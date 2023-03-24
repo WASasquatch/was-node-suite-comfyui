@@ -451,6 +451,16 @@ class WAS_Image_Threshold:
     def image_threshold(self, image, threshold=0.5):
         return ( pil2tensor(self.apply_threshold(tensor2pil(image), threshold)), )
         
+    def apply_threshold(self, input_image, threshold=0.5):
+        # Convert the input image to grayscale
+        grayscale_image = input_image.convert('L')
+
+        # Apply the threshold to the grayscale image
+        threshold_value = int(threshold * 255)
+        thresholded_image = grayscale_image.point(lambda x: 255 if x >= threshold_value else 0, mode='L')
+
+        return thresholded_image
+        
         
         
 # IMAGE CHROMATIC ABERRATION NODE
@@ -1543,7 +1553,7 @@ class WAS_Image_Save:
             if not os.path.exists(output_path.strip()):
                 print(f'\033[34mWAS NS\033[0m Error: The path `{output_path.strip()}` specified doesn\'t exist! Defaulting to `{self.output_dir}` directory.')
             else:
-                self.output_dir = os.path.normpath(output_path.strip()
+                self.output_dir = os.path.normpath(output_path.strip())
         
         # Define counter for files found
         try:
@@ -1826,13 +1836,16 @@ class MiDaS_Depth_Approx:
                 align_corners=False,
             ).squeeze()
 
+        # Invert depth map
         if invert_depth == 'true':
             depth = ( 255 - prediction.cpu().numpy().astype(np.uint8) )
             depth = depth.astype(np.float32)
         else:
             depth = prediction.cpu().numpy().astype(np.float32)
-        depth = depth * 255 / (np.max(depth)) / 255
-        # Invert depth map
+        #depth = depth * 255 / (np.max(depth)) / 255
+        depth = (depth - depth.min()) / (depth.max() - depth.min())  # Normalize depth to range [0, 1]
+        
+        # depth to RGB
         depth = cv.cvtColor(depth, cv.COLOR_GRAY2RGB)
         
         tensor = torch.from_numpy( depth )[None,]
