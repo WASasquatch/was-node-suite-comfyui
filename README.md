@@ -1,5 +1,6 @@
-# WAS's Comprehensive Node Suite
-![image](https://user-images.githubusercontent.com/1151589/227418056-d6928b42-2492-414c-9c16-21e50d976cf5.png) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FWASasquatch%2Fwas-node-suite-comfyui&count_bg=%233D9CC8&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+# WAS's Comprehensive Node Suite [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FWASasquatch%2Fwas-node-suite-comfyui&count_bg=%233D9CC8&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+
+![image](https://user-images.githubusercontent.com/1151589/227418056-d6928b42-2492-414c-9c16-21e50d976cf5.png) 
 
 ## A node suite for [ComfyUI](https://github.com/comfyanonymous) with many new modes, such as image processing, text processing, and more. 
 
