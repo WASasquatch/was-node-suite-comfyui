@@ -2,7 +2,7 @@
 
 ![image](https://user-images.githubusercontent.com/1151589/227418056-d6928b42-2492-414c-9c16-21e50d976cf5.png) 
 
-## A node suite for [ComfyUI]([https://github.com/comfyanonymous](https://github.com/comfyanonymous/ComfyUI)) with many new modes, such as image processing, text processing, and more. 
+## A node suite for [ComfyUI](https://github.com/comfyanonymous](https://github.com/comfyanonymous/ComfyUI) with many new modes, such as image processing, text processing, and more. 
 
 1. Current Nodes:
     - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
