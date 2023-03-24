@@ -25,7 +25,7 @@
     - Image Remove Color: Remove a color from a image and replace it with another
     - Image Rotate: Rotate an image
     - Image Save: A save image node with format support and path support. (Bug: Doesn't display image
-    - Image Load: Load a image from any path
+    - Image Load: Load a *image* from any path on the system, or a url starting with `http`
     - Image Select Channel: Select a single channel of an RGB image
     - Image Select Color: Return the select image only on a black canvas
     - Image Style Filter: Style a image with Pilgram instragram-like filters
