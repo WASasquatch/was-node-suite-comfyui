@@ -1,2 +1,56 @@
-# was-node-suite-comfyui
-A node suite for ComfyUI with many new modes, such as image processing, text processing, and more. 
+# WAS's Comprehensive Node Suite
+![image](https://user-images.githubusercontent.com/1151589/227418056-d6928b42-2492-414c-9c16-21e50d976cf5.png)
+
+## A node suite for [ComfyUI](https://github.com/comfyanonymous) with many new modes, such as image processing, text processing, and more. 
+
+1. Current Nodes:
+    - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
+    - Image Blank: Create a blank image in any colo
+    - Image Blend by Mask: Blend two images by a mask
+    - Image Blend: Blend two images by opacity
+    - Image Blending Mode: Blend two images by various blending modes
+    - Image Bloom Filter: Apply a high-pass based bloom filter
+    - Image Canny Filter: Apply a canny filter to a image
+    - Image Chromatic Aberration: Apply chromatic aberration lens effect to a image like in sci-fi films, movie theaters, and video games
+    - Image Edge Detection Filter: Detect edges in a image
+    - Image Film Grain: Apply film grain to a image
+    - Image Filter Adjustments: Apply various image adjustments to a image
+    - Image Flip: Flip a image horizontal, or vertical
+    - Image High Pass Filter: Apply a high frequency pass to the image returning the details
+    - Image Levels Adjustment: Adjust the levels of a image
+    - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
+    - Image Mix RGB Channels: Mix together RGB channels into a single iamge
+    - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
+    - Image Remove Color: Remove a color from a image and replace it with another
+    - Image Rotate: Rotate an image
+    - Image Save: A save image node with format support and path support. (Bug: Doesn't display image
+    - Image Load: Load a image from any path
+    - Image Select Channel: Select a single channel of an RGB image
+    - Image Select Color: Return the select image only on a black canvas
+    - Image Style Filter: Style a image with Pilgram instragram-like filters
+    - Image Threshold: Return the desired threshold range of a image
+    - Image fDOF Filter: Apply a fake depth of field effect to an image
+    - Image to Latent Mask: Convert a image into a latent mask
+    - KSampler (WAS): A sampler that accepts a seed as a node inpu
+    - Latent Noise Injection: Inject latent noise into a latent image
+    - Latent Upscale by Factor: Upscale a latent image by a facto
+    - MiDaS Depth Approximation: Produce a depth approximation of a single image input
+    - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
+    - Save Text File: Save a text string to a file
+    - Seed: Return a seed
+    - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
+    - Text Concatenate: Merge two strings
+    - Text Find and Replace: Find and replace a substring in a string
+    - Text Multiline: Write a multiline text strin
+    - Text Parse Noodle Soup Prompts: Parse NSP in a text input
+    - Text Random Line: Select a random line from a text input string
+    - Text String: Write a single line text string value
+    - Text to Conditioning: Convert a text string to conditioning.
+
+2. Installation
+    - Extract node archive to your /ComfyUI/custom_nodes/ folder
+    - Restart ComfyUI
+    - WAS Suite should uninstall legacy nodes automatically for you.
+    - Tools will be located in the WAS Suite menu.
+
+*This version renames some nodes, as well as introduces new fields. Unfortunately ComfyUI doesn't handle these changes well, so you'll have to replace the dreaded "red nodes" manually.*
