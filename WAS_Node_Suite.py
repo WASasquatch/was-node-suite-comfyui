@@ -389,7 +389,9 @@ class WAS_Image_Blending_Mode:
         out_image = out_image.convert("RGB")
 
         return ( pil2tensor(out_image), )
-        
+      
+
+      
 # IMAGE BLEND NODE
         
 class WAS_Image_Blend:
@@ -424,8 +426,181 @@ class WAS_Image_Blend:
         
         del img_a, img_b, blend_mask
 
-        return ( pil2tensor(img_result), )
+        return ( pil2tensor(img_result), )        
+
+
+
+# IMAGE TRANSPOSE
+
+class WAS_Image_Transpose:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "image_overlay": ("IMAGE",),
+                "width": ("INT", {"default": 512, "min": -48000, "max": 48000, "step": 1}),
+                "height": ("INT", {"default": 512, "min": -48000, "max": 48000, "step": 1}),
+                "X": ("INT", {"default": 0, "min": -48000, "max": 48000, "step": 1}),
+                "Y": ("INT", {"default": 0, "min": -48000, "max": 48000, "step": 1}),
+                "rotation": ("INT", {"default": 0, "min": -360, "max": 360, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_transpose"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_transpose(self, image, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
+        return ( pil2tensor(self.apply_transpose_image(tensor2pil(image), tensor2pil(image_overlay), (int(width), int(height)), (int(X), int(Y)), int(rotation))), )
         
+    def apply_transpose_image(self, base_image, transpose_image, size, location, rotation):
+
+        # Resize the base image to the desired size
+        transpose_image = transpose_image.resize(size)
+
+        # Rotate the transposed image
+        transpose_image = transpose_image.rotate(rotation, expand=True)
+
+        # Paste the transposed image onto the image
+        result_image = base_image.paste(transpose_image, location, transpose_image)
+
+        # Return the resulting image
+        return result_image
+
+
+
+# IMAGE RESCALE
+
+class WAS_Image_Rescale:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode": (["rescale","resize"],),
+                "resampling": (["lanczos","nearest","bilinear","bicubic"],),
+                "rescale_factor": ("FLOAT", {"default": 2, "min": 0.01, "max": 16.0, "step": 0.01}),
+                "resize_width": ("INT", {"default": 1024, "min": 1, "max": 48000, "step": 1}),
+                "resize_height": ("INT", {"default": 1536, "min": 1, "max": 48000, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_rescale"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_rescale(self, image, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
+        return ( pil2tensor(self.apply_resize_image(tensor2pil(image), mode, factor, width, height, resample)), )
+        
+    def apply_resize_image(self, image, mode='scale', factor=None, width=None, height=None, resample='bicubic'):
+
+        # Get the current width and height of the image
+        current_width, current_height = image.size
+        
+        # Calculate the new width and height based on the given mode and parameters
+        if mode == 'rescale':
+            new_width, new_height = int(current_width * factor), int(current_height * factor)
+        else:
+            new_width = width if width % 8 == 0 else width + (8 - width % 8)
+            new_height = height if height % 8 == 0 else height + (8 - height % 8)
+        
+        # Define a dictionary of resampling filters
+        resample_filters = {
+            'nearest': 0,
+            'bilinear': 2,
+            'bicubic': 3,
+            'lanczos': 1
+        }
+        
+        # Resize the image using the given resampling filter
+        resized_image = image.resize((new_width, new_height), resample=Image.Resampling(resample_filters(resample)))
+        
+        return resized_image
+
+
+# IMAGE PADDING
+
+class WAS_Image_Padding:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "feathering": ("INT", {"default": 120, "min": 0, "max": 2048, "step": 1}),
+                "feather_second_pass": (["true","false"],),
+                "left_padding": ("INT", {"default": 512, "min": 8, "max": 48000, "step": 1}),
+                "right_padding": ("INT", {"default": 512, "min": 8, "max": 48000, "step": 1}),
+                "top_padding": ("INT", {"default": 512, "min": 8, "max": 48000, "step": 1}),
+                "bottom_padding": ("INT", {"default": 512, "min": 8, "max": 48000, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_padding"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_padding(self, image, feathering, left_padding, right_padding, top_padding, bottom_padding, feather_second_pass=True):
+        return ( pil2tensor(self.apply_image_padding(tensor2pil(image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=True)), )
+        
+    def apply_image_padding(self, image, left_pad=100, right_pad=100, top_pad=100, bottom_pad=100, feather_radius=50, second_pass=True):
+        # Create a mask for the feathered edge
+        mask = Image.new('L', image.size, 255)
+        draw = ImageDraw.Draw(mask)
+
+        # Draw black rectangles at each edge of the image with the specified feather radius
+        draw.rectangle((0, 0, feather_radius*2, image.height), fill=0)
+        draw.rectangle((image.width-feather_radius*2, 0, image.width, image.height), fill=0)
+        draw.rectangle((0, 0, image.width, feather_radius*2), fill=0)
+        draw.rectangle((0, image.height-feather_radius*2, image.width, image.height), fill=0)
+
+        if feather_radius > 0:
+            # Blur the mask to create a smooth gradient between the black shapes and the white background
+            mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_radius))
+
+            # Create a second mask for the additional feathering pass
+            mask2 = Image.new('L', image.size, 255)
+            draw2 = ImageDraw.Draw(mask2)
+
+            # Draw black rectangles at each edge of the image with a smaller feather radius
+            feather_radius2 = int(feather_radius / 4)
+            draw2.rectangle((0, 0, feather_radius2*2, image.height), fill=0)
+            draw2.rectangle((image.width-feather_radius2*2, 0, image.width, image.height), fill=0)
+            draw2.rectangle((0, 0, image.width, feather_radius2*2), fill=0)
+            draw2.rectangle((0, image.height-feather_radius2*2, image.width, image.height), fill=0)
+
+            if second_pass:
+                # Blur the second mask to create a smooth gradient between the black shapes and the white background
+                mask2 = mask2.filter(ImageFilter.GaussianBlur(radius=feather_radius2))
+
+                # Apply the second mask to the feathered image
+                feathered_im = Image.new('RGBA', image.size, (0, 0, 0, 0))
+                feathered_im.paste(image, (0, 0), mask2)
+
+        # Calculate the new size of the image with padding added
+        new_size = (feathered_im.width + left_pad + right_pad, feathered_im.height + top_pad + bottom_pad)
+
+        # Create a new transparent image with the new size
+        new_im = Image.new('RGBA', new_size, (0, 0, 0, 0))
+
+        # Paste the feathered image onto the new image with the padding
+        new_im.paste(feathered_im, (left_pad, top_pad))
+
+        # Save the new image with alpha channel as a PNG file
+        return new_im
+            
         
         
 # IMAGE THRESHOLD NODE
@@ -1589,6 +1764,7 @@ class WAS_Image_Save:
             counter += 1
         return { "ui": { "images": paths } }
         
+        
 
 # LOAD IMAGE NODE
 class WAS_Load_Image:
@@ -1777,10 +1953,10 @@ class WAS_Latent_Noise:
 
 class MiDaS_Depth_Approx:
     def __init__(self):
-        pass
+        self.midas_dir = os.path.join(os.getcwd()+'/ComfyUI', "models/midas")
 
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(s):
         return {
             "required": {
                 "image": ("IMAGE",),
@@ -1809,6 +1985,7 @@ class MiDaS_Depth_Approx:
         img = i
 
         print("\033[34mWAS NS:\033[0m Downloading and loading MiDaS Model...")
+        torch.hub.set_dir(self.midas_dir)
         midas = torch.hub.load("intel-isl/MiDaS", midas_model, trust_repo=True)
         device = torch.device("cuda") if torch.cuda.is_available() and use_cpu == 'false' else torch.device("cpu")
         
@@ -1870,7 +2047,7 @@ class MiDaS_Depth_Approx:
 
 class MiDaS_Background_Foreground_Removal:
     def __init__(self):
-        pass
+        self.midas_dir = os.path.join(os.getcwd()+'/ComfyUI', "models/midas")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -1924,6 +2101,7 @@ class MiDaS_Background_Foreground_Removal:
         img_original = tensor2pil(image).convert('RGB')
 
         print("\033[34mWAS NS:\033[0m Downloading and loading MiDaS Model...")
+        torch.hub.set_dir(self.midas_dir)
         midas = torch.hub.load("intel-isl/MiDaS", midas_model, trust_repo=True)
         device = torch.device("cuda") if torch.cuda.is_available() and use_cpu == 'false' else torch.device("cpu")
         
@@ -2499,59 +2677,282 @@ class WAS_Text_Load_From_File:
          
 
 
+#! NUMBERS
+
+
+# RANDOM NUMBER
+
+class WAS_Random_Number:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number_type": (["integer","float","bool"],),
+                        "minimum": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                        "maximum": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                        "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    }
+                }
+                
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "return_randm_number"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_randm_number(self, minimum, maximum, seed, number_type='integer'):
+    
+        # Set Generator Seed
+        random.seed(seed)
+        
+        # Return random number
+        match number_type:
+            case 'integer':
+                number = random.randint(minimum, maximum)
+            case 'float':
+                number = random.uniform(minimum, maximum)
+            case 'bool':
+                number = random.random()
+            
+        # Return number
+        return ( number, )
+
+
+
+# CONSTANT NUMBER
+
+class WAS_Constant_Number:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number_type": (["integer","float","bool"],),
+                        "number": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                    }
+                }
+                
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "return_constant_number"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_constant_number(self, number_type, number):
+    
+        # Return number
+        match number_type:
+            case 'integer':
+                return ( int(number), )
+            case 'integer':
+                return ( float(number), )
+            case 'bool':
+                return ( ( 1 if int(number) > 0 else 0 ), )
+
+
+
+# NUMBER TO SEED
+
+class WAS_Number_To_Seed:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number": ("NUMBER",),
+                    }
+                }
+                
+    RETURN_TYPES = ("SEED",)
+    FUNCTION = "number_to_seed"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_constant_number(self, number):
+        return ( {"seed":number,}, )
+
+        
+        
+      
+# NUMBER OPERATIONS
+        
+class WAS_Number_Operation:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number_a": ("NUMBER",),
+                        "number_b": ("NUMBER",),
+                        "operation": (["addition","subtraction","division","floor division","multiplication","exponentiation","modulus","greater-than","greater-than or equels","less-than","less-than or equals","equals","does not equal"],),
+                    }
+                }
+                
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "math_operations"
+
+    CATEGORY = "WAS Suite/Operations"
+
+    def math_operations(self, number_a, number_b, operation="addition"):
+        
+        # Return random number
+        match operation:
+            case 'addition':
+                return ( (number_a + number_b), )
+            case 'subtraction':
+                return ( (number_a - number_b), )
+            case 'division':
+                return ( (number_a / number_b), )
+            case 'floor division':
+                return ( (number_a // number_b), )
+            case 'multiplication':
+                return ( (number_a * number_b), )
+            case 'exponentiation':
+                return ( (number_a ** number_b), )
+            case 'modulus':
+                return ( (number_a % number_b), )
+            case 'greater-than':
+                return ( +(number_a > number_b), )
+            case 'greater-than or equals':
+                return ( +(number_a >= number_b), )
+            case 'less-than':
+                return ( +(number_a < number_b), )
+            case 'less-than or equals':
+                return ( +(number_a <= number_b), )
+            case 'equals':
+                return ( +(number_a == number_b), )
+            case 'does not equal':
+                return ( +(number_a != number_b), )
+              
+
+#! MISC              
+                
+               
+# INPUT SWITCH
+                
+class WAS_Input_Switch:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "input_a": ("*",),
+                        "input_b": ("*",),
+                        "boolean": ("NUMBER",),
+                    }
+                }
+                
+    RETURN_TYPES = ("*",)
+    FUNCTION = "input_switch"
+
+    CATEGORY = "WAS Suite/Operations"
+
+    def input_switch(self, input_a, input_b, boolean=0):
+        
+        if int(boolean) == 1:
+            return ( input_a, )
+        else:
+            return ( input_b, )
+            
+            
+
+# DEBUG INPUT TO CONSOLE
+        
+        
+class WAS_Debug_to_Console:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "debug_input": ("*",),
+                        "label": ("STRING", {"default": f'Debug Input', "multiline": False}),
+                    }
+                }
+     
+    RETURN_TYPES = ("*",)
+    OUTPUT_NODE = True
+    FUNCTION = "debug_to_console"
+
+    CATEGORY = "WAS Suite/Debug"
+
+    def debug_to_console(self, label, debug_input=None):
+        if label.strip() != '':
+            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{text}\n')
+        else:
+            print(f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{text}\n')
+        return ( debug_input, )
+            
+
+
+
 # NODE MAPPING
 
 NODE_CLASS_MAPPINGS = {
-    # IMAGE
-    "Image Filter Adjustments": WAS_Image_Filters,
-    "Image Style Filter": WAS_Image_Style_Filter,
-    "Image Blending Mode": WAS_Image_Blending_Mode,
-    "Image Blend": WAS_Image_Blend,
-    "Image Blend by Mask": WAS_Image_Blend_Mask,
-    "Image Remove Color": WAS_Image_Remove_Color,
-    "Image Threshold": WAS_Image_Threshold,
-    "Image Chromatic Aberration": WAS_Image_Chromatic_Aberration,
-    "Image Bloom Filter": WAS_Image_Bloom_Filter,
+    "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
+    "Constant Number": WAS_Constant_Number,
+    "Debug to Console": WAS_Debug_to_Console,
     "Image Blank": WAS_Image_Blank,
-    "Image Film Grain": WAS_Film_Grain,
-    "Image Flip": WAS_Image_Flip,
-    "Image Rotate": WAS_Image_Rotate,
-    "Image Nova Filter": WAS_Image_Nova_Filter,
+    "Image Blend by Mask": WAS_Image_Blend_Mask,
+    "Image Blend": WAS_Image_Blend,
+    "Image Blending Mode": WAS_Image_Blending_Mode,
+    "Image Bloom Filter": WAS_Image_Bloom_Filter,
     "Image Canny Filter": WAS_Canny_Filter,
+    "Image Chromatic Aberration": WAS_Image_Chromatic_Aberration,
     "Image Edge Detection Filter": WAS_Image_Edge,
-    "Image fDOF Filter": WAS_Image_fDOF,
-    "Image Median Filter": WAS_Image_Median_Filter,
-    "Image Save": WAS_Image_Save,
-    "Image Load": WAS_Load_Image,
-    "Image Levels Adjustment": WAS_Image_Levels,
+    "Image Film Grain": WAS_Film_Grain,
+    "Image Filter Adjustments": WAS_Image_Filters,
+    "Image Flip": WAS_Image_Flip,
     "Image High Pass Filter": WAS_Image_High_Pass_Filter,
-    "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
-    "Image Select Color": WAS_Image_Select_Color,
-    "Image Select Channel": WAS_Image_Select_Channel,
+    "Image Levels Adjustment": WAS_Image_Levels,
+    "Image Load": WAS_Load_Image,
+    "Image Median Filter": WAS_Image_Median_Filter,
     "Image Mix RGB Channels": WAS_Image_RGB_Merge,
-    # LATENT
-    "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
-    "Latent Noise Injection": WAS_Latent_Noise,
+    "Image Nova Filter": WAS_Image_Nova_Filter,
+    "Image Padding": WAS_Image_Padding,
+    "Image Remove Color": WAS_Image_Remove_Color,
+    "Image Resize": WAS_Image_Rescale,
+    "Image Rotate": WAS_Image_Rotate,
+    "Image Save": WAS_Image_Save,
+    "Image Select Channel": WAS_Image_Select_Channel,
+    "Image Select Color": WAS_Image_Select_Color,
+    "Image Style Filter": WAS_Image_Style_Filter,
+    "Image Threshold": WAS_Image_Threshold,
+    "Image Transpose": WAS_Image_Transpose,
+    "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
-    # MIDAS
+    #"Input Switch": WAS_Input_Switch,
+    "KSampler (WAS)": WAS_KSampler,
+    "Latent Noise Injection": WAS_Latent_Noise,
+    "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
+    "Load Text File": WAS_Text_Load_From_File,
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
-    # CONDITIONING
-    "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
-    # SAMPLING
-    "KSampler (WAS)": WAS_KSampler,
-    "Seed": WAS_Seed,
-    # TEXT
-    "Text Multiline": WAS_Text_Multiline,
-    "Text String": WAS_Text_String,
-    "Text Random Line": WAS_Text_Random_Line,
-    "Text to Conditioning": WAS_Text_to_Conditioning,
-    "Text Concatenate": WAS_Text_Concatenate,
-    "Text Find and Replace": WAS_Search_and_Replace,
-    "Text Find and Replace Input": WAS_Search_and_Replace_Input,
-    "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
+    "Number Operation": WAS_Number_Operation,
+    "Number to Seed": WAS_Number_To_Seed,
+    "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
-    "Load Text File": WAS_Text_Load_From_File,
+    "Seed": WAS_Seed,
+    "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
+    "Text Concatenate": WAS_Text_Concatenate,
+    "Text Find and Replace Input": WAS_Search_and_Replace_Input,
+    "Text Find and Replace": WAS_Search_and_Replace,
+    "Text Multiline": WAS_Text_Multiline,
+    "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
+    "Text Random Line": WAS_Text_Random_Line,
+    "Text String": WAS_Text_String,
+    "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,
 }
 
