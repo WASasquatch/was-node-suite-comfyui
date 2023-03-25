@@ -568,6 +568,7 @@ class WAS_Load_Image_Batch:
             self.image_paths = []
             self.counter_file = os.path.join(directory_path, counter_file)
             self.load_images(directory_path)
+            self.image_paths.sort()  # sort the image paths by name
 
             try:
                 with open(self.counter_file, "r") as f:
