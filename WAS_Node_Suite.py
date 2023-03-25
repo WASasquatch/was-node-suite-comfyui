@@ -527,6 +527,84 @@ class WAS_Image_Rescale:
         return resized_image
 
 
+# LOAD IMAGE BATCH
+
+class WAS_Load_Image_Batch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mode": (["single_image","incremental_image"],),
+                "folder_path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
+                "image_id": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
+                "counter_name": ("STRING", {"default": 'counter_batch.txt', "multiline": False}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "load_batch_images"
+
+    CATEGORY = "WAS Suite/IO"
+
+    def load_batch_images(self, folder_path, image_id, seed, mode="single_image", counter_name="counter_batch.txt"):
+
+        if os.path.exists(folder_path):
+            fl = self.BatchImageLoader(folder_path, counter_name)
+            if mode == 'single_image':
+                image = fl.get_image_by_id(image_id)
+            else:
+                image = fl.get_next_image()   
+            self.image = image
+            
+
+        return ( pil2tensor(image), )
+        
+    class BatchImageLoader:
+        def __init__(self, directory_path, counter_file="current_image_index.txt"):
+            self.image_paths = []
+            self.counter_file = os.path.join(directory_path, counter_file)
+            self.load_images(directory_path)
+
+            try:
+                with open(self.counter_file, "r") as f:
+                    self.current_image_index = int(f.read().strip())
+            except FileNotFoundError:
+                self.current_image_index = 0
+                with open(self.counter_file, "w") as f:
+                    f.write(str(self.current_image_index))
+
+        def load_images(self, directory_path):
+            allowed_extensions = ('.jpeg', '.jpg', '.png', '.tiff', '.gif', '.bmp', '.webp')
+            for file_name in os.listdir(directory_path):
+                if file_name.lower().endswith(allowed_extensions):
+                    image_path = os.path.join(directory_path, file_name)
+                    self.image_paths.append(image_path)
+
+        def get_image_by_id(self, image_id):
+            if image_id < 0 or image_id >= len(self.image_paths):
+                raise ValueError("Invalid image ID")
+            return Image.open(self.image_paths[image_id])
+
+        def get_next_image(self):
+            if self.current_image_index >= len(self.image_paths):
+                self.current_image_index = 0
+            image_path = self.image_paths[self.current_image_index]
+            self.current_image_index += 1
+            if self.current_image_index == len(self.image_paths):
+                self.current_image_index = 0
+            with open(self.counter_file, "w") as f:
+                f.write(str(self.current_image_index))
+            return Image.open(image_path)
+            
+    @classmethod
+    def IS_CHANGED(s, folder_path, image_id, seed, mode="single_image", counter_name="counter_batch.txt"):
+        return True
+
+
 # IMAGE PADDING
 
 class WAS_Image_Padding:
@@ -2935,6 +3013,7 @@ NODE_CLASS_MAPPINGS = {
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
+    "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
