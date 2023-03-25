@@ -566,28 +566,28 @@ class WAS_Image_Padding:
         draw.rectangle((0, 0, image.width, feather_radius*2), fill=0)
         draw.rectangle((0, image.height-feather_radius*2, image.width, image.height), fill=0)
 
-        if feather_radius > 0:
-            # Blur the mask to create a smooth gradient between the black shapes and the white background
-            mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_radius))
+        # Blur the mask to create a smooth gradient between the black shapes and the white background
+        mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_radius))
 
-            # Create a second mask for the additional feathering pass
-            mask2 = Image.new('L', image.size, 255)
-            draw2 = ImageDraw.Draw(mask2)
+        # Create a second mask for the additional feathering pass
+        mask2 = Image.new('L', image.size, 255)
+        draw2 = ImageDraw.Draw(mask2)
 
-            # Draw black rectangles at each edge of the image with a smaller feather radius
-            feather_radius2 = int(feather_radius / 4)
-            draw2.rectangle((0, 0, feather_radius2*2, image.height), fill=0)
-            draw2.rectangle((image.width-feather_radius2*2, 0, image.width, image.height), fill=0)
-            draw2.rectangle((0, 0, image.width, feather_radius2*2), fill=0)
-            draw2.rectangle((0, image.height-feather_radius2*2, image.width, image.height), fill=0)
+        # Draw black rectangles at each edge of the image with a smaller feather radius
+        feather_radius2 = int(feather_radius / 4)
+        draw2.rectangle((0, 0, feather_radius2*2, image.height), fill=0)
+        draw2.rectangle((image.width-feather_radius2*2, 0, image.width, image.height), fill=0)
+        draw2.rectangle((0, 0, image.width, feather_radius2*2), fill=0)
+        draw2.rectangle((0, image.height-feather_radius2*2, image.width, image.height), fill=0)
 
-            if second_pass:
-                # Blur the second mask to create a smooth gradient between the black shapes and the white background
-                mask2 = mask2.filter(ImageFilter.GaussianBlur(radius=feather_radius2))
+        # Do second pass
+        if second_pass:
+            # Blur the second mask to create a smooth gradient between the black shapes and the white background
+            mask2 = mask2.filter(ImageFilter.GaussianBlur(radius=feather_radius2))
 
-                # Apply the second mask to the feathered image
-                feathered_im = Image.new('RGBA', image.size, (0, 0, 0, 0))
-                feathered_im.paste(image, (0, 0), mask2)
+        # Apply the second mask to the feathered image
+        feathered_im = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        feathered_im.paste(image, (0, 0), mask2)
 
         # Calculate the new size of the image with padding added
         new_size = (feathered_im.width + left_pad + right_pad, feathered_im.height + top_pad + bottom_pad)
@@ -2932,7 +2932,6 @@ NODE_CLASS_MAPPINGS = {
     "Image Transpose": WAS_Image_Transpose,
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
-    #"Input Switch": WAS_Input_Switch,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
