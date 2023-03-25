@@ -6,6 +6,8 @@
 
 1. Current Nodes:
     - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
+    - Constant Number
+    - Debug to Console (Debug pretty much anything to the console window)
     - Image Blank: Create a blank image in any colo
     - Image Blend by Mask: Blend two images by a mask
     - Image Blend: Blend two images by opacity
@@ -19,24 +21,31 @@
     - Image Flip: Flip a image horizontal, or vertical
     - Image High Pass Filter: Apply a high frequency pass to the image returning the details
     - Image Levels Adjustment: Adjust the levels of a image
+    - Image Load: Load a *image* from any path on the system, or a url starting with `http`
     - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
     - Image Mix RGB Channels: Mix together RGB channels into a single iamge
     - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
     - Image Remove Color: Remove a color from a image and replace it with another
+    - Image Resize
     - Image Rotate: Rotate an image
     - Image Save: A save image node with format support and path support. (Bug: Doesn't display image
-    - Image Load: Load a *image* from any path on the system, or a url starting with `http`
     - Image Select Channel: Select a single channel of an RGB image
     - Image Select Color: Return the select image only on a black canvas
     - Image Style Filter: Style a image with Pilgram instragram-like filters
     - Image Threshold: Return the desired threshold range of a image
+    - Image Transpose
+    - Image Transpose
     - Image fDOF Filter: Apply a fake depth of field effect to an image
     - Image to Latent Mask: Convert a image into a latent mask
+    - Input Switch  (Disable until `*` wildcard fix)
     - KSampler (WAS): A sampler that accepts a seed as a node inpu
     - Latent Noise Injection: Inject latent noise into a latent image
     - Latent Upscale by Factor: Upscale a latent image by a facto
     - MiDaS Depth Approximation: Produce a depth approximation of a single image input
     - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
+    - Number Operation
+    - Number to Seed
+    - Random Number
     - Save Text File: Save a text string to a file
     - Seed: Return a seed
     - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
