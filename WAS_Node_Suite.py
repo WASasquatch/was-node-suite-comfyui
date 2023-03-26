@@ -537,10 +537,8 @@ class WAS_Load_Image_Batch:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "mode": (["single_image","incremental_image"],),
                 "folder_path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
-                "image_id": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
-                "counter_name": ("STRING", {"default": 'counter_batch.txt', "multiline": False}),
+                "index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff})
             },
         }
 
@@ -549,33 +547,21 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, folder_path, image_id, mode="single_image", counter_name="counter_batch.txt"):
+    def load_batch_images(self, folder_path, index):
 
         if os.path.exists(folder_path):
-            fl = self.BatchImageLoader(folder_path, counter_name)
-            if mode == 'single_image':
-                image = fl.get_image_by_id(image_id)
-            else:
-                image = fl.get_next_image()   
-            self.image = image
+                fl = self.BatchImageLoader(folder_path)
+                image = fl.get_image_by_id(index) 
+                self.image = image
             
 
         return ( pil2tensor(image), )
         
     class BatchImageLoader:
-        def __init__(self, directory_path, counter_file="current_image_index.txt"):
+        def __init__(self, directory_path):
             self.image_paths = []
-            self.counter_file = os.path.join(directory_path, counter_file)
             self.load_images(directory_path)
             self.image_paths.sort()  # sort the image paths by name
-
-            try:
-                with open(self.counter_file, "r") as f:
-                    self.current_image_index = int(f.read().strip())
-            except FileNotFoundError:
-                self.current_image_index = 0
-                with open(self.counter_file, "w") as f:
-                    f.write(str(self.current_image_index))
 
         def load_images(self, directory_path):
             allowed_extensions = ('.jpeg', '.jpg', '.png', '.tiff', '.gif', '.bmp', '.webp')
@@ -588,17 +574,6 @@ class WAS_Load_Image_Batch:
             if image_id < 0 or image_id >= len(self.image_paths):
                 raise ValueError("Invalid image ID")
             return Image.open(self.image_paths[image_id])
-
-        def get_next_image(self):
-            if self.current_image_index >= len(self.image_paths):
-                self.current_image_index = 0
-            image_path = self.image_paths[self.current_image_index]
-            self.current_image_index += 1
-            if self.current_image_index == len(self.image_paths):
-                self.current_image_index = 0
-            with open(self.counter_file, "w") as f:
-                f.write(str(self.current_image_index))
-            return Image.open(image_path)
             
     @classmethod
     def IS_CHANGED(s, **kwargs):

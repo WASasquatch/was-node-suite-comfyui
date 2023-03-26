@@ -67,5 +67,6 @@
     - Restart ComfyUI
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
+    - (For the Load Image Batch node) you need the extension from [Incremental Wiget](https://github.com/Slarper/incremental-widget)
 
 *This version renames some nodes, as well as introduces new fields. Unfortunately ComfyUI doesn't handle these changes well, so you'll have to replace the dreaded "red nodes" manually.*
