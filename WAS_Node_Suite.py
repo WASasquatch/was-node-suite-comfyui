@@ -455,7 +455,7 @@ class WAS_Image_Transpose:
 
     CATEGORY = "WAS Suite/Image"
 
-    def image_transpose(self, image, image_overlay, width, height, X, Y, rotation):
+    def image_transpose(self, image, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
         return ( pil2tensor(self.apply_transpose_image(tensor2pil(image), tensor2pil(image_overlay), (int(width), int(height)), (int(X), int(Y)), int(rotation))), )
         
     def apply_transpose_image(self, base_image, transpose_image, size, location, rotation):
@@ -499,7 +499,7 @@ class WAS_Image_Rescale:
     CATEGORY = "WAS Suite/Image"
 
     def image_rescale(self, image, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
-        return ( pil2tensor(self.apply_resize_image(tensor2pil(image), mode, rescale_factor, resize_width, resize_height, resampling)), )
+        return ( pil2tensor(self.apply_resize_image(tensor2pil(image), mode, factor, width, height, resample)), )
         
     def apply_resize_image(self, image, mode='scale', factor=None, width=None, height=None, resample='bicubic'):
 
@@ -541,7 +541,6 @@ class WAS_Load_Image_Batch:
                 "folder_path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
                 "image_id": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
                 "counter_name": ("STRING", {"default": 'counter_batch.txt', "multiline": False}),
-                #"seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             },
         }
 
@@ -550,7 +549,7 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, folder_path, image_id, seed, mode="single_image", counter_name="counter_batch.txt"):
+    def load_batch_images(self, folder_path, image_id, mode="single_image", counter_name="counter_batch.txt"):
 
         if os.path.exists(folder_path):
             fl = self.BatchImageLoader(folder_path, counter_name)
