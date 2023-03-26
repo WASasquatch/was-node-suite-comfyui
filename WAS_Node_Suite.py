@@ -14,13 +14,12 @@
 # THE SOFTWARE.
 
 
-import torch, os, sys, subprocess, random, math, hashlib, json, time
-import torch.nn as nn
-import torchvision.transforms as transforms
+import torch, os, sys, subprocess, random, hashlib, json, time, requests
 import numpy as np
 from PIL import Image, ImageFilter, ImageEnhance, ImageOps, ImageDraw, ImageChops
 from PIL.PngImagePlugin import PngInfo
 from urllib.request import urlopen
+from io import BytesIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
 sys.path.append('../ComfyUI')
@@ -29,12 +28,9 @@ import comfy.samplers
 import comfy.sd
 import comfy.utils
 
-import comfy_extras.clip_vision
-
-import model_management
-import importlib
-
 import nodes
+
+import cv2
 
 # GLOBALS
 MIDAS_INSTALLED = False
@@ -1220,11 +1216,11 @@ class WAS_Image_Rotate:
         # Set Sampler
         match sampler:
             case 'nearest':
-                sampler = PIL.Image.NEAREST
+                sampler = Image.NEAREST
             case 'bicubic':
-                sampler = PIL.Image.BICUBIC
+                sampler = Image.BICUBIC
             case 'bilinear':
-                sampler = PIL.Image.BILINEAR
+                sampler = Image.BILINEAR
         
         # Rotate Image
         if mode == 'internal':
@@ -1865,12 +1861,12 @@ class WAS_Load_Image:
     
         if image_path.startswith('http'):
             from io import BytesIO
-            i = download_image(image_path)
+            i = self.download_image(image_path)
         else:
             try:
                 i = Image.open(image_path)
             except OSError:
-                print(f'\033[34mWAS NS\033[0m Error: The image `{output_path.strip()}` specified doesn\'t exist!')
+                print(f'\033[34mWAS NS\033[0m Error: The image `{image_path.strip()}` specified doesn\'t exist!')
                 i = Image.new(mode='RGB', size=(512,512), color=(0,0,0))
                 
         image = i
@@ -2968,9 +2964,9 @@ class WAS_Debug_to_Console:
 
     def debug_to_console(self, label, debug_input=None):
         if label.strip() != '':
-            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{text}\n')
+            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{debug_input}\n')
         else:
-            print(f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{text}\n')
+            print(f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{debug_input}\n')
         return ( debug_input, )
             
 
