@@ -37,7 +37,6 @@
     - Image Style Filter: Style a image with Pilgram instragram-like filters
     - Image Threshold: Return the desired threshold range of a image
     - Image Transpose
-    - Image Transpose
     - Image fDOF Filter: Apply a fake depth of field effect to an image
     - Image to Latent Mask: Convert a image into a latent mask
     - Input Switch  (Disable until `*` wildcard fix)
