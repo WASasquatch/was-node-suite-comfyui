@@ -43,7 +43,6 @@
     - KSampler (WAS): A sampler that accepts a seed as a node inpu
     - Load Text File
     - Load Batch Images
-      - Currently relies on seed to ensure it runs every gen (it's not doing anything)
       - Creates a counter in the desired batch folder to keep track of what image to output next. Be sure to set it to `0` or remove it if you want to start over. It will also restart once it hits the end of the image list, so set batches in ComfyUI menu to same number of images to do a whole batch. 
     - Latent Noise Injection: Inject latent noise into a latent image
     - Latent Upscale by Factor: Upscale a latent image by a facto
