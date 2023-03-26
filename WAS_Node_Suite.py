@@ -541,7 +541,6 @@ class WAS_Load_Image_Batch:
                 "folder_path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
                 "image_id": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
                 "counter_name": ("STRING", {"default": 'counter_batch.txt', "multiline": False}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             },
         }
 
@@ -550,7 +549,7 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, folder_path, image_id, seed, mode="single_image", counter_name="counter_batch.txt"):
+    def load_batch_images(self, folder_path, image_id, mode="single_image", counter_name="counter_batch.txt"):
 
         if os.path.exists(folder_path):
             fl = self.BatchImageLoader(folder_path, counter_name)
@@ -602,8 +601,9 @@ class WAS_Load_Image_Batch:
             return Image.open(image_path)
             
     @classmethod
-    def IS_CHANGED(s, folder_path, image_id, seed, mode="single_image", counter_name="counter_batch.txt"):
-        return True
+    def IS_CHANGED(s, **kwargs):
+        return float("NaN")
+
 
 
 # IMAGE PADDING
