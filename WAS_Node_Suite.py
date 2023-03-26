@@ -455,7 +455,7 @@ class WAS_Image_Transpose:
 
     CATEGORY = "WAS Suite/Image"
 
-    def image_transpose(self, image, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
+    def image_transpose(self, image, image_overlay, width, height, X, Y, rotation):
         return ( pil2tensor(self.apply_transpose_image(tensor2pil(image), tensor2pil(image_overlay), (int(width), int(height)), (int(X), int(Y)), int(rotation))), )
         
     def apply_transpose_image(self, base_image, transpose_image, size, location, rotation):
