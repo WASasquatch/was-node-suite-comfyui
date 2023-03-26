@@ -950,6 +950,47 @@ class WAS_Image_Remove_Color:
         result_image = Image.composite(Image.new('RGB', image.size, rep_color), image, mask_image)
         
         return result_image
+        
+        
+        
+# IMAGE REMOVE BACKGROUND
+        
+class WAS_Remove_Background:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode": (["background", "foreground"],),
+                "threshold": ("INT", {"default": 127, "min": 0, "max": 255, "step": 1}),
+                "threshold_tolerance": ("INT", {"default": 2, "min": 1, "max": 24, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_remove_background"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_remove_background(self, image, mode='background', threshold=127, threshold_tolerance=2):
+        return ( pil2tensor(self.remove_background(tensor2pil(image), mode, threshold, threshold_tolerance)), )
+
+    def remove_background(self, image, mode, threshold, threshold_tolerance):
+        grayscale_image = image.convert('L')
+        if mode == 'background':
+            grayscale_image = ImageOps.invert(grayscale_image)
+            threshold = 255 - threshold  # adjust the threshold for "background" mode
+        blurred_image = grayscale_image.filter(ImageFilter.GaussianBlur(radius=threshold_tolerance))
+        binary_image = blurred_image.point(lambda x: 0 if x < threshold else 255, '1')
+        mask = binary_image.convert('L')
+        inverted_mask = ImageOps.invert(mask)
+        transparent_image = image.copy()
+        transparent_image.putalpha(inverted_mask)
+        
+        return transparent_image 
 
 
 # IMAGE BLEND MASK NODE
@@ -3098,6 +3139,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Mix RGB Channels": WAS_Image_RGB_Merge,
     "Image Nova Filter": WAS_Image_Nova_Filter,
     "Image Padding": WAS_Image_Padding,
+    "Image Remove Background (Alpha)": WAS_Remove_Background,
     "Image Remove Color": WAS_Image_Remove_Color,
     "Image Resize": WAS_Image_Rescale,
     "Image Rotate": WAS_Image_Rotate,
