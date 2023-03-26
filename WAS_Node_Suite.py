@@ -198,7 +198,9 @@ class WAS_Image_Style_Filter:
                     "brannan",
                     "brooklyn",
                     "clarendon",
+                    "cyberpunk",
                     "earlybird",
+                    "fairy tale",
                     "gingham",
                     "hudson",
                     "inkwell",
@@ -212,6 +214,7 @@ class WAS_Image_Style_Filter:
                     "perpetua",
                     "reyes",
                     "rise",
+                    "sci-fi",
                     "slumber",
                     "stinson",
                     "toaster",
@@ -241,6 +244,9 @@ class WAS_Image_Style_Filter:
         # Convert image to PIL
         image = tensor2pil(image)
         
+        # WAS Filters
+        WFilter = self.WAS_Filter_Class()
+        
         # Apply blending
         match style:
             case "1977":
@@ -253,8 +259,12 @@ class WAS_Image_Style_Filter:
                 out_image = pilgram.brooklyn(image)
             case "clarendon":
                 out_image = pilgram.clarendon(image)
+            case "cyberpunk":
+                out_image = WFilter.cyberpunk(image)
             case "earlybird":
                 out_image = pilgram.earlybird(image)
+            case "fairy tale":
+                out_image = WFilter.sparkle(image)
             case "gingham":
                 out_image = pilgram.gingham(image)
             case "hudson":
@@ -303,6 +313,63 @@ class WAS_Image_Style_Filter:
         return ( torch.from_numpy(np.array(out_image).astype(np.float32) / 255.0).unsqueeze(0), )
         
         
+    # IN-HOUSE WAS FILTERS
+    
+    # HDR Effect
+    
+    class WAS_Filter_Class():
+            
+        # Sparkle - Fairy Tale Filter
+        
+        def sparkle(self, image):
+        
+            import pilgram
+        
+            image = image.convert('RGBA')
+            contrast_enhancer = ImageEnhance.Contrast(image)
+            image = contrast_enhancer.enhance(1.25)
+            saturation_enhancer = ImageEnhance.Color(image)
+            image = saturation_enhancer.enhance(1.5)
+
+            bloom = image.filter(ImageFilter.GaussianBlur(radius=20))
+            bloom = ImageEnhance.Brightness(bloom).enhance(1.2)
+            bloom.putalpha(128)
+            bloom = bloom.convert(image.mode)
+            image = Image.alpha_composite(image, bloom)
+
+            width, height = image.size
+            # Particls A
+            particles = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(particles)
+            for i in range(5000):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                r = random.randint(0, 255)
+                g = random.randint(0, 255)
+                b = random.randint(0, 255)
+                draw.point((x, y), fill=(r, g, b, 255))
+            particles = particles.filter(ImageFilter.GaussianBlur(radius=1))
+            particles.putalpha(128)
+
+            particles2 = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(particles2)
+            for i in range(5000):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                r = random.randint(0, 255)
+                g = random.randint(0, 255)
+                b = random.randint(0, 255)
+                draw.point((x, y), fill=(r, g, b, 255))
+            particles2 = particles2.filter(ImageFilter.GaussianBlur(radius=1))
+            particles2.putalpha(128)
+            
+            image = pilgram.css.blending.color_dodge(image, particles)
+            image = pilgram.css.blending.lighten(image, particles2)
+            #image = Image.alpha_composite(image, particles)
+
+            return image
+        
+        
 # COMBINE NODE
 
 class WAS_Image_Blending_Mode:
@@ -331,6 +398,7 @@ class WAS_Image_Blending_Mode:
                     "screen",
                     "soft_light"
                 ],),
+                "blend_percentage": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
             },
         }
 
@@ -339,7 +407,7 @@ class WAS_Image_Blending_Mode:
 
     CATEGORY = "WAS Suite/Image"
 
-    def image_blending_mode(self, image_a, image_b, mode):
+    def image_blending_mode(self, image_a, image_b, mode='add', blend_percentage=1.0):
     
         # Install Pilgram
         if 'pilgram' not in packages():
@@ -387,6 +455,11 @@ class WAS_Image_Blending_Mode:
                 out_image = img_a
                 
         out_image = out_image.convert("RGB")
+        
+        # Blend image
+        blend_mask = Image.new(mode = "L", size = img_a.size, color = (round(blend_percentage * 255)))
+        blend_mask = ImageOps.invert(blend_mask)
+        out_image = Image.composite(img_a, out_image, blend_mask)
 
         return ( pil2tensor(out_image), )
       
@@ -626,13 +699,14 @@ class WAS_Image_Padding:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE","IMAGE")
     FUNCTION = "image_padding"
 
     CATEGORY = "WAS Suite/Image"
 
     def image_padding(self, image, feathering, left_padding, right_padding, top_padding, bottom_padding, feather_second_pass=True):
-        return ( pil2tensor(self.apply_image_padding(tensor2pil(image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=True)), )
+        padding = self.apply_image_padding(tensor2pil(image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=True)
+        return ( pil2tensor(padding[0]), pil2tensor(padding[1]) )
         
     def apply_image_padding(self, image, left_pad=100, right_pad=100, top_pad=100, bottom_pad=100, feather_radius=50, second_pass=True):
         # Create a mask for the feathered edge
@@ -648,25 +722,36 @@ class WAS_Image_Padding:
         # Blur the mask to create a smooth gradient between the black shapes and the white background
         mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_radius))
 
-        # Create a second mask for the additional feathering pass
-        mask2 = Image.new('L', image.size, 255)
-        draw2 = ImageDraw.Draw(mask2)
-
-        # Draw black rectangles at each edge of the image with a smaller feather radius
-        feather_radius2 = int(feather_radius / 4)
-        draw2.rectangle((0, 0, feather_radius2*2, image.height), fill=0)
-        draw2.rectangle((image.width-feather_radius2*2, 0, image.width, image.height), fill=0)
-        draw2.rectangle((0, 0, image.width, feather_radius2*2), fill=0)
-        draw2.rectangle((0, image.height-feather_radius2*2, image.width, image.height), fill=0)
-
-        # Do second pass
+        # Apply mask if second_pass is False, apply both masks if second_pass is True
         if second_pass:
-            # Blur the second mask to create a smooth gradient between the black shapes and the white background
+
+            # Create a second mask for the additional feathering pass
+            mask2 = Image.new('L', image.size, 255)
+            draw2 = ImageDraw.Draw(mask2)
+
+            # Draw black rectangles at each edge of the image with a smaller feather radius
+            feather_radius2 = int(feather_radius / 4)
+            draw2.rectangle((0, 0, feather_radius2*2, image.height), fill=0)
+            draw2.rectangle((image.width-feather_radius2*2, 0, image.width, image.height), fill=0)
+            draw2.rectangle((0, 0, image.width, feather_radius2*2), fill=0)
+            draw2.rectangle((0, image.height-feather_radius2*2, image.width, image.height), fill=0)
+
+            # Blur the mask to create a smooth gradient between the black shapes and the white background
             mask2 = mask2.filter(ImageFilter.GaussianBlur(radius=feather_radius2))
 
-        # Apply the second mask to the feathered image
-        feathered_im = Image.new('RGBA', image.size, (0, 0, 0, 0))
-        feathered_im.paste(image, (0, 0), mask2)
+            feathered_im = Image.new('RGBA', image.size, (0, 0, 0, 0))
+            feathered_im.paste(image, (0, 0), mask)
+            feathered_im.paste(image, (0, 0), mask)
+
+            # Apply the second mask to the feathered image
+            feathered_im.paste(image, (0, 0), mask2)
+            feathered_im.paste(image, (0, 0), mask2)
+            
+        else:
+        
+            # Apply the fist maskk
+            feathered_im = Image.new('RGBA', image.size, (0, 0, 0, 0))
+            feathered_im.paste(image, (0, 0), mask)
 
         # Calculate the new size of the image with padding added
         new_size = (feathered_im.width + left_pad + right_pad, feathered_im.height + top_pad + bottom_pad)
@@ -676,9 +761,16 @@ class WAS_Image_Padding:
 
         # Paste the feathered image onto the new image with the padding
         new_im.paste(feathered_im, (left_pad, top_pad))
+        
+        # Create Padding Mask
+        padding_mask = Image.new('L', new_size, 0)
 
+        # Create a mask where the transparent pixels have a gradient
+        gradient = [(int(255 * (1 - p[3] / 255)) if p[3] != 0 else 255) for p in new_im.getdata()]
+        padding_mask.putdata(gradient)
+        
         # Save the new image with alpha channel as a PNG file
-        return new_im
+        return ( new_im, padding_mask.convert('RGB') )
             
         
         
@@ -2033,6 +2125,7 @@ class WAS_Latent_Noise:
 class MiDaS_Depth_Approx:
     def __init__(self):
         self.midas_dir = os.path.join(os.getcwd()+'/ComfyUI', "models/midas")
+        self.midas_checkpoint = os.path.join(self.midas_dir, "checkpoints")
 
     @classmethod
     def INPUT_TYPES(s):
@@ -2040,7 +2133,7 @@ class MiDaS_Depth_Approx:
             "required": {
                 "image": ("IMAGE",),
                 "use_cpu": (["false", "true"],),
-                "midas_model": (["DPT_Large", "DPT_Hybrid", "DPT_Small"],),
+                "midas_model": (["DPT_Large_512", "DPT_Large", "DPT_Hybrid", "DPT_Small"],),
                 "invert_depth": (["false", "true"],),
             },
         }
@@ -2062,6 +2155,15 @@ class MiDaS_Depth_Approx:
         # Convert the input image tensor to a PIL Image
         i = 255. * image.cpu().numpy().squeeze()
         img = i
+        
+        # Deal with 512 support
+        if midas_model == 'DPT_Large_512':
+            midas_512 = os.path.join(self.midas_checkpoint, 'dpt_beit_large_512.pt')
+            if not os.path.exists(midas_512):
+                import urllib.request as req
+                # Midas 512 model
+                req('https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_512.pt', midas_512)
+                midas_model = midas_512
 
         print("\033[34mWAS NS:\033[0m Downloading and loading MiDaS Model...")
         torch.hub.set_dir(self.midas_dir)
