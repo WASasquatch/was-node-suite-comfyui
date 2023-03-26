@@ -572,7 +572,7 @@ class WAS_Image_Rescale:
     CATEGORY = "WAS Suite/Image"
 
     def image_rescale(self, image, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
-        return ( pil2tensor(self.apply_resize_image(tensor2pil(image), mode, factor, width, height, resample)), )
+        return ( pil2tensor(self.apply_resize_image(tensor2pil(image), mode, rescale_factor, resize_width, resize_height, resampling)), )
         
     def apply_resize_image(self, image, mode='scale', factor=None, width=None, height=None, resample='bicubic'):
 
