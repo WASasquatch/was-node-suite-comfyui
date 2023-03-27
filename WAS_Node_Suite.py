@@ -583,6 +583,7 @@ class WAS_Image_Rescale:
             "required": {
                 "image": ("IMAGE",),
                 "mode": (["rescale", "resize"],),
+                "supersample": (["true", "false"],),
                 "resampling": (["lanczos", "nearest", "bilinear", "bicubic"],),
                 "rescale_factor": ("FLOAT", {"default": 2, "min": 0.01, "max": 16.0, "step": 0.01}),
                 "resize_width": ("INT", {"default": 1024, "min": 1, "max": 48000, "step": 1}),
@@ -595,10 +596,10 @@ class WAS_Image_Rescale:
 
     CATEGORY = "WAS Suite/Image"
 
-    def image_rescale(self, image: torch.Tensor, mode="rescale", resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
-        return (pil2tensor(self.apply_resize_image(tensor2pil(image), mode, rescale_factor, resize_width, resize_height, resampling)), )
+    def image_rescale(self, image: torch.Tensor, mode="rescale", supersample='true', resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
+        return (pil2tensor(self.apply_resize_image(tensor2pil(image), mode, supersample, rescale_factor, resize_width, resize_height, resampling)), )
 
-    def apply_resize_image(self, image: Image.Image, mode='scale', factor: int = 2, width: int = 1024, height: int = 1024, resample='bicubic'):
+    def apply_resize_image(self, image: Image.Image, mode='scale', supersample='true', factor: int = 2, width: int = 1024, height: int = 1024, resample='bicubic'):
 
         # Get the current width and height of the image
         current_width, current_height = image.size
@@ -619,10 +620,14 @@ class WAS_Image_Rescale:
             'bicubic': 3,
             'lanczos': 1
         }
+        
+        # Apply supersample
+        if supersample == 'true':
+            image = image.resize((new_width * 8, new_height * 8), resample=Image.Resampling(resample_filters[resample]))
 
         # Resize the image using the given resampling filter
-        resized_image = image.resize(
-            (new_width, new_height), resample=Image.Resampling(resample_filters[resample]))
+        resized_image = image.resize((new_width, new_height), resample=Image.Resampling(resample_filters[resample]))
+        
         return resized_image
 
 
