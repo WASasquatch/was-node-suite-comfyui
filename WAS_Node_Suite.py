@@ -2244,7 +2244,6 @@ class WAS_Latent_Noise:
 class MiDaS_Depth_Approx:
     def __init__(self):
         self.midas_dir = os.path.join(os.getcwd()+'/ComfyUI', "models/midas")
-        self.midas_checkpoint = os.path.join(self.midas_dir, "checkpoints")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2252,7 +2251,7 @@ class MiDaS_Depth_Approx:
             "required": {
                 "image": ("IMAGE",),
                 "use_cpu": (["false", "true"],),
-                "midas_model": (["DPT_Large_512", "DPT_Large", "DPT_Hybrid", "DPT_Small"],),
+                "midas_model": (["DPT_Large", "DPT_Hybrid", "DPT_Small"],),
                 "invert_depth": (["false", "true"],),
             },
         }
@@ -2274,17 +2273,6 @@ class MiDaS_Depth_Approx:
         # Convert the input image tensor to a PIL Image
         i = 255. * image.cpu().numpy().squeeze()
         img = i
-
-        # Deal with 512 support
-        if midas_model == 'DPT_Large_512':
-            midas_512 = os.path.join(
-                self.midas_checkpoint, 'dpt_beit_large_512.pt')
-            if not os.path.exists(midas_512):
-                import urllib.request as req
-                # Midas 512 model
-                # TODO: Pretty sure this won't work.
-                # req('https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_512.pt', midas_512)
-                midas_model = midas_512
 
         print("\033[34mWAS NS:\033[0m Downloading and loading MiDaS Model...")
         torch.hub.set_dir(self.midas_dir)
