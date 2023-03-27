@@ -2049,9 +2049,8 @@ class WAS_Image_Save:
         # Setup custom path or default
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
-                print(
-                    f'\033[34mWAS NS\033[0m Error: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
-                    os.mkdir(output_path.strip())
+                print(f'\033[34mWAS NS\033[0m Error: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
+                os.mkdir(output_path.strip())
             else:
                 self.output_dir = os.path.normpath(output_path.strip())
 
