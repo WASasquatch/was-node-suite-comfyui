@@ -2157,7 +2157,7 @@ class WAS_Tensor_Batch_to_Image:
 class WAS_Image_To_Mask:
 
     def __init__(self):
-        pass
+        self.channels = {'alpha': 'A', 'red': 0, 'green': 1, 'blue': 2}
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2173,16 +2173,9 @@ class WAS_Image_To_Mask:
     FUNCTION = "image_to_mask"
 
     def image_to_mask(self, image, channel):
-
-        img = tensor2pil(image)
-
-        mask = None
-        if channel[:1] in img.getbands():
-            mask = np.array(i.getchannel(channel[:1])).astype(np.float32) / 255.0
-            mask = 1. - torch.from_numpy(mask)
-        else:
-            mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
-
+        i = tensor2pil(image)
+        mask = np.array(i.getchannel(self.channels[channel])).astype(np.float32) / 255.0
+        mask = 1. - torch.from_numpy(mask)
         return (mask, )
 
 
@@ -3299,7 +3292,7 @@ class WAS_Debug_Number_to_Console:
         return {
             "required": {
                 "number": ("NUMBER",),
-                "label": ("STRING", {"default": f'Debug Input', "multiline": False}),
+                "label": ("STRING", {"default": 'Debug to Console', "multiline": False}),
             }
         }
 
@@ -3311,12 +3304,10 @@ class WAS_Debug_Number_to_Console:
 
     def debug_to_console(self, number, label):
         if label.strip() != '':
-            print(
-                f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{debug_input}\n')
+            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{number}\n')
         else:
-            print(
-                f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{debug_input}\n')
-        return (debug_input, )
+            print(f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{number}\n')
+        return (number, )
         
     @classmethod
     def IS_CHANGED(cls, **kwargs):
