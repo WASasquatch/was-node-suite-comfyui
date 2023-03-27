@@ -591,7 +591,7 @@ class WAS_Image_Rescale:
         }
         
         # Resize the image using the given resampling filter
-        resized_image = image.resize((new_width, new_height), resample=Image.Resampling(resample_filters(resample)))
+        resized_image = image.resize((new_width, new_height), resample=Image.Resampling(resample_filters[resample]))
         
         return resized_image
 
@@ -2503,8 +2503,7 @@ class WAS_KSampler:
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
                     "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                    }
-                }
+                    }}
 
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "sample"
@@ -2512,7 +2511,7 @@ class WAS_KSampler:
     CATEGORY = "WAS Suite/Sampling"
 
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=1.0):
-        return nodes.common_ksampler(model, seed['seed'], steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
+        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
 
 # SEED NODE
         
@@ -2909,8 +2908,8 @@ class WAS_Random_Number:
         return {
                     "required": {
                         "number_type": (["integer","float","bool"],),
-                        "minimum": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
-                        "maximum": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                        "minimum": ("FLOAT", {"default": 0, "min": 0x8000000000000000, "max": 0xffffffffffffffff}),
+                        "maximum": ("FLOAT", {"default": 0, "min": 0x8000000000000000, "max": 0xffffffffffffffff}),
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     }
                 }
@@ -2991,9 +2990,53 @@ class WAS_Number_To_Seed:
 
     CATEGORY = "WAS Suite/Constant"
 
-    def return_constant_number(self, number):
+    def number_to_seed(self, number):
         return ( {"seed":number,}, )
 
+
+# NUMBER TO INT
+
+class WAS_Number_To_Int:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number": ("NUMBER",),
+                    }
+                }
+                
+    RETURN_TYPES = ("INT",)
+    FUNCTION = "number_to_int"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_constant_int(self, number):
+        return ( int(number), )
+
+# NUMBER TO FLOAT
+
+class WAS_Number_To_Float:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number": ("NUMBER",),
+                    }
+                }
+                
+    RETURN_TYPES = ("FLOAT",)
+    FUNCTION = "number_to_float"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_constant_float(self, number):
+        return ( float(number), )
         
         
       
@@ -3159,6 +3202,8 @@ NODE_CLASS_MAPPINGS = {
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Number Operation": WAS_Number_Operation,
+    "Number to Float": WAS_Number_To_Float,
+    "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
