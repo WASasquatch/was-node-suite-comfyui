@@ -621,9 +621,7 @@ class WAS_Image_Rescale:
         }
 
         # Resize the image using the given resampling filter
-        resized_image = image.resize(
-            (new_width, new_height), resample=Image.Resampling(resample_filters[resample]))
-
+        resized_image = image.resize((new_width, new_height), resample=Image.Resampling(resample_filters[resample]))
         return resized_image
 
 
@@ -989,6 +987,47 @@ class WAS_Image_Remove_Color:
             Image.new('RGB', image.size, rep_color), image, mask_image)
 
         return result_image
+        
+        
+        
+# IMAGE REMOVE BACKGROUND
+        
+class WAS_Remove_Background:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode": (["background", "foreground"],),
+                "threshold": ("INT", {"default": 127, "min": 0, "max": 255, "step": 1}),
+                "threshold_tolerance": ("INT", {"default": 2, "min": 1, "max": 24, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_remove_background"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_remove_background(self, image, mode='background', threshold=127, threshold_tolerance=2):
+        return ( pil2tensor(self.remove_background(tensor2pil(image), mode, threshold, threshold_tolerance)), )
+
+    def remove_background(self, image, mode, threshold, threshold_tolerance):
+        grayscale_image = image.convert('L')
+        if mode == 'background':
+            grayscale_image = ImageOps.invert(grayscale_image)
+            threshold = 255 - threshold  # adjust the threshold for "background" mode
+        blurred_image = grayscale_image.filter(ImageFilter.GaussianBlur(radius=threshold_tolerance))
+        binary_image = blurred_image.point(lambda x: 0 if x < threshold else 255, '1')
+        mask = binary_image.convert('L')
+        inverted_mask = ImageOps.invert(mask)
+        transparent_image = image.copy()
+        transparent_image.putalpha(inverted_mask)
+        
+        return transparent_image 
 
 
 # IMAGE BLEND MASK NODE
@@ -2552,18 +2591,18 @@ class WAS_KSampler:
     @classmethod
     def INPUT_TYPES(cls):
         return {"required":
-                {"model": ("MODEL",),
-                 "seed": ("SEED",),
-                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
-                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
-                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                 "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
-                 "positive": ("CONDITIONING", ),
-                 "negative": ("CONDITIONING", ),
-                 "latent_image": ("LATENT", ),
-                 "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                 }
-                }
+
+                    {"model": ("MODEL",),
+                    "seed": ("SEED",),
+                    "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                    "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
+                    "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                    "positive": ("CONDITIONING", ),
+                    "negative": ("CONDITIONING", ),
+                    "latent_image": ("LATENT", ),
+                    "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    }}
 
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "sample"
@@ -2571,7 +2610,7 @@ class WAS_KSampler:
     CATEGORY = "WAS Suite/Sampling"
 
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=1.0):
-        return nodes.common_ksampler(model, seed['seed'], steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
+        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
 
 # SEED NODE
 
@@ -2972,13 +3011,13 @@ class WAS_Random_Number:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
-                "number_type": (["integer", "float", "bool"],),
-                "minimum": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
-                "maximum": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-            }
-        }
+                    "required": {
+                        "number_type": (["integer","float","bool"],),
+                        "minimum": ("FLOAT", {"default": 0, "min": 0x8000000000000000, "max": 0xffffffffffffffff}),
+                        "maximum": ("FLOAT", {"default": 0, "min": 0x8000000000000000, "max": 0xffffffffffffffff}),
+                        "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    }
+                }
 
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "return_randm_number"
@@ -3056,10 +3095,55 @@ class WAS_Number_To_Seed:
 
     CATEGORY = "WAS Suite/Constant"
 
-    def return_constant_number(self, number):
-        return ({"seed": number, }, )
+
+    def number_to_seed(self, number):
+        return ( {"seed":number,}, )
 
 
+# NUMBER TO INT
+
+class WAS_Number_To_Int:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number": ("NUMBER",),
+                    }
+                }
+                
+    RETURN_TYPES = ("INT",)
+    FUNCTION = "number_to_int"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_constant_int(self, number):
+        return ( int(number), )
+
+# NUMBER TO FLOAT
+
+class WAS_Number_To_Float:
+    def __init__(s):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                    "required": {
+                        "number": ("NUMBER",),
+                    }
+                }
+                
+    RETURN_TYPES = ("FLOAT",)
+    FUNCTION = "number_to_float"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def return_constant_float(self, number):
+        return ( float(number), )
+        
 # NUMBER OPERATIONS
 
 class WAS_Number_Operation:
@@ -3200,6 +3284,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Mix RGB Channels": WAS_Image_RGB_Merge,
     "Image Nova Filter": WAS_Image_Nova_Filter,
     "Image Padding": WAS_Image_Padding,
+    "Image Remove Background (Alpha)": WAS_Remove_Background,
     "Image Remove Color": WAS_Image_Remove_Color,
     "Image Resize": WAS_Image_Rescale,
     "Image Rotate": WAS_Image_Rotate,
@@ -3219,6 +3304,8 @@ NODE_CLASS_MAPPINGS = {
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Number Operation": WAS_Number_Operation,
+    "Number to Float": WAS_Number_To_Float,
+    "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
