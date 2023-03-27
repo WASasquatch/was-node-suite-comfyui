@@ -2177,14 +2177,11 @@ class WAS_Image_To_Mask:
         img = tensor2pil(image)
 
         mask = None
-        c = channel[0].upper()
-        if c in img.getbands():
-            mask = np.array(img.getchannel(c)).astype(np.float32) / 255.0
-            mask = torch.from_numpy(mask)
-            if c == 'A':
-                mask = 1. - mask
+        if channel[:1] in img.getbands():
+            mask = np.array(i.getchannel(channel[:1])).astype(np.float32) / 255.0
+            mask = 1. - torch.from_numpy(mask)
         else:
-            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+            mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
 
         return (mask, )
 
@@ -3003,8 +3000,8 @@ class WAS_Random_Number:
         return {
             "required": {
                 "number_type": (["integer", "float", "bool"],),
-                "minimum": ("FLOAT", {"default": 0, "min": 0x8000000000000000, "max": 0xffffffffffffffff}),
-                "maximum": ("FLOAT", {"default": 0, "min": 0x8000000000000000, "max": 0xffffffffffffffff}),
+                "minimum": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
+                "maximum": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
@@ -3045,7 +3042,7 @@ class WAS_Constant_Number:
         return {
             "required": {
                 "number_type": (["integer", "float", "bool"],),
-                "number": ("FLOAT", {"default": 0, "min": 0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                "number": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
             }
         }
 
@@ -3111,8 +3108,9 @@ class WAS_Number_To_Int:
     def return_constant_int(self, number):
         return (int(number), )
 
-# NUMBER TO FLOAT
 
+
+# NUMBER TO FLOAT
 
 class WAS_Number_To_Float:
     def __init__(self):
@@ -3133,6 +3131,75 @@ class WAS_Number_To_Float:
 
     def return_constant_float(self, number):
         return (float(number), )
+
+
+
+# INT TO NUMBER
+
+class WAS_Int_To_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "int_input": ("INT",),
+            }
+        }
+
+    RETURN_TYPES = ("INT",)
+    FUNCTION = "int_to_number"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def int_to_number(self, int_input):
+        return (int_input, )
+
+
+
+# NUMBER TO FLOAT
+
+class WAS_Float_To_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "float_input": ("FLOAT",),
+            }
+        }
+
+    RETURN_TYPES = ("FLOAT",)
+    FUNCTION = "float_to_number"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def float_to_number(self, float_input):
+        return ( float_input, )
+
+
+# NUMBER PI
+
+class WAS_Number_PI:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {}
+        }
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "number_pi"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def number_pi(self):
+        return (math.pi, )
 
 # NUMBER OPERATIONS
 
@@ -3223,7 +3290,7 @@ class WAS_Input_Switch:
 # DEBUG INPUT TO CONSOLE
 
 
-class WAS_Debug_to_Console:
+class WAS_Debug_Number_to_Console:
     def __init__(self):
         pass
 
@@ -3231,18 +3298,18 @@ class WAS_Debug_to_Console:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "debug_input": ("*",),
+                "number": ("NUMBER",),
                 "label": ("STRING", {"default": f'Debug Input', "multiline": False}),
             }
         }
 
-    RETURN_TYPES = ("*",)
+    RETURN_TYPES = ("NUMBER",)
     OUTPUT_NODE = True
     FUNCTION = "debug_to_console"
 
     CATEGORY = "WAS Suite/Debug"
 
-    def debug_to_console(self, label, debug_input=None):
+    def debug_to_console(self, number, label):
         if label.strip() != '':
             print(
                 f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{debug_input}\n')
@@ -3250,13 +3317,18 @@ class WAS_Debug_to_Console:
             print(
                 f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{debug_input}\n')
         return (debug_input, )
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
     "Constant Number": WAS_Constant_Number,
-    "Debug to Console": WAS_Debug_to_Console,
+    "Debug Number to Console": WAS_Debug_Number_to_Console,
+    "Float to Number": WAS_Float_To_Number,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
     "Image Blend": WAS_Image_Blend,
@@ -3287,6 +3359,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Transpose": WAS_Image_Transpose,
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
+    "Int to Number": WAS_Int_To_Number,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
@@ -3296,6 +3369,7 @@ NODE_CLASS_MAPPINGS = {
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Number Operation": WAS_Number_Operation,
     "Number to Float": WAS_Number_To_Float,
+    "Number PI": WAS_Number_PI,
     "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
     "Random Number": WAS_Random_Number,
