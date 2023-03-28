@@ -22,7 +22,6 @@ from urllib.request import urlopen
 import comfy.samplers
 import comfy.sd
 import comfy.utils
-import cv2
 import glob
 import hashlib
 import json
@@ -108,37 +107,197 @@ class WASDatabase:
     """
     def __init__(self, filepath):
         self.filepath = filepath
-        with open(filepath, 'r+') as f:
-             self.data = json.load(f)
-    
+        try:
+            with open(filepath, 'r') as f:
+                 self.data = json.load(f)
+        except FileNotFoundError:
+            self.data = {}
+
     def insert(self, category, key, value):
-        if not self.data.__contains__(category):
+        if category not in self.data:
             self.data[category] = {}
         self.data[category][key] = value
         self._save()
 
     def update(self, category, key, value):
-        if self.data.__contains__(category) and self.data[category].__contains__(key):
-            self.data[category].update({key: value})
-        self._save()
+        if category in self.data and key in self.data[category]:
+            self.data[category][key] = value
+            self._save()
         
     def get(self, category, key):
-        if category in self.data:
-            return self.data[category].get(key, None)
-        else:
-            return None
+        return self.data.get(category, {}).get(key, None)
 
     def delete(self, category, key):
-        if self.data.__contains__(category) and self.data[category].__contains__(key):
+        if category in self.data and key in self.data[category]:
             del self.data[category][key]
             self._save()
 
     def _save(self):
-        with open(self.filepath, 'w+') as f:
-            json.dump(self.data, f)
+        try:
+            with open(self.filepath, 'w') as f:
+                json.dump(self.data, f)
+        except FileNotFoundError:
+            print(f"\033[34mWAS Node Suite\033[0m Warning: Cannot save database to file '{self.filepath}'."
+                  " Storing the data in the object instead. Does the folder and node file have write permissions?")
 
 # Initialize the settings database
 WDB = WASDatabase(WAS_DATABASE)
+
+class WAS_Filter_Class():
+
+    # Sparkle - Fairy Tale Filter
+
+    def sparkle(self, image):
+
+        import pilgram
+
+        image = image.convert('RGBA')
+        contrast_enhancer = ImageEnhance.Contrast(image)
+        image = contrast_enhancer.enhance(1.25)
+        saturation_enhancer = ImageEnhance.Color(image)
+        image = saturation_enhancer.enhance(1.5)
+
+        bloom = image.filter(ImageFilter.GaussianBlur(radius=20))
+        bloom = ImageEnhance.Brightness(bloom).enhance(1.2)
+        bloom.putalpha(128)
+        bloom = bloom.convert(image.mode)
+        image = Image.alpha_composite(image, bloom)
+
+        width, height = image.size
+        # Particls A
+        particles = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(particles)
+        for i in range(5000):
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+            draw.point((x, y), fill=(r, g, b, 255))
+        particles = particles.filter(ImageFilter.GaussianBlur(radius=1))
+        particles.putalpha(128)
+
+        particles2 = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(particles2)
+        for i in range(5000):
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+            draw.point((x, y), fill=(r, g, b, 255))
+        particles2 = particles2.filter(ImageFilter.GaussianBlur(radius=1))
+        particles2.putalpha(128)
+
+        image = pilgram.css.blending.color_dodge(image, particles)
+        image = pilgram.css.blending.lighten(image, particles2)
+
+        return image
+            
+    def retro_digital_filter(self, image, amplitude=5, line_width=2):
+        
+        # Convert the PIL image to a numpy array
+        im = np.array(image)
+            
+        # Create a sine wave with the given amplitude
+        x, y, z = im.shape
+        sine_wave = amplitude * np.sin(np.linspace(-np.pi, np.pi, y))
+        sine_wave = sine_wave.astype(int)
+            
+        # Create the left and right distortion matrices
+        left_distortion = np.zeros((x, y, z), dtype=np.uint8)
+        right_distortion = np.zeros((x, y, z), dtype=np.uint8)
+        for i in range(y):
+            left_distortion[:, i, :] = np.roll(im[:, i, :], -sine_wave[i], axis=0)
+            right_distortion[:, i, :] = np.roll(im[:, i, :], sine_wave[i], axis=0)
+            
+        # Combine the distorted images and add scan lines as a mask
+        distorted_image = np.maximum(left_distortion, right_distortion)
+        scan_lines = np.zeros((x, y), dtype=np.float32)
+        scan_lines[::line_width, :] = 1
+        scan_lines = np.minimum(scan_lines * 1.5, 1)  # Scale scan line values
+        scan_lines = np.tile(scan_lines[:, :, np.newaxis], (1, 1, z))  # Add channel dimension
+        distorted_image = np.where(scan_lines > 0, np.random.permutation(im), distorted_image)
+        distorted_image = np.roll(distorted_image, np.random.randint(0, y), axis=1)
+            
+        # Convert the numpy array back to a PIL image
+        distorted_image = Image.fromarray(distorted_image)
+            
+        return distorted_image
+
+    def signal_distortion_filter(self, image, offset_variance):
+        
+        # Convert the image to a numpy array for easy manipulation
+        img_array = np.array(image)
+            
+        # Generate random shift values for each row of the image
+        row_shifts = np.random.randint(-offset_variance, offset_variance + 1, size=img_array.shape[0])
+            
+        # Create an empty array to hold the distorted image
+        distorted_array = np.zeros_like(img_array)
+            
+        # Loop through each row of the image
+        for y in range(img_array.shape[0]):
+            # Determine the X-axis shift value for this row
+            x_shift = row_shifts[y]
+                
+            # Use modular function to determine where to shift
+            x_shift = x_shift + y % (offset_variance * 2) - offset_variance
+                
+            # Shift the pixels in this row by the X-axis shift value
+            distorted_array[y,:] = np.roll(img_array[y,:], x_shift, axis=0)
+            
+        # Convert the distorted array back to a PIL image
+        distorted_image = Image.fromarray(distorted_array)
+            
+        return distorted_image
+
+    def apply_vhs_x_distortion(self, image, offset_multiplier=10):
+        # Convert the PIL image to a NumPy array.
+        np_image = np.array(image)
+
+        # Generate random shift values for each row of the image
+        offset_variance = int(image.height / offset_multiplier)
+        row_shifts = np.random.randint(-offset_variance, offset_variance + 1, size=image.height)
+
+        # Create an empty array to hold the distorted image
+        distorted_array = np.zeros_like(np_image)
+
+        # Loop through each row of the image
+        for y in range(np_image.shape[0]):
+            # Determine the X-axis shift value for this row
+            x_shift = row_shifts[y]
+
+            # Use modular function to determine where to shift
+            x_shift = x_shift + y % (offset_variance * 2) - offset_variance
+
+            # Shift the pixels in this row by the X-axis shift value
+            distorted_array[y,:] = np.roll(np_image[y,:], x_shift, axis=0)
+
+        # Apply distortion and noise to the image using NumPy functions.
+        h, w, c = distorted_array.shape
+        x_scale = np.linspace(0, 1, w)
+        y_scale = np.linspace(0, 1, h)
+        x_idx = np.broadcast_to(x_scale, (h, w))
+        y_idx = np.broadcast_to(y_scale.reshape(h, 1), (h, w))
+        noise = np.random.rand(h, w, c) * 0.1
+        distortion = np.sin(x_idx * 50) * 0.5 + np.sin(y_idx * 50) * 0.5
+        distorted_array = distorted_array + distortion[:, :, np.newaxis] + noise
+
+        # Convert the distorted array back to a PIL image
+        distorted_image = Image.fromarray(np.uint8(distorted_array))
+        distorted_image = distorted_image.resize((image.width, image.height))
+
+        # Apply color enhancement to the original image.
+        image_enhance = ImageEnhance.Color(image)
+        image = image_enhance.enhance(0.5)
+
+        # Overlay the distorted image over the original image.
+        effect_image = ImageChops.overlay(image, distorted_image)
+        result_image = ImageChops.overlay(image, effect_image)
+        result_image = ImageChops.blend(image, result_image, 0.25)
+            
+        return result_image
 
 # INSTALLATION CLEANUP
 
@@ -324,7 +483,7 @@ class WAS_Image_Style_Filter:
         image = tensor2pil(image)
 
         # WAS Filters
-        WFilter = self.WAS_Filter_Class()
+        WFilter = WAS_Filter_Class()
 
         # Apply blending
         match style:
@@ -389,61 +548,6 @@ class WAS_Image_Style_Filter:
 
         return (torch.from_numpy(np.array(out_image).astype(np.float32) / 255.0).unsqueeze(0), )
 
-    # IN-HOUSE WAS FILTERS
-
-    # HDR Effect
-
-    class WAS_Filter_Class():
-
-        # Sparkle - Fairy Tale Filter
-
-        def sparkle(self, image):
-
-            import pilgram
-
-            image = image.convert('RGBA')
-            contrast_enhancer = ImageEnhance.Contrast(image)
-            image = contrast_enhancer.enhance(1.25)
-            saturation_enhancer = ImageEnhance.Color(image)
-            image = saturation_enhancer.enhance(1.5)
-
-            bloom = image.filter(ImageFilter.GaussianBlur(radius=20))
-            bloom = ImageEnhance.Brightness(bloom).enhance(1.2)
-            bloom.putalpha(128)
-            bloom = bloom.convert(image.mode)
-            image = Image.alpha_composite(image, bloom)
-
-            width, height = image.size
-            # Particls A
-            particles = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            draw = ImageDraw.Draw(particles)
-            for i in range(5000):
-                x = random.randint(0, width)
-                y = random.randint(0, height)
-                r = random.randint(0, 255)
-                g = random.randint(0, 255)
-                b = random.randint(0, 255)
-                draw.point((x, y), fill=(r, g, b, 255))
-            particles = particles.filter(ImageFilter.GaussianBlur(radius=1))
-            particles.putalpha(128)
-
-            particles2 = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            draw = ImageDraw.Draw(particles2)
-            for i in range(5000):
-                x = random.randint(0, width)
-                y = random.randint(0, height)
-                r = random.randint(0, 255)
-                g = random.randint(0, 255)
-                b = random.randint(0, 255)
-                draw.point((x, y), fill=(r, g, b, 255))
-            particles2 = particles2.filter(ImageFilter.GaussianBlur(radius=1))
-            particles2.putalpha(128)
-
-            image = pilgram.css.blending.color_dodge(image, particles)
-            image = pilgram.css.blending.lighten(image, particles2)
-            # image = Image.alpha_composite(image, particles)
-
-            return image
 
 
 # COMBINE NODE
@@ -2034,7 +2138,7 @@ class WAS_Image_Save:
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "extension": (['png', 'jpeg', 'tiff', 'gif'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
-                "overwrite": (["false", "true"],),
+                "overwrite_mode": (["off", "batch_overwrite", "prefix_as_filename"],),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -2048,7 +2152,7 @@ class WAS_Image_Save:
 
     CATEGORY = "WAS Suite/IO"
 
-    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite='false'):
+    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='prefix_as_filename'):
         def map_filename(filename):
             prefix_len = len(filename_prefix)
             prefix = filename[:prefix_len + 1]
@@ -2063,12 +2167,15 @@ class WAS_Image_Save:
             if not os.path.exists(output_path.strip()):
                 print(f'\033[34mWAS NS\033[0m Warning: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
                 os.mkdir(output_path.strip())
-                self.output_dir = os.path.normpath(output_path.strip())
-            else:
-                self.output_dir = os.path.normpath(output_path.strip())
+            self.output_dir = os.path.normpath(output_path.strip())
 
         # Define counter for files found
-        if overwrite == 'false':
+        if overwrite_mode == 'batch_overwrite':
+            if not os.path.exists(self.output_dir):
+                os.mkdir(self.output_dir)
+            counter = 1
+            existing_files = set(os.listdir(self.output_dir))
+        else:
             try:
                 counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
                               [-1] == "_", map(map_filename, os.listdir(self.output_dir))))[0] + 1
@@ -2088,13 +2195,21 @@ class WAS_Image_Save:
             if extra_pnginfo is not None:
                 for x in extra_pnginfo:
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
-            
-            # Setup filename
-            if overwrite == 'true':
-                file = f"{filename_prefix}.{extension}"
-            else:
-                file = f"{filename_prefix}_{counter:05}_.{extension}"
                 
+            # Setup filename
+            if overwrite_mode == 'batch_overwrite':
+                file = f"{filename_prefix}_{counter:05}_.{extension}"
+                while file in existing_files:
+                    counter += 1
+                    file = f"{filename_prefix}_{counter:05}_.{extension}"
+                existing_files.add(file)
+            else:
+                file = f"{filename_prefix}.{extension}"
+                if overwrite_mode == 'off' and os.path.exists(os.path.join(self.output_dir, file)):
+                    counter += 1
+                    file = f"{filename_prefix}_{counter:05}_.{extension}"
+
+
             if extension == 'png':
                 img.save(os.path.join(self.output_dir, file),
                          pnginfo=metadata, optimize=True)
@@ -2109,7 +2224,7 @@ class WAS_Image_Save:
             else:
                 img.save(os.path.join(self.output_dir, file))
             paths.append(file)
-            if overwrite == 'false':
+            if overwrite_mode != 'batch_overwrite':
                 counter += 1
         return {"ui": {"images": paths}}
 
