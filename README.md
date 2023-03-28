@@ -43,7 +43,10 @@
     - KSampler (WAS): A sampler that accepts a seed as a node inpu
     - Load Text File
     - Load Batch Images
-      - Creates a counter in the desired batch folder to keep track of what image to output next. Be sure to set it to `0` or remove it if you want to start over. It will also restart once it hits the end of the image list, so set batches in ComfyUI menu to same number of images to do a whole batch. 
+      - Increment images in a folder, or fetch a single image out of a batch.
+      - Will reset it's place if the path, or pattern is changed.
+      - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
+        or things like `*.jpg` to select only JPEG images in the directory specified. 
     - Latent Noise Injection: Inject latent noise into a latent image
     - Latent Upscale by Factor: Upscale a latent image by a facto
     - MiDaS Depth Approximation: Produce a depth approximation of a single image input
