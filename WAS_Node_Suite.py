@@ -41,10 +41,15 @@ sys.path.append('..'+os.sep+'ComfyUI')
 
 
 # GLOBALS
+NODE_FILE = os.path.abspath(__file__)
 MIDAS_INSTALLED = False
-CUSTOM_NODES_DIR = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'
-WAS_SUITE_ROOT = ( CUSTOM_NODES_DIR if not os.path.exists(os.path.join(CUSTOM_NODES_DIR, 'was-node-suite-comfyui')) else os.path.join(CUSTOM_NODES_DIR, 'was-node-suite-comfyui') )
+CUSTOM_NODES_DIR = os.path.dirname(os.path.dirname(NODE_FILE))
+WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
+
+# WAS Suite Locations Debug
+print('\033[34mWAS Node Suite:\033[0m Running At:', NODE_FILE)
+print('\033[34mWAS Node Suite:\033[0m Running From:', WAS_SUITE_ROOT)
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
