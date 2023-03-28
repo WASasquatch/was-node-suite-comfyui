@@ -95,6 +95,8 @@ class WASDatabase:
             under the specified category.
         get(category, key): Retrieves the value associated with the specified
             key and category from the database.
+        update(category, key): Update a value associated with the specified
+            key and category from the database.
         delete(category, key): Deletes the key-value pair associated with the
             specified key and category from the database.
         _save(): Saves the current state of the database to the JSON file.
