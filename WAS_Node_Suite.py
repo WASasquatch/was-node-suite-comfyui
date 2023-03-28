@@ -104,7 +104,7 @@ class WASDatabase:
     def __init__(self, filepath):
         self.filepath = filepath
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r+') as f:
                 self.data = json.load(f)
         except FileNotFoundError:
             self.data = {}
@@ -132,7 +132,7 @@ class WASDatabase:
             self._save()
 
     def _save(self):
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, 'w+') as f:
             json.dump(self.data, f)
 
 # Initialize the settings database
