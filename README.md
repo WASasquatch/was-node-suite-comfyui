@@ -65,10 +65,30 @@
     - Text String: Write a single line text string value
     - Text to Conditioning: Convert a text string to conditioning.
 
-2. Installation
-    - Extract node archive to your /ComfyUI/custom_nodes/ folder
-    - Restart ComfyUI
+## Recommended Installation:
+If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
+
+  - Navigate to your `/ComfyUI/custom_nodes/` folder
+  - `git clone https://github.com/WASasquatch/was-node-suite-comfyui/`
+  - Start ComfyUI
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
+    
+## Alternate Installation:
+If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, and `WAS_Node_Suite.py` has write permissions.
+
+  - Download `WAS_Node_Suite.py`
+  - Move the file to your `/ComfyUI/custom_nodes/` folder
+  - Start, or Restart ComfyUI
+    - WAS Suite should uninstall legacy nodes automatically for you.
+    - Tools will be located in the WAS Suite menu.
+      
+### Dependencies:
+WAS Node Suite is designed to download dependencies on it's own as needed, but what it depends on can be installed manually before use to prevent any script issues. The dependencies which are not required by ComfyUI are as follows: 
+  - opencv
+  - scipy
+  - pilgram
+  - timm (for MiDaS)
+    - MiDaS Models (they will download automatically upon use and be stored in `/ComfyUI/models/midas/checkpoints/`, additional files may be installed by `PyTorch Hub`)
 
 *This version renames some nodes, as well as introduces new fields. Unfortunately ComfyUI doesn't handle these changes well, so you'll have to replace the dreaded "red nodes" manually.*
