@@ -103,11 +103,8 @@ class WASDatabase:
     """
     def __init__(self, filepath):
         self.filepath = filepath
-        try:
-            with open(filepath, 'r+') as f:
-                self.data = json.load(f)
-        except FileNotFoundError:
-            self.data = {}
+        with open(filepath, 'r+') as f:
+             self.data = json.load(f)
     
     def insert(self, category, key, value):
         if not self.data.__contains__(category):
