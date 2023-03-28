@@ -23,6 +23,7 @@ import comfy.samplers
 import comfy.sd
 import comfy.utils
 import cv2
+import glob
 import hashlib
 import json
 import nodes
@@ -42,7 +43,7 @@ sys.path.append('../ComfyUI')
 # GLOBALS
 MIDAS_INSTALLED = False
 CUSTOM_NODES_DIR = os.getcwd()+'/ComfyUI/custom_nodes'
-WAS_SUITE_ROOT = ( CUSTOM_NODES_DIR if not os.path.exists(os.path.join(CUSTOM_NODES_DIR, 'was-nodes-suite-comfyui')) else os.path.join(CUSTOM_NODES_DIR, 'was-nodes-suite-comfyui') )
+WAS_SUITE_ROOT = ( CUSTOM_NODES_DIR if not os.path.exists(os.path.join(CUSTOM_NODES_DIR, 'was-node-suite-comfyui')) else os.path.join(CUSTOM_NODES_DIR, 'was-node-suite-comfyui') )
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
@@ -107,12 +108,16 @@ class WASDatabase:
             self.data = {}
     
     def insert(self, category, key, value):
-        if category not in self.data:
+        if not self.data.__contains__(category):
             self.data[category] = {}
         self.data[category][key] = value
         self._save()
 
-    
+    def update(self, category, key, value):
+        if self.data.__contains__(category) and self.data[category].__contains__(key):
+            self.data[category].update({key: value})
+        self._save()
+        
     def get(self, category, key):
         if category in self.data:
             return self.data[category].get(key, None)
@@ -120,7 +125,7 @@ class WASDatabase:
             return None
 
     def delete(self, category, key):
-        if category in self.data and key in self.data[category]:
+        if self.data.__contains__(category) and self.data[category].__contains__(key):
             del self.data[category][key]
             self._save()
 
@@ -679,15 +684,16 @@ class WAS_Image_Rescale:
 class WAS_Load_Image_Batch:
     def __init__(self):
         pass
-
+            
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "mode": (["single_image", "incremental_image"],),
-                "folder_path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
-                "image_id": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
-                "counter_name": ("STRING", {"default": 'counter_batch.txt', "multiline": False}),
+                "index": ("INT", {"default": 0, "min": 0, "max": 150000, "step": 1}),
+                "label": ("STRING", {"default": 'Batch 001', "multiline": False}),
+                "path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
+                "pattern": ("STRING", {"default": '*', "multiline": False}),
             },
         }
 
@@ -696,13 +702,13 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, folder_path, image_id, mode="single_image", counter_name="counter_batch.txt") -> tuple[torch.Tensor] | tuple:
+    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001') -> tuple[torch.Tensor] | tuple:
 
-        if not os.path.exists(folder_path):
-            return ()
-        fl = self.BatchImageLoader(folder_path, counter_name)
+        if not os.path.exists(path):
+            return (None, )
+        fl = self.BatchImageLoader(path, label, pattern)
         if mode == 'single_image':
-            image = fl.get_image_by_id(image_id)
+            image = fl.get_image_by_id(index)
         else:
             image = fl.get_next_image()
         self.image = image
@@ -710,42 +716,44 @@ class WAS_Load_Image_Batch:
         return (pil2tensor(image), )
 
     class BatchImageLoader:
-        def __init__(self, directory_path, counter_file="current_image_index.txt"):
+        def __init__(self, directory_path, label, pattern):
+            self.WDB = WDB
             self.image_paths = []
-            self.counter_file = os.path.join(directory_path, counter_file)
-            self.load_images(directory_path)
+            self.load_images(directory_path, pattern)
             self.image_paths.sort()  # sort the image paths by name
+            stored_directory_path = self.WDB.get('Batch Paths', label)
+            stored_pattern = self.WDB.get('Batch Patterns', label)
+            if stored_directory_path != directory_path or stored_pattern != pattern:
+                self.index = 0
+                self.WDB.insert('Batch Counters', label, 0)
+                self.WDB.insert('Batch Paths', label, directory_path)
+                self.WDB.insert('Batch Patterns', label, pattern)
+            else:
+                self.index = self.WDB.get('Batch Counters', label)
+            self.label = label
 
-            try:
-                with open(self.counter_file, "r") as f:
-                    self.current_image_index = int(f.read().strip())
-            except FileNotFoundError:
-                self.current_image_index = 0
-                with open(self.counter_file, "w") as f:
-                    f.write(str(self.current_image_index))
-
-        def load_images(self, directory_path):
+        def load_images(self, directory_path, pattern):
             allowed_extensions = ('.jpeg', '.jpg', '.png',
                                   '.tiff', '.gif', '.bmp', '.webp')
-            for file_name in os.listdir(directory_path):
+            for file_name in glob.glob(os.path.join(directory_path, pattern), recursive=True):
                 if file_name.lower().endswith(allowed_extensions):
                     image_path = os.path.join(directory_path, file_name)
                     self.image_paths.append(image_path)
 
         def get_image_by_id(self, image_id):
             if image_id < 0 or image_id >= len(self.image_paths):
-                raise ValueError("Invalid image ID")
+                raise ValueError(f"\033[34mWAS NS\033[0m Error: Invalid image index `{image_id}`")
             return Image.open(self.image_paths[image_id])
 
         def get_next_image(self):
-            if self.current_image_index >= len(self.image_paths):
-                self.current_image_index = 0
-            image_path = self.image_paths[self.current_image_index]
-            self.current_image_index += 1
-            if self.current_image_index == len(self.image_paths):
-                self.current_image_index = 0
-            with open(self.counter_file, "w") as f:
-                f.write(str(self.current_image_index))
+            if self.index >= len(self.image_paths):
+                self.index = 0
+            image_path = self.image_paths[self.index]
+            self.index += 1
+            if self.index == len(self.image_paths):
+                self.index = 0
+            print(f'\033[34mWAS NS \033[33m{self.label}\033[0m Index:', self.index)
+            self.WDB.insert('Batch Counters', self.label, self.index)
             return Image.open(image_path)
 
     @classmethod
@@ -2049,7 +2057,7 @@ class WAS_Image_Save:
         # Setup custom path or default
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
-                print(f'\033[34mWAS NS\033[0m Error: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
+                print(f'\033[34mWAS NS\033[0m Warning: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
                 os.mkdir(output_path.strip())
             else:
                 self.output_dir = os.path.normpath(output_path.strip())
