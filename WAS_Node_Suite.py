@@ -43,7 +43,7 @@ sys.path.append('..'+os.sep+'ComfyUI')
 # GLOBALS
 NODE_FILE = os.path.abspath(__file__)
 MIDAS_INSTALLED = False
-CUSTOM_NODES_DIR = os.path.dirname(os.path.dirname(NODE_FILE))
+CUSTOM_NODES_DIR = os.path.dirname(os.path.dirname(NODE_FILE)) if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' else os.path.dirname(NODE_FILE)
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 
@@ -2034,6 +2034,7 @@ class WAS_Image_Save:
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "extension": (['png', 'jpeg', 'tiff', 'gif'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
+                "overwrite": (["false", "true"],),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -2047,7 +2048,7 @@ class WAS_Image_Save:
 
     CATEGORY = "WAS Suite/IO"
 
-    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None):
+    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite='false'):
         def map_filename(filename):
             prefix_len = len(filename_prefix)
             prefix = filename[:prefix_len + 1]
@@ -2062,18 +2063,20 @@ class WAS_Image_Save:
             if not os.path.exists(output_path.strip()):
                 print(f'\033[34mWAS NS\033[0m Warning: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
                 os.mkdir(output_path.strip())
+                self.output_dir = os.path.normpath(output_path.strip())
             else:
                 self.output_dir = os.path.normpath(output_path.strip())
 
         # Define counter for files found
-        try:
-            counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
-                          [-1] == "_", map(map_filename, os.listdir(self.output_dir))))[0] + 1
-        except ValueError:
-            counter = 1
-        except FileNotFoundError:
-            os.mkdir(self.output_dir)
-            counter = 1
+        if overwrite == 'false':
+            try:
+                counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
+                              [-1] == "_", map(map_filename, os.listdir(self.output_dir))))[0] + 1
+            except ValueError:
+                counter = 1
+            except FileNotFoundError:
+                os.mkdir(self.output_dir)
+                counter = 1
 
         paths = list()
         for image in images:
@@ -2085,7 +2088,13 @@ class WAS_Image_Save:
             if extra_pnginfo is not None:
                 for x in extra_pnginfo:
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
-            file = f"{filename_prefix}_{counter:05}_.{extension}"
+            
+            # Setup filename
+            if overwrite == 'true':
+                file = f"{filename_prefix}.{extension}"
+            else:
+                file = f"{filename_prefix}_{counter:05}_.{extension}"
+                
             if extension == 'png':
                 img.save(os.path.join(self.output_dir, file),
                          pnginfo=metadata, optimize=True)
@@ -2100,7 +2109,8 @@ class WAS_Image_Save:
             else:
                 img.save(os.path.join(self.output_dir, file))
             paths.append(file)
-            counter += 1
+            if overwrite == 'false':
+                counter += 1
         return {"ui": {"images": paths}}
 
 
