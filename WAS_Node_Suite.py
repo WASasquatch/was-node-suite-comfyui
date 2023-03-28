@@ -37,12 +37,12 @@ import time
 import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-sys.path.append('../ComfyUI')
+sys.path.append('..'+os.sep+'ComfyUI')
 
 
 # GLOBALS
 MIDAS_INSTALLED = False
-CUSTOM_NODES_DIR = os.getcwd()+'/ComfyUI/custom_nodes'
+CUSTOM_NODES_DIR = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'
 WAS_SUITE_ROOT = ( CUSTOM_NODES_DIR if not os.path.exists(os.path.join(CUSTOM_NODES_DIR, 'was-node-suite-comfyui')) else os.path.join(CUSTOM_NODES_DIR, 'was-node-suite-comfyui') )
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 
@@ -143,7 +143,7 @@ legacy_was_nodes = ['fDOF_WAS.py', 'Image_Blank_WAS.py', 'Image_Blend_WAS.py', '
                     'Image_Flip_WAS.py', 'Image_Nova_Filter_WAS.py', 'Image_Rotate_WAS.py', 'Image_Style_Filter_WAS.py', 'Latent_Noise_Injection_WAS.py', 'Latent_Upscale_WAS.py', 'MiDaS_Depth_Approx_WAS.py', 'NSP_CLIPTextEncoder.py', 'Samplers_WAS.py']
 legacy_was_nodes_found = []
 f_disp = False
-node_path_dir = os.getcwd()+'/ComfyUI/custom_nodes/'
+node_path_dir = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep
 for f in legacy_was_nodes:
     file = f'{node_path_dir}{f}'
     if os.path.exists(file):
@@ -1667,8 +1667,7 @@ class WAS_Canny_Filter:
     def install_opencv(self):
         if 'opencv-python' not in packages():
             print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
 
 
 # IMAGE EDGE DETECTION
@@ -2020,7 +2019,7 @@ class WAS_Image_RGB_Merge:
 
 class WAS_Image_Save:
     def __init__(self):
-        self.output_dir = os.path.join(os.getcwd()+'/ComfyUI', "output")
+        self.output_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', "output")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2105,7 +2104,7 @@ class WAS_Image_Save:
 class WAS_Load_Image:
 
     def __init__(self):
-        self.input_dir = os.path.join(os.getcwd()+'/ComfyUI', "input")
+        self.input_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', "input")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2289,7 +2288,7 @@ class WAS_Latent_Noise:
 
 class MiDaS_Depth_Approx:
     def __init__(self):
-        self.midas_dir = os.path.join(os.getcwd()+'/ComfyUI', "models/midas")
+        self.midas_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', 'models'+os.sep+'midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2388,7 +2387,7 @@ class MiDaS_Depth_Approx:
 
 class MiDaS_Background_Foreground_Removal:
     def __init__(self):
-        self.midas_dir = os.path.join(os.getcwd()+'/ComfyUI', "models/midas")
+        self.midas_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', 'models'+os.sep+'midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2582,10 +2581,9 @@ class WAS_NSP_CLIPTextEncoder:
     def nsp_encode(self, clip, text, noodle_key='__', seed=0):
 
         # Fetch the NSP Pantry
-        local_pantry = os.getcwd()+'/ComfyUI/custom_nodes/nsp_pantry.json'
+        local_pantry = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep+'nsp_pantry.json'
         if not os.path.exists(local_pantry):
-            response = urlopen(
-                'https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
+            response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
             tmp_pantry = json.loads(response.read())
             # Dump JSON locally
             pantry_serialized = json.dumps(tmp_pantry, indent=4)
@@ -2851,10 +2849,9 @@ class WAS_Text_Parse_NSP:
     def text_parse_nsp(self, text, noodle_key='__', seed=0):
 
         # Fetch the NSP Pantry
-        local_pantry = os.getcwd()+'/ComfyUI/custom_nodes/nsp_pantry.json'
+        local_pantry = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep+'nsp_pantry.json'
         if not os.path.exists(local_pantry):
-            response = urlopen(
-                'https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
+            response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
             tmp_pantry = json.loads(response.read())
             # Dump JSON locally
             pantry_serialized = json.dumps(tmp_pantry, indent=4)
