@@ -46,6 +46,20 @@ CUSTOM_NODES_DIR = os.path.dirname(os.path.dirname(NODE_FILE)) if os.path.dirnam
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 
+# SET CHMOD OF EXECUTING FILE
+
+# Get the current permissions of the file
+was_file_permissions = oct(os.stat(NODE_FILE).st_mode)[-3:]
+was_folder_permissions = oct(os.stat(WAS_SUITE_ROOT).st_mode)[-3:]
+
+# Ensure folder and file is writable
+if was_file_permissions[0] != 'w':
+    print(f'\033[34mWAS Node Suite:\033[0m {os.path.basename(NODE_FILE)}: Is not writable, changing permissions...')
+    os.chmod(NODE_FILE, 0o666)
+if was_folder_permissions[0] != 'w':
+    print(f'\033[34mWAS Node Suite:\033[0m {os.path.basename(WAS_SUITE_ROOT)}: Is not writable, changing permissions...')
+    os.chmod(WAS_SUITE_ROOT, 0o777)
+
 # WAS Suite Locations Debug
 print('\033[34mWAS Node Suite:\033[0m Running At:', NODE_FILE)
 print('\033[34mWAS Node Suite:\033[0m Running From:', WAS_SUITE_ROOT)
@@ -2138,7 +2152,7 @@ class WAS_Image_Save:
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "extension": (['png', 'jpeg', 'tiff', 'gif'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
-                "overwrite_mode": (["off", "batch_overwrite", "prefix_as_filename"],),
+                "overwrite_mode": (["false", "prefix_as_filename"],),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -2152,7 +2166,7 @@ class WAS_Image_Save:
 
     CATEGORY = "WAS Suite/IO"
 
-    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='prefix_as_filename'):
+    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false'):
         def map_filename(filename):
             prefix_len = len(filename_prefix)
             prefix = filename[:prefix_len + 1]
@@ -2169,21 +2183,15 @@ class WAS_Image_Save:
                 os.mkdir(output_path.strip())
             self.output_dir = os.path.normpath(output_path.strip())
 
-        # Define counter for files found
-        if overwrite_mode == 'batch_overwrite':
-            if not os.path.exists(self.output_dir):
-                os.mkdir(self.output_dir)
+        # Setup counter
+        try:
+            counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
+                            [-1] == "_", map(map_filename, os.listdir(self.output_dir))))[0] + 1
+        except ValueError:
             counter = 1
-            existing_files = set(os.listdir(self.output_dir))
-        else:
-            try:
-                counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
-                              [-1] == "_", map(map_filename, os.listdir(self.output_dir))))[0] + 1
-            except ValueError:
-                counter = 1
-            except FileNotFoundError:
-                os.mkdir(self.output_dir)
-                counter = 1
+        except FileNotFoundError:
+            os.mkdir(self.output_dir)
+            counter = 1
 
         paths = list()
         for image in images:
@@ -2196,19 +2204,14 @@ class WAS_Image_Save:
                 for x in extra_pnginfo:
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
                 
-            # Setup filename
-            if overwrite_mode == 'batch_overwrite':
-                file = f"{filename_prefix}_{counter:05}_.{extension}"
-                while file in existing_files:
-                    counter += 1
-                    file = f"{filename_prefix}_{counter:05}_.{extension}"
-                existing_files.add(file)
-            else:
-                file = f"{filename_prefix}.{extension}"
-                if overwrite_mode == 'off' and os.path.exists(os.path.join(self.output_dir, file)):
-                    counter += 1
-                    file = f"{filename_prefix}_{counter:05}_.{extension}"
 
+            if overwrite_mode == 'prefix_as_filename':
+                file = f"{filename_prefix}.{extension}"
+            else:
+                file = f"{filename_prefix}_{counter:05}_.{extension}"
+                if os.path.exists(os.path.join(self.output_dir, file)):
+                    counter += 1
+                    file = f"{filename_prefix}_{counter:05}_.{extension}"
 
             if extension == 'png':
                 img.save(os.path.join(self.output_dir, file),
@@ -2224,8 +2227,9 @@ class WAS_Image_Save:
             else:
                 img.save(os.path.join(self.output_dir, file))
             paths.append(file)
-            if overwrite_mode != 'batch_overwrite':
+            if overwrite_mode == 'false':
                 counter += 1
+                
         return {"ui": {"images": paths}}
 
 
