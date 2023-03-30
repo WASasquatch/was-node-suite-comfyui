@@ -361,54 +361,37 @@ class WAS_Filter_Class():
                 draw.line((0, y, size[0], y), fill=color)
 
         return img
-        
-    def gradient_map(self, image, gradient_map, reverse=False):
-        # Ensure that both images have the same size
-        if image.size != gradient_map.size:
-            gradient_map = gradient_map.resize(image.size)
 
+    
+    # Version 2 optimized based on Mark Setchell's ideas
+    def gradient_map(self, image, gradient_map, reverse=False):
+        
         # Reverse the image
         if reverse:
             gradient_map = gradient_map.transpose(Image.FLIP_LEFT_RIGHT)
+            
+        # Convert image to Numpy array and average RGB channels
+        na = np.array(image)
+        grey = np.mean(na, axis=2).astype(np.uint8)
 
-        # Convert the gradient map to a list of colors
-        gradient = list(gradient_map.getdata())
+        # Convert gradient map to Numpy array
+        cmap = np.array(gradient_map.convert('RGB'))
 
-        # Convert the image to grayscale
-        if image.mode == 'RGBA':
-            brightness = image.convert('LA')
-            brightness = brightness.convert('L')
-        else:
-            brightness = image.convert('L')
+        # Make output image, same height and width as grey image, but 3-channel RGB
+        result = np.zeros((*grey.shape, 3), dtype=np.uint8)
 
-        # Compute the intensity range
-        min_intensity = brightness.getextrema()[0]
-        max_intensity = brightness.getextrema()[1]
+        # Reshape grey to match the shape of result
+        grey_reshaped = grey.reshape(-1)
 
-        # Apply the gradient map to the brightness values
-        output_image = Image.new('RGB', image.size)
-        for y in range(image.size[1]):
-            for x in range(image.size[0]):
-                # Normalize the intensity value to the range [0, 1]
-                intensity = (brightness.getpixel((x, y)) - min_intensity) / (max_intensity - min_intensity - 1e-6)
+        # Take entries from RGB gradient map according to grayscale values in image
+        np.take(cmap.reshape(-1, 3), grey_reshaped, axis=0, out=result.reshape(-1, 3))
 
-                # Map the normalized intensity value to the range of indices in the gradient list
-                index = int(intensity * (len(gradient) - 1))
-                alpha = intensity * (len(gradient) - 1) % 1  # Fractional part of index
+        # Convert result to PIL image
+        result_image = Image.fromarray(result)
 
-                # Get the gradient colors for the current index using linear interpolation
-                low_color = gradient[index]
-                if index == len(gradient) - 1:
-                    high_color = gradient[-1]
-                else:
-                    high_color = gradient[index + 1]
-                gradient_color = [int(low_color[i] * (1 - alpha) + high_color[i] * alpha) for i in range(3)]
+        return result_image
 
-                # Assign the gradient color to the pixel
-                output_image.putpixel((x, y), tuple(gradient_color))
-
-        return output_image
-        
+            
     # Analyze Filters
         
     def black_white_levels(self, image):
