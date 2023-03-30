@@ -30,6 +30,8 @@
     - Image Film Grain: Apply film grain to a image
     - Image Filter Adjustments: Apply various image adjustments to a image
     - Image Flip: Flip a image horizontal, or vertical
+    - Image Gradient Map: Apply a gradient map to a image
+    - Image Generate Gradient: Generate a gradient map with desired stops and colors
     - Image High Pass Filter: Apply a high frequency pass to the image returning the details
     - Image Levels Adjustment: Adjust the levels of a image
     - Image Load: Load a *image* from any path on the system, or a url starting with `http`
