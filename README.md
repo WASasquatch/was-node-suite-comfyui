@@ -10,6 +10,10 @@
     - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
     - Constant Number
     - Debug to Console (Debug pretty much anything to the console window)
+    - Image Analyze
+      - Black White Levels
+      - RGB Levels
+        - Depends on `matplotlib`, will attempt to install on first run
     - Image Blank: Create a blank image in any colo
     - Image Blend by Mask: Blend two images by a mask
     - Image Blend: Blend two images by opacity
@@ -17,6 +21,11 @@
     - Image Bloom Filter: Apply a high-pass based bloom filter
     - Image Canny Filter: Apply a canny filter to a image
     - Image Chromatic Aberration: Apply chromatic aberration lens effect to a image like in sci-fi films, movie theaters, and video games
+    - Image Color Palette
+      - Generate a color palette based on the input image. 
+        - Depends on `scikit-learn`, will attempt to install on first run. 
+      - Supports color range of 8-256
+      - Utilizes font in `./res/` unless unavailable, then it will utilize internal better then nothing font. 
     - Image Edge Detection Filter: Detect edges in a image
     - Image Film Grain: Apply film grain to a image
     - Image Filter Adjustments: Apply various image adjustments to a image
@@ -26,6 +35,13 @@
     - Image Load: Load a *image* from any path on the system, or a url starting with `http`
     - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
     - Image Mix RGB Channels: Mix together RGB channels into a single iamge
+    - Image Monitor Effects Filter: Apply various monitor effects to a image
+      - Digital Distortion
+        - A digital breakup distortion effect
+      - Signal Distortion
+        - A analog signal distortion effect on vertical bands like a CRT monitor
+      - TV Distortion
+        - A TV scanline and bleed distortion effect
     - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
     - Image Remove Background (Alpha): Remove the background from a image by threshold and tolerance. 
     - Image Remove Color: Remove a color from a image and replace it with another
