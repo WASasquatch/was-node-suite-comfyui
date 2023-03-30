@@ -14,7 +14,7 @@
 # THE SOFTWARE.
 
 
-from PIL import Image, ImageFilter, ImageEnhance, ImageOps, ImageDraw, ImageChops
+from PIL import Image, ImageFilter, ImageEnhance, ImageOps, ImageDraw, ImageChops, ImageFont
 from PIL.PngImagePlugin import PngInfo
 from io import BytesIO
 from typing import Optional
@@ -45,20 +45,6 @@ MIDAS_INSTALLED = False
 CUSTOM_NODES_DIR = os.path.dirname(os.path.dirname(NODE_FILE)) if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' else os.path.dirname(NODE_FILE)
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
-
-# SET CHMOD OF EXECUTING FILE
-
-# Get the current permissions of the file
-was_file_permissions = oct(os.stat(NODE_FILE).st_mode)[-3:]
-was_folder_permissions = oct(os.stat(WAS_SUITE_ROOT).st_mode)[-3:]
-
-# Ensure folder and file is writable
-if was_file_permissions[0] != 'w':
-    print(f'\033[34mWAS Node Suite:\033[0m {os.path.basename(NODE_FILE)}: Is not writable, changing permissions...')
-    os.chmod(NODE_FILE, 0o666)
-if was_folder_permissions[0] != 'w':
-    print(f'\033[34mWAS Node Suite:\033[0m {os.path.basename(WAS_SUITE_ROOT)}: Is not writable, changing permissions...')
-    os.chmod(WAS_SUITE_ROOT, 0o777)
 
 # WAS Suite Locations Debug
 print('\033[34mWAS Node Suite:\033[0m Running At:', NODE_FILE)
@@ -159,6 +145,14 @@ WDB = WASDatabase(WAS_DATABASE)
 
 class WAS_Filter_Class():
 
+    def fig2img(self, plot):
+        import io
+        buf = io.BytesIO()
+        plot.savefig(buf)
+        buf.seek(0)
+        img = Image.open(buf)
+        return img
+
     # Sparkle - Fairy Tale Filter
 
     def sparkle(self, image):
@@ -208,70 +202,68 @@ class WAS_Filter_Class():
 
         return image
             
-    def retro_digital_filter(self, image, amplitude=5, line_width=2):
-        
+    def digital_distortion(self, image, amplitude=5, line_width=2):
         # Convert the PIL image to a numpy array
         im = np.array(image)
-            
+        
         # Create a sine wave with the given amplitude
         x, y, z = im.shape
         sine_wave = amplitude * np.sin(np.linspace(-np.pi, np.pi, y))
         sine_wave = sine_wave.astype(int)
-            
+        
         # Create the left and right distortion matrices
         left_distortion = np.zeros((x, y, z), dtype=np.uint8)
         right_distortion = np.zeros((x, y, z), dtype=np.uint8)
         for i in range(y):
             left_distortion[:, i, :] = np.roll(im[:, i, :], -sine_wave[i], axis=0)
             right_distortion[:, i, :] = np.roll(im[:, i, :], sine_wave[i], axis=0)
-            
+        
         # Combine the distorted images and add scan lines as a mask
         distorted_image = np.maximum(left_distortion, right_distortion)
         scan_lines = np.zeros((x, y), dtype=np.float32)
         scan_lines[::line_width, :] = 1
-        scan_lines = np.minimum(scan_lines * 1.5, 1)  # Scale scan line values
+        scan_lines = np.minimum(scan_lines * amplitude*50.0, 1)  # Scale scan line values
         scan_lines = np.tile(scan_lines[:, :, np.newaxis], (1, 1, z))  # Add channel dimension
         distorted_image = np.where(scan_lines > 0, np.random.permutation(im), distorted_image)
         distorted_image = np.roll(distorted_image, np.random.randint(0, y), axis=1)
-            
+        
         # Convert the numpy array back to a PIL image
         distorted_image = Image.fromarray(distorted_image)
-            
+        
         return distorted_image
 
-    def signal_distortion_filter(self, image, offset_variance):
-        
+    def signal_distortion(self, image, amplitude):
         # Convert the image to a numpy array for easy manipulation
         img_array = np.array(image)
-            
+        
         # Generate random shift values for each row of the image
-        row_shifts = np.random.randint(-offset_variance, offset_variance + 1, size=img_array.shape[0])
-            
+        row_shifts = np.random.randint(-amplitude, amplitude + 1, size=img_array.shape[0])
+        
         # Create an empty array to hold the distorted image
         distorted_array = np.zeros_like(img_array)
-            
+        
         # Loop through each row of the image
         for y in range(img_array.shape[0]):
             # Determine the X-axis shift value for this row
             x_shift = row_shifts[y]
-                
+            
             # Use modular function to determine where to shift
-            x_shift = x_shift + y % (offset_variance * 2) - offset_variance
-                
+            x_shift = x_shift + y % (amplitude * 2) - amplitude
+            
             # Shift the pixels in this row by the X-axis shift value
             distorted_array[y,:] = np.roll(img_array[y,:], x_shift, axis=0)
-            
+        
         # Convert the distorted array back to a PIL image
         distorted_image = Image.fromarray(distorted_array)
-            
+        
         return distorted_image
 
-    def apply_vhs_x_distortion(self, image, offset_multiplier=10):
+    def tv_vhs_distortion(self, image, amplitude=10):
         # Convert the PIL image to a NumPy array.
         np_image = np.array(image)
 
         # Generate random shift values for each row of the image
-        offset_variance = int(image.height / offset_multiplier)
+        offset_variance = int(image.height / amplitude)
         row_shifts = np.random.randint(-offset_variance, offset_variance + 1, size=image.height)
 
         # Create an empty array to hold the distorted image
@@ -310,8 +302,128 @@ class WAS_Filter_Class():
         effect_image = ImageChops.overlay(image, distorted_image)
         result_image = ImageChops.overlay(image, effect_image)
         result_image = ImageChops.blend(image, result_image, 0.25)
-            
+
         return result_image
+        
+    def black_white_levels(self, image):
+    
+        if 'matplotlib' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing matplotlib...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'matplotlib'])
+            
+        import matplotlib.pyplot as plt
+
+        # convert to grayscale
+        image = image.convert('L')
+
+        # Calculate the histogram of grayscale intensities
+        hist = image.histogram()
+
+        # Find the minimum and maximum grayscale intensity values
+        min_val = 0
+        max_val = 255
+        for i in range(256):
+            if hist[i] > 0:
+                min_val = i
+                break
+        for i in range(255, -1, -1):
+            if hist[i] > 0:
+                max_val = i
+                break
+
+        # Create a graph of the grayscale histogram
+        plt.figure(figsize=(16, 8))
+        plt.hist(image.getdata(), bins=256, range=(0, 256), color='black', alpha=0.7)
+        plt.xlim([0, 256])
+        plt.ylim([0, max(hist)])
+        plt.axvline(min_val, color='red', linestyle='dashed')
+        plt.axvline(max_val, color='red', linestyle='dashed')
+        plt.title('Black and White Levels')
+        plt.xlabel('Intensity')
+        plt.ylabel('Frequency')
+        
+        return self.fig2img(plt)
+
+    def channel_frequency(self, image):
+    
+        if 'matplotlib' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing matplotlib...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'matplotlib'])
+            
+        import matplotlib.pyplot as plt
+
+        # Split the image into its RGB channels
+        r, g, b = image.split()
+
+        # Calculate the frequency of each color in each channel
+        r_freq = r.histogram()
+        g_freq = g.histogram()
+        b_freq = b.histogram()
+
+        # Create a graph to hold the frequency maps
+        fig, axs = plt.subplots(1, 3, figsize=(16, 4))
+        axs[0].set_title('Red Channel')
+        axs[1].set_title('Green Channel')
+        axs[2].set_title('Blue Channel')
+
+        # Plot the frequency of each color in each channel
+        axs[0].plot(range(256), r_freq, color='red')
+        axs[1].plot(range(256), g_freq, color='green')
+        axs[2].plot(range(256), b_freq, color='blue')
+
+        # Set the axis limits and labels
+        for ax in axs:
+            ax.set_xlim([0, 255])
+            ax.set_xlabel('Color Intensity')
+            ax.set_ylabel('Frequency')
+
+        return self.fig2img(plt)
+        
+
+    def generate_palette(self, img, n_colors=16, cell_size=128, padding=10, font_path=None, font_size=15):
+
+        if 'scikit-learn' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing scikit-learn...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'scikit-learn'])
+
+        from sklearn.cluster import KMeans
+
+        # Resize the image to speed up processing
+        img = img.resize((img.width // 2, img.height // 2), resample=Image.BILINEAR)
+        # Convert the image to a numpy array
+        pixels = np.array(img)
+        # Flatten the pixel array to get a 2D array of RGB values
+        pixels = pixels.reshape((-1, 3))
+        # Initialize the KMeans model with the specified number of colors
+        kmeans = KMeans(n_clusters=n_colors, random_state=0, n_init='auto').fit(pixels)
+        # Get the cluster centers and convert them to integer values
+        cluster_centers = np.uint8(kmeans.cluster_centers_)
+        # Calculate the size of the palette image based on the number of colors
+        palette_size = (cell_size * int(np.sqrt(n_colors)), cell_size * int(np.sqrt(n_colors)))
+        # Create a square image with the cluster centers as the color palette
+        palette = Image.new('RGB', palette_size, color='white')
+        draw = ImageDraw.Draw(palette)
+        if font_path:
+            font = ImageFont.truetype(font_path, font_size)
+        else:
+            font = ImageFont.load_default()
+        stroke_width = 1
+        for i in range(n_colors):
+            color = tuple(cluster_centers[i])
+            x = i % int(np.sqrt(n_colors))
+            y = i // int(np.sqrt(n_colors))
+            # Calculate the position of the cell and text
+            cell_x = x * cell_size + padding
+            cell_y = y * cell_size + padding
+            text_x = cell_x + ( padding / 2 )
+            text_y = int(cell_y + cell_size / 1.2) - font.getsize('A')[1] - padding
+            # Draw the cell and text with padding
+            draw.rectangle((cell_x, cell_y, cell_x + cell_size - padding * 2, cell_y + cell_size - padding * 2), fill=color, outline='black', width=1)
+            draw.text((text_x+1, text_y+1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
+            draw.text((text_x, text_y), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='white')
+        # Resize the image back to the original size
+        palette = palette.resize((palette.width * 2, palette.height * 2), resample=Image.NEAREST)
+        return palette
 
 # INSTALLATION CLEANUP
 
@@ -698,6 +810,128 @@ class WAS_Image_Blend:
         return (pil2tensor(img_result), )
 
 
+
+# IMAGE MONITOR DISTORTION FILTER
+
+class WAS_Image_Monitor_Distortion_Filter:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode": (["Digital Distortion", "Signal Distortion", "TV Distortion"],),
+                "amplitude": ("INT", {"default": 5, "min": 1, "max": 255, "step": 1}),
+                "offset": ("INT", {"default": 10, "min": 1, "max": 255, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_monitor_filters"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_monitor_filters(self, image, mode="Digital Distortion", amplitude=5, offset=5):
+
+        # Convert images to PIL
+        image = tensor2pil(image)
+        
+        # WAS Filters
+        WFilter = WAS_Filter_Class()
+
+        # Apply image effect
+        match mode:
+            case 'Digital Distortion':
+                image = WFilter.digital_distortion(image, amplitude, offset)
+            case 'Signal Distortion':
+                image = WFilter.signal_distortion(image, amplitude)
+            case 'TV Distortion':
+                image = WFilter.tv_vhs_distortion(image, amplitude)  
+
+        return (pil2tensor(image), )
+
+
+# IMAGE GENERATE COLOR PALETTE
+
+class WAS_Image_Color_Palette:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "colors": ("INT", {"default": 16, "min": 8, "max": 256, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_generate_palette"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_generate_palette(self, image, colors=16):
+
+        # Convert images to PIL
+        image = tensor2pil(image)
+        
+        # WAS Filters
+        WFilter = WAS_Filter_Class()
+
+        res_dir = os.path.join(WAS_SUITE_ROOT, 'res')
+        font = os.path.join(res_dir, 'font.ttf')
+        
+        if not os.path.exists(font):
+            font = None
+
+        # Generate Color Palette
+        image = WFilter.generate_palette(image, colors, 128, 10, font, 15)
+
+        return (pil2tensor(image), )
+        
+        
+
+# IMAGE ANALYZE
+
+class WAS_Image_Analyze:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode": (["Black White Levels", "RGB Levels"],),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_analyze"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_analyze(self, image, mode='Black White Levels'):
+
+        # Convert images to PIL
+        image = tensor2pil(image)
+        
+        # WAS Filters
+        WFilter = WAS_Filter_Class()
+
+        # Analye Image
+        match mode:
+            case 'Black White Levels':
+                image = WFilter.black_white_levels(image)
+            case 'RGB Levels':
+                image = WFilter.channel_frequency(image)
+
+        return (pil2tensor(image), )
+
+
 # IMAGE TRANSPOSE
 
 class WAS_Image_Transpose:
@@ -715,6 +949,7 @@ class WAS_Image_Transpose:
                 "X": ("INT", {"default": 0, "min": -48000, "max": 48000, "step": 1}),
                 "Y": ("INT", {"default": 0, "min": -48000, "max": 48000, "step": 1}),
                 "rotation": ("INT", {"default": 0, "min": -360, "max": 360, "step": 1}),
+                "feathering": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 1}),
             },
         }
 
@@ -723,24 +958,37 @@ class WAS_Image_Transpose:
 
     CATEGORY = "WAS Suite/Image"
 
-    def image_transpose(self, image: torch.Tensor, image_overlay: torch.Tensor, width: int, height: int, X: int, Y: int, rotation: int):
-        return (pil2tensor(self.apply_transpose_image(tensor2pil(image), tensor2pil(image_overlay), (int(width), int(height)), (int(X), int(Y)), int(rotation))), )
+    def image_transpose(self, image: torch.Tensor, image_overlay: torch.Tensor, width: int, height: int, X: int, Y: int, rotation: int, feathering: int = 0):
+        return (pil2tensor(self.apply_transpose_image(tensor2pil(image), tensor2pil(image_overlay), (width, height), (X, Y), rotation, feathering)), )
 
-    def apply_transpose_image(self, base_image: Image.Image, transpose_image: Image.Image, size: tuple[int, int], location: tuple[int, int], rotation: int) -> Image.Image:
+    def apply_transpose_image(self, image_bg, image_element, size, loc, rotate=0, feathering=0):
+        
+        # Apply transformations to the element image
+        image_element = image_element.rotate(rotate, expand=True)
+        image_element = image_element.resize(size)
 
-        # Resize the base image to the desired size
-        transpose_image = transpose_image.resize(size)
+        # Create a mask for the image with the faded border
+        if feathering > 0:
+            mask = Image.new('L', image_element.size, 255)  # Initialize with 255 instead of 0
+            draw = ImageDraw.Draw(mask)
+            for i in range(feathering):
+                alpha_value = int(255 * (i + 1) / feathering)  # Invert the calculation for alpha value
+                draw.rectangle((i, i, image_element.size[0] - i, image_element.size[1] - i), fill=alpha_value)
+            alpha_mask = Image.merge('RGBA', (mask, mask, mask, mask))
+            image_element = Image.composite(image_element, Image.new('RGBA', image_element.size, (0, 0, 0, 0)), alpha_mask)
 
-        # Rotate the transposed image
-        transpose_image = transpose_image.rotate(rotation, expand=True)
+        # Create a new image of the same size as the base image with an alpha channel
+        new_image = Image.new('RGBA', image_bg.size, (0, 0, 0, 0))
+        new_image.paste(image_element, loc)
 
-        # Paste the transposed image onto the image
-        base_image.paste(transpose_image, location, transpose_image)
+        # Paste the new image onto the base image
+        image_bg = image_bg.convert('RGBA')
+        image_bg.paste(new_image, (0, 0), new_image)
 
-        # Return the resulting image
-        return base_image
-
-
+        return image_bg
+        
+        
+    
 # IMAGE RESCALE
 
 class WAS_Image_Rescale:
@@ -3506,6 +3754,7 @@ NODE_CLASS_MAPPINGS = {
     "Constant Number": WAS_Constant_Number,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Float to Number": WAS_Float_To_Number,
+    "Image Analyze": WAS_Image_Analyze,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
     "Image Blend": WAS_Image_Blend,
@@ -3513,6 +3762,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Bloom Filter": WAS_Image_Bloom_Filter,
     "Image Canny Filter": WAS_Canny_Filter,
     "Image Chromatic Aberration": WAS_Image_Chromatic_Aberration,
+    "Image Color Palette": WAS_Image_Color_Palette,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,
     "Image Filter Adjustments": WAS_Image_Filters,
@@ -3522,6 +3772,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Load": WAS_Load_Image,
     "Image Median Filter": WAS_Image_Median_Filter,
     "Image Mix RGB Channels": WAS_Image_RGB_Merge,
+    "Image Monitor Effects Filter": WAS_Image_Monitor_Distortion_Filter,
     "Image Nova Filter": WAS_Image_Nova_Filter,
     "Image Padding": WAS_Image_Padding,
     "Image Remove Background (Alpha)": WAS_Remove_Background,
