@@ -399,7 +399,7 @@ class WAS_Filter_Class():
         # Get the cluster centers and convert them to integer values
         cluster_centers = np.uint8(kmeans.cluster_centers_)
         # Calculate the size of the palette image based on the number of colors
-        palette_size = (cell_size * int(np.sqrt(n_colors)), cell_size * int(np.sqrt(n_colors)))
+        palette_size = (cell_size * (int(np.sqrt(n_colors))+1)//2*2, cell_size * (int(np.sqrt(n_colors))+1)//2*2)
         # Create a square image with the cluster centers as the color palette
         palette = Image.new('RGB', palette_size, color='white')
         draw = ImageDraw.Draw(palette)
@@ -887,6 +887,7 @@ class WAS_Image_Color_Palette:
 
         res_dir = os.path.join(WAS_SUITE_ROOT, 'res')
         font = os.path.join(res_dir, 'font.ttf')
+        print(font)
         
         if not os.path.exists(font):
             font = None
