@@ -51,6 +51,7 @@
     - Image Select Channel: Select a single channel of an RGB image
     - Image Select Color: Return the select image only on a black canvas
     - Image Style Filter: Style a image with Pilgram instragram-like filters
+      - Depends on `pilgram` module
     - Image Threshold: Return the desired threshold range of a image
     - Image Transpose
     - Image fDOF Filter: Apply a fake depth of field effect to an image
