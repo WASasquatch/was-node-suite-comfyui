@@ -145,6 +145,8 @@ WDB = WASDatabase(WAS_DATABASE)
 
 class WAS_Filter_Class():
 
+    # TOOLS
+
     def fig2img(self, plot):
         import io
         buf = io.BytesIO()
@@ -152,6 +154,8 @@ class WAS_Filter_Class():
         buf.seek(0)
         img = Image.open(buf)
         return img
+        
+    # FILTERS
 
     # Sparkle - Fairy Tale Filter
 
@@ -304,6 +308,108 @@ class WAS_Filter_Class():
         result_image = ImageChops.blend(image, result_image, 0.25)
 
         return result_image
+        
+    def gradient(self, size, mode='horizontal', colors=None, tolerance=0):
+        # Parse colors as JSON if it is a string
+        if isinstance(colors, str):
+            colors = json.loads(colors)
+        
+        colors = {int(k): [int(c) for c in v] for k, v in colors.items()}
+
+        # Set default colors if not provided
+        if colors is None:
+            colors = {0:[255,0,0],50:[0,255,0],100:[0,0,255]}
+
+        # Create a new image with a black background
+        img = Image.new('RGB', size, color=(0, 0, 0))
+
+        # Determine the color spectrum between the color stops
+        color_stop_positions = sorted(colors.keys())
+        color_stop_count = len(color_stop_positions)
+        color_stop_index = 0
+        spectrum = []
+        for i in range(256):
+            if color_stop_index < color_stop_count - 1 and i > int(color_stop_positions[color_stop_index + 1]):
+                color_stop_index += 1
+            start_pos = color_stop_positions[color_stop_index]
+            end_pos = color_stop_positions[color_stop_index + 1] if color_stop_index < color_stop_count - 1 else start_pos
+            start = colors[start_pos]
+            end = colors[end_pos]
+            if end_pos - start_pos == 0:
+                r, g, b = start
+            else:
+                r = round(start[0] + (i - start_pos) * (end[0] - start[0]) / (end_pos - start_pos))
+                g = round(start[1] + (i - start_pos) * (end[1] - start[1]) / (end_pos - start_pos))
+                b = round(start[2] + (i - start_pos) * (end[2] - start[2]) / (end_pos - start_pos))
+            spectrum.append((r, g, b))
+
+        # Draw the gradient
+        draw = ImageDraw.Draw(img)
+        if mode == 'horizontal':
+            for x in range(size[0]):
+                pos = int(x * 100 / (size[0] - 1))
+                color = spectrum[pos]
+                if tolerance > 0:
+                    color = tuple([round(c / tolerance) * tolerance for c in color])
+                draw.line((x, 0, x, size[1]), fill=color)
+        elif mode == 'vertical':
+            for y in range(size[1]):
+                pos = int(y * 100 / (size[1] - 1))
+                color = spectrum[pos]
+                if tolerance > 0:
+                    color = tuple([round(c / tolerance) * tolerance for c in color])
+                draw.line((0, y, size[0], y), fill=color)
+
+        return img
+        
+    def gradient_map(self, image, gradient_map, reverse=False):
+        # Ensure that both images have the same size
+        if image.size != gradient_map.size:
+            gradient_map = gradient_map.resize(image.size)
+
+        # Reverse the image
+        if reverse:
+            gradient_map = gradient_map.transpose(Image.FLIP_LEFT_RIGHT)
+
+        # Convert the gradient map to a list of colors
+        gradient = list(gradient_map.getdata())
+
+        # Convert the image to grayscale
+        if image.mode == 'RGBA':
+            brightness = image.convert('LA')
+            brightness = brightness.convert('L')
+        else:
+            brightness = image.convert('L')
+
+        # Compute the intensity range
+        min_intensity = brightness.getextrema()[0]
+        max_intensity = brightness.getextrema()[1]
+
+        # Apply the gradient map to the brightness values
+        output_image = Image.new('RGB', image.size)
+        for y in range(image.size[1]):
+            for x in range(image.size[0]):
+                # Normalize the intensity value to the range [0, 1]
+                intensity = (brightness.getpixel((x, y)) - min_intensity) / (max_intensity - min_intensity - 1e-6)
+
+                # Map the normalized intensity value to the range of indices in the gradient list
+                index = int(intensity * (len(gradient) - 1))
+                alpha = intensity * (len(gradient) - 1) % 1  # Fractional part of index
+
+                # Get the gradient colors for the current index using linear interpolation
+                low_color = gradient[index]
+                if index == len(gradient) - 1:
+                    high_color = gradient[-1]
+                else:
+                    high_color = gradient[index + 1]
+                gradient_color = [int(low_color[i] * (1 - alpha) + high_color[i] * alpha) for i in range(3)]
+
+                # Assign the gradient color to the pixel
+                output_image.putpixel((x, y), tuple(gradient_color))
+
+        return output_image
+        
+    # Analyze Filters
         
     def black_white_levels(self, image):
     
@@ -887,10 +993,11 @@ class WAS_Image_Color_Palette:
 
         res_dir = os.path.join(WAS_SUITE_ROOT, 'res')
         font = os.path.join(res_dir, 'font.ttf')
-        print(font)
         
         if not os.path.exists(font):
             font = None
+        else:
+            print(f'\033[34mWAS NS:\033[0m Found font at `{font}`')
 
         # Generate Color Palette
         image = WFilter.generate_palette(image, colors, 128, 10, font, 15)
@@ -933,6 +1040,86 @@ class WAS_Image_Analyze:
                 image = WFilter.black_white_levels(image)
             case 'RGB Levels':
                 image = WFilter.channel_frequency(image)
+
+        return (pil2tensor(image), )        
+        
+
+# IMAGE GENERATE GRADIENT
+
+class WAS_Image_Generate_Gradient:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        gradient_stops = '''0:255,0,0
+25:255,255,255
+50:0,255,0
+75:0,0,255'''
+        return {
+            "required": {
+                "width": ("INT", {"default":512, "max": 4096, "min": 64, "step":1}),
+                "height": ("INT", {"default":512, "max": 4096, "min": 64, "step":1}),
+                "direction": (["horizontal", "vertical"],),
+                "tolerance": ("INT", {"default":0, "max": 255, "min": 0, "step":1}),
+                "gradient_stops": ("STRING", {"default": gradient_stops, "multiline": True}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_gradient"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_gradient(self, gradient_stops, width=512, height=512, direction='horizontal', tolerance=0):
+    
+        import io
+    
+        # WAS Filters
+        WFilter = WAS_Filter_Class()
+
+        colors_dict = {}
+        stops = io.StringIO(gradient_stops.strip().replace(' ',''))
+        for stop in stops:
+            parts = stop.split(':')
+            colors = parts[1].replace('\n','').split(',')
+            colors_dict[parts[0].replace('\n','')] = colors
+        
+        image = WFilter.gradient((width, height), direction, colors_dict, tolerance)
+
+        return (pil2tensor(image), )        
+
+# IMAGE GRADIENT MAP
+
+class WAS_Image_Gradient_Map:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "gradient_image": ("IMAGE",),
+                "flip_left_right": (["false", "true"],),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_gradient_map"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_gradient_map(self, image, gradient_image, flip_left_right='false'):
+
+        # Convert images to PIL
+        image = tensor2pil(image)
+        gradient_image = tensor2pil(gradient_image)
+        
+        # WAS Filters
+        WFilter = WAS_Filter_Class()
+            
+        image = WFilter.gradient_map(image, gradient_image, (True if flip_left_right == 'true' else False))
 
         return (pil2tensor(image), )
 
@@ -3772,6 +3959,8 @@ NODE_CLASS_MAPPINGS = {
     "Image Film Grain": WAS_Film_Grain,
     "Image Filter Adjustments": WAS_Image_Filters,
     "Image Flip": WAS_Image_Flip,
+    "Image Gradient Map": WAS_Image_Gradient_Map,
+    "Image Generate Gradient": WAS_Image_Generate_Gradient,
     "Image High Pass Filter": WAS_Image_High_Pass_Filter,
     "Image Levels Adjustment": WAS_Image_Levels,
     "Image Load": WAS_Load_Image,
