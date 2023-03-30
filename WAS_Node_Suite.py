@@ -3604,6 +3604,28 @@ class WAS_Text_Load_From_File:
             text = file.read()
         return text
 
+# LOAD TEXT TO STRING
+
+class WAS_Text_To_String:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("ASCII",),
+            }
+        }
+
+    RETURN_TYPES = ("ASCII",)
+    FUNCTION = "text_to_string"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_to_string(self, text):
+        return (text, )
+
 
 #! NUMBERS
 
@@ -4007,6 +4029,7 @@ NODE_CLASS_MAPPINGS = {
     "Text String": WAS_Text_String,
     "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,
+    "Text to String": WAS_Text_To_String,
 }
 
 print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')
