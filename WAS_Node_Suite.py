@@ -3618,7 +3618,7 @@ class WAS_Text_To_String:
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = ("STRING",)
     FUNCTION = "text_to_string"
 
     CATEGORY = "WAS Suite/Text"
