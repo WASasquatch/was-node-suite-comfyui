@@ -75,6 +75,10 @@
  - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
  - Number Operation
  - Number to Seed
+ - Number to Float
+ - Number to Int
+ - Number to String
+ - Number to Text
  - Random Number
  - Save Text File: Save a text string to a file
  - Seed: Return a seed
