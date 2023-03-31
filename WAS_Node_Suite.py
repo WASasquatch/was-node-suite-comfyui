@@ -3808,7 +3808,7 @@ class WAS_Float_To_Number:
 
 # NUMBER TO STRING
 
-class WAS_Number_To_Number:
+class WAS_Number_To_String:
     def __init__(self):
         pass
 
@@ -4023,6 +4023,7 @@ NODE_CLASS_MAPPINGS = {
     "Number PI": WAS_Number_PI,
     "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
+    "Number to String": WAS_Number_To_String,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
     "Seed": WAS_Seed,
