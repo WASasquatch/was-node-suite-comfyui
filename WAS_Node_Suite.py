@@ -42,7 +42,10 @@ sys.path.append('..'+os.sep+'ComfyUI')
 # GLOBALS
 NODE_FILE = os.path.abspath(__file__)
 MIDAS_INSTALLED = False
-CUSTOM_NODES_DIR = os.path.dirname(os.path.dirname(NODE_FILE)) if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' else os.path.dirname(NODE_FILE)
+CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE)) 
+                    if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' 
+                    or os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui-main' 
+                    else os.path.dirname(NODE_FILE) )
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 
