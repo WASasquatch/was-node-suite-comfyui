@@ -9,83 +9,83 @@
 ### [Share Workflows](/workflows/README.md) to the `/workflows/` directory. Preferably embedded PNGs with workflows, buy JSON is OK too. [You can use this tool to add a workflow to a PNG file easily](https://colab.research.google.com/drive/1hQMjNUdhMQ3rw1Wcm3_umvmOMeS_K4s8?usp=sharing)
 
 
-1. Current Nodes:
-    - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
-    - Constant Number
-    - Debug to Console (Debug pretty much anything to the console window)
-    - Image Analyze
-      - Black White Levels
-      - RGB Levels
-        - Depends on `matplotlib`, will attempt to install on first run
-    - Image Blank: Create a blank image in any colo
-    - Image Blend by Mask: Blend two images by a mask
-    - Image Blend: Blend two images by opacity
-    - Image Blending Mode: Blend two images by various blending modes
-    - Image Bloom Filter: Apply a high-pass based bloom filter
-    - Image Canny Filter: Apply a canny filter to a image
-    - Image Chromatic Aberration: Apply chromatic aberration lens effect to a image like in sci-fi films, movie theaters, and video games
-    - Image Color Palette
-      - Generate a color palette based on the input image. 
-        - Depends on `scikit-learn`, will attempt to install on first run. 
-      - Supports color range of 8-256
-      - Utilizes font in `./res/` unless unavailable, then it will utilize internal better then nothing font. 
-    - Image Edge Detection Filter: Detect edges in a image
-    - Image Film Grain: Apply film grain to a image
-    - Image Filter Adjustments: Apply various image adjustments to a image
-    - Image Flip: Flip a image horizontal, or vertical
-    - Image Gradient Map: Apply a gradient map to a image
-    - Image Generate Gradient: Generate a gradient map with desired stops and colors
-    - Image High Pass Filter: Apply a high frequency pass to the image returning the details
-    - Image Levels Adjustment: Adjust the levels of a image
-    - Image Load: Load a *image* from any path on the system, or a url starting with `http`
-    - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
-    - Image Mix RGB Channels: Mix together RGB channels into a single iamge
-    - Image Monitor Effects Filter: Apply various monitor effects to a image
-      - Digital Distortion
-        - A digital breakup distortion effect
-      - Signal Distortion
-        - A analog signal distortion effect on vertical bands like a CRT monitor
-      - TV Distortion
-        - A TV scanline and bleed distortion effect
-    - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
-    - Image Remove Background (Alpha): Remove the background from a image by threshold and tolerance. 
-    - Image Remove Color: Remove a color from a image and replace it with another
-    - Image Resize
-    - Image Rotate: Rotate an image
-    - Image Save: A save image node with format support and path support. (Bug: Doesn't display image
-    - Image Select Channel: Select a single channel of an RGB image
-    - Image Select Color: Return the select image only on a black canvas
-    - Image Style Filter: Style a image with Pilgram instragram-like filters
-      - Depends on `pilgram` module
-    - Image Threshold: Return the desired threshold range of a image
-    - Image Transpose
-    - Image fDOF Filter: Apply a fake depth of field effect to an image
-    - Image to Latent Mask: Convert a image into a latent mask
-    - Input Switch  (Disable until `*` wildcard fix)
-    - KSampler (WAS): A sampler that accepts a seed as a node inpu
-    - Load Text File
-    - Load Batch Images
-      - Increment images in a folder, or fetch a single image out of a batch.
-      - Will reset it's place if the path, or pattern is changed.
-      - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
-        or things like `*.jpg` to select only JPEG images in the directory specified. 
-    - Latent Noise Injection: Inject latent noise into a latent image
-    - Latent Upscale by Factor: Upscale a latent image by a facto
-    - MiDaS Depth Approximation: Produce a depth approximation of a single image input
-    - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
-    - Number Operation
-    - Number to Seed
-    - Random Number
-    - Save Text File: Save a text string to a file
-    - Seed: Return a seed
-    - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
-    - Text Concatenate: Merge two strings
-    - Text Find and Replace: Find and replace a substring in a string
-    - Text Multiline: Write a multiline text strin
-    - Text Parse Noodle Soup Prompts: Parse NSP in a text input
-    - Text Random Line: Select a random line from a text input string
-    - Text String: Write a single line text string value
-    - Text to Conditioning: Convert a text string to conditioning.
+# Current Nodes:
+ - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
+ - Constant Number
+ - Debug to Console (Debug pretty much anything to the console window)
+ - Image Analyze
+   - Black White Levels
+   - RGB Levels
+     - Depends on `matplotlib`, will attempt to install on first run
+ - Image Blank: Create a blank image in any colo
+ - Image Blend by Mask: Blend two images by a mask
+ - Image Blend: Blend two images by opacity
+ - Image Blending Mode: Blend two images by various blending modes
+ - Image Bloom Filter: Apply a high-pass based bloom filter
+ - Image Canny Filter: Apply a canny filter to a image
+ - Image Chromatic Aberration: Apply chromatic aberration lens effect to a image like in sci-fi films, movie theaters, and video games
+ - Image Color Palette
+   - Generate a color palette based on the input image. 
+     - Depends on `scikit-learn`, will attempt to install on first run. 
+   - Supports color range of 8-256
+   - Utilizes font in `./res/` unless unavailable, then it will utilize internal better then nothing font. 
+ - Image Edge Detection Filter: Detect edges in a image
+ - Image Film Grain: Apply film grain to a image
+ - Image Filter Adjustments: Apply various image adjustments to a image
+ - Image Flip: Flip a image horizontal, or vertical
+ - Image Gradient Map: Apply a gradient map to a image
+ - Image Generate Gradient: Generate a gradient map with desired stops and colors
+ - Image High Pass Filter: Apply a high frequency pass to the image returning the details
+ - Image Levels Adjustment: Adjust the levels of a image
+ - Image Load: Load a *image* from any path on the system, or a url starting with `http`
+ - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
+ - Image Mix RGB Channels: Mix together RGB channels into a single iamge
+ - Image Monitor Effects Filter: Apply various monitor effects to a image
+   - Digital Distortion
+     - A digital breakup distortion effect
+   - Signal Distortion
+     - A analog signal distortion effect on vertical bands like a CRT monitor
+   - TV Distortion
+     - A TV scanline and bleed distortion effect
+ - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
+ - Image Remove Background (Alpha): Remove the background from a image by threshold and tolerance. 
+ - Image Remove Color: Remove a color from a image and replace it with another
+ - Image Resize
+ - Image Rotate: Rotate an image
+ - Image Save: A save image node with format support and path support. (Bug: Doesn't display image
+ - Image Select Channel: Select a single channel of an RGB image
+ - Image Select Color: Return the select image only on a black canvas
+ - Image Style Filter: Style a image with Pilgram instragram-like filters
+   - Depends on `pilgram` module
+ - Image Threshold: Return the desired threshold range of a image
+ - Image Transpose
+ - Image fDOF Filter: Apply a fake depth of field effect to an image
+ - Image to Latent Mask: Convert a image into a latent mask
+ - Input Switch  (Disable until `*` wildcard fix)
+ - KSampler (WAS): A sampler that accepts a seed as a node inpu
+ - Load Text File
+ - Load Batch Images
+   - Increment images in a folder, or fetch a single image out of a batch.
+   - Will reset it's place if the path, or pattern is changed.
+   - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
+     or things like `*.jpg` to select only JPEG images in the directory specified. 
+ - Latent Noise Injection: Inject latent noise into a latent image
+ - Latent Upscale by Factor: Upscale a latent image by a facto
+ - MiDaS Depth Approximation: Produce a depth approximation of a single image input
+ - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
+ - Number Operation
+ - Number to Seed
+ - Random Number
+ - Save Text File: Save a text string to a file
+ - Seed: Return a seed
+ - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
+ - Text Concatenate: Merge two strings
+ - Text Find and Replace: Find and replace a substring in a string
+ - Text Multiline: Write a multiline text strin
+ - Text Parse Noodle Soup Prompts: Parse NSP in a text input
+ - Text Random Line: Select a random line from a text input string
+ - Text String: Write a single line text string value
+ - Text to Conditioning: Convert a text string to conditioning.
 
 ## Recommended Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
