@@ -1,4 +1,9 @@
 # WAS Node Suite Workflows
 
-### To do
- - Actually add something... busy with nodes themselves. If you'd like to help feel free to PR workflows or example images of workflows/methods
+Load these image workflows into ComfyUI by simply loading them as if they were a .JSON file. 
+
+## Autumn Color Tone with Gradient Mapping
+<img src="Autumn_Gradient_Map_Example.png">
+
+## Several filters test workflow
+<img src="several_filters_test_workflow.png">
