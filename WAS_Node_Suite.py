@@ -3504,6 +3504,7 @@ class WAS_Text_Save:
         return string
 
 
+
 # TEXT TO CONDITIONIONG
 
 class WAS_Text_to_Conditioning:
@@ -3772,7 +3773,7 @@ class WAS_Int_To_Number:
             }
         }
 
-    RETURN_TYPES = ("INT",)
+    RETURN_TYPES = ("NUMBER",)
     FUNCTION = "int_to_number"
 
     CATEGORY = "WAS Suite/Constant"
@@ -3796,13 +3797,36 @@ class WAS_Float_To_Number:
             }
         }
 
-    RETURN_TYPES = ("FLOAT",)
+    RETURN_TYPES = ("NUMBER",)
     FUNCTION = "float_to_number"
 
     CATEGORY = "WAS Suite/Constant"
 
     def float_to_number(self, float_input):
         return ( float_input, )
+
+
+# NUMBER TO STRING
+
+class WAS_Number_To_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "number_to_string"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def number_to_string(self, number):
+        return ( str(number), )
 
 
 # NUMBER PI
