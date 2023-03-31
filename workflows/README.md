@@ -7,3 +7,6 @@ Load these image workflows into ComfyUI by simply loading them as if they were a
 
 ## Several filters test workflow
 <img src="several_filters_test_workflow.png">
+
+## Add Bloom to Image Workflow
+<img src="Bloom_Image_Workflow.png">
