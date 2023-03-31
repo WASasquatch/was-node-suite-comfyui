@@ -6,7 +6,7 @@
 
 ### A node suite for [ComfyUI](https://github.com/comfyanonymous/ComfyUI) with many new nodes, such as image processing, text processing, and more. 
 
-### [Share Workflows](/workflows/README.md) to the `/workflows/` directory. Preferably embedded PNGs with workflows, buy JSON is OK too. [You can use this tool to add a workflow to a PNG file easily](https://colab.research.google.com/drive/1hQMjNUdhMQ3rw1Wcm3_umvmOMeS_K4s8?usp=sharing)
+### [Share Workflows](/workflows/README.md) to the `/workflows/` directory. Preferably embedded PNGs with workflows, but JSON is OK too. [You can use this tool to add a workflow to a PNG file easily](https://colab.research.google.com/drive/1hQMjNUdhMQ3rw1Wcm3_umvmOMeS_K4s8?usp=sharing)
 
 
 # Current Nodes:
@@ -17,7 +17,7 @@
    - Black White Levels
    - RGB Levels
      - Depends on `matplotlib`, will attempt to install on first run
- - Image Blank: Create a blank image in any colo
+ - Image Blank: Create a blank image in any color
  - Image Blend by Mask: Blend two images by a mask
  - Image Blend: Blend two images by opacity
  - Image Blending Mode: Blend two images by various blending modes
