@@ -3490,7 +3490,7 @@ class WAS_Text_Save:
     # Save Text FileNotFoundError
     def writeTextFile(self, file, content):
         try:
-            with open(file, 'w') as f:
+            with open(file, 'w', encoding='utf-8') as f:
                 f.write(content)
         except OSError:
             print(
