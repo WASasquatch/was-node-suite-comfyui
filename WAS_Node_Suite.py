@@ -3828,6 +3828,28 @@ class WAS_Number_To_String:
     def number_to_string(self, number):
         return ( str(number), )
 
+# NUMBER TO STRING
+
+class WAS_Number_To_Text:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("ASCII",)
+    FUNCTION = "number_to_string"
+
+    CATEGORY = "WAS Suite/Constant"
+
+    def number_to_string(self, number):
+        return ( str(number), )
+
 
 # NUMBER PI
 
@@ -4024,6 +4046,7 @@ NODE_CLASS_MAPPINGS = {
     "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
     "Number to String": WAS_Number_To_String,
+    "Number to Text": WAS_Number_To_Text,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
     "Seed": WAS_Seed,

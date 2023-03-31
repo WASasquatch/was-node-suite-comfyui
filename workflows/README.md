@@ -10,3 +10,6 @@ Load these image workflows into ComfyUI by simply loading them as if they were a
 
 ## Bloom Image Workflow
 <img src="Bloom_Image_Workflow.png">
+
+## Wildcard Replacement Workflow
+<img src="Wildcard_Replacement_Example.png">
