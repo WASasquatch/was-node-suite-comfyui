@@ -3733,7 +3733,7 @@ class WAS_Number_To_Int:
 
     CATEGORY = "WAS Suite/Constant"
 
-    def return_constant_int(self, number):
+    def number_to_int(self, number):
         return (int(number), )
 
 
@@ -3757,7 +3757,7 @@ class WAS_Number_To_Float:
 
     CATEGORY = "WAS Suite/Constant"
 
-    def return_constant_float(self, number):
+    def number_to_float(self, number):
         return (float(number), )
 
 
@@ -3846,11 +3846,11 @@ class WAS_Number_To_Text:
         }
 
     RETURN_TYPES = ("ASCII",)
-    FUNCTION = "number_to_string"
+    FUNCTION = "number_to_text"
 
     CATEGORY = "WAS Suite/Constant"
 
-    def number_to_string(self, number):
+    def number_to_text(self, number):
         return ( str(number), )
 
 
