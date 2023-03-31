@@ -3497,11 +3497,11 @@ class WAS_Text_Save:
                 f'\033[34mWAS Node Suite\033[0m Error: Unable to save file `{file}`')
 
     # Replace a substring
-
-    def replace_substring(self, text, find, replace):
+    def replace_substring(self, string, substring, replacement):
         import re
-        text = re.sub(find, replace, text)
-        return text
+        pattern = re.compile(re.escape(substring))
+        string = pattern.sub(replacement, string)
+        return string
 
 
 # TEXT TO CONDITIONIONG
