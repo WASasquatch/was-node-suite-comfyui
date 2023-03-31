@@ -3480,7 +3480,7 @@ class WAS_Text_Save:
             '[time]': f'{round(time.time())}',
         }
         for k in tokens.keys():
-            text = self.replace_substring(text, k, tokens[k])
+            filename = self.replace_substring(filename, k, tokens[k])
 
         # Write text file
         self.writeTextFile(os.path.join(path, filename + '.txt'), text)
@@ -3490,7 +3490,7 @@ class WAS_Text_Save:
     # Save Text FileNotFoundError
     def writeTextFile(self, file, content):
         try:
-            with open(file, 'w', encoding='utf-8') as f:
+            with open(file, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(content)
         except OSError:
             print(
@@ -3583,7 +3583,7 @@ class WAS_Text_Load_From_File:
             print(
                 f'\033[34mWAS Node Suite\033[0m Error: The path `{path}` specified cannot be found.')
             return ''
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding="utf-8", newline='\n') as file:
             text = file.read()
         return text
 
