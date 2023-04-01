@@ -48,6 +48,8 @@
    - TV Distortion
      - A TV scanline and bleed distortion effect
  - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
+ - Image Perlin Noise Filter
+   - Create perlin noise with [pythonperlin](https://pypi.org/project/pythonperlin/) module. Trust me, better then my implementations that took minutes... 
  - Image Remove Background (Alpha): Remove the background from a image by threshold and tolerance. 
  - Image Remove Color: Remove a color from a image and replace it with another
  - Image Resize
@@ -61,6 +63,8 @@
  - Image Transpose
  - Image fDOF Filter: Apply a fake depth of field effect to an image
  - Image to Latent Mask: Convert a image into a latent mask
+ - Image Voronoi Noise Filter
+   - A custom implementation of the worley voronoi noise diagram
  - Input Switch  (Disable until `*` wildcard fix)
  - KSampler (WAS): A sampler that accepts a seed as a node inpu
  - Load Text File

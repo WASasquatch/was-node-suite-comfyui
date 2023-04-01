@@ -393,7 +393,85 @@ class WAS_Filter_Class():
         result_image = Image.fromarray(result)
 
         return result_image
+        
+        
+    # Perlin Noise (relies on perlin_noise package: https://github.com/salaxieb/perlin_noise/blob/master/perlin_noise/perlin_noise.py)
+    
+    def perlin_noise(self, width, height, shape, density, octaves, seed): 
 
+        if 'pythonperlin' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing pythonperlin...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pythonperlin'])
+            
+        from pythonperlin import perlin
+        
+        if seed > 4294967294:
+            seed = random.randint(0,4294967294)
+            print(f'\033[34mWAS NS:\033[0m Seed too large for perlin; rescaled to: {seed}')
+        
+        # Density range
+        min_density = 1
+        max_density = 100
+
+        # Map the density to a range of 0 to 1
+        density = int(10 ** (np.log10(min_density) + (1.0 - density) * (np.log10(max_density) - np.log10(min_density))))
+        
+        # Set grid shape for randomly seeded gradients
+        shape = (shape,shape)
+
+        # Calcualte shape and density
+        shape = (width // density, height // density)
+        density = min(width // shape[0], height // shape[1])
+
+        # Generate Noise
+        x = perlin(shape, dens=density, octaves=octaves, seed=seed)
+        
+        min_val, max_val = np.min(x), np.max(x)
+        data_scaled = (x - min_val) / (max_val - min_val) * 255
+        data_scaled = data_scaled.astype(np.uint8)
+        return Image.fromarray(data_scaled)
+        
+    # Worley Noise Generator
+        
+    class worley_noise:
+
+        def __init__(self, height=512, width=512, density=50, option=0, use_broadcast_ops=True):
+
+            self.height = height
+            self.width = width
+            self.density = density
+            self.use_broadcast_ops = use_broadcast_ops
+            self.image = self.generateImage(option)
+
+        def generate_points(self):
+            self.points = np.random.randint(0, (self.width, self.height), (self.density, 2))
+
+        def calculate_noise(self, option):
+            self.data = np.zeros((self.height, self.width))
+            for h in range(self.height):
+                for w in range(self.width):
+                    distances = np.sqrt(np.sum((self.points - np.array([w, h])) ** 2, axis=1))
+                    self.data[h, w] = np.sort(distances)[option]
+
+        def broadcast_calculate_noise(self, option):
+            xs = np.arange(self.width)
+            ys = np.arange(self.height)
+            x_dist = np.power(self.points[:, 0, np.newaxis] - xs, 2)
+            y_dist = np.power(self.points[:, 1, np.newaxis] - ys, 2)
+            d = np.sqrt(x_dist[:, :, np.newaxis] + y_dist[:, np.newaxis, :])
+            distances = np.sort(d, axis=0)
+            self.data = distances[option]
+
+        def generateImage(self, option):
+            self.generate_points()
+            if self.use_broadcast_ops:
+                self.broadcast_calculate_noise(option)
+            else:
+                self.calculate_noise(option)
+            min_val, max_val = np.min(self.data), np.max(self.data)
+            data_scaled = (self.data - min_val) / (max_val - min_val) * 255
+            data_scaled = data_scaled.astype(np.uint8)
+            return Image.fromarray(data_scaled)
             
     # Analyze Filters
         
@@ -708,63 +786,64 @@ class WAS_Image_Style_Filter:
         WFilter = WAS_Filter_Class()
 
         # Apply blending
-        match style:
-            case "1977":
+        if style:
+            if style == "1977":
                 out_image = pilgram._1977(image)
-            case "aden":
+            elif style == "aden":
                 out_image = pilgram.aden(image)
-            case "brannan":
+            elif style == "brannan":
                 out_image = pilgram.brannan(image)
-            case "brooklyn":
+            elif style == "brooklyn":
                 out_image = pilgram.brooklyn(image)
-            case "clarendon":
+            elif style == "clarendon":
                 out_image = pilgram.clarendon(image)
-            case "earlybird":
+            elif style == "earlybird":
                 out_image = pilgram.earlybird(image)
-            case "fairy tale":
+            elif style == "fairy tale":
                 out_image = WFilter.sparkle(image)
-            case "gingham":
+            elif style == "gingham":
                 out_image = pilgram.gingham(image)
-            case "hudson":
+            elif style == "hudson":
                 out_image = pilgram.hudson(image)
-            case "inkwell":
+            elif style == "inkwell":
                 out_image = pilgram.inkwell(image)
-            case "kelvin":
+            elif style == "kelvin":
                 out_image = pilgram.kelvin(image)
-            case "lark":
+            elif style == "lark":
                 out_image = pilgram.lark(image)
-            case "lofi":
+            elif style == "lofi":
                 out_image = pilgram.lofi(image)
-            case "maven":
+            elif style == "maven":
                 out_image = pilgram.maven(image)
-            case "mayfair":
+            elif style == "mayfair":
                 out_image = pilgram.mayfair(image)
-            case "moon":
+            elif style == "moon":
                 out_image = pilgram.moon(image)
-            case "nashville":
+            elif style == "nashville":
                 out_image = pilgram.nashville(image)
-            case "perpetua":
+            elif style == "perpetua":
                 out_image = pilgram.perpetua(image)
-            case "reyes":
+            elif style == "reyes":
                 out_image = pilgram.reyes(image)
-            case "rise":
+            elif style == "rise":
                 out_image = pilgram.rise(image)
-            case "slumber":
+            elif style == "slumber":
                 out_image = pilgram.slumber(image)
-            case "stinson":
+            elif style == "stinson":
                 out_image = pilgram.stinson(image)
-            case "toaster":
+            elif style == "toaster":
                 out_image = pilgram.toaster(image)
-            case "valencia":
+            elif style == "valencia":
                 out_image = pilgram.valencia(image)
-            case "walden":
+            elif style == "walden":
                 out_image = pilgram.walden(image)
-            case "willow":
+            elif style == "willow":
                 out_image = pilgram.willow(image)
-            case "xpro2":
+            elif style == "xpro2":
                 out_image = pilgram.xpro2(image)
-            case _:
+            else:
                 out_image = image
+
 
         out_image = out_image.convert("RGB")
 
@@ -825,36 +904,36 @@ class WAS_Image_Blending_Mode:
         img_b = tensor2pil(image_b)
 
         # Apply blending
-        match mode:
-            case "color":
+        if mode:
+            if mode == "color":
                 out_image = pilgram.css.blending.color(img_a, img_b)
-            case "color_burn":
+            elif mode == "color_burn":
                 out_image = pilgram.css.blending.color_burn(img_a, img_b)
-            case "color_dodge":
+            elif mode == "color_dodge":
                 out_image = pilgram.css.blending.color_dodge(img_a, img_b)
-            case "darken":
+            elif mode == "darken":
                 out_image = pilgram.css.blending.darken(img_a, img_b)
-            case "difference":
+            elif mode == "difference":
                 out_image = pilgram.css.blending.difference(img_a, img_b)
-            case "exclusion":
+            elif mode == "exclusion":
                 out_image = pilgram.css.blending.exclusion(img_a, img_b)
-            case "hard_light":
+            elif mode == "hard_light":
                 out_image = pilgram.css.blending.hard_light(img_a, img_b)
-            case "hue":
+            elif mode == "hue":
                 out_image = pilgram.css.blending.hue(img_a, img_b)
-            case "lighten":
+            elif mode == "lighten":
                 out_image = pilgram.css.blending.lighten(img_a, img_b)
-            case "multiply":
+            elif mode == "multiply":
                 out_image = pilgram.css.blending.multiply(img_a, img_b)
-            case "add":
+            elif mode == "add":
                 out_image = pilgram.css.blending.normal(img_a, img_b)
-            case "overlay":
+            elif mode == "overlay":
                 out_image = pilgram.css.blending.overlay(img_a, img_b)
-            case "screen":
+            elif mode == "screen":
                 out_image = pilgram.css.blending.screen(img_a, img_b)
-            case "soft_light":
+            elif mode == "soft_light":
                 out_image = pilgram.css.blending.soft_light(img_a, img_b)
-            case _:
+            else:
                 out_image = img_a
 
         out_image = out_image.convert("RGB")
@@ -938,16 +1017,88 @@ class WAS_Image_Monitor_Distortion_Filter:
         WFilter = WAS_Filter_Class()
 
         # Apply image effect
-        match mode:
-            case 'Digital Distortion':
+        if mode:
+            if mode == 'Digital Distortion':
                 image = WFilter.digital_distortion(image, amplitude, offset)
-            case 'Signal Distortion':
+            elif mode == 'Signal Distortion':
                 image = WFilter.signal_distortion(image, amplitude)
-            case 'TV Distortion':
+            elif mode == 'TV Distortion':
                 image = WFilter.tv_vhs_distortion(image, amplitude)  
+            else:
+                image = image
 
         return (pil2tensor(image), )
+        
+        
 
+# IMAGE PERLIN NOISE FILTER
+
+class WAS_Image_Perlin_Noise_Filter:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "width": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
+                "height": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
+                "shape": ("INT", {"default": 4, "max": 8, "min": 2, "step": 2}),
+                "density": ("FLOAT", {"default": 0.25, "max": 1.0, "min": 0.0, "step": 0.01}),
+                "octaves": ("INT", {"default": 4, "max": 8, "min": 2, "step": 2}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),  
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "perlin_noise_filter"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def perlin_noise_filter(self, width, height, shape, density, octaves, seed):
+    
+        if width > 1024 or height > 1024 and octaves > 6:
+            octaves = 6
+    
+        WFilter = WAS_Filter_Class()
+        
+        image = WFilter.perlin_noise(width, height, shape, density, octaves, seed)
+
+        return (pil2tensor(image), )        
+        
+
+# IMAGE VORONOI NOISE FILTER
+
+class WAS_Image_Voronoi_Noise_Filter:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "width": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
+                "height": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
+                "density": ("INT", {"default": 50, "max": 256, "min": 10, "step": 2}),
+                "modulator": ("INT", {"default": 0, "max": 8, "min": 0, "step": 1}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "voronoi_noise_filter"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def voronoi_noise_filter(self, width, height, density, modulator, seed):
+    
+        WFilter = WAS_Filter_Class()
+        
+        image = WFilter.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True).image
+
+        return (pil2tensor(image), )
+        
+        
 
 # IMAGE GENERATE COLOR PALETTE
 
@@ -1021,11 +1172,13 @@ class WAS_Image_Analyze:
         WFilter = WAS_Filter_Class()
 
         # Analye Image
-        match mode:
-            case 'Black White Levels':
+        if mode:
+            if mode == 'Black White Levels':
                 image = WFilter.black_white_levels(image)
-            case 'RGB Levels':
+            elif mode == 'RGB Levels':
                 image = WFilter.channel_frequency(image)
+            else:
+                image = image
 
         return (pil2tensor(image), )        
         
@@ -1995,13 +2148,15 @@ class WAS_Image_Rotate:
             rotation = int((rotation//90)*90)
 
         # Set Sampler
-        match sampler:
-            case 'nearest':
+        if sampler:
+            if sampler == 'nearest':
                 sampler = Image.NEAREST
-            case 'bicubic':
+            elif sampler == 'bicubic':
                 sampler = Image.BICUBIC
-            case 'bilinear':
+            elif sampler == 'bilinear':
                 sampler = Image.BILINEAR
+            else:
+                sampler == Image.BILINEAR
 
         # Rotate Image
         if mode == 'internal':
@@ -2244,13 +2399,13 @@ class WAS_Image_Edge:
         image = tensor2pil(image)
 
         # Detect edges
-        match mode:
-            case "normal":
+        if mode:
+            if mode == "normal":
                 image = image.filter(ImageFilter.FIND_EDGES)
-            case "laplacian":
+            elif mode == "laplacian":
                 image = image.filter(ImageFilter.Kernel((3, 3), (-1, -1, -1, -1, 8,
                                                                  -1, -1, -1, -1), 1, 0))
-            case _:
+            else:
                 image = image
 
         return (torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0), )
@@ -2520,6 +2675,7 @@ class WAS_Image_Select_Channel:
             'RGB', (channel_img, channel_img, channel_img))
 
         return channel_img
+        
 
 
 # IMAGE CONVERT TO CHANNEL
@@ -3645,14 +3801,14 @@ class WAS_Random_Number:
         random.seed(seed)
 
         # Return random number
-        match number_type:
-            case 'integer':
+        if number_type:
+            if number_type == 'integer':
                 number = random.randint(minimum, maximum)
-            case 'float':
+            elif number_type == 'float':
                 number = random.uniform(minimum, maximum)
-            case 'bool':
+            elif number_type == 'bool':
                 number = random.random()
-            case _:
+            else:
                 return
 
         # Return number
@@ -3682,13 +3838,15 @@ class WAS_Constant_Number:
     def return_constant_number(self, number_type, number):
 
         # Return number
-        match number_type:
-            case 'integer':
+        if number_type:
+            if number_type == 'integer':
                 return (int(number), )
-            case 'integer':
+            elif number_type == 'integer':
                 return (float(number), )
-            case 'bool':
+            elif number_type == 'bool':
                 return ((1 if int(number) > 0 else 0), )
+            else:
+                return number
 
 
 # NUMBER TO SEED
@@ -3899,33 +4057,35 @@ class WAS_Number_Operation:
     def math_operations(self, number_a, number_b, operation="addition"):
 
         # Return random number
-        match operation:
-            case 'addition':
+        if operation:
+            if operation == 'addition':
                 return ((number_a + number_b), )
-            case 'subtraction':
+            elif operation == 'subtraction':
                 return ((number_a - number_b), )
-            case 'division':
+            elif operation == 'division':
                 return ((number_a / number_b), )
-            case 'floor division':
+            elif operation == 'floor division':
                 return ((number_a // number_b), )
-            case 'multiplication':
+            elif operation == 'multiplication':
                 return ((number_a * number_b), )
-            case 'exponentiation':
+            elif operation == 'exponentiation':
                 return ((number_a ** number_b), )
-            case 'modulus':
+            elif operation == 'modulus':
                 return ((number_a % number_b), )
-            case 'greater-than':
+            elif operation == 'greater-than':
                 return (+(number_a > number_b), )
-            case 'greater-than or equals':
+            elif operation == 'greater-than or equals':
                 return (+(number_a >= number_b), )
-            case 'less-than':
+            elif operation == 'less-than':
                 return (+(number_a < number_b), )
-            case 'less-than or equals':
+            elif operation == 'less-than or equals':
                 return (+(number_a <= number_b), )
-            case 'equals':
+            elif operation == 'equals':
                 return (+(number_a == number_b), )
-            case 'does not equal':
+            elif operation == 'does not equal':
                 return (+(number_a != number_b), )
+            else:
+                return number_a
 
 
 #! MISC
@@ -4023,6 +4183,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Monitor Effects Filter": WAS_Image_Monitor_Distortion_Filter,
     "Image Nova Filter": WAS_Image_Nova_Filter,
     "Image Padding": WAS_Image_Padding,
+    "Image Perlin Noise Filter": WAS_Image_Perlin_Noise_Filter,
     "Image Remove Background (Alpha)": WAS_Remove_Background,
     "Image Remove Color": WAS_Image_Remove_Color,
     "Image Resize": WAS_Image_Rescale,
@@ -4035,6 +4196,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Transpose": WAS_Image_Transpose,
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
+    "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "Int to Number": WAS_Int_To_Number,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
