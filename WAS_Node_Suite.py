@@ -1047,7 +1047,7 @@ class WAS_Image_Perlin_Noise_Filter:
                 "height": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
                 "shape": ("INT", {"default": 4, "max": 8, "min": 2, "step": 2}),
                 "density": ("FLOAT", {"default": 0.25, "max": 1.0, "min": 0.0, "step": 0.01}),
-                "octaves": ("INT", {"default": 4, "max": 8, "min": 2, "step": 2}),
+                "octaves": ("INT", {"default": 4, "max": 8, "min": 0, "step": 1}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),  
             },
         }

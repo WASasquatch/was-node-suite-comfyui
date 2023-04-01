@@ -16,3 +16,6 @@ Load these image workflows into ComfyUI by simply loading them as if they were a
 
 ## High Pass Sharpening
 <img src="High_Pass_Sharpening.png">
+
+## Procedural Rock Texture Generator
+<img src="Procedural Rock Texture Generator.png">
