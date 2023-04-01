@@ -56,21 +56,21 @@ print('\033[34mWAS Node Suite:\033[0m Running From:', WAS_SUITE_ROOT)
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
 # Freeze PIP modules
-def packages() -> list[str]:
+def packages():
     import sys
     import subprocess
     return [r.decode().split('==')[0] for r in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).split()]
 
 # Tensor to PIL
-def tensor2pil(image: torch.Tensor) -> Image.Image:
+def tensor2pil(image):
     return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
 
 # Convert PIL to Tensor
-def pil2tensor(image: Image.Image) -> torch.Tensor:
+def pil2tensor(image):
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
 
 # PIL Hex
-def pil2hex(image: torch.Tensor) -> str:
+def pil2hex(image):
     return hashlib.sha256(np.array(tensor2pil(image)).astype(np.uint16).tobytes()).hexdigest()
 
 # Median Filter
@@ -1403,7 +1403,7 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001') -> tuple[torch.Tensor] | tuple:
+    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001'):
 
         if not os.path.exists(path):
             return (None, )
@@ -2434,7 +2434,7 @@ class WAS_Image_fDOF:
 
     CATEGORY = "WAS Suite/Image"
 
-    def fdof_composite(self, image: torch.Tensor, depth: torch.Tensor, radius: int, samples: int, mode: str) -> tuple[torch.Tensor]:
+    def fdof_composite(self, image, depth, radius, samples, mode):
 
         if 'opencv-python' not in packages():
             print("\033[34mWAS NS:\033[0m Installing CV2...")
@@ -2455,7 +2455,7 @@ class WAS_Image_fDOF:
 
         return (torch.from_numpy(np.array(fdof_image).astype(np.float32) / 255.0).unsqueeze(0), )
 
-    def portraitBlur(self, img: Image.Image, mask: Image.Image, radius: int = 5, samples: int = 1, mode='mock') -> Optional[Image.Image]:
+    def portraitBlur(self, img, mask, radius, samples, mode='mock'):
         mask = mask.resize(img.size).convert('L')
         bimg: Optional[Image.Image] = None
         if mode == 'mock':
@@ -2833,7 +2833,7 @@ class WAS_Load_Image:
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "load_image"
 
-    def load_image(self, image_path) -> Optional[tuple[torch.Tensor, torch.Tensor]]:
+    def load_image(self, image_path):
 
         if image_path.startswith('http'):
             from io import BytesIO
