@@ -13,3 +13,6 @@ Load these image workflows into ComfyUI by simply loading them as if they were a
 
 ## Wildcard Replacement Workflow
 <img src="Wildcard_Replacement_Example.png">
+
+## High Pass Sharpening
+<img src="High_Pass_Sharpening.png">
