@@ -429,7 +429,8 @@ class WAS_Filter_Class():
         min_val, max_val = np.min(x), np.max(x)
         data_scaled = (x - min_val) / (max_val - min_val) * 255
         data_scaled = data_scaled.astype(np.uint8)
-        return Image.fromarray(data_scaled)
+        
+        return Image.fromarray(data_scaled).convert('RGB')
         
     # Worley Noise Generator
         
@@ -471,7 +472,8 @@ class WAS_Filter_Class():
             min_val, max_val = np.min(self.data), np.max(self.data)
             data_scaled = (self.data - min_val) / (max_val - min_val) * 255
             data_scaled = data_scaled.astype(np.uint8)
-            return Image.fromarray(data_scaled)
+            
+            return Image.fromarray(data_scaled).convert('RGB')
             
     # Analyze Filters
         
