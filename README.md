@@ -133,7 +133,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
 ## Installing on Colab
 Create a new cell and add the following code, then run the cell.
 
-  - `git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/`
+  - `!git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/`
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
 
