@@ -134,6 +134,10 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
 Create a new cell and add the following code, then run the cell.
 
   - `git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/`
+  - Restart Colab Runtime (don't disconnect)
+    - WAS Suite should uninstall legacy nodes automatically for you.
+    - Tools will be located in the WAS Suite menu.
+
       
 ### Dependencies:
 WAS Node Suite is designed to download dependencies on it's own as needed, but what it depends on can be installed manually before use to prevent any script issues. The dependencies which are not required by ComfyUI are as follows: 
