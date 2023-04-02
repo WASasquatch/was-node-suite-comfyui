@@ -102,6 +102,8 @@
 ## Text Tokens
 Text tokens can be used in the Save Text File and Save Image nodes. You can also add your own custom tokens with the Text Add Tokens node.
 
+The token name can be anything to define your token. It can also be a Regular Expression.
+
 ### Built-in Tokens
   - [time]
     - The current system microtime
