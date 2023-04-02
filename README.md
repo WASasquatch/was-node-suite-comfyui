@@ -142,9 +142,9 @@ Create a new cell and add the following code, then run the cell.
 WAS Node Suite is designed to download dependencies on it's own as needed, but what it depends on can be installed manually before use to prevent any script issues. The dependencies which are not required by ComfyUI are as follows: 
   - opencv
   - scipy
-  - pilgram
+  - [pilgram](https://github.com/akiomik/pilgram)
   - timm (for MiDaS)
     - MiDaS Models (they will download automatically upon use and be stored in `/ComfyUI/models/midas/checkpoints/`, additional files may be installed by `PyTorch Hub`)
-  - img2texture (for Image Seamless Texture node)
+  - [img2texture](https://github.com/WASasquatch/img2texture) (for Image Seamless Texture node)
 
 *This version renames some nodes, as well as introduces new fields. Unfortunately ComfyUI doesn't handle these changes well, so you'll have to replace the dreaded "red nodes" manually.*
