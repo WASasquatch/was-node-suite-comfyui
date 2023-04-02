@@ -475,6 +475,22 @@ class WAS_Filter_Class():
             
             return Image.fromarray(data_scaled).convert('RGB')
             
+            
+    def make_seamless(self, image, blending=0.5, tiled=False, tiles=2):
+    
+        if 'img2texture' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing img2texture...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'git+https://github.com/WASasquatch/img2texture.git'])
+            
+        from img2texture import img2tex
+        from img2texture._tiling import tile
+    
+        texture = img2tex(src=image, dst=None, pct=blending, return_result=True)
+        if tiled:
+            texture = tile(source=texture, target=None, horizontal=tiles, vertical=tiles, return_result=True)
+            
+        return texture
+            
     # Analyze Filters
         
     def black_white_levels(self, image):
@@ -1097,6 +1113,38 @@ class WAS_Image_Voronoi_Noise_Filter:
         WFilter = WAS_Filter_Class()
         
         image = WFilter.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True).image
+
+        return (pil2tensor(image), )        
+
+
+
+# IMAGE MAKE SEAMLESS
+
+class WAS_Image_Make_Seamless:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "blending": ("FLOAT", {"default": 0.4, "max": 1.0, "min": 0.0, "step": 0.01}),
+                "tiled": (["true", "false"],),
+                "tiles": ("INT", {"default": 2, "max": 6, "min": 2, "step": 2}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "make_seamless"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def make_seamless(self, image, blending, tiled, tiles):
+    
+        WFilter = WAS_Filter_Class()
+        
+        image = WFilter.make_seamless(tensor2pil(image), blending, tiled, tiles)
 
         return (pil2tensor(image), )
         
@@ -4191,6 +4239,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Resize": WAS_Image_Rescale,
     "Image Rotate": WAS_Image_Rotate,
     "Image Save": WAS_Image_Save,
+    "Image Seamless Texture": WAS_Image_Make_Seamless,
     "Image Select Channel": WAS_Image_Select_Channel,
     "Image Select Color": WAS_Image_Select_Color,
     "Image Style Filter": WAS_Image_Style_Filter,

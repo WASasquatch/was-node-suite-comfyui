@@ -19,3 +19,6 @@ Load these image workflows into ComfyUI by simply loading them as if they were a
 
 ## Procedural Rock Texture Generator
 <img src="Procedural Rock Texture Generator.png">
+
+## Procedural Rock **Seamless** Texture Generator
+<img src="Procedural Rock -Seamless- Texture Generator.png">
