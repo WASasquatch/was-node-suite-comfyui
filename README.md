@@ -135,7 +135,6 @@ Create a new cell and add the following code, then run the cell.
 
   - `git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/`
   - Restart Colab Runtime (don't disconnect)
-    - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
 
       
