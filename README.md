@@ -88,13 +88,27 @@
  - Save Text File: Save a text string to a file
  - Seed: Return a seed
  - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
+ - Text Add Tokens: Add custom tokens to parse in filenames or other text.
  - Text Concatenate: Merge two strings
  - Text Find and Replace: Find and replace a substring in a string
  - Text Multiline: Write a multiline text strin
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
+ - Text Parse Tokens: Parse custom tokens in text.
  - Text Random Line: Select a random line from a text input string
  - Text String: Write a single line text string value
  - Text to Conditioning: Convert a text string to conditioning.
+ 
+ 
+## Text Tokens
+Text tokens can be used in the Save Text File and Save Image nodes. You can also add your own custom tokens with the Text Add Tokens node.
+
+### Built-in Tokens
+  - [time]
+    - The current system microtime
+  - [hostname]
+    - The hostname of the system executing ComfyUI
+  - [user]
+    - The user that is executing ComfyUI
 
 ## Recommended Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
