@@ -126,9 +126,29 @@ class WASDatabase:
         if category in self.data and key in self.data[category]:
             self.data[category][key] = value
             self._save()
+            
+    def updateCat(self, category, dictionary):
+        if self.data.__contains__(category):
+            Exception(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` already exists!")
+        self.data[category].update(dictionary)
+        self._save()
         
     def get(self, category, key):
         return self.data.get(category, {}).get(key, None)
+        
+    def getDB(self):
+        return self.data
+        
+    def insertCat(self, category):
+        if self.data.__contains__(category):
+            Exception(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` already exists!")
+        self.data[category] = {}
+        self._save()
+        
+    def getDict(self, category):
+        if not self.data.__contains__(category):
+            ValueError(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` does not exist!")
+        return self.data[category]
 
     def delete(self, category, key):
         if category in self.data and key in self.data[category]:
@@ -138,13 +158,64 @@ class WASDatabase:
     def _save(self):
         try:
             with open(self.filepath, 'w') as f:
-                json.dump(self.data, f)
+                json.dump(self.data, f, indent=4)
         except FileNotFoundError:
             print(f"\033[34mWAS Node Suite\033[0m Warning: Cannot save database to file '{self.filepath}'."
                   " Storing the data in the object instead. Does the folder and node file have write permissions?")
 
 # Initialize the settings database
 WDB = WASDatabase(WAS_DATABASE)
+
+# WAS Token Class
+
+class TextTokens:
+
+    def __init__(self):
+        import socket
+        self.WDB = WDB
+        if not self.WDB.getDB().__contains__('custom_tokens'):
+            self.WDB.insertCat('custom_tokens')
+        self.custom_tokens = self.WDB.getDict('custom_tokens')
+                
+        self.tokens =  {
+            '[time]': str(round(time.time())),
+            '[hostname]': socket.gethostname(),
+            '[user]': ( os.getlogin() if os.getlogin() else 'null' ),
+        }
+                
+    def addToken(self, name, value):
+        self.custom_tokens.update({name: value})
+        self._update()
+                
+    def removeToken (self, name):
+        self.custom_tokens.pop(name)
+        self._update()
+                
+    def parseTokens(self, text):
+        tokens = self.tokens
+        
+        if self.custom_tokens:
+            tokens.update(self.custom_tokens)
+                
+        # Update time
+        tokens['[time]'] = str(round(time.time()))
+                
+        for k in tokens.keys():
+            text = self.replace_substring(text, k, tokens[k])
+        
+        return text
+                
+    def replace_substring(self, string, substring, replacement):
+        import re
+        pattern = re.compile(re.escape(str(substring)))
+        string = pattern.sub(str(replacement), str(string))
+        
+        return string
+                
+    def _update(self):
+        self.WDB.updateCat('custom_tokens', self.custom_tokens)
+
+# WAS Filter Class
 
 class WAS_Filter_Class():
 
@@ -2836,6 +2907,9 @@ class WAS_Image_Save:
                 for x in extra_pnginfo:
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
                 
+            # Parse prefix tokens
+            tokens = TextTokens()
+            filename_prefix = tokens.parseTokens(filename_prefix)
 
             if overwrite_mode == 'prefix_as_filename':
                 file = f"{filename_prefix}.{extension}"
@@ -3684,12 +3758,9 @@ class WAS_Text_Save:
             print(
                 f'\033[34mWAS NS\033[0m Error: There is no text specified to save! Text is empty.')
 
-        # Replace tokens
-        tokens = {
-            '[time]': f'{round(time.time())}',
-        }
-        for k in tokens.keys():
-            filename = self.replace_substring(filename, k, tokens[k])
+        # Parse filename tokens
+        tokens = TextTokens()
+        filename = tokens.parseTokens(filename)
 
         # Write text file
         self.writeTextFile(os.path.join(path, filename + '.txt'), text)
@@ -3702,15 +3773,7 @@ class WAS_Text_Save:
             with open(file, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(content)
         except OSError:
-            print(
-                f'\033[34mWAS Node Suite\033[0m Error: Unable to save file `{file}`')
-
-    # Replace a substring
-    def replace_substring(self, string, substring, replacement):
-        import re
-        pattern = re.compile(re.escape(substring))
-        string = pattern.sub(replacement, string)
-        return string
+            print(f'\033[34mWAS Node Suite\033[0m Error: Unable to save file `{file}`')
 
 
 
@@ -3737,6 +3800,78 @@ class WAS_Text_to_Conditioning:
     def text_to_conditioning(self, clip, text):
         return ([[clip.encode(text), {}]], )
 
+
+# TEXT PARSE TOKENS
+
+class WAS_Text_Parse_Tokens:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("ASCII",),
+            }
+        }
+
+    RETURN_TYPES = ("ASCII",)
+    FUNCTION = "text_parse_tokens"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_parse_tokens(self, text):
+        # Token Parser
+        tokens = TextTokens()
+        return (tokens.parseTokens(text), )
+        
+        
+        
+# TEXT ADD TOKENS
+
+
+class WAS_Text_Add_Tokens:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "tokens": ("STRING", {"default": "[hello]: world", "multiline": True}),
+            }
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "text_add_tokens"
+    OUTPUT_NODE = True
+    CATEGORY = "WAS Suite/Text"
+
+    def text_add_tokens(self, tokens):
+    
+        import io
+    
+        # Token Parser
+        tk = TextTokens()
+        
+        # Parse out Tokens
+        for line in io.StringIO(tokens):
+            parts = line.split(':')
+            token = parts[0].strip()
+            token_value = parts[1].strip()
+            tk.addToken(token, token_value)
+        
+        print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
+        print(json.dumps(tk.custom_tokens, indent=4))
+        
+        return tokens
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+
+
+# TEXT TO CONSOLE
 
 class WAS_Text_to_Console:
     def __init__(self):
@@ -3990,7 +4125,7 @@ class WAS_Int_To_Number:
     CATEGORY = "WAS Suite/Constant"
 
     def int_to_number(self, int_input):
-        return (int_input, )
+        return (int(int_input), )
 
 
 
@@ -4014,7 +4149,7 @@ class WAS_Float_To_Number:
     CATEGORY = "WAS Suite/Constant"
 
     def float_to_number(self, float_input):
-        return ( float_input, )
+        return ( float(float_input), )
 
 
 # NUMBER TO STRING
@@ -4267,11 +4402,13 @@ NODE_CLASS_MAPPINGS = {
     "Save Text File": WAS_Text_Save,
     "Seed": WAS_Seed,
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
+    "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Concatenate": WAS_Text_Concatenate,
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
     "Text Multiline": WAS_Text_Multiline,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
+    "Text Parse Tokens": WAS_Text_Parse_Tokens,
     "Text Random Line": WAS_Text_Random_Line,
     "Text String": WAS_Text_String,
     "Text to Conditioning": WAS_Text_to_Conditioning,
