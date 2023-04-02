@@ -55,6 +55,7 @@
  - Image Resize
  - Image Rotate: Rotate an image
  - Image Save: A save image node with format support and path support. (Bug: Doesn't display image
+ - Image Seamless Texture: Create a seamless texture out of a image with optional tiling
  - Image Select Channel: Select a single channel of an RGB image
  - Image Select Color: Return the select image only on a black canvas
  - Image Style Filter: Style a image with Pilgram instragram-like filters
