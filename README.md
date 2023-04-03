@@ -105,6 +105,7 @@
  - Text to Conditioning: Convert a text string to conditioning.
  
 </details>
+
 <br />
 
 # Text Tokens
@@ -121,6 +122,7 @@ The token name can be anything excluding the `:` character to define your token.
     - The user that is executing ComfyUI
 
 <br />
+
 # Other Features
 
 ### Import AUTOMATIC1111 WebUI Styles
@@ -137,6 +139,7 @@ When using the latest builds of WAS Node Suite a `was_suite_config.json` file wi
 You can set `webui_styles_persistent_update` to `true` to update the WAS Node Suite styles from WebUI every start of ComfyUI
 
 <br />
+
 # Recommended Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
 
@@ -162,7 +165,8 @@ Create a new cell and add the following code, then run the cell. You may need to
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
 
-<br />      
+<br />   
+
 ### Dependencies:
 WAS Node Suite is designed to download dependencies on it's own as needed, but what it depends on can be installed manually before use to prevent any script issues. The dependencies which are not required by ComfyUI are as follows: 
   - opencv
