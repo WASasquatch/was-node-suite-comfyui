@@ -99,20 +99,33 @@
  - Text to Conditioning: Convert a text string to conditioning.
  
  
-## Text Tokens
+# Text Tokens
 Text tokens can be used in the Save Text File and Save Image nodes. You can also add your own custom tokens with the Text Add Tokens node.
 
 The token name can be anything excluding the `:` character to define your token. It can also be simple Regular Expressions.
 
-### Built-in Tokens
+## Built-in Tokens
   - [time]
     - The current system microtime
   - [hostname]
     - The hostname of the system executing ComfyUI
   - [user]
     - The user that is executing ComfyUI
+	
+# Other Features
 
-## Recommended Installation:
+### Import AUTOMATIC1111 WebUI Styles
+When using the latest builds of WAS Node Suite a `was_suite_config.json` file will be generated (if it doesn't exist). In this file you can setup a A1111 styles import.
+
+  - Run ComfyUI to generate the new `/custom-nodes/was-node-suite-comfyui/was_Suite_config.json` file.
+  - Open the `was_suite_config.json` file with a text editor.
+  - Replace the `webui_styles` value from `None` to the path of your A1111 styles file called **styles.csv**. Be sure to use double backslashes for Windows paths.
+    - Example `C:\\python\\stable-diffusion-webui\\styles.csv`
+  - Restart ComfyUI
+  - Select a style with the `Prompt Styles Node`. 
+    - The first ASCII output is your positive prompt, and the second ASCII output is your negative prompt.
+  
+# Recommended Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
 
   - Navigate to your `/ComfyUI/custom_nodes/` folder
