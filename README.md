@@ -124,6 +124,8 @@ When using the latest builds of WAS Node Suite a `was_suite_config.json` file wi
   - Restart ComfyUI
   - Select a style with the `Prompt Styles Node`. 
     - The first ASCII output is your positive prompt, and the second ASCII output is your negative prompt.
+	
+You can set `webui_styles_persistent_update` to `true` to update the WAS Node Suite styles from WebUI every start of ComfyUI
   
 # Recommended Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
