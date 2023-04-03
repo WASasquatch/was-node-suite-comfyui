@@ -12,7 +12,7 @@
 # Current Nodes:
 
 <details>
-	<summary>Expand Node List</summary>
+	<summary>$\Large\color{orange}{Expand\ Node\ List}$</summary>
 
 	 - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
 	 - Constant Number
