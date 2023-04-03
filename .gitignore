@@ -2,3 +2,5 @@
 __pycache__/__init__.cpython-310.pyc
 __pycache__/WAS_Node_Suite.cpython-310.pyc
 was_suite_settings.json
+styles.json
+was_suite_config.json

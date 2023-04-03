@@ -39,7 +39,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "co
 sys.path.append('..'+os.sep+'ComfyUI')
 
 
-# GLOBALS
+#! GLOBALS
 NODE_FILE = os.path.abspath(__file__)
 MIDAS_INSTALLED = False
 CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE)) 
@@ -48,10 +48,95 @@ CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE))
                     else os.path.dirname(NODE_FILE) )
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
+WAS_CONFIG = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
+STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
 
 # WAS Suite Locations Debug
 print('\033[34mWAS Node Suite:\033[0m Running At:', NODE_FILE)
 print('\033[34mWAS Node Suite:\033[0m Running From:', WAS_SUITE_ROOT)
+
+#! INSTALLATION CLEANUP
+
+# Delete legacy nodes
+legacy_was_nodes = ['fDOF_WAS.py', 'Image_Blank_WAS.py', 'Image_Blend_WAS.py', 'Image_Canny_Filter_WAS.py', 'Canny_Filter_WAS.py', 'Image_Combine_WAS.py', 'Image_Edge_Detection_WAS.py', 'Image_Film_Grain_WAS.py', 'Image_Filters_WAS.py',
+                    'Image_Flip_WAS.py', 'Image_Nova_Filter_WAS.py', 'Image_Rotate_WAS.py', 'Image_Style_Filter_WAS.py', 'Latent_Noise_Injection_WAS.py', 'Latent_Upscale_WAS.py', 'MiDaS_Depth_Approx_WAS.py', 'NSP_CLIPTextEncoder.py', 'Samplers_WAS.py']
+legacy_was_nodes_found = []
+
+if os.path.basename(CUSTOM_NODES_DIR) == 'was-node-suite-comfyui':
+    legacy_was_nodes.append('WAS_Node_Suite.py')
+
+f_disp = False
+node_path_dir = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep
+for f in legacy_was_nodes:
+    file = f'{node_path_dir}{f}'
+    if os.path.exists(file):
+        if not f_disp:
+            print('\033[34mWAS Node Suite:\033[0m Found legacy nodes. Archiving legacy nodes...')
+            f_disp = True
+        legacy_was_nodes_found.append(file)
+if legacy_was_nodes_found:
+    import zipfile
+    from os.path import basename
+    archive = zipfile.ZipFile(
+        f'{node_path_dir}WAS_Legacy_Nodes_Backup_{round(time.time())}.zip', "w")
+    for f in legacy_was_nodes_found:
+        archive.write(f, basename(f))
+        try:
+            os.remove(f)
+        except OSError:
+            pass
+    archive.close()
+if f_disp:
+    print('\033[34mWAS Node Suite:\033[0m Legacy cleanup complete.')
+    
+#! WAS SUITE CONFIG
+
+was_conf_template = {
+                    "webui_styles": "None",
+                    "webui_styles_persistent_update": True
+                }
+
+# Create default config file or load it
+if not os.path.exists(WAS_CONFIG):
+    with open(WAS_CONFIG, "w", encoding='utf-8') as f:
+        json.dump(was_conf_template, f, indent=4)
+    print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG}`.')
+else:
+    with open(WAS_CONFIG, "r") as f:
+        was_config = json.load(f)
+    
+    # Convert WebUI Styles
+    if was_config.__contains__('webui_styles'):
+    
+        webui_styles_file = was_config['webui_styles'].strip()
+        
+        if was_config.__contains__('webui_styles_persistent_update'):
+            styles_persist = was_config['webui_styles_persistent_update']
+        else:
+            styles_persist = True
+            
+        if webui_styles_file != "None" and os.path.exists(webui_styles_file):
+        
+            print(f'\033[34mWAS Node Suite:\033[0m Importing styles from `{webui_styles_file}`.')
+        
+            import csv
+            
+            styles = {}
+            with open(webui_styles_file, 'r') as data:
+                for line in csv.DictReader(data):
+                    name = "\ufeffname" if "\ufeffname" in line else "ï»¿name"
+                    styles[line[name]] = {"prompt": line['prompt'], "negative_prompt": line['negative_prompt']}
+            
+            if styles:
+                if not os.path.exists(STYLES_PATH) or styles_persist:
+                    with open(STYLES_PATH, "w", encoding='utf-8') as f:
+                        json.dump(styles, f, indent=4)
+                    
+            del styles
+            
+            print(f'\033[34mWAS Node Suite:\033[0m Styles import complete.')
+
+            
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
@@ -683,41 +768,6 @@ class WAS_Filter_Class():
         # Resize the image back to the original size
         palette = palette.resize((palette.width * 2, palette.height * 2), resample=Image.NEAREST)
         return palette
-
-# INSTALLATION CLEANUP
-
-# Delete legacy nodes
-legacy_was_nodes = ['fDOF_WAS.py', 'Image_Blank_WAS.py', 'Image_Blend_WAS.py', 'Image_Canny_Filter_WAS.py', 'Canny_Filter_WAS.py', 'Image_Combine_WAS.py', 'Image_Edge_Detection_WAS.py', 'Image_Film_Grain_WAS.py', 'Image_Filters_WAS.py',
-                    'Image_Flip_WAS.py', 'Image_Nova_Filter_WAS.py', 'Image_Rotate_WAS.py', 'Image_Style_Filter_WAS.py', 'Latent_Noise_Injection_WAS.py', 'Latent_Upscale_WAS.py', 'MiDaS_Depth_Approx_WAS.py', 'NSP_CLIPTextEncoder.py', 'Samplers_WAS.py']
-legacy_was_nodes_found = []
-
-if os.path.basename(CUSTOM_NODES_DIR) == 'was-node-suite-comfyui':
-    legacy_was_nodes.append('WAS_Node_Suite.py')
-
-f_disp = False
-node_path_dir = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep
-for f in legacy_was_nodes:
-    file = f'{node_path_dir}{f}'
-    if os.path.exists(file):
-        if not f_disp:
-            print(
-                '\033[34mWAS Node Suite:\033[0m Found legacy nodes. Archiving legacy nodes...')
-            f_disp = True
-        legacy_was_nodes_found.append(file)
-if legacy_was_nodes_found:
-    import zipfile
-    from os.path import basename
-    archive = zipfile.ZipFile(
-        f'{node_path_dir}WAS_Legacy_Nodes_Backup_{round(time.time())}.zip', "w")
-    for f in legacy_was_nodes_found:
-        archive.write(f, basename(f))
-        try:
-            os.remove(f)
-        except OSError:
-            pass
-    archive.close()
-if f_disp:
-    print('\033[34mWAS Node Suite:\033[0m Legacy cleanup complete.')
 
 #! IMAGE FILTER NODES
 
@@ -3507,6 +3557,52 @@ class WAS_Seed:
 
 #! TEXT NODES
 
+class WAS_Prompt_Styles_Selector:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        style_list = []
+        if os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, "r") as f:
+                if len(f.readlines()) != 0:
+                    f.seek(0)
+                    data = f.read()
+                    styles = json.loads(data)
+                    for style in styles.keys():
+                        style_list.append(style)
+        if not style_list:
+            style_list.append("None")
+        return {
+            "required": {
+                "style": (style_list,),
+            }
+        }
+        
+    RETURN_TYPES = ("ASCII","ASCII")
+    FUNCTION = "load_style"
+    
+    CATEGORY = "WAS Suite/Text"
+    
+    def load_style(self, style):
+    
+        styles = {}
+        # Load styles from file
+        if os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, 'r') as data:
+                styles = json.load(data)
+        else:
+            print(f'\033[34mWAS NS\033[0m Error: The styles file does not exist at `{STYLES_PATH}`. Unable to load styles!')
+            
+        if styles:
+            prompt = styles[style]['prompt']
+            negative_prompt = styles[style]['negative_prompt']
+            
+        return (prompt, negative_prompt)
+        
+                
+
 # Text Multiline Node
 
 class WAS_Text_Multiline:
@@ -4398,6 +4494,7 @@ NODE_CLASS_MAPPINGS = {
     "Number to Seed": WAS_Number_To_Seed,
     "Number to String": WAS_Number_To_String,
     "Number to Text": WAS_Number_To_Text,
+    "Prompt Styles Selector": WAS_Prompt_Styles_Selector,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
     "Seed": WAS_Seed,
