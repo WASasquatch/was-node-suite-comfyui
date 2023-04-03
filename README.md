@@ -131,7 +131,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
     - Tools will be located in the WAS Suite menu.
 	
 ## Installing on Colab
-Create a new cell and add the following code, then run the cell. You may need to edit the path to your ComfyUI custom_nodes folder. 
+Create a new cell and add the following code, then run the cell. You may need to edit the path to your `custom_nodes` folder. 
 
   - `!git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/`
   - Restart Colab Runtime (don't disconnect)
@@ -146,5 +146,6 @@ WAS Node Suite is designed to download dependencies on it's own as needed, but w
   - timm (for MiDaS)
     - MiDaS Models (they will download automatically upon use and be stored in `/ComfyUI/models/midas/checkpoints/`, additional files may be installed by `PyTorch Hub`)
   - [img2texture](https://github.com/WASasquatch/img2texture) (for Image Seamless Texture node)
-
+  - [pythonperlin](https://pypi.org/project/pythonperlin/)
+    - Used for the perlin noise. I tried writing three different perlin noise functions but I couldn't get things as fast as this library, even with numpy, and that was really hard to figure out. Haha. I'm just terrible with math. Feel free to PR a in-house version so long as it doesn't take longer than a few seconds. Fastest I got was nearly a minute... Lol
 *This version renames some nodes, as well as introduces new fields. Unfortunately ComfyUI doesn't handle these changes well, so you'll have to replace the dreaded "red nodes" manually.*
