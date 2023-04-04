@@ -15,6 +15,7 @@
 	<summary>$\Large\color{orange}{Expand\ Node\ List}$</summary>
 
 <br/>
+
  - BLIP Analyze Image: Get a text caption from a image, or interrogate the image with a question.
    - Model will download automatically from default URL, but you can point the download to another location/caption model in `was_suite_config`
    - Models will be stored in `ComfyUI/models/blip/checkpoints/`
