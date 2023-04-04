@@ -78,6 +78,8 @@
  - Input Switch  (Disable until `*` wildcard fix)
  - KSampler (WAS): A sampler that accepts a seed as a node inpu
  - Load Text File
+   - Now supports outputting a dictionary named after the file, or custom input. 
+   - The dictionary contains a list of all lines in the file.
  - Load Batch Images
    - Increment images in a folder, or fetch a single image out of a batch.
    - Will reset it's place if the path, or pattern is changed.
@@ -99,7 +101,10 @@
  - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
  - Text Add Tokens: Add custom tokens to parse in filenames or other text.
  - Text Concatenate: Merge two strings
+ - Text Dictionary Update: Merge two dictionaries
  - Text Find and Replace: Find and replace a substring in a string
+ - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary. 
+   - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed. 
  - Text Multiline: Write a multiline text strin
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
  - Text Parse Tokens: Parse custom tokens in text.
