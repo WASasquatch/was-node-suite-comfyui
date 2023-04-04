@@ -3647,7 +3647,7 @@ class WAS_Prompt_Styles_Selector:
             with open(STYLES_PATH, 'r') as data:
                 styles = json.load(data)
         else:
-            print(f'\033[34mWAS NS\033[0m Error: The styles file does not exist at `{STYLES_PATH}`. Unable to load styles!')
+            print(f'\033[34mWAS NS\033[0m Error: The styles file does not exist at `{STYLES_PATH}`. Unable to load styles! Have you imported your AUTOMATIC1111 WebUI styles?')
             
         if styles:
             prompt = styles[style]['prompt']
@@ -3676,7 +3676,30 @@ class WAS_Text_Multiline:
     CATEGORY = "WAS Suite/Text"
 
     def text_multiline(self, text):
-        return (text, )
+        return (text, )        
+                
+
+# Text Dictionary Concatenate
+
+class WAS_Dictionary_Update:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "dictionary_a": ("DICT", ),
+                "dictionary_b": ("DICT", ),
+            }
+        }
+    RETURN_TYPES = ("DICT",)
+    FUNCTION = "dictionary_update"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def dictionary_update(self, dictionary_a, dictionary_b):
+        return ({**dictionary_a, **dictionary_b}, )
 
 
 # Text String Node
@@ -3799,9 +3822,7 @@ class WAS_Search_and_Replace_Input:
             "required": {
                 "text": ("ASCII",),
                 "find": ("ASCII",),
-                "replace": ("ASCII",),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-            }
+                "replace": ("ASCII",),            }
         }
 
     RETURN_TYPES = ("ASCII",)
@@ -3810,16 +3831,58 @@ class WAS_Search_and_Replace_Input:
     CATEGORY = "WAS Suite/Text"
 
     def text_search_and_replace(self, text, find, replace, seed):
-    
-        if seed > 0 or seed < 0:
-            random.seed(seed)
-
+   
         # Parse Text
         new_text = text
         tcount = new_text.count(find)
-        print("Find Count:", tcount)
         for _ in range(tcount):
             new_text = new_text.replace(find, replace, 1)
+
+        return (new_text, )
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+        
+        
+        
+# Text Search and Replace By Dictionary
+
+class WAS_Search_and_Replace_Dictionary:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("ASCII",),
+                "dictionary": ("DICT",),
+                "replacement_key": ("STRING", {"default": "__", "multiline": False}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+
+    RETURN_TYPES = ("ASCII",)
+    FUNCTION = "text_search_and_replace_dict"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_search_and_replace_dict(self, text, dictionary, replacement_key, seed):
+    
+        random.seed(seed)
+
+        # Parse Text
+        new_text = text
+        
+        for term in dictionary.keys():
+            tkey = f'{replacement_key}{term}{replacement_key}'
+            tcount = new_text.count(tkey)   
+            for _ in range(tcount):
+                new_text = new_text.replace(tkey, random.choice(dictionary[term]), 1)
+                if seed > 0 or seed < 0:
+                    seed = seed + 1
+                    random.seed(seed)
 
         return (new_text, )
         
@@ -4077,25 +4140,34 @@ class WAS_Text_Load_From_File:
         return {
             "required": {
                 "file_path": ("STRING", {"default": '', "multiline": False}),
+                "dictionary_name": ("STRING", {"default": '[filename]', "multiline": False}),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = ("ASCII","DICT")
     FUNCTION = "load_file"
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_file(self, file_path=''):
-        return (self.load_text_file(file_path), )
-
-    def load_text_file(self, path):
-        if not os.path.exists(path):
+    def load_file(self, file_path='', dictionary_name='[filename]]'):
+    
+        filename = ( os.path.basename(file_path).split('.', 1)[0] 
+            if '.' in os.path.basename(file_path) else os.path.basename(file_path) )
+        if dictionary_name != '[filename]':
+            filename = dictionary_name
+        if not os.path.exists(file_path):
             print(
-                f'\033[34mWAS Node Suite\033[0m Error: The path `{path}` specified cannot be found.')
-            return ''
-        with open(path, 'r', encoding="utf-8", newline='\n') as file:
+                f'\033[34mWAS Node Suite\033[0m Error: The path `{file_path}` specified cannot be found.')
+            return ('', {filename: []})
+        with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
             text = file.read()
-        return text
+            
+        import io
+        dictionary = {filename: []}
+        for line in io.StringIO(text):
+            dictionary[filename].append(line.replace('\n', ''))
+            
+        return (text, dictionary)
 
 # LOAD TEXT TO STRING
 
@@ -4691,8 +4763,10 @@ NODE_CLASS_MAPPINGS = {
     "Seed": WAS_Seed,
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
     "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
+    "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Concatenate": WAS_Text_Concatenate,
+    "Text Find and Replace by Dictionary": WAS_Search_and_Replace_Dictionary,
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
     "Text Multiline": WAS_Text_Multiline,
