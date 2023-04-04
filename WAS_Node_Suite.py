@@ -182,10 +182,10 @@ else:
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
 # Freeze PIP modules
-def packages():
+def packages(versions=False):
     import sys
     import subprocess
-    return [r.decode().split('==')[0] for r in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).split()]
+    return [( r.decode().split('==')[0] if not versions else r.decode() ) for r in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).split()]
 
 # Tensor to PIL
 def tensor2pil(image):
@@ -4222,7 +4222,11 @@ class WAS_BLIP_Analyze_Image:
             or 'fairscale' not in packages() ):
             print(packages())
             print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers===4.15.0', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers==4.26.1', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
+           
+        if 'transformers==4.26.1' not in packages(True):
+            print("\033[34mWAS NS:\033[0m Installing BLIP compatible `transformers` (transformers==4.26.1)...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', '--upgrade', '--force-reinstall', 'transformers==4.26.1'])
 
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
             from git.repo.base import Repo
