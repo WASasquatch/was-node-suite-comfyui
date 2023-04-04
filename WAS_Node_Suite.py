@@ -4222,7 +4222,7 @@ class WAS_BLIP_Analyze_Image:
             or 'fairscale' not in packages() ):
             print(packages())
             print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers>=4.15.0', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers===4.15.0', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
 
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
             from git.repo.base import Repo
