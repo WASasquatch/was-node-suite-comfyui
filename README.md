@@ -175,5 +175,5 @@ WAS Node Suite is designed to download dependencies on it's own as needed, but w
   - [pythonperlin](https://pypi.org/project/pythonperlin/)
     - Used for the perlin noise. I tried writing three different perlin noise functions but I couldn't get things as fast as this library, even with numpy, and that was really hard to figure out. Haha. I'm just terrible with math. Feel free to PR a in-house version so long as it doesn't take longer than a few seconds. Fastest I got was nearly a minute... Lol
   - PythonGit
-    - For downloading repos
+    - For downloading repos (such as BLIP)
 	
