@@ -27,3 +27,6 @@ PS; The `TAM_LOFI` model is a 50/50 mix of [LOFI](https://civitai.com/models/905
 
 ## Load Batch Imges - Incremental Images
 <img src="Load Image Batch - Incremental Images.png">
+
+## Wildcards from Load Text File Dictionary
+<img src="Wildcards_with_Dictionary_Text_File.png">
