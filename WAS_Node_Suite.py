@@ -93,17 +93,53 @@ if f_disp:
 
 was_conf_template = {
                     "webui_styles": "None",
-                    "webui_styles_persistent_update": True
+                    "webui_styles_persistent_update": True,
+                    "blip_model_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth",
+                    "blip_model_vqa_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth",
                 }
 
-# Create default config file or load it
+# Create, Load, or Update Config
+
+def getSuiteConfig():
+    try:
+        with open(WAS_CONFIG, "r") as f:
+            was_config = json.load(f)
+    except OSError as e:
+        print(e)
+        return False
+    except Exception as e:
+        print(e)
+        return False
+    return was_config
+    
+def updateSuiteConfig(conf):
+    try:
+        with open(WAS_CONFIG, "w", encoding='utf-8') as f:
+            json.dump(conf, f, indent=4)
+    except OSError as e:
+        print(e)
+        return False
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
 if not os.path.exists(WAS_CONFIG):
-    with open(WAS_CONFIG, "w", encoding='utf-8') as f:
-        json.dump(was_conf_template, f, indent=4)
-    print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG}`.')
+    if updateSuiteConfig(was_conf_template):
+        print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG}`.')
+    else:
+        print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG}`.')
 else:
-    with open(WAS_CONFIG, "r") as f:
-        was_config = json.load(f)
+    was_config = getSuiteConfig()
+    
+    update_config = False
+    for sett_ in was_conf_template.keys():
+        if not was_config.__contains__(sett_):
+            was_config.update({sett_: was_conf_template[sett_]})
+            update_config = True
+       
+    if update_config:
+        updateSuiteConfig(was_config)
     
     # Convert WebUI Styles
     if was_config.__contains__('webui_styles'):
@@ -4051,6 +4087,126 @@ class WAS_Text_To_String:
         return (text, )
 
 
+
+# BLIP CAPTION IMAGE
+
+class WAS_BLIP_Analyze_Image:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode": (["caption", "interrogate"], ),
+                "question": ("STRING", {"default": "What does the background consist of?", "multiline": True}),
+            }
+        }
+        
+    RETURN_TYPES = ("ASCII",)
+    FUNCTION = "blip_caption_image"
+    
+    CATEGORY = "WAS Suite/Text"
+    
+    def blip_caption_image(self, image, mode, question):
+    
+        if ('timm' not in packages() 
+            or 'transformers' not in packages() 
+            or 'GitPython' not in packages()):
+            print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers>=4.15.0', 'timm>=0.4.12', 'gitpython'])
+
+        if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
+            from git.repo.base import Repo
+            print("\033[34mWAS NS:\033[0m Installing BLIP...")
+            Repo.clone_from('https://github.com/WASasquatch/BLIP-Python', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
+            
+        # Not sure this is needed
+        def create_fake_fairscale(self):
+            class FakeFairscale:
+                def checkpoint_wrapper(self):
+                    pass
+            sys.modules["fairscale.nn.checkpoint.checkpoint_activations"] = FakeFairscale
+            
+        def transformImage(input_image, image_size, device):
+            raw_image = input_image.convert('RGB')   
+            w,h = raw_image.size
+            transform = transforms.Compose([
+                transforms.Resize((image_size,image_size),interpolation=InterpolationMode.BICUBIC),
+                transforms.ToTensor(),
+                transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+                ]) 
+            image = transform(raw_image).unsqueeze(0).to(device)   
+            return image
+        
+        sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
+        
+        from torchvision import transforms
+        from torchvision.transforms.functional import InterpolationMode
+        
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        conf = getSuiteConfig()
+        image = tensor2pil(image)
+        size = 384
+        tensor = transformImage(image, size, device)
+        
+        if mode == 'caption':
+        
+            from models.blip import blip_decoder
+            
+            blip_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', 'models'+os.sep+'blip')
+            if not os.path.exists(blip_dir):
+                os.mkdir(blip_dir)
+                
+            torch.hub.set_dir(blip_dir)
+        
+            if conf.__contains__('blip_model_url'):
+                model_url = conf['blip_model_url']
+            else:
+                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+                
+            model = blip_decoder(pretrained=model_url, image_size=size, vit='base')
+            model.eval()
+            model = model.to(device)
+            
+            with torch.no_grad():
+                caption = model.generate(tensor, sample=False, num_beams=6, max_length=74, min_length=10) 
+                # nucleus sampling
+                #caption = model.generate(tensor, sample=True, top_p=0.9, max_length=75, min_length=10) 
+                print(f"\033[34mWAS NS\033[33m BLIP Caption:\033[0m", caption[0])
+                return (caption[0], )
+                
+        elif mode == 'interrogate':
+        
+            from models.blip_vqa import blip_vqa
+            
+            blip_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', 'models'+os.sep+'blip')
+            if not os.path.exists(blip_dir):
+                os.mkdir(blip_dir)
+                
+            torch.hub.set_dir(blip_dir)
+
+            if conf.__contains__('blip_model_vqa_url'):
+                model_url = conf['blip_model_vqa_url']
+            else:
+                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+        
+            model = blip_vqa(pretrained=model_url, image_size=size, vit='base')
+            model.eval()
+            model = model.to(device)
+
+            with torch.no_grad():
+                answer = model(tensor, question, train=False, inference='generate') 
+                print(f"\033[34mWAS NS\033[33m BLIP Answer:\033[0m", answer[0])
+                return (answer[0], )
+                
+        else:
+            print(f"\033[34mWAS NS\033[0m Error: The selected mode `{mode}` is not a valid selection!")
+            return ('Invalid BLIP mode!', )
+        
+
 #! NUMBERS
 
 
@@ -4499,6 +4655,7 @@ NODE_CLASS_MAPPINGS = {
     "Save Text File": WAS_Text_Save,
     "Seed": WAS_Seed,
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
+    "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Concatenate": WAS_Text_Concatenate,
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
