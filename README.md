@@ -105,7 +105,7 @@
  - Text Find and Replace: Find and replace a substring in a string
  - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary. 
    - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed. 
- - Text Multiline: Write a multiline text strin
+ - Text Multiline: Write a multiline text string
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
  - Text Parse Tokens: Parse custom tokens in text.
  - Text Random Line: Select a random line from a text input string
