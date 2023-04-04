@@ -3713,6 +3713,10 @@ class WAS_Text_Random_Line:
         random.seed(seed)
         choice = random.choice(lines)
         return (choice, )
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 
 # Text Concatenate
@@ -3783,6 +3787,7 @@ class WAS_Search_and_Replace_Input:
                 "text": ("ASCII",),
                 "find": ("ASCII",),
                 "replace": ("ASCII",),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
 
@@ -3791,13 +3796,23 @@ class WAS_Search_and_Replace_Input:
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_search_and_replace(self, text, find, replace):
-        return (self.replace_substring(text, find, replace), )
+    def text_search_and_replace(self, text, find, replace, seed):
+    
+        if seed > 0 or seed < 0:
+            random.seed(seed)
 
-    def replace_substring(self, text, find, replace):
-        import re
-        text = re.sub(find, replace, text)
-        return text
+        # Parse Text
+        new_text = text
+        tcount = new_text.count(find)
+        print("Find Count:", tcount)
+        for _ in range(tcount):
+            new_text = new_text.replace(find, replace, 1)
+
+        return (new_text, )
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 
 # Text Parse NSP
@@ -3839,7 +3854,7 @@ class WAS_Text_Parse_NSP:
         with open(local_pantry, 'r') as f:
             nspterminology = json.load(f)
 
-        if seed > 0 or seed < 1:
+        if seed > 0 or seed < 0:
             random.seed(seed)
 
         # Parse Text
