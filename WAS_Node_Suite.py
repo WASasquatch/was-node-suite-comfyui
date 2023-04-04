@@ -211,6 +211,19 @@ def medianFilter(img, diameter, sigmaColor, sigmaSpace):
     img = cv.cvtColor(np.array(img), cv.COLOR_BGR2RGB)
     return Image.fromarray(img).convert('RGB')
     
+def resizeImage(image, max_size):
+    width, height = image.size
+    if width > height:
+        if width > max_size:
+            new_width = max_size
+            new_height = int(height * (max_size / width))
+    else:
+        if height > max_size:
+            new_height = max_size
+            new_width = int(width * (max_size / height))
+    resized_image = image.resize((new_width, new_height))
+    return resized_image
+    
 # WAS SETTINGS MANAGER
 
 class WASDatabase:
@@ -4153,9 +4166,9 @@ class WAS_BLIP_Analyze_Image:
             
         def transformImage(input_image, image_size, device):
             raw_image = input_image.convert('RGB')   
-            w,h = raw_image.size
+            raw_image = raw_image.resize((image_size, image_size))
             transform = transforms.Compose([
-                transforms.Resize((image_size,image_size),interpolation=InterpolationMode.BICUBIC),
+                transforms.Resize(raw_image.size, interpolation=InterpolationMode.BICUBIC),
                 transforms.ToTensor(),
                 transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
                 ]) 
@@ -4194,7 +4207,7 @@ class WAS_BLIP_Analyze_Image:
             model = model.to(device)
             
             with torch.no_grad():
-                caption = model.generate(tensor, sample=False, num_beams=6, max_length=74, min_length=10) 
+                caption = model.generate(tensor, sample=False, num_beams=6, max_length=74, min_length=20) 
                 # nucleus sampling
                 #caption = model.generate(tensor, sample=True, top_p=0.9, max_length=75, min_length=10) 
                 print(f"\033[34mWAS NS\033[33m BLIP Caption:\033[0m", caption[0])
