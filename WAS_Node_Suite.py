@@ -160,7 +160,12 @@ else:
             styles = {}
             with open(webui_styles_file, 'r') as data:
                 for line in csv.DictReader(data):
-                    name = "\ufeffname" if "\ufeffname" in line else "ï»¿name"
+                    if "\ufeffname" in line:
+                        name = "\ufeffname"
+                    elif "ï»¿name" in line:
+                        name = "ï»¿name"
+                    else:
+                        name = "name"
                     styles[line[name]] = {"prompt": line['prompt'], "negative_prompt": line['negative_prompt']}
             
             if styles:
@@ -4111,11 +4116,13 @@ class WAS_BLIP_Analyze_Image:
     
     def blip_caption_image(self, image, mode, question):
     
-        if ('timm' not in packages() 
+        if ( 'timm' not in packages() 
             or 'transformers' not in packages() 
-            or 'GitPython' not in packages()):
+            or 'GitPython' not in packages()
+            or 'fairscale' not in packages() ):
+            print(packages())
             print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers>=4.15.0', 'timm>=0.4.12', 'gitpython'])
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers>=4.15.0', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
 
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
             from git.repo.base import Repo
