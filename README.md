@@ -173,7 +173,7 @@ Create a new cell and add the following code, then run the cell. You may need to
 WAS Node Suite is designed to download dependencies on it's own as needed, but what it depends on can be installed manually before use to prevent any script issues. The dependencies which are not required by ComfyUI are as follows: 
   - BLIP
     - Requires `transformers==4.26.1`
-      - You can try to manually install from your `/python_embeds/` folder run `.\python.exe -m pip install --user --upgrade --force-reinstall transformers==4.26.1 Collecting transformers==4.26.1`
+      - You can try to manually install from your `/python_embeds/` folder run `.\python.exe -m pip install --user --upgrade --force-reinstall transformers==4.26.1`
   - opencv
   - scipy
   - [pilgram](https://github.com/akiomik/pilgram)
