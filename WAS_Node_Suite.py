@@ -4284,7 +4284,7 @@ class WAS_BLIP_Analyze_Image:
         
             from models.blip import blip_decoder
             
-            blip_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI' , 'models'+os.sep+'blip')
+            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if 'ComfyUI' not in os.getcwd() else os.getcwd() ), 'models'+os.sep+'blip')
             if not os.path.exists(blip_dir):
                 os.mkdir(blip_dir)
                 
@@ -4310,7 +4310,7 @@ class WAS_BLIP_Analyze_Image:
         
             from models.blip_vqa import blip_vqa
             
-            blip_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI' , 'models'+os.sep+'blip')
+            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if 'ComfyUI' not in os.getcwd() else os.getcwd() ), 'models'+os.sep+'blip')
             if not os.path.exists(blip_dir):
                 os.mkdir(blip_dir)
                 
