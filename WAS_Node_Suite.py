@@ -3676,7 +3676,15 @@ class WAS_Text_Multiline:
     CATEGORY = "WAS Suite/Text"
 
     def text_multiline(self, text):
-        return (text, )        
+        import io
+        new_text = []
+        for line in io.StringIO(text):
+            if not line.strip().startswith('#'):
+                if not line.strip().startswith("\n"):
+                    line = line.replace("\n", '')
+                new_text.append(line)
+        new_text = "\n".join(new_text)
+        return (new_text, )        
                 
 
 # Text Dictionary Concatenate
