@@ -4175,7 +4175,16 @@ class WAS_Text_Load_From_File:
         for line in io.StringIO(text):
             dictionary[filename].append(line.replace('\n', ''))
             
-        return (text, dictionary)
+        import io
+        lines = []
+        for line in io.StringIO(text):
+            if not line.strip().startswith('#'):
+                if not line.strip().startswith("\n"):
+                    line = line.replace("\n", '')
+                lines.append(line.replace("\n",''))
+                dictionary[filename].append(line.replace("\n", ''))
+            
+        return ("\n".join(lines), dictionary)
 
 # LOAD TEXT TO STRING
 
