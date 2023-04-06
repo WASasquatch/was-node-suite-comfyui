@@ -1727,8 +1727,8 @@ class WAS_Image_History:
             if conf.__contains__('history_display_limit'):
                 history_paths = history_paths[-conf['history_display_limit']:]
                 paths = []
-            for path in history_paths:
-                paths.append(os.path.join('...'+os.sep+os.path.basename(os.path.dirname(path)), os.path.basename(path)))
+            for path_ in history_paths:
+                paths.append(os.path.join('...'+os.sep+os.path.basename(os.path.dirname(path_)), os.path.basename(path_)))
                 
         return {
             "required": {
@@ -1747,7 +1747,7 @@ class WAS_Image_History:
         if self.HDB.catExists("History") and self.HDB.keyExists("History", "Images"):
             history_paths = self.HDB.get("History", "Images")
             for path_ in history_paths:
-                paths.update({os.path.join('...'+os.sep+path.basename(os.path.dirname(path_)), os.path.basename(path_)): path_})
+                paths.update({os.path.join('...'+os.sep+os.path.basename(os.path.dirname(path_)), os.path.basename(path_)): path_})
         if os.path.exists(paths[image]) and paths.__contains__(image):
             return (pil2tensor(Image.open(paths[image]).convert('RGB')), )
         else:
