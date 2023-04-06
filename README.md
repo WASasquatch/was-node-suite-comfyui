@@ -45,6 +45,7 @@
  - Image Gradient Map: Apply a gradient map to a image
  - Image Generate Gradient: Generate a gradient map with desired stops and colors
  - Image High Pass Filter: Apply a high frequency pass to the image returning the details
+ - Image History Loader: Load images from history based on the Load Image Batch node. Can define max history in config file.
  - Image Levels Adjustment: Adjust the levels of a image
  - Image Load: Load a *image* from any path on the system, or a url starting with `http`
  - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
