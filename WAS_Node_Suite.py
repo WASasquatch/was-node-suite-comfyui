@@ -1646,17 +1646,20 @@ class WAS_Load_Image_Batch:
             image = fl.get_image_by_id(index)
         else:
             image = fl.get_next_image()
-        self.image = image
-        
+
         if ( self.HDB.catExists("History") 
             and self.HDB.keyExists("History", "Images") ):
             saved_paths = self.HDB.get("History", "Images")
-            for path in saved_paths:
-                if not os.path.exists(path):
-                    saved_paths.remove(path)    
-            saved_paths.extend(new_paths)
+            for path_ in saved_paths:
+                if not os.path.exists(path_):
+                    saved_paths.remove(path_)    
+            for path_ in new_paths:
+                if path_ not in saved_paths:
+                    saved_paths.append(path_)
+                else: # Move occurance up in list
+                    saved_paths.remove(path_)
+                    saved_paths.append(path_)
             self.HDB.update("History", "Images", saved_paths)
-            
         else:
             if not self.HDB.catExists("History"):
                 self.HDB.insertCat("History")
@@ -3116,6 +3119,7 @@ class WAS_Load_Image:
 
     def __init__(self):
         self.input_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', "input")
+        self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -3143,6 +3147,23 @@ class WAS_Load_Image:
                 i = Image.new(mode='RGB', size=(512, 512), color=(0, 0, 0))
         if not i:
             return
+            
+        if ( self.HDB.catExists("History") 
+            and self.HDB.keyExists("History", "Images") ):
+            saved_paths = self.HDB.get("History", "Images")
+            for path_ in saved_paths:
+                if not os.path.exists(path_):
+                    saved_paths.remove(path_)    
+            if image_path not in saved_paths:
+                saved_paths.append(image_path)
+            else:
+                saved_paths.remove(image_path)
+                saved_paths.append(image_path)
+            self.HDB.update("History", "Images", saved_paths)
+        else:
+            if not self.HDB.catExists("History"):
+                self.HDB.insertCat("History")
+            self.HDB.insert("History", "Images", [image_path, ])
 
         image = i
         image = np.array(image).astype(np.float32) / 255.0
@@ -3153,7 +3174,7 @@ class WAS_Load_Image:
             mask = 1. - torch.from_numpy(mask)
         else:
             mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-        return (image, mask)
+        return (image.convert('RGB'), mask)
 
     def download_image(self, url):
         try:
@@ -3176,7 +3197,7 @@ class WAS_Load_Image:
     @classmethod
     def IS_CHANGED(cls, image_path):
         if image_path.startswith('http'):
-            return True
+            return float("NaN")
         m = hashlib.sha256()
         with open(image_path, 'rb') as f:
             m.update(f.read())
