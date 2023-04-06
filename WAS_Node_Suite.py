@@ -154,7 +154,6 @@ else:
             styles_persist = True
             
         if webui_styles_file != "None" and os.path.exists(webui_styles_file):
-        
             print(f'\033[34mWAS Node Suite:\033[0m Importing styles from `{webui_styles_file}`.')
         
             import csv
