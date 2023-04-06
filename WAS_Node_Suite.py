@@ -201,6 +201,25 @@ def pil2tensor(image):
 def pil2hex(image):
     return hashlib.sha256(np.array(tensor2pil(image)).astype(np.uint16).tobytes()).hexdigest()
 
+# Tensor to SAM-compatible NumPy
+def tensor2sam(image):
+    # Convert tensor to numpy array in HWC uint8 format with pixel values in [0, 255]
+    sam_image = np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8)
+    # Transpose the image to HWC format if it's in CHW format
+    if sam_image.shape[0] == 3:
+        sam_image = np.transpose(sam_image, (1, 2, 0))
+    return sam_image
+
+# SAM-compatible NumPy to tensor
+def sam2tensor(image):
+    # Convert the image to float32 and normalize the pixel values to [0, 1]
+    float_image = image.astype(np.float32) / 255.0
+    # Transpose the image from HWC format to CHW format
+    chw_image = np.transpose(float_image, (2, 0, 1))
+    # Convert the numpy array to a tensor
+    tensor_image = torch.from_numpy(chw_image)
+    return tensor_image
+
 # Median Filter
 def medianFilter(img, diameter, sigmaColor, sigmaSpace):
     import cv2 as cv
@@ -4419,6 +4438,117 @@ class WAS_BLIP_Analyze_Image:
             return ('Invalid BLIP mode!', )
         
 
+# SAM MODEL LOADER
+class WAS_SAM_Model_Loader:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "model_size": (["ViT-H (91M)", "ViT-L (308M)", "ViT-B (636M)"], ),
+            }
+        }
+    
+    RETURN_TYPES = ("SAM_MODEL",)
+    FUNCTION = "sam_load_model"
+    
+    CATEGORY = "WAS Suite/Image/SAM"
+    
+    def sam_load_model(self, model_size):
+        model_filename_mapping = {
+            "ViT-H (91M)": "sam_vit_h_4b8939.pth",
+            "ViT-L (308M)": "sam_vit_l_0b3195.pth",
+            "ViT-B (636M)": "sam_vit_b_01ec64.pth",
+        }
+        
+        model_url_mapping = {
+            "ViT-H (91M)": r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+            "ViT-L (308M)": r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+            "ViT-B (636M)": r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+        }
+        
+        model_filename = model_filename_mapping[model_size]
+    
+        if ( 'GitPython' not in packages() ):
+            print("\033[34mWAS NS:\033[0m Installing SAM dependencies...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'gitpython'])
+        
+        if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM')):
+            from git.repo.base import Repo
+            print("\033[34mWAS NS:\033[0m Installing SAM...")
+            Repo.clone_from('https://github.com/facebookresearch/segment-anything', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
+        
+        sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
+        
+        sam_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'sam')
+        if not os.path.exists(sam_dir):
+            os.mkdir(sam_dir)
+        
+        sam_file = os.path.join(sam_dir, model_filename)
+        if not os.path.exists(sam_file):
+            print("\033[34mWAS NS:\033[0m Selected SAM model not found. Downloading...")
+            r = requests.get(model_url, allow_redirects=True)
+            open(sam_file, 'wb').write(r.content)
+        
+        from segment_anything import build_sam
+        sam_model = build_sam(checkpoint=sam_file)
+        
+        return (sam_model, )
+
+
+# SAM IMAGE MASK
+class WAS_SAM_Image_Mask:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "model": ("SAM_MODEL",),
+                "image": ("IMAGE",),
+                "points": ("STRING", {"default": "0 100;100 0;25 25", "multiline": True}),
+                "labels": ("STRING", {"default": "1 1 0", "multiline": True}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "sam_image_mask"
+    
+    CATEGORY = "WAS Suite/Image/SAM"
+    
+    def sam_image_mask(self, model, image, points, labels):
+        image = tensor2sam(image)
+        points = np.asarray(np.matrix(points))
+        labels = np.array(np.matrix(labels))[0]
+        
+        print(points)
+        print(labels)
+        
+        from segment_anything import SamPredictor
+        
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model.to(device=device)
+        
+        predictor = SamPredictor(model)
+        predictor.set_image(image)
+        
+        masks, scores, logits = predictor.predict(
+            point_coords=points,
+            point_labels=labels,
+            multimask_output=False
+        )
+        
+        model.to(device='cpu')
+        
+        masks_expanded = np.expand_dims(masks, axis=-1)
+        masks_final = np.repeat(masks_expanded, 3, axis=-1)
+        
+        return (torch.from_numpy(masks), )
+
+
 #! NUMBERS
 
 
@@ -4868,6 +4998,8 @@ NODE_CLASS_MAPPINGS = {
     "Seed": WAS_Seed,
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
     "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
+    "SAM Model Loader": WAS_SAM_Model_Loader,
+    "SAM Image Mask": WAS_SAM_Image_Mask,
     "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Concatenate": WAS_Text_Concatenate,
