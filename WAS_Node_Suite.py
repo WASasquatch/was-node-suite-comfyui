@@ -48,7 +48,8 @@ CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE))
                     else os.path.dirname(NODE_FILE) )
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
-WAS_CONFIG = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
+WAS_HISTORY_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_history.json')
+WAS_CONFIG_FILE = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
 STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
 
 # WAS Suite Locations Debug
@@ -96,13 +97,14 @@ was_conf_template = {
                     "webui_styles_persistent_update": True,
                     "blip_model_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth",
                     "blip_model_vqa_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth",
+                    "history_display_limit": 32,
                 }
 
 # Create, Load, or Update Config
 
 def getSuiteConfig():
     try:
-        with open(WAS_CONFIG, "r") as f:
+        with open(WAS_CONFIG_FILE, "r") as f:
             was_config = json.load(f)
     except OSError as e:
         print(e)
@@ -114,7 +116,7 @@ def getSuiteConfig():
     
 def updateSuiteConfig(conf):
     try:
-        with open(WAS_CONFIG, "w", encoding='utf-8') as f:
+        with open(WAS_CONFIG_FILE, "w", encoding='utf-8') as f:
             json.dump(conf, f, indent=4)
     except OSError as e:
         print(e)
@@ -124,11 +126,11 @@ def updateSuiteConfig(conf):
         return False
     return True
 
-if not os.path.exists(WAS_CONFIG):
+if not os.path.exists(WAS_CONFIG_FILE):
     if updateSuiteConfig(was_conf_template):
-        print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG}`.')
+        print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG_FILE}`.')
     else:
-        print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG}`.')
+        print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG_FILE}`.')
 else:
     was_config = getSuiteConfig()
     
@@ -254,6 +256,12 @@ class WASDatabase:
                  self.data = json.load(f)
         except FileNotFoundError:
             self.data = {}
+
+    def catExists(self, category):
+        return self.data.__contains__(category)
+        
+    def keyExists(self, category, key):
+        return self.data[category].__contains__(key)
 
     def insert(self, category, key, value):
         if category not in self.data:
@@ -1609,7 +1617,7 @@ class WAS_Image_Rescale:
 
 class WAS_Load_Image_Batch:
     def __init__(self):
-        pass
+        self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
             
     @classmethod
     def INPUT_TYPES(cls):
@@ -1629,15 +1637,30 @@ class WAS_Load_Image_Batch:
     CATEGORY = "WAS Suite/IO"
 
     def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001'):
-
+        
         if not os.path.exists(path):
             return (None, )
         fl = self.BatchImageLoader(path, label, pattern)
+        new_paths = fl.image_paths
         if mode == 'single_image':
             image = fl.get_image_by_id(index)
         else:
             image = fl.get_next_image()
         self.image = image
+        
+        if ( self.HDB.catExists("History") 
+            and self.HDB.keyExists("History", "Images") ):
+            saved_paths = self.HDB.get("History", "Images")
+            for path in saved_paths:
+                if not os.path.exists(path):
+                    saved_paths.remove(path)    
+            saved_paths.extend(new_paths)
+            self.HDB.update("History", "Images", saved_paths)
+            
+        else:
+            if not self.HDB.catExists("History"):
+                self.HDB.insertCat("History")
+            self.HDB.insert("History", "Images", new_paths)
 
         return (pil2tensor(image), )
 
@@ -1685,6 +1708,51 @@ class WAS_Load_Image_Batch:
     @classmethod
     def IS_CHANGED(cls, **kwargs):
         return float("NaN")
+        
+        
+# IMAGE HISTORY NODE
+
+class WAS_Image_History:
+    def __init__(self):
+        self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
+        self.conf = getSuiteConfig()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        HDB = WASDatabase(WAS_HISTORY_DATABASE)
+        conf = getSuiteConfig()
+        paths = ['No History']
+        if HDB.catExists("History") and HDB.keyExists("History", "Images"):
+            history_paths = HDB.get("History", "Images")
+            if conf.__contains__('history_display_limit'):
+                history_paths = history_paths[-conf['history_display_limit']:]
+                paths = []
+            for path in history_paths:
+                paths.append(os.path.join('...'+os.sep+os.path.basename(os.path.dirname(path)), os.path.basename(path)))
+                
+        return {
+            "required": {
+                "image": (paths,),
+            },
+        }
+        
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_history"
+
+    CATEGORY = "WAS Suite/History"
+    
+    def image_history(self, image):
+        self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
+        paths = {}
+        if self.HDB.catExists("History") and self.HDB.keyExists("History", "Images"):
+            history_paths = self.HDB.get("History", "Images")
+            for path in history_paths:
+                paths.update({os.path.join('...'+os.sep+path.basename(os.path.dirname(path)), os.path.basename(path)): path})
+        if os.path.exists(paths[image]) and paths.__contains__(image):
+            return (pil2tensor(Image.open(paths[image]).convert('RGB')), )
+        else:
+            raise ValueError(f"\033[34mWAS NS\033[0m Error: The image `{image}` does not exist!")
+            return (pil2tensor(Image.new('RGB', (512,512), (0, 0, 0, 0))), )
 
 
 # IMAGE PADDING
@@ -3569,8 +3637,8 @@ class WAS_KSampler:
     def INPUT_TYPES(cls):
         return {"required":
 
-                {"model": ("MODEL",),
-                 "seed": ("SEED",),
+                {"model": ("MODEL", ),
+                 "seed": ("SEED", ),
                  "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                  "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                  "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
@@ -3588,6 +3656,7 @@ class WAS_KSampler:
 
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=1.0):
         return nodes.common_ksampler(model, seed['seed'], steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
+
 
 # SEED NODE
 
@@ -4237,7 +4306,6 @@ class WAS_BLIP_Analyze_Image:
             or 'transformers' not in packages() 
             or 'GitPython' not in packages()
             or 'fairscale' not in packages() ):
-            print(packages())
             print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
             subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers==4.26.1', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
            
@@ -4257,7 +4325,7 @@ class WAS_BLIP_Analyze_Image:
                     pass
             sys.modules["fairscale.nn.checkpoint.checkpoint_activations"] = FakeFairscale
             
-        def transformImage(input_image, image_size, device):
+        def transformImage_legacy(input_image, image_size, device):
             raw_image = input_image.convert('RGB')   
             raw_image = raw_image.resize((image_size, image_size))
             transform = transforms.Compose([
@@ -4267,6 +4335,17 @@ class WAS_BLIP_Analyze_Image:
                 ]) 
             image = transform(raw_image).unsqueeze(0).to(device)   
             return image
+            
+        def transformImage(input_image, image_size, device):
+            raw_image = input_image.convert('RGB')   
+            raw_image = raw_image.resize((image_size, image_size))
+            transform = transforms.Compose([
+                transforms.Resize(raw_image.size, interpolation=InterpolationMode.BICUBIC),
+                transforms.ToTensor(),
+                transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+            ]) 
+            image = transform(raw_image).unsqueeze(0).to(device)   
+            return image.view(1, -1, image_size, image_size)  # Change the shape of the output tensor
         
         sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
         
@@ -4278,13 +4357,18 @@ class WAS_BLIP_Analyze_Image:
         conf = getSuiteConfig()
         image = tensor2pil(image)
         size = 384
-        tensor = transformImage(image, size, device)
+        
+        if 'transformers==4.26.1' in packages(True):
+            print("Using Legacy `transformImaage()`")
+            tensor = transformImage_legacy(image, size, device)
+        else:
+            tensor = transformImage(image, size, device)
         
         if mode == 'caption':
         
             from models.blip import blip_decoder
             
-            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if 'ComfyUI' not in os.getcwd() else os.getcwd() ), 'models'+os.sep+'blip')
+            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'blip')
             if not os.path.exists(blip_dir):
                 os.mkdir(blip_dir)
                 
@@ -4310,7 +4394,7 @@ class WAS_BLIP_Analyze_Image:
         
             from models.blip_vqa import blip_vqa
             
-            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if 'ComfyUI' not in os.getcwd() else os.getcwd() ), 'models'+os.sep+'blip')
+            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'blip')
             if not os.path.exists(blip_dir):
                 os.mkdir(blip_dir)
                 
@@ -4319,7 +4403,7 @@ class WAS_BLIP_Analyze_Image:
             if conf.__contains__('blip_model_vqa_url'):
                 model_url = conf['blip_model_vqa_url']
             else:
-                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth'
         
             model = blip_vqa(pretrained=model_url, image_size=size, vit='base')
             model.eval()
@@ -4718,7 +4802,6 @@ class WAS_Debug_Number_to_Console:
     def IS_CHANGED(cls, **kwargs):
         return float("NaN")
 
-
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
@@ -4741,6 +4824,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Gradient Map": WAS_Image_Gradient_Map,
     "Image Generate Gradient": WAS_Image_Generate_Gradient,
     "Image High Pass Filter": WAS_Image_High_Pass_Filter,
+    "Image History Loader": WAS_Image_History,
     "Image Levels Adjustment": WAS_Image_Levels,
     "Image Load": WAS_Load_Image,
     "Image Median Filter": WAS_Image_Median_Filter,
