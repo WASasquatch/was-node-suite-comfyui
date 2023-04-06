@@ -154,6 +154,7 @@ else:
             styles_persist = True
             
         if webui_styles_file != "None" and os.path.exists(webui_styles_file):
+
             print(f'\033[34mWAS Node Suite:\033[0m Importing styles from `{webui_styles_file}`.')
         
             import csv
@@ -1745,8 +1746,8 @@ class WAS_Image_History:
         paths = {}
         if self.HDB.catExists("History") and self.HDB.keyExists("History", "Images"):
             history_paths = self.HDB.get("History", "Images")
-            for path in history_paths:
-                paths.update({os.path.join('...'+os.sep+path.basename(os.path.dirname(path)), os.path.basename(path)): path})
+            for path_ in history_paths:
+                paths.update({os.path.join('...'+os.sep+path.basename(os.path.dirname(path_)), os.path.basename(path_)): path_})
         if os.path.exists(paths[image]) and paths.__contains__(image):
             return (pil2tensor(Image.open(paths[image]).convert('RGB')), )
         else:
