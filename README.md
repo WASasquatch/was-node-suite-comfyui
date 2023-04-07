@@ -45,7 +45,7 @@
  - Image Gradient Map: Apply a gradient map to a image
  - Image Generate Gradient: Generate a gradient map with desired stops and colors
  - Image High Pass Filter: Apply a high frequency pass to the image returning the details
- - Image History Loader: Load images from history based on the Load Image Batch node. Can define max history in config file.
+ - Image History Loader: Load images from history based on the Load Image Batch node. Can define max history in config file. *(requires restart to show last sessions files at this time)*
  - Image Levels Adjustment: Adjust the levels of a image
  - Image Load: Load a *image* from any path on the system, or a url starting with `http`
  - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
@@ -103,6 +103,7 @@
  - Text Add Tokens: Add custom tokens to parse in filenames or other text.
  - Text Concatenate: Merge two strings
  - Text Dictionary Update: Merge two dictionaries
+ - Text File History: Show previously opened text files *(requires restart to show last sessions files at this time)*
  - Text Find and Replace: Find and replace a substring in a string
  - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary. 
    - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed. 
