@@ -131,6 +131,7 @@ The token name can be anything excluding the `:` character to define your token.
     - The current system microtime
   - [time(`format_code`)]
     - The current system time in human readable format. Utilizing [datetime]() formatting
+    - Example: `[hostname]_[time]__[time(%Y-%m-%d__%I-%M%p)]` would output: **SKYNET-MASTER_1680897261__2023-04-07__07-54PM**
   - [hostname]
     - The hostname of the system executing ComfyUI
   - [user]
@@ -141,6 +142,8 @@ The token name can be anything excluding the `:` character to define your token.
 <details>
 	<summary>$\color{orange}{Expand\ Date\ Code\ List}$</summary>
 
+<br>
+	
 | Directive | Meaning | Example | Notes |
 | --- | --- | --- | --- |
 | %a | Weekday as locale’s abbreviated name. |  Sun, Mon, …, Sat (en_US); So, Mo, …, Sa (de_DE)   | (1) |
