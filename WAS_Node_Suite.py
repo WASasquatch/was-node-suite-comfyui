@@ -375,9 +375,14 @@ def update_history_images(new_paths):
             if not os.path.exists(path_):
                 saved_paths.remove(path_)
         if isinstance(new_paths, str):
+            if new_paths in saved_paths:
+                saved_paths.remove(new_paths)
             saved_paths.append(new_paths)
         elif isinstance(new_paths, list):
-            saved_paths.extend(new_paths)
+            for path_ in new_paths:
+                if path_ in saved_paths:
+                    saved_paths.remove(path_)
+                saved_paths.append(path_)
         HDB.update("History", "Images", saved_paths)
     else:
         if not HDB.catExists("History"):
@@ -387,6 +392,32 @@ def update_history_images(new_paths):
         elif isinstance(new_paths, list):
             HDB.insert("History", "Images", new_paths)
 
+# Update text file history
+
+def update_history_text_files(new_paths):
+    HDB = WASDatabase(WAS_HISTORY_DATABASE)
+    if HDB.catExists("History") and HDB.keyExists("History", "TextFiles"):
+        saved_paths = HDB.get("History", "TextFiles")
+        for path_ in saved_paths:
+            if not os.path.exists(path_):
+                saved_paths.remove(path_)
+        if isinstance(new_paths, str):
+            if new_paths in saved_paths:
+                saved_paths.remove(new_paths)
+            saved_paths.append(new_paths)
+        elif isinstance(new_paths, list):
+            for path_ in new_paths:
+                if path_ in saved_paths:
+                    saved_paths.remove(path_)
+                saved_paths.append(path_)
+        HDB.update("History", "TextFiles", saved_paths)
+    else:
+        if not HDB.catExists("History"):
+            HDB.insertCat("History")
+        if isinstance(new_paths, str):
+            HDB.insert("History", "TextFiles", [new_paths])
+        elif isinstance(new_paths, list):
+            HDB.insert("History", "TextFiles", new_paths)
 # WAS Filter Class
 
 class WAS_Filter_Class():
@@ -4140,7 +4171,11 @@ class WAS_Text_Save:
         filename = tokens.parseTokens(filename)
 
         # Write text file
-        self.writeTextFile(os.path.join(path, filename + '.txt'), text)
+        file_path = os.path.join(path, filename + '.txt')
+        self.writeTextFile(file_path, text)
+        
+        # Write file to file history
+        update_history_text_files(file_path)
 
         return (text, )
 
@@ -4152,7 +4187,69 @@ class WAS_Text_Save:
         except OSError:
             print(f'\033[34mWAS Node Suite\033[0m Error: Unable to save file `{file}`')
 
+        
+        
+# TEXT FILE HISTORY NODE
 
+class WAS_Text_File_History:
+    def __init__(self):
+        self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
+        self.conf = getSuiteConfig()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        HDB = WASDatabase(WAS_HISTORY_DATABASE)
+        conf = getSuiteConfig()
+        paths = ['No History',]
+        if HDB.catExists("History") and HDB.keyExists("History", "TextFiles"):
+            history_paths = HDB.get("History", "TextFiles")
+            if conf.__contains__('history_display_limit'):
+                history_paths = history_paths[-conf['history_display_limit']:]
+                paths = []
+            for path_ in history_paths:
+                paths.append(os.path.join('...'+os.sep+os.path.basename(os.path.dirname(path_)), os.path.basename(path_)))
+                
+        return {
+            "required": {
+                "file": (paths,),
+                "dictionary_name": ("STRING", {"default": '[filename]', "multiline": True}),
+            },
+        }
+        
+    RETURN_TYPES = ("ASCII","DICT")
+    FUNCTION = "text_file_history"
+
+    CATEGORY = "WAS Suite/History"
+    
+    def text_file_history(self, file=None, dictionary_name='[filename]]'):
+        file_path = file.strip()
+        filename = ( os.path.basename(file_path).split('.', 1)[0] 
+            if '.' in os.path.basename(file_path) else os.path.basename(file_path) )
+        if dictionary_name != '[filename]' or dictionary_name not in [' ', '']:
+            filename = dictionary_name
+        if not os.path.exists(file_path):
+            print('\033[34mWAS Node Suite\033[0m Error: The path `{file_path}` specified cannot be found.')
+            return ('', {filename: []})
+        with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
+            text = file.read()
+            
+        # Write to file history
+        update_history_text_files(file_path)
+            
+        import io
+        lines = []
+        for line in io.StringIO(text):
+            if not line.strip().startswith('#'):
+                if not line.strip().startswith("\n"):
+                    line = line.replace("\n", '')
+                lines.append(line.replace("\n",''))
+        dictionary = {filename: lines}
+            
+        return ("\n".join(lines), dictionary)
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 # TEXT TO CONDITIONIONG
 
@@ -4344,6 +4441,9 @@ class WAS_Text_Load_From_File:
             return ('', {filename: []})
         with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
             text = file.read()
+            
+        # Write to file history
+        update_history_text_files(file_path)
             
         import io
         lines = []
@@ -4971,6 +5071,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Concatenate": WAS_Text_Concatenate,
+    "Text File History Loader": WAS_Text_File_History,
     "Text Find and Replace by Dictionary": WAS_Search_and_Replace_Dictionary,
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
