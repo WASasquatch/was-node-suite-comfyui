@@ -22,6 +22,7 @@ from urllib.request import urlopen
 import comfy.samplers
 import comfy.sd
 import comfy.utils
+import folder_paths as comfy_paths
 import glob
 import hashlib
 import json
@@ -46,6 +47,7 @@ CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE))
                     if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' 
                     or os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui-main' 
                     else os.path.dirname(NODE_FILE) )
+MODELS_DIR =  os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models')
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 WAS_HISTORY_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_history.json')
@@ -361,6 +363,29 @@ class TextTokens:
                 
     def _update(self):
         self.WDB.updateCat('custom_tokens', self.custom_tokens)
+        
+        
+# Update image history
+
+def update_history_images(new_paths):
+    HDB = WASDatabase(WAS_HISTORY_DATABASE)
+    if HDB.catExists("History") and HDB.keyExists("History", "Images"):
+        saved_paths = HDB.get("History", "Images")
+        for path_ in saved_paths:
+            if not os.path.exists(path_):
+                saved_paths.remove(path_)
+        if isinstance(new_paths, str):
+            saved_paths.append(new_paths)
+        elif isinstance(new_paths, list):
+            saved_paths.extend(new_paths)
+        HDB.update("History", "Images", saved_paths)
+    else:
+        if not HDB.catExists("History"):
+            HDB.insertCat("History")
+        if isinstance(new_paths, str):
+            HDB.insert("History", "Images", [new_paths])
+        elif isinstance(new_paths, list):
+            HDB.insert("History", "Images", new_paths)
 
 # WAS Filter Class
 
@@ -1647,23 +1672,8 @@ class WAS_Load_Image_Batch:
         else:
             image = fl.get_next_image()
 
-        if ( self.HDB.catExists("History") 
-            and self.HDB.keyExists("History", "Images") ):
-            saved_paths = self.HDB.get("History", "Images")
-            for path_ in saved_paths:
-                if not os.path.exists(path_):
-                    saved_paths.remove(path_)    
-            for path_ in new_paths:
-                if path_ not in saved_paths:
-                    saved_paths.append(path_)
-                else: # Move occurance up in list
-                    saved_paths.remove(path_)
-                    saved_paths.append(path_)
-            self.HDB.update("History", "Images", saved_paths)
-        else:
-            if not self.HDB.catExists("History"):
-                self.HDB.insertCat("History")
-            self.HDB.insert("History", "Images", new_paths)
+        # Update history
+        update_history_images(new_paths)
 
         return (pil2tensor(image), )
 
@@ -1757,6 +1767,9 @@ class WAS_Image_History:
             raise ValueError(f"\033[34mWAS NS\033[0m Error: The image `{image}` does not exist!")
             return (pil2tensor(Image.new('RGB', (512,512), (0, 0, 0, 0))), )
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 # IMAGE PADDING
 
@@ -3148,22 +3161,8 @@ class WAS_Load_Image:
         if not i:
             return
             
-        if ( self.HDB.catExists("History") 
-            and self.HDB.keyExists("History", "Images") ):
-            saved_paths = self.HDB.get("History", "Images")
-            for path_ in saved_paths:
-                if not os.path.exists(path_):
-                    saved_paths.remove(path_)    
-            if image_path not in saved_paths:
-                saved_paths.append(image_path)
-            else:
-                saved_paths.remove(image_path)
-                saved_paths.append(image_path)
-            self.HDB.update("History", "Images", saved_paths)
-        else:
-            if not self.HDB.catExists("History"):
-                self.HDB.insertCat("History")
-            self.HDB.insert("History", "Images", [image_path, ])
+        # Update history
+        update_history_images(image_path)
 
         image = i
         image = np.array(image).astype(np.float32) / 255.0
@@ -3320,7 +3319,7 @@ class WAS_Latent_Noise:
 
 class MiDaS_Depth_Approx:
     def __init__(self):
-        self.midas_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', 'models'+os.sep+'midas')
+        self.midas_dir = os.path.join(MODELS_DIR, 'midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -3419,7 +3418,7 @@ class MiDaS_Depth_Approx:
 
 class MiDaS_Background_Foreground_Removal:
     def __init__(self):
-        self.midas_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', 'models'+os.sep+'midas')
+        self.midas_dir = os.path.join(MODELS_DIR, 'midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -3693,7 +3692,7 @@ class WAS_Seed:
     RETURN_TYPES = ("SEED",)
     FUNCTION = "seed"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def seed(self, seed):
         return ({"seed": seed, }, )
@@ -3774,7 +3773,38 @@ class WAS_Text_Multiline:
                     line = line.replace("\n", '')
                 new_text.append(line)
         new_text = "\n".join(new_text)
-        return (new_text, )        
+        return (new_text, )   
+
+        
+# Text Parse Embeddings
+
+class WAS_Text_Parse_Embeddings_By_Name:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("ASCII", ),
+            }
+        }
+    RETURN_TYPES = ("ASCII",)
+    FUNCTION = "text_parse_embeddings"
+
+    CATEGORY = "WAS Suite/Text/Parse"
+
+    def text_parse_embeddings(self, text):
+        return (self.convert_a1111_embeddings(text), )
+        
+    def convert_a1111_embeddings(self, text):
+        import re
+        for filename in os.listdir(os.path.join(MODELS_DIR, 'embeddings')):
+            basename, ext = os.path.splitext(filename)
+            pattern = re.compile(r'\b{}\b'.format(re.escape(basename)))
+            replacement = 'embedding:{}'.format(basename)
+            text = re.sub(pattern, replacement, text)
+        return text        
                 
 
 # Text Dictionary Concatenate
@@ -3789,6 +3819,10 @@ class WAS_Dictionary_Update:
             "required": {
                 "dictionary_a": ("DICT", ),
                 "dictionary_b": ("DICT", ),
+            },
+            "optional": {
+                "dictionary_c": ("DICT", ),
+                "dictionary_d": ("DICT", ),
             }
         }
     RETURN_TYPES = ("DICT",)
@@ -3796,8 +3830,13 @@ class WAS_Dictionary_Update:
 
     CATEGORY = "WAS Suite/Text"
 
-    def dictionary_update(self, dictionary_a, dictionary_b):
-        return ({**dictionary_a, **dictionary_b}, )
+    def dictionary_update(self, dictionary_a, dictionary_b, dictionary_c=None, dictionary_d=None):
+        return_dictionary = {**dictionary_a, **dictionary_b}
+        if dictionary_a:
+            return_dictionary = {**return_dictionary, **dictionary_c}
+        if dictionary_d:
+            return_dictionary = {**return_dictionary, **dictionary_d}
+        return (return_dictionary, )
 
 
 # Text String Node
@@ -3811,15 +3850,18 @@ class WAS_Text_String:
         return {
             "required": {
                 "text": ("STRING", {"default": '', "multiline": False}),
+                "text_b": ("STRING", {"default": '', "multiline": False}),
+                "text_c": ("STRING", {"default": '', "multiline": False}),
+                "text_d": ("STRING", {"default": '', "multiline": False}),
             }
         }
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = ("ASCII","ASCII","ASCII","ASCII")
     FUNCTION = "text_string"
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_string(self, text):
-        return (text, )
+    def text_string(self, text='', text_b='', text_c='', text_d=''):
+        return (text, text_b, text_c, text_d)
 
 
 # Text Random Line
@@ -3865,7 +3907,11 @@ class WAS_Text_Concatenate:
             "required": {
                 "text_a": ("ASCII",),
                 "text_b": ("ASCII",),
-                "linebreak_addition": (['true', 'false'], ),
+                "linebreak_addition": (['false','true'], ),
+            },
+            "optional": {
+                "text_c": ("ASCII",),
+                "text_d": ("ASCII",),
             }
         }
 
@@ -3874,8 +3920,13 @@ class WAS_Text_Concatenate:
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_concatenate(self, text_a, text_b, linebreak_addition):
-        return (text_a + ("\n" if linebreak_addition == 'true' else '') + text_b, )
+    def text_concatenate(self, text_a, text_b, text_c=None, text_d=None, linebreak_addition='false'):
+        return_text = text_a + ("\n" if linebreak_addition == 'true' else '') + text_b
+        if text_c:
+            return_text = return_text + ("\n" if linebreak_addition == 'true' else '') + text_c
+        if text_d:
+            return_text = return_text + ("\n" if linebreak_addition == 'true' else '') + text_d
+        return (return_text, )
 
 
 # Text Search and Replace
@@ -3897,7 +3948,7 @@ class WAS_Search_and_Replace:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "text_search_and_replace"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Search"
 
     def text_search_and_replace(self, text, find, replace):
         return (self.replace_substring(text, find, replace), )
@@ -3926,7 +3977,7 @@ class WAS_Search_and_Replace_Input:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "text_search_and_replace"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Search"
 
     def text_search_and_replace(self, text, find, replace, seed):
    
@@ -3964,7 +4015,7 @@ class WAS_Search_and_Replace_Dictionary:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "text_search_and_replace_dict"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Search"
 
     def text_search_and_replace_dict(self, text, dictionary, replacement_key, seed):
     
@@ -4009,7 +4060,7 @@ class WAS_Text_Parse_NSP:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "text_parse_nsp"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Parse"
 
     def text_parse_nsp(self, text, noodle_key='__', seed=0):
 
@@ -4144,7 +4195,7 @@ class WAS_Text_Parse_Tokens:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "text_parse_tokens"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Parse"
 
     def text_parse_tokens(self, text):
         # Token Parser
@@ -4171,7 +4222,7 @@ class WAS_Text_Add_Tokens:
     RETURN_TYPES = ()
     FUNCTION = "text_add_tokens"
     OUTPUT_NODE = True
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Parse"
 
     def text_add_tokens(self, tokens):
     
@@ -4216,7 +4267,7 @@ class WAS_Text_to_Console:
     OUTPUT_NODE = True
     FUNCTION = "text_to_console"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Debug"
 
     def text_to_console(self, text, label):
         if label.strip() != '':
@@ -4225,6 +4276,40 @@ class WAS_Text_to_Console:
             print(
                 f'\033[34mWAS Node Suite \033[33mText to Console\033[0m:\n{text}\n')
         return (text, )
+
+# DICT TO CONSOLE
+
+class WAS_Dictionary_To_Console:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "dictionary": ("DICT",),
+                "label": ("STRING", {"default": f'Dictionary Output', "multiline": False}),
+            }
+        }
+
+    RETURN_TYPES = ("ASCII",)
+    OUTPUT_NODE = True
+    FUNCTION = "text_to_console"
+
+    CATEGORY = "WAS Suite/Debug"
+
+    def text_to_console(self, dictionary, label):
+        if label.strip() != '':
+            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n')
+            from pprint import pprint
+            pprint(dictionary, indent=4)
+            print('')
+        else:
+            print(
+                f'\033[34mWAS Node Suite \033[33mText to Console\033[0m:\n')
+            pprint(dictionary, indent=4)
+            print('')
+        return (dictionary, )
 
 
 # LOAD TEXT FILE
@@ -4261,18 +4346,13 @@ class WAS_Text_Load_From_File:
             text = file.read()
             
         import io
-        dictionary = {filename: []}
-        for line in io.StringIO(text):
-            dictionary[filename].append(line.replace('\n', ''))
-            
-        import io
         lines = []
         for line in io.StringIO(text):
             if not line.strip().startswith('#'):
                 if not line.strip().startswith("\n"):
                     line = line.replace("\n", '')
                 lines.append(line.replace("\n",''))
-                dictionary[filename].append(line.replace("\n", ''))
+        dictionary = {filename: lines}
             
         return ("\n".join(lines), dictionary)
 
@@ -4319,7 +4399,7 @@ class WAS_BLIP_Analyze_Image:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "blip_caption_image"
     
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/AI"
     
     def blip_caption_image(self, image, mode, question):
     
@@ -4389,7 +4469,7 @@ class WAS_BLIP_Analyze_Image:
         
             from models.blip import blip_decoder
             
-            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'blip')
+            blip_dir = os.path.join(MODELS_DIR, 'blip')
             if not os.path.exists(blip_dir):
                 os.mkdir(blip_dir)
                 
@@ -4415,7 +4495,7 @@ class WAS_BLIP_Analyze_Image:
         
             from models.blip_vqa import blip_vqa
             
-            blip_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'blip')
+            blip_dir = os.path.join(MODELS_DIR, 'blip')
             if not os.path.exists(blip_dir):
                 os.mkdir(blip_dir)
                 
@@ -4463,7 +4543,7 @@ class WAS_Random_Number:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "return_randm_number"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def return_randm_number(self, minimum, maximum, seed, number_type='integer'):
 
@@ -4503,7 +4583,7 @@ class WAS_Constant_Number:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "return_constant_number"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def return_constant_number(self, number_type, number):
 
@@ -4536,7 +4616,7 @@ class WAS_Number_To_Seed:
     RETURN_TYPES = ("SEED",)
     FUNCTION = "number_to_seed"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def number_to_seed(self, number):
         return ({"seed": number, }, )
@@ -4559,7 +4639,7 @@ class WAS_Number_To_Int:
     RETURN_TYPES = ("INT",)
     FUNCTION = "number_to_int"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def number_to_int(self, number):
         return (int(number), )
@@ -4583,7 +4663,7 @@ class WAS_Number_To_Float:
     RETURN_TYPES = ("FLOAT",)
     FUNCTION = "number_to_float"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def number_to_float(self, number):
         return (float(number), )
@@ -4607,7 +4687,7 @@ class WAS_Int_To_Number:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "int_to_number"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def int_to_number(self, int_input):
         return (int(int_input), )
@@ -4631,7 +4711,7 @@ class WAS_Float_To_Number:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "float_to_number"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def float_to_number(self, float_input):
         return ( float(float_input), )
@@ -4654,7 +4734,7 @@ class WAS_Number_To_String:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "number_to_string"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def number_to_string(self, number):
         return ( str(number), )
@@ -4676,7 +4756,7 @@ class WAS_Number_To_Text:
     RETURN_TYPES = ("ASCII",)
     FUNCTION = "number_to_text"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def number_to_text(self, number):
         return ( str(number), )
@@ -4697,7 +4777,7 @@ class WAS_Number_PI:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "number_pi"
 
-    CATEGORY = "WAS Suite/Constant"
+    CATEGORY = "WAS Suite/Number"
 
     def number_pi(self):
         return (math.pi, )
@@ -4722,7 +4802,7 @@ class WAS_Number_Operation:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "math_operations"
 
-    CATEGORY = "WAS Suite/Operations"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def math_operations(self, number_a, number_b, operation="addition"):
 
@@ -4828,7 +4908,7 @@ NODE_CLASS_MAPPINGS = {
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
     "Constant Number": WAS_Constant_Number,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
-    "Float to Number": WAS_Float_To_Number,
+    "Dictionary to Console": WAS_Dictionary_To_Console,
     "Image Analyze": WAS_Image_Analyze,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
@@ -4868,7 +4948,6 @@ NODE_CLASS_MAPPINGS = {
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
-    "Int to Number": WAS_Int_To_Number,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
@@ -4896,6 +4975,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
     "Text Multiline": WAS_Text_Multiline,
+    "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
     "Text Parse Tokens": WAS_Text_Parse_Tokens,
     "Text Random Line": WAS_Text_Random_Line,
