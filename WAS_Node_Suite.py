@@ -3863,9 +3863,9 @@ class WAS_Dictionary_Update:
 
     def dictionary_update(self, dictionary_a, dictionary_b, dictionary_c=None, dictionary_d=None):
         return_dictionary = {**dictionary_a, **dictionary_b}
-        if dictionary_a:
+        if dictionary_c is not None:
             return_dictionary = {**return_dictionary, **dictionary_c}
-        if dictionary_d:
+        if dictionary_d is not None:
             return_dictionary = {**return_dictionary, **dictionary_d}
         return (return_dictionary, )
 
@@ -4389,7 +4389,7 @@ class WAS_Dictionary_To_Console:
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = ("DICT",)
     OUTPUT_NODE = True
     FUNCTION = "text_to_console"
 
