@@ -130,7 +130,7 @@ The token name can be anything excluding the `:` character to define your token.
   - [time]
     - The current system microtime
   - [time(`format_code`)]
-    - The current system time in human readable format. Utilizing [datetime]() formatting
+    - The current system time in human readable format. Utilizing [datetime](https://docs.python.org/3/library/datetime.html) formatting
     - Example: `[hostname]_[time]__[time(%Y-%m-%d__%I-%M%p)]` would output: **SKYNET-MASTER_1680897261__2023-04-07__07-54PM**
   - [hostname]
     - The hostname of the system executing ComfyUI
