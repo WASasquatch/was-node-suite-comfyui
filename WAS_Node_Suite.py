@@ -318,19 +318,24 @@ WDB = WASDatabase(WAS_DATABASE)
 # WAS Token Class
 
 class TextTokens:
-
     def __init__(self):
-        import socket
         self.WDB = WDB
         if not self.WDB.getDB().__contains__('custom_tokens'):
             self.WDB.insertCat('custom_tokens')
         self.custom_tokens = self.WDB.getDict('custom_tokens')
                 
         self.tokens =  {
-            '[time]': str(round(time.time())),
+            '[time]': str(time.time()).replace('.','_'),
             '[hostname]': socket.gethostname(),
-            '[user]': ( os.getlogin() if os.getlogin() else 'null' ),
         }
+
+        if '.' in self.tokens['[time]']:
+            self.tokens['[time]'] = self.tokens['[time]'].split('.')[0]
+
+        try:
+            self.tokens['[user]'] = ( os.getlogin() if os.getlogin() else 'null' )
+        except Exception:
+            self.tokens['[user]'] = 'null'
                 
     def addToken(self, name, value):
         self.custom_tokens.update({name: value})
@@ -339,27 +344,33 @@ class TextTokens:
     def removeToken (self, name):
         self.custom_tokens.pop(name)
         self._update()
-                
-    def parseTokens(self, text):
-        tokens = self.tokens
         
+    def format_time(self, format_code):
+        return time.strftime(format_code)
+        
+    def parseTokens(self, text):
+        tokens = self.tokens.copy()
+
         if self.custom_tokens:
             tokens.update(self.custom_tokens)
-                
+
         # Update time
-        tokens['[time]'] = str(round(time.time()))
-                
-        for k in tokens.keys():
-            text = self.replace_substring(text, k, tokens[k])
-        
+        tokens['[time]'] = str(time.time())
+        if '.' in tokens['[time]']:
+            tokens['[time]'] = tokens['[time]'].split('.')[0]
+
+        for token, value in tokens.items():
+            if token.startswith('[time('):
+                continue
+            text = text.replace(token, value)
+
+        def replace_custom_time(match):
+            format_code = match.group(1)
+            return self.format_time(format_code)
+
+        text = re.sub(r'\[time\((.*?)\)\]', replace_custom_time, text)
+
         return text
-                
-    def replace_substring(self, string, substring, replacement):
-        import re
-        pattern = re.compile(re.escape(str(substring)))
-        string = pattern.sub(str(replacement), str(string))
-        
-        return string
                 
     def _update(self):
         self.WDB.updateCat('custom_tokens', self.custom_tokens)
