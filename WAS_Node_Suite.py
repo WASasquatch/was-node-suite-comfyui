@@ -4023,7 +4023,7 @@ class WAS_Search_and_Replace_Input:
 
     CATEGORY = "WAS Suite/Text/Search"
 
-    def text_search_and_replace(self, text, find, replace, seed):
+    def text_search_and_replace(self, text, find, replace):
    
         # Parse Text
         new_text = text
