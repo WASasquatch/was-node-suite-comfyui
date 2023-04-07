@@ -139,7 +139,7 @@ The token name can be anything excluding the `:` character to define your token.
 <br>
     
 <details>
-	<summary>$\Large\color{orange}{Expand\ Date\ Code\ List}$</summary>
+	<summary>$\color{orange}{Expand\ Date\ Code\ List}$</summary>
 
 | Directive | Meaning | Example | Notes |
 | --- | --- | --- | --- |
