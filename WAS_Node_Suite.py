@@ -346,7 +346,7 @@ class TextTokens:
         self._update()
         
     def format_time(self, format_code):
-        return time.strftime(format_code)
+        return time.strftime(format_code, time.localtime(time.time()))
         
     def parseTokens(self, text):
         tokens = self.tokens.copy()
