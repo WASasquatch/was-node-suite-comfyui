@@ -3881,6 +3881,8 @@ class WAS_Text_String:
         return {
             "required": {
                 "text": ("STRING", {"default": '', "multiline": False}),
+            },
+            "optional": {
                 "text_b": ("STRING", {"default": '', "multiline": False}),
                 "text_c": ("STRING", {"default": '', "multiline": False}),
                 "text_d": ("STRING", {"default": '', "multiline": False}),
@@ -4449,9 +4451,11 @@ class WAS_Text_Load_From_File:
         lines = []
         for line in io.StringIO(text):
             if not line.strip().startswith('#'):
-                if not line.strip().startswith("\n"):
-                    line = line.replace("\n", '')
-                lines.append(line.replace("\n",''))
+                if ( not line.strip().startswith("\n") 
+                    or not line.strip().startswith("\r") 
+                    or not line.strip().startswith("\r\n") ):
+                    line = line.replace("\n", '').replace("\r",'').replace("\r\n",'')
+                lines.append(line.replace("\n",'').replace("\r",'').replace("\r\n",''))
         dictionary = {filename: lines}
             
         return ("\n".join(lines), dictionary)
