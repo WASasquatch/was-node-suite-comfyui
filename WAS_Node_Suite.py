@@ -30,6 +30,7 @@ import nodes
 import numpy as np
 import os
 import random
+import re
 import requests
 import socket
 import subprocess
