@@ -31,6 +31,7 @@ import numpy as np
 import os
 import random
 import requests
+import socket
 import subprocess
 import sys
 import time
