@@ -3780,7 +3780,7 @@ class WAS_Prompt_Styles_Selector:
         else:
             print(f'\033[34mWAS NS\033[0m Error: The styles file does not exist at `{STYLES_PATH}`. Unable to load styles! Have you imported your AUTOMATIC1111 WebUI styles?')
             
-        if styles and style is not None or style is not 'None':
+        if styles and style != None or style != 'None':
             prompt = styles[style]['prompt']
             negative_prompt = styles[style]['negative_prompt']
         else:
