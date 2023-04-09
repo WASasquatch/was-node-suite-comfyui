@@ -57,8 +57,8 @@ WAS_CONFIG_FILE = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
 STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
 
 # WAS Suite Locations Debug
-print('\033[34mWAS Node Suite:\033[0m Running At:', NODE_FILE)
-print('\033[34mWAS Node Suite:\033[0m Running From:', WAS_SUITE_ROOT)
+print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
+print('\033[34mWAS Node Suite\033[0m Running From:', WAS_SUITE_ROOT)
 
 #! INSTALLATION CLEANUP
 
@@ -102,6 +102,7 @@ was_conf_template = {
                     "blip_model_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth",
                     "blip_model_vqa_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth",
                     "history_display_limit": 32,
+                    "use_legacy_ascii_text": True, # ASCII Legacy is True For Now
                 }
 
 # Create, Load, or Update Config
@@ -146,6 +147,14 @@ else:
        
     if update_config:
         updateSuiteConfig(was_config)
+        
+    # SET TEXT TYPE
+    TEXT_TYPE = "TEXT"
+    if was_config.__contains__('use_legacy_ascii_text'):
+        if was_config['use_legacy_ascii_text']:
+            TEXT_TYPE = "ASCII"
+            print(f'\033[34mWAS Node Suite\033[0m Warning: use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.')
+ 
     
     # Convert WebUI Styles
     if was_config.__contains__('webui_styles'):
@@ -446,10 +455,113 @@ class WAS_Filter_Class():
         return img
         
     # FILTERS
+    
+    # SHADOWS AND HIGHLIGHTS ADJUSTMENTS
+    
+    def shadows_and_highlights(self, image, shadow_thresh=30, highlight_thresh=220, shadow_factor=0.5, highlight_factor=1.5, shadow_smooth=None, highlight_smooth=None, simplify_masks=None):
+
+        if 'pilgram' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing pilgram...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+
+        import pilgram
+
+        alpha = None
+        if image.mode.endswith('A'):
+            alpha = image.getchannel('A')
+            image = image.convert('RGB')
+
+        # Convert the image to grayscale
+        grays = image.convert('L')
+
+        if shadow_smooth is not None or highlight_smooth is not None and simplify_masks is not None:
+            simplify = float(simplify_masks)
+            grays = grays.filter(ImageFilter.GaussianBlur(radius=simplify))
+
+        # Create shadow and highlight masks
+        shadow_mask = Image.eval(grays, lambda x: 255 if x < shadow_thresh else 0)
+        highlight_mask = Image.eval(grays, lambda x: 255 if x > highlight_thresh else 0)
+
+        image_shadow = image.copy()
+        image_highlight = image.copy()
+
+        if shadow_smooth is not None:
+            shadow_mask = shadow_mask.filter(ImageFilter.GaussianBlur(radius=shadow_smooth))
+        if highlight_smooth is not None:
+            highlight_mask = highlight_mask.filter(ImageFilter.GaussianBlur(radius=highlight_smooth))
+
+        image_shadow = Image.eval(image_shadow, lambda x: x * shadow_factor)
+        image_highlight = Image.eval(image_highlight, lambda x: x * highlight_factor)
+
+        if shadow_smooth is not None:
+            shadow_mask = shadow_mask.filter(ImageFilter.GaussianBlur(radius=shadow_smooth))
+        if highlight_smooth is not None:
+            highlight_mask = highlight_mask.filter(ImageFilter.GaussianBlur(radius=highlight_smooth))
+
+        result = image.copy()
+        result.paste(image_shadow, shadow_mask)
+        result.paste(image_highlight, highlight_mask)
+        result = pilgram.css.blending.color(result, image)
+
+        if alpha:
+            result.putalpha(alpha)
+
+        return (result, shadow_mask, highlight_mask)
+    
+    # DRAGAN PHOTOGRAPHY FILTER
+    
+
+    def dragan_filter(self, image, saturation=1, contrast=1, sharpness=1, brightness=1, highpass_radius=3, highpass_samples=1, highpass_strength=1, colorize=True):
+    
+        if 'pilgram' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing pilgram...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+
+        import pilgram
+    
+        alpha = None
+        if image.mode == 'RGBA':
+            alpha = image.getchannel('A')
+            
+        grayscale_image = image if image.mode == 'L' else image.convert('L')
+        contrast_enhancer = ImageEnhance.Contrast(grayscale_image)
+        contrast_image = contrast_enhancer.enhance(contrast)
+        saturation_enhancer = ImageEnhance.Color(contrast_image) if image.mode != 'L' else None
+        saturation_image = contrast_image if saturation_enhancer is None else saturation_enhancer.enhance(saturation)
+        sharpness_enhancer = ImageEnhance.Sharpness(saturation_image)
+        sharpness_image = sharpness_enhancer.enhance(sharpness)
+        brightness_enhancer = ImageEnhance.Brightness(sharpness_image)
+        brightness_image = brightness_enhancer.enhance(brightness)
+        
+        blurred_image = brightness_image.filter(ImageFilter.GaussianBlur(radius=-highpass_radius))
+        highpass_filter = ImageChops.subtract(image, blurred_image.convert('RGB'))
+        blank_image = Image.new('RGB', image.size, (127, 127, 127))
+        highpass_image = ImageChops.screen(blank_image, highpass_filter.resize(image.size))
+        if not colorize:
+            highpass_image = highpass_image.convert('L').convert('RGB')
+        highpassed_image = pilgram.css.blending.overlay(brightness_image.convert('RGB'), highpass_image)
+        for _ in range((highpass_samples if highpass_samples > 0 else 1)):
+            highpassed_image = pilgram.css.blending.overlay(highpassed_image, highpass_image)
+            
+        final_image = ImageChops.blend(brightness_image.convert('RGB'), highpassed_image, highpass_strength)
+        
+        if colorize:
+            final_image = pilgram.css.blending.color(final_image, image)
+            
+        if alpha:
+            final_image.putalpha(alpha)
+            
+        return final_image
+    
 
     # Sparkle - Fairy Tale Filter
+    
 
     def sparkle(self, image):
+    
+        if 'pilgram' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing pilgram...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
 
@@ -902,8 +1014,45 @@ class WAS_Filter_Class():
 
 #! IMAGE FILTER NODES
 
-# IMAGE FILTER ADJUSTMENTS
+# IMAGE ADJUSTMENTS NODES
 
+# IMAGE SHADOW AND HIGHLIGHT ADJUSTMENTS
+
+class WAS_Shadow_And_Highlight_Adjustment:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "shadow_threshold": ("FLOAT", {"default": 75, "min": 0.0, "max": 255.0, "step": 0.1}),
+                "shadow_factor": ("FLOAT", {"default": 1.5, "min": -12.0, "max": 12.0, "step": 0.1}),
+                "shadow_smoothing": ("FLOAT", {"default": 0.25, "min": -255.0, "max": 255.0, "step": 0.1}),
+                "highlight_threshold": ("FLOAT", {"default": 175, "min": 0.0, "max": 255.0, "step": 0.1}),
+                "highlight_factor": ("FLOAT", {"default": 0.5, "min": -12.0, "max": 12.0, "step": 0.1}),
+                "highlight_smoothing": ("FLOAT", {"default": 0.25, "min": -255.0, "max": 255.0, "step": 0.1}),
+                "simplify_isolation": ("FLOAT", {"default": 0, "min": -255.0, "max": 255.0, "step": 0.1}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE","IMAGE","IMAGE")
+    FUNCTION = "apply_shadow_and_highlight"
+    
+    CATEGORY = "WAS Suite/Image/Adjustment"
+    
+    def apply_shadow_and_highlight(self, image, shadow_threshold=30, highlight_threshold=220, shadow_factor=1.5, highlight_factor=0.5, shadow_smoothing=0, highlight_smoothing=0, simplify_isolation=0):
+
+        WFilter = WAS_Filter_Class()
+        
+        result, shadows, highlights = WFilter.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
+        result, shadows, highlights = WFilter.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
+        
+        return (pil2tensor(result), pil2tensor(shadows), pil2tensor(highlights) )
+        
+        
+# SIMPLE IMAGE ADJUST
 
 class WAS_Image_Filters:
     def __init__(self):
@@ -927,7 +1076,7 @@ class WAS_Image_Filters:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_filters"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Adjustment"
 
     def image_filters(self, image, brightness, contrast, saturation, sharpness, blur, gaussian_blur, edge_enhance):
 
@@ -1036,7 +1185,7 @@ class WAS_Image_Style_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_style_filter"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_style_filter(self, image, style):
 
@@ -1276,7 +1425,7 @@ class WAS_Image_Monitor_Distortion_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_monitor_filters"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_monitor_filters(self, image, mode="Digital Distortion", amplitude=5, offset=5):
 
@@ -1323,7 +1472,7 @@ class WAS_Image_Perlin_Noise_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "perlin_noise_filter"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Generate/Noise"
 
     def perlin_noise_filter(self, width, height, shape, density, octaves, seed):
     
@@ -1358,7 +1507,7 @@ class WAS_Image_Voronoi_Noise_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "voronoi_noise_filter"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Generate/Noise"
 
     def voronoi_noise_filter(self, width, height, density, modulator, seed):
     
@@ -1390,7 +1539,7 @@ class WAS_Image_Make_Seamless:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "make_seamless"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def make_seamless(self, image, blending, tiled, tiles):
     
@@ -1420,7 +1569,7 @@ class WAS_Image_Color_Palette:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_generate_palette"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Analyze"
 
     def image_generate_palette(self, image, colors=16):
 
@@ -1463,7 +1612,7 @@ class WAS_Image_Analyze:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_analyze"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Analyze"
 
     def image_analyze(self, image, mode='Black White Levels'):
 
@@ -1510,7 +1659,7 @@ class WAS_Image_Generate_Gradient:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_gradient"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Generate"
 
     def image_gradient(self, gradient_stops, width=512, height=512, direction='horizontal', tolerance=0):
     
@@ -1549,7 +1698,7 @@ class WAS_Image_Gradient_Map:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_gradient_map"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_gradient_map(self, image, gradient_image, flip_left_right='false'):
 
@@ -1589,7 +1738,7 @@ class WAS_Image_Transpose:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_transpose"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Transform"
 
     def image_transpose(self, image: torch.Tensor, image_overlay: torch.Tensor, width: int, height: int, X: int, Y: int, rotation: int, feathering: int = 0):
         return (pil2tensor(self.apply_transpose_image(tensor2pil(image), tensor2pil(image_overlay), (width, height), (X, Y), rotation, feathering)), )
@@ -1645,7 +1794,7 @@ class WAS_Image_Rescale:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_rescale"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Transform"
 
     def image_rescale(self, image: torch.Tensor, mode="rescale", supersample='true', resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
         return (pil2tensor(self.apply_resize_image(tensor2pil(image), mode, supersample, rescale_factor, resize_width, resize_height, resampling)), )
@@ -1838,7 +1987,7 @@ class WAS_Image_Padding:
     RETURN_TYPES = ("IMAGE", "IMAGE")
     FUNCTION = "image_padding"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Transform"
 
     def image_padding(self, image, feathering, left_padding, right_padding, top_padding, bottom_padding, feather_second_pass=True):
         padding = self.apply_image_padding(tensor2pil(
@@ -1935,7 +2084,7 @@ class WAS_Image_Threshold:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_threshold"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def image_threshold(self, image, threshold=0.5):
         return (pil2tensor(self.apply_threshold(tensor2pil(image), threshold)), )
@@ -1974,7 +2123,7 @@ class WAS_Image_Chromatic_Aberration:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_chromatic_aberration"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_chromatic_aberration(self, image, red_offset=4, green_offset=2, blue_offset=0, intensity=1):
         return (pil2tensor(self.apply_chromatic_aberration(tensor2pil(image), red_offset, green_offset, blue_offset, intensity)), )
@@ -2018,7 +2167,7 @@ class WAS_Image_Bloom_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_bloom"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_bloom(self, image, radius=0.5, intensity=1.0):
         return (pil2tensor(self.apply_bloom_filter(tensor2pil(image), radius, intensity)), )
@@ -2072,7 +2221,7 @@ class WAS_Image_Remove_Color:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_remove_color"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def image_remove_color(self, image, clip_threshold=10, target_red=255, target_green=255, target_blue=255, replace_red=255, replace_green=255, replace_blue=255):
         return (pil2tensor(self.apply_remove_color(tensor2pil(image), clip_threshold, (target_red, target_green, target_blue), (replace_red, replace_green, replace_blue))), )
@@ -2120,7 +2269,7 @@ class WAS_Remove_Background:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_remove_background"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def image_remove_background(self, image, mode='background', threshold=127, threshold_tolerance=2):
         return (pil2tensor(self.remove_background(tensor2pil(image), mode, threshold, threshold_tolerance)), )
@@ -2239,7 +2388,7 @@ class WAS_Image_High_Pass_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "high_pass"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def high_pass(self, image, radius=10, strength=1.5):
         hpf = tensor2pil(image).convert('L')
@@ -2279,7 +2428,7 @@ class WAS_Image_Levels:
             }
         }
     RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "apply_image_levels"
+    FUNCTION = "apply_image_levels/Adjustment"
 
     CATEGORY = "WAS Suite/Image"
 
@@ -2380,7 +2529,7 @@ class WAS_Film_Grain:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "film_grain"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def film_grain(self, image, density, intensity, highlights, supersample_factor):
         return (pil2tensor(self.apply_film_grain(tensor2pil(image), density, intensity, highlights, supersample_factor)), )
@@ -2453,7 +2602,7 @@ class WAS_Image_Flip:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_flip"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Transform"
 
     def image_flip(self, image, mode):
 
@@ -2487,7 +2636,7 @@ class WAS_Image_Rotate:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_rotate"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Transform"
 
     def image_rotate(self, image, mode, rotation, sampler):
 
@@ -2541,7 +2690,7 @@ class WAS_Image_Nova_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "nova_sine"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def nova_sine(self, image, amplitude, frequency):
 
@@ -2602,7 +2751,7 @@ class WAS_Canny_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "canny_filter"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def canny_filter(self, image, threshold_low, threshold_high, enable_threshold):
 
@@ -2744,7 +2893,7 @@ class WAS_Image_Edge:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_edges"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_edges(self, image, mode):
 
@@ -2785,7 +2934,7 @@ class WAS_Image_fDOF:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "fdof_composite"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def fdof_composite(self, image, depth, radius, samples, mode):
 
@@ -2832,58 +2981,42 @@ class WAS_Image_fDOF:
 
         return rimg
 
-    # TODO: Implement lens_blur mode attempt
-    def lens_blur(self, img, radius, amount, mask=None):
-        """Applies a lens shape blur effect on an image.
+        
+# IMAGE DRAGAN PHOTOGRAPHY FILTER
 
-        Args:
-            img (numpy.ndarray): The input image as a numpy array.
-            radius (float): The radius of the lens shape.
-            amount (float): The amount of blur to be applied.
-            mask (numpy.ndarray): An optional mask image specifying where to apply the blur.
-
-        Returns:
-            numpy.ndarray: The blurred image as a numpy array.
-        """
-        # Create a lens shape kernel.
-        kernel = cv2.getGaussianKernel(ksize=int(radius * 10), sigma=0)
-        kernel = np.dot(kernel, kernel.T)
-
-        # Normalize the kernel.
-        kernel /= np.max(kernel)
-
-        # Create a circular mask for the kernel.
-        mask_shape = (int(radius * 2), int(radius * 2))
-        mask = np.ones(mask_shape) if mask is None else cv2.resize(
-            mask, mask_shape, interpolation=cv2.INTER_LINEAR)
-        mask = cv2.GaussianBlur(
-            mask, (int(radius * 2) + 1, int(radius * 2) + 1), radius / 2)
-        mask /= np.max(mask)
-
-        # Adjust kernel and mask size to match input image.
-        ksize_x = img.shape[1] // (kernel.shape[1] + 1)
-        ksize_y = img.shape[0] // (kernel.shape[0] + 1)
-        kernel = cv2.resize(kernel, (ksize_x, ksize_y),
-                            interpolation=cv2.INTER_LINEAR)
-        kernel = cv2.copyMakeBorder(
-            kernel, 0, img.shape[0] - kernel.shape[0], 0, img.shape[1] - kernel.shape[1], cv2.BORDER_CONSTANT, value=0)
-        mask = cv2.resize(mask, (ksize_x, ksize_y),
-                          interpolation=cv2.INTER_LINEAR)
-        mask = cv2.copyMakeBorder(
-            mask, 0, img.shape[0] - mask.shape[0], 0, img.shape[1] - mask.shape[1], cv2.BORDER_CONSTANT, value=0)
-
-        # Apply the lens shape blur effect on the image.
-        blurred = cv2.filter2D(img, -1, kernel)
-        blurred = cv2.filter2D(blurred, -1, mask * amount)
-
-        if mask is not None:
-            # Apply the mask to the original image.
-            mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-            img_masked = img * mask
-            # Combine the masked image with the blurred image.
-            blurred = img_masked * (1 - mask) + blurred  # type: ignore
-
-        return blurred
+class WAS_Dragon_Filter:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "saturation": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 16.0, "step": 0.01}),
+                "contrast": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 16.0, "step": 0.01}),
+                "brightness": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 16.0, "step": 0.01}),
+                "sharpness": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 6.0, "step": 0.01}),
+                "highpass_radius": ("FLOAT", {"default": 6.0, "min": 0.0, "max": 255.0, "step": 0.01}),
+                "highpass_samples": ("INT", {"default": 1, "min": 0, "max": 6.0, "step": 1}),
+                "highpass_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "colorize": (["true","false"],),
+            },
+        }
+        
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "apply_dragan_filter"
+    
+    CATEGORY = "WAS Suite/Image/Filter"
+    
+    def apply_dragan_filter(self, image, saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize):
+    
+        WFilter = WAS_Filter_Class()
+        
+        image = WFilter.dragan_filter(tensor2pil(image), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)
+        
+        return (pil2tensor(image), )
+     
 
 
 # IMAGE MEDIAN FILTER NODE
@@ -2906,7 +3039,7 @@ class WAS_Image_Median_Filter:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "apply_median_filter"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def apply_median_filter(self, image, diameter, sigma_color, sigma_space):
 
@@ -2940,7 +3073,7 @@ class WAS_Image_Select_Color:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "select_color"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def select_color(self, image, red=255, green=255, blue=255, variance=10):
 
@@ -2999,7 +3132,7 @@ class WAS_Image_Select_Channel:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "select_channel"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def select_channel(self, image, channel='red'):
 
@@ -3050,7 +3183,7 @@ class WAS_Image_RGB_Merge:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "merge_channels"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Process"
 
     def merge_channels(self, red_channel, green_channel, blue_channel):
 
@@ -3208,7 +3341,7 @@ class WAS_Load_Image:
         # Update history
         update_history_images(image_path)
 
-        image = i
+        image = i.convert('RGB')
         image = np.array(image).astype(np.float32) / 255.0
         image = torch.from_numpy(image)[None,]
 
@@ -3217,7 +3350,8 @@ class WAS_Load_Image:
             mask = 1. - torch.from_numpy(mask)
         else:
             mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-        return (image.convert('RGB'), mask)
+            
+        return (image, mask)
 
     def download_image(self, url):
         try:
@@ -3265,7 +3399,7 @@ class WAS_Tensor_Batch_to_Image:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "tensor_batch_to_image"
 
-    CATEGORY = "WAS Suite/Latent"
+    CATEGORY = "WAS Suite/Latent/Transform"
 
     def tensor_batch_to_image(self, images_batch=[], batch_image_number=0):
 
@@ -3296,7 +3430,7 @@ class WAS_Image_To_Mask:
                     "channel": (["alpha", "red", "green", "blue"], ), }
                 }
 
-    CATEGORY = "WAS Suite/Latent"
+    CATEGORY = "WAS Suite/Image/Transform"
 
     RETURN_TYPES = ("MASK",)
 
@@ -3323,7 +3457,7 @@ class WAS_Latent_Upscale:
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "latent_upscale"
 
-    CATEGORY = "WAS Suite/Latent"
+    CATEGORY = "WAS Suite/Latent/Transform"
 
     def latent_upscale(self, samples, mode, factor, align):
         s = samples.copy()
@@ -3350,7 +3484,7 @@ class WAS_Latent_Noise:
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "inject_noise"
 
-    CATEGORY = "WAS Suite/Latent"
+    CATEGORY = "WAS Suite/Latent/Generate"
 
     def inject_noise(self, samples, noise_std):
         s = samples.copy()
@@ -3379,7 +3513,7 @@ class MiDaS_Depth_Approx:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "midas_approx"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/AI"
 
     def midas_approx(self, image, use_cpu, midas_model, invert_depth):
 
@@ -3486,7 +3620,7 @@ class MiDaS_Background_Foreground_Removal:
     RETURN_TYPES = ("IMAGE", "IMAGE")
     FUNCTION = "midas_remove"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/AI"
 
     def midas_remove(self,
                      image,
@@ -3656,7 +3790,7 @@ class WAS_NSP_CLIPTextEncoder:
     def nsp_encode(self, clip, text, noodle_key='__', seed=0):
 
         # Fetch the NSP Pantry
-        local_pantry = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep+'nsp_pantry.json'
+        local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
         if not os.path.exists(local_pantry):
             response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
             tmp_pantry = json.loads(response.read())
@@ -3767,7 +3901,7 @@ class WAS_Prompt_Styles_Selector:
             }
         }
         
-    RETURN_TYPES = ("ASCII","ASCII")
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE)
     FUNCTION = "load_style"
     
     CATEGORY = "WAS Suite/Text"
@@ -3806,7 +3940,7 @@ class WAS_Text_Multiline:
                 "text": ("STRING", {"default": '', "multiline": True}),
             }
         }
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_multiline"
 
     CATEGORY = "WAS Suite/Text"
@@ -3833,10 +3967,10 @@ class WAS_Text_Parse_Embeddings_By_Name:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII", ),
+                "text": (TEXT_TYPE, ),
             }
         }
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_parse_embeddings"
 
     CATEGORY = "WAS Suite/Text/Parse"
@@ -3883,7 +4017,7 @@ class WAS_Dictionary_Update:
             return_dictionary = {**return_dictionary, **dictionary_c}
         if dictionary_d is not None:
             return_dictionary = {**return_dictionary, **dictionary_d}
-        return (return_dictionary, )
+        return (return_dictionary, )                
 
 
 # Text String Node
@@ -3904,7 +4038,7 @@ class WAS_Text_String:
                 "text_d": ("STRING", {"default": '', "multiline": False}),
             }
         }
-    RETURN_TYPES = ("ASCII","ASCII","ASCII","ASCII")
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,TEXT_TYPE,TEXT_TYPE)
     FUNCTION = "text_string"
 
     CATEGORY = "WAS Suite/Text"
@@ -3923,12 +4057,12 @@ class WAS_Text_Random_Line:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_random_line"
 
     CATEGORY = "WAS Suite/Text"
@@ -3954,17 +4088,17 @@ class WAS_Text_Concatenate:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text_a": ("ASCII",),
-                "text_b": ("ASCII",),
+                "text_a": (TEXT_TYPE,),
+                "text_b": (TEXT_TYPE,),
                 "linebreak_addition": (['false','true'], ),
             },
             "optional": {
-                "text_c": ("ASCII",),
-                "text_d": ("ASCII",),
+                "text_c": (TEXT_TYPE,),
+                "text_d": (TEXT_TYPE,),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_concatenate"
 
     CATEGORY = "WAS Suite/Text"
@@ -3988,13 +4122,13 @@ class WAS_Search_and_Replace:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
                 "find": ("STRING", {"default": '', "multiline": False}),
                 "replace": ("STRING", {"default": '', "multiline": False}),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_search_and_replace"
 
     CATEGORY = "WAS Suite/Text/Search"
@@ -4018,12 +4152,12 @@ class WAS_Search_and_Replace_Input:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
-                "find": ("ASCII",),
-                "replace": ("ASCII",),            }
+                "text": (TEXT_TYPE,),
+                "find": (TEXT_TYPE,),
+                "replace": (TEXT_TYPE,),            }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_search_and_replace"
 
     CATEGORY = "WAS Suite/Text/Search"
@@ -4054,14 +4188,14 @@ class WAS_Search_and_Replace_Dictionary:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
                 "dictionary": ("DICT",),
                 "replacement_key": ("STRING", {"default": "__", "multiline": False}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_search_and_replace_dict"
 
     CATEGORY = "WAS Suite/Text/Search"
@@ -4101,12 +4235,12 @@ class WAS_Text_Parse_NSP:
             "required": {
                 "noodle_key": ("STRING", {"default": '__', "multiline": False}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
             }
         }
 
     OUTPUT_NODE = True
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_parse_nsp"
 
     CATEGORY = "WAS Suite/Text/Parse"
@@ -4114,7 +4248,7 @@ class WAS_Text_Parse_NSP:
     def text_parse_nsp(self, text, noodle_key='__', seed=0):
 
         # Fetch the NSP Pantry
-        local_pantry = os.getcwd()+os.sep+'ComfyUI'+os.sep+'custom_nodes'+os.sep+'nsp_pantry.json'
+        local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
         if not os.path.exists(local_pantry):
             response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
             tmp_pantry = json.loads(response.read())
@@ -4160,7 +4294,7 @@ class WAS_Text_Save:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
                 "path": ("STRING", {"default": '', "multiline": False}),
                 "filename": ("STRING", {"default": f'text_[time]', "multiline": False}),
             }
@@ -4234,7 +4368,7 @@ class WAS_Text_File_History:
             },
         }
         
-    RETURN_TYPES = ("ASCII","DICT")
+    RETURN_TYPES = (TEXT_TYPE,"DICT")
     FUNCTION = "text_file_history"
 
     CATEGORY = "WAS Suite/History"
@@ -4280,7 +4414,7 @@ class WAS_Text_to_Conditioning:
         return {
             "required": {
                 "clip": ("CLIP",),
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
             }
         }
 
@@ -4303,14 +4437,14 @@ class WAS_Text_Parse_Tokens:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "text_parse_tokens"
 
-    CATEGORY = "WAS Suite/Text/Parse"
+    CATEGORY = "WAS Suite/Text/Tokens"
 
     def text_parse_tokens(self, text):
         # Token Parser
@@ -4337,7 +4471,7 @@ class WAS_Text_Add_Tokens:
     RETURN_TYPES = ()
     FUNCTION = "text_add_tokens"
     OUTPUT_NODE = True
-    CATEGORY = "WAS Suite/Text/Parse"
+    CATEGORY = "WAS Suite/Text/Tokens"
 
     def text_add_tokens(self, tokens):
     
@@ -4353,6 +4487,7 @@ class WAS_Text_Add_Tokens:
             token_value = parts[1].strip()
             tk.addToken(token, token_value)
         
+        # Current Tokens
         print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
         print(json.dumps(tk.custom_tokens, indent=4))
         
@@ -4360,7 +4495,48 @@ class WAS_Text_Add_Tokens:
         
     @classmethod
     def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
+        return float("NaN")        
+        
+        
+# TEXT ADD TOKEN BY INPUT
+
+
+class WAS_Text_Add_Token_Input:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "token_name": (TEXT_TYPE, ),
+                "token_value": (TEXT_TYPE, ),
+            }
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "text_add_token"
+    OUTPUT_NODE = True
+    CATEGORY = "WAS Suite/Text/Tokens"
+
+    def text_add_token(self, token_name, token_value):
+
+        if token_name.strip() == '':
+            print(f'\033[34mWAS Node Suite\033[0m Error: a `token_name` is required for a token; token name provided is empty.')
+            pass
+
+        # Token Parser
+        tk = TextTokens()
+        
+        # Add Tokens
+        tk.addToken(token_name, token_value)
+        
+        # Current Tokens
+        print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
+        print(json.dumps(tk.custom_tokens, indent=4))
+        
+        return (token_name, token_value)
+
 
 
 # TEXT TO CONSOLE
@@ -4373,12 +4549,12 @@ class WAS_Text_to_Console:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
                 "label": ("STRING", {"default": f'Text Output', "multiline": False}),
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     OUTPUT_NODE = True
     FUNCTION = "text_to_console"
 
@@ -4442,7 +4618,7 @@ class WAS_Text_Load_From_File:
             }
         }
 
-    RETURN_TYPES = ("ASCII","DICT")
+    RETURN_TYPES = (TEXT_TYPE,"DICT")
     FUNCTION = "load_file"
 
     CATEGORY = "WAS Suite/IO"
@@ -4486,7 +4662,7 @@ class WAS_Text_To_String:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("ASCII",),
+                "text": (TEXT_TYPE,),
             }
         }
 
@@ -4516,7 +4692,7 @@ class WAS_BLIP_Analyze_Image:
             }
         }
         
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "blip_caption_image"
     
     CATEGORY = "WAS Suite/Text/AI"
@@ -4736,7 +4912,7 @@ class WAS_Number_To_Seed:
     RETURN_TYPES = ("SEED",)
     FUNCTION = "number_to_seed"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def number_to_seed(self, number):
         return ({"seed": number, }, )
@@ -4759,7 +4935,7 @@ class WAS_Number_To_Int:
     RETURN_TYPES = ("INT",)
     FUNCTION = "number_to_int"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def number_to_int(self, number):
         return (int(number), )
@@ -4783,7 +4959,7 @@ class WAS_Number_To_Float:
     RETURN_TYPES = ("FLOAT",)
     FUNCTION = "number_to_float"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def number_to_float(self, number):
         return (float(number), )
@@ -4807,7 +4983,7 @@ class WAS_Int_To_Number:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "int_to_number"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def int_to_number(self, int_input):
         return (int(int_input), )
@@ -4831,7 +5007,7 @@ class WAS_Float_To_Number:
     RETURN_TYPES = ("NUMBER",)
     FUNCTION = "float_to_number"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def float_to_number(self, float_input):
         return ( float(float_input), )
@@ -4854,7 +5030,7 @@ class WAS_Number_To_String:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "number_to_string"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def number_to_string(self, number):
         return ( str(number), )
@@ -4873,10 +5049,10 @@ class WAS_Number_To_Text:
             }
         }
 
-    RETURN_TYPES = ("ASCII",)
+    RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "number_to_text"
 
-    CATEGORY = "WAS Suite/Number"
+    CATEGORY = "WAS Suite/Number/Operations"
 
     def number_to_text(self, number):
         return ( str(number), )
@@ -4958,8 +5134,32 @@ class WAS_Number_Operation:
                 return number_a
 
 
+
+
 #! MISC
 
+class WAS_Image_Size_To_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER", "NUMBER",)
+    FUNCTION = "image_width_height"
+
+    CATEGORY = "WAS Suite/Number/Operations"
+    
+    def image_width_height(self, image):
+        image = tensor2pil(image)
+        if image.size:
+            return( image.size[0], image.size[1] )
+        return ( 0, 0 )
 
 # INPUT SWITCH
 
@@ -5038,6 +5238,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Canny Filter": WAS_Canny_Filter,
     "Image Chromatic Aberration": WAS_Image_Chromatic_Aberration,
     "Image Color Palette": WAS_Image_Color_Palette,
+    "Image Dragan Photography Filter": WAS_Dragon_Filter,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,
     "Image Filter Adjustments": WAS_Image_Filters,
@@ -5062,6 +5263,8 @@ NODE_CLASS_MAPPINGS = {
     "Image Seamless Texture": WAS_Image_Make_Seamless,
     "Image Select Channel": WAS_Image_Select_Channel,
     "Image Select Color": WAS_Image_Select_Color,
+    "Image Shadows and Highlights": WAS_Shadow_And_Highlight_Adjustment,
+    "Image Size to Number": WAS_Image_Size_To_Number,
     "Image Style Filter": WAS_Image_Style_Filter,
     "Image Threshold": WAS_Image_Threshold,
     "Image Transpose": WAS_Image_Transpose,
@@ -5090,6 +5293,7 @@ NODE_CLASS_MAPPINGS = {
     "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
     "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Add Tokens": WAS_Text_Add_Tokens,
+    "Text Add Token by Input": WAS_Text_Add_Token_Input,
     "Text Concatenate": WAS_Text_Concatenate,
     "Text File History Loader": WAS_Text_File_History,
     "Text Find and Replace by Dictionary": WAS_Search_and_Replace_Dictionary,

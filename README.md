@@ -8,6 +8,11 @@
 
 ### [Share Workflows](/workflows/README.md) to the `/workflows/` directory. Preferably embedded PNGs with workflows, but JSON is OK too. [You can use this tool to add a workflow to a PNG file easily](https://colab.research.google.com/drive/1hQMjNUdhMQ3rw1Wcm3_umvmOMeS_K4s8?usp=sharing)
 
+# Important Updates
+
+ - `ASCII` **is deprecated**. The new preferred method of text node output is `TEXT`. This is a change from `ASCII` so that it is more clear what data is being passed.
+   - The `was_suit_config.json` will automatically set `use_legacy_ascii_text` to `true` for a transition period. You can enable `TEXT` output by setting `use_legacy_ascii_text` to `false` 
+
 
 # Current Nodes:
 
@@ -21,7 +26,7 @@
    - Models will be stored in `ComfyUI/models/blip/checkpoints/`
  - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
  - Constant Number
- - Debug to Console (Debug pretty much anything to the console window)
+ - Dictionary to Console: Print a dictionary input to the console	
  - Image Analyze
    - Black White Levels
    - RGB Levels
@@ -38,6 +43,7 @@
      - Depends on `scikit-learn`, will attempt to install on first run. 
    - Supports color range of 8-256
    - Utilizes font in `./res/` unless unavailable, then it will utilize internal better then nothing font. 
+ - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
  - Image Film Grain: Apply film grain to a image
  - Image Filter Adjustments: Apply various image adjustments to a image
@@ -68,6 +74,8 @@
  - Image Seamless Texture: Create a seamless texture out of a image with optional tiling
  - Image Select Channel: Select a single channel of an RGB image
  - Image Select Color: Return the select image only on a black canvas
+ - Image Shadows and Highlights: Adjust the shadows and highlights of an image
+ - Image Size to Number: Get the `width` and `height` of an input image to use with **Number** nodes. 
  - Image Style Filter: Style a image with Pilgram instragram-like filters
    - Depends on `pilgram` module
  - Image Threshold: Return the desired threshold range of a image
@@ -101,6 +109,7 @@
  - Seed: Return a seed
  - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
  - Text Add Tokens: Add custom tokens to parse in filenames or other text.
+ - Text Add Token by Input: Add custom token by inputs representing single **single line** name and value of the token
  - Text Concatenate: Merge two strings
  - Text Dictionary Update: Merge two dictionaries
  - Text File History: Show previously opened text files *(requires restart to show last sessions files at this time)*
