@@ -4592,9 +4592,6 @@ class WAS_SAM_Image_Mask:
         points = sam_parameters["points"]
         labels = sam_parameters["labels"]
         
-        print(points)
-        print(labels)
-        
         from segment_anything import SamPredictor
         
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
