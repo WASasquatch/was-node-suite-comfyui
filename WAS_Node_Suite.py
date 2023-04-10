@@ -1957,7 +1957,8 @@ class WAS_Load_Image_Batch:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE",TEXT_TYPE)
+    RETURN_NAMES = ("image","filename_text")
     FUNCTION = "load_batch_images"
 
     CATEGORY = "WAS Suite/IO"
@@ -1969,14 +1970,14 @@ class WAS_Load_Image_Batch:
         fl = self.BatchImageLoader(path, label, pattern)
         new_paths = fl.image_paths
         if mode == 'single_image':
-            image = fl.get_image_by_id(index)
+            image, filename = fl.get_image_by_id(index)
         else:
-            image = fl.get_next_image()
+            image, filename = fl.get_next_image()
 
         # Update history
         update_history_images(new_paths)
 
-        return (pil2tensor(image), )
+        return (pil2tensor(image), filename)
 
     class BatchImageLoader:
         def __init__(self, directory_path, label, pattern):
@@ -2006,7 +2007,7 @@ class WAS_Load_Image_Batch:
         def get_image_by_id(self, image_id):
             if image_id < 0 or image_id >= len(self.image_paths):
                 raise ValueError(f"\033[34mWAS NS\033[0m Error: Invalid image index `{image_id}`")
-            return Image.open(self.image_paths[image_id])
+            return (Image.open(self.image_paths[image_id]), os.path.basename(self.image_paths[image_id]))
 
         def get_next_image(self):
             if self.index >= len(self.image_paths):
@@ -2017,7 +2018,7 @@ class WAS_Load_Image_Batch:
                 self.index = 0
             print(f'\033[34mWAS NS \033[33m{self.label}\033[0m Index:', self.index)
             self.WDB.insert('Batch Counters', self.label, self.index)
-            return Image.open(image_path)
+            return (Image.open(image_path), os.path.basename(image_path))
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
@@ -2050,7 +2051,8 @@ class WAS_Image_History:
             },
         }
         
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE",TEXT_TYPE)
+    RETURN_NAMES = ("image","filename_text")
     FUNCTION = "image_history"
 
     CATEGORY = "WAS Suite/History"
@@ -2063,10 +2065,10 @@ class WAS_Image_History:
             for path_ in history_paths:
                 paths.update({os.path.join('...'+os.sep+os.path.basename(os.path.dirname(path_)), os.path.basename(path_)): path_})
         if os.path.exists(paths[image]) and paths.__contains__(image):
-            return (pil2tensor(Image.open(paths[image]).convert('RGB')), )
+            return (pil2tensor(Image.open(paths[image]).convert('RGB')), os.path.basename(paths[image]))
         else:
             raise ValueError(f"\033[34mWAS NS\033[0m Error: The image `{image}` does not exist!")
-            return (pil2tensor(Image.new('RGB', (512,512), (0, 0, 0, 0))), )
+            return (pil2tensor(Image.new('RGB', (512,512), (0, 0, 0, 0))), 'null')
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
@@ -3464,10 +3466,11 @@ class WAS_Load_Image:
                     "STRING", {"default": './ComfyUI/input/example.png', "multiline": False}), }
                 }
 
-    CATEGORY = "WAS Suite/IO"
-
-    RETURN_TYPES = ("IMAGE", "MASK")
+    RETURN_TYPES = ("IMAGE", "MASK", TEXT_TYPE)
+    RETURN_NAMES = ("image", "mask", "filename_text")
     FUNCTION = "load_image"
+    
+    CATEGORY = "WAS Suite/IO"
 
     def load_image(self, image_path):
 
@@ -3497,7 +3500,7 @@ class WAS_Load_Image:
         else:
             mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             
-        return (image, mask)
+        return (image, mask, os.path.basename(image_path))
 
     def download_image(self, url):
         try:
