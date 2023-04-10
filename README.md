@@ -24,6 +24,16 @@
  - BLIP Analyze Image: Get a text caption from a image, or interrogate the image with a question.
    - Model will download automatically from default URL, but you can point the download to another location/caption model in `was_suite_config`
    - Models will be stored in `ComfyUI/models/blip/checkpoints/`
+ - SAM Model Loader: Load a SAM Segmentation model
+ - SAM Parameters: Define your SAM parameters for segmentation of a image
+ - SAM Parameters Combine: Combine SAM parameters
+ - SAM Image Mask: SAM image masking
+ - Image Bounds: Bounds a image
+ - Inset Image Bounds: Inset a image bounds
+ - Bounded Image Blend: Blend bounds image
+ - Bounded Image Blend with Mask: Blend a bounds image by mask
+ - Bounded Image Crop: Crop a bounds image
+ - Bounded Image Crop with Mask: Crop a bounds image by mask
  - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
  - Constant Number
  - Dictionary to Console: Print a dictionary input to the console	
