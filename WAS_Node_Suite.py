@@ -5190,7 +5190,7 @@ class WAS_Inset_Image_Bounds:
     RETURN_TYPES = ("IMAGE_BOUNDS",)
     FUNCTION = "inset_image_bounds"
     
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Transform"
     
     def inset_image_bounds(self, image_bounds, inset_left, inset_right, inset_top, inset_bottom):
         # Unpack the image bounds
