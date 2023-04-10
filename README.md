@@ -76,6 +76,7 @@
  - Image Select Color: Return the select image only on a black canvas
  - Image Shadows and Highlights: Adjust the shadows and highlights of an image
  - Image Size to Number: Get the `width` and `height` of an input image to use with **Number** nodes. 
+ - Image Stitch: Stitch images together on different sides with optional feathering blending between them. 
  - Image Style Filter: Style a image with Pilgram instragram-like filters
    - Depends on `pilgram` module
  - Image Threshold: Return the desired threshold range of a image

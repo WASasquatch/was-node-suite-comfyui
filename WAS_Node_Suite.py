@@ -454,6 +454,91 @@ class WAS_Filter_Class():
         img = Image.open(buf)
         return img
         
+    def stitch_image(self, image_a, image_b, mode='right', fuzzy_zone=50):
+
+        def linear_gradient(start_color, end_color, size, start, end, mode='horizontal'):
+            width, height = size
+            gradient = Image.new('RGB', (width, height), end_color)
+            draw = ImageDraw.Draw(gradient)
+
+            for i in range(0, start):
+                if mode == "horizontal":
+                    draw.line((i, 0, i, height-1), start_color)
+                elif mode == "vertical":
+                    draw.line((0, i, width-1, i), start_color)
+
+            for i in range(start, end):
+                if mode == "horizontal":
+                    curr_color = (
+                        int(start_color[0] + (float(i - start) / (end - start)) * (end_color[0] - start_color[0])),
+                        int(start_color[1] + (float(i - start) / (end - start)) * (end_color[1] - start_color[1])),
+                        int(start_color[2] + (float(i - start) / (end - start)) * (end_color[2] - start_color[2]))
+                    )
+                    draw.line((i, 0, i, height-1), curr_color)
+                elif mode == "vertical":
+                    curr_color = (
+                        int(start_color[0] + (float(i - start) / (end - start)) * (end_color[0] - start_color[0])),
+                        int(start_color[1] + (float(i - start) / (end - start)) * (end_color[1] - start_color[1])),
+                        int(start_color[2] + (float(i - start) / (end - start)) * (end_color[2] - start_color[2]))
+                    )
+                    draw.line((0, i, width-1, i), curr_color)
+
+            for i in range(end, width if mode == 'horizontal' else height):
+                if mode == "horizontal":
+                    draw.line((i, 0, i, height-1), end_color)
+                elif mode == "vertical":
+                    draw.line((0, i, width-1, i), end_color)
+
+            return gradient
+
+        image_a = image_a.convert('RGB')
+        image_b = image_b.convert('RGB')
+
+        offset = int(fuzzy_zone / 2)
+        canvas_width = int(image_a.size[0] + image_b.size[0] - fuzzy_zone) if mode == 'right' or mode == 'left' else image_a.size[0]
+        canvas_height = int(image_a.size[1] + image_b.size[1] - fuzzy_zone) if mode == 'top' or mode == 'bottom' else image_a.size[1]
+        canvas = Image.new('RGB', (canvas_width, canvas_height), (0,0,0))
+
+        im_ax = 0
+        im_ay = 0
+        im_bx = 0
+        im_by = 0
+
+        image_a_mask = None
+        image_b_mask = None
+
+        if mode == 'top':
+
+            image_a_mask = linear_gradient((0,0,0), (255,255,255), image_a.size, 0, fuzzy_zone, 'vertical')
+            image_b_mask = linear_gradient((255,255,255), (0,0,0), image_b.size, int(image_b.size[1] - fuzzy_zone), image_b.size[1], 'vertical')
+            im_ay = image_b.size[1] - fuzzy_zone
+        
+        elif mode == 'bottom':
+
+            image_a_mask = linear_gradient((255,255,255), (0,0,0), image_a.size, int(image_a.size[1] - fuzzy_zone), image_a.size[1], 'vertical')
+            image_b_mask = linear_gradient((0,0,0), (255,255,255), image_b.size, 0, fuzzy_zone, 'vertical').convert('L')
+            im_by = image_a.size[1] - fuzzy_zone
+
+        elif mode == 'left':
+
+            image_a_mask = linear_gradient((0,0,0), (255,255,255), image_a.size, 0, fuzzy_zone, 'horizontal')
+            image_b_mask = linear_gradient((255,255,255), (0,0,0), image_b.size, int(image_b.size[0] - fuzzy_zone), image_b.size[0], 'horizontal')
+            im_ax = image_b.size[0] - fuzzy_zone
+
+
+        elif mode == 'right':
+
+            image_a_mask = linear_gradient((255,255,255), (0,0,0), image_a.size, int(image_a.size[0] - fuzzy_zone), image_a.size[0], 'horizontal')
+            image_b_mask = linear_gradient((0,0,0), (255,255,255), image_b.size, 0, fuzzy_zone, 'horizontal')
+            im_bx = image_b.size[0] - fuzzy_zone
+
+            
+        Image.Image.paste(canvas, image_a, (im_ax, im_ay), image_a_mask.convert('L'))
+        Image.Image.paste(canvas, image_b, (im_bx, im_by), image_b_mask.convert('L'))
+
+        return canvas
+        
+        
     # FILTERS
     
     # SHADOWS AND HIGHLIGHTS ADJUSTMENTS
@@ -763,7 +848,7 @@ class WAS_Filter_Class():
                 draw.line((0, y, size[0], y), fill=color)
 
         return img
-
+       
     
     # Version 2 optimized based on Mark Setchell's ideas
     def gradient_map(self, image, gradient_map, reverse=False):
@@ -1038,6 +1123,7 @@ class WAS_Shadow_And_Highlight_Adjustment:
         }
     
     RETURN_TYPES = ("IMAGE","IMAGE","IMAGE")
+    RETURN_NAMES = ("image","shadow_map","highlight_map")
     FUNCTION = "apply_shadow_and_highlight"
     
     CATEGORY = "WAS Suite/Image/Adjustment"
@@ -1964,6 +2050,44 @@ class WAS_Image_History:
     def IS_CHANGED(cls, **kwargs):
         return float("NaN")
 
+# IMAGE PADDING
+
+class WAS_Image_Stitch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image_a": ("IMAGE",),
+                "image_b": ("IMAGE",),
+                "stitch": (["top", "left", "bottom", "right"],),
+                "feathering": ("INT", {"default": 50, "min": 0, "max": 2048, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_stitching"
+
+    CATEGORY = "WAS Suite/Image/Transform"
+
+    def image_stitching(self, image_a, image_b, stitch="right", feathering=50):
+        
+        valid_stitches = ["top", "left", "bottom", "right"]
+        if stitch not in valid_stitches:
+            raise ValueError(f"\033[34mWAS NS\033[0m Error: The stitch mode `{stitch}` is not valid. Valid sitch modes are {', '.join(valid_stitches)}")
+        if feathering > 2048:
+            raise ValueError(f"\033[34mWAS NS\033[0m Error: The stitch feathering of `{feathering}` is too high. Please choose a value between `0` and `2048`")
+            
+        WFilter = WAS_Filter_Class();
+        
+        stitched_image = WFilter.stitch_image(tensor2pil(image_a), tensor2pil(image_b), stitch, feathering)
+        
+        return (pil2tensor(stitched_image), )
+
+
+        
 # IMAGE PADDING
 
 class WAS_Image_Padding:
@@ -5151,6 +5275,7 @@ class WAS_Image_Size_To_Number:
         }
 
     RETURN_TYPES = ("NUMBER", "NUMBER",)
+    RETURN_NAMES = ("width_num", "height_num",)
     FUNCTION = "image_width_height"
 
     CATEGORY = "WAS Suite/Number/Operations"
@@ -5265,6 +5390,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Select Color": WAS_Image_Select_Color,
     "Image Shadows and Highlights": WAS_Shadow_And_Highlight_Adjustment,
     "Image Size to Number": WAS_Image_Size_To_Number,
+    "Image Stitch": WAS_Image_Stitch, 
     "Image Style Filter": WAS_Image_Style_Filter,
     "Image Threshold": WAS_Image_Threshold,
     "Image Transpose": WAS_Image_Transpose,
