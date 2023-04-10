@@ -97,6 +97,9 @@ was_conf_template = {
                     "webui_styles_persistent_update": True,
                     "blip_model_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth",
                     "blip_model_vqa_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth",
+                    "sam_model_vith_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+                    "sam_model_vitl_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+                    "sam_model_vitb_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
                     "history_display_limit": 32,
                 }
 
@@ -4454,9 +4457,11 @@ class WAS_SAM_Model_Loader:
     RETURN_TYPES = ("SAM_MODEL",)
     FUNCTION = "sam_load_model"
     
-    CATEGORY = "WAS Suite/Image/SAM"
+    CATEGORY = "WAS Suite/SAM"
     
     def sam_load_model(self, model_size):
+        conf = getSuiteConfig()
+        
         model_filename_mapping = {
             "ViT-H (91M)": "sam_vit_h_4b8939.pth",
             "ViT-L (308M)": "sam_vit_l_0b3195.pth",
@@ -4464,11 +4469,12 @@ class WAS_SAM_Model_Loader:
         }
         
         model_url_mapping = {
-            "ViT-H (91M)": r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
-            "ViT-L (308M)": r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
-            "ViT-B (636M)": r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+            "ViT-H (91M)": conf['sam_model_vith_url'] if conf.__contains__('sam_model_vith_url') else r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+            "ViT-L (308M)": conf['sam_model_vitl_url'] if conf.__contains__('sam_model_vitl_url') else r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+            "ViT-B (636M)": conf['sam_model_vitb_url'] if conf.__contains__('sam_model_vitb_url') else r"https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
         }
         
+        model_url = model_url_mapping[model_size]
         model_filename = model_filename_mapping[model_size]
     
         if ( 'GitPython' not in packages() ):
@@ -4498,6 +4504,69 @@ class WAS_SAM_Model_Loader:
         return (sam_model, )
 
 
+# SAM PARAMETERS
+class WAS_SAM_Parameters:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "points": ("STRING", {"default": "[128, 128]; [0, 0]", "multiline": False}),
+                "labels": ("STRING", {"default": "[1, 0]", "multiline": False}),
+            }
+        }
+    
+    RETURN_TYPES = ("SAM_PARAMETERS",)
+    FUNCTION = "sam_parameters"
+    
+    CATEGORY = "WAS Suite/SAM"
+    
+    def sam_parameters(self, points, labels):
+        parameters = {
+            "points": np.asarray(np.matrix(points)),
+            "labels": np.array(np.matrix(labels))[0]
+        }
+        
+        return (parameters,)
+
+
+# SAM COMBINE PARAMETERS
+class WAS_SAM_Combine_Parameters:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "sam_parameters_a": ("SAM_PARAMETERS",),
+                "sam_parameters_b": ("SAM_PARAMETERS",),
+            }
+        }
+    
+    RETURN_TYPES = ("SAM_PARAMETERS",)
+    FUNCTION = "sam_combine_parameters"
+    
+    CATEGORY = "WAS Suite/SAM"
+    
+    def sam_combine_parameters(self, sam_parameters_a, sam_parameters_b):
+        parameters = {
+            "points": np.concatenate(
+                (sam_parameters_a["points"],
+                sam_parameters_b["points"]),
+                axis=0
+            ),
+            "labels": np.concatenate(
+                (sam_parameters_a["labels"],
+                sam_parameters_b["labels"])
+            )
+        }
+        
+        return (parameters,)
+
+
 # SAM IMAGE MASK
 class WAS_SAM_Image_Mask:
     def __init__(self):
@@ -4507,22 +4576,21 @@ class WAS_SAM_Image_Mask:
     def INPUT_TYPES(self):
         return {
             "required": {
-                "model": ("SAM_MODEL",),
+                "sam_model": ("SAM_MODEL",),
+                "sam_parameters": ("SAM_PARAMETERS",),
                 "image": ("IMAGE",),
-                "points": ("STRING", {"default": "0 100;100 0;25 25", "multiline": True}),
-                "labels": ("STRING", {"default": "1 1 0", "multiline": True}),
             }
         }
     
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE", "MASK",)
     FUNCTION = "sam_image_mask"
     
-    CATEGORY = "WAS Suite/Image/SAM"
+    CATEGORY = "WAS Suite/SAM"
     
-    def sam_image_mask(self, model, image, points, labels):
+    def sam_image_mask(self, sam_model, sam_parameters, image):
         image = tensor2sam(image)
-        points = np.asarray(np.matrix(points))
-        labels = np.array(np.matrix(labels))[0]
+        points = sam_parameters["points"]
+        labels = sam_parameters["labels"]
         
         print(points)
         print(labels)
@@ -4530,9 +4598,9 @@ class WAS_SAM_Image_Mask:
         from segment_anything import SamPredictor
         
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model.to(device=device)
+        sam_model.to(device=device)
         
-        predictor = SamPredictor(model)
+        predictor = SamPredictor(sam_model)
         predictor.set_image(image)
         
         masks, scores, logits = predictor.predict(
@@ -4541,12 +4609,281 @@ class WAS_SAM_Image_Mask:
             multimask_output=False
         )
         
-        model.to(device='cpu')
+        sam_model.to(device='cpu')
         
-        masks_expanded = np.expand_dims(masks, axis=-1)
-        masks_final = np.repeat(masks_expanded, 3, axis=-1)
+        mask = np.expand_dims(masks, axis=-1)
         
-        return (torch.from_numpy(masks), )
+        image = np.repeat(mask, 3, axis=-1)
+        image = torch.from_numpy(image)
+        
+        mask = torch.from_numpy(mask)
+        mask = mask.squeeze(2)
+        mask = mask.squeeze().to(torch.float32)
+        
+        return (image, mask, )
+
+
+# IMAGE BOUNDS
+class WAS_Image_Bounds:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE_BOUNDS",)
+    FUNCTION = "image_bounds"
+    
+    CATEGORY = "WAS Suite/Image"
+    
+    def image_bounds(self, image):
+        _, height, width, _ = image.shape
+        
+        image_bounds = [0, height - 1, 0, width - 1]
+        
+        return (image_bounds,)
+
+
+# INSET IMAGE BOUNDS
+class WAS_Inset_Image_Bounds:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "image_bounds": ("IMAGE_BOUNDS",),
+                "inset_left": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                "inset_right": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                "inset_top": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                "inset_bottom": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE_BOUNDS",)
+    FUNCTION = "inset_image_bounds"
+    
+    CATEGORY = "WAS Suite/Image"
+    
+    def inset_image_bounds(self, image_bounds, inset_left, inset_right, inset_top, inset_bottom):
+        # Unpack the image bounds
+        rmin, rmax, cmin, cmax = image_bounds
+        
+        # Apply insets
+        rmin = rmin + inset_top
+        rmax = rmax - inset_bottom
+        cmin = cmin + inset_left
+        cmax = cmax - inset_right
+
+        # Check if the resulting bounds are valid
+        if rmin > rmax or cmin > cmax:
+            raise ValueError("Invalid insets provided. Please make sure the insets do not exceed the image bounds.")
+        
+        image_bounds = [rmin, rmax, cmin, cmax]
+        
+        return (image_bounds,)
+
+
+# WAS BOUNDED IMAGE BLEND
+class WAS_Bounded_Image_Blend:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "target": ("IMAGE",),
+                "target_bounds": ("IMAGE_BOUNDS",),
+                "source": ("IMAGE",),
+                "blend_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0}),
+                "feathering": ("INT", {"default": 16, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "bounded_image_blend"
+    
+    CATEGORY = "WAS Suite/Image"
+    
+    def bounded_image_blend(self, target, target_bounds, source, blend_factor, feathering):
+        # Convert PyTorch tensors to PIL images
+        target_pil = Image.fromarray((target.squeeze(0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8))
+        source_pil = Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8))
+
+        # Extract the target bounds
+        rmin, rmax, cmin, cmax = target_bounds
+
+        # Calculate the dimensions of the target bounds
+        width = cmax - cmin + 1
+        height = rmax - rmin + 1
+
+        # Resize the source image to match the dimensions of the target bounds
+        source_resized = source_pil.resize((width, height), Image.ANTIALIAS)
+
+        # Create the blend mask with the same size as the target image
+        blend_mask = Image.new('L', target_pil.size, 0)
+
+        # Create the feathered mask portion the size of the target bounds
+        if feathering > 0:
+            inner_mask = Image.new('L', (width - (2 * feathering), height - (2 * feathering)), 255)
+            inner_mask = ImageOps.expand(inner_mask, border=feathering, fill=0)
+            inner_mask = inner_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
+        else:
+            inner_mask = Image.new('L', (width, height), 255)
+
+        # Paste the feathered mask portion into the blend mask at the target bounds position
+        blend_mask.paste(inner_mask, (cmin, rmin))
+
+        # Create a blank image with the same size and mode as the target
+        source_positioned = Image.new(target_pil.mode, target_pil.size)
+
+        # Paste the source image onto the blank image using the target bounds
+        source_positioned.paste(source_resized, (cmin, rmin))
+
+        # Create a blend mask using the blend_mask and blend factor
+        blend_mask = blend_mask.point(lambda p: p * blend_factor).convert('L')
+
+        # Blend the source and target images using the blend mask
+        result = Image.composite(source_positioned, target_pil, blend_mask)
+
+        # Convert the result back to a PyTorch tensor
+        result = torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0)
+        
+        return (result,)
+
+
+# BOUNDED IMAGE CROP
+class WAS_Bounded_Image_Crop:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "image_bounds": ("IMAGE_BOUNDS",),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "bounded_image_crop"
+    
+    CATEGORY = "WAS Suite/Image"
+    
+    def bounded_image_crop(self, image, image_bounds):
+        # Unpack the image bounds
+        rmin, rmax, cmin, cmax = image_bounds
+
+        # Check if the provided bounds are valid
+        if rmin > rmax or cmin > cmax:
+            raise ValueError("Invalid bounds provided. Please make sure the bounds are within the image dimensions.")
+
+        # Crop the image using the provided bounds and return it
+        return (image[:, rmin:rmax+1, cmin:cmax+1, :],)
+
+
+# WAS BOUNDED IMAGE BLEND WITH MASK
+class WAS_Bounded_Image_Blend_With_Mask:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "target": ("IMAGE",),
+                "target_mask": ("MASK",),
+                "target_bounds": ("IMAGE_BOUNDS",),
+                "source": ("IMAGE",),
+                "blend_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0}),
+                "feathering": ("INT", {"default": 16, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "bounded_image_blend_with_mask"
+    
+    CATEGORY = "WAS Suite/Image"
+    
+    def bounded_image_blend_with_mask(self, target, target_mask, target_bounds, source, blend_factor, feathering):
+        # Convert PyTorch tensors to PIL images
+        target_pil = Image.fromarray((target.squeeze(0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8))
+        target_mask_pil = Image.fromarray((target_mask.cpu().numpy() * 255).astype(np.uint8), mode='L')
+        source_pil = Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8))
+
+        # Extract the target bounds
+        rmin, rmax, cmin, cmax = target_bounds
+
+        # Create a blank image with the same size and mode as the target
+        source_positioned = Image.new(target_pil.mode, target_pil.size)
+
+        # Paste the source image onto the blank image using the target bounds
+        source_positioned.paste(source_pil, (cmin, rmin))
+
+        # Create a blend mask using the target mask and blend factor
+        blend_mask = target_mask_pil.point(lambda p: p * blend_factor).convert('L')
+
+        # Apply feathering (Gaussian blur) to the blend mask if feather_amount is greater than 0
+        if feathering > 0:
+            blend_mask = blend_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
+
+        # Blend the source and target images using the blend mask
+        result = Image.composite(source_positioned, target_pil, blend_mask)
+
+        # Convert the result back to a PyTorch tensor
+        result_tensor = torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0)
+
+        return (result_tensor,)
+
+
+# WAS BOUNDED IMAGE CROP WITH MASK
+class WAS_Bounded_Image_Crop_With_Mask:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mask": ("MASK",),
+                "padding_left": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                "padding_right": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                "padding_top": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                "padding_bottom": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE", "IMAGE_BOUNDS",)
+    FUNCTION = "bounded_image_crop_with_mask"
+    
+    CATEGORY = "WAS Suite/Image"
+    
+    def bounded_image_crop_with_mask(self, image, mask, padding_left, padding_right, padding_top, padding_bottom):
+        # Get the bounding box coordinates of the mask
+        rows = torch.any(mask, axis=1)
+        cols = torch.any(mask, axis=0)
+        rmin, rmax = torch.where(rows)[0][[0, -1]]
+        cmin, cmax = torch.where(cols)[0][[0, -1]]
+        
+        # Apply padding
+        rmin = max(rmin - padding_top, 0)
+        rmax = min(rmax + padding_bottom, mask.shape[0] - 1)
+        cmin = max(cmin - padding_left, 0)
+        cmax = min(cmax + padding_right, mask.shape[1] - 1)
+        
+        bounds = [rmin, rmax, cmin, cmax]
+        
+        # Crop the image using the computed coordinates and return it
+        return (image[:, rmin:rmax+1, cmin:cmax+1, :], bounds,)
 
 
 #! NUMBERS
@@ -4999,7 +5336,15 @@ NODE_CLASS_MAPPINGS = {
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
     "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
     "SAM Model Loader": WAS_SAM_Model_Loader,
+    "SAM Parameters": WAS_SAM_Parameters,
+    "SAM Parameters Combine": WAS_SAM_Combine_Parameters,
     "SAM Image Mask": WAS_SAM_Image_Mask,
+    "Image Bounds": WAS_Image_Bounds,
+    "Inset Image Bounds": WAS_Inset_Image_Bounds,
+    "Bounded Image Blend": WAS_Bounded_Image_Blend,
+    "Bounded Image Blend with Mask": WAS_Bounded_Image_Blend_With_Mask,
+    "Bounded Image Crop": WAS_Bounded_Image_Crop,
+    "Bounded Image Crop with Mask": WAS_Bounded_Image_Crop_With_Mask,
     "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Concatenate": WAS_Text_Concatenate,
