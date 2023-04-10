@@ -4981,7 +4981,7 @@ class WAS_SAM_Model_Loader:
     RETURN_TYPES = ("SAM_MODEL",)
     FUNCTION = "sam_load_model"
     
-    CATEGORY = "WAS Suite/SAM"
+    CATEGORY = "WAS Suite/Image/AI/SAM"
     
     def sam_load_model(self, model_size):
         conf = getSuiteConfig()
@@ -5045,7 +5045,7 @@ class WAS_SAM_Parameters:
     RETURN_TYPES = ("SAM_PARAMETERS",)
     FUNCTION = "sam_parameters"
     
-    CATEGORY = "WAS Suite/SAM"
+    CATEGORY = "WAS Suite/Image/AI/SAM"
     
     def sam_parameters(self, points, labels):
         parameters = {
@@ -5073,7 +5073,7 @@ class WAS_SAM_Combine_Parameters:
     RETURN_TYPES = ("SAM_PARAMETERS",)
     FUNCTION = "sam_combine_parameters"
     
-    CATEGORY = "WAS Suite/SAM"
+    CATEGORY = "WAS Suite/Image/AI/SAM"
     
     def sam_combine_parameters(self, sam_parameters_a, sam_parameters_b):
         parameters = {
@@ -5109,7 +5109,7 @@ class WAS_SAM_Image_Mask:
     RETURN_TYPES = ("IMAGE", "MASK",)
     FUNCTION = "sam_image_mask"
     
-    CATEGORY = "WAS Suite/SAM"
+    CATEGORY = "WAS Suite/Image/AI/SAM"
     
     def sam_image_mask(self, sam_model, sam_parameters, image):
         image = tensor2sam(image)
@@ -5160,7 +5160,7 @@ class WAS_Image_Bounds:
     RETURN_TYPES = ("IMAGE_BOUNDS",)
     FUNCTION = "image_bounds"
     
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Bound"
     
     def image_bounds(self, image):
         _, height, width, _ = image.shape
@@ -5190,7 +5190,7 @@ class WAS_Inset_Image_Bounds:
     RETURN_TYPES = ("IMAGE_BOUNDS",)
     FUNCTION = "inset_image_bounds"
     
-    CATEGORY = "WAS Suite/Image/Transform"
+    CATEGORY = "WAS Suite/Image/Bound"
     
     def inset_image_bounds(self, image_bounds, inset_left, inset_right, inset_top, inset_bottom):
         # Unpack the image bounds
@@ -5231,7 +5231,7 @@ class WAS_Bounded_Image_Blend:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "bounded_image_blend"
     
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Bound"
     
     def bounded_image_blend(self, target, target_bounds, source, blend_factor, feathering):
         # Convert PyTorch tensors to PIL images
@@ -5297,7 +5297,7 @@ class WAS_Bounded_Image_Crop:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "bounded_image_crop"
     
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Bound"
     
     def bounded_image_crop(self, image, image_bounds):
         # Unpack the image bounds
@@ -5332,7 +5332,7 @@ class WAS_Bounded_Image_Blend_With_Mask:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "bounded_image_blend_with_mask"
     
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Bound"
     
     def bounded_image_blend_with_mask(self, target, target_mask, target_bounds, source, blend_factor, feathering):
         # Convert PyTorch tensors to PIL images
@@ -5386,7 +5386,7 @@ class WAS_Bounded_Image_Crop_With_Mask:
     RETURN_TYPES = ("IMAGE", "IMAGE_BOUNDS",)
     FUNCTION = "bounded_image_crop_with_mask"
     
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Bound"
     
     def bounded_image_crop_with_mask(self, image, mask, padding_left, padding_right, padding_top, padding_bottom):
         # Get the bounding box coordinates of the mask
