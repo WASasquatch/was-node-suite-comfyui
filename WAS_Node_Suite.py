@@ -5781,8 +5781,8 @@ class WAS_Latent_Size_To_Number:
             }
         }
 
-    RETURN_TYPES = ("NUMBER","NUMBER","NUMBER","NUMBER")
-    RETURN_NAMES = ("tensor_w_num","tensor_h_num","image_w_num","image_h_num")
+    RETURN_TYPES = ("NUMBER","NUMBER")
+    RETURN_NAMES = ("tensor_w_num","tensor_h_num")
     FUNCTION = "latent_width_height"
 
     CATEGORY = "WAS Suite/Number/Operations"
@@ -5796,11 +5796,9 @@ class WAS_Latent_Size_To_Number:
             shape = tensor.shape
             tensor_height = shape[-2]
             tensor_width = shape[-1]
-            image_height = int(shape[-2] * 96 / 2.54)
-            image_width = int(shape[-1] * 96 / 2.54)
             print(tensor)
-            size_dict.update({i:[tensor_width, tensor_height, image_width, image_height]})
-        return (size_dict[0][0], size_dict[0][1], size_dict[0][2], size_dict[0][3])
+            size_dict.update({i:[tensor_width, tensor_height]})
+        return (size_dict[0][0], size_dict[0][1])
 
 # INPUT SWITCH
 
