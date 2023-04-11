@@ -3600,8 +3600,8 @@ class WAS_Latent_Upscale:
 
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"samples": ("LATENT",), "mode": (["bilinear", "bicubic"],),
-                             "factor": ("FLOAT", {"default": 2.0, "min": 0.1, "max": 8.0, "step": 0.1}),
+        return {"required": {"samples": ("LATENT",), "mode": (["area", "bicubic", "bilinear", "nearest"],),
+                             "factor": ("FLOAT", {"default": 2.0, "min": 0.1, "max": 8.0, "step": 0.01}),
                              "align": (["true", "false"], )}}
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "latent_upscale"
@@ -3609,9 +3609,18 @@ class WAS_Latent_Upscale:
     CATEGORY = "WAS Suite/Latent/Transform"
 
     def latent_upscale(self, samples, mode, factor, align):
+        valid_modes = ["area", "bicubic", "bilinear", "nearest"]
+        if mode not in valid_modes:
+            raise ValueError(f"\033[34mWAS NS\033[0m Error: Invalid interpolation mode `{mode}` selected. Valid modes are: {', '.join(valid_modes)}")
+        align = True if align == 'true' else False
         s = samples.copy()
-        s["samples"] = torch.nn.functional.interpolate(
-            s['samples'], scale_factor=factor, mode=mode, align_corners=(True if align == 'true' else False))
+        shape = s['samples'].shape
+        size = tuple(int(round(dim * factor)) for dim in shape[-2:])
+        if mode in ['linear', 'bilinear', 'bicubic', 'trilinear']:
+            s["samples"] = torch.nn.functional.interpolate(
+                s['samples'], size=size, mode=mode, align_corners=align)
+        else:
+            s["samples"] = torch.nn.functional.interpolate(s['samples'], size=size, mode=mode)
         return (s,)
 
 # LATENT NOISE INJECTION NODE
