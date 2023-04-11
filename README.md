@@ -1,3 +1,7 @@
+# DEVELOPMENT HAS ENDED
+
+*Due to the fact Comfyanonymous is building a system for himself, and not the community, I have decided to stop working on WAS Node Suite. In the current state ComfyUI is broken with it's [weighting and embed system](https://github.com/comfyanonymous/ComfyUI/discussions/473). I do not recommend using it for any sort of professional work. Comfyanonymous is blind to the fidelity loss in quality with his personal choices, and the flexibility of weighting is completely lost in ComfyUI.*
+
 # **WAS** Node Suite &nbsp; [![Colab](https://camo.githubusercontent.com/84f0493939e0c4de4e6dbe113251b4bfb5353e57134ffd9fcab6b8714514d4d1/68747470733a2f2f636f6c61622e72657365617263682e676f6f676c652e636f6d2f6173736574732f636f6c61622d62616467652e737667)](https://colab.research.google.com/github/WASasquatch/comfyui-colab-was-node-suite/blob/main/ComfyUI_%2B_WAS_Node_Suite.ipynb) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FWASasquatch%2Fwas-node-suite-comfyui&count_bg=%233D9CC8&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 
 <p align="center">
