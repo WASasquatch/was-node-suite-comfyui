@@ -106,6 +106,7 @@
    - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
      or things like `*.jpg` to select only JPEG images in the directory specified. 
  - Latent Noise Injection: Inject latent noise into a latent image
+ - Latent Size to Number: Latent sizes in tensor width/height
  - Latent Upscale by Factor: Upscale a latent image by a facto
  - MiDaS Depth Approximation: Produce a depth approximation of a single image input
  - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
