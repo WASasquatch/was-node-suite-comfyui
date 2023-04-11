@@ -2576,9 +2576,9 @@ class WAS_Image_Levels:
             }
         }
     RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "apply_image_levels/Adjustment"
+    FUNCTION = "apply_image_levels"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image/Adjustment"
 
     def apply_image_levels(self, image, black_level, mid_level, white_level):
 
