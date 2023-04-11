@@ -3613,6 +3613,8 @@ class WAS_Latent_Upscale:
         if mode not in valid_modes:
             raise ValueError(f"\033[34mWAS NS\033[0m Error: Invalid interpolation mode `{mode}` selected. Valid modes are: {', '.join(valid_modes)}")
         align = True if align == 'true' else False
+        if not isinstance(factor, float) or factor <= 0:
+            raise ValueError(f"\033[34mWAS NS\033[0m Error: The input `factor` is `{factor}`, but should be a positive or negative float.")
         s = samples.copy()
         shape = s['samples'].shape
         size = tuple(int(round(dim * factor)) for dim in shape[-2:])
@@ -5738,6 +5740,8 @@ class WAS_Number_Operation:
 
 #! MISC
 
+# Image Width and Height to Number
+
 class WAS_Image_Size_To_Number:
     def __init__(self):
         pass
@@ -5761,6 +5765,42 @@ class WAS_Image_Size_To_Number:
         if image.size:
             return( image.size[0], image.size[1] )
         return ( 0, 0 )
+        
+        
+# Latent Width and Height to Number
+        
+class WAS_Latent_Size_To_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "samples": ("LATENT",),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER","NUMBER","NUMBER","NUMBER")
+    RETURN_NAMES = ("tensor_w_num","tensor_h_num","image_w_num","image_h_num")
+    FUNCTION = "latent_width_height"
+
+    CATEGORY = "WAS Suite/Number/Operations"
+    
+    def latent_width_height(self, samples):
+        size_dict = {}
+        i = 0
+        for tensor in samples['samples'][0]:
+            if not isinstance(tensor, torch.Tensor):
+                raise ValueError(f'\033[34mWAS NS\033[33m Error: Input should be a torch.Tensor')
+            shape = tensor.shape
+            tensor_height = shape[-2]
+            tensor_width = shape[-1]
+            image_height = int(shape[-2] * 96 / 2.54)
+            image_width = int(shape[-1] * 96 / 2.54)
+            print(tensor)
+            size_dict.update({i:[tensor_width, tensor_height, image_width, image_height]})
+        return (size_dict[0][0], size_dict[0][1], size_dict[0][2], size_dict[0][3])
 
 # INPUT SWITCH
 
@@ -5875,6 +5915,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
+    "Latent Size to Number": WAS_Latent_Size_To_Number,
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
