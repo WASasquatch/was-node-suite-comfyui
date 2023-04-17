@@ -3651,7 +3651,8 @@ class WAS_Latent_Noise:
         noise = torch.randn_like(s["samples"]) * noise_std
         s["samples"] = s["samples"] + noise
         return (s,)
-
+        
+        
 
 # MIDAS DEPTH APPROXIMATION NODE
 
@@ -3964,7 +3965,7 @@ class WAS_NSP_CLIPTextEncoder:
         with open(local_pantry, 'r') as f:
             nspterminology = json.load(f)
 
-        if seed > 0 or seed < 1:
+        if seed > 0 or seed < 0:
             random.seed(seed)
 
         # Parse Text
@@ -4471,7 +4472,12 @@ class WAS_Text_Save:
         # Ensure path exists
         if not os.path.exists(path):
             print(
-                f'\033[34mWAS NS\033[0m Error: The path `{path}` doesn\'t exist!')
+                f'\033[34mWAS NS\033[0m Warning: The path `{path}` doesn\'t exist! Creating it...')
+            try:
+                os.mkdir(path)
+            except OSError as e:
+                print(
+                    f'\033[34mWAS NS\033[0m Warning: The path `{path}` could not be created! Is there write access?\n{e}')
 
         # Ensure content to save
         if text.strip == '':
@@ -4581,7 +4587,7 @@ class WAS_Text_to_Conditioning:
     RETURN_TYPES = ("CONDITIONING",)
     FUNCTION = "text_to_conditioning"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Operations"
 
     def text_to_conditioning(self, clip, text):
         return ([[clip.encode(text), {}]], )
@@ -4829,7 +4835,7 @@ class WAS_Text_To_String:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "text_to_string"
 
-    CATEGORY = "WAS Suite/Text"
+    CATEGORY = "WAS Suite/Text/Operations"
 
     def text_to_string(self, text):
         return (text, )
@@ -5679,6 +5685,28 @@ class WAS_Number_PI:
 
     def number_pi(self):
         return (math.pi, )
+        
+# Boolean
+
+class WAS_Boolean:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "boolean_number": ("INT", {"default":1, "min":0, "max":1, "step":1}),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "return_boolean"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def return_boolean(self, boolean_number=1):
+        return (int(boolean_number), )
 
 # NUMBER OPERATIONS
 
@@ -5799,10 +5827,11 @@ class WAS_Latent_Size_To_Number:
             print(tensor)
             size_dict.update({i:[tensor_width, tensor_height]})
         return (size_dict[0][0], size_dict[0][1])
+        
+            
+# LATENT INPUT SWITCH
 
-# INPUT SWITCH
-
-class WAS_Input_Switch:
+class WAS_Latent_Input_Switch:
     def __init__(self):
         pass
 
@@ -5810,23 +5839,203 @@ class WAS_Input_Switch:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "input_a": ("*",),
-                "input_b": ("*",),
-                "boolean": ("NUMBER",),
+                "latent_a": ("LATENT",),
+                "latent_b": ("LATENT",),
+                "boolean_number": ("NUMBER",),
             }
         }
 
-    RETURN_TYPES = ("*",)
-    FUNCTION = "input_switch"
+    RETURN_TYPES = ("LATENT",)
+    FUNCTION = "latent_input_switch"
 
-    CATEGORY = "WAS Suite/Operations"
+    CATEGORY = "WAS Suite/Logic"
 
-    def input_switch(self, input_a, input_b, boolean=0):
+    def latent_input_switch(self, latent_a, latent_b, boolean_number=1):
 
-        if int(boolean) == 1:
-            return (input_a, )
+        if int(boolean_number) == 1:
+            return (latent_a, )
         else:
-            return (input_b, )
+            return (latent_b, )
+            
+# NUMBER INPUT CONDITION
+
+class WAS_Number_Input_Condition:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "number_a": ("NUMBER",),
+                "number_b": ("NUMBER",),
+                "comparison": (["greater-than", "greater-than or equels", "less-than", "less-than or equals", "equals", "does not equal", "divisible by", "if A odd", "if A even", "if A prime", "factor of"],),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "number_input_condition"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def number_input_condition(self, number_a, number_b, comparison="greater-than"):
+
+        if comparison:
+            if comparison == 'greater-than':
+                result = number_a if number_a > number_b else number_b
+            elif comparison == 'greater-than or equals':
+                result = number_a if number_a >= number_b else number_b
+            elif comparison == 'less-than':
+                result = number_a if number_a < number_b else number_b
+            elif comparison == 'less-than or equals':
+                result = number_a if number_a <= number_b else number_b
+            elif comparison == 'equals':
+                result = number_a if number_a == number_b else number_b
+            elif comparison == 'does not equal':
+                result = number_a if number_a != number_b else number_b
+            elif comparison == 'divisible by':
+                result = number_a if number_b % number_a == 0 else number_b
+            elif comparison == 'if A odd':
+                result = number_a if number_a % 2 != 0 else number_b
+            elif comparison == 'if A even':
+                result = number_a if number_a % 2 == 0 else number_b
+            elif comparison == 'if A prime':
+                result = number_a if self.is_prime(number_a) else number_b
+            elif comparison == 'factor of':
+                result = number_a if number_b % number_a == 0 else number_b
+            else:
+                result = number_a
+
+            print(result)
+
+        return (result,)
+        
+    def is_prime(self, n):
+        if n <= 1:
+            return False
+        elif n <= 3:
+            return True
+        elif n % 2 == 0 or n % 3 == 0:
+            return False
+        i = 5
+        while i * i <= n:
+            if n % i == 0 or n % (i + 2) == 0:
+                return False
+            i += 6
+        return True
+        
+# NUMBER INPUT SWITCH
+
+class WAS_Number_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "number_a": ("NUMBER",),
+                "number_b": ("NUMBER",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "number_input_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def number_input_switch(self, number_a, number_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (number_a, )
+        else:
+            return (number_b, )
+            
+            
+# IMAGE INPUT SWITCH
+
+class WAS_Image_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image_a": ("IMAGE",),
+                "image_b": ("IMAGE",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_input_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def image_input_switch(self, image_a, image_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (image_a, )
+        else:
+            return (image_b, )
+            
+# CONDITIONING INPUT SWITCH
+
+class WAS_Conditioning_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "conditioning_a": ("CONDITIONING",),
+                "conditioning_b": ("CONDITIONING",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("CONDITIONING",)
+    FUNCTION = "conditioning_input_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def conditioning_input_switch(self, conditioning_a, conditioning_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (conditioning_a, )
+        else:
+            return (conditioning_b, )   
+            
+# TEXT INPUT SWITCH
+
+class WAS_Text_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text_a": (TEXT_TYPE,),
+                "text_b": (TEXT_TYPE,),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "text_input_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def text_input_switch(self, text_a, text_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (text_a, )
+        else:
+            return (text_b, )
 
 
 # DEBUG INPUT TO CONSOLE
@@ -5865,9 +6074,12 @@ class WAS_Debug_Number_to_Console:
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
+    "Conditioning Input Switch": WAS_Conditioning_Input_Switch,
     "Constant Number": WAS_Constant_Number,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
+    "Latent Input Switch": WAS_Latent_Input_Switch,
+    "Logic Boolean": WAS_Boolean,
     "Image Analyze": WAS_Image_Analyze,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
@@ -5886,6 +6098,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Generate Gradient": WAS_Image_Generate_Gradient,
     "Image High Pass Filter": WAS_Image_High_Pass_Filter,
     "Image History Loader": WAS_Image_History,
+    "Image Input Switch": WAS_Image_Input_Switch,
     "Image Levels Adjustment": WAS_Image_Levels,
     "Image Load": WAS_Load_Image,
     "Image Median Filter": WAS_Image_Median_Filter,
@@ -5921,6 +6134,8 @@ NODE_CLASS_MAPPINGS = {
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Number Operation": WAS_Number_Operation,
     "Number to Float": WAS_Number_To_Float,
+    "Number Input Switch": WAS_Number_Input_Switch,
+    "Number Input Condition": WAS_Number_Input_Condition,
     "Number PI": WAS_Number_PI,
     "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
@@ -5950,6 +6165,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Find and Replace by Dictionary": WAS_Search_and_Replace_Dictionary,
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
+    "Text Input Switch": WAS_Text_Input_Switch,
     "Text Multiline": WAS_Text_Multiline,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,

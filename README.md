@@ -35,8 +35,11 @@
  - Bounded Image Crop: Crop a bounds image
  - Bounded Image Crop with Mask: Crop a bounds image by mask
  - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
+ - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
- - Dictionary to Console: Print a dictionary input to the console	
+ - Dictionary to Console: Print a dictionary input to the console
+ - Latent Input Switch: Switch between two latent inputs 
+ - Logic Boolean: A simple `1` or `0` output to use with logic
  - Image Analyze
    - Black White Levels
    - RGB Levels
@@ -62,6 +65,7 @@
  - Image Generate Gradient: Generate a gradient map with desired stops and colors
  - Image High Pass Filter: Apply a high frequency pass to the image returning the details
  - Image History Loader: Load images from history based on the Load Image Batch node. Can define max history in config file. *(requires restart to show last sessions files at this time)*
+ - Image Input Switch: Switch between two image inputs
  - Image Levels Adjustment: Adjust the levels of a image
  - Image Load: Load a *image* from any path on the system, or a url starting with `http`
  - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
@@ -113,6 +117,8 @@
  - Number Operation
  - Number to Seed
  - Number to Float
+ - Number Input Switch: Switch between two number inputs
+ - Number Input Condition: Compare between two inputs or against the A input
  - Number to Int
  - Number to String
  - Number to Text
@@ -128,6 +134,7 @@
  - Text Find and Replace: Find and replace a substring in a string
  - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary. 
    - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed. 
+ - Text Input Switch: Switch between two text inputs
  - Text Multiline: Write a multiline text string
  - Text Parse A1111 Embeddings: Convert embeddings filenames in your prompts to `embedding:[filename]]` format based on your `/ComfyUI/models/embeddings/` files. 
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
