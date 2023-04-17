@@ -38,8 +38,6 @@
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Dictionary to Console: Print a dictionary input to the console
- - Latent Input Switch: Switch between two latent inputs 
- - Logic Boolean: A simple `1` or `0` output to use with logic
  - Image Analyze
    - Black White Levels
    - RGB Levels
@@ -111,7 +109,9 @@
      or things like `*.jpg` to select only JPEG images in the directory specified. 
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height
- - Latent Upscale by Factor: Upscale a latent image by a facto
+ - Latent Upscale by Factor: Upscale a latent image by a factor
+ - Latent Input Switch: Switch between two latent inputs 
+ - Logic Boolean: A simple `1` or `0` output to use with logic
  - MiDaS Depth Approximation: Produce a depth approximation of a single image input
  - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
  - Number Operation
