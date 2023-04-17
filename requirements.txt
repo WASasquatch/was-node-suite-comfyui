@@ -1,0 +1,10 @@
+pilgram
+pythonperlin
+git+https://github.com/WASasquatch/img2texture.git
+matplotlib
+scikit-learn
+opencv-python
+timm>=0.4.12
+transformers==4.26.1
+gitpython
+fairscale>=0.4.4
