@@ -139,6 +139,7 @@ if not os.path.exists(WAS_CONFIG_FILE):
         print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG_FILE}`.')
     else:
         print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG_FILE}`.')
+    
 else:
     was_config = getSuiteConfig()
     
@@ -150,14 +151,6 @@ else:
        
     if update_config:
         updateSuiteConfig(was_config)
-        
-    # SET TEXT TYPE
-    TEXT_TYPE = "TEXT"
-    if was_config.__contains__('use_legacy_ascii_text'):
-        if was_config['use_legacy_ascii_text']:
-            TEXT_TYPE = "ASCII"
-            print(f'\033[34mWAS Node Suite\033[0m Warning: use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.')
- 
     
     # Convert WebUI Styles
     if was_config.__contains__('webui_styles'):
@@ -195,7 +188,13 @@ else:
             
             print(f'\033[34mWAS Node Suite:\033[0m Styles import complete.')
 
-            
+# SET TEXT TYPE
+TEXT_TYPE = "TEXT"
+if was_config.__contains__('use_legacy_ascii_text'):
+    if was_config['use_legacy_ascii_text']:
+        TEXT_TYPE = "ASCII"
+        print(f'\033[34mWAS Node Suite\033[0m Warning: use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.')
+ 
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
