@@ -5500,7 +5500,7 @@ class WAS_Constant_Number:
             elif number_type == 'bool':
                 return ((1 if int(number) > 0 else 0), )
             else:
-                return number
+                return (number, )
 
 
 # NUMBER TO SEED
