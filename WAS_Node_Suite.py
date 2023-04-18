@@ -60,6 +60,11 @@ STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
 print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
 print('\033[34mWAS Node Suite\033[0m Running From:', WAS_SUITE_ROOT)
 
+# Check Write Access
+if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
+    print(f'\033[34mWAS Node Suite\033[0m Error: There is no write access to `{WAS_SUITE_ROOT}` or `{MODELS_DIR}`. Write access is required!')
+    exit
+
 #! INSTALLATION CLEANUP
 
 # Delete legacy nodes
@@ -137,8 +142,10 @@ def updateSuiteConfig(conf):
 if not os.path.exists(WAS_CONFIG_FILE):
     if updateSuiteConfig(was_conf_template):
         print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG_FILE}`.')
+        was_config = getSuiteConfig()
     else:
-        print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG_FILE}`.')
+        print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG_FILE}`. Using internal config template.')
+        was_config = was_conf_tempalte
     
 else:
     was_config = getSuiteConfig()
@@ -190,7 +197,7 @@ else:
 
 # SET TEXT TYPE
 TEXT_TYPE = "TEXT"
-if was_config.__contains__('use_legacy_ascii_text'):
+if was_config and was_config.__contains__('use_legacy_ascii_text'):
     if was_config['use_legacy_ascii_text']:
         TEXT_TYPE = "ASCII"
         print(f'\033[34mWAS Node Suite\033[0m Warning: use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.')
