@@ -5227,7 +5227,7 @@ class WAS_Inset_Image_Bounds:
 
         # Check if the resulting bounds are valid
         if rmin > rmax or cmin > cmax:
-            raise ValueError("Invalid insets provided. Please make sure the insets do not exceed the image bounds.")
+            raise ValueError("\033[34mWAS NS\033[33m Error:\033[0m Invalid insets provided. Please make sure the insets do not exceed the image bounds.")
         
         image_bounds = [rmin, rmax, cmin, cmax]
         
@@ -5328,7 +5328,7 @@ class WAS_Bounded_Image_Crop:
 
         # Check if the provided bounds are valid
         if rmin > rmax or cmin > cmax:
-            raise ValueError("Invalid bounds provided. Please make sure the bounds are within the image dimensions.")
+            raise ValueError("\033[34mWAS NS\033[33m Error:\033[0m Invalid bounds provided. Please make sure the bounds are within the image dimensions.")
 
         # Crop the image using the provided bounds and return it
         return (image[:, rmin:rmax+1, cmin:cmax+1, :],)
@@ -5473,6 +5473,65 @@ class WAS_Random_Number:
 
         # Return number
         return (number, )
+
+# TRUE RANDOM NUMBER
+
+class WAS_True_Random_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "api_key": ("STRING",{"default":"00000000-0000-0000-0000-000000000000", "multiline": False}),
+                "minimum": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
+                "maximum": ("FLOAT", {"default": 10000000, "min": -18446744073709551615, "max": 18446744073709551615}),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "return_true_randm_number"
+
+    CATEGORY = "WAS Suite/Number"
+
+    def return_true_randm_number(self, api_key=None, minimum=0, maximum=10):
+
+        # Get Random Number
+        number = self.get_random_numbers(api_key=api_key, minimum=minimum, maximum=maximum)[0]
+
+        # Return number
+        return (number, )
+        
+    def get_random_numbers(self, api_key=None, amount=1, minimum=0, maximum=10):
+        '''Get random number(s) from random.org'''
+        if api_key in [None, '00000000-0000-0000-0000-000000000000', '']:
+            print("\033[34mWAS NS\033[33m Error:\033[0m No API key provided! A valid RANDOM.ORG API key is required to use `True Random.org Number Generator`")
+            return [0]
+            
+        url = "https://api.random.org/json-rpc/2/invoke"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "generateIntegers",
+            "params": {
+                "apiKey": api_key,
+                "n": amount,
+                "min": minimum,
+                "max": maximum,
+                "replacement": True,
+                "base": 10
+            },
+            "id": 1
+        }
+        
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        if response.status_code == 200:
+            data = response.json()
+            if "result" in data:
+                return data["result"]["random"]["data"]
+                
+        return [0]
 
 
 # CONSTANT NUMBER
@@ -6181,6 +6240,7 @@ NODE_CLASS_MAPPINGS = {
     "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,
     "Text to String": WAS_Text_To_String,
+    "True Random.org Number Generator": WAS_True_Random_Number,
 }
 
 print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')

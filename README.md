@@ -142,6 +142,8 @@
  - Text Random Line: Select a random line from a text input string
  - Text String: Write a single line text string value
  - Text to Conditioning: Convert a text string to conditioning.
+ - True Random.org Number Generator: Generate a truly random number online from atmospheric noise with [Random.org](https://random.org/)
+   - [Get your API key from your account page](https://accounts.random.org/)
  
 </details>
  
