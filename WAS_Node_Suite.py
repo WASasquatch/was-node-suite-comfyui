@@ -5532,6 +5532,10 @@ class WAS_True_Random_Number:
                 return data["result"]["random"]["data"]
                 
         return [0]
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 
 # CONSTANT NUMBER
