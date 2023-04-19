@@ -5473,6 +5473,10 @@ class WAS_Random_Number:
 
         # Return number
         return (number, )
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
 # TRUE RANDOM NUMBER
 
