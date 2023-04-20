@@ -5839,7 +5839,30 @@ class WAS_Number_Operation:
             else:
                 return number_a
 
+# NUMBER MULTIPLE OF
 
+class WAS_Number_Multiple_Of:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "number": ("NUMBER",),
+                "multiple": ("INT", {"default": 8, "min": -18446744073709551615, "max": 18446744073709551615}),
+            }
+        }
+    
+    RETURN_TYPES =("NUMBER",)
+    FUNCTION = "number_multiple_of"
+    
+    CATEGORY = "WAS Suite/Number/Functions"
+    
+    def number_multiple_of(self, number, multiple=8):
+        if number % multiple != 0:
+            return ((number // multiple) * multiple + multiple, )
+        return (number, )
 
 
 #! MISC
@@ -5900,7 +5923,6 @@ class WAS_Latent_Size_To_Number:
             shape = tensor.shape
             tensor_height = shape[-2]
             tensor_width = shape[-1]
-            print(tensor)
             size_dict.update({i:[tensor_width, tensor_height]})
         return (size_dict[0][0], size_dict[0][1])
         
@@ -5981,8 +6003,6 @@ class WAS_Number_Input_Condition:
                 result = number_a if number_b % number_a == 0 else number_b
             else:
                 result = number_a
-
-            print(result)
 
         return (result,)
         
@@ -6212,6 +6232,7 @@ NODE_CLASS_MAPPINGS = {
     "Number to Float": WAS_Number_To_Float,
     "Number Input Switch": WAS_Number_Input_Switch,
     "Number Input Condition": WAS_Number_Input_Condition,
+    "Number Multiple Of": WAS_Number_Multiple_Of, 
     "Number PI": WAS_Number_PI,
     "Number to Int": WAS_Number_To_Int,
     "Number to Seed": WAS_Number_To_Seed,
