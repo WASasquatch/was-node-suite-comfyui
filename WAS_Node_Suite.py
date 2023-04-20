@@ -164,6 +164,7 @@ else:
     
         webui_styles_file = was_config['webui_styles'].strip()
         
+        
         if was_config.__contains__('webui_styles_persistent_update'):
             styles_persist = was_config['webui_styles_persistent_update']
         else:
@@ -1190,7 +1191,7 @@ class WAS_Image_Filters:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_filters"
 
-    CATEGORY = "WAS Suite/Image/Adjustment"
+    CATEGORY = "WAS Suite/Image/Filter"
 
     def image_filters(self, image, brightness, contrast, saturation, sharpness, blur, gaussian_blur, edge_enhance):
 
