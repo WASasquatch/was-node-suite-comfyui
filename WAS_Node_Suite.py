@@ -3397,6 +3397,10 @@ class WAS_Image_Save:
             except:
                 digits = 0
             return (digits, prefix)
+        
+        # Define token system
+        tokens = TextTokens()
+        output_path = tokens.parseTokens(output_path)
 
         # Setup custom path or default
         if output_path.strip() != '':
@@ -3427,7 +3431,6 @@ class WAS_Image_Save:
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
                 
             # Parse prefix tokens
-            tokens = TextTokens()
             filename_prefix = tokens.parseTokens(filename_prefix)
 
             if overwrite_mode == 'prefix_as_filename':
