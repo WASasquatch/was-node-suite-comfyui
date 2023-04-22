@@ -1539,7 +1539,7 @@ class WAS_Image_Crop_Face:
         face_img.resize((((face_img.size[0] // 8) * 8 + 8), ((face_img.size[1] // 8) * 8 + 8)))
         
         # Return face image and coordinates
-        return (pil2tensor(face_img), (original_size, (left, top, right, bottom)))
+        return (pil2tensor(face_img.convert('RGB')), (original_size, (left, top, right, bottom)))
 
 
 # IMAGE PASTE FACE CROP
@@ -1600,7 +1600,7 @@ class WAS_Image_Paste_Face_Crop:
         blend.putalpha(mask)
         image = Image.alpha_composite(image.convert("RGBA"), blend)
         
-        return (pil2tensor(image), pil2tensor(mask))
+        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))
 
 
 # COMBINE NODE
