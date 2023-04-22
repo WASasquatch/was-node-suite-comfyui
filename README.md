@@ -58,6 +58,7 @@
    - **Limitations:**
      - Sometimes no faces are found in badly generated images, or faces at angles
 	 - Sometimes face crop is black, this is because the padding is too large and intersected with the image edge. Use a smaller padding size.
+	 - face_recognition mode sometimes finds random things as faces. It also requires a [CUDA] GPU.
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
