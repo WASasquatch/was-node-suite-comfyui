@@ -6,7 +6,7 @@
 
 ### A node suite for [ComfyUI](https://github.com/comfyanonymous/ComfyUI) with many new nodes, such as image processing, text processing, and more. 
 
-### [Share Workflows](/workflows/README.md) to the `/workflows/` directory. Preferably embedded PNGs with workflows, but JSON is OK too. [You can use this tool to add a workflow to a PNG file easily](https://colab.research.google.com/drive/1hQMjNUdhMQ3rw1Wcm3_umvmOMeS_K4s8?usp=sharing)
+### [Share Workflows](https://github.com/WASasquatch/was-node-suite-comfyui/wiki/Workflow-Examples) to the `/workflows/` directory. Preferably embedded PNGs with workflows, but JSON is OK too. [You can use this tool to add a workflow to a PNG file easily](https://colab.research.google.com/drive/1hQMjNUdhMQ3rw1Wcm3_umvmOMeS_K4s8?usp=sharing)
 
 # Important Updates
 
@@ -54,6 +54,11 @@
      - Depends on `scikit-learn`, will attempt to install on first run. 
    - Supports color range of 8-256
    - Utilizes font in `./res/` unless unavailable, then it will utilize internal better then nothing font. 
+ - Image Crop Face: Crop a face out of a image
+  - **Limitations:**
+    - Sometimes no faces are found in badly generated images, or faces at angles
+	- Sometimes face crop is black, this is because the padding is too large and intersected with the image edge. Use a smaller padding size.
+ - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
  - Image Film Grain: Apply film grain to a image

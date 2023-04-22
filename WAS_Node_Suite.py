@@ -1384,6 +1384,224 @@ class WAS_Image_Style_Filter:
         return (torch.from_numpy(np.array(out_image).astype(np.float32) / 255.0).unsqueeze(0), )
 
 
+# IMAGE CROP FACE
+
+class WAS_Image_Crop_Face:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "crop_padding_factor": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 2.0, "step": 0.01}),
+                "cascade_xml": ([
+                                "haarcascade_frontalface_default.xml", 
+                                "haarcascade_frontalface_alt.xml", 
+                                "haarcascade_frontalface_alt2.xml",
+                                "haarcascade_frontalface_alt_tree.xml",
+                                "haarcascade_upperbody.xml"
+                                ],),
+                "use_face_recognition_gpu": (["false","true"],),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE", "CROP_DATA")
+    FUNCTION = "image_crop_face"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25, use_face_recognition_gpu="false"):
+    
+        use_fr = False if use_face_recognition_gpu.strip().lower() == 'false' else True
+    
+        if 'opencv-python' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing CV2...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
+        
+        if use_fr:
+            if 'face_recognition' not in packages():
+                print("\033[34mWAS NS:\033[0m Installing face_recognition...")
+                subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'face_recognition'])
+        
+        return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor, use_fr)
+    
+    def crop_face(self, image, cascade_name=None, padding=0.25, use_fr=False):
+    
+        import cv2
+        if use_fr:
+            import face_recognition
+
+        img = np.array(image.convert('RGB'))
+
+        if use_fr:
+            face_location = face_recognition.face_locations(img)
+        else:
+            face_location = None
+
+        cascades = [os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_default.xml'), 
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt.xml'), 
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt2.xml'), 
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt_tree.xml'), 
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_upperbody.xml')]
+                    
+        if cascade_name:
+            for cascade in cascades:
+                if os.path.basename(cascade) == cascade_name:
+                    cascades.remove(cascade)
+                    cascades.insert(0, cascade)
+                    break
+
+        faces = None
+        if not face_location:
+            if use_fr:
+                print(f"\033[34mWAS NS\033[0m Warning: Unable to find any faces with face_recognition, switching to cascade recognition...")
+            for cascade in cascades:
+                if not os.path.exists(cascade):
+                    print(f"\033[34mWAS NS\033[0m Error: Unable to find cascade XML file at `{cascade}`.",
+                        "Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?")
+                    return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), ((0,0),(0,0,0,0)))
+                face_cascade = cv2.CascadeClassifier(cascade)
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+                if len(faces) != 0:
+                    print("\033[34mWAS NS\033[0m: Face found with:", os.path.basename(cascade))
+                    break
+            if len(faces) == 0:
+                print("\033[34mWAS NS\033[0m Warning: No faces found in the image!")
+                return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), ((0,0),(0,0,0,0)))
+        else: 
+            print("\033[34mWAS NS\033[0m: Face found with: face_recognition model")
+            faces = face_location
+            
+        # Assume there is only one face in the image
+        x, y, w, h = faces[0]
+        
+        # Check if the face region aligns with the edges of the original image
+        left_adjust = max(0, -x)
+        right_adjust = max(0, x + w - img.shape[1])
+        top_adjust = max(0, -y)
+        bottom_adjust = max(0, y + h - img.shape[0])
+
+        # Check if the face region is near any edges, and if so, pad in the opposite direction
+        if left_adjust < w:
+            x += right_adjust
+        elif right_adjust < w:
+            x -= left_adjust
+        if top_adjust < h:
+            y += bottom_adjust
+        elif bottom_adjust < h:
+            y -= top_adjust
+
+        w -= left_adjust + right_adjust
+        h -= top_adjust + bottom_adjust
+        
+        # Calculate padding around face
+        face_size = min(h, w)
+        y_pad = int(face_size * padding)
+        x_pad = int(face_size * padding)
+        
+        # Calculate square coordinates around face
+        center_x = x + w // 2
+        center_y = y + h // 2
+        half_size = (face_size + max(x_pad, y_pad)) // 2
+        top = max(0, center_y - half_size)
+        bottom = min(img.shape[0], center_y + half_size)
+        left = max(0, center_x - half_size)
+        right = min(img.shape[1], center_x + half_size)
+        
+        # Ensure square crop of the original image
+        crop_size = min(right - left, bottom - top)
+        left = center_x - crop_size // 2
+        right = center_x + crop_size // 2
+        top = center_y - crop_size // 2
+        bottom = center_y + crop_size // 2
+        
+        # Crop face from original image
+        face_img = img[top:bottom, left:right, :]
+        
+        # Resize image
+        size = max(face_img.copy().shape[:2])
+        pad_h = (size - face_img.shape[0]) // 2
+        pad_w = (size - face_img.shape[1]) // 2
+        face_img = cv2.copyMakeBorder(face_img, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT, value=[0,0,0])
+        min_size = 64 # Set minimum size for padded image
+        if size < min_size:
+            size = min_size
+        face_img = cv2.resize(face_img, (size, size))
+        
+        # Convert numpy array back to PIL image
+        face_img = Image.fromarray(face_img)
+
+        # Resize image to a multiple of 8
+        original_size = face_img.size
+        face_img.resize((((face_img.size[0] // 8) * 8 + 8), ((face_img.size[1] // 8) * 8 + 8)))
+        
+        # Return face image and coordinates
+        return (pil2tensor(face_img), (original_size, (left, top, right, bottom)))
+
+
+# IMAGE PASTE FACE CROP
+
+class WAS_Image_Paste_Face_Crop:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "crop_image": ("IMAGE",),
+                "crop_data": ("CROP_DATA",),
+                "crop_blending": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "crop_sharpening": ("INT", {"default": 0, "min": 0, "max": 3, "step": 1}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("IMAGE", "MASK_IMAGE")
+    FUNCTION = "image_paste_face"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def image_paste_face(self, image, crop_image, crop_data=None, crop_blending=0.25, crop_sharpening=0):
+
+        result_image, result_mask = self.paste_face(tensor2pil(image), tensor2pil(crop_image), crop_data[0], crop_data[1], crop_blending, crop_sharpening)
+        return(result_image, result_mask)
+        
+    def paste_face(self, image, face_img, original_size, face_coords, blend_amount=0.25, sharpen_amount=1):
+    
+        face_img = face_img.convert("RGB").resize(original_size)
+        
+        if sharpen_amount > 0:
+            for _ in range(sharpen_amount):
+                face_img = face_img.filter(ImageFilter.SHARPEN)
+
+        if blend_amount > 1.0: 
+            blend_amount = 1.0
+        elif blend_amount < 0.0:
+            blend_amount = 0.0
+        blend_ratio = (max(face_img.size[0], face_img.size[1]) / 2) * float(blend_amount)
+
+        blend = image.convert("RGBA")
+        mask = Image.new("L", image.size, 0)
+        offset_x = int(original_size[0] * (blend_amount + blend_amount / 2.5))
+        offset_y = int(original_size[1] * (blend_amount + blend_amount / 2.5))
+        mask_block_size = (original_size[0]-offset_x, original_size[1]-offset_y)
+        mask_block = Image.new("L", mask_block_size, 255)
+        Image.Image.paste(mask, mask_block, (int(face_coords[0]+offset_x/2), int(face_coords[1]+offset_y/2)))
+        Image.Image.paste(blend, face_img, (face_coords[0], face_coords[1]))
+
+        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/2))
+        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio/2))
+
+        blend.putalpha(mask)
+        image = Image.alpha_composite(image.convert("RGBA"), blend)
+        
+        return (pil2tensor(image), pil2tensor(mask))
+
 
 # COMBINE NODE
 
@@ -6186,6 +6404,8 @@ NODE_CLASS_MAPPINGS = {
     "Image Canny Filter": WAS_Canny_Filter,
     "Image Chromatic Aberration": WAS_Image_Chromatic_Aberration,
     "Image Color Palette": WAS_Image_Color_Palette,
+    "Image Crop Face": WAS_Image_Crop_Face,
+    "Image Paste Face": WAS_Image_Paste_Face_Crop,
     "Image Dragan Photography Filter": WAS_Dragon_Filter,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,
