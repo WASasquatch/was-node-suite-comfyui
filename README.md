@@ -55,9 +55,9 @@
    - Supports color range of 8-256
    - Utilizes font in `./res/` unless unavailable, then it will utilize internal better then nothing font. 
  - Image Crop Face: Crop a face out of a image
-  - **Limitations:**
-    - Sometimes no faces are found in badly generated images, or faces at angles
-	- Sometimes face crop is black, this is because the padding is too large and intersected with the image edge. Use a smaller padding size.
+   - **Limitations:**
+     - Sometimes no faces are found in badly generated images, or faces at angles
+	 - Sometimes face crop is black, this is because the padding is too large and intersected with the image edge. Use a smaller padding size.
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
