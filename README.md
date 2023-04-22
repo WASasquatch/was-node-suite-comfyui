@@ -59,7 +59,9 @@
      - Sometimes no faces are found in badly generated images, or faces at angles
 	 - Sometimes face crop is black, this is because the padding is too large and intersected with the image edge. Use a smaller padding size.
 	 - face_recognition mode sometimes finds random things as faces. It also requires a [CUDA] GPU.
+	 - Only detects one face. This is a design choice to make it's use easy.
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
+   - Features a better blending funciton than GFPGAN/CodeFormer so there shouldn't be visible seams, and coupled with Diffusion Result, looks better than GFPGAN/CodeFormer. 
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
  - Image Film Grain: Apply film grain to a image
