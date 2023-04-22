@@ -1402,6 +1402,7 @@ class WAS_Image_Crop_Face:
                                 "haarcascade_frontalface_alt.xml", 
                                 "haarcascade_frontalface_alt2.xml",
                                 "haarcascade_frontalface_alt_tree.xml",
+                                "haarcascade_profileface.xml",
                                 "haarcascade_upperbody.xml"
                                 ],),
                 "use_face_recognition_gpu": (["false","true"],),
@@ -1441,12 +1442,13 @@ class WAS_Image_Crop_Face:
         else:
             face_location = None
 
-        cascades = [os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_default.xml'), 
+        cascades = [ os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'lbpcascade_animeface.xml'), 
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_default.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt2.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt_tree.xml'), 
-                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_upperbody.xml'),
-                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'lbpcascade_animeface.xml')]
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_profileface.xml'), 
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_upperbody.xml') ]
                     
         if cascade_name:
             for cascade in cascades:
@@ -1463,7 +1465,7 @@ class WAS_Image_Crop_Face:
                 if not os.path.exists(cascade):
                     print(f"\033[34mWAS NS\033[0m Error: Unable to find cascade XML file at `{cascade}`.",
                         "Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?")
-                    return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), ((0,0),(0,0,0,0)))
+                    return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), False)
                 face_cascade = cv2.CascadeClassifier(cascade)
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
@@ -1472,7 +1474,7 @@ class WAS_Image_Crop_Face:
                     break
             if len(faces) == 0:
                 print("\033[34mWAS NS\033[0m Warning: No faces found in the image!")
-                return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), ((0,0),(0,0,0,0)))
+                return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), False)
         else: 
             print("\033[34mWAS NS\033[0m: Face found with: face_recognition model")
             faces = face_location
@@ -1569,6 +1571,10 @@ class WAS_Image_Paste_Face_Crop:
     CATEGORY = "WAS Suite/Image/Process"
     
     def image_paste_face(self, image, crop_image, crop_data=None, crop_blending=0.25, crop_sharpening=0):
+    
+        if crop_data == False:
+            print("\033[34mWAS NS\033[0m Error: No valid crop data found!")
+            return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), pil2tensor(Image.new("RGB", (512,512), (0,0,0))))
 
         result_image, result_mask = self.paste_face(tensor2pil(image), tensor2pil(crop_image), crop_data[0], crop_data[1], crop_blending, crop_sharpening)
         return(result_image, result_mask)
@@ -1604,6 +1610,101 @@ class WAS_Image_Paste_Face_Crop:
         
         return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))
 
+
+# IMAGE CROP LOCATION
+
+class WAS_Image_Crop_Location:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "top": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+                "left": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+                "right": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+                "bottom": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE", "CROP_DATA")
+    FUNCTION = "image_crop_location"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def image_crop_location(self, image, top=0, left=0, right=100, bottom=100):
+        image = tensor2pil(image)
+        crop = image.crop((left, top, right, bottom))
+        crop_data = (crop.copy().size, (top, left, bottom, right))
+        crop = crop.resize((((crop.size[0] // 8) * 8 + 8), ((crop.size[1] // 8) * 8 + 8)))
+        return (pil2tensor(crop), crop_data)
+        
+        
+# IMAGE PASTE CROP
+
+class WAS_Image_Paste_Crop:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                "required": {
+                    "image": ("IMAGE",),
+                    "crop_image": ("IMAGE",),
+                    "crop_data": ("CROP_DATA",),
+                    "crop_blending": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    "crop_sharpening": ("INT", {"default": 0, "min": 0, "max": 3, "step": 1}),
+                }
+            }
+            
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    FUNCTION = "image_paste_crop"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def image_paste_crop(self, image, crop_image, crop_data=None, crop_blending=0.25, crop_sharpening=0):
+    
+        if crop_data == False:
+            print("\033[34mWAS NS\033[0m Error: No valid crop data found!")
+            return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), pil2tensor(Image.new("RGB", (512,512), (0,0,0))))
+
+        result_image, result_mask = self.paste_image(tensor2pil(image), crop_data, tensor2pil(crop_image), crop_blending, crop_sharpening)
+        return (result_image, result_mask)
+    
+    def paste_image(self, image, crop_data, crop_img, blend_amount=0.25, sharpen_amount=1):
+    
+        crop_size, crop_coords = crop_data
+        crop_img = crop_img.convert("RGB").resize(crop_size)
+        
+        if sharpen_amount > 0:
+            for _ in range(sharpen_amount):
+                crop_img = crop_img.filter(ImageFilter.SHARPEN)
+
+        if blend_amount > 1.0: 
+            blend_amount = 1.0
+        elif blend_amount < 0.0:
+            blend_amount = 0.0
+        blend_ratio = (max(crop_img.size[0], crop_img.size[1]) / 2) * float(blend_amount)
+
+        blend = image.convert("RGBA")
+        mask = Image.new("L", image.size, 0)
+        offset_x = int(crop_size[0] * (blend_amount + blend_amount / 2.5))
+        offset_y = int(crop_size[1] * (blend_amount + blend_amount / 2.5))
+        mask_block_size = (crop_size[0]-offset_x, crop_size[1]-offset_y)
+        mask_block = Image.new("L", mask_block_size, 255)
+        Image.Image.paste(mask, mask_block, (int(crop_coords[1]+offset_x/2), int(crop_coords[0]+offset_y/2)))
+        Image.Image.paste(blend, crop_img, (crop_coords[1], crop_coords[0]))
+
+        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/2))
+        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio/2))
+
+        blend.putalpha(mask)
+        image = Image.alpha_composite(image.convert("RGBA"), blend)
+        
+        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))
 
 # COMBINE NODE
 
@@ -6407,7 +6508,9 @@ NODE_CLASS_MAPPINGS = {
     "Image Chromatic Aberration": WAS_Image_Chromatic_Aberration,
     "Image Color Palette": WAS_Image_Color_Palette,
     "Image Crop Face": WAS_Image_Crop_Face,
+    "Image Crop Location": WAS_Image_Crop_Location,
     "Image Paste Face": WAS_Image_Paste_Face_Crop,
+    "Image Paste Crop": WAS_Image_Paste_Crop,
     "Image Dragan Photography Filter": WAS_Dragon_Filter,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,

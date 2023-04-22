@@ -60,8 +60,12 @@
 	 - Sometimes face crop is black, this is because the padding is too large and intersected with the image edge. Use a smaller padding size.
 	 - face_recognition mode sometimes finds random things as faces. It also requires a [CUDA] GPU.
 	 - Only detects one face. This is a design choice to make it's use easy.
+   - **Notes:**
+     - Detection runs in succession. If nothing is found with the selected detection cascades, it will try the next available cascades file.
+ - Image Crop Location: Crop a image to specified location in top, left, right, and bottom locations relating to the pixel dimensions of the image in X and Y coordinats.
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
    - Features a better blending funciton than GFPGAN/CodeFormer so there shouldn't be visible seams, and coupled with Diffusion Result, looks better than GFPGAN/CodeFormer. 
+ - Image Paste Crop: Paste a crop (such as from Image Crop Location) at it's original location and size utilizing the `crop_data` node input. 
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
  - Image Film Grain: Apply film grain to a image
