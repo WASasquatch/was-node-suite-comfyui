@@ -1397,6 +1397,7 @@ class WAS_Image_Crop_Face:
                 "image": ("IMAGE",),
                 "crop_padding_factor": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 2.0, "step": 0.01}),
                 "cascade_xml": ([
+                                "lbpcascade_animeface.xml",
                                 "haarcascade_frontalface_default.xml", 
                                 "haarcascade_frontalface_alt.xml", 
                                 "haarcascade_frontalface_alt2.xml",
@@ -1444,7 +1445,8 @@ class WAS_Image_Crop_Face:
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt2.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_alt_tree.xml'), 
-                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_upperbody.xml')]
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_upperbody.xml'),
+                    os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'lbpcascade_animeface.xml')]
                     
         if cascade_name:
             for cascade in cascades:
