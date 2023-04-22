@@ -248,6 +248,8 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
 	
+This method will not install the resources required for Image Crop Face node, and you'll have to download the [./res/](https://github.com/WASasquatch/was-node-suite-comfyui/tree/main/res) folder yourself. 
+	
 ## Installing on Colab
 Create a new cell and add the following code, then run the cell. You may need to edit the path to your `custom_nodes` folder. 
 
