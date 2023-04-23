@@ -49,12 +49,13 @@ CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE))
                     if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' 
                     or os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui-main' 
                     else os.path.dirname(NODE_FILE) )
-MODELS_DIR =  os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models')
+MODELS_DIR =  comfy_paths.models_dir
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
 WAS_HISTORY_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_history.json')
 WAS_CONFIG_FILE = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
 STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
+
 
 # WAS Suite Locations Debug
 print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
@@ -1624,8 +1625,8 @@ class WAS_Image_Crop_Location:
                 "image": ("IMAGE",),
                 "top": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
                 "left": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
-                "right": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
-                "bottom": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+                "right": ("INT", {"default":256, "max": 10000000, "min":0, "step":1}),
+                "bottom": ("INT", {"default":256, "max": 10000000, "min":0, "step":1}),
             }
         }
     
@@ -1634,11 +1635,21 @@ class WAS_Image_Crop_Location:
     
     CATEGORY = "WAS Suite/Image/Process"
     
-    def image_crop_location(self, image, top=0, left=0, right=100, bottom=100):
+    def image_crop_location(self, image, top=0, left=0, right=256, bottom=256):
+    
         image = tensor2pil(image)
+        img_width, img_height = image.size
+        
+        # Ensure that the coordinates are within the image bounds
+        top = min(max(top, 0), img_height)
+        left = min(max(left, 0), img_width)
+        bottom = min(max(bottom, 0), img_height)
+        right = min(max(right, 0), img_width)
+        
         crop = image.crop((left, top, right, bottom))
         crop_data = (crop.copy().size, (top, left, bottom, right))
         crop = crop.resize((((crop.size[0] // 8) * 8 + 8), ((crop.size[1] // 8) * 8 + 8)))
+        
         return (pil2tensor(crop), crop_data)
         
         
@@ -1691,20 +1702,101 @@ class WAS_Image_Paste_Crop:
 
         blend = image.convert("RGBA")
         mask = Image.new("L", image.size, 0)
-        offset_x = int(crop_size[0] * (blend_amount + blend_amount / 2.5))
-        offset_y = int(crop_size[1] * (blend_amount + blend_amount / 2.5))
+        
+        aspect_ratio = crop_size[0] / crop_size[1]
+        max_size = max(image.size[0], image.size[1])
+        offset_x = int(max_size * aspect_ratio * ( blend_amount / 4))
+        offset_y = int(max_size * aspect_ratio * ( blend_amount / 4))
+        
         mask_block_size = (crop_size[0]-offset_x, crop_size[1]-offset_y)
         mask_block = Image.new("L", mask_block_size, 255)
         Image.Image.paste(mask, mask_block, (int(crop_coords[1]+offset_x/2), int(crop_coords[0]+offset_y/2)))
         Image.Image.paste(blend, crop_img, (crop_coords[1], crop_coords[0]))
 
-        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/2))
-        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio/2))
+        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio / 4))
+        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio / 4))
 
         blend.putalpha(mask)
         image = Image.alpha_composite(image.convert("RGBA"), blend)
         
-        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))
+        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))        
+        
+# IMAGE PASTE CROP BY LOCATION
+
+class WAS_Image_Paste_Crop_Location:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                "required": {
+                    "image": ("IMAGE",),
+                    "crop_image": ("IMAGE",),
+                    "top": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+                    "left": ("INT", {"default":0, "max": 10000000, "min":0, "step":1}),
+                    "right": ("INT", {"default":256, "max": 10000000, "min":0, "step":1}),
+                    "bottom": ("INT", {"default":256, "max": 10000000, "min":0, "step":1}),
+                    "crop_blending": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    "crop_sharpening": ("INT", {"default": 0, "min": 0, "max": 3, "step": 1}),
+                }
+            }
+            
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    FUNCTION = "image_paste_crop_location"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def image_paste_crop_location(self, image, crop_image, top=0, left=0, right=256, bottom=256, crop_blending=0.25, crop_sharpening=0):
+
+        result_image, result_mask = self.paste_image(tensor2pil(image), tensor2pil(crop_image), top, left, right, bottom, crop_blending, crop_sharpening)
+        return (result_image, result_mask)
+    
+    def paste_image(self, image, crop_image, top=0, left=0, right=256, bottom=256, blend_amount=0.25, sharpen_amount=1):
+    
+        img_width, img_height = image.size
+        
+        # Ensure that the coordinates are within the image bounds
+        top = min(max(top, 0), img_height)
+        left = min(max(left, 0), img_width)
+        bottom = min(max(bottom, 0), img_height)
+        right = min(max(right, 0), img_width)
+        
+        crop_size = (right - left, bottom - top)
+        crop_img = crop_image.convert("RGB")
+        crop_img = crop_img.resize(crop_size)
+            
+        if sharpen_amount > 0:
+            for _ in range(sharpen_amount):
+                crop_img = crop_img.filter(ImageFilter.SHARPEN)
+
+        if blend_amount > 1.0: 
+            blend_amount = 1.0
+        elif blend_amount < 0.0:
+            blend_amount = 0.0
+        blend_ratio = (max(crop_img.size[0], crop_img.size[1]) / 2) * float(blend_amount)
+
+        blend = image.convert("RGBA")
+        mask = Image.new("L", image.size, 0)
+         
+        # Calculate the proportional offset based on the height and width of the cropped image
+        aspect_ratio = crop_size[0] / crop_size[1]
+        max_size = max(image.size[0], image.size[1])
+        offset_x = int(max_size * aspect_ratio * ( blend_amount / 4))
+        offset_y = int(max_size * aspect_ratio * ( blend_amount / 4))
+        
+        mask_block_size = (crop_size[0]-offset_x, crop_size[1]-offset_y)
+        mask_block = Image.new("L", mask_block_size, 255)
+        Image.Image.paste(mask, mask_block, (left + int(offset_x/2), top + int(offset_y/2)))
+        Image.Image.paste(blend, crop_img, (left, top))
+
+        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/4))
+        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio/4))
+
+        blend.putalpha(mask)
+        image = Image.alpha_composite(image.convert("RGBA"), blend)
+            
+        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB'))) 
 
 # COMBINE NODE
 
@@ -6511,6 +6603,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Crop Location": WAS_Image_Crop_Location,
     "Image Paste Face": WAS_Image_Paste_Face_Crop,
     "Image Paste Crop": WAS_Image_Paste_Crop,
+    "Image Paste Crop by Location": WAS_Image_Paste_Crop_Location,
     "Image Dragan Photography Filter": WAS_Dragon_Filter,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,
