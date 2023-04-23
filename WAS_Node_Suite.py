@@ -1539,9 +1539,9 @@ class WAS_Image_Crop_Face:
         # Convert numpy array back to PIL image
         face_img = Image.fromarray(face_img)
 
-        # Resize image to a multiple of 8
+        # Resize image to a multiple of 64
         original_size = face_img.size
-        face_img.resize((((face_img.size[0] // 8) * 8 + 8), ((face_img.size[1] // 8) * 8 + 8)))
+        face_img.resize((((face_img.size[0] // 64) * 64 + 64), ((face_img.size[1] // 64) * 64 + 64)))
         
         # Return face image and coordinates
         return (pil2tensor(face_img.convert('RGB')), (original_size, (left, top, right, bottom)))
@@ -1648,7 +1648,7 @@ class WAS_Image_Crop_Location:
         
         crop = image.crop((left, top, right, bottom))
         crop_data = (crop.copy().size, (top, left, bottom, right))
-        crop = crop.resize((((crop.size[0] // 8) * 8 + 8), ((crop.size[1] // 8) * 8 + 8)))
+        crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
         
         return (pil2tensor(crop), crop_data)
         
@@ -1687,7 +1687,15 @@ class WAS_Image_Paste_Crop:
     
     def paste_image(self, image, crop_data, crop_img, blend_amount=0.25, sharpen_amount=1):
     
-        crop_size, crop_coords = crop_data
+        def inset_border(image, border_width=20, border_color=(0)):
+            width, height = image.size
+            bordered_image = Image.new(image.mode, (width, height), border_color)
+            bordered_image.paste(image, (0, 0))
+            draw = ImageDraw.Draw(bordered_image)
+            draw.rectangle((0, 0, width-1, height-1), outline=border_color, width=border_width)
+            return bordered_image
+    
+        crop_size, (left, top, right, bottom) = crop_data
         crop_img = crop_img.convert("RGB").resize(crop_size)
         
         if sharpen_amount > 0:
@@ -1698,20 +1706,16 @@ class WAS_Image_Paste_Crop:
             blend_amount = 1.0
         elif blend_amount < 0.0:
             blend_amount = 0.0
-        blend_ratio = (max(crop_img.size[0], crop_img.size[1]) / 2) * float(blend_amount)
+        blend_ratio = (max(crop_img.size) / 2) * float(blend_amount)
 
         blend = image.convert("RGBA")
         mask = Image.new("L", image.size, 0)
         
-        aspect_ratio = crop_size[0] / crop_size[1]
-        max_size = max(image.size[0], image.size[1])
-        offset_x = int(max_size * aspect_ratio * ( blend_amount / 4))
-        offset_y = int(max_size * aspect_ratio * ( blend_amount / 4))
+        mask_block = Image.new("L", crop_size, 255)
+        mask_block = inset_border(mask_block, int(blend_ratio/2), (0))
         
-        mask_block_size = (crop_size[0]-offset_x, crop_size[1]-offset_y)
-        mask_block = Image.new("L", mask_block_size, 255)
-        Image.Image.paste(mask, mask_block, (int(crop_coords[1]+offset_x/2), int(crop_coords[0]+offset_y/2)))
-        Image.Image.paste(blend, crop_img, (crop_coords[1], crop_coords[0]))
+        Image.Image.paste(mask, mask_block, (top, left))
+        Image.Image.paste(blend, crop_img, (top, left))
 
         mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio / 4))
         mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio / 4))
@@ -1754,6 +1758,14 @@ class WAS_Image_Paste_Crop_Location:
     
     def paste_image(self, image, crop_image, top=0, left=0, right=256, bottom=256, blend_amount=0.25, sharpen_amount=1):
     
+        def inset_border(image, border_width=20, border_color=(0)):
+            width, height = image.size
+            bordered_image = Image.new(image.mode, (width, height), border_color)
+            bordered_image.paste(image, (0, 0))
+            draw = ImageDraw.Draw(bordered_image)
+            draw.rectangle((0, 0, width-1, height-1), outline=border_color, width=border_width)
+            return bordered_image
+    
         img_width, img_height = image.size
         
         # Ensure that the coordinates are within the image bounds
@@ -1774,20 +1786,15 @@ class WAS_Image_Paste_Crop_Location:
             blend_amount = 1.0
         elif blend_amount < 0.0:
             blend_amount = 0.0
-        blend_ratio = (max(crop_img.size[0], crop_img.size[1]) / 2) * float(blend_amount)
+        blend_ratio = (max(crop_size) / 2) * float(blend_amount)
 
         blend = image.convert("RGBA")
         mask = Image.new("L", image.size, 0)
-         
-        # Calculate the proportional offset based on the height and width of the cropped image
-        aspect_ratio = crop_size[0] / crop_size[1]
-        max_size = max(image.size[0], image.size[1])
-        offset_x = int(max_size * aspect_ratio * ( blend_amount / 4))
-        offset_y = int(max_size * aspect_ratio * ( blend_amount / 4))
         
-        mask_block_size = (crop_size[0]-offset_x, crop_size[1]-offset_y)
-        mask_block = Image.new("L", mask_block_size, 255)
-        Image.Image.paste(mask, mask_block, (left + int(offset_x/2), top + int(offset_y/2)))
+        mask_block = Image.new("L", crop_size, 255)
+        mask_block = inset_border(mask_block, int(blend_ratio/2), (0))
+     
+        Image.Image.paste(mask, mask_block, (left, top))
         Image.Image.paste(blend, crop_img, (left, top))
 
         mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/4))
