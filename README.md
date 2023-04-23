@@ -65,7 +65,8 @@
  - Image Crop Location: Crop a image to specified location in top, left, right, and bottom locations relating to the pixel dimensions of the image in X and Y coordinats.
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
    - Features a better blending funciton than GFPGAN/CodeFormer so there shouldn't be visible seams, and coupled with Diffusion Result, looks better than GFPGAN/CodeFormer. 
- - Image Paste Crop: Paste a crop (such as from Image Crop Location) at it's original location and size utilizing the `crop_data` node input. 
+ - Image Paste Crop: Paste a crop (such as from Image Crop Location) at it's original location and size utilizing the `crop_data` node input. This uses a different blending algorithm then Image Paste Face Crop, which may be desired in certain instances.
+ - Image Paste Crop by Location: Paste a crop top a custom location. This uses the same blending algorithm as Image Paste Crop. 
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
  - Image Film Grain: Apply film grain to a image
