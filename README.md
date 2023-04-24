@@ -37,7 +37,7 @@
  - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
- - Create Image Grid: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
+ - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
  - Dictionary to Console: Print a dictionary input to the console
  - Image Analyze
    - Black White Levels
