@@ -19,10 +19,14 @@ from PIL.PngImagePlugin import PngInfo
 from io import BytesIO
 from typing import Optional
 from urllib.request import urlopen
+import comfy.diffusers_convert
 import comfy.samplers
 import comfy.sd
 import comfy.utils
+import comfy.clip_vision
+import model_management
 import folder_paths as comfy_paths
+import model_management
 import glob
 import hashlib
 import json
@@ -5385,6 +5389,29 @@ class WAS_Text_To_String:
 
     def text_to_string(self, text):
         return (text, )
+        
+        
+class WAS_String_To_Text:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "string": ("STRING",{}),
+            }
+        }
+
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "string_to_text"
+
+    CATEGORY = "WAS Suite/Text/Operations"
+
+    def string_to_text(self, string):
+        return (string, )
+        
+        
 
 
 
@@ -6703,17 +6730,119 @@ class WAS_Debug_Number_to_Console:
     @classmethod
     def IS_CHANGED(cls, **kwargs):
         return float("NaN")
+        
+        
+# CUSTOM COMFYUI NODES
+
+class WAS_Checkpoint_Loader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "config_name": (comfy_paths.get_filename_list("configs"), ),
+                              "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), )}}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
+    FUNCTION = "load_checkpoint"
+
+    CATEGORY = "WAS Suite/Loaders/Advanced"
+
+    def load_checkpoint(self, config_name, ckpt_name, output_vae=True, output_clip=True):
+        config_path = comfy_paths.get_full_path("configs", config_name)
+        ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint(config_path, ckpt_path, output_vae=True, output_clip=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
+        return (out[0], out[1], out[2], os.path.splitext(os.path.basename(ckpt_name))[0])
+
+class WAS_Checkpoint_Loader_Simple:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), ),
+                             }}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
+    FUNCTION = "load_checkpoint"
+
+    CATEGORY = "WAS Suite/Loaders"
+
+    def load_checkpoint(self, ckpt_name, output_vae=True, output_clip=True):
+        ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
+        return (out[0], out[1], out[2], os.path.splitext(os.path.basename(ckpt_name))[0])
+
+class WAS_Diffusers_Loader:
+    @classmethod
+    def INPUT_TYPES(cls):
+        paths = []
+        for search_path in comfy_paths.get_folder_paths("diffusers"):
+            if os.path.exists(search_path):
+                paths += next(os.walk(search_path))[1]
+        return {"required": {"model_path": (paths,), }}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
+    FUNCTION = "load_checkpoint"
+
+    CATEGORY = "WAS Suite/Loaders/Advanced"
+
+    def load_checkpoint(self, model_path, output_vae=True, output_clip=True):
+        for search_path in comfy_paths.get_folder_paths("diffusers"):
+            if os.path.exists(search_path):
+                paths = next(os.walk(search_path))[1]
+                if model_path in paths:
+                    model_path = os.path.join(search_path, model_path)
+                    break
+
+        out = comfy.diffusers_convert.load_diffusers(model_path, fp16=model_management.should_use_fp16(), output_vae=output_vae, output_clip=output_clip, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
+        return (out[0], out[1], out[2], os.path.basename(model_path))
+
+
+class WAS_unCLIP_Checkpoint_Loader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), ),
+                             }}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "CLIP_VISION", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "CLIP_VISION", "NAME_STRING")
+    FUNCTION = "load_checkpoint"
+
+    CATEGORY = "WAS Suite/Loaders"
+    
+    def load_checkpoint(self, ckpt_name, output_vae=True, output_clip=True):
+        ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
+        return (out[0], out[1], out[2], out[3], os.path.splitext(os.path.basename(ckpt_name))[0])
+        
+class WAS_Lora_Loader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "model": ("MODEL",),
+                              "clip": ("CLIP", ),
+                              "lora_name": (comfy_paths.get_filename_list("loras"), ),
+                              "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                              "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                              }}
+    RETURN_TYPES = ("MODEL", "CLIP", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "NAME_STRING")
+    FUNCTION = "load_lora"
+
+    CATEGORY = "WAS Suite/Loaders"
+
+    def load_lora(self, model, clip, lora_name, strength_model, strength_clip):
+        lora_path = comfy_paths.get_full_path("loras", lora_name)
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora_path, strength_model, strength_clip)
+        return (model_lora, clip_lora, os.path.splitext(os.path.basename(lora_name))[0])
 
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
+    "Checkpoint Loader": WAS_Checkpoint_Loader, 
+    "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
     "Conditioning Input Switch": WAS_Conditioning_Input_Switch,
     "Constant Number": WAS_Constant_Number,
     "Create Grid Image": WAS_Image_Grid_Image,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
+    "Diffusers Model Loader": WAS_Diffusers_Loader,
     "Latent Input Switch": WAS_Latent_Input_Switch,
     "Logic Boolean": WAS_Boolean,
+    "Lora Loader": WAS_Lora_Loader,
     "Image Analyze": WAS_Image_Analyze,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
@@ -6791,6 +6920,7 @@ NODE_CLASS_MAPPINGS = {
     "SAM Parameters": WAS_SAM_Parameters,
     "SAM Parameters Combine": WAS_SAM_Combine_Parameters,
     "SAM Image Mask": WAS_SAM_Image_Mask,
+    "String to Text": WAS_String_To_Text,
     "Image Bounds": WAS_Image_Bounds,
     "Inset Image Bounds": WAS_Inset_Image_Bounds,
     "Bounded Image Blend": WAS_Bounded_Image_Blend,
@@ -6816,6 +6946,7 @@ NODE_CLASS_MAPPINGS = {
     "Text to Console": WAS_Text_to_Console,
     "Text to String": WAS_Text_To_String,
     "True Random.org Number Generator": WAS_True_Random_Number,
+    "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
 }
 
 print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')
