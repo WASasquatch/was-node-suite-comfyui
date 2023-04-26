@@ -574,7 +574,188 @@ class WAS_Filter_Class():
         Image.Image.paste(canvas, image_b, (im_bx, im_by), image_b_mask.convert('L'))
 
         return canvas
+
+    def morph_images(self, images, steps=10, max_size=512, loop=None, still_duration=30, duration=0.1, output_path='output', filename="morph", filetype="GIF"):
+
+        import cv2
+        import imageio
+
+        # File
+        output_file = os.path.abspath(os.path.join(os.path.join(*output_path.split('/')), filename))
+        output_file += ( '.png' if filetype == 'APNG' else '.gif' )
+
+        # Determine maximum width and height of all the images
+        max_width = max(im.size[0] for im in images)
+        max_height = max(im.size[1] for im in images)
+        max_aspect_ratio = max_width / max_height
+
+        # Pad and resize images as necessary
+        def padded_images():
+            for im in images:
+                aspect_ratio = im.size[0] / im.size[1]
+                if aspect_ratio > max_aspect_ratio:
+                    # Add padding to top and bottom
+                    new_height = int(max_width / aspect_ratio)
+                    padding = (max_height - new_height) // 2
+                    padded_im = Image.new('RGB', (max_width, max_height), color=(0, 0, 0))
+                    padded_im.paste(im.resize((max_width, new_height)), (0, padding))
+                else:
+                    # Add padding to left and right
+                    new_width = int(max_height * aspect_ratio)
+                    padding = (max_width - new_width) // 2
+                    padded_im = Image.new('RGB', (max_width, max_height), color=(0, 0, 0))
+                    padded_im.paste(im.resize((new_width, max_height)), (padding, 0))
+                yield np.array(padded_im)
+
+        # Create a copy of the first image and append it to the end of the images list
+        padded_images = list(padded_images())
+        padded_images.append(padded_images[0].copy())
+
+        # Load images
+        images = padded_images
+
+        # Initialize output frames and durations
+        frames = []
+        durations = []
+
+        # Create morph frames
+        for i in range(len(images)-1):
+            # Add still frame to beginning of transition
+            frames.append(Image.fromarray(images[i]).convert('RGB'))
+            durations.append(still_duration)
+
+            for j in range(steps):
+                alpha = j / float(steps)
+                morph = cv2.addWeighted(images[i], 1 - alpha, images[i+1], alpha, 0)
+                frames.append(Image.fromarray(morph).convert('RGB'))
+                durations.append(duration)
+
+        # Add still frame to end of last image
+        frames.append(Image.fromarray(images[-1]).convert('RGB'))
+        # Add the still frame duration for the last image to the beginning of the durations list
+        durations.insert(0, still_duration)
+
+        # Set durations for still frames during loop
+        if loop is not None:
+            for i in range(loop):
+                durations.insert(0, still_duration)
+                durations.append(still_duration)
+
+        # Save frames as GIF file
+        try:
+            imageio.mimsave(output_file, frames, filetype, duration=durations, loop=loop)
+        except OSError as e:
+            print(f"\033[34mWAS NS\033[0m Error: Unable to save output to {output_file} due to the following error:")
+            print(e)
+        except Exception as e:
+            print(f"\033[34mWAS NS\033[0m Error: Unable to generate GIF due to the following error:")
+            print(e)
+
+        print(f"\033[34mWAS NS:\033[0m Morphing completed. Output saved as {output_file}")
         
+        return output_file  
+
+    class GifMorphWriter:
+        def __init__(self, transition_frames=10, duration_ms=100, still_image_delay_ms=2500, loop=0):
+            self.transition_frames = transition_frames
+            self.duration_ms = duration_ms
+            self.still_image_delay_ms = still_image_delay_ms
+            self.loop = loop
+            
+        def write(self, image, gif_path):
+            if not os.path.isfile(gif_path):
+                # Create the GIF file if it doesn't exist
+                with Image.new("RGBA", image.size) as new_gif:
+                    # Add first frame
+                    new_gif.paste(image.convert("RGBA"))
+                    new_gif.info["duration"] = self.still_image_delay_ms
+                    new_gif.save(gif_path, format="GIF", save_all=True, append_images=[], duration=self.still_image_delay_ms, loop=0)
+                print(f"Created new Morph GIF at: {gif_path}")
+            else:
+                with Image.open(gif_path) as gif:
+                    # Extract the last still frame of the GIF, if it exists
+                    n_frames = gif.n_frames
+                    if n_frames > 0:
+                        # Extract the last frame
+                        gif.seek(n_frames - 1)
+                        last_frame = gif.copy()
+                    else:
+                        last_frame = None
+                    
+                    # Define end_image to be the input image
+                    end_image = image
+
+                    # Calculate the number of transition frames to add
+                    steps = self.transition_frames - 1 if last_frame is not None else self.transition_frames
+
+                    # Pad the new image to match the size of the last frame, if there is one
+                    if last_frame is not None:
+                        image = self.pad_to_size(image, last_frame.size)
+
+                    # Generate the transition frames from last_frame to image
+                    frames = self.generate_transition_frames(last_frame, image, steps)
+
+                    # Create the still frame
+                    still_frame = end_image.copy()
+
+                    # Populate with original GIF frames up to the last still frame
+                    gif_frames = []
+                    for i in range(n_frames):
+                        gif.seek(i)
+                        gif_frame = gif.copy()
+                        gif_frames.append(gif_frame)
+                                        
+                    # Append transition frames to gif_frames
+                    for frame in frames:
+                        frame.info["duration"] = self.duration_ms
+                        gif_frames.append(frame)
+
+                    # Add the still frame to gif_frames
+                    still_frame.info['duration'] = self.still_image_delay_ms
+                    gif_frames.append(still_frame)
+                    
+                    # Debug Durations
+                    #for i, gf in enumerate(gif_frames):
+                    #    print(f"Frame {i} Duration:", gf.info['duration'])
+
+                    # Save the new GIF
+                    gif_frames[0].save(
+                        gif_path,
+                        format="GIF",
+                        save_all=True,
+                        append_images=gif_frames[1:],
+                        optimize=True,
+                        loop=self.loop,
+                    )
+
+                    print(f"Edited existing Morph GIF at: {gif_path}")
+
+                
+        def pad_to_size(self, image, size):
+            # Pad the image with transparent pixels to match the desired size
+            new_image = Image.new("RGBA", size, color=(0, 0, 0, 0))
+            x_offset = (size[0] - image.width) // 2
+            y_offset = (size[1] - image.height) // 2
+            new_image.paste(image, (x_offset, y_offset))
+            return new_image
+
+        def generate_transition_frames(self, start_frame, end_image, num_frames):
+
+            # Generate transition frames between two images
+            if start_frame is None:
+                return [image]
+                
+            start_frame = start_frame.convert("RGBA")
+            end_image = end_image.convert("RGBA")
+
+            # Create a list of interpolated frames
+            frames = []
+            for i in range(1, num_frames + 1):
+                weight = i / (num_frames + 1)
+                frame = Image.blend(start_frame, end_image, weight)
+                frames.append(frame)
+            return frames
+
         
     # FILTERS
     
@@ -1925,8 +2106,247 @@ class WAS_Image_Grid_Image:
 
         return new_image
 
+# IMAGE MORPH GIF
 
+class WAS_Image_Morph_GIF:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image_a": ("IMAGE",),
+                "image_b": ("IMAGE",),
+                "transition_frames": ("INT", {"default":30, "min":2, "max":60, "step":1}),
+                "still_image_delay_ms": ("FLOAT", {"default":2500.0, "min":0.1, "max":60000.0, "step":0.1}),
+                "duration_ms": ("FLOAT", {"default":0.1, "min":0.1, "max":60000.0, "step":0.1}),
+                "loops": ("INT", {"default":0, "min":0, "max":100, "step":1}),
+                "max_size": ("INT", {"default":512, "min":128, "max":1280, "step":1}),
+                "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
+                "filename": ("STRING", {"default": "morph", "multiline": False}),
+                "filetype": (["GIF", "APNG"],),
+            }
+        }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+        
+    RETURN_TYPES = ("IMAGE","IMAGE",TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("image_a_pass","image_b_pass","filepath_text","filename_text")
+    FUNCTION = "create_morph_gif"
     
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def create_morph_gif(self, image_a, image_b, transition_frames=10, still_image_delay_ms=10, duration_ms=0.1, loops=0, max_size=512, 
+                            output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
+    
+        if 'opencv-python' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing CV2...")
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
+                
+        if 'imageio' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing imageio...")
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', '-q', 'install', 'imageio'])
+        
+        if filetype not in ["APNG", "GIF"]:
+            filetype = "GIF"
+        if output_path.strip() in [None, "", "."]:
+            output_path = "./ComfyUI/output"
+        output_path = tokens.parseTokens(os.path.join(*output_path.split('/')))
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+            
+        if image_a == None:
+            image_a = pil2tensor(Image.new("RGB", (512,512), (0,0,0)))
+        if image_b == None:
+            image_b = pil2tensor(Image.new("RGB", (512,512), (255,255,255)))
+                    
+        if transition_frames < 2:
+            transition_frames = 2
+        elif transition_frames > 60:
+            transition_frames = 60
+        
+        if duration_ms < 0.1:
+            duration_ms = 0.1
+        elif duration_ms > 60000.0:
+            duration_ms = 60000.0
+            
+        tokens = TextTokens()
+        WFilter = WAS_Filter_Class()
+            
+        output_file = WFilter.morph_images([tensor2pil(image_a), tensor2pil(image_b)], steps=int(transition_frames), max_size=int(max_size), loop=int(loops), 
+                            still_duration=int(still_image_delay_ms), duration=int(duration_ms), output_path=output_path,
+                            filename=tokens.parseTokens(filename), filetype=filetype)
+        
+        return (image_a, image_b, output_file)
+        
+
+# IMAGE MORPH GIF WRITER
+
+class WAS_Image_Morph_GIF_Writer:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "transition_frames": ("INT", {"default":30, "min":2, "max":60, "step":1}),
+                "image_delay_ms": ("FLOAT", {"default":2500.0, "min":0.1, "max":60000.0, "step":0.1}),
+                "duration_ms": ("FLOAT", {"default":0.1, "min":0.1, "max":60000.0, "step":0.1}),
+                "loops": ("INT", {"default":0, "min":0, "max":100, "step":1}),
+                "max_size": ("INT", {"default":512, "min":128, "max":1280, "step":1}),
+                "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
+                "filename": ("STRING", {"default": "morph_writer", "multiline": False}),
+            }
+        }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+        
+    RETURN_TYPES = ("IMAGE",TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("IMAGE_PASS","filepath_text","filename_text")
+    FUNCTION = "write_to_morph_gif"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def write_to_morph_gif(self, image, transition_frames=10, image_delay_ms=10, duration_ms=0.1, loops=0, max_size=512, 
+                            output_path="./ComfyUI/output", filename="morph"):
+    
+        if 'opencv-python' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing CV2...")
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
+                
+        if 'imageio' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing imageio...")
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', '-q', 'install', 'imageio'])
+        
+        if output_path.strip() in [None, "", "."]:
+            output_path = "./ComfyUI/output"
+            
+        if image == None:
+            image = pil2tensor(Image.new("RGB", (512,512), (0,0,0)))
+            
+        if transition_frames < 2:
+            transition_frames = 2
+        elif transition_frames > 60:
+            transition_frames = 60
+        
+        if duration_ms < 0.1:
+            duration_ms = 0.1
+        elif duration_ms > 60000.0:
+            duration_ms = 60000.0
+            
+        tokens = TextTokens()
+        output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
+        output_file = os.path.join(output_path, tokens.parseTokens(filename)+'.gif')
+        
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+        
+        WFilter = WAS_Filter_Class()
+        GifMorph = WFilter.GifMorphWriter(int(transition_frames), int(duration_ms), int(image_delay_ms))
+        GifMorph.write(tensor2pil(image), output_file)
+        
+        return (image, output_file, filename)
+        
+
+# IMAGE MORPH GIF BY PATH
+
+class WAS_Image_Morph_GIF_By_Path:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "transition_frames": ("INT", {"default":30, "min":2, "max":60, "step":1}),
+                "still_image_delay_ms": ("FLOAT", {"default":2500.0, "min":0.1, "max":60000.0, "step":0.1}),
+                "duration_ms": ("FLOAT", {"default":0.1, "min":0.1, "max":60000.0, "step":0.1}),
+                "loops": ("INT", {"default":0, "min":0, "max":100, "step":1}),
+                "max_size": ("INT", {"default":512, "min":128, "max":1280, "step":1}),
+                "input_path": ("STRING",{"default":"./ComfyUI", "multiline": False}),
+                "input_pattern": ("STRING",{"default":"*", "multiline": False}),
+                "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
+                "filename": ("STRING", {"default": "morph", "multiline": False}),
+                "filetype": (["GIF", "APNG"],),
+            }
+        }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+        
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("filepath_text","filename_text")
+    FUNCTION = "create_morph_gif"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def create_morph_gif(self, transition_frames=30, still_image_delay_ms=2500, duration_ms=0.1, loops=0, max_size=512, 
+                            input_path="./ComfyUI/output", input_pattern="*", output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
+    
+        if 'opencv-python' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing CV2...")
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
+                
+        if 'imageio' not in packages():
+            print("\033[34mWAS NS:\033[0m Installing imageio...")
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', '-q', 'install', 'imageio'])
+                
+        if not os.path.exists(input_path):
+            print(f"\033[34mWAS NS\033[0m Error: the input_path `{input_path}` does not exist!")
+            return ("",)
+            
+        images = self.load_images(input_path, input_pattern)
+        if not images:
+            print(f"\033[34mWAS NS\033[0m Error: The input_path `{input_path}` does not contain any valid images!")
+            return ("",)
+            
+        if filetype not in ["APNG", "GIF"]:
+            filetype = "GIF"
+        if output_path.strip() in [None, "", "."]:
+            output_path = "./ComfyUI/output"
+                    
+        if transition_frames < 2:
+            transition_frames = 2
+        elif transition_frames > 60:
+            transition_frames = 60
+        
+        if duration_ms < 0.1:
+            duration_ms = 0.1
+        elif duration_ms > 60000.0:
+            duration_ms = 60000.0
+            
+        tokens = TextTokens()
+        WFilter = WAS_Filter_Class()
+            
+        output_file = WFilter.morph_images(images, steps=int(transition_frames), max_size=int(max_size), loop=int(loops), still_duration=int(still_image_delay_ms), 
+                                            duration=int(duration_ms), output_path=tokens.parseTokens(os.path.join(*output_path.split('/'))),
+                                            filename=tokens.parseTokens(filename), filetype=filetype)
+        
+        return (output_file,filename)
+        
+
+    def load_images(self, directory_path, pattern):
+        images = []
+        for file_name in glob.glob(os.path.join(directory_path, pattern), recursive=False):
+            if file_name.lower().endswith(ALLOWED_EXT):
+                images.append(Image.open(file_name).convert("RGB"))
+        return images
+
+
 # COMBINE NODE
 
 class WAS_Image_Blending_Mode:
@@ -5167,7 +5587,9 @@ class WAS_Text_Parse_Tokens:
         tokens = TextTokens()
         return (tokens.parseTokens(text), )
         
-        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")      
         
 # TEXT ADD TOKENS
 
@@ -5252,6 +5674,10 @@ class WAS_Text_Add_Token_Input:
         print(json.dumps(tk.custom_tokens, indent=4))
         
         return (token_name, token_value)
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")      
 
 
 
@@ -5368,7 +5794,6 @@ class WAS_Text_Load_From_File:
             
         return ("\n".join(lines), dictionary)
 
-# LOAD TEXT TO STRING
 
 class WAS_Text_To_String:
     def __init__(self):
@@ -5390,6 +5815,30 @@ class WAS_Text_To_String:
     def text_to_string(self, text):
         return (text, )
         
+class WAS_Text_To_Number:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": (TEXT_TYPE,),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "text_to_number"
+
+    CATEGORY = "WAS Suite/Text/Operations"
+
+    def text_to_number(self, text):
+        if text.replace(".", "").isnumeric():
+            number = float(text)
+        else:
+            number = int(text)
+        return (number, )
+        
         
 class WAS_String_To_Text:
     def __init__(self):
@@ -5399,7 +5848,7 @@ class WAS_String_To_Text:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "string": ("STRING",{}),
+                "string": ("STRING", {}),
             }
         }
 
@@ -6483,7 +6932,7 @@ class WAS_Latent_Size_To_Number:
         i = 0
         for tensor in samples['samples'][0]:
             if not isinstance(tensor, torch.Tensor):
-                raise ValueError(f'\033[34mWAS NS\033[33m Error: Input should be a torch.Tensor')
+                raise ValueError(f'\033[34mWAS NS\033[0m Error: Input should be a torch.Tensor')
             shape = tensor.shape
             tensor_height = shape[-2]
             tensor_width = shape[-1]
@@ -6837,6 +7286,8 @@ NODE_CLASS_MAPPINGS = {
     "Conditioning Input Switch": WAS_Conditioning_Input_Switch,
     "Constant Number": WAS_Constant_Number,
     "Create Grid Image": WAS_Image_Grid_Image,
+    "Create Morph Image": WAS_Image_Morph_GIF, 
+    "Create Morph Image from Path": WAS_Image_Morph_GIF_By_Path,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
@@ -6944,9 +7395,11 @@ NODE_CLASS_MAPPINGS = {
     "Text String": WAS_Text_String,
     "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,
+    "Text to Number": WAS_Text_To_Number,
     "Text to String": WAS_Text_To_String,
     "True Random.org Number Generator": WAS_True_Random_Number,
     "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
+    "Write to Morph GIF": WAS_Image_Morph_GIF_Writer, 
 }
 
 print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')

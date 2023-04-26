@@ -38,6 +38,8 @@
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
+ - Create Morph Image: Create a GIF/APNG animation from two images, fading between them. 
+ - Create Morph Image by Path: Create a GIF/APNG animation from a path to a directory containing images, with optional pattern. 
  - Dictionary to Console: Print a dictionary input to the console
  - Image Analyze
    - Black White Levels
@@ -122,7 +124,8 @@
    - Increment images in a folder, or fetch a single image out of a batch.
    - Will reset it's place if the path, or pattern is changed.
    - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
-     or things like `*.jpg` to select only JPEG images in the directory specified. 
+     or things like `*.jpg` to select only JPEG images in the directory specified.
+ - ComfyUI Loaders: A set of ComfyUI loaders that also output a string that contains the name of the model being loaded. 
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height
  - Latent Upscale by Factor: Upscale a latent image by a factor
@@ -160,6 +163,7 @@
  - Text to Conditioning: Convert a text string to conditioning.
  - True Random.org Number Generator: Generate a truly random number online from atmospheric noise with [Random.org](https://random.org/)
    - [Get your API key from your account page](https://accounts.random.org/)
+ - Write to Morph GIF: Write a new frame to an existing GIF (or create new one) with interpolation between frames. 
  
 </details>
  
