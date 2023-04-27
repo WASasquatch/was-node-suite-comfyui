@@ -4333,7 +4333,7 @@ class WAS_Image_Save:
                 "images": ("IMAGE", ),
                 "output_path": ("STRING", {"default": './ComfyUI/output', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
-                "extension": (['png', 'jpeg', 'gif', 'tiff', 'tiff (half-float)', 'tiff (full-float)'], ),
+                "extension": (['png', 'jpeg', 'gif', 'tiff'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
             },
@@ -4368,7 +4368,7 @@ class WAS_Image_Save:
             if not os.path.exists(output_path.strip()):
                 print(f'\033[34mWAS NS\033[0m Warning: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
                 os.mkdir(output_path.strip())
-            self.output_dir = os.path.normpath(output_path.strip())
+            self.output_dir = output_path.strip()
 
         # Setup counter
         try:
@@ -4381,7 +4381,7 @@ class WAS_Image_Save:
             counter = 1
             
         # Set Extension
-        extension = ( extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'tiff' )
+        file_extension = ( extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'tiff' )
 
         paths = list()
         for image in images:
@@ -4398,47 +4398,48 @@ class WAS_Image_Save:
             filename_prefix = tokens.parseTokens(filename_prefix)
 
             if overwrite_mode == 'prefix_as_filename':
-                file = f"{filename_prefix}.{extension}"
+                file = f"{filename_prefix}.{file_extension}"
             else:
-                file = f"{filename_prefix}_{counter:05}_.{extension}"
+                file = f"{filename_prefix}_{counter:05}_.{file_extension}"
                 if os.path.exists(os.path.join(self.output_dir, file)):
                     counter += 1
-                    file = f"{filename_prefix}_{counter:05}_.{extension}"
-
-            if extension == 'png':
-                img.save(os.path.join(self.output_dir, file),
-                         pnginfo=metadata, optimize=True)
-            elif extension == 'webp':
-                img.save(os.path.join(self.output_dir, file), quality=quality)
-            elif extension == 'jpeg':
-                img.save(os.path.join(self.output_dir, file),
-                         quality=quality, optimize=True)
-            elif extension == 'tiff':
-                img.save(os.path.join(self.output_dir, file),
-                         quality=quality, optimize=True)
-            elif extension == 'tiff (full-float)':
-                if 'tifffile' not in packages():
-                    print("\033[34mWAS NS:\033[0m Installing tifffile...")
-                    subprocess.check_call(
-                        [sys.executable, '-m', 'pip', '-q', 'install', 'tifffile'])
-                    from tifffile import tiff
-                    tiff.imwrite(os.path.join(self.output_dir, file), image.cpu().numpy(), dtype=tiff.float32)
-            elif extension == 'tiff (half-float)':
-                if 'tifffile' not in packages():
-                    print("\033[34mWAS NS:\033[0m Installing tifffile...")
-                    subprocess.check_call(
-                        [sys.executable, '-m', 'pip', '-q', 'install', 'tifffile'])
-                    from tifffile import tiff
-                    tiff.imwrite(os.path.join(self.output_dir, file), image.cpu().numpy(), dtype=tiff.float16)
-            else:
-                img.save(os.path.join(self.output_dir, file))
-            paths.append(file)
+                    file = f"{filename_prefix}_{counter:05}_.{file_extension}"
+            try:
+                if extension == 'png':
+                    output_file = os.path.join(self.output_dir, file)
+                    img.save(output_file,
+                             pnginfo=metadata, optimize=True)
+                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
+                elif extension == 'webp':
+                    output_file = os.path.join(self.output_dir, file)
+                    img.save(output_file, quality=quality)
+                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
+                elif extension == 'jpeg':
+                    output_file = os.path.join(self.output_dir, file)
+                    img.save(output_file,
+                             quality=quality, optimize=True)
+                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
+                elif extension == 'tiff':
+                    output_file = os.path.join(self.output_dir, file)
+                    img.save(output_file,
+                             quality=quality, optimize=True)
+                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
+                else:
+                    output_file = os.path.join(self.output_dir, file)
+                    img.save(output_file)
+                paths.append(file)
+            except OSError as e:
+                print(f'\033[34mWAS NS\033[0m Error: Unable to save file to:', output_file)
+                print(e)
+            except Exception as e:
+                print(f'\033[34mWAS NS\033[0m Error: Unable to save file due to the following error:')
+                print(e)
+            
             if overwrite_mode == 'false':
                 counter += 1
                 
         return {"ui": {"images": paths}}
-
-
+        
 # LOAD IMAGE NODE
 class WAS_Load_Image:
 
