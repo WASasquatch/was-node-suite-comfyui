@@ -10,3 +10,4 @@ gitpython
 fairscale>=0.4.4
 face_recognition
 imageio
+tifffile

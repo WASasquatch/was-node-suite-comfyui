@@ -4333,7 +4333,7 @@ class WAS_Image_Save:
                 "images": ("IMAGE", ),
                 "output_path": ("STRING", {"default": './ComfyUI/output', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
-                "extension": (['png', 'jpeg', 'tiff', 'gif'], ),
+                "extension": (['png', 'jpeg', 'gif', 'tiff', 'tiff (half-float)', 'tiff (full-float)'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
             },
@@ -4379,6 +4379,9 @@ class WAS_Image_Save:
         except FileNotFoundError:
             os.mkdir(self.output_dir)
             counter = 1
+            
+        # Set Extension
+        extension = ( extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'tiff' )
 
         paths = list()
         for image in images:
@@ -4413,6 +4416,20 @@ class WAS_Image_Save:
             elif extension == 'tiff':
                 img.save(os.path.join(self.output_dir, file),
                          quality=quality, optimize=True)
+            elif extension == 'tiff (full-float)':
+                if 'tifffile' not in packages():
+                    print("\033[34mWAS NS:\033[0m Installing tifffile...")
+                    subprocess.check_call(
+                        [sys.executable, '-m', 'pip', '-q', 'install', 'tifffile'])
+                    from tifffile import tiff
+                    tiff.imwrite(os.path.join(self.output_dir, file), image.cpu().numpy(), dtype=tiff.float32)
+            elif extension == 'tiff (half-float)':
+                if 'tifffile' not in packages():
+                    print("\033[34mWAS NS:\033[0m Installing tifffile...")
+                    subprocess.check_call(
+                        [sys.executable, '-m', 'pip', '-q', 'install', 'tifffile'])
+                    from tifffile import tiff
+                    tiff.imwrite(os.path.join(self.output_dir, file), image.cpu().numpy(), dtype=tiff.float16)
             else:
                 img.save(os.path.join(self.output_dir, file))
             paths.append(file)
