@@ -6497,7 +6497,7 @@ class WAS_Random_Number:
         # Return random number
         if number_type:
             if number_type == 'integer':
-                number = random.randint(minimum, maximum)
+                number = random.randint(int(minimum), int(maximum))
             elif number_type == 'float':
                 number = random.uniform(minimum, maximum)
             elif number_type == 'bool':
