@@ -276,6 +276,8 @@ Create a new cell and add the following code, then run the cell. You may need to
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
 
+---
+
 ## Video Nodes
   - For now I am only supporting **Windows** installations for video nodes.
     - I do not have access to Mac or a stand-alone linux distro. If you get them working and want to PR a patch/directions, feel free. 
