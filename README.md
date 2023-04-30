@@ -170,7 +170,18 @@
  
  <br>
  
- ---
+---
+ 
+ 
+## Video Nodes
+  - For now I am only supporting **Windows** installations for video nodes.
+    - I do not have access to Mac or a stand-alone linux distro. If you get them working and want to PR a patch/directions, feel free. 
+  - Video nodes require [FFMPEG](https://ffmpeg.org/download.html). You should download the proper FFMPEG binaries for you system and set the FFMPEG path in the config file. 
+  - Additionally, if you want to use H264 codec need to [download OpenH264 1.8.0](https://github.com/cisco/openh264/releases/tag/v1.8.0) and place it in the root of ComfyUI (Example: `C:\ComfyUI_windows_portable`). 
+  - FFV1 will complain about invalid container. You can ignore this. The resulting MKV file is readable. I have not figured out what this issue is about. Documentaion tells me to use MKV, but it's telling me it's unsupported.
+  
+
+---
  
 # Text Tokens
 Text tokens can be used in the Save Text File and Save Image nodes. You can also add your own custom tokens with the Text Add Tokens node.
@@ -275,12 +286,3 @@ Create a new cell and add the following code, then run the cell. You may need to
   - `!git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/was-node-suite-comfyui`
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
-
----
-
-## Video Nodes
-  - For now I am only supporting **Windows** installations for video nodes.
-    - I do not have access to Mac or a stand-alone linux distro. If you get them working and want to PR a patch/directions, feel free. 
-  - Video nodes require [FFMPEG](https://ffmpeg.org/download.html). You should download the proper FFMPEG binaries for you system and set the FFMPEG path in the config file. 
-  - Additionally, if you want to use H264 codec need to [download OpenH264 1.8.0](https://github.com/cisco/openh264/releases/tag/v1.8.0) and place it in the root of ComfyUI (Example: `C:\ComfyUI_windows_portable`). 
-  - FFV1 will complain about invalid container. You can ignore this. The resulting MKV file is readable. I have not figured out what this issue is about. Documentaion tells me to use MKV, but it's telling me it's unsupported.
