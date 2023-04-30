@@ -40,6 +40,7 @@
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
  - Create Morph Image: Create a GIF/APNG animation from two images, fading between them. 
  - Create Morph Image by Path: Create a GIF/APNG animation from a path to a directory containing images, with optional pattern. 
+ - Create Video from Path: Create video from images from a specified path. 
  - Dictionary to Console: Print a dictionary input to the console
  - Image Analyze
    - Black White Levels
@@ -164,7 +165,7 @@
  - True Random.org Number Generator: Generate a truly random number online from atmospheric noise with [Random.org](https://random.org/)
    - [Get your API key from your account page](https://accounts.random.org/)
  - Write to Morph GIF: Write a new frame to an existing GIF (or create new one) with interpolation between frames. 
- 
+ - Write to Video: Write a frame as you generate to a video (Best used with FFV1 for lossless images)
 </details>
  
  <br>
@@ -246,7 +247,12 @@ You can set `webui_styles_persistent_update` to `true` to update the WAS Node Su
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
 
   - Navigate to your `/ComfyUI/custom_nodes/` folder
-  - `git clone https://github.com/WASasquatch/was-node-suite-comfyui/`
+  - Run `git clone https://github.com/WASasquatch/was-node-suite-comfyui/`
+  - Navigate to your `was-node-suite-comfyui` folder
+    - Portable/venv:
+       - Run `path/to/ComfUI/python_embeded/python.exe -m pip install -r requirements.txt`
+	- With system python
+	   - Run `pip install -r requirements.txt`
   - Start ComfyUI
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
@@ -256,6 +262,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
 
   - Download `WAS_Node_Suite.py`
   - Move the file to your `/ComfyUI/custom_nodes/` folder
+  - WAS Node Suite will attempt install dependencies on it's own, but you may need to manually do so. The dependencies required are in the `requirements.txt` on this repo.
   - Start, or Restart ComfyUI
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
@@ -268,3 +275,10 @@ Create a new cell and add the following code, then run the cell. You may need to
   - `!git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/was-node-suite-comfyui`
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
+
+## Video Nodes
+  - For now I am only supporting **Windows** installations for video nodes.
+    - I do not have access to Mac or a stand-alone linux distro. If you get them working and want to PR a patch/directions, feel free. 
+  - Video nodes require [FFMPEG](https://ffmpeg.org/download.html). You should download the proper FFMPEG binaries for you system and set the FFMPEG path in the config file. 
+  - Additionally, if you want to use H264 codec need to [download OpenH264 1.8.0](https://github.com/cisco/openh264/releases/tag/v1.8.0) and place it in the root of ComfyUI (Example: `C:\ComfyUI_windows_portable`). 
+  - FFV1 will complain about invalid container. You can ignore this. The resulting MKV file is readable. I have not figured out what this issue is about. Documentaion tells me to use MKV, but it's telling me it's unsupported.

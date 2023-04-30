@@ -119,6 +119,7 @@ was_conf_template = {
                     "sam_model_vitb_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
                     "history_display_limit": 32,
                     "use_legacy_ascii_text": True, # ASCII Legacy is True For Now
+                    "ffmpeg_bin_path": "/path/to/ffmpeg",
                 }
 
 # Create, Load, or Update Config
@@ -133,6 +134,7 @@ def getSuiteConfig():
     except Exception as e:
         print(e)
         return False
+    return was_config
     return was_config
     
 def updateSuiteConfig(conf):
@@ -479,7 +481,7 @@ def update_history_text_files(new_paths):
             HDB.insert("History", "TextFiles", new_paths)
 # WAS Filter Class
 
-class WAS_Filter_Class():
+class WAS_Tools_Class():
 
     # TOOLS
 
@@ -656,13 +658,16 @@ class WAS_Filter_Class():
         return output_file  
 
     class GifMorphWriter:
-        def __init__(self, transition_frames=10, duration_ms=100, still_image_delay_ms=2500, loop=0):
+        def __init__(self, transition_frames=30, duration_ms=100, still_image_delay_ms=2500, loop=0):
             self.transition_frames = transition_frames
             self.duration_ms = duration_ms
             self.still_image_delay_ms = still_image_delay_ms
             self.loop = loop
             
         def write(self, image, gif_path):
+        
+            import cv2
+        
             if not os.path.isfile(gif_path):
                 # Create the GIF file if it doesn't exist
                 with Image.new("RGBA", image.size) as new_gif:
@@ -670,7 +675,7 @@ class WAS_Filter_Class():
                     new_gif.paste(image.convert("RGBA"))
                     new_gif.info["duration"] = self.still_image_delay_ms
                     new_gif.save(gif_path, format="GIF", save_all=True, append_images=[], duration=self.still_image_delay_ms, loop=0)
-                print(f"Created new Morph GIF at: {gif_path}")
+                print(f"\033[34mWAS NS:\033[0m Created new GIF animation at: {gif_path}")
             else:
                 with Image.open(gif_path) as gif:
                     # Extract the last still frame of the GIF, if it exists
@@ -728,7 +733,7 @@ class WAS_Filter_Class():
                         loop=self.loop,
                     )
 
-                    print(f"Edited existing Morph GIF at: {gif_path}")
+                    print(f"\033[34mWAS NS:\033[0m Edited existing GIF animation at: {gif_path}")
 
                 
         def pad_to_size(self, image, size):
@@ -755,6 +760,207 @@ class WAS_Filter_Class():
                 frame = Image.blend(start_frame, end_image, weight)
                 frames.append(frame)
             return frames
+            
+    class VideoWriter:
+        def __init__(self, transition_frames=30, fps=25, still_image_delay_sec=2, max_size=512, codec="mp4v"):
+            self.transition_frames = transition_frames
+            self.fps = fps
+            self.still_image_delay_frames = round(still_image_delay_sec * fps)
+            self.max_size = int(max_size)
+            self.valid_codecs = ["avc1","h264","ffv1","hfyu","mp4v"]
+            self.extensions = {"avc1":".avi","h264":".mkv","ffv1":".mkv","mp4v":".mp4"} 
+            self.codec = codec.lower() if codec.lower() in self.valid_codecs else "mp4v"
+
+        def write(self, image, video_path):
+            
+            import cv2
+            
+            # Setup video path extension
+            video_path += self.extensions[self.codec]
+
+            # Convert the input image to a cv2 image
+            end_image = self.rescale(self.pil2cv(image), self.max_size)
+
+            if os.path.isfile(video_path):
+                # If the video file already exists, load it
+                cap = cv2.VideoCapture(video_path)
+
+                # Get the video dimensions
+                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                fps = int(cap.get(cv2.CAP_PROP_FPS))
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+                # Create a temporary file to hold the new frames
+                temp_file_path = video_path.replace(self.extensions[self.codec], '_temp'+self.extensions[self.codec])
+                fourcc = cv2.VideoWriter_fourcc(*self.codec)
+                out = cv2.VideoWriter(temp_file_path, fourcc, fps, (width, height), isColor=True)
+
+                # Write the original frames to the temporary file
+                for i in range(total_frames):
+                    ret, frame = cap.read()
+                    out.write(frame)
+                    
+                # Create transition
+                if self.transition_frames > 0:
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
+                    ret, last_frame = cap.read()
+                    transition_frames = self.generate_transition_frames(last_frame, self.pad_to_size(end_image, (width, height)), self.transition_frames)
+                    for i, transition_frame in enumerate(transition_frames):
+                        out.write(transition_frame)
+
+                # Add the new image frames to the temporary file
+                for i in range(self.still_image_delay_frames):
+                    out.write(end_image)
+
+                # Release resources
+                cap.release()
+                out.release()
+
+                # Replace the original video file with the temporary file
+                os.remove(video_path)
+                os.rename(temp_file_path, video_path)
+
+                print(f"\033[34mWAS NS:\033[0m Edited video at: {video_path}")
+                
+                return video_path
+
+            else:
+                # If the video file doesn't exist, create it
+                fourcc = cv2.VideoWriter_fourcc(*self.codec)
+                height, width, _ = end_image.shape
+                out = cv2.VideoWriter(video_path, fourcc, self.fps, (width, height), isColor=True)
+
+                # Write the still image for the specified duration
+                for i in range(self.still_image_delay_frames):
+                    out.write(end_image)
+
+                # Release resources
+                out.release()
+
+                print(f"\033[34mWAS NS:\033[0m Created new video at: {video_path}")
+                
+                return video_path
+                
+            return ""
+                
+        def create_video(self, image_folder, video_path):
+            import cv2
+
+            # Get a list of the image files in the folder, sorted alphabetically
+            image_paths = sorted([os.path.join(image_folder, f) for f in os.listdir(image_folder) 
+                                  if os.path.isfile(os.path.join(image_folder, f)) 
+                                  and os.path.join(image_folder, f).lower().endswith(ALLOWED_EXT)])
+                                          
+            print(image_paths)
+
+            # Check that there are image files in the folder
+            if len(image_paths) == 0:
+                print(f"\033[31mERR:\033[0m No valid image files found in `{image_folder}` directory. Valid image formats are", *sort(ALLOWED_EXT), end=" ")
+                return
+
+            # Output file including extension
+            output_file = video_path + self.extensions[self.codec]
+
+            # Load the first image to get the dimensions
+            image = self.rescale(cv2.imread(image_paths[0]), self.max_size)
+            height, width = image.shape[:2]
+
+            # Create a VideoWriter object
+            fourcc = cv2.VideoWriter_fourcc(*self.codec)
+            out = cv2.VideoWriter(output_file, fourcc, self.fps, (width, height), isColor=True)
+
+            # Write still frames for the first image
+            out.write(image)
+            for _ in range(self.still_image_delay_frames - 1):
+                out.write(image)
+
+            for i in range(len(image_paths)):
+                # Load frame(s)
+                start_frame = cv2.imread(image_paths[i])
+                end_frame = None
+                if i+1 <= len(image_paths)-1:
+                    end_frame = self.rescale(cv2.imread(image_paths[i+1]), self.max_size)
+
+                # Create transition frames
+                if isinstance(end_frame, np.ndarray):
+                    transition_frames = self.generate_transition_frames(start_frame, end_frame, self.transition_frames)
+                    # Resize transition frames to match video size
+                    transition_frames = [cv2.resize(frame, (width, height)) for frame in transition_frames]
+                    # Write transition frames to the video
+                    for _, frame in enumerate(transition_frames):
+                        out.write(frame)
+
+                    # Write still frames for the current image after the transition frames
+                    for _ in range(self.still_image_delay_frames - self.transition_frames):
+                        out.write(end_frame)
+
+                else:
+                    # No transition frames for the last image in the folder
+                    out.write(start_frame)
+                    for _ in range(self.still_image_delay_frames - 1):
+                        out.write(start_frame)
+
+            # Release resources
+            out.release()
+
+            if os.path.exists(output_file):
+                print(f"\033[34mWAS NS:\033[0m Created video at: {output_file}")
+                return output_file
+            else:
+                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to create video at: {output_file}")
+                return ""
+        
+        def rescale(self, image, max_dimension):
+            import cv2
+            height, width, _ = image.shape
+            if width > max_dimension or height > max_dimension:
+                scaling_factor = max(width, height) / max_dimension
+                new_width = int(width / scaling_factor)
+                new_height = int(height / scaling_factor)
+                image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+            return image
+                
+        def pad_to_size(self, image, size):
+            import cv2
+            # Pad the image with black pixels to match the desired size
+            if image.shape[1] != size[0] or image.shape[0] != size[1]:
+                image = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+                x_offset = (size[0] - image.shape[1]) // 2
+                y_offset = (size[1] - image.shape[0]) // 2
+                image[y_offset:y_offset+image.shape[0], x_offset:x_offset+image.shape[1], :] = cv2.resize(image, (size[0], size[1]))
+            return image
+            
+        def generate_transition_frames(self, img1, img2, num_frames):
+            import cv2
+            if img1 is None and img2 is None:
+                return []
+            
+            # Resize the images if necessary
+            if img1 is not None and img2 is not None:
+                if img1.shape != img2.shape:
+                    img2 = cv2.resize(img2, img1.shape[:2][::-1])
+            elif img1 is not None:
+                img2 = np.zeros_like(img1)
+            else:
+                img1 = np.zeros_like(img2)
+            
+            height, width, _ = img2.shape
+            
+            frame_sequence = []
+            for i in range(num_frames):
+                alpha = i / float(num_frames)
+                blended = cv2.addWeighted(img1, 1 - alpha, img2, alpha,
+                                              gamma=0.0, dtype=cv2.CV_8U)
+                frame_sequence.append(blended)
+            
+            return frame_sequence
+            
+        def pil2cv(self, img):
+            import cv2
+            img = np.array(img) 
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  
+            return img
 
         
     # FILTERS
@@ -1348,10 +1554,10 @@ class WAS_Shadow_And_Highlight_Adjustment:
     
     def apply_shadow_and_highlight(self, image, shadow_threshold=30, highlight_threshold=220, shadow_factor=1.5, highlight_factor=0.5, shadow_smoothing=0, highlight_smoothing=0, simplify_isolation=0):
 
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
         
-        result, shadows, highlights = WFilter.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
-        result, shadows, highlights = WFilter.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
+        result, shadows, highlights = WTools.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
+        result, shadows, highlights = WTools.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
         
         return (pil2tensor(result), pil2tensor(shadows), pil2tensor(highlights) )
         
@@ -1506,7 +1712,7 @@ class WAS_Image_Style_Filter:
         image = tensor2pil(image)
 
         # WAS Filters
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
 
         # Apply blending
         if style:
@@ -1523,7 +1729,7 @@ class WAS_Image_Style_Filter:
             elif style == "earlybird":
                 out_image = pilgram.earlybird(image)
             elif style == "fairy tale":
-                out_image = WFilter.sparkle(image)
+                out_image = WTools.sparkle(image)
             elif style == "gingham":
                 out_image = pilgram.gingham(image)
             elif style == "hudson":
@@ -1606,10 +1812,6 @@ class WAS_Image_Crop_Face:
     def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25, use_face_recognition_gpu="false"):
     
         use_fr = False if use_face_recognition_gpu.strip().lower() == 'false' else True
-    
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
         
         if use_fr:
             if 'face_recognition' not in packages():
@@ -2137,15 +2339,10 @@ class WAS_Image_Morph_GIF:
     RETURN_NAMES = ("image_a_pass","image_b_pass","filepath_text","filename_text")
     FUNCTION = "create_morph_gif"
     
-    CATEGORY = "WAS Suite/Image/Process"
+    CATEGORY = "WAS Suite/Animation"
     
     def create_morph_gif(self, image_a, image_b, transition_frames=10, still_image_delay_ms=10, duration_ms=0.1, loops=0, max_size=512, 
                             output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
-    
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
                 
         if 'imageio' not in packages():
             print("\033[34mWAS NS:\033[0m Installing imageio...")
@@ -2158,7 +2355,7 @@ class WAS_Image_Morph_GIF:
             output_path = "./ComfyUI/output"
         output_path = tokens.parseTokens(os.path.join(*output_path.split('/')))
         if not os.path.exists(output_path):
-            os.mkdir(output_path)
+            os.makedirs(output_path, exist_ok=True)
             
         if image_a == None:
             image_a = pil2tensor(Image.new("RGB", (512,512), (0,0,0)))
@@ -2176,9 +2373,9 @@ class WAS_Image_Morph_GIF:
             duration_ms = 60000.0
             
         tokens = TextTokens()
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
             
-        output_file = WFilter.morph_images([tensor2pil(image_a), tensor2pil(image_b)], steps=int(transition_frames), max_size=int(max_size), loop=int(loops), 
+        output_file = WTools.morph_images([tensor2pil(image_a), tensor2pil(image_b)], steps=int(transition_frames), max_size=int(max_size), loop=int(loops), 
                             still_duration=int(still_image_delay_ms), duration=int(duration_ms), output_path=output_path,
                             filename=tokens.parseTokens(filename), filetype=filetype)
         
@@ -2214,15 +2411,10 @@ class WAS_Image_Morph_GIF_Writer:
     RETURN_NAMES = ("IMAGE_PASS","filepath_text","filename_text")
     FUNCTION = "write_to_morph_gif"
     
-    CATEGORY = "WAS Suite/Image/Process"
+    CATEGORY = "WAS Suite/Animation/Writer"
     
     def write_to_morph_gif(self, image, transition_frames=10, image_delay_ms=10, duration_ms=0.1, loops=0, max_size=512, 
                             output_path="./ComfyUI/output", filename="morph"):
-    
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
                 
         if 'imageio' not in packages():
             print("\033[34mWAS NS:\033[0m Installing imageio...")
@@ -2250,14 +2442,13 @@ class WAS_Image_Morph_GIF_Writer:
         output_file = os.path.join(output_path, tokens.parseTokens(filename)+'.gif')
         
         if not os.path.exists(output_path):
-            os.mkdir(output_path)
+            os.makedirs(output_path, exist_ok=True)
         
-        WFilter = WAS_Filter_Class()
-        GifMorph = WFilter.GifMorphWriter(int(transition_frames), int(duration_ms), int(image_delay_ms))
+        WTools = WAS_Tools_Class()
+        GifMorph = WTools.GifMorphWriter(int(transition_frames), int(duration_ms), int(image_delay_ms))
         GifMorph.write(tensor2pil(image), output_file)
         
-        return (image, output_file, filename)
-        
+        return (image, output_file, filename)        
 
 # IMAGE MORPH GIF BY PATH
 
@@ -2290,15 +2481,10 @@ class WAS_Image_Morph_GIF_By_Path:
     RETURN_NAMES = ("filepath_text","filename_text")
     FUNCTION = "create_morph_gif"
     
-    CATEGORY = "WAS Suite/Image/Process"
+    CATEGORY = "WAS Suite/Animation"
     
     def create_morph_gif(self, transition_frames=30, still_image_delay_ms=2500, duration_ms=0.1, loops=0, max_size=512, 
                             input_path="./ComfyUI/output", input_pattern="*", output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
-    
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
                 
         if 'imageio' not in packages():
             print("\033[34mWAS NS:\033[0m Installing imageio...")
@@ -2330,9 +2516,9 @@ class WAS_Image_Morph_GIF_By_Path:
             duration_ms = 60000.0
             
         tokens = TextTokens()
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
             
-        output_file = WFilter.morph_images(images, steps=int(transition_frames), max_size=int(max_size), loop=int(loops), still_duration=int(still_image_delay_ms), 
+        output_file = WTools.morph_images(images, steps=int(transition_frames), max_size=int(max_size), loop=int(loops), still_duration=int(still_image_delay_ms), 
                                             duration=int(duration_ms), output_path=tokens.parseTokens(os.path.join(*output_path.split('/'))),
                                             filename=tokens.parseTokens(filename), filetype=filetype)
         
@@ -2510,16 +2696,16 @@ class WAS_Image_Monitor_Distortion_Filter:
         image = tensor2pil(image)
         
         # WAS Filters
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
 
         # Apply image effect
         if mode:
             if mode == 'Digital Distortion':
-                image = WFilter.digital_distortion(image, amplitude, offset)
+                image = WTools.digital_distortion(image, amplitude, offset)
             elif mode == 'Signal Distortion':
-                image = WFilter.signal_distortion(image, amplitude)
+                image = WTools.signal_distortion(image, amplitude)
             elif mode == 'TV Distortion':
-                image = WFilter.tv_vhs_distortion(image, amplitude)  
+                image = WTools.tv_vhs_distortion(image, amplitude)  
             else:
                 image = image
 
@@ -2556,9 +2742,9 @@ class WAS_Image_Perlin_Noise_Filter:
         if width > 1024 or height > 1024 and octaves > 6:
             octaves = 6
     
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
         
-        image = WFilter.perlin_noise(width, height, shape, density, octaves, seed)
+        image = WTools.perlin_noise(width, height, shape, density, octaves, seed)
 
         return (pil2tensor(image), )        
         
@@ -2588,9 +2774,9 @@ class WAS_Image_Voronoi_Noise_Filter:
 
     def voronoi_noise_filter(self, width, height, density, modulator, seed):
     
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
         
-        image = WFilter.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True).image
+        image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True).image
 
         return (pil2tensor(image), )        
 
@@ -2620,9 +2806,9 @@ class WAS_Image_Make_Seamless:
 
     def make_seamless(self, image, blending, tiled, tiles):
     
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
         
-        image = WFilter.make_seamless(tensor2pil(image), blending, tiled, tiles)
+        image = WTools.make_seamless(tensor2pil(image), blending, tiled, tiles)
 
         return (pil2tensor(image), )
         
@@ -2654,7 +2840,7 @@ class WAS_Image_Color_Palette:
         image = tensor2pil(image)
         
         # WAS Filters
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
 
         res_dir = os.path.join(WAS_SUITE_ROOT, 'res')
         font = os.path.join(res_dir, 'font.ttf')
@@ -2665,7 +2851,7 @@ class WAS_Image_Color_Palette:
             print(f'\033[34mWAS NS:\033[0m Found font at `{font}`')
 
         # Generate Color Palette
-        image = WFilter.generate_palette(image, colors, 128, 10, font, 15)
+        image = WTools.generate_palette(image, colors, 128, 10, font, 15)
 
         return (pil2tensor(image), )
         
@@ -2697,14 +2883,14 @@ class WAS_Image_Analyze:
         image = tensor2pil(image)
         
         # WAS Filters
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
 
         # Analye Image
         if mode:
             if mode == 'Black White Levels':
-                image = WFilter.black_white_levels(image)
+                image = WTools.black_white_levels(image)
             elif mode == 'RGB Levels':
-                image = WFilter.channel_frequency(image)
+                image = WTools.channel_frequency(image)
             else:
                 image = image
 
@@ -2743,7 +2929,7 @@ class WAS_Image_Generate_Gradient:
         import io
     
         # WAS Filters
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
 
         colors_dict = {}
         stops = io.StringIO(gradient_stops.strip().replace(' ',''))
@@ -2752,7 +2938,7 @@ class WAS_Image_Generate_Gradient:
             colors = parts[1].replace('\n','').split(',')
             colors_dict[parts[0].replace('\n','')] = colors
         
-        image = WFilter.gradient((width, height), direction, colors_dict, tolerance)
+        image = WTools.gradient((width, height), direction, colors_dict, tolerance)
 
         return (pil2tensor(image), )        
 
@@ -2784,9 +2970,9 @@ class WAS_Image_Gradient_Map:
         gradient_image = tensor2pil(gradient_image)
         
         # WAS Filters
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
             
-        image = WFilter.gradient_map(image, gradient_image, (True if flip_left_right == 'true' else False))
+        image = WTools.gradient_map(image, gradient_image, (True if flip_left_right == 'true' else False))
 
         return (pil2tensor(image), )
 
@@ -3071,9 +3257,9 @@ class WAS_Image_Stitch:
         if feathering > 2048:
             raise ValueError(f"\033[34mWAS NS\033[0m Error: The stitch feathering of `{feathering}` is too high. Please choose a value between `0` and `2048`")
             
-        WFilter = WAS_Filter_Class();
+        WTools = WAS_Tools_Class();
         
-        stitched_image = WFilter.stitch_image(tensor2pil(image_a), tensor2pil(image_b), stitch, feathering)
+        stitched_image = WTools.stitch_image(tensor2pil(image_a), tensor2pil(image_b), stitch, feathering)
         
         return (pil2tensor(stitched_image), )
 
@@ -3870,8 +4056,6 @@ class WAS_Canny_Filter:
 
     def canny_filter(self, image, threshold_low, threshold_high, enable_threshold):
 
-        self.install_opencv()
-
         if enable_threshold == 'false':
             threshold_low = None
             threshold_high = None
@@ -3984,12 +4168,6 @@ class WAS_Canny_Filter:
         # gradients of edges
         return mag
 
-    def install_opencv(self):
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
-
-
 # IMAGE EDGE DETECTION
 
 class WAS_Image_Edge:
@@ -4052,11 +4230,6 @@ class WAS_Image_fDOF:
     CATEGORY = "WAS Suite/Image/Filter"
 
     def fdof_composite(self, image, depth, radius, samples, mode):
-
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
 
         import cv2 as cv
 
@@ -4126,9 +4299,9 @@ class WAS_Dragon_Filter:
     
     def apply_dragan_filter(self, image, saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize):
     
-        WFilter = WAS_Filter_Class()
+        WTools = WAS_Tools_Class()
         
-        image = WFilter.dragan_filter(tensor2pil(image), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)
+        image = WTools.dragan_filter(tensor2pil(image), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)
         
         return (pil2tensor(image), )
      
@@ -4191,11 +4364,6 @@ class WAS_Image_Select_Color:
     CATEGORY = "WAS Suite/Image/Process"
 
     def select_color(self, image, red=255, green=255, blue=255, variance=10):
-
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
 
         image = self.color_pick(tensor2pil(image), red, green, blue, variance)
 
@@ -4343,13 +4511,13 @@ class WAS_Image_Save:
         }
 
     RETURN_TYPES = ()
-    FUNCTION = "save_images"
+    FUNCTION = "was_save_images"
 
     OUTPUT_NODE = True
 
     CATEGORY = "WAS Suite/IO"
 
-    def save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false'):
+    def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false'):
         def map_filename(filename):
             prefix_len = len(filename_prefix)
             prefix = filename[:prefix_len + 1]
@@ -4367,7 +4535,7 @@ class WAS_Image_Save:
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
                 print(f'\033[34mWAS NS\033[0m Warning: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
-                os.mkdir(output_path.strip())
+                os.makedirs(output_path.strip(), exist_ok=True)
             self.output_dir = output_path.strip()
 
         # Setup counter
@@ -4377,11 +4545,11 @@ class WAS_Image_Save:
         except ValueError:
             counter = 1
         except FileNotFoundError:
-            os.mkdir(self.output_dir)
+            os.makedirs(self.output_dir, exist_ok=True)
             counter = 1
             
         # Set Extension
-        file_extension = ( extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'tiff' )
+        file_extension = ( extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'png' )
 
         paths = list()
         for image in images:
@@ -4405,27 +4573,23 @@ class WAS_Image_Save:
                     counter += 1
                     file = f"{filename_prefix}_{counter:05}_.{file_extension}"
             try:
+                output_file = os.path.abspath(os.path.join(self.output_dir, file))
                 if extension == 'png':
-                    output_file = os.path.join(self.output_dir, file)
                     img.save(output_file,
                              pnginfo=metadata, optimize=True)
                     print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 elif extension == 'webp':
-                    output_file = os.path.join(self.output_dir, file)
                     img.save(output_file, quality=quality)
                     print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 elif extension == 'jpeg':
-                    output_file = os.path.join(self.output_dir, file)
                     img.save(output_file,
                              quality=quality, optimize=True)
                     print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 elif extension == 'tiff':
-                    output_file = os.path.join(self.output_dir, file)
                     img.save(output_file,
                              quality=quality, optimize=True)
                     print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 else:
-                    output_file = os.path.join(self.output_dir, file)
                     img.save(output_file)
                 paths.append(file)
             except OSError as e:
@@ -4734,10 +4898,6 @@ class MiDaS_Depth_Approx:
             print("\033[34mWAS NS:\033[0m Installing timm...")
             subprocess.check_call(
                 [sys.executable, '-m', 'pip', '-q', 'install', 'timm'])
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
         MIDAS_INSTALLED = True
 
 # MIDAS REMOVE BACKGROUND/FOREGROUND NODE
@@ -4903,10 +5063,6 @@ class MiDaS_Background_Foreground_Removal:
             print("\033[34mWAS NS:\033[0m Installing timm...")
             subprocess.check_call(
                 [sys.executable, '-m', 'pip', '-q', 'install', 'timm'])
-        if 'opencv-python' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing CV2...")
-            subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'opencv-python'])
         MIDAS_INSTALLED = True
 
 
@@ -5462,7 +5618,7 @@ class WAS_Text_Save:
             print(
                 f'\033[34mWAS NS\033[0m Warning: The path `{path}` doesn\'t exist! Creating it...')
             try:
-                os.mkdir(path)
+                os.makedirs(path, exist_ok=True)
             except OSError as e:
                 print(
                     f'\033[34mWAS NS\033[0m Warning: The path `{path}` could not be created! Is there write access?\n{e}')
@@ -5973,7 +6129,7 @@ class WAS_BLIP_Analyze_Image:
             
             blip_dir = os.path.join(MODELS_DIR, 'blip')
             if not os.path.exists(blip_dir):
-                os.mkdir(blip_dir)
+                os.makedirs(blip_dir, exist_ok=True)
                 
             torch.hub.set_dir(blip_dir)
         
@@ -5999,7 +6155,7 @@ class WAS_BLIP_Analyze_Image:
             
             blip_dir = os.path.join(MODELS_DIR, 'blip')
             if not os.path.exists(blip_dir):
-                os.mkdir(blip_dir)
+                os.makedirs(blip_dir, exist_ok=True)
                 
             torch.hub.set_dir(blip_dir)
 
@@ -6071,7 +6227,7 @@ class WAS_SAM_Model_Loader:
         
         sam_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'sam')
         if not os.path.exists(sam_dir):
-            os.mkdir(sam_dir)
+            os.makedirs(sam_dir, exist_ok=True)
         
         sam_file = os.path.join(sam_dir, model_filename)
         if not os.path.exists(sam_file):
@@ -7295,6 +7451,179 @@ class WAS_Lora_Loader:
         lora_path = comfy_paths.get_full_path("loras", lora_name)
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora_path, strength_model, strength_clip)
         return (model_lora, clip_lora, os.path.splitext(os.path.basename(lora_name))[0])
+        
+class WAS_Upscale_Model_Loader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "model_name": (comfy_paths.get_filename_list("upscale_models"), ),
+                             }}
+    RETURN_TYPES = ("UPSCALE_MODEL",TEXT_TYPE)
+    RETURN_NAMES = ("UPSCALE_MODEL","MODEL_NAME_TEXT")
+    FUNCTION = "load_model"
+
+    CATEGORY = "WAS Suite/Loaders"
+
+    def load_model(self, model_name):
+        model_path = comfy_paths.get_full_path("upscale_models", model_name)
+        sd = comfy.utils.load_torch_file(model_path)
+        out = model_loading.load_state_dict(sd).eval()
+        return (out,model_name)
+        
+# VIDEO WRITER
+
+class WAS_Video_Writer:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "transition_frames": ("INT", {"default":30, "min":0, "max":120, "step":1}),
+                "image_delay_sec": ("FLOAT", {"default":2.5, "min":0.1, "max":60000.0, "step":0.1}),
+                "fps": ("INT", {"default":30, "min":1, "max":60.0, "step":1}),
+                "max_size": ("INT", {"default":512, "min":128, "max":1920, "step":1}),
+                "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
+                "filename": ("STRING", {"default": "comfy_writer", "multiline": False}),
+                "codec": (["AVC1","FFV1","H264","MP4V"],),
+            }
+        }
+        
+    #@classmethod
+    #def IS_CHANGED(cls, **kwargs):
+    #    return float("NaN")
+        
+    RETURN_TYPES = ("IMAGE",TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("IMAGE_PASS","filepath_text","filename_text")
+    FUNCTION = "write_video"
+    
+    CATEGORY = "WAS Suite/Animation/Writer"
+    
+    def write_video(self, image, transition_frames=10, image_delay_sec=10, fps=30, max_size=512, 
+                            output_path="./ComfyUI/output", filename="morph", codec="H264"):
+        
+        conf = getSuiteConfig()
+        if not conf.__contains__('ffmpeg_bin_path'):
+            print(f"\033[34mWAS Node Suite\033[0m Error: Unable to use MP4 Writer because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`")
+            return (image,"","")
+
+        if conf.__contains__('ffmpeg_bin_path'):
+            if conf['ffmpeg_bin_path'] != "/path/to/ffmpeg":
+                sys.path.append(conf['ffmpeg_bin_path'])
+                os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
+                os.environ['OPENCV_FFMPEG_BINARY'] = conf['ffmpeg_bin_path']
+        
+        if output_path.strip() in [None, "", "."]:
+            output_path = "./ComfyUI/output"
+            
+        if image == None:
+            image = pil2tensor(Image.new("RGB", (512,512), (0,0,0)))
+            
+        if transition_frames < 0:
+            transition_frames = 0
+        elif transition_frames > 60:
+            transition_frames = 60
+        
+        if fps < 1:
+            fps = 1
+        elif fps > 60:
+            fps = 60
+
+        image = self.rescale_image(tensor2pil(image), max_size)
+            
+        tokens = TextTokens()
+        output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
+        output_file = os.path.join(output_path, tokens.parseTokens(filename))
+        
+        if not os.path.exists(output_path):
+            os.makedirs(output_path, exist_ok=True)
+        
+        WTools = WAS_Tools_Class()
+        MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), codec)
+        path = MP4Writer.write(image, output_file)
+        
+        return (pil2tensor(image), path, filename)
+        
+    def rescale_image(self, image, max_dimension):
+        width, height = image.size
+        if width > max_dimension or height > max_dimension:
+            scaling_factor = max(width, height) / max_dimension
+            new_width = int(width / scaling_factor)
+            new_height = int(height / scaling_factor)
+            image = image.resize((new_width, new_height), Image.Resampling(1))
+        return image
+        
+# VIDEO CREATOR 
+
+class WAS_Create_Video_From_Path:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "transition_frames": ("INT", {"default":30, "min":0, "max":120, "step":1}),
+                "image_delay_sec": ("FLOAT", {"default":2.5, "min":0.01, "max":60000.0, "step":0.01}),
+                "fps": ("INT", {"default":30, "min":1, "max":60.0, "step":1}),
+                "max_size": ("INT", {"default":512, "min":128, "max":1920, "step":1}),
+                "input_path": ("STRING", {"default": "./ComfyUI/input", "multiline": False}),
+                "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
+                "filename": ("STRING", {"default": "comfy_video", "multiline": False}),
+                "codec": (["AVC1","FFV1","H264","MP4V"],),
+            }
+        }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+        
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("filepath_text","filename_text")
+    FUNCTION = "create_video_from_path"
+    
+    CATEGORY = "WAS Suite/Animation"
+    
+    def create_video_from_path(self, transition_frames=10, image_delay_sec=10, fps=30, max_size=512, 
+                            input_path="./ComfyUI/input", output_path="./ComfyUI/output", filename="morph", codec="H264"):
+        
+        conf = getSuiteConfig()
+        if not conf.__contains__('ffmpeg_bin_path'):
+            print(f"\033[34mWAS Node Suite\033[0m Error: Unable to use MP4 Writer because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`")
+            return ("","")
+
+        if conf.__contains__('ffmpeg_bin_path'):
+            if conf['ffmpeg_bin_path'] != "/path/to/ffmpeg":
+                sys.path.append(conf['ffmpeg_bin_path'])
+                os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
+                os.environ['OPENCV_FFMPEG_BINARY'] = conf['ffmpeg_bin_path']
+        
+        if output_path.strip() in [None, "", "."]:
+            output_path = "./ComfyUI/output"
+            
+        if transition_frames < 0:
+            transition_frames = 0
+        elif transition_frames > 60:
+            transition_frames = 60
+        
+        if fps < 1:
+            fps = 1
+        elif fps > 60:
+            fps = 60
+            
+        tokens = TextTokens()
+        output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
+        output_file = os.path.join(output_path, tokens.parseTokens(filename))
+        
+        if not os.path.exists(output_path):
+            os.makedirs(output_path, exist_ok=True)
+        
+        WTools = WAS_Tools_Class()
+        MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), max_size, codec)
+        path = MP4Writer.create_video(input_path, output_file)
+        
+        return (path, filename)
 
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
@@ -7306,6 +7635,7 @@ NODE_CLASS_MAPPINGS = {
     "Create Grid Image": WAS_Image_Grid_Image,
     "Create Morph Image": WAS_Image_Morph_GIF, 
     "Create Morph Image from Path": WAS_Image_Morph_GIF_By_Path,
+    "Create Video from Path (Experimental)": WAS_Create_Video_From_Path,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
@@ -7417,7 +7747,42 @@ NODE_CLASS_MAPPINGS = {
     "Text to String": WAS_Text_To_String,
     "True Random.org Number Generator": WAS_True_Random_Number,
     "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
-    "Write to Morph GIF": WAS_Image_Morph_GIF_Writer, 
-}
+    "Upscale Model Loader": WAS_Upscale_Model_Loader,
+    "Write to GIF": WAS_Image_Morph_GIF_Writer,
+    "Write to Video (Experimental)": WAS_Video_Writer,
+}    
 
+# opencv-python-headless handling
+if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
+    try:
+        import cv2
+        build_info = ' '.join(cv2.getBuildInformation().split())
+        if "FFMPEG: YES" in build_info:
+            print("\033[34mWAS Node Suite:\033[0m OpenCV Python FFMPEG support is enabled")
+            if was_config.__contains__('ffmpeg_bin_path'):
+                if was_config['ffmpeg_bin_path'] == "/path/to/ffmpeg":
+                    print(f"\033[34mWAS Node Suite\033[0m Warning: `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}` config file. Will attempt to use system ffmpeg binaries if available.") 
+                else:
+                    print("\033[34mWAS Node Suite:\033[0m `ffmpeg_bin_path` is set to:", was_config['ffmpeg_bin_path'])                 
+        else:
+            print("\033[34mWAS Node Suite: \033[93mOpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.")
+    except ImportError:
+        print("\033[34mWAS Node Suite: \033[93mOpenCV Python module cannot be found. Attempting install...")
+        subprocess.check_call([sys.executable, '-m', 'pip', 'uninstall', 'opencv-python', 'opencv-python-headless[ffmpeg]'])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
+        try:
+            import cv2
+            print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
+        except ImportError:
+            print("\033[34mWAS Node Suite: \033[93mOpenCV Python module still cannot be imported. There is a system conflict.")
+else:
+    print("\033[34mWAS Node Suite:\033[0m Installing `opencv-python-headless` ...")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
+    try:
+        import cv2
+        print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
+    except ImportError:
+        print("\033[34mWAS Node Suite: \033[93mOpenCV Python module still cannot be imported. There is a system conflict.")
+
+# Well we got here, we're as loaded as we're gonna get. 
 print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')
