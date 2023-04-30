@@ -6653,7 +6653,7 @@ class WAS_Random_Number:
         # Return random number
         if number_type:
             if number_type == 'integer':
-                number = random.randint(int(min(minimum, maximum)), int(max(minimum, maximum)))
+                number = random.randint(minimum, maximum)
             elif number_type == 'float':
                 number = random.uniform(minimum, maximum)
             elif number_type == 'bool':
@@ -7635,7 +7635,7 @@ NODE_CLASS_MAPPINGS = {
     "Create Grid Image": WAS_Image_Grid_Image,
     "Create Morph Image": WAS_Image_Morph_GIF, 
     "Create Morph Image from Path": WAS_Image_Morph_GIF_By_Path,
-    "Create Video from Path (Experimental)": WAS_Create_Video_From_Path,
+    "Create Video from Path": WAS_Create_Video_From_Path,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
@@ -7749,7 +7749,7 @@ NODE_CLASS_MAPPINGS = {
     "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
     "Upscale Model Loader": WAS_Upscale_Model_Loader,
     "Write to GIF": WAS_Image_Morph_GIF_Writer,
-    "Write to Video (Experimental)": WAS_Video_Writer,
+    "Write to Video": WAS_Video_Writer,
 }    
 
 # opencv-python-headless handling
