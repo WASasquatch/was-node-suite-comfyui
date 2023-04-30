@@ -42,6 +42,7 @@ import subprocess
 import sys
 import time
 import torch
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
 sys.path.append('..'+os.sep+'ComfyUI')
@@ -768,13 +769,13 @@ class WAS_Tools_Class():
             self.still_image_delay_frames = round(still_image_delay_sec * fps)
             self.max_size = int(max_size)
             self.valid_codecs = ["avc1","h264","ffv1","hfyu","mp4v"]
-            self.extensions = {"avc1":".avi","h264":".mkv","ffv1":".mkv","mp4v":".mp4"} 
+            self.extensions = {"avc1":".mp4","h264":".mkv","ffv1":".mkv","mp4v":".mp4"} 
             self.codec = codec.lower() if codec.lower() in self.valid_codecs else "mp4v"
 
         def write(self, image, video_path):
-            
             import cv2
-            
+            import os
+
             # Setup video path extension
             video_path += self.extensions[self.codec]
 
@@ -797,20 +798,20 @@ class WAS_Tools_Class():
                 out = cv2.VideoWriter(temp_file_path, fourcc, fps, (width, height), isColor=True)
 
                 # Write the original frames to the temporary file
-                for i in range(total_frames):
+                for i in tqdm(range(total_frames), desc="Copying original frames"):
                     ret, frame = cap.read()
                     out.write(frame)
-                    
+
                 # Create transition
                 if self.transition_frames > 0:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
                     ret, last_frame = cap.read()
                     transition_frames = self.generate_transition_frames(last_frame, self.pad_to_size(end_image, (width, height)), self.transition_frames)
-                    for i, transition_frame in enumerate(transition_frames):
+                    for i, transition_frame in tqdm(enumerate(transition_frames), desc="Generating transition frames", total=self.transition_frames):
                         out.write(transition_frame)
 
                 # Add the new image frames to the temporary file
-                for i in range(self.still_image_delay_frames):
+                for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
                     out.write(end_image)
 
                 # Release resources
@@ -822,7 +823,7 @@ class WAS_Tools_Class():
                 os.rename(temp_file_path, video_path)
 
                 print(f"\033[34mWAS NS:\033[0m Edited video at: {video_path}")
-                
+
                 return video_path
 
             else:
@@ -832,27 +833,26 @@ class WAS_Tools_Class():
                 out = cv2.VideoWriter(video_path, fourcc, self.fps, (width, height), isColor=True)
 
                 # Write the still image for the specified duration
-                for i in range(self.still_image_delay_frames):
+                for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
                     out.write(end_image)
 
                 # Release resources
                 out.release()
 
                 print(f"\033[34mWAS NS:\033[0m Created new video at: {video_path}")
-                
+
                 return video_path
-                
+
             return ""
                 
         def create_video(self, image_folder, video_path):
             import cv2
+            from tqdm import tqdm
 
             # Get a list of the image files in the folder, sorted alphabetically
             image_paths = sorted([os.path.join(image_folder, f) for f in os.listdir(image_folder) 
                                   if os.path.isfile(os.path.join(image_folder, f)) 
                                   and os.path.join(image_folder, f).lower().endswith(ALLOWED_EXT)])
-                                          
-            print(image_paths)
 
             # Check that there are image files in the folder
             if len(image_paths) == 0:
@@ -875,7 +875,7 @@ class WAS_Tools_Class():
             for _ in range(self.still_image_delay_frames - 1):
                 out.write(image)
 
-            for i in range(len(image_paths)):
+            for i in tqdm(range(len(image_paths)), desc="Writing video frames"):
                 # Load frame(s)
                 start_frame = cv2.imread(image_paths[i])
                 end_frame = None
@@ -923,13 +923,22 @@ class WAS_Tools_Class():
                 
         def pad_to_size(self, image, size):
             import cv2
-            # Pad the image with black pixels to match the desired size
-            if image.shape[1] != size[0] or image.shape[0] != size[1]:
-                image = np.zeros((size[1], size[0], 3), dtype=np.uint8)
-                x_offset = (size[0] - image.shape[1]) // 2
-                y_offset = (size[1] - image.shape[0]) // 2
-                image[y_offset:y_offset+image.shape[0], x_offset:x_offset+image.shape[1], :] = cv2.resize(image, (size[0], size[1]))
-            return image
+            
+            # If the image is already the desired size, return it
+            if image.shape[1] == size[0] and image.shape[0] == size[1]:
+                return image
+            
+            # Resize the image to fit within the desired size without changing aspect ratio
+            ratio = min(size[0] / image.shape[1], size[1] / image.shape[0])
+            resized_image = cv2.resize(image, (int(image.shape[1] * ratio), int(image.shape[0] * ratio)))
+            
+            # Create a black image with the desired size and copy the resized image onto it
+            padded_image = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+            x_offset = (size[0] - resized_image.shape[1]) // 2
+            y_offset = (size[1] - resized_image.shape[0]) // 2
+            padded_image[y_offset:y_offset+resized_image.shape[0], x_offset:x_offset+resized_image.shape[1], :] = resized_image
+            
+            return padded_image
             
         def generate_transition_frames(self, img1, img2, num_frames):
             import cv2
