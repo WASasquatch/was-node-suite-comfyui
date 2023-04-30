@@ -7540,7 +7540,7 @@ class WAS_Video_Writer:
             os.makedirs(output_path, exist_ok=True)
         
         WTools = WAS_Tools_Class()
-        MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), codec)
+        MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), max_size, codec)
         path = MP4Writer.write(image, output_file)
         
         return (pil2tensor(image), path, filename)
