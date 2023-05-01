@@ -763,7 +763,8 @@ class WAS_Tools_Class():
             return frames
             
     class VideoWriter:
-        def __init__(self, transition_frames=30, fps=25, still_image_delay_sec=2, max_size=512, codec="mp4v"):
+        def __init__(self, transition_frames=30, fps=25, still_image_delay_sec=2, 
+                        max_size=512, codec="mp4v"):
             self.transition_frames = transition_frames
             self.fps = fps
             self.still_image_delay_frames = round(still_image_delay_sec * fps)
@@ -781,7 +782,6 @@ class WAS_Tools_Class():
 
             # Convert the input image to a cv2 image
             end_image = self.rescale(self.pil2cv(image), self.max_size)
-            print(end_image.shape)
 
             if os.path.isfile(video_path):
                 # If the video file already exists, load it
