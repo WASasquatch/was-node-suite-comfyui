@@ -7614,9 +7614,131 @@ class WAS_Create_Video_From_Path:
         path = MP4Writer.create_video(input_path, output_file)
         
         return (path, filename)
+        
+# CACHING
+
+class WAS_Cache:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "latent_suffix": ("STRING", {"default": str(random.randint(999999, 99999999))+"_cache", "multiline":False}),
+                "image_suffix": ("STRING", {"default": str(random.randint(999999, 99999999))+"_cache", "multiline":False}),
+                "conditioning_suffix": ("STRING", {"default": str(random.randint(999999, 99999999))+"_cache", "multiline":False}),
+            },
+            "optional": {
+                "latent": ("LATENT",),
+                "image": ("IMAGE",),
+                "conditioning": ("CONDITIONING",),
+            }
+        }
+        
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("latent_filename","image_filename","conditioning_filename")
+    FUNCTION = "cache_input"
+
+    CATEGORY = "WAS Suite/IO"
+
+    def cache_input(self, latent_suffix="_cache", image_suffix="_cache", conditioning_suffix="_cache", latent=None, image=None, conditioning=None):
+
+        if 'joblib' not in packages():
+            print("\033[34mWAS Node Suite:\033[0m Installing joblib...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'joblib'])
+            
+        import joblib
+            
+        output = os.path.join(WAS_SUITE_ROOT, 'cache')
+        if not os.path.exists(output):
+            os.makedirs(output, exist_ok=True)
+
+        l_filename = ""
+        i_filename = ""
+        c_filename = ""
+        
+        if latent != None:
+            l_filename = f'l_{latent_suffix}.latent'
+            out_file = os.path.join(output, l_filename)
+            joblib.dump(latent, out_file)
+            print(f"\033[34mWAS Node Suite:\033[0m Latent saved to: {out_file}")     
+            
+        if image != None:
+            i_filename = f'i_{image_suffix}.image'
+            out_file = os.path.join(output, i_filename)
+            joblib.dump(image, out_file)
+            print(f"\033[34mWAS Node Suite:\033[0m Tensor batch saved to: {out_file}")     
+        
+        if conditioning != None:
+            c_filename = f'c_{conditioning_suffix}.conditioning'
+            out_file = os.path.join(output, c_filename)
+            joblib.dump(conditioning, os.path.join(output, out_file))
+            print(f"\033[34mWAS Node Suite:\033[0m Conditioning saved to: {out_file}")     
+            
+        return (l_filename, i_filename, c_filename)
+        
+        
+class WAS_Load_Cache:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "latent_filename": ("STRING", {"default": "", "multiline":False}),
+                "image_filename": ("STRING", {"default": "", "multiline":False}),
+                "conditioning_filename": ("STRING", {"default": "", "multiline":False}),
+            }
+        }
+        
+    RETURN_TYPES = ("LATENT","IMAGE","CONDITIONING")
+    RETURN_NAMES = ("LATENT","IMAGE","CONDITIONING")
+    FUNCTION = "load_cache"
+
+    CATEGORY = "WAS Suite/IO"
+
+    def load_cache(self, latent_filename=None, image_filename=None, conditioning_filename=None):
+
+        if 'joblib' not in packages():
+            print("\033[34mWAS Node Suite:\033[0m Installing joblib...")
+            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'joblib'])
+            
+        import joblib
+        
+        input_path = os.path.join(WAS_SUITE_ROOT, 'cache')
+        
+        latent = None
+        image = None
+        conditioning = None
+        
+        if latent_filename not in ["",None]:
+            file = os.path.join(input_path, latent_filename)
+            if os.path.exists(file):
+                latent = joblib.load(file)
+            else:
+                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to locate cache file {file}")     
+                
+        if image_filename not in ["",None]:
+            file = os.path.join(input_path, image_filename)
+            if os.path.exists(file):
+                image = joblib.load(file)
+            else:
+                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to locate cache file {file}")               
+                
+        if conditioning_filename not in ["",None]:
+            file = os.path.join(input_path, conditioning_filename)
+            if os.path.exists(file):
+                conditioning = joblib.load(file)
+            else:
+                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to locate cache file {file}")
+            
+        return (latent, image, conditioning)
 
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
+    "Cache Node": WAS_Cache,
     "Checkpoint Loader": WAS_Checkpoint_Loader, 
     "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
@@ -7630,6 +7752,7 @@ NODE_CLASS_MAPPINGS = {
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
     "Latent Input Switch": WAS_Latent_Input_Switch,
+    "Load Cache": WAS_Load_Cache,
     "Logic Boolean": WAS_Boolean,
     "Lora Loader": WAS_Lora_Loader,
     "Image Analyze": WAS_Image_Analyze,
