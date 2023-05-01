@@ -34,6 +34,7 @@
  - Bounded Image Blend with Mask: Blend a bounds image by mask
  - Bounded Image Crop: Crop a bounds image
  - Bounded Image Crop with Mask: Crop a bounds image by mask
+ - Cache Node: Cache Latnet, Tensor Batches (Image), and Conditioning to disk to use later.
  - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
@@ -118,6 +119,7 @@
    - A custom implementation of the worley voronoi noise diagram
  - Input Switch  (Disable until `*` wildcard fix)
  - KSampler (WAS): A sampler that accepts a seed as a node inpu
+ - Load Cache: Load cached Latent, Tensor Batch (image), and Conditioning files. 
  - Load Text File
    - Now supports outputting a dictionary named after the file, or custom input. 
    - The dictionary contains a list of all lines in the file.
