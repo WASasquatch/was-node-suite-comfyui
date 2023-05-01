@@ -781,6 +781,7 @@ class WAS_Tools_Class():
 
             # Convert the input image to a cv2 image
             end_image = self.rescale(self.pil2cv(image), self.max_size)
+            print(end_image.shape)
 
             if os.path.isfile(video_path):
                 # If the video file already exists, load it
@@ -806,9 +807,10 @@ class WAS_Tools_Class():
                 if self.transition_frames > 0:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
                     ret, last_frame = cap.read()
-                    transition_frames = self.generate_transition_frames(last_frame, self.pad_to_size(end_image, (width, height)), self.transition_frames)
+                    transition_frames = self.generate_transition_frames(last_frame, end_image, self.transition_frames)
                     for i, transition_frame in tqdm(enumerate(transition_frames), desc="Generating transition frames", total=self.transition_frames):
-                        out.write(transition_frame)
+                        transition_frame_resized = cv2.resize(transition_frame, (width, height))
+                        out.write(transition_frame_resized)
 
                 # Add the new image frames to the temporary file
                 for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
@@ -844,7 +846,7 @@ class WAS_Tools_Class():
                 return video_path
 
             return ""
-                
+
         def create_video(self, image_folder, video_path):
             import cv2
             from tqdm import tqdm
@@ -910,35 +912,14 @@ class WAS_Tools_Class():
             else:
                 print(f"\033[34mWAS Node Suite\033[0m Error: Unable to create video at: {output_file}")
                 return ""
-        
-        def rescale(self, image, max_dimension):
-            import cv2
-            height, width, _ = image.shape
-            if width > max_dimension or height > max_dimension:
-                scaling_factor = max(width, height) / max_dimension
-                new_width = int(width / scaling_factor)
-                new_height = int(height / scaling_factor)
-                image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
-            return image
-                
-        def pad_to_size(self, image, size):
-            import cv2
-            
-            # If the image is already the desired size, return it
-            if image.shape[1] == size[0] and image.shape[0] == size[1]:
-                return image
-            
-            # Resize the image to fit within the desired size without changing aspect ratio
-            ratio = min(size[0] / image.shape[1], size[1] / image.shape[0])
-            resized_image = cv2.resize(image, (int(image.shape[1] * ratio), int(image.shape[0] * ratio)))
-            
-            # Create a black image with the desired size and copy the resized image onto it
-            padded_image = np.zeros((size[1], size[0], 3), dtype=np.uint8)
-            x_offset = (size[0] - resized_image.shape[1]) // 2
-            y_offset = (size[1] - resized_image.shape[0]) // 2
-            padded_image[y_offset:y_offset+resized_image.shape[0], x_offset:x_offset+resized_image.shape[1], :] = resized_image
-            
-            return padded_image
+
+        def rescale(self, image, max_size):
+            f1 = max_size / image.shape[1]
+            f2 = max_size / image.shape[0]
+            f = min(f1, f2)
+            dim = (int(image.shape[1] * f), int(image.shape[0] * f))
+            resized = cv2.resize(image, dim)
+            return resized
             
         def generate_transition_frames(self, img1, img2, num_frames):
             import cv2
@@ -6234,7 +6215,7 @@ class WAS_SAM_Model_Loader:
         
         sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
         
-        sam_dir = os.path.join(( os.getcwd()+os.sep+'ComfyUI' if not os.getcwd().startswith('/content') else os.getcwd() ), 'models'+os.sep+'sam')
+        sam_dir = os.path.join(MODELS_DIR, 'sam')
         if not os.path.exists(sam_dir):
             os.makedirs(sam_dir, exist_ok=True)
         
