@@ -12,7 +12,7 @@
 
  - `ASCII` **is deprecated**. The new preferred method of text node output is `TEXT`. This is a change from `ASCII` so that it is more clear what data is being passed.
    - The `was_suite_config.json` will automatically set `use_legacy_ascii_text` to `true` for a transition period. You can enable `TEXT` output by setting `use_legacy_ascii_text` to `false` 
-
+ -  [Video Nodes](https://github.com/WASasquatch/was-node-suite-comfyui#video-nodes) - There are two new video nodes, `Write to Video` and `Create Video from Path`. These are experimental nodes. 
 
 # Current Nodes:
 
