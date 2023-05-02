@@ -11,7 +11,7 @@
 # Important Updates
 
  - `ASCII` **is deprecated**. The new preferred method of text node output is `TEXT`. This is a change from `ASCII` so that it is more clear what data is being passed.
-   - The `was_suit_config.json` will automatically set `use_legacy_ascii_text` to `true` for a transition period. You can enable `TEXT` output by setting `use_legacy_ascii_text` to `false` 
+   - The `was_suite_config.json` will automatically set `use_legacy_ascii_text` to `true` for a transition period. You can enable `TEXT` output by setting `use_legacy_ascii_text` to `false` 
 
 
 # Current Nodes:
@@ -176,6 +176,19 @@
  
  
 ## Video Nodes
+
+### Codecs
+You can use codecs that are available to your ffmpeg binaries by adding their fourcc ID (in one string), and appropriate container extension to the `was_suite_config.json`
+
+Example H264 Codecs (Defaults)
+```
+    "ffmpeg_extra_codecs": {
+        "avc1": ".mp4",
+        "h264": ".mkv"
+    }
+```
+
+### Notes
   - For now I am only supporting **Windows** installations for video nodes.
     - I do not have access to Mac or a stand-alone linux distro. If you get them working and want to PR a patch/directions, feel free. 
   - Video nodes require [FFMPEG](https://ffmpeg.org/download.html). You should download the proper FFMPEG binaries for you system and set the FFMPEG path in the config file. 
