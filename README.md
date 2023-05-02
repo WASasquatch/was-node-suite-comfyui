@@ -181,7 +181,8 @@
   - Video nodes require [FFMPEG](https://ffmpeg.org/download.html). You should download the proper FFMPEG binaries for you system and set the FFMPEG path in the config file. 
   - Additionally, if you want to use H264 codec need to [download OpenH264 1.8.0](https://github.com/cisco/openh264/releases/tag/v1.8.0) and place it in the root of ComfyUI (Example: `C:\ComfyUI_windows_portable`). 
   - FFV1 will complain about invalid container. You can ignore this. The resulting MKV file is readable. I have not figured out what this issue is about. Documentaion tells me to use MKV, but it's telling me it's unsupported.
-  
+    - If you know how to resolve this, I'd love a PR
+  - `Write to Video` node should use a lossless video codec or when it copies frames, and reapplies compression, it will start expontentially ruining the starting frames run to run. 
 
 ---
  
