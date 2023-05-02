@@ -289,7 +289,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
 
   - Download `WAS_Node_Suite.py`
   - Move the file to your `/ComfyUI/custom_nodes/` folder
-  - WAS Node Suite will attempt install dependencies on it's own, but you may need to manually do so. The dependencies required are in the `requirements.txt` on this repo.
+  - WAS Node Suite will attempt install dependencies on it's own, but you may need to manually do so. The dependencies required are in the `requirements.txt` on this repo. See installation steps above.
   - Start, or Restart ComfyUI
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
