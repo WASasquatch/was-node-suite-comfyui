@@ -121,6 +121,10 @@ was_conf_template = {
                     "history_display_limit": 32,
                     "use_legacy_ascii_text": True, # ASCII Legacy is True For Now
                     "ffmpeg_bin_path": "/path/to/ffmpeg",
+                    "ffmpeg_extra_codecs": {
+                        "avc1": ".mp4",
+                        "h264": ".mkv",
+                    },
                 }
 
 # Create, Load, or Update Config
@@ -765,12 +769,15 @@ class WAS_Tools_Class():
     class VideoWriter:
         def __init__(self, transition_frames=30, fps=25, still_image_delay_sec=2, 
                         max_size=512, codec="mp4v"):
+            conf = getSuiteConfig()
             self.transition_frames = transition_frames
             self.fps = fps
             self.still_image_delay_frames = round(still_image_delay_sec * fps)
             self.max_size = int(max_size)
-            self.valid_codecs = ["avc1","h264","ffv1","hfyu","mp4v"]
-            self.extensions = {"avc1":".mp4","h264":".mkv","ffv1":".mkv","mp4v":".mp4"} 
+            self.valid_codecs = ["ffv1","mp4v"]
+            self.extensions = {"ffv1":".mkv","mp4v":".mp4"} 
+            if conf.__contains__('ffmpeg_extra_codecs'):
+                self.add_codecs(conf['ffmpeg_extra_codecs'])
             self.codec = codec.lower() if codec.lower() in self.valid_codecs else "mp4v"
 
         def write(self, image, video_path):
@@ -951,6 +958,15 @@ class WAS_Tools_Class():
             img = np.array(img) 
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  
             return img
+            
+        def add_codecs(self, codecs): 
+            if isinstance(codecs, dict):
+                codec_forcc_codes = codecs.keys()
+                self.valid_codecs.extend(codec_forcc_codes)
+                self.extensions.update(codecs)
+                
+        def get_codecs(self):
+            return self.valid_codecs
 
         
     # FILTERS
@@ -7467,6 +7483,12 @@ class WAS_Video_Writer:
         
     @classmethod
     def INPUT_TYPES(cls):
+        WTools = WAS_Tools_Class()
+        v = WTools.VideoWriter()
+        codecs = []
+        for codec in v.get_codecs():
+            codecs.append(codec.upper())
+        codecs = sorted(codecs)
         return {
             "required": {
                 "image": ("IMAGE",),
@@ -7476,7 +7498,7 @@ class WAS_Video_Writer:
                 "max_size": ("INT", {"default":512, "min":128, "max":1920, "step":1}),
                 "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
                 "filename": ("STRING", {"default": "comfy_writer", "multiline": False}),
-                "codec": (["AVC1","FFV1","H264","MP4V"],),
+                "codec": (codecs,),
             }
         }
         
@@ -7552,6 +7574,12 @@ class WAS_Create_Video_From_Path:
         
     @classmethod
     def INPUT_TYPES(cls):
+        WTools = WAS_Tools_Class()
+        v = WTools.VideoWriter()
+        codecs = []
+        for codec in v.get_codecs():
+            codecs.append(codec.upper())
+        codecs = sorted(codecs)
         return {
             "required": {
                 "transition_frames": ("INT", {"default":30, "min":0, "max":120, "step":1}),
@@ -7561,7 +7589,7 @@ class WAS_Create_Video_From_Path:
                 "input_path": ("STRING", {"default": "./ComfyUI/input", "multiline": False}),
                 "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
                 "filename": ("STRING", {"default": "comfy_video", "multiline": False}),
-                "codec": (["AVC1","FFV1","H264","MP4V"],),
+                "codec": (codecs,),
             }
         }
         
