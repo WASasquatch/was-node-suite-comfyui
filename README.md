@@ -180,7 +180,7 @@
 ### Codecs
 You can use codecs that are available to your ffmpeg binaries by adding their fourcc ID (in one string), and appropriate container extension to the `was_suite_config.json`
 
-Example H264 Codecs (Defaults)
+Example [H264 Codecs](https://github.com/cisco/openh264/releases/tag/v1.8.0) (Defaults)
 ```
     "ffmpeg_extra_codecs": {
         "avc1": ".mp4",
