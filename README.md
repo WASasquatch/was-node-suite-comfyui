@@ -35,7 +35,8 @@
  - Bounded Image Crop: Crop a bounds image
  - Bounded Image Crop with Mask: Crop a bounds image by mask
  - Cache Node: Cache Latnet, Tensor Batches (Image), and Conditioning to disk to use later.
- - CLIPTextEncode (NSP): Parse Noodle Soup Prompts
+ - CLIPTextEncode (NSP): Parse noodle soups from the NSP pantry, or parse wildcards from a directory containing A1111 style wildacrds.
+   - Wildcards are in the style of `__filename__`, which also includes subdirectories like `__appearance/haircolour__`
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 

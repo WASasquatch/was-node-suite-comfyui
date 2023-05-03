@@ -111,7 +111,7 @@ if f_disp:
 #! WAS SUITE CONFIG
 
 was_conf_template = {
-                    "webui_styles": "None",
+                    "webui_styles": None,
                     "webui_styles_persistent_update": True,
                     "blip_model_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth",
                     "blip_model_vqa_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth",
@@ -125,6 +125,7 @@ was_conf_template = {
                         "avc1": ".mp4",
                         "h264": ".mkv",
                     },
+                    "wildcards_path": None,
                 }
 
 # Create, Load, or Update Config
@@ -174,7 +175,7 @@ else:
     if update_config:
         updateSuiteConfig(was_config)
     
-    # Convert WebUI Styles
+    # Convert WebUI Styles - TODO: Convert to PromptStyles class
     if was_config.__contains__('webui_styles'):
     
         webui_styles_file = was_config['webui_styles'].strip()
@@ -194,6 +195,7 @@ else:
             styles = {}
             with open(webui_styles_file, 'r') as data:
                 for line in csv.DictReader(data):
+                    # Handle encoding garbage
                     if "\ufeffname" in line:
                         name = "\ufeffname"
                     elif "ï»¿name" in line:
@@ -217,7 +219,6 @@ if was_config and was_config.__contains__('use_legacy_ascii_text'):
     if was_config['use_legacy_ascii_text']:
         TEXT_TYPE = "ASCII"
         print(f'\033[34mWAS Node Suite\033[0m Warning: use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.')
- 
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
@@ -282,6 +283,100 @@ def resizeImage(image, max_size):
             new_width = int(width * (max_size / height))
     resized_image = image.resize((new_width, new_height))
     return resized_image
+    
+# Simple wildcard parser:
+
+def replace_wildcards(text, seed=None, noodle_key='__'):
+    conf = getSuiteConfig()
+    wildcard_dir = os.path.join(WAS_SUITE_ROOT, 'wildcards')
+    if not os.path.exists(wildcard_dir):
+        os.makedirs(wildcard_dir, exist_ok=True)
+    if conf.__contains__('wildcards_path'):
+        wildcard_dir = conf['wildcards_path']
+        
+    print("\033[34mWAS Node Suite\033[0m Wildcard Path:", wildcard_dir)
+
+    # Set the random seed for reproducibility
+    if seed:
+        random.seed(seed)
+
+    # Create a dictionary of key to file path pairs
+    key_path_dict = {}
+    for root, dirs, files in os.walk(wildcard_dir):
+        for file in files:
+            file_path = os.path.join(root, file)
+            key = os.path.relpath(file_path, wildcard_dir).replace(os.path.sep, "/").rsplit(".", 1)[0]
+            key_path_dict[f"{noodle_key}{key}{noodle_key}"] = os.path.abspath(file_path)
+            
+    # Replace keys in text with random lines from corresponding files
+    for key, file_path in key_path_dict.items():
+        with open(file_path, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+            if lines:
+                random_line = None
+                while not random_line:
+                    line = random.choice(lines).strip()
+                    if not line.startswith('#') and not line.startswith('//'):
+                        random_line = line
+                text = text.replace(key, random_line)
+
+    return text
+    
+class PromptStyles:
+    def __init__(self, styles_file, preview_length = 32):
+        self.styles_file = styles_file
+        self.styles = {}
+        self.preview_length = preview_length
+
+        if os.path.exists(self.styles_file):
+            with open(self.styles_file, 'r') as f:
+                self.styles = json.load(f)
+
+    def add_style(self, prompt="", negative_prompt="", auto=False, name=None):
+        if auto:
+            date_format = '%A, %d %B %Y %I:%M %p'
+            date_str = datetime.datetime.now().strftime(date_format)
+            key = None
+            if prompt.strip() != "":
+                if len(prompt) > self.preview_length:
+                    length = self.preview_length
+                else:
+                    length = len(prompt)
+                key = f"[{date_str}] Positive: {prompt[:length]} ..."
+            elif negative_prompt.strip() != "":
+                if len(negative_prompt) > self.preview_length:
+                    length = self.preview_length
+                else:
+                    length = len(negative_prompt)
+                key = f"[{date_str}] Negative: {negative_prompt[:length]} ..."
+            else:
+                raise AttributeError("At least a `prompt`, or `negative_prompt` input is required!")
+        else:
+            if name == None or str(name).strip() == "":
+                raise AttributeError("A `name` input is required when not using `auto=True`")
+            key = str(name)
+
+
+        for k, v in self.styles.items():
+            if v['prompt'] == prompt and v['negative_prompt'] == negative_prompt:
+                return
+
+        self.styles[key] = {"prompt": prompt, "negative_prompt": negative_prompt}
+
+        with open(self.styles_file, "w", encoding='utf-8') as f:
+            json.dump(self.styles, f, indent=4)
+
+    def get_prompts(self):
+        return self.styles
+
+    def get_prompt(self, prompt_key):
+        if prompt_key in self.styles:
+            return self.styles[prompt_key]['prompt'], self.styles[prompt_key]['negative_prompt']
+        else:
+            print(f"Prompt style `{prompt_key}` was not found!")
+            return None, None
+
+
     
 # WAS SETTINGS MANAGER
 
@@ -5085,6 +5180,7 @@ class WAS_NSP_CLIPTextEncoder:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "mode": (["Noodle Soup Prompts", "Wildcards"],),
                 "noodle_key": ("STRING", {"default": '__', "multiline": False}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "text": ("STRING", {"multiline": True}),
@@ -5098,41 +5194,48 @@ class WAS_NSP_CLIPTextEncoder:
 
     CATEGORY = "WAS Suite/Conditioning"
 
-    def nsp_encode(self, clip, text, noodle_key='__', seed=0):
+    def nsp_encode(self, clip, text, mode="Noodle Soup Prompts", noodle_key='__', seed=0):
+    
+        if mode == "Noodle Soup Prompts":
 
-        # Fetch the NSP Pantry
-        local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
-        if not os.path.exists(local_pantry):
-            response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
-            tmp_pantry = json.loads(response.read())
-            # Dump JSON locally
-            pantry_serialized = json.dumps(tmp_pantry, indent=4)
-            with open(local_pantry, "w") as f:
-                f.write(pantry_serialized)
-            del response, tmp_pantry
+            # Fetch the NSP Pantry
+            local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
+            if not os.path.exists(local_pantry):
+                response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
+                tmp_pantry = json.loads(response.read())
+                # Dump JSON locally
+                pantry_serialized = json.dumps(tmp_pantry, indent=4)
+                with open(local_pantry, "w") as f:
+                    f.write(pantry_serialized)
+                del response, tmp_pantry
 
-        # Load local pantry
-        with open(local_pantry, 'r') as f:
-            nspterminology = json.load(f)
+            # Load local pantry
+            with open(local_pantry, 'r') as f:
+                nspterminology = json.load(f)
 
-        if seed > 0 or seed < 0:
-            random.seed(seed)
-
-        # Parse Text
-        new_text = text
-        for term in nspterminology:
-            # Target Noodle
-            tkey = f'{noodle_key}{term}{noodle_key}'
-            # How many occurances?
-            tcount = new_text.count(tkey)
-            # Apply random results for each noodle counted
-            for _ in range(tcount):
-                new_text = new_text.replace(
-                    tkey, random.choice(nspterminology[term]), 1)
-                seed = seed+1
+            if seed > 0 or seed < 0:
                 random.seed(seed)
 
-        print('\033[34mWAS NS\033[0m CLIPTextEncode NSP:', new_text)
+            # Parse Text
+            new_text = text
+            for term in nspterminology:
+                # Target Noodle
+                tkey = f'{noodle_key}{term}{noodle_key}'
+                # How many occurances?
+                tcount = new_text.count(tkey)
+                # Apply random results for each noodle counted
+                for _ in range(tcount):
+                    new_text = new_text.replace(
+                        tkey, random.choice(nspterminology[term]), 1)
+                    seed = seed+1
+                    random.seed(seed)
+
+            print('\033[34mWAS NS\033[0m CLIPTextEncode NSP:\n', new_text)
+            
+        else:
+        
+            new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
+            print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
 
         return ([[clip.encode(new_text), {}]], {"ui": {"prompt": new_text}})
 
