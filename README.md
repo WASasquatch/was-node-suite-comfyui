@@ -39,6 +39,7 @@
    - Wildcards are in the style of `__filename__`, which also includes subdirectories like `__appearance/haircolour__` (if you noodle_key is set to `__`)
    - You can set a custom wildcards path in `was_suite_config.json` file with key:
      - `    "wildcards_path": "E:\\python\\automatic\\webui3\\stable-diffusion-webui\\extensions\\sd-dynamic-prompts\\wildcards"`
+     - If no path is set the wildcards dir is located at the root of WAS Node Suite
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
