@@ -37,7 +37,7 @@
  - Cache Node: Cache Latnet, Tensor Batches (Image), and Conditioning to disk to use later.
  - CLIPTextEncode (NSP): Parse noodle soups from the NSP pantry, or parse wildcards from a directory containing A1111 style wildacrds.
    - Wildcards are in the style of `__filename__`, which also includes subdirectories like `__appearance/haircolour__` (if you noodle_key is set to `__`)
-   - You can get a custom wildcards path in `was_suite_config.json` file with key:
+   - You can set a custom wildcards path in `was_suite_config.json` file with key:
      - `    "wildcards_path": "E:\\python\\automatic\\webui3\\stable-diffusion-webui\\extensions\\sd-dynamic-prompts\\wildcards"`
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
