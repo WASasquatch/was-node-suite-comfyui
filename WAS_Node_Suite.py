@@ -125,7 +125,7 @@ was_conf_template = {
                         "avc1": ".mp4",
                         "h264": ".mkv",
                     },
-                    "wildcards_path": None,
+                    "wildcards_path": os.path.join(WAS_SUITE_ROOT, "wildcards"),
                 }
 
 # Create, Load, or Update Config
@@ -292,7 +292,8 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
     if not os.path.exists(wildcard_dir):
         os.makedirs(wildcard_dir, exist_ok=True)
     if conf.__contains__('wildcards_path'):
-        wildcard_dir = conf['wildcards_path']
+        if conf['wildcards_path'] not in [None, ""]:
+            wildcard_dir = conf['wildcards_path']
         
     print("\033[34mWAS Node Suite\033[0m Wildcard Path:", wildcard_dir)
 
