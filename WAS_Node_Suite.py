@@ -2067,7 +2067,7 @@ class WAS_Image_Paste_Face_Crop:
     
         if crop_data == False:
             print("\033[34mWAS NS\033[0m Error: No valid crop data found!")
-            return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), pil2tensor(Image.new("RGB", (512,512), (0,0,0))))
+            return (image, pil2tensor(Image.new("RGB", tensor2pil(image).size, (0,0,0))))
 
         result_image, result_mask = self.paste_face(tensor2pil(image), tensor2pil(crop_image), crop_data[0], crop_data[1], crop_blending, crop_sharpening)
         return(result_image, result_mask)
@@ -2172,7 +2172,7 @@ class WAS_Image_Paste_Crop:
     
         if crop_data == False:
             print("\033[34mWAS NS\033[0m Error: No valid crop data found!")
-            return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), pil2tensor(Image.new("RGB", (512,512), (0,0,0))))
+            return (image, pil2tensor(Image.new("RGB", tensor2pil(image).size, (0,0,0))))
 
         result_image, result_mask = self.paste_image(tensor2pil(image), crop_data, tensor2pil(crop_image), crop_blending, crop_sharpening)
         return (result_image, result_mask)
