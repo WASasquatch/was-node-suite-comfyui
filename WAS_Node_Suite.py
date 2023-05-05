@@ -5490,6 +5490,7 @@ class WAS_Text_Compare:
         sim = self.string_compare(text_a, text_b, tolerance, ( True if mode == 'difference' else False ))
         score = float(sim[0])
         sim_result = ' '.join(sim[1][::-1])
+        sim_result = ' '.join(sim_result.split())
 
         return (text_a, text_b, boolean, score, sim_result)
             
