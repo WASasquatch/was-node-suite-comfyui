@@ -178,7 +178,7 @@ else:
     # Convert WebUI Styles - TODO: Convert to PromptStyles class
     if was_config.__contains__('webui_styles'):
     
-        webui_styles_file = was_config['webui_styles'].strip()
+        webui_styles_file = was_config['webui_styles'].strip() if was_config['webui_styles'] not in [None, ""] else ""
         
         
         if was_config.__contains__('webui_styles_persistent_update'):
@@ -186,7 +186,7 @@ else:
         else:
             styles_persist = True
             
-        if webui_styles_file != "None" and os.path.exists(webui_styles_file):
+        if webui_styles_file != "" and os.path.exists(webui_styles_file):
 
             print(f'\033[34mWAS Node Suite:\033[0m Importing styles from `{webui_styles_file}`.')
         
