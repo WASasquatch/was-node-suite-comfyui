@@ -5661,7 +5661,7 @@ class WAS_Text_Parse_NSP:
 
     CATEGORY = "WAS Suite/Text/Parse"
 
-    def text_parse_nsp(self, text, noodle_key='__', seed=0):
+    def text_parse_nsp(self, text, mode="Noodle Soup Prompts", noodle_key='__', seed=0):
 
         if mode == "Noodle Soup Prompts":
 
