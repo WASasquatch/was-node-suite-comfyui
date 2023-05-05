@@ -5648,6 +5648,7 @@ class WAS_Text_Parse_NSP:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "mode": (["Noodle Soup Prompts", "Wildcards"],),
                 "noodle_key": ("STRING", {"default": '__', "multiline": False}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "text": (TEXT_TYPE,),
@@ -5662,39 +5663,48 @@ class WAS_Text_Parse_NSP:
 
     def text_parse_nsp(self, text, noodle_key='__', seed=0):
 
-        # Fetch the NSP Pantry
-        local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
-        if not os.path.exists(local_pantry):
-            response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
-            tmp_pantry = json.loads(response.read())
-            # Dump JSON locally
-            pantry_serialized = json.dumps(tmp_pantry, indent=4)
-            with open(local_pantry, "w") as f:
-                f.write(pantry_serialized)
-            del response, tmp_pantry
+        if mode == "Noodle Soup Prompts":
 
-        # Load local pantry
-        with open(local_pantry, 'r') as f:
-            nspterminology = json.load(f)
+            # Fetch the NSP Pantry
+            local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
+            if not os.path.exists(local_pantry):
+                response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
+                tmp_pantry = json.loads(response.read())
+                # Dump JSON locally
+                pantry_serialized = json.dumps(tmp_pantry, indent=4)
+                with open(local_pantry, "w") as f:
+                    f.write(pantry_serialized)
+                del response, tmp_pantry
 
-        if seed > 0 or seed < 0:
-            random.seed(seed)
+            # Load local pantry
+            with open(local_pantry, 'r') as f:
+                nspterminology = json.load(f)
 
-        # Parse Text
-        new_text = text
-        for term in nspterminology:
-            # Target Noodle
-            tkey = f'{noodle_key}{term}{noodle_key}'
-            # How many occurances?
-            tcount = new_text.count(tkey)
-            # Apply random results for each noodle counted
-            for _ in range(tcount):
-                new_text = new_text.replace(
-                    tkey, random.choice(nspterminology[term]), 1)
-                seed = seed+1
+            if seed > 0 or seed < 0:
                 random.seed(seed)
 
-        print('\033[34mWAS NS\033[0m Text Parse NSP:', new_text)
+            # Parse Text
+            new_text = text
+            for term in nspterminology:
+                # Target Noodle
+                tkey = f'{noodle_key}{term}{noodle_key}'
+                # How many occurances?
+                tcount = new_text.count(tkey)
+                # Apply random results for each noodle counted
+                for _ in range(tcount):
+                    new_text = new_text.replace(
+                        tkey, random.choice(nspterminology[term]), 1)
+                    seed = seed+1
+                    random.seed(seed)
+
+            print('\033[34mWAS NS\033[0m Text Parse NSP:', new_text)
+            
+        else:
+        
+            new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
+            print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
+
+
 
         return (new_text, )
 
