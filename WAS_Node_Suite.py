@@ -5462,6 +5462,126 @@ class WAS_Text_String:
         return (text, text_b, text_c, text_d)
 
 
+# Text Compare Strings
+
+class WAS_Text_Compare:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text_a": (TEXT_TYPE,),
+                "text_b": (TEXT_TYPE,),
+                "mode": (["similarity","difference"],),
+                "tolerance": ("FLOAT", {"default":0.0,"min":0.0,"max":1.0,"step":0.01}),
+            }
+        }
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,"NUMBER","NUMBER",TEXT_TYPE)
+    RETURN_NAMES = ("TEXT_A_PASS","TEXT_B_PASS","BOOL_NUMBER","SCORE_NUMBER","COMPARISON_TEXT")
+    FUNCTION = "text_compare"
+
+    CATEGORY = "WAS Suite/Text/Search"
+
+    def text_compare(self, text_a='', text_b='', mode='similarity', tolerance=0.0):
+    
+        boolean = ( 1 if text_a == text_b else 0 )
+        sim = self.string_compare(text_a, text_b, tolerance, ( True if mode == 'difference' else False ))
+        score = float(sim[0])
+        sim_result = ' '.join(sim[1][::-1])
+
+        return (text_a, text_b, boolean, score, sim_result)
+            
+    def string_compare(self, str1, str2, threshold=1.0, difference_mode=False):
+        m = len(str1)
+        n = len(str2)
+        if difference_mode:
+            dp = [[0 for x in range(n+1)] for x in range(m+1)]
+            for i in range(m+1):
+                for j in range(n+1):
+                    if i == 0:
+                        dp[i][j] = j
+                    elif j == 0:
+                        dp[i][j] = i
+                    elif str1[i-1] == str2[j-1]:
+                        dp[i][j] = dp[i-1][j-1]
+                    else:
+                        dp[i][j] = 1 + min(dp[i][j-1],      # Insert
+                                           dp[i-1][j],      # Remove
+                                           dp[i-1][j-1])    # Replace
+            diff_indices = []
+            i, j = m, n
+            while i > 0 and j > 0:
+                if str1[i-1] == str2[j-1]:
+                    i -= 1
+                    j -= 1
+                else:
+                    diff_indices.append(i-1)
+                    i, j = min((i, j-1), (i-1, j))
+            diff_indices.reverse()
+            words = []
+            start_idx = 0
+            for i in diff_indices:
+                if str1[i] == " ":
+                    words.append(str1[start_idx:i])
+                    start_idx = i+1
+            words.append(str1[start_idx:m])
+            difference_score = 1 - ((dp[m][n] - len(words)) / max(m, n))
+            return (difference_score, words[::-1])
+        else:
+            dp = [[0 for x in range(n+1)] for x in range(m+1)]
+            similar_words = set()
+            for i in range(m+1):
+                for j in range(n+1):
+                    if i == 0:
+                        dp[i][j] = j
+                    elif j == 0:
+                        dp[i][j] = i
+                    elif str1[i-1] == str2[j-1]:
+                        dp[i][j] = dp[i-1][j-1]
+                        if i > 1 and j > 1 and str1[i-2] == ' ' and str2[j-2] == ' ':
+                            word1_start = i-2
+                            word2_start = j-2
+                            while word1_start > 0 and str1[word1_start-1] != " ":
+                                word1_start -= 1
+                            while word2_start > 0 and str2[word2_start-1] != " ":
+                                word2_start -= 1
+                            word1 = str1[word1_start:i-1]
+                            word2 = str2[word2_start:j-1]
+                            if word1 in str2 or word2 in str1:
+                                if word1 not in similar_words:
+                                    similar_words.add(word1)
+                                if word2 not in similar_words:
+                                    similar_words.add(word2)
+                    else:
+                        dp[i][j] = 1 + min(dp[i][j-1],      # Insert
+                                           dp[i-1][j],      # Remove
+                                           dp[i-1][j-1])    # Replace
+                    if dp[i][j] <= threshold and i > 0 and j > 0:
+                        word1_start = max(0, i-dp[i][j])
+                        word2_start = max(0, j-dp[i][j])
+                        word1_end = i
+                        word2_end = j
+                        while word1_start > 0 and str1[word1_start-1] != " ":
+                            word1_start -= 1
+                        while word2_start > 0 and str2[word2_start-1] != " ":
+                            word2_start -= 1
+                        while word1_end < m and str1[word1_end] != " ":
+                            word1_end += 1
+                        while word2_end < n and str2[word2_end] != " ":
+                            word2_end += 1
+                        word1 = str1[word1_start:word1_end]
+                        word2 = str2[word2_start:word2_end]
+                        if word1 in str2 or word2 in str1:
+                            if word1 not in similar_words:
+                                similar_words.add(word1)
+                            if word2 not in similar_words:
+                                similar_words.add(word2)
+            similarity_score = 1 - (dp[m][n]/max(m,n))
+            return (similarity_score, list(similar_words))
+
+
 # Text Random Line
 
 class WAS_Text_Random_Line:
@@ -5703,8 +5823,6 @@ class WAS_Text_Parse_NSP:
         
             new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
             print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
-
-
 
         return (new_text, )
 
@@ -7984,6 +8102,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Add Token by Input": WAS_Text_Add_Token_Input,
+    "Text Compare": WAS_Text_Compare,
     "Text Concatenate": WAS_Text_Concatenate,
     "Text File History Loader": WAS_Text_File_History,
     "Text Find and Replace by Dictionary": WAS_Search_and_Replace_Dictionary,

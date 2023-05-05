@@ -154,6 +154,7 @@
  - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
  - Text Add Tokens: Add custom tokens to parse in filenames or other text.
  - Text Add Token by Input: Add custom token by inputs representing single **single line** name and value of the token
+ - Text Compare: Compare two strings. Returns a boolean if they are the same, a score of similarity, and the similarity or difference text. 
  - Text Concatenate: Merge two strings
  - Text Dictionary Update: Merge two dictionaries
  - Text File History: Show previously opened text files *(requires restart to show last sessions files at this time)*
