@@ -178,7 +178,7 @@ else:
     # Convert WebUI Styles - TODO: Convert to PromptStyles class
     if was_config.__contains__('webui_styles'):
     
-        webui_styles_file = was_config['webui_styles'].strip() if was_config['webui_styles'] not in [None, ""] else ""
+        webui_styles_file = was_config['webui_styles'].strip() if was_config['webui_styles'] not in [None, "None", "none", ""] else ""
         
         
         if was_config.__contains__('webui_styles_persistent_update'):
