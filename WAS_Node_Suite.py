@@ -51,10 +51,7 @@ sys.path.append('..'+os.sep+'ComfyUI')
 #! GLOBALS
 NODE_FILE = os.path.abspath(__file__)
 MIDAS_INSTALLED = False
-CUSTOM_NODES_DIR = ( os.path.dirname(os.path.dirname(NODE_FILE)) 
-                    if os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui' 
-                    or os.path.dirname(os.path.dirname(NODE_FILE)) == 'was-node-suite-comfyui-main' 
-                    else os.path.dirname(NODE_FILE) )
+CUSTOM_NODES_DIR = comfy_paths.folder_names_and_paths["custom_nodes"][0][0]
 MODELS_DIR =  comfy_paths.models_dir
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
 WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
@@ -63,8 +60,8 @@ WAS_CONFIG_FILE = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
 STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
 ALLOWED_EXT = ('.jpeg', '.jpg', '.png',
                         '.tiff', '.gif', '.bmp', '.webp')
-
-
+                        
+                        
 # WAS Suite Locations Debug
 print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
 print('\033[34mWAS Node Suite\033[0m Running From:', WAS_SUITE_ROOT)
@@ -283,6 +280,45 @@ def resizeImage(image, max_size):
             new_width = int(width * (max_size / height))
     resized_image = image.resize((new_width, new_height))
     return resized_image
+    
+# NSP Function
+
+def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=None):
+    if nspterminology is None:
+        # Fetch the NSP Pantry
+        if pantry_path is None:
+            pantry_path = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
+        if not os.path.exists(pantry_path):
+            response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
+            tmp_pantry = json.loads(response.read())
+            # Dump JSON locally
+            pantry_serialized = json.dumps(tmp_pantry, indent=4)
+            with open(pantry_path, "w") as f:
+                f.write(pantry_serialized)
+            del response, tmp_pantry
+
+        # Load local pantry
+        with open(pantry_path, 'r') as f:
+            nspterminology = json.load(f)
+
+    if seed > 0 or seed < 0:
+        random.seed(seed)
+
+    # Parse Text
+    new_text = text
+    for term in nspterminology:
+        # Target Noodle
+        tkey = f'{noodle_key}{term}{noodle_key}'
+        # How many occurrences?
+        tcount = new_text.count(tkey)
+        # Apply random results for each noodle counted
+        for _ in range(tcount):
+            new_text = new_text.replace(
+                tkey, random.choice(nspterminology[term]), 1)
+            seed = seed + 1
+            random.seed(seed)
+
+    return new_text
     
 # Simple wildcard parser:
 
@@ -5199,38 +5235,7 @@ class WAS_NSP_CLIPTextEncoder:
     
         if mode == "Noodle Soup Prompts":
 
-            # Fetch the NSP Pantry
-            local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
-            if not os.path.exists(local_pantry):
-                response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
-                tmp_pantry = json.loads(response.read())
-                # Dump JSON locally
-                pantry_serialized = json.dumps(tmp_pantry, indent=4)
-                with open(local_pantry, "w") as f:
-                    f.write(pantry_serialized)
-                del response, tmp_pantry
-
-            # Load local pantry
-            with open(local_pantry, 'r') as f:
-                nspterminology = json.load(f)
-
-            if seed > 0 or seed < 0:
-                random.seed(seed)
-
-            # Parse Text
-            new_text = text
-            for term in nspterminology:
-                # Target Noodle
-                tkey = f'{noodle_key}{term}{noodle_key}'
-                # How many occurances?
-                tcount = new_text.count(tkey)
-                # Apply random results for each noodle counted
-                for _ in range(tcount):
-                    new_text = new_text.replace(
-                        tkey, random.choice(nspterminology[term]), 1)
-                    seed = seed+1
-                    random.seed(seed)
-
+            new_text = nsp_parse(text, seed, noodle_key)
             print('\033[34mWAS NS\033[0m CLIPTextEncode NSP:\n', new_text)
             
         else:
@@ -5786,38 +5791,7 @@ class WAS_Text_Parse_NSP:
 
         if mode == "Noodle Soup Prompts":
 
-            # Fetch the NSP Pantry
-            local_pantry = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
-            if not os.path.exists(local_pantry):
-                response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
-                tmp_pantry = json.loads(response.read())
-                # Dump JSON locally
-                pantry_serialized = json.dumps(tmp_pantry, indent=4)
-                with open(local_pantry, "w") as f:
-                    f.write(pantry_serialized)
-                del response, tmp_pantry
-
-            # Load local pantry
-            with open(local_pantry, 'r') as f:
-                nspterminology = json.load(f)
-
-            if seed > 0 or seed < 0:
-                random.seed(seed)
-
-            # Parse Text
-            new_text = text
-            for term in nspterminology:
-                # Target Noodle
-                tkey = f'{noodle_key}{term}{noodle_key}'
-                # How many occurances?
-                tcount = new_text.count(tkey)
-                # Apply random results for each noodle counted
-                for _ in range(tcount):
-                    new_text = new_text.replace(
-                        tkey, random.choice(nspterminology[term]), 1)
-                    seed = seed+1
-                    random.seed(seed)
-
+            new_text = nsp_parse(text, seed, noodle_key)
             print('\033[34mWAS NS\033[0m Text Parse NSP:', new_text)
             
         else:
@@ -8127,6 +8101,59 @@ NODE_CLASS_MAPPINGS = {
     "Write to Video": WAS_Video_Writer,
 }    
 
+#! EXTRA NODES
+
+# Check for BlenderNeko's Advanced CLIP Text Encode repo
+BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
+if os.path.exists(BKAdvCLIP_dir):
+
+    print('\033[34mWAS Node Suite:\033[0m BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.')
+    sys.path.append(BKAdvCLIP_dir)
+    
+    from adv_encode import advanced_encode
+    
+    class WAS_AdvancedCLIPTextEncode:
+        @classmethod
+        def INPUT_TYPES(s):
+            return {
+                "required": {
+                    "mode": (["Noodle Soup Prompts", "Wildcards"],),
+                    "noodle_key": ("STRING", {"default": '__', "multiline": False}),
+                    "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    "clip": ("CLIP", ),
+                    "token_normalization": (["none", "mean", "length", "length+mean"],),
+                    "weight_interpretation": (["comfy", "A1111", "compel", "comfy++"],),
+                    "text": ("STRING", {"multiline": True}),
+                    }
+                }
+            
+        RETURN_TYPES = ("CONDITIONING",)
+        FUNCTION = "encode"
+
+        CATEGORY = "WAS Suite/Conditioning"
+
+        def encode(self, clip, text, token_normalization, weight_interpretation, seed=0, mode="Noodle Soup Prompts", noodle_key="__"):
+            
+            if mode == "Noodle Soup Prompts":
+
+                new_text = nsp_parse(text, int(seed), noodle_key)
+                print('\033[34mWAS NS\033[0m CLIPTextEncode NSP:\n', new_text)
+                    
+            else:
+                
+                new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
+                print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
+
+            
+            encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
+
+            return ([[encoded, {}]], )
+                
+    NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})    
+
+    if NODE_CLASS_MAPPINGS.__contains__("CLIPTextEncode (BlenderNeko Advanced + NSP)"):
+        print('\033[34mWAS Node Suite:\033[0m `CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under WAS Suite/Conditioning.')
+    
 # opencv-python-headless handling
 if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
     try:
