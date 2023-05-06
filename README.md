@@ -179,7 +179,7 @@
  
  ### Extra Nodes
  
-  - CLIPTextEncode (BlenderNeko Advanced + NSP): Only available if you have BlenderNeko's [Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb). Allows for NSP and Wildcard use with his advanced CLIPTextEncode. 
+  - CLIPTextEncode (BlenderNeko Advanced + NSP): Only available if you have BlenderNeko's [Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb). Allows for NSP and Wildcard use with their advanced CLIPTextEncode. 
  
 ---
  
