@@ -61,15 +61,6 @@ STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
 ALLOWED_EXT = ('.jpeg', '.jpg', '.png',
                         '.tiff', '.gif', '.bmp', '.webp')
                         
-                        
-# WAS Suite Locations Debug
-print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
-print('\033[34mWAS Node Suite\033[0m Running From:', WAS_SUITE_ROOT)
-
-# Check Write Access
-if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
-    print(f'\033[34mWAS Node Suite\033[0m Error: There is no write access to `{WAS_SUITE_ROOT}` or `{MODELS_DIR}`. Write access is required!')
-    exit
 
 #! INSTALLATION CLEANUP
 
@@ -108,6 +99,8 @@ if f_disp:
 #! WAS SUITE CONFIG
 
 was_conf_template = {
+                    "show_startup_junk": True,
+                    "show_inspiration_quote": True,
                     "webui_styles": None,
                     "webui_styles_persistent_update": True,
                     "blip_model_url": "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth",
@@ -209,6 +202,17 @@ else:
             del styles
             
             print(f'\033[34mWAS Node Suite:\033[0m Styles import complete.')
+            
+# WAS Suite Locations Debug
+if was_config.__contains__('show_startup_junk'):
+    if was_config['show_startup_junk']: 
+        print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
+        print('\033[34mWAS Node Suite\033[0m Running From:', WAS_SUITE_ROOT)
+
+# Check Write Access
+if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
+    print(f'\033[34mWAS Node Suite\033[0m Error: There is no write access to `{WAS_SUITE_ROOT}` or `{MODELS_DIR}`. Write access is required!')
+    exit
 
 # SET TEXT TYPE
 TEXT_TYPE = "TEXT"
@@ -8478,7 +8482,9 @@ NODE_CLASS_MAPPINGS = {
 BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
 if os.path.exists(BKAdvCLIP_dir):
 
-    print('\033[34mWAS Node Suite:\033[0m BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.')
+    if was_config.__contains__('show_startup_junk'):
+        if was_config['show_startup_junk']: 
+            print('\033[34mWAS Node Suite:\033[0m BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.')
     sys.path.append(BKAdvCLIP_dir)
     
     from adv_encode import advanced_encode
@@ -8523,7 +8529,9 @@ if os.path.exists(BKAdvCLIP_dir):
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})    
 
     if NODE_CLASS_MAPPINGS.__contains__("CLIPTextEncode (BlenderNeko Advanced + NSP)"):
-        print('\033[34mWAS Node Suite:\033[0m `CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under WAS Suite/Conditioning.')
+        if was_config.__contains__('show_startup_junk'):
+            if was_config['show_startup_junk']:
+                print('\033[34mWAS Node Suite:\033[0m `CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.')
     
 # opencv-python-headless handling
 if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
@@ -8531,12 +8539,16 @@ if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
         import cv2
         build_info = ' '.join(cv2.getBuildInformation().split())
         if "FFMPEG: YES" in build_info:
-            print("\033[34mWAS Node Suite:\033[0m OpenCV Python FFMPEG support is enabled")
+            if was_config.__contains__('show_startup_junk'):
+                if was_config['show_startup_junk']:
+                    print("\033[34mWAS Node Suite:\033[0m OpenCV Python FFMPEG support is enabled")
             if was_config.__contains__('ffmpeg_bin_path'):
                 if was_config['ffmpeg_bin_path'] == "/path/to/ffmpeg":
                     print(f"\033[34mWAS Node Suite\033[0m Warning: `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}` config file. Will attempt to use system ffmpeg binaries if available.") 
                 else:
-                    print("\033[34mWAS Node Suite:\033[0m `ffmpeg_bin_path` is set to:", was_config['ffmpeg_bin_path'])                 
+                    if was_config.__contains__('show_startup_junk'):
+                        if was_config['show_startup_junk']:
+                            print("\033[34mWAS Node Suite:\033[0m `ffmpeg_bin_path` is set to:", was_config['ffmpeg_bin_path'])                 
         else:
             print("\033[34mWAS Node Suite: \033[93mOpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.")
     except ImportError:
@@ -8578,4 +8590,48 @@ if 'scikit-image' not in packages():
         print(e)
 
 # Well we got here, we're as loaded as we're gonna get. 
-print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')
+print(f'\033[34mWAS Node Suite: \033[92mLoaded \033[0m{len(NODE_CLASS_MAPPINGS.keys())}\033[92m nodes successfully.\033[0m')
+
+was_conf = getSuiteConfig()
+show_quotes = True
+if was_conf.__contains__('show_inspiration_quote'):
+    if was_conf['show_inspiration_quote'] == False:
+        show_quotes = False
+if show_quotes:
+    art_quotes = [
+        '\033[93m"Every artist was first an amateur."\033[0m\033[3m - Ralph Waldo Emerson',
+        '\033[93m"Art is not freedom from discipline, but disciplined freedom."\033[0m\033[3m - John F. Kennedy',
+        '\033[93m"Art enables us to find ourselves and lose ourselves at the same time."\033[0m\033[3m - Thomas Merton',
+        '\033[93m"Art is the most intense mode of individualism that the world has known."\033[0m\033[3m - Oscar Wilde',
+        '\033[93m"The purpose of art is washing the dust of daily life off our souls."\033[0m\033[3m - Pablo Picasso',
+        '\033[93m"Art is the lie that enables us to realize the truth."\033[0m\033[3m - Pablo Picasso',
+        '\033[93m"Art is not what you see, but what you make others see."\033[0m\033[3m - Edgar Degas',
+        '\033[93m"Every artist dips his brush in his own soul, and paints his own nature into his pictures."\033[0m\033[3m - Henry Ward Beecher',
+        '\033[93m"Art is the stored honey of the human soul."\033[0m\033[3m - Theodore Dreiser',
+        '\033[93m"Creativity takes courage."\033[0m\033[3m - Henri Matisse',
+        '\033[93m"Art should disturb the comfortable and comfort the disturbed." - Cesar Cruz',
+        '\033[93m"Art is the most beautiful of all lies."\033[0m\033[3m - Claude Debussy',
+        '\033[93m"Art is the journey of a free soul."\033[0m\033[3m - Alev Oguz',
+        '\033[93m"The artist\'s world is limitless. It can be found anywhere, far from where he lives or a few feet away. It is always on his doorstep." - Paul Strand',
+        '\033[93m"Art is not a thing; it is a way."\033[0m\033[3m - Elbert Hubbard',
+        '\033[93m"Art is the lie that enables us to recognize the truth."\033[0m\033[3m - Friedrich Nietzsche',
+        '\033[93m"Art is the triumph over chaos."\033[0m\033[3m - John Cheever',
+        '\033[93m"Art is the lie that enables us to realize the truth."\033[0m\033[3m - Pablo Picasso',
+        '\033[93m"Art is the only way to run away without leaving home."\033[0m\033[3m - Twyla Tharp',
+        '\033[93m"Art is the most powerful tool we have to connect with the world and express our individuality."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is not about making something perfect, it\'s about making something meaningful."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the voice of the soul, expressing what words cannot."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the bridge that connects imagination to reality."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the language of the heart and the window to the soul."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the magic that brings beauty into the world."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the freedom to create, explore, and inspire."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the mirror that reflects the beauty within us."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the universal language that transcends boundaries and speaks to all."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the light that shines even in the darkest corners."\033[0m\033[3m - Unknown',
+        '\033[93m"Art is the soul made visible."\033[0m\033[3m - George Crook',
+        '\033[93m"Art is the breath of life."\033[0m\033[3m - Liza Donnelly',
+        '\033[93m"Art is a harmony parallel with nature."\033[0m\033[3m - Paul Cézanne',
+        '\033[93m"Art is the daughter of freedom."\033[0m\033[3m - Friedrich Schiller',
+    ]
+    print(f'\n\t\033[3m{random.choice(art_quotes)}\033[0m\n')
+
