@@ -8612,7 +8612,7 @@ if show_quotes:
         '\033[93m"Art should disturb the comfortable and comfort the disturbed." - Cesar Cruz',
         '\033[93m"Art is the most beautiful of all lies."\033[0m\033[3m - Claude Debussy',
         '\033[93m"Art is the journey of a free soul."\033[0m\033[3m - Alev Oguz',
-        '\033[93m"The artist\'s world is limitless. It can be found anywhere, far from where he lives or a few feet away. It is always on his doorstep." - Paul Strand',
+        '\033[93m"The artist\'s world is limitless. It can be found anywhere, far from where he lives or a few feet away. It is always on his doorstep."\033[0m\033[3m - Paul Strand',
         '\033[93m"Art is not a thing; it is a way."\033[0m\033[3m - Elbert Hubbard',
         '\033[93m"Art is the lie that enables us to recognize the truth."\033[0m\033[3m - Friedrich Nietzsche',
         '\033[93m"Art is the triumph over chaos."\033[0m\033[3m - John Cheever',
