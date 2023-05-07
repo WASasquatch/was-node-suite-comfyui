@@ -40,6 +40,7 @@
    - You can set a custom wildcards path in `was_suite_config.json` file with key:
      - `    "wildcards_path": "E:\\python\\automatic\\webui3\\stable-diffusion-webui\\extensions\\sd-dynamic-prompts\\wildcards"`
      - If no path is set the wildcards dir is located at the root of WAS Node Suite as `/wildcards`
+ - Combine Masks: Combine 2 or more masks into one mask.
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
@@ -132,6 +133,14 @@
    - Will reset it's place if the path, or pattern is changed.
    - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
      or things like `*.jpg` to select only JPEG images in the directory specified.
+ - Mask to Image: Convert `MASK` to `IMAGE`
+ - Mask Dominant Region: Return the dominant region in a mask (the largest area)
+ - Mask Minority Region: Return the smallest region in a mask (the smallest area)
+ - Mask Arbitrary Region: Return a region that most closely matches the size input (size is not a direct representation of pixels, but approximate)
+ - Mask Smooth Region: Smooth the boundaries of a mask
+ - Mask Erode Region: Erode the boundaries of a mask
+ - Mask Dilate Region: Dilate the boundaries of a mask
+ - Mask Fill Region: Fill holes within the masks regions
  - ComfyUI Loaders: A set of ComfyUI loaders that also output a string that contains the name of the model being loaded. 
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height

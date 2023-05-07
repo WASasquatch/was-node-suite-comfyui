@@ -2,7 +2,10 @@ pilgram
 pythonperlin
 git+https://github.com/WASasquatch/img2texture.git
 matplotlib
+numpy<1.24>=1.18
 scikit-learn
+scikit-image==0.20.0
+scipy
 opencv-python-headless[ffmpeg]
 timm>=0.4.12
 transformers==4.26.1

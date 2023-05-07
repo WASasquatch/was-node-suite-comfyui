@@ -228,7 +228,7 @@ def packages(versions=False):
 # Tensor to PIL
 def tensor2pil(image):
     return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
-
+    
 # Convert PIL to Tensor
 def pil2tensor(image):
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
@@ -236,6 +236,18 @@ def pil2tensor(image):
 # PIL Hex
 def pil2hex(image):
     return hashlib.sha256(np.array(tensor2pil(image)).astype(np.uint16).tobytes()).hexdigest()
+
+# Mask to PIL
+def mask2pil(mask):
+    mask = mask.numpy()
+    mask = (mask * 255).astype(np.uint8)
+    return Image.fromarray(mask)
+
+# PIL to Mask
+def pil2mask(image):
+    mask = np.array(image).astype(np.float32) / 255.0
+    mask_tensor = 1.0 - torch.from_numpy(mask)
+    return mask_tensor
 
 # Tensor to SAM-compatible NumPy
 def tensor2sam(image):
@@ -619,7 +631,9 @@ def update_history_text_files(new_paths):
 # WAS Filter Class
 
 class WAS_Tools_Class():
-
+    """
+    Contains various tools and filters for WAS Node Suite
+    """
     # TOOLS
 
     def fig2img(self, plot):
@@ -1103,6 +1117,110 @@ class WAS_Tools_Class():
         
     # FILTERS
     
+    class Masking:
+    
+        @staticmethod
+        def dominant_region(image, threshold=128):
+            from scipy.ndimage import label
+            image = ImageOps.invert(image.convert("L"))
+            binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
+            l, n = label(np.array(binary_image))
+            sizes = np.bincount(l.flatten())
+            dominant = np.argmax(sizes[1:]) + 1
+            dominant_region_mask = (l == dominant).astype(np.uint8) * 255
+            result = Image.fromarray(dominant_region_mask, mode="L")
+            return ImageOps.invert(result.convert("RGB"))
+
+        @staticmethod
+        def minority_region(image, threshold=128):
+            from scipy.ndimage import label
+            image = ImageOps.invert(image.convert("L"))
+            binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
+            labeled_array, num_features = label(np.array(binary_image))
+            sizes = np.bincount(labeled_array.flatten())
+            smallest_region = np.argmin(sizes[1:]) + 1
+            smallest_region_mask = (labeled_array == smallest_region).astype(np.uint8) * 255
+            inverted_mask = ImageOps.invert(Image.fromarray(smallest_region_mask, mode="L"))
+            rgb_image = Image.merge("RGB", [inverted_mask, inverted_mask, inverted_mask])
+
+            return rgb_image
+
+        @staticmethod
+        def arbitrary_region(image, size, threshold=128):
+            from skimage.measure import label, regionprops
+            image = ImageOps.invert(image.convert("L"))
+            binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
+            labeled_image = label(np.array(binary_image))
+            regions = regionprops(labeled_image)
+
+            image_area = binary_image.size[0] * binary_image.size[1]
+            scaled_size = size * image_area / 10000
+
+            filtered_regions = [region for region in regions if region.area >= scaled_size]
+            if len(filtered_regions) > 0:
+                filtered_regions.sort(key=lambda region: region.area)
+                smallest_region = filtered_regions[0]
+                region_mask = (labeled_image == smallest_region.label).astype(np.uint8) * 255
+                result = Image.fromarray(region_mask, mode="L")
+                return ImageOps.invert(result)
+
+            return ImageOps.invert(image)
+            
+        @staticmethod
+        def smooth_region(image, tolerance):
+            from scipy.ndimage import gaussian_filter
+            image = ImageOps.invert(image.convert("L"))
+            mask_array = np.array(image)
+            smoothed_array = gaussian_filter(mask_array, sigma=tolerance)
+            threshold = np.max(smoothed_array) / 2
+            smoothed_mask = np.where(smoothed_array >= threshold, 255, 0).astype(np.uint8)
+            smoothed_image = Image.fromarray(smoothed_mask, mode="L")
+            return ImageOps.invert(smoothed_image.convert("RGB"))
+
+        @staticmethod
+        def erode_region(image, iterations=1):
+            from scipy.ndimage import binary_erosion
+            image = ImageOps.invert(image.convert("L"))
+            binary_mask = np.array(image) > 0
+            eroded_mask = binary_erosion(binary_mask, iterations=iterations)
+            eroded_image = Image.fromarray(eroded_mask.astype(np.uint8) * 255, mode="L")
+            return ImageOps.invert(eroded_image.convert("RGB"))
+
+        @staticmethod
+        def dilate_region(image, iterations=1):
+            from scipy.ndimage import binary_dilation
+            image = ImageOps.invert(image.convert("L"))
+            binary_mask = np.array(image) > 0
+            dilated_mask = binary_dilation(binary_mask, iterations=iterations)
+            dilated_image = Image.fromarray(dilated_mask.astype(np.uint8) * 255, mode="L")
+            return ImageOps.invert(dilated_image.convert("RGB"))
+
+        @staticmethod
+        def fill_region(image):
+            from scipy.ndimage import binary_fill_holes
+            image = ImageOps.invert(image.convert("L"))
+            binary_mask = np.array(image) > 0
+            filled_mask = binary_fill_holes(binary_mask)
+            filled_image = Image.fromarray(filled_mask.astype(np.uint8) * 255, mode="L")
+
+            return ImageOps.invert(filled_image.convert("RGB"))
+
+        @staticmethod
+        def combine_masks(*masks):
+            if len(masks) < 1:
+                raise ValueError("\033[34mWAS NS\033[0m Error: At least one mask must be provided.")
+            dimensions = masks[0].size
+            for mask in masks:
+                if mask.size != dimensions:
+                    raise ValueError("\033[34mWAS NS\033[0m Error: All masks must have the same dimensions.")
+
+            inverted_masks = [ImageOps.invert(mask.convert("L")) for mask in masks]
+            combined_mask = Image.new("L", dimensions, 255)
+            for mask in inverted_masks:
+                combined_mask = Image.fromarray(np.minimum(np.array(combined_mask), np.array(mask)), mode="L")
+
+            return combined_mask    
+            
     # SHADOWS AND HIGHLIGHTS ADJUSTMENTS
     
     def shadows_and_highlights(self, image, shadow_thresh=30, highlight_thresh=220, shadow_factor=0.5, highlight_factor=1.5, shadow_smooth=None, highlight_smooth=None, simplify_masks=None):
@@ -4585,7 +4703,7 @@ class WAS_Image_Select_Channel:
         
 
 
-# IMAGE CONVERT TO CHANNEL
+# IMAGE MERGE RGB CHANNELS
 
 class WAS_Image_RGB_Merge:
     def __init__(self):
@@ -4864,12 +4982,14 @@ class WAS_Image_To_Mask:
 
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required":
-                {"image": ("IMAGE",),
-                    "channel": (["alpha", "red", "green", "blue"], ), }
+        return {
+                "required": {
+                    "image": ("IMAGE",),
+                    "channel": (["alpha", "red", "green", "blue"], ), 
+                    }
                 }
 
-    CATEGORY = "WAS Suite/Image/Transform"
+    CATEGORY = "WAS Suite/Image/Masking"
 
     RETURN_TYPES = ("MASK",)
 
@@ -4880,9 +5000,251 @@ class WAS_Image_To_Mask:
         mask = np.array(i.getchannel(self.channels[channel])).astype(np.float32) / 255.0
         mask = 1. - torch.from_numpy(mask)
         return (mask, )
+        
+
+# MASK TO IMAGE
+
+class WAS_Mask_To_Image:
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("IMAGE",)
+
+    FUNCTION = "mask_to_image"
+
+    def mask_to_image(self, mask):
+        return (pil2tensor(mask2pil(mask)),)
+        
+# MASK DOMINANT REGION
+
+class WAS_Mask_Dominant_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "threshold": ("INT", {"default":128, "min":0, "max":255, "step":1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "dominant_region"
+
+    def dominant_region(self, mask, threshold=128):
+        return (pil2mask(self.WT.Masking.dominant_region(mask2pil(mask), threshold)),)      
+        
+# MASK MINORITY REGION
+
+class WAS_Mask_Minority_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "threshold": ("INT", {"default":128, "min":0, "max":255, "step":1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "minority_region"
+
+    def minority_region(self, mask, threshold=128):
+        return (pil2mask(self.WT.Masking.minority_region(mask2pil(mask), threshold)),)        
+        
+# MASK ARBITRARY REGION
+
+class WAS_Mask_Arbitrary_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "size": ("INT", {"default":256, "min":1, "max":4096, "step":1}),
+                        "threshold": ("INT", {"default":128, "min":0, "max":255, "step":1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "arbitary_region"
+
+    def arbitary_region(self, mask, size=256, threshold=128):
+        return (pil2mask(self.WT.Masking.arbitrary_region(mask2pil(mask), size, threshold)),)
+        
+# MASK SMOOTH REGION
+
+class WAS_Mask_Smooth_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "sigma": ("FLOAT", {"default":5.0, "min":0.0, "max":128.0, "step":0.1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "smooth_region"
+
+    def smooth_region(self, mask, sigma=128):
+        return (pil2mask(self.WT.Masking.smooth_region(mask2pil(mask), sigma)),)
+        
+# MASK ERODE REGION
+
+class WAS_Mask_Erode_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "iterations": ("INT", {"default":5, "min":1, "max":64, "step":1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "erode_region"
+
+    def erode_region(self, mask, iterations=5):
+        return (pil2mask(self.WT.Masking.erode_region(mask2pil(mask), iterations)),) 
+        
+# MASK DILATE REGION
+
+class WAS_Mask_Dilate_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "iterations": ("INT", {"default":5, "min":1, "max":64, "step":1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "dilate_region"
+
+    def dilate_region(self, mask, iterations=5):
+        return (pil2mask(self.WT.Masking.dilate_region(mask2pil(mask), iterations)),)     
+        
+# MASK FILL REGION
+
+class WAS_Mask_Fill_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "fill_region"
+
+    def fill_region(self, mask, sigma=128):
+        return (pil2mask(self.WT.Masking.fill_region(mask2pil(mask))),)  
+        
+# MASK COMBINE
+
+class WAS_Mask_Combine:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask_a": ("MASK",),
+                        "mask_b": ("MASK",),
+                    },
+                    "optional": {
+                        "mask_c": ("MASK",),
+                        "mask_d": ("MASK",),
+                        "mask_e": ("MASK",),
+                        "mask_f": ("MASK",),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "combine_masks"
+
+    def combine_masks(self, mask_a, mask_b, mask_c=None, mask_d=None, mask_e=None, mask_f=None):
+        masks = [mask2pil(mask_a), mask2pil(mask_b)]
+        if mask_c:
+            masks.append(mask2pil(mask_c))
+        if mask_d:
+            masks.append(mask2pil(mask_d))
+        if mask_e:
+            masks.append(mask2pil(mask_e))
+        if mask_f:
+            masks.append(mask2pil(mask_f))
+        return (pil2mask(self.WT.Masking.combine_masks(*masks)),)
 
 
 # LATENT UPSCALE NODE
+
+
 
 class WAS_Latent_Upscale:
     def __init__(self):
@@ -7977,6 +8339,7 @@ NODE_CLASS_MAPPINGS = {
     "Checkpoint Loader": WAS_Checkpoint_Loader, 
     "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
+    "Combine Masks": WAS_Mask_Combine,
     "Conditioning Input Switch": WAS_Conditioning_Input_Switch,
     "Constant Number": WAS_Constant_Number,
     "Create Grid Image": WAS_Image_Grid_Image,
@@ -8045,6 +8408,14 @@ NODE_CLASS_MAPPINGS = {
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
+    "Mask to Image": WAS_Mask_To_Image,
+    "Mask Dominant Region": WAS_Mask_Dominant_Region,
+    "Mask Minority Region": WAS_Mask_Minority_Region,
+    "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
+    "Mask Smooth Boundaries": WAS_Mask_Smooth_Region,
+    "Mask Erode Boundaries": WAS_Mask_Erode_Region,
+    "Mask Dilate Boundaries": WAS_Mask_Dilate_Region,
+    "Mask Fill Holes": WAS_Mask_Fill_Region,
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Number Operation": WAS_Number_Operation,
@@ -8185,6 +8556,26 @@ else:
         print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
     except ImportError:
         print("\033[34mWAS Node Suite: \033[93mOpenCV Python module still cannot be imported. There is a system conflict.")
+
+# scipy handling
+if 'scipy' not in packages():
+    print("\033[34mWAS Node Suite:\033[0m Installing `scipy`....")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'scipy'])
+    try:
+        import scipy
+    except ImportError as e:
+        print("\033[34mWAS Node Suite\033[0m Error: Unable to import tools for certain masking procedures.")
+        print(e)
+        
+# scikit-image handling
+if 'scikit-image' not in packages():
+    print("\033[34mWAS Node Suite:\033[0m Installing `scikit-image`....")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--user', '--force-reinstall', '--upgrade', 'scikit-image'])
+    try:
+        import skimage
+    except ImportError as e:
+        print("\033[34mWAS Node Suite\033[0m Error: Unable to import tools for certain masking procedures.")
+        print(e)
 
 # Well we got here, we're as loaded as we're gonna get. 
 print('\033[34mWAS Node Suite: \033[92mLoaded\033[0m')
