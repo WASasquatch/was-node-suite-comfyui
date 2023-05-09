@@ -5330,7 +5330,7 @@ class WAS_Mask_Gaussian_Region:
         return {
             "required": {
                 "mask": ("MASK",),
-                "blur": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 1024, "step": 0.1}),
+                "radius": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 1024, "step": 0.1}),
             }
         }
 
