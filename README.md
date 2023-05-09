@@ -47,6 +47,7 @@
  - Create Morph Image: Create a GIF/APNG animation from two images, fading between them. 
  - Create Morph Image by Path: Create a GIF/APNG animation from a path to a directory containing images, with optional pattern. 
  - Create Video from Path: Create video from images from a specified path. 
+ - CLIPSeg Masking: Mask a image with CLIPSeg and return a raw mask
  - Dictionary to Console: Print a dictionary input to the console
  - Image Analyze
    - Black White Levels
@@ -141,6 +142,10 @@
  - Mask Erode Region: Erode the boundaries of a mask
  - Mask Dilate Region: Dilate the boundaries of a mask
  - Mask Fill Region: Fill holes within the masks regions
+ - Mask Ceiling Region": Return only white pixels within a offset range.
+ - Mask Floor Region: Return the lower most pixel values as white (255)
+ - Mask Threshold Region: Apply a thresholded image between a black value and white value
+ - Mask Gaussian Region: Apply a Gaussian blur to the mask
  - ComfyUI Loaders: A set of ComfyUI loaders that also output a string that contains the name of the model being loaded. 
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height
