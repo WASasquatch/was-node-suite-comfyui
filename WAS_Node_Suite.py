@@ -241,18 +241,15 @@ def pil2tensor(image):
 def pil2hex(image):
     return hashlib.sha256(np.array(tensor2pil(image)).astype(np.uint16).tobytes()).hexdigest()
 
-# Mask to PIL
-def mask2pil(mask):
-    mask = mask.numpy()
-    mask = (mask * 255).astype(np.uint8)
-    return Image.fromarray(mask)
-
-# PIL to Mask
 def pil2mask(image):
-    mask = np.array(image).astype(np.float32) / 255.0
-    mask_tensor = 1.0 - torch.from_numpy(mask)
-    return mask_tensor
+    image_np = np.array(image.convert("L")).astype(np.float32) / 255.0
+    mask = torch.from_numpy(image_np)
+    return 1.0 - mask if image.mode == "L" else mask
 
+def mask2pil(mask):
+    mask_np = (mask.numpy() * 255).astype(np.uint8).squeeze()
+    return Image.fromarray(mask_np, mode="L") 
+    
 # Tensor to SAM-compatible NumPy
 def tensor2sam(image):
     # Convert tensor to numpy array in HWC uint8 format with pixel values in [0, 255]
@@ -1126,25 +1123,25 @@ class WAS_Tools_Class():
         @staticmethod
         def dominant_region(image, threshold=128):
             from scipy.ndimage import label
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
             l, n = label(np.array(binary_image))
             sizes = np.bincount(l.flatten())
             dominant = np.argmax(sizes[1:]) + 1
             dominant_region_mask = (l == dominant).astype(np.uint8) * 255
             result = Image.fromarray(dominant_region_mask, mode="L")
-            return ImageOps.invert(result.convert("RGB"))
+            return result.convert("RGB")
 
         @staticmethod
         def minority_region(image, threshold=128):
             from scipy.ndimage import label
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
             labeled_array, num_features = label(np.array(binary_image))
             sizes = np.bincount(labeled_array.flatten())
             smallest_region = np.argmin(sizes[1:]) + 1
             smallest_region_mask = (labeled_array == smallest_region).astype(np.uint8) * 255
-            inverted_mask = ImageOps.invert(Image.fromarray(smallest_region_mask, mode="L"))
+            inverted_mask = Image.fromarray(smallest_region_mask, mode="L")
             rgb_image = Image.merge("RGB", [inverted_mask, inverted_mask, inverted_mask])
 
             return rgb_image
@@ -1152,7 +1149,7 @@ class WAS_Tools_Class():
         @staticmethod
         def arbitrary_region(image, size, threshold=128):
             from skimage.measure import label, regionprops
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
             labeled_image = label(np.array(binary_image))
             regions = regionprops(labeled_image)
@@ -1166,48 +1163,48 @@ class WAS_Tools_Class():
                 smallest_region = filtered_regions[0]
                 region_mask = (labeled_image == smallest_region.label).astype(np.uint8) * 255
                 result = Image.fromarray(region_mask, mode="L")
-                return ImageOps.invert(result)
+                return result
 
-            return ImageOps.invert(image)
+            return image
             
         @staticmethod
         def smooth_region(image, tolerance):
             from scipy.ndimage import gaussian_filter
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             mask_array = np.array(image)
             smoothed_array = gaussian_filter(mask_array, sigma=tolerance)
             threshold = np.max(smoothed_array) / 2
             smoothed_mask = np.where(smoothed_array >= threshold, 255, 0).astype(np.uint8)
             smoothed_image = Image.fromarray(smoothed_mask, mode="L")
-            return ImageOps.invert(smoothed_image.convert("RGB"))
+            return smoothed_image.convert("RGB")
 
         @staticmethod
         def erode_region(image, iterations=1):
             from scipy.ndimage import binary_erosion
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             binary_mask = np.array(image) > 0
             eroded_mask = binary_erosion(binary_mask, iterations=iterations)
             eroded_image = Image.fromarray(eroded_mask.astype(np.uint8) * 255, mode="L")
-            return ImageOps.invert(eroded_image.convert("RGB"))
+            return eroded_image.convert("RGB")
 
         @staticmethod
         def dilate_region(image, iterations=1):
             from scipy.ndimage import binary_dilation
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             binary_mask = np.array(image) > 0
             dilated_mask = binary_dilation(binary_mask, iterations=iterations)
             dilated_image = Image.fromarray(dilated_mask.astype(np.uint8) * 255, mode="L")
-            return ImageOps.invert(dilated_image.convert("RGB"))
+            return dilated_image.convert("RGB")
 
         @staticmethod
         def fill_region(image):
             from scipy.ndimage import binary_fill_holes
-            image = ImageOps.invert(image.convert("L"))
+            image = image.convert("L")
             binary_mask = np.array(image) > 0
             filled_mask = binary_fill_holes(binary_mask)
             filled_image = Image.fromarray(filled_mask.astype(np.uint8) * 255, mode="L")
 
-            return ImageOps.invert(filled_image.convert("RGB"))
+            return filled_image.convert("RGB")
 
         @staticmethod
         def combine_masks(*masks):
@@ -1218,12 +1215,54 @@ class WAS_Tools_Class():
                 if mask.size != dimensions:
                     raise ValueError("\033[34mWAS NS\033[0m Error: All masks must have the same dimensions.")
 
-            inverted_masks = [ImageOps.invert(mask.convert("L")) for mask in masks]
+            inverted_masks = [mask.convert("L") for mask in masks]
             combined_mask = Image.new("L", dimensions, 255)
             for mask in inverted_masks:
                 combined_mask = Image.fromarray(np.minimum(np.array(combined_mask), np.array(mask)), mode="L")
 
-            return combined_mask    
+            return combined_mask
+
+        @staticmethod
+        def threshold_region(image, black_threshold=0, white_threshold=255):
+            gray_image = image.convert("L")
+            mask_array = np.array(gray_image)
+            mask_array[mask_array < black_threshold] = 0
+            mask_array[mask_array > white_threshold] = 255
+            thresholded_image = Image.fromarray(mask_array, mode="L")
+            return ImageOps.invert(thresholded_image)
+            
+        @staticmethod
+        def floor_region(image):
+            gray_image = image.convert("L")
+            mask_array = np.array(gray_image)
+            non_black_pixels = mask_array[mask_array > 0]
+            
+            if non_black_pixels.size > 0:
+                threshold_value = non_black_pixels.min()
+                mask_array[mask_array > threshold_value] = 255  # Set whites to 255
+                mask_array[mask_array <= threshold_value] = 0  # Set blacks to 0
+            
+            thresholded_image = Image.fromarray(mask_array, mode="L")
+            return ImageOps.invert(thresholded_image)    
+            
+        @staticmethod
+        def ceiling_region(image, offset=30):
+            if offset < 0:
+                offset = 0
+            elif offset > 255:
+                offset = 255
+            grayscale_image = image.convert("L")
+            mask_array = np.array(grayscale_image)
+            mask_array[mask_array < 255 - offset] = 0
+            mask_array[mask_array >= 250] = 255
+            filtered_image = Image.fromarray(mask_array, mode="L")
+            return ImageOps.invert(filtered_image)
+            
+        @staticmethod
+        def gaussian_region(image, radius=5.0):
+            image.convert("L")
+            image = image.filter(ImageFilter.GaussianBlur(radius=int(radius)))
+            return image.convert("RGB")
             
     # SHADOWS AND HIGHLIGHTS ADJUSTMENTS
     
@@ -5205,6 +5244,105 @@ class WAS_Mask_Fill_Region:
     def fill_region(self, mask, sigma=128):
         return (pil2mask(self.WT.Masking.fill_region(mask2pil(mask))),)  
         
+# MASK THRESHOLD
+
+class WAS_Mask_Threshold_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "mask": ("MASK",),
+                        "black_threshold": ("INT",{"default":75, "min":0, "max": 255, "step": 1}),
+                        "white_threshold": ("INT",{"default":175, "min":0, "max": 255, "step": 1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "threshold_region"
+
+    def threshold_region(self, mask, black_threshold=75, white_threshold=255):
+        return (pil2mask(self.WT.Masking.threshold_region(mask2pil(mask), black_threshold, white_threshold)),)    
+        
+# MASK FLOOR REGION
+
+class WAS_Mask_Floor_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+            }
+        }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "floor_region"
+
+    def floor_region(self, mask):
+        return (pil2mask(self.WT.Masking.floor_region(mask2pil(mask))),)
+        
+# MASK CEILING REGION
+
+class WAS_Mask_Ceiling_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+            }
+        }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "ceiling_region"
+
+    def ceiling_region(self, mask):
+        return (pil2mask(self.WT.Masking.ceiling_region(mask2pil(mask))),)
+        
+# MASK GAUSSIAN REGION
+
+class WAS_Mask_Gaussian_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "blur": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 1024, "step": 0.1}),
+            }
+        }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+
+    FUNCTION = "gaussian_region"
+
+    def gaussian_region(self, mask, radius=5.0):
+        return (pil2mask(self.WT.Masking.gaussian_region(mask2pil(mask), radius)),)
+        
 # MASK COMBINE
 
 class WAS_Mask_Combine:
@@ -5245,10 +5383,7 @@ class WAS_Mask_Combine:
             masks.append(mask2pil(mask_f))
         return (pil2mask(self.WT.Masking.combine_masks(*masks)),)
 
-
 # LATENT UPSCALE NODE
-
-
 
 class WAS_Latent_Upscale:
     def __init__(self):
@@ -6614,9 +6749,6 @@ class WAS_String_To_Text:
         return (string, )
         
         
-
-
-
 # BLIP CAPTION IMAGE
 
 class WAS_BLIP_Analyze_Image:
@@ -6755,7 +6887,48 @@ class WAS_BLIP_Analyze_Image:
         else:
             print(f"\033[34mWAS NS\033[0m Error: The selected mode `{mode}` is not a valid selection!")
             return ('Invalid BLIP mode!', )
+            
+# CLIPSeg Node
         
+class WAS_CLIPSeg:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "text": ("STRING", {"default":"", "multiline": True}),
+            },
+        }
+
+    RETURN_TYPES = ("MASK", "IMAGE")
+    RETURN_NAMES = ("MASK", "MASK_IMAGE")
+    FUNCTION = "CLIPSeg_image"
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    def CLIPSeg_image(self, image, text=None):
+        from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
+        import os
+        
+        image = tensor2pil(image)
+
+        inputs = CLIPSegProcessor.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=os.path.join(MODELS_DIR, 'clipseg'))
+        model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=os.path.join(MODELS_DIR, 'clipseg'))
+
+        with torch.no_grad():
+            result = model(**inputs(text=text, images=image, padding="max_length", return_tensors="pt"))
+
+        tensor = torch.sigmoid(result[0])
+        mask = (tensor - tensor.min()) / tensor.max()
+        mask = tensor2pil(mask).convert("L")
+        mask = mask.resize(image.size)
+        
+        return (pil2mask(ImageOps.invert(mask)), pil2tensor(ImageOps.invert(mask.convert("RGB"))))
+        
+
 
 # SAM MODEL LOADER
 class WAS_SAM_Model_Loader:
@@ -8349,6 +8522,7 @@ NODE_CLASS_MAPPINGS = {
     "Create Morph Image": WAS_Image_Morph_GIF, 
     "Create Morph Image from Path": WAS_Image_Morph_GIF_By_Path,
     "Create Video from Path": WAS_Create_Video_From_Path,
+    "CLIPSeg Masking": WAS_CLIPSeg,
     "Convert Mask to Image": WAS_Mask_To_Image,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
@@ -8412,14 +8586,18 @@ NODE_CLASS_MAPPINGS = {
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
-    "Mask Dominant Region": WAS_Mask_Dominant_Region,
-    "Mask Minority Region": WAS_Mask_Minority_Region,
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
-    "Mask Smooth Boundaries": WAS_Mask_Smooth_Region,
-    "Mask Erode Boundaries": WAS_Mask_Erode_Region,
-    "Mask Dilate Boundaries": WAS_Mask_Dilate_Region,
+    "Mask Ceiling Region": WAS_Mask_Ceiling_Region,
+    "Mask Dilate Region": WAS_Mask_Dilate_Region,
+    "Mask Dominant Region": WAS_Mask_Dominant_Region,
+    "Mask Erode Region": WAS_Mask_Erode_Region,
     "Mask Fill Holes": WAS_Mask_Fill_Region,
-    "Masks Combine": WAS_Mask_Combine,
+    "Mask Floor Region": WAS_Mask_Floor_Region,
+    "Mask Gaussian Region": WAS_Mask_Gaussian_Region,
+    "Mask Minority Region": WAS_Mask_Minority_Region,
+    "Mask Smooth Region": WAS_Mask_Smooth_Region,
+    "Mask Threshold Region": WAS_Mask_Threshold_Region,
+    "Masks Combine Regions": WAS_Mask_Combine,
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Number Operation": WAS_Number_Operation,
