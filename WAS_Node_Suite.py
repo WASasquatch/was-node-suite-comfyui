@@ -99,6 +99,7 @@ if f_disp:
 #! WAS SUITE CONFIG
 
 was_conf_template = {
+                    "suppress_uncomfy_warnings": True,
                     "show_startup_junk": True,
                     "show_inspiration_quote": True,
                     "webui_styles": None,
@@ -5041,7 +5042,7 @@ class WAS_Image_To_Mask:
     def image_to_mask(self, image, channel):
         i = tensor2pil(image)
         mask = np.array(i.getchannel(self.channels[channel])).astype(np.float32) / 255.0
-        mask = 1. - torch.from_numpy(mask)
+        mask = torch.from_numpy(mask)
         return (mask, )
         
 
@@ -6919,7 +6920,7 @@ class WAS_CLIPSeg:
         model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=os.path.join(MODELS_DIR, 'clipseg'))
 
         with torch.no_grad():
-            result = model(**inputs(text=text, images=image, padding="max_length", return_tensors="pt"))
+            result = model(**inputs(text=text, images=image, padding=True, return_tensors="pt"))
 
         tensor = torch.sigmoid(result[0])
         mask = (tensor - tensor.min()) / tensor.max()
@@ -6946,7 +6947,7 @@ class WAS_SAM_Model_Loader:
     RETURN_TYPES = ("SAM_MODEL",)
     FUNCTION = "sam_load_model"
     
-    CATEGORY = "WAS Suite/Image/AI/SAM"
+    CATEGORY = "WAS Suite/Image/Masking"
     
     def sam_load_model(self, model_size):
         conf = getSuiteConfig()
@@ -7010,7 +7011,7 @@ class WAS_SAM_Parameters:
     RETURN_TYPES = ("SAM_PARAMETERS",)
     FUNCTION = "sam_parameters"
     
-    CATEGORY = "WAS Suite/Image/AI/SAM"
+    CATEGORY = "WAS Suite/Image/Masking"
     
     def sam_parameters(self, points, labels):
         parameters = {
@@ -7038,7 +7039,7 @@ class WAS_SAM_Combine_Parameters:
     RETURN_TYPES = ("SAM_PARAMETERS",)
     FUNCTION = "sam_combine_parameters"
     
-    CATEGORY = "WAS Suite/Image/AI/SAM"
+    CATEGORY = "WAS Suite/Image/Masking"
     
     def sam_combine_parameters(self, sam_parameters_a, sam_parameters_b):
         parameters = {
@@ -7074,7 +7075,7 @@ class WAS_SAM_Image_Mask:
     RETURN_TYPES = ("IMAGE", "MASK",)
     FUNCTION = "sam_image_mask"
     
-    CATEGORY = "WAS Suite/Image/AI/SAM"
+    CATEGORY = "WAS Suite/Image/Masking"
     
     def sam_image_mask(self, sam_model, sam_parameters, image):
         image = tensor2sam(image)
@@ -8766,11 +8767,21 @@ if 'scikit-image' not in packages():
     except ImportError as e:
         print("\033[34mWAS Node Suite\033[0m Error: Unable to import tools for certain masking procedures.")
         print(e)
+        
+was_conf = getSuiteConfig()
+
+# Suppress warnings
+if was_conf.__contains__('suppress_uncomfy_warnings'):
+    if was_conf['suppress_uncomfy_warnings']:
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning, module="safetensors")
+        warnings.filterwarnings("ignore", category=UserWarning, module="torch")
+        warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
+
 
 # Well we got here, we're as loaded as we're gonna get. 
 print(f'\033[34mWAS Node Suite: \033[92mLoaded \033[0m{len(NODE_CLASS_MAPPINGS.keys())}\033[92m nodes successfully.\033[0m')
 
-was_conf = getSuiteConfig()
 show_quotes = True
 if was_conf.__contains__('show_inspiration_quote'):
     if was_conf['show_inspiration_quote'] == False:
