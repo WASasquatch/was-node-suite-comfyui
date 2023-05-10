@@ -40,7 +40,6 @@
    - You can set a custom wildcards path in `was_suite_config.json` file with key:
      - `    "wildcards_path": "E:\\python\\automatic\\webui3\\stable-diffusion-webui\\extensions\\sd-dynamic-prompts\\wildcards"`
      - If no path is set the wildcards dir is located at the root of WAS Node Suite as `/wildcards`
- - Combine Masks: Combine 2 or more masks into one mask.
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
@@ -146,6 +145,8 @@
  - Mask Floor Region: Return the lower most pixel values as white (255)
  - Mask Threshold Region: Apply a thresholded image between a black value and white value
  - Mask Gaussian Region: Apply a Gaussian blur to the mask
+ - Masks Combine Masks: Combine 2 or more masks into one mask.
+ - Masks Combine Batch: Combine batched masks into one mask.
  - ComfyUI Loaders: A set of ComfyUI loaders that also output a string that contains the name of the model being loaded. 
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height
