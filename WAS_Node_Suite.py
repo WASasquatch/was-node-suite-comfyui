@@ -243,12 +243,15 @@ def pil2hex(image):
     return hashlib.sha256(np.array(tensor2pil(image)).astype(np.uint16).tobytes()).hexdigest()
 
 def pil2mask(image):
-    image_np = np.array(image.convert("L")).astype(np.float32) / 255.0
-    mask = torch.from_numpy(image_np)
+    if image.mode == "L":
+        image_np = np.array(image).astype(np.float32) / 255.0
+    else:
+        image_np = np.array(image.convert("L")).astype(np.float32) / 255.0
+    mask = torch.from_numpy(image_np).unsqueeze(0)
     return 1.0 - mask if image.mode == "L" else mask
 
 def mask2pil(mask):
-    mask_np = (mask.numpy() * 255).astype(np.uint8)
+    mask_np = (mask.numpy().squeeze() * 255).astype(np.uint8)
     mask_np = np.squeeze(mask_np)
     return Image.fromarray(mask_np, mode="L")
     
@@ -4991,7 +4994,39 @@ class WAS_Load_Image:
         return m.digest().hex()
 
 
-# TENSOR TO IMAGE NODE
+# MASK BATCH TO MASK
+
+class WAS_Mask_Batch_to_Single_Mask:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "masks": ("MASK",),
+                "batch_number": ("INT", {"default": 0, "min": 0, "max": 64, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "mask_batch_to_mask"
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    def mask_batch_to_mask(self, masks=[], batch_number=0):
+
+        count = 0
+        for _ in masks:
+            if batch_number == count:
+                return (masks[batch_number].unsqueeze(0), )
+            count = count+1
+
+        print(
+            f"\033[34mWAS NS\033[0m Error: Batch number `{batch_number}` is not defined, returning last image")
+        return (masks[-1].unsqueeze(0), )
+        
+# TENSOR BATCH TO IMAGE
 
 class WAS_Tensor_Batch_to_Image:
     def __init__(self):
@@ -5087,17 +5122,18 @@ class WAS_Mask_To_Image:
     FUNCTION = "mask_to_image"
 
     def mask_to_image(self, masks):
-        if len(masks.shape) > 3 or masks.shape[0] > 1:
-            images = []
-            for i in range(masks.shape[0]):
-                pil_image = mask2pil(masks[i]).convert("L")
+        if masks.shape[0] > 1:
+            mask_images = []
+            for mask in masks:
+                pil_image = mask2pil(mask).convert("RGB")
                 image_array = np.array(pil_image)
                 image_tensor = torch.from_numpy(image_array / 255.0).unsqueeze(0)
-                images.append(image_tensor)
-            images_tensor = torch.cat(images, dim=0)
-            return (images_tensor,)
+                mask_images.append(image_tensor)
+            mask_tensors = torch.cat(mask_images, dim=0)
+            return (mask_tensors,)
         else:
-            return (pil2tensor(mask2pil(masks)),)
+            tensor = pil2tensor(mask2pil(masks).convert("RGB"))
+            return (tensor,)
         
 # MASK DOMINANT REGION
 
@@ -5129,11 +5165,11 @@ class WAS_Mask_Dominant_Region:
                 pil_image = mask2pil(masks[i]).convert("L")
                 region_mask = self.WT.Masking.dominant_region(pil_image, threshold)
                 regions.append(pil2mask(region_mask).unsqueeze(0))
-            regions_tensor = torch.stack(regions, dim=0)
+            regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
-            return (pil2mask(self.WT.Masking.dominant_region(mask2pil(masks), threshold)),)     
-        
+            return (pil2mask(self.WT.Masking.dominant_region(mask2pil(masks), threshold)),)         
+
 # MASK MINORITY REGION
 
 class WAS_Mask_Minority_Region:
@@ -7129,27 +7165,25 @@ class WAS_CLIPSeg_Batch:
         from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
         import torch.nn.functional as F
 
-        print("Shape:", image_a.shape)
-
         images_pil = [tensor2pil(image_a), tensor2pil(image_b)]
 
-        if image_c:
+        if image_c is not None:
             if image_c.shape[-2:] != image_a.shape[-2:]:
                 raise ValueError("Size of image_c is different from image_a.")
             images_pil.append(tensor2pil(image_c))
-        if image_d:
+        if image_d is not None:
             if image_d.shape[-2:] != image_a.shape[-2:]:
                 raise ValueError("Size of image_d is different from image_a.")
             images_pil.append(tensor2pil(image_d))
-        if image_e:
+        if image_e is not None:
             if image_e.shape[-2:] != image_a.shape[-2:]:
                 raise ValueError("Size of image_e is different from image_a.")
             images_pil.append(tensor2pil(image_e))
-        if image_f:
+        if image_f is not None:
             if image_f.shape[-2:] != image_a.shape[-2:]:
                 raise ValueError("Size of image_f is different from image_a.")
             images_pil.append(tensor2pil(image_f))
-            
+
         images_tensor = [torch.from_numpy(np.array(img.convert("RGB")) / 255.0).unsqueeze(0) for img in images_pil]
         images_tensor = torch.cat(images_tensor, dim=0)
 
@@ -7172,16 +7206,19 @@ class WAS_CLIPSeg_Batch:
             result = model(**inputs(text=prompts, images=images_pil, padding=True, return_tensors="pt"))
 
         masks = []
-        mask_images = []  # List to store mask images
+        mask_images = []
         for i, res in enumerate(result.logits):
             tensor = torch.sigmoid(res)
-            mask = (tensor - tensor.min()) / tensor.max()
-            masks.append(mask.unsqueeze(0))
-            mask_rgb = mask.unsqueeze(2).expand(-1, -1, 3)
-            mask_images.append(mask_rgb)
+            mask = 1. - (tensor - tensor.min()) / tensor.max()
+            mask = mask.unsqueeze(0)
+            mask = tensor2pil(mask).convert("L")
+            mask = mask.resize(images_pil[0].size)
+            mask_batch = pil2mask(mask)
+            masks.append(mask_batch)
+            mask_images.append(pil2tensor(mask.convert("RGB")))
 
-        masks_tensor = torch.stack(masks, dim=0)
-        mask_images_tensor = torch.stack(mask_images, dim=0)
+        masks_tensor = torch.cat(masks, dim=0)
+        mask_images_tensor = torch.cat(mask_images, dim=0)
 
         return (images_tensor, masks_tensor, mask_images_tensor)
 
@@ -8845,6 +8882,7 @@ NODE_CLASS_MAPPINGS = {
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
+    "Mask Batch to Mask": WAS_Mask_Batch_to_Single_Mask,
     "Mask Ceiling Region": WAS_Mask_Ceiling_Region,
     "Mask Dilate Region": WAS_Mask_Dilate_Region,
     "Mask Dominant Region": WAS_Mask_Dominant_Region,

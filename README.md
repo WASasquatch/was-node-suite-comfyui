@@ -47,6 +47,7 @@
  - Create Morph Image by Path: Create a GIF/APNG animation from a path to a directory containing images, with optional pattern. 
  - Create Video from Path: Create video from images from a specified path. 
  - CLIPSeg Masking: Mask a image with CLIPSeg and return a raw mask
+ - CLIPSeg Masking Batch: Create a batch image (from image inputs) and batch mask with CLIPSeg
  - Dictionary to Console: Print a dictionary input to the console
  - Image Analyze
    - Black White Levels
@@ -134,6 +135,7 @@
    - pattern is a glob that allows you to do things like `**/*` to get all files in the directory and subdirectory
      or things like `*.jpg` to select only JPEG images in the directory specified.
  - Mask to Image: Convert `MASK` to `IMAGE`
+ - Mask Batch to Mask: Return a single mask from a batch of masks
  - Mask Dominant Region: Return the dominant region in a mask (the largest area)
  - Mask Minority Region: Return the smallest region in a mask (the smallest area)
  - Mask Arbitrary Region: Return a region that most closely matches the size input (size is not a direct representation of pixels, but approximate)
