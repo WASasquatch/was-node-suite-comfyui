@@ -5040,18 +5040,19 @@ class WAS_Image_To_Mask:
 
     FUNCTION = "image_to_mask"
 
-    def image_to_mask(self, images, channel):
-        if len(images.shape) == 4:
-            masks = []
-            for i in range(images.shape[0]):
-                pil_image = tensor2pil(images[i])
-                mask = np.array(pil_image.getchannel(self.channels[channel])).astype(np.float32) / 255.0
-                mask = torch.from_numpy(mask).unsqueeze(0)
-                masks.append(mask)
-            masks_tensor = torch.cat(masks, dim=0)
-            return (masks_tensor,)
+    def dominant_region(self, masks, threshold=128):
+        if len(masks.shape) == 4:
+            regions = []
+            for i in range(masks.shape[0]):
+                pil_mask = mask2pil(masks[i])
+                region_mask = self.WT.Masking.dominant_region(pil_mask, threshold)
+                region_tensor = pil2mask(region_mask)
+                regions.append(region_tensor.unsqueeze(0))
+            regions_tensor = torch.cat(regions, dim=0)
+            return (regions_tensor,)
         else:
-            return (pil2tensor(mask2pil(images)),)
+            return (pil2mask(self.WT.Masking.dominant_region(mask2pil(masks), threshold)),)
+
         
 
 # MASK TO IMAGE
@@ -5119,12 +5120,11 @@ class WAS_Mask_Dominant_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.dominant_region(pil_mask, threshold)
-                region = pil2mask(region_mask)
-                regions.append(region)
-            regions_tensor = torch.cat(regions, dim=0)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
+            regions_tensor = torch.stack(regions, dim=0)
             return (regions_tensor,)
         else:
-            return (pil2mask(self.WT.Masking.dominant_region(mask2pil(masks), threshold)),)      
+            return (pil2mask(self.WT.Masking.dominant_region(mask2pil(masks), threshold)),)     
         
 # MASK MINORITY REGION
 
@@ -5155,8 +5155,7 @@ class WAS_Mask_Minority_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.minority_region(pil_mask, threshold)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5192,8 +5191,7 @@ class WAS_Mask_Arbitrary_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.arbitrary_region(pil_mask, size, threshold)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5228,8 +5226,7 @@ class WAS_Mask_Smooth_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.smooth_region(pil_mask, sigma)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5264,8 +5261,7 @@ class WAS_Mask_Erode_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.erode_region(pil_mask, iterations)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5300,8 +5296,7 @@ class WAS_Mask_Dilate_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.dilate_region(pil_mask, iterations)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5335,8 +5330,7 @@ class WAS_Mask_Fill_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.fill_region(pil_mask)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5372,8 +5366,7 @@ class WAS_Mask_Threshold_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.threshold_region(pil_mask, black_threshold, white_threshold)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5407,8 +5400,7 @@ class WAS_Mask_Floor_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.floor_region(pil_mask)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5442,8 +5434,7 @@ class WAS_Mask_Ceiling_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.ceiling_region(pil_mask)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
@@ -5478,8 +5469,7 @@ class WAS_Mask_Gaussian_Region:
             for i in range(masks.shape[0]):
                 pil_mask = mask2pil(masks[i])
                 region_mask = self.WT.Masking.gaussian_region(pil_mask, radius)
-                region = pil2mask(region_mask)
-                regions.append(region)
+                regions.append(pil2mask(region_mask).unsqueeze(0))
             regions_tensor = torch.cat(regions, dim=0)
             return (regions_tensor,)
         else:
