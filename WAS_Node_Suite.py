@@ -5015,16 +5015,19 @@ class WAS_Mask_Batch_to_Single_Mask:
     CATEGORY = "WAS Suite/Image/Masking"
 
     def mask_batch_to_mask(self, masks=[], batch_number=0):
-
         count = 0
         for _ in masks:
             if batch_number == count:
-                return (masks[batch_number].unsqueeze(0), )
-            count = count+1
+                tensor = masks[batch_number].unsqueeze(0)
+                tensor = tensor.unsqueeze(1)
+                print("Shape:", tensor.shape)
+                return (tensor, )
+            count += 1
 
-        print(
-            f"\033[34mWAS NS\033[0m Error: Batch number `{batch_number}` is not defined, returning last image")
-        return (masks[-1].unsqueeze(0), )
+        print("\033[34mWAS NS\033[0m Error: Batch number `{batch_number}` is not defined, returning last image")
+        last_tensor = masks[-1].unsqueeze(0)
+        last_tensor = last_tensor.unsqueeze(1)
+        return (last_tensor, )
         
 # TENSOR BATCH TO IMAGE
 
