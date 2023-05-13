@@ -303,7 +303,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
   - Run `git clone https://github.com/WASasquatch/was-node-suite-comfyui/`
   - Navigate to your `was-node-suite-comfyui` folder
     - Portable/venv:
-       - Run `path/to/ComfUI/python_embeded/python.exe -m pip install -r requirements.txt`
+       - Run `path/to/ComfUI/python_embeded/python.exe -s -m pip install -r requirements.txt`
 	- With system python
 	   - Run `pip install -r requirements.txt`
   - Start ComfyUI
@@ -316,6 +316,12 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
   - Download `WAS_Node_Suite.py`
   - Move the file to your `/ComfyUI/custom_nodes/` folder
   - WAS Node Suite will attempt install dependencies on it's own, but you may need to manually do so. The dependencies required are in the `requirements.txt` on this repo. See installation steps above.
+    - If this process fails attempt the following:
+      - Navigate to your `was-node-suite-comfyui` folder
+      - Portable/venv:
+        - Run `path/to/ComfUI/python_embeded/python.exe -s -m pip install -r requirements.txt`
+      - With system python
+	- Run `pip install -r requirements.txt`
   - Start, or Restart ComfyUI
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
