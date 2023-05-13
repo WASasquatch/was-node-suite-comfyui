@@ -228,7 +228,7 @@ if was_config and was_config.__contains__('use_legacy_ascii_text'):
 def packages(versions=False):
     import sys
     import subprocess
-    return [( r.decode().split('==')[0] if not versions else r.decode() ) for r in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).split()]
+    return [( r.decode().split('==')[0] if not versions else r.decode() ) for r in subprocess.check_output([sys.executable, '-s', '-m', 'pip', 'freeze']).split()]
 
 # Tensor to PIL
 def tensor2pil(image):
@@ -1271,7 +1271,7 @@ class WAS_Tools_Class():
             
         @staticmethod
         def gaussian_region(image, radius=5.0):
-            image.convert("L")
+            image = ImageOps.invert(image.convert("L"))
             image = image.filter(ImageFilter.GaussianBlur(radius=int(radius)))
             return image.convert("RGB")
             
@@ -1281,7 +1281,7 @@ class WAS_Tools_Class():
 
         if 'pilgram' not in packages():
             print("\033[34mWAS NS:\033[0m Installing pilgram...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
 
@@ -1334,7 +1334,7 @@ class WAS_Tools_Class():
     
         if 'pilgram' not in packages():
             print("\033[34mWAS NS:\033[0m Installing pilgram...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
     
@@ -1380,7 +1380,7 @@ class WAS_Tools_Class():
     
         if 'pilgram' not in packages():
             print("\033[34mWAS NS:\033[0m Installing pilgram...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
 
@@ -1619,7 +1619,7 @@ class WAS_Tools_Class():
 
         if 'pythonperlin' not in packages():
             print("\033[34mWAS NS:\033[0m Installing pythonperlin...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'pythonperlin'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pythonperlin'])
             
         from pythonperlin import perlin
         
@@ -1698,7 +1698,7 @@ class WAS_Tools_Class():
     
         if 'img2texture' not in packages():
             print("\033[34mWAS NS:\033[0m Installing img2texture...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'git+https://github.com/WASasquatch/img2texture.git'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'git+https://github.com/WASasquatch/img2texture.git'])
             
         from img2texture import img2tex
         from img2texture._tiling import tile
@@ -1715,7 +1715,7 @@ class WAS_Tools_Class():
     
         if 'matplotlib' not in packages():
             print("\033[34mWAS NS:\033[0m Installing matplotlib...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'matplotlib'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'matplotlib'])
             
         import matplotlib.pyplot as plt
 
@@ -1754,7 +1754,7 @@ class WAS_Tools_Class():
     
         if 'matplotlib' not in packages():
             print("\033[34mWAS NS:\033[0m Installing matplotlib...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'matplotlib'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'matplotlib'])
             
         import matplotlib.pyplot as plt
 
@@ -1790,7 +1790,7 @@ class WAS_Tools_Class():
 
         if 'scikit-learn' not in packages():
             print("\033[34mWAS NS:\033[0m Installing scikit-learn...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'scikit-learn'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
 
         from sklearn.cluster import KMeans
 
@@ -2013,7 +2013,7 @@ class WAS_Image_Style_Filter:
         if 'pilgram' not in packages():
             print("\033[34mWAS NS:\033[0m Installing Pilgram...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         # Import Pilgram module
         import pilgram
@@ -2126,7 +2126,7 @@ class WAS_Image_Crop_Face:
         if use_fr:
             if 'face_recognition' not in packages():
                 print("\033[34mWAS NS:\033[0m Installing face_recognition...")
-                subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'face_recognition'])
+                subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'face_recognition'])
         
         return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor, use_fr)
     
@@ -2657,7 +2657,7 @@ class WAS_Image_Morph_GIF:
         if 'imageio' not in packages():
             print("\033[34mWAS NS:\033[0m Installing imageio...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'imageio'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
         
         if filetype not in ["APNG", "GIF"]:
             filetype = "GIF"
@@ -2729,7 +2729,7 @@ class WAS_Image_Morph_GIF_Writer:
         if 'imageio' not in packages():
             print("\033[34mWAS NS:\033[0m Installing imageio...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'imageio'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
         
         if output_path.strip() in [None, "", "."]:
             output_path = "./ComfyUI/output"
@@ -2799,7 +2799,7 @@ class WAS_Image_Morph_GIF_By_Path:
         if 'imageio' not in packages():
             print("\033[34mWAS NS:\033[0m Installing imageio...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'imageio'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
                 
         if not os.path.exists(input_path):
             print(f"\033[34mWAS NS\033[0m Error: the input_path `{input_path}` does not exist!")
@@ -2886,7 +2886,7 @@ class WAS_Image_Blending_Mode:
         if 'pilgram' not in packages():
             print("\033[34mWAS NS:\033[0m Installing Pilgram...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'pilgram'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         # Import Pilgram module
         import pilgram
@@ -5017,7 +5017,6 @@ class WAS_Mask_Batch_to_Single_Mask:
         for _ in masks:
             if batch_number == count:
                 tensor = masks[batch_number][0]
-                print(f"mask_batch: {tensor.shape} - {tensor.size()}")
                 return (tensor,)
             count += 1
 
@@ -5121,18 +5120,15 @@ class WAS_Mask_To_Image:
     FUNCTION = "mask_to_image"
 
     def mask_to_image(self, masks):
-        print("mask_to_image input shape:", masks.shape)
         if masks.ndim == 4:
             # If input has shape [N, C, H, W]
             tensor = masks.permute(0, 2, 3, 1)
             tensor_rgb = torch.cat([tensor] * 3, dim=-1)
-            print("mask_to_image out:", tensor_rgb.shape)
             return (tensor_rgb,)
         elif masks.ndim == 2:
             # If input has shape [H, W]
             tensor = masks.unsqueeze(0).unsqueeze(-1)
             tensor_rgb = torch.cat([tensor] * 3, dim=-1)
-            print("mask_to_image out:", tensor_rgb.shape)
             return (tensor_rgb,)
         else:
             raise ValueError("Invalid input shape. Expected [N, C, H, W] or [H, W].")
@@ -5344,6 +5340,89 @@ class WAS_Mask_Erode_Region:
             region_mask = self.WT.Masking.erode_region(pil_image, iterations)
             region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
             return (region_tensor,)
+          
+# MASKS SUBTRACT
+          
+class WAS_Mask_Subtract:
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "masks_a": ("MASK",),
+                        "masks_b": ("MASK",),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "subtract_masks"
+
+    def subtract_masks(self, masks_a, masks_b):
+        subtracted_masks = torch.clamp(masks_a - masks_b, 0, 255)
+        return (subtracted_masks,)
+        
+# MASKS ADD
+          
+class WAS_Mask_Add:
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "masks_a": ("MASK",),
+                        "masks_b": ("MASK",),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "add_masks"
+
+    def add_masks(self, masks_a, masks_b):
+        if masks_a.ndim > 2 and masks_b.ndim > 2:
+            added_masks = masks_a + masks_b
+        else:
+            added_masks = torch.clamp(masks_a.unsqueeze(1) + masks_b.unsqueeze(1), 0, 255)
+            added_masks = added_masks.squeeze(1)
+        return (added_masks,)        
+        
+# MASKS ADD
+          
+class WAS_Mask_Invert:
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "masks": ("MASK",),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "add_masks"
+
+    def add_masks(self, masks):
+        return (1. - masks,)
         
 # MASK DILATE REGION
 
@@ -5624,19 +5703,19 @@ class WAS_Mask_Combine:
     FUNCTION = "combine_masks"
 
     def combine_masks(self, mask_a, mask_b, mask_c=None, mask_d=None, mask_e=None, mask_f=None):
-        masks = [mask2pil(mask_a), mask2pil(mask_b)]
+        masks = [mask_a, mask_b]
         if mask_c:
-            masks.append(mask2pil(mask_c))
+            masks.append(mask_c)
         if mask_d:
-            masks.append(mask2pil(mask_d))
+            masks.append(mask_d)
         if mask_e:
-            masks.append(mask2pil(mask_e))
+            masks.append(mask_e)
         if mask_f:
-            masks.append(mask2pil(mask_f))
-        region_mask = self.WT.Masking.combine_masks(*masks)
-        region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
-        return (region_tensor,)
-        
+            masks.append(mask_f)
+        combined_mask = torch.sum(torch.stack(masks, dim=0), dim=0)
+        combined_mask = torch.clamp(combined_mask, 0, 1)  # Ensure values are between 0 and 1
+        return (combined_mask, )
+    
 class WAS_Mask_Combine_Batch:
 
     def __init__(self):
@@ -5657,8 +5736,11 @@ class WAS_Mask_Combine_Batch:
     FUNCTION = "combine_masks"
 
     def combine_masks(self, masks):
-        masks = [mask2pil(mask) for mask in masks]
-        return (pil2mask(self.WT.Masking.combine_masks(*masks)),)
+        combined_mask = torch.sum(torch.stack([mask.unsqueeze(0) for mask in masks], dim=0), dim=0)
+        combined_mask = torch.clamp(combined_mask, 0, 1)  # Ensure values are between 0 and 1
+        print("Combined mask shape:", combined_mask.shape)
+        return (combined_mask, )
+
 
 # LATENT UPSCALE NODE
 
@@ -5813,7 +5895,7 @@ class MiDaS_Depth_Approx:
         if 'timm' not in packages():
             print("\033[34mWAS NS:\033[0m Installing timm...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'timm'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
         MIDAS_INSTALLED = True
 
 # MIDAS REMOVE BACKGROUND/FOREGROUND NODE
@@ -5978,7 +6060,7 @@ class MiDaS_Background_Foreground_Removal:
         if 'timm' not in packages():
             print("\033[34mWAS NS:\033[0m Installing timm...")
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', '-q', 'install', 'timm'])
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
         MIDAS_INSTALLED = True
 
 
@@ -7054,11 +7136,11 @@ class WAS_BLIP_Analyze_Image:
             or 'GitPython' not in packages()
             or 'fairscale' not in packages() ):
             print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'transformers==4.26.1', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'transformers==4.26.1', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
            
         if 'transformers==4.26.1' not in packages(True):
             print("\033[34mWAS NS:\033[0m Installing BLIP compatible `transformers` (transformers==4.26.1)...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', '--upgrade', '--force-reinstall', 'transformers==4.26.1'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', '--upgrade', '--force-reinstall', 'transformers==4.26.1'])
 
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
             from git.repo.base import Repo
@@ -7204,6 +7286,8 @@ class WAS_CLIPSeg:
         mask = tensor2pil(mask).convert("L")
         mask = mask.resize(image.size)
         
+        del inputs, model, result, tensor
+        
         return (pil2mask(mask), pil2tensor(ImageOps.invert(mask.convert("RGB"))))           
         
 # CLIPSeg Node
@@ -7293,15 +7377,15 @@ class WAS_CLIPSeg_Batch:
             mask = tensor2pil(mask).convert("L")
             mask = mask.resize(images_pil[0].size)
             mask_batch = pil2mask(mask)
-
-            print(f"mask_batch: {mask_batch.shape} - {mask_batch.size()}")
-
-            masks.append(mask_batch.unsqueeze(0).unsqueeze(1))  # Add unsqueeze(1) to add a channel dimension
-            mask_images.append(pil2tensor(mask.convert("RGB")).unsqueeze(0))
+            
+            masks.append(mask_batch.unsqueeze(0).unsqueeze(1)) 
+            mask_images.append(pil2tensor(ImageOps.invert(mask.convert("RGB"))).squeeze(0))
 
         masks_tensor = torch.cat(masks, dim=0)
-        mask_images_tensor = torch.cat(mask_images, dim=0)
-
+        mask_images_tensor = torch.stack(mask_images, dim=0)
+        
+        del inputs, model, result, tensor, masks, mask_images, images_pil
+        
         return (images_tensor, masks_tensor, mask_images_tensor)
 
 # SAM MODEL LOADER
@@ -7343,7 +7427,7 @@ class WAS_SAM_Model_Loader:
     
         if ( 'GitPython' not in packages() ):
             print("\033[34mWAS NS:\033[0m Installing SAM dependencies...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'gitpython'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'gitpython'])
         
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM')):
             from git.repo.base import Repo
@@ -8795,7 +8879,7 @@ class WAS_Cache:
 
         if 'joblib' not in packages():
             print("\033[34mWAS Node Suite:\033[0m Installing joblib...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'joblib'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'joblib'])
             
         import joblib
             
@@ -8852,7 +8936,7 @@ class WAS_Load_Cache:
 
         if 'joblib' not in packages():
             print("\033[34mWAS Node Suite:\033[0m Installing joblib...")
-            subprocess.check_call([sys.executable, '-m', 'pip', '-q', 'install', 'joblib'])
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'joblib'])
             
         import joblib
         
@@ -8962,6 +9046,8 @@ NODE_CLASS_MAPPINGS = {
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
+    "Masks Add": WAS_Mask_Add,
+    "Masks Subtract": WAS_Mask_Subtract,
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
     "Mask Batch to Mask": WAS_Mask_Batch_to_Single_Mask,
     "Mask Ceiling Region": WAS_Mask_Ceiling_Region,
@@ -8971,6 +9057,7 @@ NODE_CLASS_MAPPINGS = {
     "Mask Fill Holes": WAS_Mask_Fill_Region,
     "Mask Floor Region": WAS_Mask_Floor_Region,
     "Mask Gaussian Region": WAS_Mask_Gaussian_Region,
+    "Mask Invert": WAS_Mask_Invert,
     "Mask Minority Region": WAS_Mask_Minority_Region,
     "Mask Smooth Region": WAS_Mask_Smooth_Region,
     "Mask Threshold Region": WAS_Mask_Threshold_Region,
@@ -9109,8 +9196,8 @@ if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
             print("\033[34mWAS Node Suite: \033[93mOpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.")
     except ImportError:
         print("\033[34mWAS Node Suite: \033[93mOpenCV Python module cannot be found. Attempting install...")
-        subprocess.check_call([sys.executable, '-m', 'pip', 'uninstall', 'opencv-python', 'opencv-python-headless[ffmpeg]'])
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
+        subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'uninstall', 'opencv-python', 'opencv-python-headless[ffmpeg]'])
+        subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
         try:
             import cv2
             print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
@@ -9118,7 +9205,7 @@ if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
             print("\033[34mWAS Node Suite: \033[93mOpenCV Python module still cannot be imported. There is a system conflict.")
 else:
     print("\033[34mWAS Node Suite:\033[0m Installing `opencv-python-headless` ...")
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
+    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
     try:
         import cv2
         print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
@@ -9128,7 +9215,7 @@ else:
 # scipy handling
 if 'scipy' not in packages():
     print("\033[34mWAS Node Suite:\033[0m Installing `scipy`....")
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'scipy'])
+    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'scipy'])
     try:
         import scipy
     except ImportError as e:
@@ -9138,7 +9225,7 @@ if 'scipy' not in packages():
 # scikit-image handling
 if 'scikit-image' not in packages():
     print("\033[34mWAS Node Suite:\033[0m Installing `scikit-image`....")
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--user', '--force-reinstall', '--upgrade', 'scikit-image'])
+    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', '--user', '--force-reinstall', '--upgrade', 'scikit-image'])
     try:
         import skimage
     except ImportError as e:
