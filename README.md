@@ -136,6 +136,9 @@
      or things like `*.jpg` to select only JPEG images in the directory specified.
  - Mask to Image: Convert `MASK` to `IMAGE`
  - Mask Batch to Mask: Return a single mask from a batch of masks
+ - Mask Invert: Invert a mask.
+ - Mask Add: Add masks together.
+ - Mask Subtract: Subtract from a mask by another.
  - Mask Dominant Region: Return the dominant region in a mask (the largest area)
  - Mask Minority Region: Return the smallest region in a mask (the smallest area)
  - Mask Arbitrary Region: Return a region that most closely matches the size input (size is not a direct representation of pixels, but approximate)
