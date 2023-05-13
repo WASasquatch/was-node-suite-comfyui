@@ -2351,6 +2351,96 @@ class WAS_Image_Crop_Location:
         crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
         
         return (pil2tensor(crop), crop_data)
+
+
+# IMAGE SQUARE CROP LOCATION
+
+class WAS_Image_Crop_Square_Location:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "x": ("INT", {"default":0, "max": 24576, "min":0, "step":1}),
+                "y": ("INT", {"default":0, "max": 24576, "min":0, "step":1}),
+                "size": ("INT", {"default":256, "max": 4096, "min":5, "step":1}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE", "CROP_DATA")
+    FUNCTION = "image_crop_location"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def image_crop_location(self, image, x=256, y=256, size=512):
+    
+        image = tensor2pil(image)
+        img_width, img_height = image.size
+        exp_size = size // 2
+        left = max(x - exp_size, 0)
+        top = max(y - exp_size, 0)
+        right = min(x + exp_size, img_width)
+        bottom = min(y + exp_size, img_height)
+        
+        if right - left < size:
+            if right < img_width:
+                right = min(right + size - (right - left), img_width)
+            elif left > 0:
+                left = max(left - (size - (right - left)), 0)
+        if bottom - top < size:
+            if bottom < img_height:
+                bottom = min(bottom + size - (bottom - top), img_height)
+            elif top > 0:
+                top = max(top - (size - (bottom - top)), 0)
+        
+        crop = image.crop((left, top, right, bottom))
+        crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
+        crop_data = (crop.size, (top, left, bottom, right))
+        return (pil2tensor(crop), crop_data)
+        
+        
+# IMAGE SQUARE CROP LOCATION
+
+class WAS_Image_Tile_Batch:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "num_tiles": ("INT", {"default":4, "max": 64, "min":2, "step":1}),
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("IMAGES",)
+    FUNCTION = "tile_image"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+    
+    def tile_image(self, image, num_tiles=6):
+        image = tensor2pil(image.squeeze(0))
+        img_width, img_height = image.size
+
+        num_rows = int(num_tiles ** 0.5)
+        num_cols = (num_tiles + num_rows - 1) // num_rows
+        tile_width = img_width // num_cols
+        tile_height = img_height // num_rows
+
+        tiles = []
+        for y in range(0, img_height, tile_height):
+            for x in range(0, img_width, tile_width):
+                tile = image.crop((x, y, x + tile_width, y + tile_height))
+                tiles.append(pil2tensor(tile))
+
+        tiles = torch.stack(tiles, dim=0).squeeze(1)
+
+        return (tiles, )
         
         
 # IMAGE PASTE CROP
@@ -9002,6 +9092,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Color Palette": WAS_Image_Color_Palette,
     "Image Crop Face": WAS_Image_Crop_Face,
     "Image Crop Location": WAS_Image_Crop_Location,
+    "Image Crop Square Location": WAS_Image_Crop_Square_Location,
     "Image Paste Face": WAS_Image_Paste_Face_Crop,
     "Image Paste Crop": WAS_Image_Paste_Crop,
     "Image Paste Crop by Location": WAS_Image_Paste_Crop_Location,
@@ -9036,6 +9127,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Stitch": WAS_Image_Stitch, 
     "Image Style Filter": WAS_Image_Style_Filter,
     "Image Threshold": WAS_Image_Threshold,
+    "Image Tiled": WAS_Image_Tile_Batch,
     "Image Transpose": WAS_Image_Transpose,
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
@@ -9125,9 +9217,7 @@ NODE_CLASS_MAPPINGS = {
 BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
 if os.path.exists(BKAdvCLIP_dir):
 
-    if was_config.__contains__('show_startup_junk'):
-        if was_config['show_startup_junk']: 
-            print('\033[34mWAS Node Suite:\033[0m BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.')
+    print('\033[34mWAS Node Suite:\033[0m BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.')
     sys.path.append(BKAdvCLIP_dir)
     
     from adv_encode import advanced_encode
@@ -9172,9 +9262,7 @@ if os.path.exists(BKAdvCLIP_dir):
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})    
 
     if NODE_CLASS_MAPPINGS.__contains__("CLIPTextEncode (BlenderNeko Advanced + NSP)"):
-        if was_config.__contains__('show_startup_junk'):
-            if was_config['show_startup_junk']:
-                print('\033[34mWAS Node Suite:\033[0m `CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.')
+        print('\033[34mWAS Node Suite:\033[0m `CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.')
     
 # opencv-python-headless handling
 if 'opencv-python' in packages() or 'opencv-python-headless' in packages():

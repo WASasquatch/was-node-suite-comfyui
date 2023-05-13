@@ -74,6 +74,7 @@
    - **Notes:**
      - Detection runs in succession. If nothing is found with the selected detection cascades, it will try the next available cascades file.
  - Image Crop Location: Crop a image to specified location in top, left, right, and bottom locations relating to the pixel dimensions of the image in X and Y coordinats.
+ - Image Crop Square Location: Crop a location by X/Y center, creating a square crop around that point.
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
    - Features a better blending funciton than GFPGAN/CodeFormer so there shouldn't be visible seams, and coupled with Diffusion Result, looks better than GFPGAN/CodeFormer. 
  - Image Paste Crop: Paste a crop (such as from Image Crop Location) at it's original location and size utilizing the `crop_data` node input. This uses a different blending algorithm then Image Paste Face Crop, which may be desired in certain instances.
@@ -118,6 +119,7 @@
  - Image Style Filter: Style a image with Pilgram instragram-like filters
    - Depends on `pilgram` module
  - Image Threshold: Return the desired threshold range of a image
+ - Image Tile: Split a image up into a image batch of tiles. Can be used with Tensor Batch to Image to select a individual tile from the batch.
  - Image Transpose
  - Image fDOF Filter: Apply a fake depth of field effect to an image
  - Image to Latent Mask: Convert a image into a latent mask
