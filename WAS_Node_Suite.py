@@ -47,6 +47,86 @@ from tqdm import tqdm
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
 sys.path.append('..'+os.sep+'ComfyUI')
 
+#! SYSTEM HOOKS
+
+class cstr(str):
+    class color:
+        END = '\33[0m'
+        BOLD = '\33[1m'
+        ITALIC = '\33[3m'
+        UNDERLINE = '\33[4m'
+        BLINK = '\33[5m'
+        BLINK2 = '\33[6m'
+        SELECTED = '\33[7m'
+
+        BLACK = '\33[30m'
+        RED = '\33[31m'
+        GREEN = '\33[32m'
+        YELLOW = '\33[33m'
+        BLUE = '\33[34m'
+        VIOLET = '\33[35m'
+        BEIGE = '\33[36m'
+        WHITE = '\33[37m'
+
+        BLACKBG = '\33[40m'
+        REDBG = '\33[41m'
+        GREENBG = '\33[42m'
+        YELLOWBG = '\33[43m'
+        BLUEBG = '\33[44m'
+        VIOLETBG = '\33[45m'
+        BEIGEBG = '\33[46m'
+        WHITEBG = '\33[47m'
+
+        GREY = '\33[90m'
+        LIGHTRED = '\33[91m'
+        LIGHTGREEN = '\33[92m'
+        LIGHTYELLOW = '\33[93m'
+        LIGHTBLUE = '\33[94m'
+        LIGHTVIOLET = '\33[95m'
+        LIGHTBEIGE = '\33[96m'
+        LIGHTWHITE = '\33[97m'
+
+        GREYBG = '\33[100m'
+        LIGHTREDBG = '\33[101m'
+        LIGHTGREENBG = '\33[102m'
+        LIGHTYELLOWBG = '\33[103m'
+        LIGHTBLUEBG = '\33[104m'
+        LIGHTVIOLETBG = '\33[105m'
+        LIGHTBEIGEBG = '\33[106m'
+        LIGHTWHITEBG = '\33[107m'
+
+        @staticmethod
+        def add_code(name, code):
+            if not hasattr(cstr.color, name.upper()):
+                setattr(cstr.color, name.upper(), code)
+            else:
+                raise ValueError(f"'cstr' object already contains a code with the name '{name}'.")
+
+    def __new__(cls, text):
+        return super().__new__(cls, text)
+
+    def __getattr__(self, attr):
+        if attr.lower().startswith("_cstr"):
+            code = getattr(self.color, attr.upper().lstrip("_cstr"))
+            modified_text = self.replace(f"__{attr[1:]}__", f"{code}")
+            return cstr(modified_text)
+        elif attr.upper() in dir(self.color):
+            code = getattr(self.color, attr.upper())
+            modified_text = f"{code}{self}{self.color.END}"
+            return cstr(modified_text)
+        elif attr.lower() in dir(cstr):
+            return getattr(cstr, attr.lower())
+        else:
+            raise AttributeError(f"'cstr' object has no attribute '{attr}'")
+
+
+    def print(self, **kwargs):
+        print(self, **kwargs)
+        
+#! MESSAGE TEMPLATES
+cstr.color.add_code("msg", "\033[34mWAS Node Suite:\033[0m ")
+cstr.color.add_code("warning", "\033[34mWAS Node Suite \33[93mWarning:\033[0m ")
+cstr.color.add_code("error", "\033[34mWAS Node Suite \33[92mError:\033[0m ")
 
 #! GLOBALS
 NODE_FILE = os.path.abspath(__file__)
@@ -78,7 +158,7 @@ for f in legacy_was_nodes:
     file = f'{node_path_dir}{f}'
     if os.path.exists(file):
         if not f_disp:
-            print('\033[34mWAS Node Suite:\033[0m Found legacy nodes. Archiving legacy nodes...')
+            cstr("Found legacy nodes. Archiving legacy nodes...").msg.print()
             f_disp = True
         legacy_was_nodes_found.append(file)
 if legacy_was_nodes_found:
@@ -94,7 +174,7 @@ if legacy_was_nodes_found:
             pass
     archive.close()
 if f_disp:
-    print('\033[34mWAS Node Suite:\033[0m Legacy cleanup complete.')
+    cstr("Legacy cleanup complete.").msg.print()
     
 #! WAS SUITE CONFIG
 
@@ -148,10 +228,10 @@ def updateSuiteConfig(conf):
 
 if not os.path.exists(WAS_CONFIG_FILE):
     if updateSuiteConfig(was_conf_template):
-        print(f'\033[34mWAS Node Suite:\033[0m Created default conf file at `{WAS_CONFIG_FILE}`.')
+        cstr(f'Created default conf file at `{WAS_CONFIG_FILE}`.').msg.print()
         was_config = getSuiteConfig()
     else:
-        print(f'\033[34mWAS Node Suite\033[0m Error: Unable to create default conf file at `{WAS_CONFIG_FILE}`. Using internal config template.')
+        cstr(f"Unable to create default conf file at `{WAS_CONFIG_FILE}`. Using internal config template.").error.print()
         was_config = was_conf_tempalte
     
 else:
@@ -179,7 +259,7 @@ else:
             
         if webui_styles_file != "" and os.path.exists(webui_styles_file):
 
-            print(f'\033[34mWAS Node Suite:\033[0m Importing styles from `{webui_styles_file}`.')
+            cstr(f"Importing styles from `{webui_styles_file}`.").msg.print()
         
             import csv
             
@@ -202,17 +282,17 @@ else:
                     
             del styles
             
-            print(f'\033[34mWAS Node Suite:\033[0m Styles import complete.')
+            cstr(f"Styles import complete.").msg.print()
             
 # WAS Suite Locations Debug
 if was_config.__contains__('show_startup_junk'):
     if was_config['show_startup_junk']: 
-        print('\033[34mWAS Node Suite\033[0m Running At:', NODE_FILE)
-        print('\033[34mWAS Node Suite\033[0m Running From:', WAS_SUITE_ROOT)
+        cstr(f"Running At: {NODE_FILE}")
+        cstr(f"Running From: {WAS_SUITE_ROOT}")
 
 # Check Write Access
 if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
-    print(f'\033[34mWAS Node Suite\033[0m Error: There is no write access to `{WAS_SUITE_ROOT}` or `{MODELS_DIR}`. Write access is required!')
+    cstr(f"There is no write access to `{WAS_SUITE_ROOT}` or `{MODELS_DIR}`. Write access is required!").error.print()
     exit
 
 # SET TEXT TYPE
@@ -220,7 +300,7 @@ TEXT_TYPE = "TEXT"
 if was_config and was_config.__contains__('use_legacy_ascii_text'):
     if was_config['use_legacy_ascii_text']:
         TEXT_TYPE = "ASCII"
-        print(f'\033[34mWAS Node Suite\033[0m Warning: use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.')
+        cstr("use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.").warning.print()
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
@@ -234,7 +314,7 @@ def packages(versions=False):
 def tensor2pil(image):
     return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
     
-# Convert PIL to Tensor
+# PIL to Tensor
 def pil2tensor(image):
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
 
@@ -242,11 +322,13 @@ def pil2tensor(image):
 def pil2hex(image):
     return hashlib.sha256(np.array(tensor2pil(image)).astype(np.uint16).tobytes()).hexdigest()
 
+# PIL to Mask
 def pil2mask(image):
     image_np = np.array(image.convert("L")).astype(np.float32) / 255.0
     mask = torch.from_numpy(image_np)
     return 1.0 - mask
-
+    
+# Mask to PIL
 def mask2pil(mask):
     if mask.ndim > 2:
         mask = mask.squeeze(0)
@@ -285,6 +367,7 @@ def medianFilter(img, diameter, sigmaColor, sigmaSpace):
     img = cv.cvtColor(np.array(img), cv.COLOR_BGR2RGB)
     return Image.fromarray(img).convert('RGB')
     
+# Resize Image
 def resizeImage(image, max_size):
     width, height = image.size
     if width > height:
@@ -348,7 +431,7 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
         if conf['wildcards_path'] not in [None, ""]:
             wildcard_dir = conf['wildcards_path']
         
-    print("\033[34mWAS Node Suite\033[0m Wildcard Path:", wildcard_dir)
+    cstr(f"Wildcard Path: {wildcard_dir}").msg.print()
 
     # Set the random seed for reproducibility
     if seed:
@@ -404,10 +487,12 @@ class PromptStyles:
                     length = len(negative_prompt)
                 key = f"[{date_str}] Negative: {negative_prompt[:length]} ..."
             else:
-                raise AttributeError("At least a `prompt`, or `negative_prompt` input is required!")
+                cstr("At least a `prompt`, or `negative_prompt` input is required!").error.print()
+                return
         else:
             if name == None or str(name).strip() == "":
-                raise AttributeError("A `name` input is required when not using `auto=True`")
+                cstr("A `name` input is required when not using `auto=True`").error.print()
+                return
             key = str(name)
 
 
@@ -427,7 +512,7 @@ class PromptStyles:
         if prompt_key in self.styles:
             return self.styles[prompt_key]['prompt'], self.styles[prompt_key]['negative_prompt']
         else:
-            print(f"Prompt style `{prompt_key}` was not found!")
+            cstr(f"Prompt style `{prompt_key}` was not found!").error.print()
             return None, None
 
 
@@ -482,7 +567,8 @@ class WASDatabase:
             
     def updateCat(self, category, dictionary):
         if self.data.__contains__(category):
-            Exception(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` already exists!")
+            cstr(f"The database category `{category}` already exists!").error.print()
+            return
         self.data[category].update(dictionary)
         self._save()
         
@@ -494,13 +580,14 @@ class WASDatabase:
         
     def insertCat(self, category):
         if self.data.__contains__(category):
-            Exception(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` already exists!")
+            cstr(f"The database category `{category}` already exists!").error.print()
+            return
         self.data[category] = {}
         self._save()
         
     def getDict(self, category):
         if not self.data.__contains__(category):
-            ValueError(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` does not exist!")
+            cstr(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` does not exist!").error.print()
         return self.data[category]
 
     def delete(self, category, key):
@@ -513,8 +600,8 @@ class WASDatabase:
             with open(self.filepath, 'w') as f:
                 json.dump(self.data, f, indent=4)
         except FileNotFoundError:
-            print(f"\033[34mWAS Node Suite\033[0m Warning: Cannot save database to file '{self.filepath}'."
-                  " Storing the data in the object instead. Does the folder and node file have write permissions?")
+            cstr(f"Cannot save database to file '{self.filepath}'."
+                  " Storing the data in the object instead. Does the folder and node file have write permissions?").warning.print()
 
 # Initialize the settings database
 WDB = WASDatabase(WAS_DATABASE)
@@ -803,13 +890,14 @@ class WAS_Tools_Class():
         try:
             imageio.mimsave(output_file, frames, filetype, duration=durations, loop=loop)
         except OSError as e:
-            print(f"\033[34mWAS NS\033[0m Error: Unable to save output to {output_file} due to the following error:")
+            cstr(f"Unable to save output to {output_file} due to the following error:").error.print()
             print(e)
+            return
         except Exception as e:
-            print(f"\033[34mWAS NS\033[0m Error: Unable to generate GIF due to the following error:")
+            cstr(f"\033[34mWAS NS\033[0m Error: Unable to generate GIF due to the following error:").error.print()
             print(e)
 
-        print(f"\033[34mWAS NS:\033[0m Morphing completed. Output saved as {output_file}")
+        cstr(f"Morphing completed. Output saved as {output_file}").msg.print()
         
         return output_file  
 
@@ -831,7 +919,7 @@ class WAS_Tools_Class():
                     new_gif.paste(image.convert("RGBA"))
                     new_gif.info["duration"] = self.still_image_delay_ms
                     new_gif.save(gif_path, format="GIF", save_all=True, append_images=[], duration=self.still_image_delay_ms, loop=0)
-                print(f"\033[34mWAS NS:\033[0m Created new GIF animation at: {gif_path}")
+                cstr(f"Created new GIF animation at: {gif_path}").msg.print()
             else:
                 with Image.open(gif_path) as gif:
                     # Extract the last still frame of the GIF, if it exists
@@ -889,7 +977,7 @@ class WAS_Tools_Class():
                         loop=self.loop,
                     )
 
-                    print(f"\033[34mWAS NS:\033[0m Edited existing GIF animation at: {gif_path}")
+                    cstr(f"Edited existing GIF animation at: {gif_path}").msg.print()
 
                 
         def pad_to_size(self, image, size):
@@ -982,7 +1070,7 @@ class WAS_Tools_Class():
                 os.remove(video_path)
                 os.rename(temp_file_path, video_path)
 
-                print(f"\033[34mWAS NS:\033[0m Edited video at: {video_path}")
+                cstr(f"Edited video at: {video_path}").msg.print()
 
                 return video_path
 
@@ -999,7 +1087,7 @@ class WAS_Tools_Class():
                 # Release resources
                 out.release()
 
-                print(f"\033[34mWAS NS:\033[0m Created new video at: {video_path}")
+                cstr("Created new video at: {video_path}").msg.print()
 
                 return video_path
 
@@ -1016,7 +1104,8 @@ class WAS_Tools_Class():
 
             # Check that there are image files in the folder
             if len(image_paths) == 0:
-                print(f"\033[31mERR:\033[0m No valid image files found in `{image_folder}` directory. Valid image formats are", *sort(ALLOWED_EXT), end=" ")
+                cstr(f"No valid image files found in `{image_folder}` directory.").error.print()
+                cstr("Valid image formats are").error.print(*sort(ALLOWED_EXT), end=" ")
                 return
 
             # Output file including extension
@@ -1065,11 +1154,41 @@ class WAS_Tools_Class():
             out.release()
 
             if os.path.exists(output_file):
-                print(f"\033[34mWAS NS:\033[0m Created video at: {output_file}")
+                cstr(f"Created video at: {output_file}").msg.print()
                 return output_file
             else:
-                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to create video at: {output_file}")
+                cstr(f"Unable to create video at: {output_file}").error.print()
                 return ""
+                
+        def extract(self, video_file, output_folder, extension="png"):
+            # Create the output folder if it doesn't exist
+            os.makedirs(output_folder, exist_ok=True)
+
+            # Open the video file
+            video = cv2.VideoCapture(video_file)
+
+            # Get some video properties
+            fps = video.get(cv2.CAP_PROP_FPS)
+            frame_number = 0
+
+            # Iterate over all frames
+            while True:
+                # Read the next frame
+                success, frame = video.read()
+
+                if success:
+                    # Save the frame as an image file
+                    frame_path = os.path.join(output_folder, f"frame_{frame_number}.{extension}")
+                    cv2.imwrite(frame_path, frame)
+                    print(f"Saved frame {frame_number} to {frame_path}")
+                    frame_number += 1
+                else:
+                    break
+
+            # Release the video file
+            video.release()
+            
+            return frame_number
 
         def rescale(self, image, max_size):
             f1 = max_size / image.shape[1]
@@ -1280,7 +1399,7 @@ class WAS_Tools_Class():
     def shadows_and_highlights(self, image, shadow_thresh=30, highlight_thresh=220, shadow_factor=0.5, highlight_factor=1.5, shadow_smooth=None, highlight_smooth=None, simplify_masks=None):
 
         if 'pilgram' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing pilgram...")
+            cstr("Installing pilgram...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
@@ -1333,7 +1452,7 @@ class WAS_Tools_Class():
     def dragan_filter(self, image, saturation=1, contrast=1, sharpness=1, brightness=1, highpass_radius=3, highpass_samples=1, highpass_strength=1, colorize=True):
     
         if 'pilgram' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing pilgram...")
+            cstr("Installing pilgram...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
@@ -1379,7 +1498,7 @@ class WAS_Tools_Class():
     def sparkle(self, image):
     
         if 'pilgram' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing pilgram...")
+            cstr("Installing pilgram...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
         import pilgram
@@ -1618,14 +1737,14 @@ class WAS_Tools_Class():
     def perlin_noise(self, width, height, shape, density, octaves, seed): 
 
         if 'pythonperlin' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing pythonperlin...")
+            cstr("Installing pythonperlin...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pythonperlin'])
             
         from pythonperlin import perlin
         
         if seed > 4294967294:
             seed = random.randint(0,4294967294)
-            print(f'\033[34mWAS NS:\033[0m Seed too large for perlin; rescaled to: {seed}')
+            cstr(f"Seed too large for perlin; rescaled to: {seed}").warning.print()
         
         # Density range
         min_density = 1
@@ -1697,7 +1816,7 @@ class WAS_Tools_Class():
     def make_seamless(self, image, blending=0.5, tiled=False, tiles=2):
     
         if 'img2texture' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing img2texture...")
+            cstr("Installing img2texture...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'git+https://github.com/WASasquatch/img2texture.git'])
             
         from img2texture import img2tex
@@ -1714,7 +1833,7 @@ class WAS_Tools_Class():
     def black_white_levels(self, image):
     
         if 'matplotlib' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing matplotlib...")
+            cstr("Installing matplotlib...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'matplotlib'])
             
         import matplotlib.pyplot as plt
@@ -1753,7 +1872,7 @@ class WAS_Tools_Class():
     def channel_frequency(self, image):
     
         if 'matplotlib' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing matplotlib...")
+            cstr("Installing matplotlib...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'matplotlib'])
             
         import matplotlib.pyplot as plt
@@ -1789,7 +1908,7 @@ class WAS_Tools_Class():
     def generate_palette(self, img, n_colors=16, cell_size=128, padding=10, font_path=None, font_size=15):
 
         if 'scikit-learn' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing scikit-learn...")
+            cstr("Installing scikit-learn...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
 
         from sklearn.cluster import KMeans
@@ -1870,6 +1989,82 @@ class WAS_Shadow_And_Highlight_Adjustment:
         result, shadows, highlights = WTools.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
         
         return (pil2tensor(result), pil2tensor(shadows), pil2tensor(highlights) )
+        
+        
+# IMAGE PIXATE
+
+class WAS_Image_Pixelate:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "pixelation_size": ("FLOAT", {"default": 164, "min": 16, "max": 256, "step": 1}),
+                "num_colors": ("FLOAT", {"default": 16, "min": 6, "max": 256, "step": 1}),
+                "init_mode": (["k-means++", "random"],),
+                "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
+                "seed": ("INT", {"default": 100, "min": 0, "max": 0xffffffffffffffff}),  
+
+            }
+        }
+    
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
+    FUNCTION = "image_pixelate"
+    
+    CATEGORY = "WAS Suite/Image/Adjustment"
+    
+    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, seed=42):
+    
+        if 'scikit-learn' not in packages():
+            cstr("Installing scikit-learn...").msg.print()
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
+    
+        return ( self.pixelate_batch(images, pixelation_size, num_colors, init_mode, max_iterations, seed), )
+
+    def pixelate_batch(self, images, max_size, num_colors=16, init_mode='random', max_iter=100, random_state=42):
+
+        from sklearn.cluster import KMeans
+    
+        max_size = int(max_size)
+        num_colors = int(num_colors)
+        max_iter = int(max_iter)
+        random_state = int(random_state)
+
+        def flatten_colors(image, num_colors, init_mode='random', max_iter=100, random_state=42):
+            np_image = np.array(image)
+            pixels = np_image.reshape(-1, 3)
+            kmeans = KMeans(n_clusters=num_colors, init=init_mode, max_iter=max_iter, tol=1e-3, random_state=random_state, n_init='auto')
+            labels = kmeans.fit_predict(pixels)
+            colors = kmeans.cluster_centers_.astype(np.uint8)
+            flattened_pixels = colors[labels]
+            flattened_image = flattened_pixels.reshape(np_image.shape)
+            return Image.fromarray(flattened_image)
+
+        pil_images = [tensor2pil(image) for image in images]
+        downsized_images = []
+        original_sizes = []
+        for image in pil_images:
+            width, height = image.size
+            original_sizes.append((width, height))
+            if max(width, height) > max_size:
+                if width > height:
+                    new_width = max_size
+                    new_height = int(height * (max_size / width))
+                else:
+                    new_height = max_size
+                    new_width = int(width * (max_size / height))
+                downsized_images.append(image.resize((new_width, new_height), Image.NEAREST))
+            else:
+                downsized_images.append(image)
+        flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
+        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(flattened_images, original_sizes)]
+        tensor_images = [pil2tensor(image) for image in pixel_art_images]
+        batch_tensor = torch.cat(tensor_images, dim=0)
+        return batch_tensor
         
         
 # SIMPLE IMAGE ADJUST
@@ -2011,7 +2206,7 @@ class WAS_Image_Style_Filter:
 
         # Install Pilgram
         if 'pilgram' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing Pilgram...")
+            cstr("Installing Pilgram...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
@@ -2083,7 +2278,6 @@ class WAS_Image_Style_Filter:
             else:
                 out_image = image
 
-
         out_image = out_image.convert("RGB")
 
         return (torch.from_numpy(np.array(out_image).astype(np.float32) / 255.0).unsqueeze(0), )
@@ -2125,7 +2319,7 @@ class WAS_Image_Crop_Face:
         
         if use_fr:
             if 'face_recognition' not in packages():
-                print("\033[34mWAS NS:\033[0m Installing face_recognition...")
+                cstr("Installing face_recognition...").msg.print()
                 subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'face_recognition'])
         
         return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor, use_fr)
@@ -2161,23 +2355,23 @@ class WAS_Image_Crop_Face:
         faces = None
         if not face_location:
             if use_fr:
-                print(f"\033[34mWAS NS\033[0m Warning: Unable to find any faces with face_recognition, switching to cascade recognition...")
+                cstr(f"Unable to find any faces with face_recognition, switching to cascade recognition...").warning.print()
             for cascade in cascades:
                 if not os.path.exists(cascade):
-                    print(f"\033[34mWAS NS\033[0m Error: Unable to find cascade XML file at `{cascade}`.",
-                        "Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?")
+                    cstr(f"Unable to find cascade XML file at `{cascade}`.",
+                        "Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?").error.print()
                     return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), False)
                 face_cascade = cv2.CascadeClassifier(cascade)
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
                 if len(faces) != 0:
-                    print("\033[34mWAS NS\033[0m: Face found with:", os.path.basename(cascade))
+                    cstr("Face found with:", os.path.basename(cascade)).msg.print()
                     break
             if len(faces) == 0:
-                print("\033[34mWAS NS\033[0m Warning: No faces found in the image!")
+                cstr("No faces found in the image!").warning.print()
                 return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), False)
         else: 
-            print("\033[34mWAS NS\033[0m: Face found with: face_recognition model")
+            cstr("Face found with: face_recognition model").warning.print()
             faces = face_location
             
         # Assume there is only one face in the image
@@ -2274,7 +2468,7 @@ class WAS_Image_Paste_Face_Crop:
     def image_paste_face(self, image, crop_image, crop_data=None, crop_blending=0.25, crop_sharpening=0):
     
         if crop_data == False:
-            print("\033[34mWAS NS\033[0m Error: No valid crop data found!")
+            cstr("No valid crop data found!").error.print()
             return (image, pil2tensor(Image.new("RGB", tensor2pil(image).size, (0,0,0))))
 
         result_image, result_mask = self.paste_face(tensor2pil(image), tensor2pil(crop_image), crop_data[0], crop_data[1], crop_blending, crop_sharpening)
@@ -2469,7 +2663,7 @@ class WAS_Image_Paste_Crop:
     def image_paste_crop(self, image, crop_image, crop_data=None, crop_blending=0.25, crop_sharpening=0):
     
         if crop_data == False:
-            print("\033[34mWAS NS\033[0m Error: No valid crop data found!")
+            cstr("No valid crop data found!").error.print()
             return (image, pil2tensor(Image.new("RGB", tensor2pil(image).size, (0,0,0))))
 
         result_image, result_mask = self.paste_image(tensor2pil(image), crop_data, tensor2pil(crop_image), crop_blending, crop_sharpening)
@@ -2626,7 +2820,7 @@ class WAS_Image_Grid_Image:
                             max_cell_size=256, border_width=3, border_red=0, border_green=0, border_blue=0):
     
         if not os.path.exists(images_path):
-            print(f"\033[34mWAS NS\033[0m Error: The grid image path `{images_path}` does not exist!")
+            cstr(f"The grid image path `{images_path}` does not exist!").error.print()
             return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))),)
         
         paths = glob.glob(os.path.join(images_path, pattern_glob), recursive=(False if include_subfolders == "false" else True))
@@ -2745,7 +2939,7 @@ class WAS_Image_Morph_GIF:
                             output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
                 
         if 'imageio' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing imageio...")
+            cstr("Installing imageio...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
         
@@ -2817,7 +3011,7 @@ class WAS_Image_Morph_GIF_Writer:
                             output_path="./ComfyUI/output", filename="morph"):
                 
         if 'imageio' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing imageio...")
+            cstr("Installing imageio...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
         
@@ -2887,17 +3081,17 @@ class WAS_Image_Morph_GIF_By_Path:
                             input_path="./ComfyUI/output", input_pattern="*", output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
                 
         if 'imageio' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing imageio...")
+            cstr("Installing imageio...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
                 
         if not os.path.exists(input_path):
-            print(f"\033[34mWAS NS\033[0m Error: the input_path `{input_path}` does not exist!")
+            cstr(f"The input_path `{input_path}` does not exist!").error.print()
             return ("",)
             
         images = self.load_images(input_path, input_pattern)
         if not images:
-            print(f"\033[34mWAS NS\033[0m Error: The input_path `{input_path}` does not contain any valid images!")
+            cstr(f"The input_path `{input_path}` does not contain any valid images!").msg.print()
             return ("",)
             
         if filetype not in ["APNG", "GIF"]:
@@ -2974,7 +3168,7 @@ class WAS_Image_Blending_Mode:
 
         # Install Pilgram
         if 'pilgram' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing Pilgram...")
+            cstr("Installing Pilgram...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
 
@@ -3248,7 +3442,7 @@ class WAS_Image_Color_Palette:
         if not os.path.exists(font):
             font = None
         else:
-            print(f'\033[34mWAS NS:\033[0m Found font at `{font}`')
+            cstr(f'\Found font at `{font}`').msg.print()
 
         # Generate Color Palette
         image = WTools.generate_palette(image, colors, 128, 10, font, 15)
@@ -3559,7 +3753,8 @@ class WAS_Load_Image_Batch:
 
         def get_image_by_id(self, image_id):
             if image_id < 0 or image_id >= len(self.image_paths):
-                raise ValueError(f"\033[34mWAS NS\033[0m Error: Invalid image index `{image_id}`")
+                cstr(f"Invalid image index `{image_id}`").error.print()
+                return
             return (Image.open(self.image_paths[image_id]), os.path.basename(self.image_paths[image_id]))
 
         def get_next_image(self):
@@ -3569,7 +3764,7 @@ class WAS_Load_Image_Batch:
             self.index += 1
             if self.index == len(self.image_paths):
                 self.index = 0
-            print(f'\033[34mWAS NS \033[33m{self.label}\033[0m Index:', self.index)
+            print(f'\033[34mWAS Node Suite \033[33m{self.label}\033[0m Index:', self.index)
             self.WDB.insert('Batch Counters', self.label, self.index)
             return (Image.open(image_path), os.path.basename(image_path))
 
@@ -3620,7 +3815,7 @@ class WAS_Image_History:
         if os.path.exists(paths[image]) and paths.__contains__(image):
             return (pil2tensor(Image.open(paths[image]).convert('RGB')), os.path.basename(paths[image]))
         else:
-            raise ValueError(f"\033[34mWAS NS\033[0m Error: The image `{image}` does not exist!")
+            cstr(f"The image `{image}` does not exist!").error.print()
             return (pil2tensor(Image.new('RGB', (512,512), (0, 0, 0, 0))), 'null')
 
     @classmethod
@@ -3653,9 +3848,9 @@ class WAS_Image_Stitch:
         
         valid_stitches = ["top", "left", "bottom", "right"]
         if stitch not in valid_stitches:
-            raise ValueError(f"\033[34mWAS NS\033[0m Error: The stitch mode `{stitch}` is not valid. Valid sitch modes are {', '.join(valid_stitches)}")
+            cstr(f"The stitch mode `{stitch}` is not valid. Valid sitch modes are {', '.join(valid_stitches)}").error.print()
         if feathering > 2048:
-            raise ValueError(f"\033[34mWAS NS\033[0m Error: The stitch feathering of `{feathering}` is too high. Please choose a value between `0` and `2048`")
+            cstr(f"The stitch feathering of `{feathering}` is too high. Please choose a value between `0` and `2048`").error.print()
             
         WTools = WAS_Tools_Class();
         
@@ -3960,7 +4155,7 @@ class WAS_Remove_Background:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "images": ("IMAGE",),
                 "mode": (["background", "foreground"],),
                 "threshold": ("INT", {"default": 127, "min": 0, "max": 255, "step": 1}),
                 "threshold_tolerance": ("INT", {"default": 2, "min": 1, "max": 24, "step": 1}),
@@ -3968,28 +4163,34 @@ class WAS_Remove_Background:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("iamges",)
     FUNCTION = "image_remove_background"
 
     CATEGORY = "WAS Suite/Image/Process"
 
-    def image_remove_background(self, image, mode='background', threshold=127, threshold_tolerance=2):
-        return (pil2tensor(self.remove_background(tensor2pil(image), mode, threshold, threshold_tolerance)), )
+    def image_remove_background(self, images, mode='background', threshold=127, threshold_tolerance=2):
+        return (self.remove_background(images, mode, threshold, threshold_tolerance), )
 
     def remove_background(self, image, mode, threshold, threshold_tolerance):
-        grayscale_image = image.convert('L')
-        if mode == 'background':
-            grayscale_image = ImageOps.invert(grayscale_image)
-            threshold = 255 - threshold  # adjust the threshold for "background" mode
-        blurred_image = grayscale_image.filter(
-            ImageFilter.GaussianBlur(radius=threshold_tolerance))
-        binary_image = blurred_image.point(
-            lambda x: 0 if x < threshold else 255, '1')
-        mask = binary_image.convert('L')
-        inverted_mask = ImageOps.invert(mask)
-        transparent_image = image.copy()
-        transparent_image.putalpha(inverted_mask)
+        images = []
+        image = [tensor2pil(img) for img in image]
+        for img in image:
+            grayscale_image = img.convert('L')
+            if mode == 'background':
+                grayscale_image = ImageOps.invert(grayscale_image)
+                threshold = 255 - threshold  # adjust the threshold for "background" mode
+            blurred_image = grayscale_image.filter(
+                ImageFilter.GaussianBlur(radius=threshold_tolerance))
+            binary_image = blurred_image.point(
+                lambda x: 0 if x < threshold else 255, '1')
+            mask = binary_image.convert('L')
+            inverted_mask = ImageOps.invert(mask)
+            transparent_image = img.copy()
+            transparent_image.putalpha(inverted_mask)
+            images.append(pil2tensor(transparent_image))
+        batch = torch.cat(images, dim=0)
 
-        return transparent_image
+        return batch
 
 
 # IMAGE BLEND MASK NODE
@@ -4934,7 +5135,7 @@ class WAS_Image_Save:
         # Setup custom path or default
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
-                print(f'\033[34mWAS NS\033[0m Warning: The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.')
+                cstr(f'The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.').warning.print()
                 os.makedirs(output_path.strip(), exist_ok=True)
             self.output_dir = output_path.strip()
 
@@ -4977,26 +5178,23 @@ class WAS_Image_Save:
                 if extension == 'png':
                     img.save(output_file,
                              pnginfo=metadata, optimize=True)
-                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 elif extension == 'webp':
                     img.save(output_file, quality=quality)
-                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 elif extension == 'jpeg':
                     img.save(output_file,
                              quality=quality, optimize=True)
-                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 elif extension == 'tiff':
                     img.save(output_file,
                              quality=quality, optimize=True)
-                    print(f'\033[34mWAS NS:\033[0m Image file saved to:', output_file)
                 else:
                     img.save(output_file)
+                cstr(f"Image file saved to: {output_file}").msg.print()
                 paths.append(file)
             except OSError as e:
-                print(f'\033[34mWAS NS\033[0m Error: Unable to save file to:', output_file)
+                cstr(f'Unable to save file to: {output_file}').error.print()
                 print(e)
             except Exception as e:
-                print(f'\033[34mWAS NS\033[0m Error: Unable to save file due to the following error:')
+                cstr('Unable to save file due to the following error:').error.print()
                 print(e)
             
             if overwrite_mode == 'false':
@@ -5033,8 +5231,7 @@ class WAS_Load_Image:
             try:
                 i = Image.open(image_path)
             except OSError:
-                print(
-                    f'\033[34mWAS NS\033[0m Error: The image `{image_path.strip()}` specified doesn\'t exist!')
+                cstr(f"The image `{image_path.strip()}` specified doesn't exist!").error.print()
                 i = Image.new(mode='RGB', size=(512, 512), color=(0, 0, 0))
         if not i:
             return
@@ -5061,16 +5258,13 @@ class WAS_Load_Image:
             img = Image.open(BytesIO(response.content))
             return img
         except requests.exceptions.HTTPError as errh:
-            print(f"\033[34mWAS NS\033[0m Error: HTTP Error: ({url}): {errh}")
+            cstr(f"HTTP Error: ({url}): {errh}").error.print()
         except requests.exceptions.ConnectionError as errc:
-            print(
-                f"\033[34mWAS NS\033[0m Error: Connection Error: ({url}): {errc}")
+            cstr(f"Connection Error: ({url}): {errc}").error.print()
         except requests.exceptions.Timeout as errt:
-            print(
-                f"\033[34mWAS NS\033[0m Error: Timeout Error: ({url}): {errt}")
+            cstr(f"Timeout Error: ({url}): {errt}").error.print()
         except requests.exceptions.RequestException as err:
-            print(
-                f"\033[34mWAS NS\033[0m Error: Request Exception: ({url}): {err}")
+            cstr(f"Request Exception: ({url}): {err}").error.print()
 
     @classmethod
     def IS_CHANGED(cls, image_path):
@@ -5110,7 +5304,7 @@ class WAS_Mask_Batch_to_Single_Mask:
                 return (tensor,)
             count += 1
 
-        print(f"\033[34mWAS NS\033[0m Error: Batch number `{batch_number}` is not defined, returning last image")
+        cstr(f"Batch number `{batch_number}` is not defined, returning last image").error.print()
         last_tensor = masks[-1][0]
         return (last_tensor,)
         
@@ -5142,8 +5336,7 @@ class WAS_Tensor_Batch_to_Image:
                 return (images_batch[batch_image_number].unsqueeze(0), )
             count = count+1
 
-        print(
-            f"\033[34mWAS NS\033[0m Error: Batch number `{batch_image_number}` is not defined, returning last image")
+        cstr(f"Batch number `{batch_image_number}` is not defined, returning last image").error.print()
         return (images_batch[-1].unsqueeze(0), )
 
 
@@ -5221,7 +5414,8 @@ class WAS_Mask_To_Image:
             tensor_rgb = torch.cat([tensor] * 3, dim=-1)
             return (tensor_rgb,)
         else:
-            raise ValueError("Invalid input shape. Expected [N, C, H, W] or [H, W].")
+            cstr("Invalid input shape. Expected [N, C, H, W] or [H, W].").error.print()
+            return masks
             
 # MASK DOMINANT REGION
 
@@ -5828,7 +6022,6 @@ class WAS_Mask_Combine_Batch:
     def combine_masks(self, masks):
         combined_mask = torch.sum(torch.stack([mask.unsqueeze(0) for mask in masks], dim=0), dim=0)
         combined_mask = torch.clamp(combined_mask, 0, 1)  # Ensure values are between 0 and 1
-        print("Combined mask shape:", combined_mask.shape)
         return (combined_mask, )
 
 
@@ -5851,10 +6044,12 @@ class WAS_Latent_Upscale:
     def latent_upscale(self, samples, mode, factor, align):
         valid_modes = ["area", "bicubic", "bilinear", "nearest"]
         if mode not in valid_modes:
-            raise ValueError(f"\033[34mWAS NS\033[0m Error: Invalid interpolation mode `{mode}` selected. Valid modes are: {', '.join(valid_modes)}")
+            cstr(f"Invalid interpolation mode `{mode}` selected. Valid modes are: {', '.join(valid_modes)}").error.print()
+            return (s, )
         align = True if align == 'true' else False
         if not isinstance(factor, float) or factor <= 0:
-            raise ValueError(f"\033[34mWAS NS\033[0m Error: The input `factor` is `{factor}`, but should be a positive or negative float.")
+            cstr(f"The input `factor` is `{factor}`, but should be a positive or negative float.").error.print()
+            return (s, )
         s = samples.copy()
         shape = s['samples'].shape
         size = tuple(int(round(dim * factor)) for dim in shape[-2:])
@@ -5929,13 +6124,13 @@ class MiDaS_Depth_Approx:
         i = 255. * image.cpu().numpy().squeeze()
         img = i
 
-        print("\033[34mWAS NS:\033[0m Downloading and loading MiDaS Model...")
+        cstr("Downloading and loading MiDaS Model...").msg.print()
         torch.hub.set_dir(self.midas_dir)
         midas = torch.hub.load("intel-isl/MiDaS", midas_model, trust_repo=True)
         device = torch.device("cuda") if torch.cuda.is_available(
         ) and use_cpu == 'false' else torch.device("cpu")
 
-        print('\033[34mWAS NS:\033[0m MiDaS is using device:', device)
+        cstr(f"MiDaS is using device: {device}").msg.print()
 
         midas.to(device).eval()
         midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
@@ -5948,7 +6143,7 @@ class MiDaS_Depth_Approx:
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         input_batch = transform(img).to(device)
 
-        print('\033[34mWAS NS:\033[0m Approximating depth from image.')
+        cstr("Approximating depth from image.").msg.print()
 
         with torch.no_grad():
             prediction = midas(input_batch)
@@ -5983,7 +6178,7 @@ class MiDaS_Depth_Approx:
     def install_midas(self):
         global MIDAS_INSTALLED
         if 'timm' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing timm...")
+            cstr("Installing timm...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
         MIDAS_INSTALLED = True
@@ -6046,13 +6241,13 @@ class MiDaS_Background_Foreground_Removal:
         # Original image
         img_original = tensor2pil(image).convert('RGB')
 
-        print("\033[34mWAS NS:\033[0m Downloading and loading MiDaS Model...")
+        cstr("Downloading and loading MiDaS Model...").msg.print()
         torch.hub.set_dir(self.midas_dir)
         midas = torch.hub.load("intel-isl/MiDaS", midas_model, trust_repo=True)
         device = torch.device("cuda") if torch.cuda.is_available(
         ) and use_cpu == 'false' else torch.device("cpu")
 
-        print('\033[34mWAS NS:\033[0m MiDaS is using device:', device)
+        cstr(f"MiDaS is using device: {device}").msg.print()
 
         midas.to(device).eval()
         midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
@@ -6065,7 +6260,7 @@ class MiDaS_Background_Foreground_Removal:
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         input_batch = transform(img).to(device)
 
-        print('\033[34mWAS NS:\033[0m Approximating depth from image.')
+        cstr("Approximating depth from image.").msg.print()
 
         with torch.no_grad():
             prediction = midas(input_batch)
@@ -6148,7 +6343,7 @@ class MiDaS_Background_Foreground_Removal:
     def install_midas(self):
         global MIDAS_INSTALLED
         if 'timm' not in packages():
-            print("\033[34mWAS NS:\033[0m Installing timm...")
+            cstr("Installing timm...").msg.print()
             subprocess.check_call(
                 [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
         MIDAS_INSTALLED = True
@@ -6186,12 +6381,12 @@ class WAS_NSP_CLIPTextEncoder:
         if mode == "Noodle Soup Prompts":
 
             new_text = nsp_parse(text, seed, noodle_key)
-            print('\033[34mWAS NS\033[0m CLIPTextEncode NSP:\n', new_text)
+            cstr(f"CLIPTextEncode NSP:\n {new_text}").msg.print()
             
         else:
         
             new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
-            print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
+            cstr(f"CLIPTextEncode Wildcards:\n {new_text}").msg.print()
 
         return ([[clip.encode(new_text), {}]], {"ui": {"prompt": new_text}})
 
@@ -6284,7 +6479,7 @@ class WAS_Prompt_Styles_Selector:
             with open(STYLES_PATH, 'r') as data:
                 styles = json.load(data)
         else:
-            print(f'\033[34mWAS NS\033[0m Error: The styles file does not exist at `{STYLES_PATH}`. Unable to load styles! Have you imported your AUTOMATIC1111 WebUI styles?')
+            cstr(f"The styles file does not exist at `{STYLES_PATH}`. Unable to load styles! Have you imported your AUTOMATIC1111 WebUI styles?").error.print()
             
         if styles and style != None or style != 'None':
             prompt = styles[style]['prompt']
@@ -6742,12 +6937,12 @@ class WAS_Text_Parse_NSP:
         if mode == "Noodle Soup Prompts":
 
             new_text = nsp_parse(text, seed, noodle_key)
-            print('\033[34mWAS NS\033[0m Text Parse NSP:', new_text)
+            cstr(f"Text Parse NSP:\n{new_text}").msg.print()
             
         else:
         
             new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
-            print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
+            cstr(f"CLIPTextEncode Wildcards:\n{new_text}").msg.print()
 
         return (new_text, )
 
@@ -6778,18 +6973,15 @@ class WAS_Text_Save:
 
         # Ensure path exists
         if not os.path.exists(path):
-            print(
-                f'\033[34mWAS NS\033[0m Warning: The path `{path}` doesn\'t exist! Creating it...')
+            cstr(f"The path `{path}` doesn't exist! Creating it...").warning.print()
             try:
                 os.makedirs(path, exist_ok=True)
             except OSError as e:
-                print(
-                    f'\033[34mWAS NS\033[0m Warning: The path `{path}` could not be created! Is there write access?\n{e}')
+                cstr(f"The path `{path}` could not be created! Is there write access?\n{e}").error.print()
 
         # Ensure content to save
         if text.strip == '':
-            print(
-                f'\033[34mWAS NS\033[0m Error: There is no text specified to save! Text is empty.')
+            cstr(f"There is no text specified to save! Text is empty.").error.print()
 
         # Parse filename tokens
         tokens = TextTokens()
@@ -6810,7 +7002,7 @@ class WAS_Text_Save:
             with open(file, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(content)
         except OSError:
-            print(f'\033[34mWAS Node Suite\033[0m Error: Unable to save file `{file}`')
+            cstr(f"Unable to save file `{file}`").error.print()
 
         
         
@@ -6853,7 +7045,7 @@ class WAS_Text_File_History:
         if dictionary_name != '[filename]' or dictionary_name not in [' ', '']:
             filename = dictionary_name
         if not os.path.exists(file_path):
-            print('\033[34mWAS Node Suite\033[0m Error: The path `{file_path}` specified cannot be found.')
+            cstr(f"The path `{file_path}` specified cannot be found.").error.print()
             return ('', {filename: []})
         with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
             text = file.read()
@@ -6963,7 +7155,7 @@ class WAS_Text_Add_Tokens:
             tk.addToken(token, token_value)
         
         # Current Tokens
-        print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
+        cstr(f'Current Custom Tokens:').msg.print()
         print(json.dumps(tk.custom_tokens, indent=4))
         
         return tokens
@@ -6997,7 +7189,7 @@ class WAS_Text_Add_Token_Input:
     def text_add_token(self, token_name, token_value):
 
         if token_name.strip() == '':
-            print(f'\033[34mWAS Node Suite\033[0m Error: a `token_name` is required for a token; token name provided is empty.')
+            cstr(f'A `token_name` is required for a token; token name provided is empty.').error.print()
             pass
 
         # Token Parser
@@ -7041,10 +7233,9 @@ class WAS_Text_to_Console:
 
     def text_to_console(self, text, label):
         if label.strip() != '':
-            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{text}\n')
+            cstr(f'\033[33m{label}\033[0m:\n{text}\n').msg.print()
         else:
-            print(
-                f'\033[34mWAS Node Suite \033[33mText to Console\033[0m:\n{text}\n')
+            cstr(f"\033[33mText to Console\033[0m:\n{text}\n").msg.print()
         return (text, )
 
 # DICT TO CONSOLE
@@ -7075,8 +7266,7 @@ class WAS_Dictionary_To_Console:
             pprint(dictionary, indent=4)
             print('')
         else:
-            print(
-                f'\033[34mWAS Node Suite \033[33mText to Console\033[0m:\n')
+            cstr(f"\033[33mText to Console\033[0m:\n")
             pprint(dictionary, indent=4)
             print('')
         return (dictionary, )
@@ -7109,8 +7299,7 @@ class WAS_Text_Load_From_File:
         if dictionary_name != '[filename]':
             filename = dictionary_name
         if not os.path.exists(file_path):
-            print(
-                f'\033[34mWAS Node Suite\033[0m Error: The path `{file_path}` specified cannot be found.')
+            cstr(f"The path `{file_path}` specified cannot be found.").error.print()
             return ('', {filename: []})
         with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
             text = file.read()
@@ -7225,24 +7414,17 @@ class WAS_BLIP_Analyze_Image:
             or 'transformers' not in packages() 
             or 'GitPython' not in packages()
             or 'fairscale' not in packages() ):
-            print("\033[34mWAS NS:\033[0m Installing BLIP dependencies...")
+            cstr("Installing BLIP dependencies...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'transformers==4.26.1', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
            
         if 'transformers==4.26.1' not in packages(True):
-            print("\033[34mWAS NS:\033[0m Installing BLIP compatible `transformers` (transformers==4.26.1)...")
+            cstr("Installing BLIP compatible `transformers` (transformers==4.26.1)...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', '--upgrade', '--force-reinstall', 'transformers==4.26.1'])
 
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
             from git.repo.base import Repo
-            print("\033[34mWAS NS:\033[0m Installing BLIP...")
+            cstr("Installing BLIP...").msg.print()
             Repo.clone_from('https://github.com/WASasquatch/BLIP-Python', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
-            
-        # Not sure this is needed
-        def create_fake_fairscale(self):
-            class FakeFairscale:
-                def checkpoint_wrapper(self):
-                    pass
-            sys.modules["fairscale.nn.checkpoint.checkpoint_activations"] = FakeFairscale
             
         def transformImage_legacy(input_image, image_size, device):
             raw_image = input_image.convert('RGB')   
@@ -7278,7 +7460,6 @@ class WAS_BLIP_Analyze_Image:
         size = 384
         
         if 'transformers==4.26.1' in packages(True):
-            print("Using Legacy `transformImaage()`")
             tensor = transformImage_legacy(image, size, device)
         else:
             tensor = transformImage(image, size, device)
@@ -7306,7 +7487,7 @@ class WAS_BLIP_Analyze_Image:
                 caption = model.generate(tensor, sample=False, num_beams=6, max_length=74, min_length=20) 
                 # nucleus sampling
                 #caption = model.generate(tensor, sample=True, top_p=0.9, max_length=75, min_length=10) 
-                print(f"\033[34mWAS NS\033[33m BLIP Caption:\033[0m", caption[0])
+                cstr(f"\033[33mBLIP Caption:\033[0m {caption[0]}").msg.print()
                 return (caption[0], )
                 
         elif mode == 'interrogate':
@@ -7330,11 +7511,11 @@ class WAS_BLIP_Analyze_Image:
 
             with torch.no_grad():
                 answer = model(tensor, question, train=False, inference='generate') 
-                print(f"\033[34mWAS NS\033[33m BLIP Answer:\033[0m", answer[0])
+                cstr(f"\033[33m BLIP Answer:\033[0m {answer[0]}").msg.print()
                 return (answer[0], )
                 
         else:
-            print(f"\033[34mWAS NS\033[0m Error: The selected mode `{mode}` is not a valid selection!")
+            cstr(f"The selected mode `{mode}` is not a valid selection!").error.print()
             return ('Invalid BLIP mode!', )
             
 # CLIPSeg Node
@@ -7422,19 +7603,23 @@ class WAS_CLIPSeg_Batch:
 
         if image_c is not None:
             if image_c.shape[-2:] != image_a.shape[-2:]:
-                raise ValueError("Size of image_c is different from image_a.")
+                cstr("Size of image_c is different from image_a.").error.print()
+                return
             images_pil.append(tensor2pil(image_c))
         if image_d is not None:
             if image_d.shape[-2:] != image_a.shape[-2:]:
-                raise ValueError("Size of image_d is different from image_a.")
+                cstr("Size of image_d is different from image_a.").error.print()
+                return
             images_pil.append(tensor2pil(image_d))
         if image_e is not None:
             if image_e.shape[-2:] != image_a.shape[-2:]:
-                raise ValueError("Size of image_e is different from image_a.")
+                cstr("Size of image_e is different from image_a.").error.print()
+                return
             images_pil.append(tensor2pil(image_e))
         if image_f is not None:
             if image_f.shape[-2:] != image_a.shape[-2:]:
-                raise ValueError("Size of image_f is different from image_a.")
+                cstr("Size of image_f is different from image_a.").error.print()
+                return
             images_pil.append(tensor2pil(image_f))
 
         images_tensor = [torch.from_numpy(np.array(img.convert("RGB")).astype(np.float32) / 255.0).unsqueeze(0) for img in images_pil]
@@ -7516,12 +7701,12 @@ class WAS_SAM_Model_Loader:
         model_filename = model_filename_mapping[model_size]
     
         if ( 'GitPython' not in packages() ):
-            print("\033[34mWAS NS:\033[0m Installing SAM dependencies...")
+            cstr("Installing SAM dependencies...").error.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'gitpython'])
         
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM')):
             from git.repo.base import Repo
-            print("\033[34mWAS NS:\033[0m Installing SAM...")
+            cstr("Installing SAM...").msg.print()
             Repo.clone_from('https://github.com/facebookresearch/segment-anything', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
         
         sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
@@ -7532,7 +7717,7 @@ class WAS_SAM_Model_Loader:
         
         sam_file = os.path.join(sam_dir, model_filename)
         if not os.path.exists(sam_file):
-            print("\033[34mWAS NS:\033[0m Selected SAM model not found. Downloading...")
+            cstr("Selected SAM model not found. Downloading...").msg.print()
             r = requests.get(model_url, allow_redirects=True)
             open(sam_file, 'wb').write(r.content)
         
@@ -7718,7 +7903,8 @@ class WAS_Inset_Image_Bounds:
 
         # Check if the resulting bounds are valid
         if rmin > rmax or cmin > cmax:
-            raise ValueError("\033[34mWAS NS\033[33m Error:\033[0m Invalid insets provided. Please make sure the insets do not exceed the image bounds.")
+            cstr("Invalid insets provided. Please make sure the insets do not exceed the image bounds.").error.print()
+            return
         
         image_bounds = [rmin, rmax, cmin, cmax]
         
@@ -7819,7 +8005,7 @@ class WAS_Bounded_Image_Crop:
 
         # Check if the provided bounds are valid
         if rmin > rmax or cmin > cmax:
-            raise ValueError("\033[34mWAS NS\033[33m Error:\033[0m Invalid bounds provided. Please make sure the bounds are within the image dimensions.")
+            cstr("Invalid bounds provided. Please make sure the bounds are within the image dimensions.").error.print()
 
         # Crop the image using the provided bounds and return it
         return (image[:, rmin:rmax+1, cmin:cmax+1, :],)
@@ -8001,7 +8187,7 @@ class WAS_True_Random_Number:
     def get_random_numbers(self, api_key=None, amount=1, minimum=0, maximum=10):
         '''Get random number(s) from random.org'''
         if api_key in [None, '00000000-0000-0000-0000-000000000000', '']:
-            print("\033[34mWAS NS\033[33m Error:\033[0m No API key provided! A valid RANDOM.ORG API key is required to use `True Random.org Number Generator`")
+            cstr("No API key provided! A valid RANDOM.ORG API key is required to use `True Random.org Number Generator`").error.print()
             return [0]
             
         url = "https://api.random.org/json-rpc/2/invoke"
@@ -8407,7 +8593,7 @@ class WAS_Latent_Size_To_Number:
         i = 0
         for tensor in samples['samples'][0]:
             if not isinstance(tensor, torch.Tensor):
-                raise ValueError(f'\033[34mWAS NS\033[0m Error: Input should be a torch.Tensor')
+                cstr(f'Input should be a torch.Tensor').error.print()
             shape = tensor.shape
             tensor_height = shape[-2]
             tensor_width = shape[-1]
@@ -8646,9 +8832,9 @@ class WAS_Debug_Number_to_Console:
 
     def debug_to_console(self, number, label):
         if label.strip() != '':
-            print(f'\033[34mWAS Node Suite \033[33m{label}\033[0m:\n{number}\n')
+            cstr(f'\033[33m{label}\033[0m:\n{number}\n').msg.print()
         else:
-            print(f'\033[34mWAS Node Suite \033[33mDebug to Console\033[0m:\n{number}\n')
+            cstr(f'\033[33mDebug to Console\033[0m:\n{number}\n').msg.print()
         return (number, )
         
     @classmethod
@@ -8657,6 +8843,8 @@ class WAS_Debug_Number_to_Console:
         
         
 # CUSTOM COMFYUI NODES
+
+
 
 class WAS_Checkpoint_Loader:
     @classmethod
@@ -8674,6 +8862,35 @@ class WAS_Checkpoint_Loader:
         ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint(config_path, ckpt_path, output_vae=True, output_clip=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
         return (out[0], out[1], out[2], os.path.splitext(os.path.basename(ckpt_name))[0])
+        
+class WAS_Diffusers_Hub_Model_Loader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "repo_id": ("STRING", {"multiline":False}),
+                              "revision": ("STRING", {"default": "None", "multiline":False})}}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
+    FUNCTION = "load_hub_checkpoint"
+
+    CATEGORY = "WAS Suite/Loaders/Advanced"
+
+    def load_hub_checkpoint(self, repo_id=None, revision=None):
+        if revision in ["", "None", "none", None]:
+            revision = None
+        model_path = comfy_paths.get_folder_paths("diffusers")[0]
+        self.download_diffusers_model(repo_id, model_path, revision)
+        diffusersLoader = nodes.DiffusersLoader()
+        model, clip, vae = diffusersLoader.load_checkpoint(os.path.join(model_path, repo_id))
+        return (model, clip, vae, repo_id)
+        
+    def download_diffusers_model(self, repo_id, local_dir, revision=None):
+        if 'huggingface-hub' not in packages():
+            cstr("Installing `huggingface_hub` ...").msg.print()
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'huggingface_hub'])
+        from huggingface_hub import snapshot_download
+        model_path = os.path.join(local_dir, repo_id)
+        ignore_patterns = ["*.ckpt","*.safetensors","*.onnx"]
+        snapshot_download(repo_id=repo_id, repo_type="model", local_dir=model_path, revision=revision, use_auth_token=False, ignore_patterns=ignore_patterns)
 
 class WAS_Checkpoint_Loader_Simple:
     @classmethod
@@ -8812,7 +9029,7 @@ class WAS_Video_Writer:
         
         conf = getSuiteConfig()
         if not conf.__contains__('ffmpeg_bin_path'):
-            print(f"\033[34mWAS Node Suite\033[0m Error: Unable to use MP4 Writer because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`")
+            cstr(f"Unable to use MP4 Writer because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`").error.print()
             return (image,"","")
 
         if conf.__contains__('ffmpeg_bin_path'):
@@ -8903,7 +9120,7 @@ class WAS_Create_Video_From_Path:
         
         conf = getSuiteConfig()
         if not conf.__contains__('ffmpeg_bin_path'):
-            print(f"\033[34mWAS Node Suite\033[0m Error: Unable to use MP4 Writer because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`")
+            cstr(f"Unable to use MP4 Writer because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`").error.print()
             return ("","")
 
         if conf.__contains__('ffmpeg_bin_path'):
@@ -8936,7 +9153,60 @@ class WAS_Create_Video_From_Path:
         MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), max_size, codec)
         path = MP4Writer.create_video(input_path, output_file)
         
-        return (path, filename)
+        return (path, filename)   
+        
+# VIDEO FRAME DUMP 
+
+class WAS_Video_Frame_Dump:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "video_path": ("STRING", {"default":"./ComfyUI/input/MyVideo.mp4", "multiline":False}),
+                "output_path": ("STRING", {"default": "./ComfyUI/input/MyVideo", "multiline": False}),
+                "prefix": ("STRING", {"default": "frame", "multiline": False}),
+                "extension": (["png","jpg","gif","tiff"],),
+            }
+        }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+        
+    RETURN_TYPES = (TEXT_TYPE,"NUMBER")
+    RETURN_NAMES = ("output_path","processed_count")
+    FUNCTION = "dump_video_frames"
+    
+    CATEGORY = "WAS Suite/Animation"
+    
+    def dump_video_frames(self, video_path, output_path, prefix="fame", extension="png"):
+        
+        conf = getSuiteConfig()
+        if not conf.__contains__('ffmpeg_bin_path'):
+            cstr(f"Unable to use dump frames because the `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}`").error.print()
+            return ("",0)
+
+        if conf.__contains__('ffmpeg_bin_path'):
+            if conf['ffmpeg_bin_path'] != "/path/to/ffmpeg":
+                sys.path.append(conf['ffmpeg_bin_path'])
+                os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
+                os.environ['OPENCV_FFMPEG_BINARY'] = conf['ffmpeg_bin_path']
+        
+        if output_path.strip() in [None, "", "."]:
+            output_path = "./ComfyUI/input/frames"
+            
+        tokens = TextTokens()
+        output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
+        prefix = tokens.parseTokens(prefix)
+
+        WTools = WAS_Tools_Class()
+        MP4Writer = WTools.VideoWriter()
+        processed = MP4Writer.extract(video_path, output_path, extension)
+        
+        return (output_path, processed)
         
 # CACHING
 
@@ -8968,7 +9238,7 @@ class WAS_Cache:
     def cache_input(self, latent_suffix="_cache", image_suffix="_cache", conditioning_suffix="_cache", latent=None, image=None, conditioning=None):
 
         if 'joblib' not in packages():
-            print("\033[34mWAS Node Suite:\033[0m Installing joblib...")
+            cstr("Installing joblib...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'joblib'])
             
         import joblib
@@ -8985,19 +9255,19 @@ class WAS_Cache:
             l_filename = f'l_{latent_suffix}.latent'
             out_file = os.path.join(output, l_filename)
             joblib.dump(latent, out_file)
-            print(f"\033[34mWAS Node Suite:\033[0m Latent saved to: {out_file}")     
+            cstr(f"Latent saved to: {out_file}").msg.print()    
             
         if image != None:
             i_filename = f'i_{image_suffix}.image'
             out_file = os.path.join(output, i_filename)
             joblib.dump(image, out_file)
-            print(f"\033[34mWAS Node Suite:\033[0m Tensor batch saved to: {out_file}")     
+            cstr(f"Tensor batch saved to: {out_file}").msg.print()
         
         if conditioning != None:
             c_filename = f'c_{conditioning_suffix}.conditioning'
             out_file = os.path.join(output, c_filename)
             joblib.dump(conditioning, os.path.join(output, out_file))
-            print(f"\033[34mWAS Node Suite:\033[0m Conditioning saved to: {out_file}")     
+            cstr(f"Conditioning saved to: {out_file}").msg.print()   
             
         return (l_filename, i_filename, c_filename)
         
@@ -9025,7 +9295,7 @@ class WAS_Load_Cache:
     def load_cache(self, latent_filename=None, image_filename=None, conditioning_filename=None):
 
         if 'joblib' not in packages():
-            print("\033[34mWAS Node Suite:\033[0m Installing joblib...")
+            cstr("Installing joblib...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'joblib'])
             
         import joblib
@@ -9041,21 +9311,21 @@ class WAS_Load_Cache:
             if os.path.exists(file):
                 latent = joblib.load(file)
             else:
-                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to locate cache file {file}")     
+                cstr(f"Unable to locate cache file {file}").error.print()
                 
         if image_filename not in ["",None]:
             file = os.path.join(input_path, image_filename)
             if os.path.exists(file):
                 image = joblib.load(file)
             else:
-                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to locate cache file {file}")               
+                cstr(f"Unable to locate cache file {file}").msg.print()             
                 
         if conditioning_filename not in ["",None]:
             file = os.path.join(input_path, conditioning_filename)
             if os.path.exists(file):
                 conditioning = joblib.load(file)
             else:
-                print(f"\033[34mWAS Node Suite\033[0m Error: Unable to locate cache file {file}")
+                cstr(f"Unable to locate cache file {file}").error.print()
             
         return (latent, image, conditioning)
 
@@ -9077,6 +9347,7 @@ NODE_CLASS_MAPPINGS = {
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
+    "Diffusers Hub Model Down-Loader": WAS_Diffusers_Hub_Model_Loader,
     "Latent Input Switch": WAS_Latent_Input_Switch,
     "Load Cache": WAS_Load_Cache,
     "Logic Boolean": WAS_Boolean,
@@ -9096,6 +9367,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Paste Face": WAS_Image_Paste_Face_Crop,
     "Image Paste Crop": WAS_Image_Paste_Crop,
     "Image Paste Crop by Location": WAS_Image_Paste_Crop_Location,
+    "Image Pixelate": WAS_Image_Pixelate,
     "Image Dragan Photography Filter": WAS_Dragon_Filter,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,
@@ -9209,6 +9481,7 @@ NODE_CLASS_MAPPINGS = {
     "Upscale Model Loader": WAS_Upscale_Model_Loader,
     "Write to GIF": WAS_Image_Morph_GIF_Writer,
     "Write to Video": WAS_Video_Writer,
+    "Video Dump Frames": WAS_Video_Frame_Dump,
 }    
 
 #! EXTRA NODES
@@ -9217,7 +9490,7 @@ NODE_CLASS_MAPPINGS = {
 BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
 if os.path.exists(BKAdvCLIP_dir):
 
-    print('\033[34mWAS Node Suite:\033[0m BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.')
+    cstr(f"BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.").msg.print()
     sys.path.append(BKAdvCLIP_dir)
     
     from adv_encode import advanced_encode
@@ -9245,15 +9518,11 @@ if os.path.exists(BKAdvCLIP_dir):
         def encode(self, clip, text, token_normalization, weight_interpretation, seed=0, mode="Noodle Soup Prompts", noodle_key="__"):
             
             if mode == "Noodle Soup Prompts":
-
                 new_text = nsp_parse(text, int(seed), noodle_key)
-                print('\033[34mWAS NS\033[0m CLIPTextEncode NSP:\n', new_text)
-                    
+                cstr(f"CLIPTextEncode NSP:\n{new_text}").msg.print()
             else:
-                
                 new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
-                print('\033[34mWAS NS\033[0m CLIPTextEncode Wildcards:\n', new_text)
-
+                cstr(f"CLIPTextEncode Wildcards:\n{new_text}").msg.print()
             
             encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
 
@@ -9262,7 +9531,7 @@ if os.path.exists(BKAdvCLIP_dir):
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})    
 
     if NODE_CLASS_MAPPINGS.__contains__("CLIPTextEncode (BlenderNeko Advanced + NSP)"):
-        print('\033[34mWAS Node Suite:\033[0m `CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.')
+        cstr('`CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.').msg.print()
     
 # opencv-python-headless handling
 if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
@@ -9272,52 +9541,52 @@ if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
         if "FFMPEG: YES" in build_info:
             if was_config.__contains__('show_startup_junk'):
                 if was_config['show_startup_junk']:
-                    print("\033[34mWAS Node Suite:\033[0m OpenCV Python FFMPEG support is enabled")
+                    cstr("OpenCV Python FFMPEG support is enabled").msg.print()
             if was_config.__contains__('ffmpeg_bin_path'):
                 if was_config['ffmpeg_bin_path'] == "/path/to/ffmpeg":
-                    print(f"\033[34mWAS Node Suite\033[0m Warning: `ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}` config file. Will attempt to use system ffmpeg binaries if available.") 
+                    cstr(f"`ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}` config file. Will attempt to use system ffmpeg binaries if available.").warning.print()
                 else:
                     if was_config.__contains__('show_startup_junk'):
                         if was_config['show_startup_junk']:
-                            print("\033[34mWAS Node Suite:\033[0m `ffmpeg_bin_path` is set to:", was_config['ffmpeg_bin_path'])                 
+                            cstr(f"`ffmpeg_bin_path` is set to: {was_config['ffmpeg_bin_path']}").msg.print()           
         else:
-            print("\033[34mWAS Node Suite: \033[93mOpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.")
+            cstr(f"OpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.").warning.print()
     except ImportError:
-        print("\033[34mWAS Node Suite: \033[93mOpenCV Python module cannot be found. Attempting install...")
+        cstr("OpenCV Python module cannot be found. Attempting install...").warning.print()
         subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'uninstall', 'opencv-python', 'opencv-python-headless[ffmpeg]'])
         subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
         try:
             import cv2
-            print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
+            cstr("OpenCV Python installed.").msg.print()
         except ImportError:
-            print("\033[34mWAS Node Suite: \033[93mOpenCV Python module still cannot be imported. There is a system conflict.")
+            cstr("OpenCV Python module still cannot be imported. There is a system conflict.").error.print()
 else:
-    print("\033[34mWAS Node Suite:\033[0m Installing `opencv-python-headless` ...")
+    cstr("Installing `opencv-python-headless` ...").msg.print()
     subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
     try:
         import cv2
-        print("\033[34mWAS Node Suite:\033[0m OpenCV Python installed.")
+        cstr("OpenCV Python installed.").msg.print()
     except ImportError:
-        print("\033[34mWAS Node Suite: \033[93mOpenCV Python module still cannot be imported. There is a system conflict.")
+        cstr("OpenCV Python module still cannot be imported. There is a system conflict.").error.print()
 
 # scipy handling
 if 'scipy' not in packages():
-    print("\033[34mWAS Node Suite:\033[0m Installing `scipy`....")
+    cstr("Installing `scipy` ...").msg.print()
     subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'scipy'])
     try:
         import scipy
     except ImportError as e:
-        print("\033[34mWAS Node Suite\033[0m Error: Unable to import tools for certain masking procedures.")
+        cstr("Unable to import tools for certain masking procedures.").msg.print()
         print(e)
         
 # scikit-image handling
 if 'scikit-image' not in packages():
-    print("\033[34mWAS Node Suite:\033[0m Installing `scikit-image`....")
+    cstr("Installing `scikit-image`....").msg.print()
     subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', '--user', '--force-reinstall', '--upgrade', 'scikit-image'])
     try:
         import skimage
     except ImportError as e:
-        print("\033[34mWAS Node Suite\033[0m Error: Unable to import tools for certain masking procedures.")
+        cstr("Unable to import tools for certain masking procedures.").error.print()
         print(e)
         
 was_conf = getSuiteConfig()
@@ -9332,7 +9601,7 @@ if was_conf.__contains__('suppress_uncomfy_warnings'):
 
 
 # Well we got here, we're as loaded as we're gonna get. 
-print(f'\033[34mWAS Node Suite: \033[92mLoaded \033[0m{len(NODE_CLASS_MAPPINGS.keys())}\033[92m nodes successfully.\033[0m')
+print(" ".join([cstr("Finished.").msg, cstr("Loaded").green, cstr(len(NODE_CLASS_MAPPINGS.keys())).end, cstr("nodes successfully.").green]))
 
 show_quotes = True
 if was_conf.__contains__('show_inspiration_quote'):

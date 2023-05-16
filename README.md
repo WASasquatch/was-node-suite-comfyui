@@ -53,6 +53,7 @@
    - Black White Levels
    - RGB Levels
      - Depends on `matplotlib`, will attempt to install on first run
+ - Diffusers Hub Down-Loader: Download a diffusers model from the HuggingFace Hub and load it
  - Image Blank: Create a blank image in any color
  - Image Blend by Mask: Blend two images by a mask
  - Image Blend: Blend two images by opacity
@@ -81,6 +82,7 @@
    - Samplers can resize/crop odd sized images
  - Image Paste Crop by Location: Paste a crop top a custom location. This uses the same blending algorithm as Image Paste Crop. 
    - Samplers can resize/crop odd sized images
+ - Image Pixelate: Turn a image into pixel art! Define the max number of colors, the pixelation mode, the random state, and max iterations, and max those sprites shine.
  - Image Dragan Photography Filter: Apply a Andrzej Dragan photography style to a image
  - Image Edge Detection Filter: Detect edges in a image
  - Image Film Grain: Apply film grain to a image
