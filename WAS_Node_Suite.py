@@ -5094,6 +5094,7 @@ class WAS_Image_RGB_Merge:
 class WAS_Image_Save:
     def __init__(self):
         self.output_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', "output")
+        self.type = "output"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -5136,6 +5137,7 @@ class WAS_Image_Save:
         # Define token system
         tokens = TextTokens()
         output_path = tokens.parseTokens(output_path)
+        base_output = os.path.basename(output_path)
 
         # Setup custom path or default
         if output_path.strip() != '':
@@ -5157,7 +5159,7 @@ class WAS_Image_Save:
         # Set Extension
         file_extension = (extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'png')
 
-        paths = list()
+        results = list()
         for image in images:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
@@ -5194,7 +5196,11 @@ class WAS_Image_Save:
                 else:
                     img.save(output_file)
                 cstr(f"Image file saved to: {output_file}").msg.print()
-                paths.append(file)
+                results.append({
+                    "filename": file,
+                    "subfolder": base_output,
+                    "type": self.type
+                })
             except OSError as e:
                 cstr(f'Unable to save file to: {output_file}').error.print()
                 print(e)
@@ -5205,7 +5211,7 @@ class WAS_Image_Save:
             if overwrite_mode == 'false':
                 counter += 1
                 
-        return {"ui": {"images": paths}}
+        return {"ui": {"images": results}}
 
         
 # LOAD IMAGE NODE
