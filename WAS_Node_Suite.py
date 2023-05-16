@@ -5102,6 +5102,8 @@ class WAS_Image_Save:
                 "images": ("IMAGE", ),
                 "output_path": ("STRING", {"default": './ComfyUI/output', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
+                "filename_delimiter": ("STRING", {"default":"_"}),
+                "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
                 "extension": (['png', 'jpeg', 'gif', 'tiff'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
@@ -5118,12 +5120,15 @@ class WAS_Image_Save:
 
     CATEGORY = "WAS Suite/IO"
 
-    def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false'):
+    def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', filename_number_padding=4):
+        delimiter = filename_delimiter
+        number_padding = filename_number_padding
+        
         def map_filename(filename):
             prefix_len = len(filename_prefix)
             prefix = filename[:prefix_len + 1]
             try:
-                digits = int(filename[prefix_len + 1:].split('_')[0])
+                digits = int(filename[prefix_len + 1:].split(delimiter)[0])
             except:
                 digits = 0
             return (digits, prefix)
@@ -5142,15 +5147,15 @@ class WAS_Image_Save:
         # Setup counter
         try:
             counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
-                            [-1] == "_", map(map_filename, os.listdir(self.output_dir))))[0] + 1
+                            [-1] == delimiter, map(map_filename, os.listdir(self.output_dir))))[0] + 1
         except ValueError:
             counter = 1
         except FileNotFoundError:
             os.makedirs(self.output_dir, exist_ok=True)
             counter = 1
-            
+        
         # Set Extension
-        file_extension = ( extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'png' )
+        file_extension = (extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'png')
 
         paths = list()
         for image in images:
@@ -5169,10 +5174,10 @@ class WAS_Image_Save:
             if overwrite_mode == 'prefix_as_filename':
                 file = f"{filename_prefix}.{file_extension}"
             else:
-                file = f"{filename_prefix}_{counter:05}_.{file_extension}"
+                file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}.{file_extension}"
                 if os.path.exists(os.path.join(self.output_dir, file)):
                     counter += 1
-                    file = f"{filename_prefix}_{counter:05}_.{file_extension}"
+                    file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}.{file_extension}"
             try:
                 output_file = os.path.abspath(os.path.join(self.output_dir, file))
                 if extension == 'png':
@@ -5194,13 +5199,14 @@ class WAS_Image_Save:
                 cstr(f'Unable to save file to: {output_file}').error.print()
                 print(e)
             except Exception as e:
-                cstr('Unable to save file due to the following error:').error.print()
+                cstr('Unable to save file due to the to the following error:').error.print()
                 print(e)
             
             if overwrite_mode == 'false':
                 counter += 1
                 
         return {"ui": {"images": paths}}
+
         
 # LOAD IMAGE NODE
 class WAS_Load_Image:
