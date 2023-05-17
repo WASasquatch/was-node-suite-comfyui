@@ -1105,7 +1105,7 @@ class WAS_Tools_Class():
             # Check that there are image files in the folder
             if len(image_paths) == 0:
                 cstr(f"No valid image files found in `{image_folder}` directory.").error.print()
-                cstr("Valid image formats are").error.print(*sort(ALLOWED_EXT), end=" ")
+                cstr(f"The valid formats are: {', '.join(sorted(ALLOWED_EXT))}").error.print()
                 return
 
             # Output file including extension
@@ -5124,40 +5124,52 @@ class WAS_Image_Save:
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', filename_number_padding=4):
         delimiter = filename_delimiter
         number_padding = filename_number_padding
-        
-        def map_filename(filename):
-            prefix_len = len(filename_prefix)
-            prefix = filename[:prefix_len + 1]
-            try:
-                digits = int(filename[prefix_len + 1:].split(delimiter)[0])
-            except:
-                digits = 0
-            return (digits, prefix)
-        
+
         # Define token system
         tokens = TextTokens()
-        output_path = tokens.parseTokens(output_path)
-        base_output = os.path.basename(output_path)
 
-        # Setup custom path or default
+        # Setup output path
+        if output_path in [None, '', "none", "."]:
+            output_path = self.output_dir
+        else:
+            output_path = tokens.parseTokens(output_path)
+        base_output = os.path.basename(output_path)
+        if output_path.endswith("ComfyUI/output") or output_path.endswith("ComfyUI\output"):
+            base_output = ""
+
+        # Check output destination
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
                 cstr(f'The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.').warning.print()
                 os.makedirs(output_path.strip(), exist_ok=True)
             self.output_dir = output_path.strip()
-
-        # Setup counter
-        try:
-            counter = max(filter(lambda a: a[1][:-1] == filename_prefix and a[1]
-                            [-1] == delimiter, map(map_filename, os.listdir(self.output_dir))))[0] + 1
-        except ValueError:
-            counter = 1
-        except FileNotFoundError:
-            os.makedirs(self.output_dir, exist_ok=True)
-            counter = 1
         
+        # Find existing counter values
+        pattern = f"{re.escape(filename_prefix)}{re.escape(delimiter)}(\\d{{{filename_number_padding}}})"
+        existing_counters = [
+            int(re.search(pattern, filename).group(1))
+            for filename in os.listdir(output_path)
+            if re.match(pattern, filename)
+        ]
+        existing_counters.sort(reverse=True)
+
+        # Set initial counter value
+        if existing_counters:
+            counter = existing_counters[0] + 1
+        else:
+            counter = 1
+
+        # Set initial counter value
+        if existing_counters:
+            counter = existing_counters[0] + 1
+        else:
+            counter = 1
+
         # Set Extension
-        file_extension = (extension if extension in ['png', 'jpeg', 'gif', 'tiff', 'gif'] else 'png')
+        file_extension = '.' + extension
+        if file_extension not in ALLOWED_EXT:
+            cstr(f"The extension `{extension}` is not valid. The valid formats are: {', '.join(sorted(ALLOWED_EXT))}").error.print()
+            file_extension = "png"
 
         results = list()
         for image in images:
@@ -5169,17 +5181,17 @@ class WAS_Image_Save:
             if extra_pnginfo is not None:
                 for x in extra_pnginfo:
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
-                
+
             # Parse prefix tokens
             filename_prefix = tokens.parseTokens(filename_prefix)
 
             if overwrite_mode == 'prefix_as_filename':
-                file = f"{filename_prefix}.{file_extension}"
+                file = f"{filename_prefix}{file_extension}"
             else:
-                file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}.{file_extension}"
+                file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
                 if os.path.exists(os.path.join(self.output_dir, file)):
                     counter += 1
-                    file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}.{file_extension}"
+                    file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
             try:
                 output_file = os.path.abspath(os.path.join(self.output_dir, file))
                 if extension == 'png':
