@@ -296,7 +296,7 @@ if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
     exit
 
 # SET TEXT TYPE
-TEXT_TYPE = "TEXT"
+TEXT_TYPE = "STRING"
 if was_config and was_config.__contains__('use_legacy_ascii_text'):
     if was_config['use_legacy_ascii_text']:
         TEXT_TYPE = "ASCII"
