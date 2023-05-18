@@ -2358,14 +2358,13 @@ class WAS_Image_Crop_Face:
                 cstr(f"Unable to find any faces with face_recognition, switching to cascade recognition...").warning.print()
             for cascade in cascades:
                 if not os.path.exists(cascade):
-                    cstr(f"Unable to find cascade XML file at `{cascade}`.",
-                        "Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?").error.print()
+                    cstr(f"Unable to find cascade XML file at `{cascade}`. Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?").error.print()
                     return (pil2tensor(Image.new("RGB", (512,512), (0,0,0))), False)
                 face_cascade = cv2.CascadeClassifier(cascade)
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
                 if len(faces) != 0:
-                    cstr("Face found with:", os.path.basename(cascade)).msg.print()
+                    cstr(f"Face found with: {os.path.basename(cascade)}").msg.print()
                     break
             if len(faces) == 0:
                 cstr("No faces found in the image!").warning.print()
