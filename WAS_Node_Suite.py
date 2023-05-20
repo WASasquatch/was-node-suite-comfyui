@@ -2006,10 +2006,11 @@ class WAS_Image_Pixelate:
                 "num_colors": ("FLOAT", {"default": 16, "min": 6, "max": 256, "step": 1}),
                 "init_mode": (["k-means++", "random"],),
                 "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
+                "dither": (["False", "True"],),
             },
             "optional": {
                 "color_palette_string": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "color_palette_mode": (["Linear", "Tonal"],),
+                "color_palette_mode": (["Brightness", "BrightnessAndTonal", "Linear", "Tonal"],),
                 "reverse_palette":(["False","True"],),
             }
         }
@@ -2020,7 +2021,8 @@ class WAS_Image_Pixelate:
     
     CATEGORY = "WAS Suite/Image/Adjustment"
     
-    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, color_palette_string=None, color_palette_mode="Linear", reverse_palette='False'):
+    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, 
+                        color_palette_string=None, color_palette_mode="Linear", reverse_palette='False', dither='False'):
     
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
@@ -2029,15 +2031,18 @@ class WAS_Image_Pixelate:
         pixelation_size = int(pixelation_size)
         num_colors = int(num_colors)
         max_iterations = int(max_iterations)
-        color_palette_mode = color_palette_mode.capitalize()
+        color_palette_mode = color_palette_mode
+        dither = (True if dither == 'True' else False)
         
         if color_palette_string:
-            color_palette_string = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//')]
+            color_palette = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//')]
         reverse_palette = (True if reverse_palette == 'True' else False)
 
-        return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, (color_palette_string if color_palette_string not in [None, ''] else None), color_palette_mode, reverse_palette), )
+        return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, 
+                (color_palette if color_palette not in [None, ''] else None), color_palette_mode, reverse_palette), dither)
 
-    def pixel_art_batch(self, batch, min_size, num_colors=16, init_mode='random', max_iter=100, random_state=42, palette=None, palette_mode="Linear", reverse_palette=False):
+    def pixel_art_batch(self, batch, min_size, num_colors=16, init_mode='random', max_iter=100, random_state=42, 
+                            palette=None, palette_mode="Linear", reverse_palette=False, dither=False):
 
         from sklearn.cluster import KMeans
 
@@ -2051,37 +2056,84 @@ class WAS_Image_Pixelate:
             flattened_image = flattened_pixels.reshape(np_image.shape)
             return Image.fromarray(flattened_image)
 
-        def color_distance(color1, color2):
-            r1, g1, b1 = color1
-            r2, g2, b2 = color2
-            return abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2)
-
-        def find_nearest_color_index(color, palette):
-            distances = [color_distance(color, palette_color) for palette_color in palette]
-            return distances.index(min(distances))
-
         def color_palette_from_hex_lines(image, colors, palette_mode='Linear', reverse_palette=False):
+        
+            def color_distance(color1, color2):
+                r1, g1, b1 = color1
+                r2, g2, b2 = color2
+                return np.sqrt((r1 - r2)**2 + (g1 - g2)**2 + (b1 - b2)**2)
+
+            def find_nearest_color_index(color, palette):
+                distances = [color_distance(color, palette_color) for palette_color in palette]
+                return distances.index(min(distances))
+
+            def find_nearest_color_index_tonal(color, palette):
+                distances = [color_distance_tonal(color, palette_color) for palette_color in palette]
+                return distances.index(min(distances))
+
+            def find_nearest_color_index_both(color, palette):
+                distances = [color_distance_both(color, palette_color) for palette_color in palette]
+                return distances.index(min(distances))
+
+            def color_distance_tonal(color1, color2):
+                r1, g1, b1 = color1
+                r2, g2, b2 = color2
+                l1 = 0.299 * r1 + 0.587 * g1 + 0.114 * b1
+                l2 = 0.299 * r2 + 0.587 * g2 + 0.114 * b2
+                return abs(l1 - l2)
+
+            def color_distance_both(color1, color2):
+                r1, g1, b1 = color1
+                r2, g2, b2 = color2
+                l1 = 0.299 * r1 + 0.587 * g1 + 0.114 * b1
+                l2 = 0.299 * r2 + 0.587 * g2 + 0.114 * b2
+                return abs(l1 - l2) + sum(abs(c1 - c2) for c1, c2 in zip(color1, color2))
+
+            def color_distance(color1, color2):
+                return sum(abs(c1 - c2) for c1, c2 in zip(color1, color2))
+        
             hex_palette_to_rgb = lambda hex: tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
             color_palette = [hex_palette_to_rgb(color.lstrip('#')) for color in colors]
+
             if reverse_palette:
                 color_palette = color_palette[::-1]
+
             np_image = np.array(image)
             labels = np_image.reshape(image.size[1], image.size[0], -1)
             width, height = image.size
             new_image = Image.new("RGB", image.size)
+
+            if palette_mode == 'Linear':
+                color_palette_indices = list(range(len(color_palette)))
+            elif palette_mode == 'Brightness':
+                color_palette_indices = sorted(range(len(color_palette)), key=lambda i: sum(color_palette[i]) / 3)
+            elif palette_mode == 'Tonal':
+                color_palette_indices = sorted(range(len(color_palette)), key=lambda i: color_distance(color_palette[i], (128, 128, 128)))
+            elif palette_mode == 'BrightnessAndTonal':
+                color_palette_indices = sorted(range(len(color_palette)), key=lambda i: (sum(color_palette[i]) / 3, color_distance(color_palette[i], (128, 128, 128))))
+            else:
+                raise ValueError(f"Unsupported mapping mode: {palette_mode}")
+
             for x in range(width):
                 for y in range(height):
                     pixel_color = labels[y, x, :]
+
                     if palette_mode == 'Linear':
                         color_index = pixel_color[0] % len(color_palette)
+                    elif palette_mode == 'Brightness':
+                        color_index = find_nearest_color_index(pixel_color, [color_palette[i] for i in color_palette_indices])
                     elif palette_mode == 'Tonal':
-                        color_index = find_nearest_color_index(pixel_color, color_palette)
+                        color_index = find_nearest_color_index_tonal(pixel_color, [color_palette[i] for i in color_palette_indices])
+                    elif palette_mode == 'BrightnessAndTonal':
+                        color_index = find_nearest_color_index_both(pixel_color, [color_palette[i] for i in color_palette_indices])
                     else:
                         raise ValueError(f"Unsupported mapping mode: {palette_mode}")
-                    color = color_palette[color_index]
+
+                    color = color_palette[color_palette_indices[color_index]]
                     new_image.putpixel((x, y), color)
+
             return new_image
-            
+
         pil_images = [tensor2pil(image) for image in batch]
         downsized_images = []
         original_sizes = []
@@ -2099,9 +2151,11 @@ class WAS_Image_Pixelate:
             else:
                 downsized_images.append(image)
         flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
-        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(flattened_images, original_sizes)]
         if palette:
-            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in pixel_art_images]
+            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in flattened_images]
+        if dither:
+            pixel_art_images = [image.convert("RGB", dither=Image.FLOYDSTEINBERG) for image in pixel_art_images] 
+        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)]            
         tensor_images = [pil2tensor(image) for image in pixel_art_images]
         batch_tensor = torch.cat(tensor_images, dim=0)
         return batch_tensor
