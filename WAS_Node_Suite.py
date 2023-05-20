@@ -2006,8 +2006,11 @@ class WAS_Image_Pixelate:
                 "num_colors": ("FLOAT", {"default": 16, "min": 6, "max": 256, "step": 1}),
                 "init_mode": (["k-means++", "random"],),
                 "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
-                "seed": ("INT", {"default": 100, "min": 0, "max": 0xffffffffffffffff}),  
-
+            },
+            "optional": {
+                "color_palette_string": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "color_palette_mode": (["Linear", "Tonal"],),
+                "reverse_palette":(["False","True"],),
             }
         }
     
@@ -2017,22 +2020,26 @@ class WAS_Image_Pixelate:
     
     CATEGORY = "WAS Suite/Image/Adjustment"
     
-    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, seed=42):
+    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, color_palette_string=None, color_palette_mode="Linear", reverse_palette='False'):
     
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
-    
-        return ( self.pixelate_batch(images, pixelation_size, num_colors, init_mode, max_iterations, seed), )
+            
+        pixelation_size = int(pixelation_size)
+        num_colors = int(num_colors)
+        max_iterations = int(max_iterations)
+        color_palette_mode = color_palette_mode.capitalize()
+        
+        if color_palette_string:
+            color_palette_string = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//')]
+        reverse_palette = (True if reverse_palette == 'True' else False)
 
-    def pixelate_batch(self, images, max_size, num_colors=16, init_mode='random', max_iter=100, random_state=42):
+        return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, (color_palette_string if color_palette_string not in [None, ''] else None), color_palette_mode, reverse_palette), )
+
+    def pixel_art_batch(self, batch, min_size, num_colors=16, init_mode='random', max_iter=100, random_state=42, palette=None, palette_mode="Linear", reverse_palette=False):
 
         from sklearn.cluster import KMeans
-    
-        max_size = int(max_size)
-        num_colors = int(num_colors)
-        max_iter = int(max_iter)
-        random_state = int(random_state)
 
         def flatten_colors(image, num_colors, init_mode='random', max_iter=100, random_state=42):
             np_image = np.array(image)
@@ -2044,28 +2051,61 @@ class WAS_Image_Pixelate:
             flattened_image = flattened_pixels.reshape(np_image.shape)
             return Image.fromarray(flattened_image)
 
-        pil_images = [tensor2pil(image) for image in images]
+        def color_distance(color1, color2):
+            r1, g1, b1 = color1
+            r2, g2, b2 = color2
+            return abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2)
+
+        def find_nearest_color_index(color, palette):
+            distances = [color_distance(color, palette_color) for palette_color in palette]
+            return distances.index(min(distances))
+
+        def color_palette_from_hex_lines(image, colors, palette_mode='Linear', reverse_palette=False):
+            hex_palette_to_rgb = lambda hex: tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+            color_palette = [hex_palette_to_rgb(color.lstrip('#')) for color in colors]
+            if reverse_palette:
+                color_palette = color_palette[::-1]
+            np_image = np.array(image)
+            labels = np_image.reshape(image.size[1], image.size[0], -1)
+            width, height = image.size
+            new_image = Image.new("RGB", image.size)
+            for x in range(width):
+                for y in range(height):
+                    pixel_color = labels[y, x, :]
+                    if palette_mode == 'Linear':
+                        color_index = pixel_color[0] % len(color_palette)
+                    elif palette_mode == 'Tonal':
+                        color_index = find_nearest_color_index(pixel_color, color_palette)
+                    else:
+                        raise ValueError(f"Unsupported mapping mode: {palette_mode}")
+                    color = color_palette[color_index]
+                    new_image.putpixel((x, y), color)
+            return new_image
+            
+        pil_images = [tensor2pil(image) for image in batch]
         downsized_images = []
         original_sizes = []
         for image in pil_images:
             width, height = image.size
             original_sizes.append((width, height))
-            if max(width, height) > max_size:
+            if max(width, height) > min_size:
                 if width > height:
-                    new_width = max_size
-                    new_height = int(height * (max_size / width))
+                    new_width = min_size
+                    new_height = int(height * (min_size / width))
                 else:
-                    new_height = max_size
-                    new_width = int(width * (max_size / height))
-                downsized_images.append(image.resize((new_width, new_height), Image.NEAREST))
+                    new_height = min_size
+                    new_width = int(width * (min_size / height))
+                downsized_images.append(image.resize((new_width, int(new_height)), Image.NEAREST))
             else:
                 downsized_images.append(image)
         flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
         pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(flattened_images, original_sizes)]
+        if palette:
+            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in pixel_art_images]
         tensor_images = [pil2tensor(image) for image in pixel_art_images]
         batch_tensor = torch.cat(tensor_images, dim=0)
         return batch_tensor
-        
+
         
 # SIMPLE IMAGE ADJUST
 
