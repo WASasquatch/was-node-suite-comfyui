@@ -2003,7 +2003,7 @@ class WAS_Image_Pixelate:
             "required": {
                 "images": ("IMAGE",),
                 "pixelation_size": ("FLOAT", {"default": 164, "min": 16, "max": 256, "step": 1}),
-                "num_colors": ("FLOAT", {"default": 16, "min": 6, "max": 256, "step": 1}),
+                "num_colors": ("FLOAT", {"default": 16, "min": 2, "max": 256, "step": 1}),
                 "init_mode": (["k-means++", "random"],),
                 "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
                 "dither": (["False", "True"],),
@@ -2398,8 +2398,7 @@ class WAS_Image_Crop_Face:
                                 "haarcascade_profileface.xml",
                                 "haarcascade_upperbody.xml"
                                 ],),
-                "use_face_recognition_gpu": (["false","true"],),
-            }
+                }
         }
     
     RETURN_TYPES = ("IMAGE", "CROP_DATA")
@@ -2407,27 +2406,15 @@ class WAS_Image_Crop_Face:
     
     CATEGORY = "WAS Suite/Image/Process"
     
-    def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25, use_face_recognition_gpu="false"):
-    
-        use_fr = False if use_face_recognition_gpu.strip().lower() == 'false' else True
-        
-        if use_fr:
-            if 'face_recognition' not in packages():
-                cstr("Installing face_recognition...").msg.print()
-                subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'face_recognition'])
-        
+    def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25):
         return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor, use_fr)
     
-    def crop_face(self, image, cascade_name=None, padding=0.25, use_fr=False):
+    def crop_face(self, image, cascade_name=None, padding=0.25):
     
         import cv2
-        if use_fr:
-            import face_recognition
 
         img = np.array(image.convert('RGB'))
 
-        if use_fr:
-            face_location = face_recognition.face_locations(img)
         else:
             face_location = None
 
@@ -2448,8 +2435,6 @@ class WAS_Image_Crop_Face:
 
         faces = None
         if not face_location:
-            if use_fr:
-                cstr(f"Unable to find any faces with face_recognition, switching to cascade recognition...").warning.print()
             for cascade in cascades:
                 if not os.path.exists(cascade):
                     cstr(f"Unable to find cascade XML file at `{cascade}`. Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?").error.print()
