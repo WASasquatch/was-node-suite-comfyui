@@ -2415,8 +2415,7 @@ class WAS_Image_Crop_Face:
 
         img = np.array(image.convert('RGB'))
 
-        else:
-            face_location = None
+        face_location = None
 
         cascades = [ os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'lbpcascade_animeface.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_default.xml'), 
@@ -9051,13 +9050,15 @@ class WAS_unCLIP_Checkpoint_Loader:
         ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
         return (out[0], out[1], out[2], out[3], os.path.splitext(os.path.basename(ckpt_name))[0])
-        
+
 class WAS_Lora_Loader:
     @classmethod
     def INPUT_TYPES(s):
+        file_list = comfy_paths.get_filename_list("loras")
+        file_list.insert(0, "None")
         return {"required": { "model": ("MODEL",),
                               "clip": ("CLIP", ),
-                              "lora_name": (comfy_paths.get_filename_list("loras"), ),
+                              "lora_name": (file_list, ),
                               "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                               "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                               }}
@@ -9068,6 +9069,10 @@ class WAS_Lora_Loader:
     CATEGORY = "WAS Suite/Loaders"
 
     def load_lora(self, model, clip, lora_name, strength_model, strength_clip):
+        if lora_name == 'None':
+            lora_name = file_list = comfy_paths.get_filename_list("loras")[0]
+            strength_model = 0.0
+            strength_clip = 0.0
         lora_path = comfy_paths.get_full_path("loras", lora_name)
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora_path, strength_model, strength_clip)
         return (model_lora, clip_lora, os.path.splitext(os.path.basename(lora_name))[0])
@@ -9512,6 +9517,7 @@ NODE_CLASS_MAPPINGS = {
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
+    "Load Lora": WAS_Lora_Loader,
     "Masks Add": WAS_Mask_Add,
     "Masks Subtract": WAS_Mask_Subtract,
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
