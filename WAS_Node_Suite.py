@@ -2004,9 +2004,10 @@ class WAS_Image_Pixelate:
                 "images": ("IMAGE",),
                 "pixelation_size": ("FLOAT", {"default": 164, "min": 16, "max": 256, "step": 1}),
                 "num_colors": ("FLOAT", {"default": 16, "min": 2, "max": 256, "step": 1}),
-                "init_mode": (["k-means++", "random"],),
+                "init_mode": (["k-means++", "random", "none"],),
                 "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
                 "dither": (["False", "True"],),
+                "dither_mode": (["FloydSteinberg", "Ordered"],),
             },
             "optional": {
                 "color_palette_string": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
@@ -2022,7 +2023,7 @@ class WAS_Image_Pixelate:
     CATEGORY = "WAS Suite/Image/Adjustment"
     
     def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, 
-                        color_palette_string=None, color_palette_mode="Linear", reverse_palette='False', dither='False'):
+                        color_palette_string=None, color_palette_mode="Linear", reverse_palette='False', dither='False', dither_mode='FloydSteinberg'):
     
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
@@ -2032,17 +2033,18 @@ class WAS_Image_Pixelate:
         num_colors = int(num_colors)
         max_iterations = int(max_iterations)
         color_palette_mode = color_palette_mode
-        dither = (True if dither == 'True' else False)
+        dither = (dither == 'True')
         
+        color_palette = None
         if color_palette_string:
             color_palette = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//')]
         reverse_palette = (True if reverse_palette == 'True' else False)
 
         return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, 
-                (color_palette if color_palette not in [None, ''] else None), color_palette_mode, reverse_palette), dither)
+                (color_palette if color_palette not in [None, ''] else None), color_palette_mode, reverse_palette, dither, dither_mode), )
 
     def pixel_art_batch(self, batch, min_size, num_colors=16, init_mode='random', max_iter=100, random_state=42, 
-                            palette=None, palette_mode="Linear", reverse_palette=False, dither=False):
+                            palette=None, palette_mode="Linear", reverse_palette=False, dither=False, dither_mode='FloydSteinberg'):
 
         from sklearn.cluster import KMeans
 
@@ -2055,6 +2057,57 @@ class WAS_Image_Pixelate:
             flattened_pixels = colors[labels]
             flattened_image = flattened_pixels.reshape(np_image.shape)
             return Image.fromarray(flattened_image)
+
+        def dither_image(image, mode, nc):
+            def get_new_val(old_val, nc):
+                return np.round(old_val * (nc - 1)) / (nc - 1)
+
+            def fs_dither(img, nc):
+                arr = np.array(img, dtype=float) / 255
+                new_width, new_height = img.size
+
+                for ir in range(new_height):
+                    for ic in range(new_width):
+                        old_val = arr[ir, ic].copy()
+                        new_val = get_new_val(old_val, nc)
+                        arr[ir, ic] = new_val
+                        err = old_val - new_val
+
+                        if ic < new_width - 1:
+                            arr[ir, ic + 1] += err * 7/16
+                        if ir < new_height - 1:
+                            if ic > 0:
+                                arr[ir + 1, ic - 1] += err * 3/16
+                            arr[ir + 1, ic] += err * 5/16
+                            if ic < new_width - 1:
+                                arr[ir + 1, ic + 1] += err / 16
+
+                carr = np.array(arr * 255, dtype=np.uint8)
+                return Image.fromarray(carr)
+
+            width, height = image.size
+
+            if mode == 'FloydSteinberg':
+                dithered_image = fs_dither(image, nc)
+                return dithered_image
+
+            elif mode == 'Ordered':
+                dither_matrix = [
+                    [0, 8, 2, 10],
+                    [12, 4, 14, 6],
+                    [3, 11, 1, 9],
+                    [15, 7, 13, 5]
+                ]
+                dithered_image = Image.new('RGB', (width, height))
+                for y in range(height):
+                    for x in range(width):
+                        old_pixel = image.getpixel((x, y))
+                        threshold = dither_matrix[x % 4][y % 4] * 16
+                        new_pixel = tuple(255 if c >= threshold else 0 for c in old_pixel)
+                        dithered_image.putpixel((x, y), new_pixel)
+                return dithered_image
+
+            return image
 
         def color_palette_from_hex_lines(image, colors, palette_mode='Linear', reverse_palette=False):
         
@@ -2150,11 +2203,15 @@ class WAS_Image_Pixelate:
                 downsized_images.append(image.resize((new_width, int(new_height)), Image.NEAREST))
             else:
                 downsized_images.append(image)
-        flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
-        if palette:
-            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in flattened_images]
+        flattened_images = downsized_images
+        if init_mode != 'none':
+            flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
         if dither:
-            pixel_art_images = [image.convert("RGB", dither=Image.FLOYDSTEINBERG) for image in pixel_art_images] 
+            pixel_art_images = [dither_image(image, dither_mode, num_colors) for image in flattened_images] 
+        if palette:
+            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in pixel_art_images]
+        else:
+            pixel_art_images = pixel_art_images
         pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)]            
         tensor_images = [pil2tensor(image) for image in pixel_art_images]
         batch_tensor = torch.cat(tensor_images, dim=0)
