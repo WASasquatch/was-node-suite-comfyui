@@ -1906,26 +1906,27 @@ class WAS_Tools_Class():
         
 
     def generate_palette(self, img, n_colors=16, cell_size=128, padding=10, font_path=None, font_size=15):
-
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
 
         from sklearn.cluster import KMeans
 
-        # Resize the image to speed up processing
         img = img.resize((img.width // 2, img.height // 2), resample=Image.BILINEAR)
-        # Convert the image to a numpy array
         pixels = np.array(img)
-        # Flatten the pixel array to get a 2D array of RGB values
         pixels = pixels.reshape((-1, 3))
-        # Initialize the KMeans model with the specified number of colors
         kmeans = KMeans(n_clusters=n_colors, random_state=0, n_init='auto').fit(pixels)
-        # Get the cluster centers and convert them to integer values
         cluster_centers = np.uint8(kmeans.cluster_centers_)
-        # Calculate the size of the palette image based on the number of colors
-        palette_size = (cell_size * (int(np.sqrt(n_colors))+1)//2*2, cell_size * (int(np.sqrt(n_colors))+1)//2*2)
-        # Create a square image with the cluster centers as the color palette
+
+        # Calculate the number of rows and columns based on the number of colors
+        num_rows = int(np.sqrt(n_colors))
+        num_cols = int(np.ceil(n_colors / num_rows))
+
+        # Calculate the size of the palette image based on the number of rows and columns
+        palette_width = num_cols * cell_size
+        palette_height = num_rows * cell_size
+        palette_size = (palette_width + padding * 2, palette_height + padding * 2)
+
         palette = Image.new('RGB', palette_size, color='white')
         draw = ImageDraw.Draw(palette)
         if font_path:
@@ -1933,22 +1934,26 @@ class WAS_Tools_Class():
         else:
             font = ImageFont.load_default()
         stroke_width = 1
+        hex_palette = []
         for i in range(n_colors):
             color = tuple(cluster_centers[i])
-            x = i % int(np.sqrt(n_colors))
-            y = i // int(np.sqrt(n_colors))
-            # Calculate the position of the cell and text
-            cell_x = x * cell_size + padding
-            cell_y = y * cell_size + padding
-            text_x = cell_x + ( padding / 2 )
+            row = i % num_rows
+            col = i // num_rows
+            cell_x = col * cell_size + padding
+            cell_y = row * cell_size + padding
+            text_x = cell_x + (padding / 2)
             text_y = int(cell_y + cell_size / 1.2) - font.getsize('A')[1] - padding
-            # Draw the cell and text with padding
-            draw.rectangle((cell_x, cell_y, cell_x + cell_size - padding * 2, cell_y + cell_size - padding * 2), fill=color, outline='black', width=1)
-            draw.text((text_x+1, text_y+1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
+
+            draw.rectangle((cell_x, cell_y, cell_x + cell_size - padding * 2, cell_y + cell_size - padding * 2),
+                           fill=color, outline='black', width=1)
+            draw.text((text_x + 1, text_y + 1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
             draw.text((text_x, text_y), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='white')
-        # Resize the image back to the original size
+
+            hex_palette.append('#%02x%02x%02x' % color)
+
         palette = palette.resize((palette.width * 2, palette.height * 2), resample=Image.NEAREST)
-        return palette
+        return palette, '\n'.join(hex_palette)
+
 
 #! IMAGE FILTER NODES
 
@@ -3329,6 +3334,7 @@ class WAS_Image_Blending_Mode:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "image_blending_mode"
 
     CATEGORY = "WAS Suite/Image"
@@ -3409,6 +3415,7 @@ class WAS_Image_Blend:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "image_blend"
 
     CATEGORY = "WAS Suite/Image"
@@ -3449,6 +3456,7 @@ class WAS_Image_Monitor_Distortion_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "image_monitor_filters"
 
     CATEGORY = "WAS Suite/Image/Filter"
@@ -3496,6 +3504,7 @@ class WAS_Image_Perlin_Noise_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "perlin_noise_filter"
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
@@ -3531,6 +3540,7 @@ class WAS_Image_Voronoi_Noise_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "voronoi_noise_filter"
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
@@ -3563,6 +3573,7 @@ class WAS_Image_Make_Seamless:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "make_seamless"
 
     CATEGORY = "WAS Suite/Image/Process"
@@ -3592,7 +3603,8 @@ class WAS_Image_Color_Palette:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE",TEXT_TYPE)
+    RETURN_NAMES = ("image","color_palette_string")
     FUNCTION = "image_generate_palette"
 
     CATEGORY = "WAS Suite/Image/Analyze"
@@ -3614,9 +3626,9 @@ class WAS_Image_Color_Palette:
             cstr(f'\Found font at `{font}`').msg.print()
 
         # Generate Color Palette
-        image = WTools.generate_palette(image, colors, 128, 10, font, 15)
+        image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15)
 
-        return (pil2tensor(image), )
+        return (pil2tensor(image), palette)
         
         
 
