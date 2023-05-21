@@ -2059,6 +2059,10 @@ class WAS_Image_Pixelate:
             return Image.fromarray(flattened_image)
 
         def dither_image(image, mode, nc):
+        
+            def clamp(value, min_value=0, max_value=255):
+                return max(min(value, max_value), min_value)
+    
             def get_new_val(old_val, nc):
                 return np.round(old_val * (nc - 1)) / (nc - 1)
 
@@ -2090,7 +2094,6 @@ class WAS_Image_Pixelate:
             if mode == 'FloydSteinberg':
                 dithered_image = fs_dither(image, nc)
                 return dithered_image
-
             elif mode == 'Ordered':
                 dither_matrix = [
                     [0, 8, 2, 10],
@@ -2099,12 +2102,42 @@ class WAS_Image_Pixelate:
                     [15, 7, 13, 5]
                 ]
                 dithered_image = Image.new('RGB', (width, height))
+                num_colors = min(2 ** int(np.log2(nc)), 16)
                 for y in range(height):
                     for x in range(width):
                         old_pixel = image.getpixel((x, y))
-                        threshold = dither_matrix[x % 4][y % 4] * 16
-                        new_pixel = tuple(255 if c >= threshold else 0 for c in old_pixel)
+                        threshold = dither_matrix[x % 4][y % 4] * num_colors
+                        new_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in old_pixel)
+                        error = tuple(old - new for old, new in zip(old_pixel, new_pixel))
                         dithered_image.putpixel((x, y), new_pixel)
+                        
+                        if x < width - 1:
+                            neighboring_pixel = image.getpixel((x + 1, y))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 7 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x + 1, y), neighboring_pixel)
+
+                        if x < width - 1 and y < height - 1:
+                            neighboring_pixel = image.getpixel((x + 1, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 1 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x + 1, y + 1), neighboring_pixel)
+
+                        if y < height - 1:
+                            neighboring_pixel = image.getpixel((x, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 5 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x, y + 1), neighboring_pixel)
+
+                        if x > 0 and y < height - 1:
+                            neighboring_pixel = image.getpixel((x - 1, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 3 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x - 1, y + 1), neighboring_pixel)
                 return dithered_image
 
             return image
