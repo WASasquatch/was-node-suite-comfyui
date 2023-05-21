@@ -1906,26 +1906,27 @@ class WAS_Tools_Class():
         
 
     def generate_palette(self, img, n_colors=16, cell_size=128, padding=10, font_path=None, font_size=15):
-
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
 
         from sklearn.cluster import KMeans
 
-        # Resize the image to speed up processing
         img = img.resize((img.width // 2, img.height // 2), resample=Image.BILINEAR)
-        # Convert the image to a numpy array
         pixels = np.array(img)
-        # Flatten the pixel array to get a 2D array of RGB values
         pixels = pixels.reshape((-1, 3))
-        # Initialize the KMeans model with the specified number of colors
         kmeans = KMeans(n_clusters=n_colors, random_state=0, n_init='auto').fit(pixels)
-        # Get the cluster centers and convert them to integer values
         cluster_centers = np.uint8(kmeans.cluster_centers_)
-        # Calculate the size of the palette image based on the number of colors
-        palette_size = (cell_size * (int(np.sqrt(n_colors))+1)//2*2, cell_size * (int(np.sqrt(n_colors))+1)//2*2)
-        # Create a square image with the cluster centers as the color palette
+
+        # Calculate the number of rows and columns based on the number of colors
+        num_rows = int(np.sqrt(n_colors))
+        num_cols = int(np.ceil(n_colors / num_rows))
+
+        # Calculate the size of the palette image based on the number of rows and columns
+        palette_width = num_cols * cell_size
+        palette_height = num_rows * cell_size
+        palette_size = (palette_width + padding * 2, palette_height + padding * 2)
+
         palette = Image.new('RGB', palette_size, color='white')
         draw = ImageDraw.Draw(palette)
         if font_path:
@@ -1933,22 +1934,26 @@ class WAS_Tools_Class():
         else:
             font = ImageFont.load_default()
         stroke_width = 1
+        hex_palette = []
         for i in range(n_colors):
             color = tuple(cluster_centers[i])
-            x = i % int(np.sqrt(n_colors))
-            y = i // int(np.sqrt(n_colors))
-            # Calculate the position of the cell and text
-            cell_x = x * cell_size + padding
-            cell_y = y * cell_size + padding
-            text_x = cell_x + ( padding / 2 )
+            row = i % num_rows
+            col = i // num_rows
+            cell_x = col * cell_size + padding
+            cell_y = row * cell_size + padding
+            text_x = cell_x + (padding / 2)
             text_y = int(cell_y + cell_size / 1.2) - font.getsize('A')[1] - padding
-            # Draw the cell and text with padding
-            draw.rectangle((cell_x, cell_y, cell_x + cell_size - padding * 2, cell_y + cell_size - padding * 2), fill=color, outline='black', width=1)
-            draw.text((text_x+1, text_y+1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
+
+            draw.rectangle((cell_x, cell_y, cell_x + cell_size - padding * 2, cell_y + cell_size - padding * 2),
+                           fill=color, outline='black', width=1)
+            draw.text((text_x + 1, text_y + 1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
             draw.text((text_x, text_y), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='white')
-        # Resize the image back to the original size
+
+            hex_palette.append('#%02x%02x%02x' % color)
+
         palette = palette.resize((palette.width * 2, palette.height * 2), resample=Image.NEAREST)
-        return palette
+        return palette, '\n'.join(hex_palette)
+
 
 #! IMAGE FILTER NODES
 
@@ -2003,11 +2008,16 @@ class WAS_Image_Pixelate:
             "required": {
                 "images": ("IMAGE",),
                 "pixelation_size": ("FLOAT", {"default": 164, "min": 16, "max": 256, "step": 1}),
-                "num_colors": ("FLOAT", {"default": 16, "min": 6, "max": 256, "step": 1}),
-                "init_mode": (["k-means++", "random"],),
+                "num_colors": ("FLOAT", {"default": 16, "min": 2, "max": 256, "step": 1}),
+                "init_mode": (["k-means++", "random", "none"],),
                 "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
-                "seed": ("INT", {"default": 100, "min": 0, "max": 0xffffffffffffffff}),  
-
+                "dither": (["False", "True"],),
+                "dither_mode": (["FloydSteinberg", "Ordered"],),
+            },
+            "optional": {
+                "color_palette_string": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "color_palette_mode": (["Brightness", "BrightnessAndTonal", "Linear", "Tonal"],),
+                "reverse_palette":(["False","True"],),
             }
         }
     
@@ -2017,22 +2027,33 @@ class WAS_Image_Pixelate:
     
     CATEGORY = "WAS Suite/Image/Adjustment"
     
-    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, seed=42):
+    def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, 
+                        color_palette_string=None, color_palette_mode="Linear", reverse_palette='False', dither='False', dither_mode='FloydSteinberg'):
     
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
-    
-        return ( self.pixelate_batch(images, pixelation_size, num_colors, init_mode, max_iterations, seed), )
+            
+        pixelation_size = int(pixelation_size)
+        num_colors = int(num_colors)
+        max_iterations = int(max_iterations)
+        color_palette_mode = color_palette_mode
+        dither = (dither == 'True')
+        
+        color_palette = None
+        if color_palette_string:
+            color_palette = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//') or not color.startswith(';')]
+        reverse_palette = (True if reverse_palette == 'True' else False)
 
-    def pixelate_batch(self, images, max_size, num_colors=16, init_mode='random', max_iter=100, random_state=42):
+        return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, 
+                (color_palette if color_palette not in [None, ''] else None), color_palette_mode, reverse_palette, dither, dither_mode), )
+
+    def pixel_art_batch(self, batch, min_size, num_colors=16, init_mode='random', max_iter=100, random_state=42, 
+                            palette=None, palette_mode="Linear", reverse_palette=False, dither=False, dither_mode='FloydSteinberg'):
 
         from sklearn.cluster import KMeans
-    
-        max_size = int(max_size)
-        num_colors = int(num_colors)
-        max_iter = int(max_iter)
-        random_state = int(random_state)
+
+        hex_palette_to_rgb = lambda hex: tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
 
         def flatten_colors(image, num_colors, init_mode='random', max_iter=100, random_state=42):
             np_image = np.array(image)
@@ -2044,28 +2065,198 @@ class WAS_Image_Pixelate:
             flattened_image = flattened_pixels.reshape(np_image.shape)
             return Image.fromarray(flattened_image)
 
-        pil_images = [tensor2pil(image) for image in images]
-        downsized_images = []
+        def dither_image(image, mode, nc):
+        
+            def clamp(value, min_value=0, max_value=255):
+                return max(min(value, max_value), min_value)
+    
+            def get_new_val(old_val, nc):
+                return np.round(old_val * (nc - 1)) / (nc - 1)
+
+            def fs_dither(img, nc):
+                arr = np.array(img, dtype=float) / 255
+                new_width, new_height = img.size
+
+                for ir in range(new_height):
+                    for ic in range(new_width):
+                        old_val = arr[ir, ic].copy()
+                        new_val = get_new_val(old_val, nc)
+                        arr[ir, ic] = new_val
+                        err = old_val - new_val
+
+                        if ic < new_width - 1:
+                            arr[ir, ic + 1] += err * 7/16
+                        if ir < new_height - 1:
+                            if ic > 0:
+                                arr[ir + 1, ic - 1] += err * 3/16
+                            arr[ir + 1, ic] += err * 5/16
+                            if ic < new_width - 1:
+                                arr[ir + 1, ic + 1] += err / 16
+
+                carr = np.array(arr * 255, dtype=np.uint8)
+                return Image.fromarray(carr)
+
+            width, height = image.size
+
+            if mode == 'FloydSteinberg':
+                dithered_image = fs_dither(image, nc)
+                return dithered_image
+            elif mode == 'Ordered':
+                dither_matrix = [
+                    [0, 8, 2, 10],
+                    [12, 4, 14, 6],
+                    [3, 11, 1, 9],
+                    [15, 7, 13, 5]
+                ]
+                dithered_image = Image.new('RGB', (width, height))
+                num_colors = min(2 ** int(np.log2(nc)), 16)
+                for y in range(height):
+                    for x in range(width):
+                        old_pixel = image.getpixel((x, y))
+                        threshold = dither_matrix[x % 4][y % 4] * num_colors
+                        new_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in old_pixel)
+                        error = tuple(old - new for old, new in zip(old_pixel, new_pixel))
+                        dithered_image.putpixel((x, y), new_pixel)
+                        
+                        if x < width - 1:
+                            neighboring_pixel = image.getpixel((x + 1, y))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 7 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x + 1, y), neighboring_pixel)
+
+                        if x < width - 1 and y < height - 1:
+                            neighboring_pixel = image.getpixel((x + 1, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 1 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x + 1, y + 1), neighboring_pixel)
+
+                        if y < height - 1:
+                            neighboring_pixel = image.getpixel((x, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 5 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x, y + 1), neighboring_pixel)
+
+                        if x > 0 and y < height - 1:
+                            neighboring_pixel = image.getpixel((x - 1, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
+                            neighboring_pixel = tuple(int(clamp(pixel + error * 3 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
+                            image.putpixel((x - 1, y + 1), neighboring_pixel)
+                return dithered_image
+
+            return image
+
+        def color_palette_from_hex_lines(image, colors, palette_mode='Linear', reverse_palette=False):
+        
+            def color_distance(color1, color2):
+                r1, g1, b1 = color1
+                r2, g2, b2 = color2
+                return np.sqrt((r1 - r2)**2 + (g1 - g2)**2 + (b1 - b2)**2)
+
+            def find_nearest_color_index(color, palette):
+                distances = [color_distance(color, palette_color) for palette_color in palette]
+                return distances.index(min(distances))
+
+            def find_nearest_color_index_tonal(color, palette):
+                distances = [color_distance_tonal(color, palette_color) for palette_color in palette]
+                return distances.index(min(distances))
+
+            def find_nearest_color_index_both(color, palette):
+                distances = [color_distance_both(color, palette_color) for palette_color in palette]
+                return distances.index(min(distances))
+
+            def color_distance_tonal(color1, color2):
+                r1, g1, b1 = color1
+                r2, g2, b2 = color2
+                l1 = 0.299 * r1 + 0.587 * g1 + 0.114 * b1
+                l2 = 0.299 * r2 + 0.587 * g2 + 0.114 * b2
+                return abs(l1 - l2)
+
+            def color_distance_both(color1, color2):
+                r1, g1, b1 = color1
+                r2, g2, b2 = color2
+                l1 = 0.299 * r1 + 0.587 * g1 + 0.114 * b1
+                l2 = 0.299 * r2 + 0.587 * g2 + 0.114 * b2
+                return abs(l1 - l2) + sum(abs(c1 - c2) for c1, c2 in zip(color1, color2))
+
+            def color_distance(color1, color2):
+                return sum(abs(c1 - c2) for c1, c2 in zip(color1, color2))
+        
+            color_palette = [hex_palette_to_rgb(color.lstrip('#')) for color in colors]
+            
+            if reverse_palette:
+                color_palette = color_palette[::-1]
+
+            np_image = np.array(image)
+            labels = np_image.reshape(image.size[1], image.size[0], -1)
+            width, height = image.size
+            new_image = Image.new("RGB", image.size)
+
+            if palette_mode == 'Linear':
+                color_palette_indices = list(range(len(color_palette)))
+            elif palette_mode == 'Brightness':
+                color_palette_indices = sorted(range(len(color_palette)), key=lambda i: sum(color_palette[i]) / 3)
+            elif palette_mode == 'Tonal':
+                color_palette_indices = sorted(range(len(color_palette)), key=lambda i: color_distance(color_palette[i], (128, 128, 128)))
+            elif palette_mode == 'BrightnessAndTonal':
+                color_palette_indices = sorted(range(len(color_palette)), key=lambda i: (sum(color_palette[i]) / 3, color_distance(color_palette[i], (128, 128, 128))))
+            else:
+                raise ValueError(f"Unsupported mapping mode: {palette_mode}")
+
+            for x in range(width):
+                for y in range(height):
+                    pixel_color = labels[y, x, :]
+
+                    if palette_mode == 'Linear':
+                        color_index = pixel_color[0] % len(color_palette)
+                    elif palette_mode == 'Brightness':
+                        color_index = find_nearest_color_index(pixel_color, [color_palette[i] for i in color_palette_indices])
+                    elif palette_mode == 'Tonal':
+                        color_index = find_nearest_color_index_tonal(pixel_color, [color_palette[i] for i in color_palette_indices])
+                    elif palette_mode == 'BrightnessAndTonal':
+                        color_index = find_nearest_color_index_both(pixel_color, [color_palette[i] for i in color_palette_indices])
+                    else:
+                        raise ValueError(f"Unsupported mapping mode: {palette_mode}")
+
+                    color = color_palette[color_palette_indices[color_index]]
+                    new_image.putpixel((x, y), color)
+
+            return new_image
+
+        pil_images = [tensor2pil(image) for image in batch]
+        pixel_art_images = []
         original_sizes = []
         for image in pil_images:
             width, height = image.size
             original_sizes.append((width, height))
-            if max(width, height) > max_size:
+            if max(width, height) > min_size:
                 if width > height:
-                    new_width = max_size
-                    new_height = int(height * (max_size / width))
+                    new_width = min_size
+                    new_height = int(height * (min_size / width))
                 else:
-                    new_height = max_size
-                    new_width = int(width * (max_size / height))
-                downsized_images.append(image.resize((new_width, new_height), Image.NEAREST))
+                    new_height = min_size
+                    new_width = int(width * (min_size / height))
+                pixel_art_images.append(image.resize((new_width, int(new_height)), Image.NEAREST))
             else:
-                downsized_images.append(image)
-        flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
-        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(flattened_images, original_sizes)]
+                pixel_art_images.append(image)
+        if init_mode != 'none':
+            pixel_art_images = [flatten_colors(image, num_colors, init_mode) for image in pixel_art_images]
+        if dither:
+            pixel_art_images = [dither_image(image, dither_mode, num_colors) for image in pixel_art_images] 
+        if palette:
+            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in pixel_art_images]
+        else:
+            pixel_art_images = pixel_art_images
+        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)]       
+        
         tensor_images = [pil2tensor(image) for image in pixel_art_images]
+        
         batch_tensor = torch.cat(tensor_images, dim=0)
         return batch_tensor
-        
+
         
 # SIMPLE IMAGE ADJUST
 
@@ -2304,8 +2495,7 @@ class WAS_Image_Crop_Face:
                                 "haarcascade_profileface.xml",
                                 "haarcascade_upperbody.xml"
                                 ],),
-                "use_face_recognition_gpu": (["false","true"],),
-            }
+                }
         }
     
     RETURN_TYPES = ("IMAGE", "CROP_DATA")
@@ -2313,29 +2503,16 @@ class WAS_Image_Crop_Face:
     
     CATEGORY = "WAS Suite/Image/Process"
     
-    def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25, use_face_recognition_gpu="false"):
-    
-        use_fr = False if use_face_recognition_gpu.strip().lower() == 'false' else True
-        
-        if use_fr:
-            if 'face_recognition' not in packages():
-                cstr("Installing face_recognition...").msg.print()
-                subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'face_recognition'])
-        
+    def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25):
         return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor, use_fr)
     
-    def crop_face(self, image, cascade_name=None, padding=0.25, use_fr=False):
+    def crop_face(self, image, cascade_name=None, padding=0.25):
     
         import cv2
-        if use_fr:
-            import face_recognition
 
         img = np.array(image.convert('RGB'))
 
-        if use_fr:
-            face_location = face_recognition.face_locations(img)
-        else:
-            face_location = None
+        face_location = None
 
         cascades = [ os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'lbpcascade_animeface.xml'), 
                     os.path.join(os.path.join(WAS_SUITE_ROOT, 'res'), 'haarcascade_frontalface_default.xml'), 
@@ -2354,8 +2531,6 @@ class WAS_Image_Crop_Face:
 
         faces = None
         if not face_location:
-            if use_fr:
-                cstr(f"Unable to find any faces with face_recognition, switching to cascade recognition...").warning.print()
             for cascade in cascades:
                 if not os.path.exists(cascade):
                     cstr(f"Unable to find cascade XML file at `{cascade}`. Did you pull the latest files from https://github.com/WASasquatch/was-node-suite-comfyui repo?").error.print()
@@ -3159,6 +3334,7 @@ class WAS_Image_Blending_Mode:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "image_blending_mode"
 
     CATEGORY = "WAS Suite/Image"
@@ -3239,6 +3415,7 @@ class WAS_Image_Blend:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "image_blend"
 
     CATEGORY = "WAS Suite/Image"
@@ -3279,6 +3456,7 @@ class WAS_Image_Monitor_Distortion_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "image_monitor_filters"
 
     CATEGORY = "WAS Suite/Image/Filter"
@@ -3326,6 +3504,7 @@ class WAS_Image_Perlin_Noise_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "perlin_noise_filter"
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
@@ -3361,6 +3540,7 @@ class WAS_Image_Voronoi_Noise_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "voronoi_noise_filter"
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
@@ -3393,6 +3573,7 @@ class WAS_Image_Make_Seamless:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "make_seamless"
 
     CATEGORY = "WAS Suite/Image/Process"
@@ -3422,7 +3603,8 @@ class WAS_Image_Color_Palette:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE",TEXT_TYPE)
+    RETURN_NAMES = ("image","color_palette_string")
     FUNCTION = "image_generate_palette"
 
     CATEGORY = "WAS Suite/Image/Analyze"
@@ -3444,9 +3626,9 @@ class WAS_Image_Color_Palette:
             cstr(f'\Found font at `{font}`').msg.print()
 
         # Generate Color Palette
-        image = WTools.generate_palette(image, colors, 128, 10, font, 15)
+        image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15)
 
-        return (pil2tensor(image), )
+        return (pil2tensor(image), palette)
         
         
 
@@ -9096,13 +9278,15 @@ class WAS_unCLIP_Checkpoint_Loader:
         ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
         return (out[0], out[1], out[2], out[3], os.path.splitext(os.path.basename(ckpt_name))[0])
-        
+
 class WAS_Lora_Loader:
     @classmethod
     def INPUT_TYPES(s):
+        file_list = comfy_paths.get_filename_list("loras")
+        file_list.insert(0, "None")
         return {"required": { "model": ("MODEL",),
                               "clip": ("CLIP", ),
-                              "lora_name": (comfy_paths.get_filename_list("loras"), ),
+                              "lora_name": (file_list, ),
                               "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                               "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                               }}
@@ -9113,6 +9297,10 @@ class WAS_Lora_Loader:
     CATEGORY = "WAS Suite/Loaders"
 
     def load_lora(self, model, clip, lora_name, strength_model, strength_clip):
+        if lora_name == 'None':
+            lora_name = file_list = comfy_paths.get_filename_list("loras")[0]
+            strength_model = 0.0
+            strength_clip = 0.0
         lora_path = comfy_paths.get_full_path("loras", lora_name)
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora_path, strength_model, strength_clip)
         return (model_lora, clip_lora, os.path.splitext(os.path.basename(lora_name))[0])
@@ -9557,6 +9745,7 @@ NODE_CLASS_MAPPINGS = {
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
+    "Load Lora": WAS_Lora_Loader,
     "Masks Add": WAS_Mask_Add,
     "Masks Subtract": WAS_Mask_Subtract,
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
