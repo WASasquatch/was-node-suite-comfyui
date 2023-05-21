@@ -2048,6 +2048,8 @@ class WAS_Image_Pixelate:
 
         from sklearn.cluster import KMeans
 
+        hex_palette_to_rgb = lambda hex: tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+
         def flatten_colors(image, num_colors, init_mode='random', max_iter=100, random_state=42):
             np_image = np.array(image)
             pixels = np_image.reshape(-1, 3)
@@ -2178,9 +2180,8 @@ class WAS_Image_Pixelate:
             def color_distance(color1, color2):
                 return sum(abs(c1 - c2) for c1, c2 in zip(color1, color2))
         
-            hex_palette_to_rgb = lambda hex: tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
             color_palette = [hex_palette_to_rgb(color.lstrip('#')) for color in colors]
-
+            
             if reverse_palette:
                 color_palette = color_palette[::-1]
 
@@ -2221,7 +2222,7 @@ class WAS_Image_Pixelate:
             return new_image
 
         pil_images = [tensor2pil(image) for image in batch]
-        downsized_images = []
+        pixel_art_images = []
         original_sizes = []
         for image in pil_images:
             width, height = image.size
@@ -2233,20 +2234,21 @@ class WAS_Image_Pixelate:
                 else:
                     new_height = min_size
                     new_width = int(width * (min_size / height))
-                downsized_images.append(image.resize((new_width, int(new_height)), Image.NEAREST))
+                pixel_art_images.append(image.resize((new_width, int(new_height)), Image.NEAREST))
             else:
-                downsized_images.append(image)
-        flattened_images = downsized_images
+                pixel_art_images.append(image)
         if init_mode != 'none':
-            flattened_images = [flatten_colors(image, num_colors, init_mode) for image in downsized_images]
+            pixel_art_images = [flatten_colors(image, num_colors, init_mode) for image in pixel_art_images]
         if dither:
-            pixel_art_images = [dither_image(image, dither_mode, num_colors) for image in flattened_images] 
+            pixel_art_images = [dither_image(image, dither_mode, num_colors) for image in pixel_art_images] 
         if palette:
             pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in pixel_art_images]
         else:
             pixel_art_images = pixel_art_images
-        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)]            
+        pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)]       
+        
         tensor_images = [pil2tensor(image) for image in pixel_art_images]
+        
         batch_tensor = torch.cat(tensor_images, dim=0)
         return batch_tensor
 
