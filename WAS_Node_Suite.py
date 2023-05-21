@@ -2037,7 +2037,7 @@ class WAS_Image_Pixelate:
         
         color_palette = None
         if color_palette_string:
-            color_palette = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//')]
+            color_palette = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//') or not color.startswith(';')]
         reverse_palette = (True if reverse_palette == 'True' else False)
 
         return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, 
