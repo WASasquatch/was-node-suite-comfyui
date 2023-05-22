@@ -296,11 +296,11 @@ if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
     exit
 
 # SET TEXT TYPE
-TEXT_TYPE = "TEXT"
+TEXT_TYPE = "STRING"
 if was_config and was_config.__contains__('use_legacy_ascii_text'):
     if was_config['use_legacy_ascii_text']:
         TEXT_TYPE = "ASCII"
-        cstr("use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `TEXT` in the future.").warning.print()
+        cstr("use_legacy_ascii_text is `True` in `was_suite_config.json`. `ASCII` type is deprecated and the default will be `STRING` in the future.").warning.print()
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
@@ -6835,7 +6835,7 @@ class WAS_Text_Parse_Embeddings_By_Name:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE, ),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
     RETURN_TYPES = (TEXT_TYPE,)
@@ -6925,8 +6925,8 @@ class WAS_Text_Compare:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text_a": (TEXT_TYPE,),
-                "text_b": (TEXT_TYPE,),
+                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "mode": (["similarity","difference"],),
                 "tolerance": ("FLOAT", {"default":0.0,"min":0.0,"max":1.0,"step":0.01}),
             }
@@ -7046,7 +7046,7 @@ class WAS_Text_Random_Line:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
@@ -7077,13 +7077,13 @@ class WAS_Text_Concatenate:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text_a": (TEXT_TYPE,),
-                "text_b": (TEXT_TYPE,),
+                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "linebreak_addition": (['false','true'], ),
             },
             "optional": {
-                "text_c": (TEXT_TYPE,),
-                "text_d": (TEXT_TYPE,),
+                "text_c": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_d": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -7111,7 +7111,7 @@ class WAS_Search_and_Replace:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "find": ("STRING", {"default": '', "multiline": False}),
                 "replace": ("STRING", {"default": '', "multiline": False}),
             }
@@ -7141,9 +7141,10 @@ class WAS_Search_and_Replace_Input:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
-                "find": (TEXT_TYPE,),
-                "replace": (TEXT_TYPE,),            }
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "find": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "replace": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+            }
         }
 
     RETURN_TYPES = (TEXT_TYPE,)
@@ -7177,7 +7178,7 @@ class WAS_Search_and_Replace_Dictionary:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "dictionary": ("DICT",),
                 "replacement_key": ("STRING", {"default": "__", "multiline": False}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -7225,7 +7226,7 @@ class WAS_Text_Parse_NSP:
                 "mode": (["Noodle Soup Prompts", "Wildcards"],),
                 "noodle_key": ("STRING", {"default": '__', "multiline": False}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -7260,7 +7261,7 @@ class WAS_Text_Save:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "path": ("STRING", {"default": '', "multiline": False}),
                 "filename": ("STRING", {"default": f'text_[time]', "multiline": False}),
             }
@@ -7382,7 +7383,7 @@ class WAS_Text_to_Conditioning:
         return {
             "required": {
                 "clip": ("CLIP",),
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -7405,7 +7406,7 @@ class WAS_Text_Parse_Tokens:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -7479,8 +7480,8 @@ class WAS_Text_Add_Token_Input:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "token_name": (TEXT_TYPE, ),
-                "token_value": (TEXT_TYPE, ),
+                "token_name": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "token_value": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -7523,7 +7524,7 @@ class WAS_Text_to_Console:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "label": ("STRING", {"default": f'Text Output', "multiline": False}),
             }
         }
@@ -7632,7 +7633,7 @@ class WAS_Text_To_String:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -7652,7 +7653,7 @@ class WAS_Text_To_Number:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE,),
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
             }
         }
 
@@ -9092,8 +9093,8 @@ class WAS_Text_Input_Switch:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text_a": (TEXT_TYPE,),
-                "text_b": (TEXT_TYPE,),
+                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "boolean_number": ("NUMBER",),
             }
         }
@@ -9954,4 +9955,4 @@ if show_quotes:
         '\033[93m"Art is the daughter of freedom."\033[0m\033[3m - Friedrich Schiller',
     ]
     print(f'\n\t\033[3m{random.choice(art_quotes)}\033[0m\n')
-
+    
