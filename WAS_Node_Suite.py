@@ -1944,7 +1944,11 @@ class WAS_Tools_Class():
             text_x = cell_x + (padding / 2)
             text_y = int(cell_y + cell_size / 1.2) - font.getsize('A')[1] - padding
 
-            draw.rectangle((cell_x, cell_y, cell_x + cell_size - padding * 2, cell_y + cell_size - padding * 2),
+            # Calculate the width and height of the cell without the border padding
+            cell_width = cell_size - padding * 2
+            cell_height = cell_size - padding * 2
+
+            draw.rectangle((cell_x, cell_y, cell_x + cell_width, cell_y + cell_height),
                            fill=color, outline='black', width=1)
             draw.text((text_x + 1, text_y + 1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
             draw.text((text_x, text_y), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='white')
@@ -2504,7 +2508,7 @@ class WAS_Image_Crop_Face:
     CATEGORY = "WAS Suite/Image/Process"
     
     def image_crop_face(self, image, cascade_xml=None, crop_padding_factor=0.25):
-        return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor, use_fr)
+        return self.crop_face(tensor2pil(image), cascade_xml, crop_padding_factor)
     
     def crop_face(self, image, cascade_name=None, padding=0.25):
     
@@ -2645,39 +2649,83 @@ class WAS_Image_Paste_Face_Crop:
             cstr("No valid crop data found!").error.print()
             return (image, pil2tensor(Image.new("RGB", tensor2pil(image).size, (0,0,0))))
 
-        result_image, result_mask = self.paste_face(tensor2pil(image), tensor2pil(crop_image), crop_data[0], crop_data[1], crop_blending, crop_sharpening)
+        result_image, result_mask = self.paste_image(tensor2pil(image), tensor2pil(crop_image), crop_data, crop_blending, crop_sharpening)
         return(result_image, result_mask)
-        
-    def paste_face(self, image, face_img, original_size, face_coords, blend_amount=0.25, sharpen_amount=1):
+
+    def paste_image(self, image, crop_image, crop_data, blend_amount=0.25, sharpen_amount=1):
     
-        face_img = face_img.convert("RGB").resize(original_size)
+        def lingrad(size, direction, white_ratio):
+            image = Image.new('RGB', size)
+            draw = ImageDraw.Draw(image)
+            if direction == 'vertical':
+                black_end = int(size[1] * (1 - white_ratio))
+                range_start = 0
+                range_end = size[1]
+                range_step = 1
+                for y in range(range_start, range_end, range_step):
+                    color_ratio = y / size[1]
+                    if y <= black_end:
+                        color = (0, 0, 0)
+                    else:
+                        color_value = int(((y - black_end) / (size[1] - black_end)) * 255)
+                        color = (color_value, color_value, color_value)
+                    draw.line([(0, y), (size[0], y)], fill=color)
+            elif direction == 'horizontal':
+                black_end = int(size[0] * (1 - white_ratio))
+                range_start = 0
+                range_end = size[0]
+                range_step = 1
+                for x in range(range_start, range_end, range_step):
+                    color_ratio = x / size[0]
+                    if x <= black_end:
+                        color = (0, 0, 0)
+                    else:
+                        color_value = int(((x - black_end) / (size[0] - black_end)) * 255)
+                        color = (color_value, color_value, color_value)
+                    draw.line([(x, 0), (x, size[1])], fill=color)
+                    
+            return image.convert("L")
+    
+        crop_size, (left, top, right, bottom) = crop_data
+        crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
-            for _ in range(sharpen_amount):
-                face_img = face_img.filter(ImageFilter.SHARPEN)
+            for _ in range(int(sharpen_amount)):
+                crop_image = crop_image.filter(ImageFilter.SHARPEN)
 
-        if blend_amount > 1.0: 
-            blend_amount = 1.0
-        elif blend_amount < 0.0:
-            blend_amount = 0.0
-        blend_ratio = (max(face_img.size[0], face_img.size[1]) / 2) * float(blend_amount)
-
-        blend = image.convert("RGBA")
-        mask = Image.new("L", image.size, 0)
-        offset_x = int(original_size[0] * (blend_amount + blend_amount / 2.5))
-        offset_y = int(original_size[1] * (blend_amount + blend_amount / 2.5))
-        mask_block_size = (original_size[0]-offset_x, original_size[1]-offset_y)
-        mask_block = Image.new("L", mask_block_size, 255)
-        Image.Image.paste(mask, mask_block, (int(face_coords[0]+offset_x/2), int(face_coords[1]+offset_y/2)))
-        Image.Image.paste(blend, face_img, (face_coords[0], face_coords[1]))
-
-        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/2))
-        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio/2))
-
-        blend.putalpha(mask)
-        image = Image.alpha_composite(image.convert("RGBA"), blend)
+        blended_image = Image.new('RGBA', image.size, (0, 0, 0, 255))
+        blended_mask = Image.new('L', image.size, 0)
+        crop_padded = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        blended_image.paste(image, (0, 0))
+        crop_padded.paste(crop_image, (left, top))
+        crop_mask = Image.new('L', crop_image.size, 0)
         
-        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))
+        if top > 0:
+            gradient_image = ImageOps.flip(lingrad(crop_image.size, 'vertical', blend_amount))
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("top.png")
+
+        if left > 0:
+            gradient_image = ImageOps.mirror(lingrad(crop_image.size, 'horizontal', blend_amount))
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("left.png")
+
+        if right < image.width:
+            gradient_image = lingrad(crop_image.size, 'horizontal', blend_amount)
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("right.png")
+
+        if bottom < image.height:
+            gradient_image = lingrad(crop_image.size, 'vertical', blend_amount)
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("bottom.png")
+
+        crop_mask = ImageOps.invert(crop_mask)
+        blended_mask.paste(crop_mask, (left, top))
+        blended_mask = blended_mask.convert("L")
+        blended_image.paste(crop_padded, (0, 0), blended_mask)
+
+        return (pil2tensor(blended_image.convert("RGB")), pil2tensor(blended_mask.convert("RGB")))
 
 
 # IMAGE CROP LOCATION
@@ -2840,48 +2888,85 @@ class WAS_Image_Paste_Crop:
             cstr("No valid crop data found!").error.print()
             return (image, pil2tensor(Image.new("RGB", tensor2pil(image).size, (0,0,0))))
 
-        result_image, result_mask = self.paste_image(tensor2pil(image), crop_data, tensor2pil(crop_image), crop_blending, crop_sharpening)
-        return (result_image, result_mask)
+        result_image, result_mask = self.paste_image(tensor2pil(image), tensor2pil(crop_image), crop_data, crop_blending, crop_sharpening)
+        
+        return (result_image, result_mask) 
+
+    def paste_image(self, image, crop_image, crop_data, blend_amount=0.25, sharpen_amount=1):
     
-    def paste_image(self, image, crop_data, crop_img, blend_amount=0.25, sharpen_amount=1):
-    
-        def inset_border(image, border_width=20, border_color=(0)):
-            width, height = image.size
-            bordered_image = Image.new(image.mode, (width, height), border_color)
-            bordered_image.paste(image, (0, 0))
-            draw = ImageDraw.Draw(bordered_image)
-            draw.rectangle((0, 0, width-1, height-1), outline=border_color, width=border_width)
-            return bordered_image
+        def lingrad(size, direction, black_ratio):
+            image = Image.new('RGB', size)
+            draw = ImageDraw.Draw(image)
+            if direction == 'vertical':
+                black_end = int(size[1] * (1 - black_ratio))
+                range_start = 0
+                range_end = size[1]
+                range_step = 1
+                for y in range(range_start, range_end, range_step):
+                    color_ratio = y / size[1]
+                    if y <= black_end:
+                        color = (0, 0, 0)
+                    else:
+                        color_value = int(((y - black_end) / (size[1] - black_end)) * 255)
+                        color = (color_value, color_value, color_value)
+                    draw.line([(0, y), (size[0], y)], fill=color)
+            elif direction == 'horizontal':
+                black_end = int(size[0] * (1 - black_ratio))
+                range_start = 0
+                range_end = size[0]
+                range_step = 1
+                for x in range(range_start, range_end, range_step):
+                    color_ratio = x / size[0]
+                    if x <= black_end:
+                        color = (0, 0, 0)
+                    else:
+                        color_value = int(((x - black_end) / (size[0] - black_end)) * 255)
+                        color = (color_value, color_value, color_value)
+                    draw.line([(x, 0), (x, size[1])], fill=color)
+                    
+            return image.convert("L")
     
         crop_size, (left, top, right, bottom) = crop_data
-        crop_img = crop_img.convert("RGB").resize(crop_size)
+        crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
-            for _ in range(sharpen_amount):
-                crop_img = crop_img.filter(ImageFilter.SHARPEN)
+            for _ in range(int(sharpen_amount)):
+                crop_image = crop_image.filter(ImageFilter.SHARPEN)
 
-        if blend_amount > 1.0: 
-            blend_amount = 1.0
-        elif blend_amount < 0.0:
-            blend_amount = 0.0
-        blend_ratio = (max(crop_img.size) / 2) * float(blend_amount)
-
-        blend = image.convert("RGBA")
-        mask = Image.new("L", image.size, 0)
+        blended_image = Image.new('RGBA', image.size, (0, 0, 0, 255))
+        blended_mask = Image.new('L', image.size, 0)
+        crop_padded = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        blended_image.paste(image, (0, 0))
+        crop_padded.paste(crop_image, (left, top))
+        crop_mask = Image.new('L', crop_image.size, 0)
         
-        mask_block = Image.new("L", crop_size, 255)
-        mask_block = inset_border(mask_block, int(blend_ratio/2), (0))
-        
-        Image.Image.paste(mask, mask_block, (top, left))
-        Image.Image.paste(blend, crop_img, (top, left))
+        if top > 0:
+            gradient_image = ImageOps.flip(lingrad(crop_image.size, 'vertical', blend_amount))
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("top.png")
 
-        mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio / 4))
-        mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio / 4))
+        if left > 0:
+            gradient_image = ImageOps.mirror(lingrad(crop_image.size, 'horizontal', blend_amount))
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("left.png")
 
-        blend.putalpha(mask)
-        image = Image.alpha_composite(image.convert("RGBA"), blend)
-        
-        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB')))        
+        if right < image.width:
+            gradient_image = lingrad(crop_image.size, 'horizontal', blend_amount)
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("right.png")
+
+        if bottom < image.height:
+            gradient_image = lingrad(crop_image.size, 'vertical', blend_amount)
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+            gradient_image.save("bottom.png")
+
+        crop_mask = ImageOps.invert(crop_mask)
+        blended_mask.paste(crop_mask, (left, top))
+        blended_mask = blended_mask.convert("L")
+        blended_image.paste(crop_padded, (0, 0), blended_mask)
+
+        return (pil2tensor(blended_image.convert("RGB")), pil2tensor(blended_mask.convert("RGB")))
+            
         
 # IMAGE PASTE CROP BY LOCATION
 
@@ -5552,8 +5637,8 @@ class WAS_Tensor_Batch_to_Image:
 class WAS_Image_To_Mask:
 
     def __init__(self):
-        self.channels = {'alpha': 'A', 'red': 0, 'green': 1, 'blue': 2}
-
+        pass
+        
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -5566,24 +5651,37 @@ class WAS_Image_To_Mask:
     CATEGORY = "WAS Suite/Image/Masking"
 
     RETURN_TYPES = ("MASK",)
-    RETURN_TYPES = ("MASKS",)
+    RETURN_NAMES = ("MASKS",)
 
     FUNCTION = "image_to_mask"
 
-    def dominant_region(self, masks, threshold=128):
-        if len(masks.shape) > 3 or masks.shape[0] > 1:
-            regions = []
-            for i in range(masks.shape[0]):
-                pil_image = mask2pil(masks[i]).convert("L")
-                region_mask = self.WT.Masking.dominant_region(pil_image, threshold)
-                region_tensor = pil2mask(region_mask)
-                regions.append(region_tensor.unsqueeze(0))
-            regions_tensor = torch.cat(regions, dim=0)
-            return (regions_tensor,)
+    def image_to_mask(self, images, channel):
+        mask_images = []
+        if len(images) > 1:
+            for image in images:
+                r, g, b, a = tensor2pil(image).convert("RGBA").split()
+                if channel == "red":
+                    channel_image = r
+                elif channel == "green":
+                    channel_image = g
+                elif channel == "blue":
+                    channel_image = b
+                elif channel == "alpha":
+                    channel_image = a
+                mask_images.append(pil2mask(tensor2pil(channel_image)).unsqueeze(0).unsqueeze(1))
+            return (torch.cat(mask_images, dim=0), )
         else:
-            return (pil2mask(self.WT.Masking.dominant_region(mask2pil(masks), threshold)),)
+            r, g, b, a = tensor2pil(images).convert("RGBA").split()
+            if channel == "red":
+                channel_image = r
+            elif channel == "green":
+                channel_image = g
+            elif channel == "blue":
+                channel_image = b
+            elif channel == "alpha":
+                channel_image = a
+            return (pil2mask(tensor2pil(channel_image)).unsqueeze(0).unsqueeze(1), )
 
-        
 
 # MASK TO IMAGE
 
