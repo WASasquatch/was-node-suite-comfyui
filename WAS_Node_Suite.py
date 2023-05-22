@@ -2686,7 +2686,7 @@ class WAS_Image_Paste_Face_Crop:
                     
             return image.convert("L")
     
-        crop_size, (left, top, right, bottom) = crop_data
+        crop_size, (top, left, right, bottom) = crop_data
         crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
@@ -2703,22 +2703,18 @@ class WAS_Image_Paste_Face_Crop:
         if top > 0:
             gradient_image = ImageOps.flip(lingrad(crop_image.size, 'vertical', blend_amount))
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("top.png")
 
         if left > 0:
             gradient_image = ImageOps.mirror(lingrad(crop_image.size, 'horizontal', blend_amount))
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("left.png")
 
         if right < image.width:
             gradient_image = lingrad(crop_image.size, 'horizontal', blend_amount)
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("right.png")
 
         if bottom < image.height:
             gradient_image = lingrad(crop_image.size, 'vertical', blend_amount)
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("bottom.png")
 
         crop_mask = ImageOps.invert(crop_mask)
         blended_mask.paste(crop_mask, (left, top))
@@ -2894,11 +2890,11 @@ class WAS_Image_Paste_Crop:
 
     def paste_image(self, image, crop_image, crop_data, blend_amount=0.25, sharpen_amount=1):
     
-        def lingrad(size, direction, black_ratio):
+        def lingrad(size, direction, white_ratio):
             image = Image.new('RGB', size)
             draw = ImageDraw.Draw(image)
             if direction == 'vertical':
-                black_end = int(size[1] * (1 - black_ratio))
+                black_end = int(size[1] * (1 - white_ratio))
                 range_start = 0
                 range_end = size[1]
                 range_step = 1
@@ -2911,7 +2907,7 @@ class WAS_Image_Paste_Crop:
                         color = (color_value, color_value, color_value)
                     draw.line([(0, y), (size[0], y)], fill=color)
             elif direction == 'horizontal':
-                black_end = int(size[0] * (1 - black_ratio))
+                black_end = int(size[0] * (1 - white_ratio))
                 range_start = 0
                 range_end = size[0]
                 range_step = 1
@@ -2926,7 +2922,7 @@ class WAS_Image_Paste_Crop:
                     
             return image.convert("L")
     
-        crop_size, (left, top, right, bottom) = crop_data
+        crop_size, (top, left, right, bottom) = crop_data
         crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
@@ -2943,22 +2939,18 @@ class WAS_Image_Paste_Crop:
         if top > 0:
             gradient_image = ImageOps.flip(lingrad(crop_image.size, 'vertical', blend_amount))
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("top.png")
 
         if left > 0:
             gradient_image = ImageOps.mirror(lingrad(crop_image.size, 'horizontal', blend_amount))
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("left.png")
 
         if right < image.width:
             gradient_image = lingrad(crop_image.size, 'horizontal', blend_amount)
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("right.png")
 
         if bottom < image.height:
             gradient_image = lingrad(crop_image.size, 'vertical', blend_amount)
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
-            gradient_image.save("bottom.png")
 
         crop_mask = ImageOps.invert(crop_mask)
         blended_mask.paste(crop_mask, (left, top))
