@@ -2805,21 +2805,28 @@ class WAS_Image_Crop_Location:
     CATEGORY = "WAS Suite/Image/Process"
     
     def image_crop_location(self, image, top=0, left=0, right=256, bottom=256):
-    
         image = tensor2pil(image)
         img_width, img_height = image.size
         
-        # Ensure that the coordinates are within the image bounds
-        top = min(max(top, 0), img_height)
-        left = min(max(left, 0), img_width)
-        bottom = min(max(bottom, 0), img_height)
-        right = min(max(right, 0), img_width)
+        # Calculate the final coordinates for cropping
+        crop_top = max(top, 0)
+        crop_left = max(left, 0)
+        crop_bottom = min(bottom, img_height)
+        crop_right = min(right, img_width)
         
-        crop = image.crop((left, top, right, bottom))
-        crop_data = (crop.copy().size, (top, left, bottom, right))
+        # Ensure that the cropping region has non-zero width and height
+        crop_width = crop_right - crop_left
+        crop_height = crop_bottom - crop_top
+        if crop_width <= 0 or crop_height <= 0:
+            raise ValueError("Invalid crop dimensions. Please check the values for top, left, right, and bottom.")
+        
+        # Crop the image and resize
+        crop = image.crop((crop_left, crop_top, crop_right, crop_bottom))
+        crop_data = (crop.size, (crop_top, crop_left, crop_right, crop_bottom))
         crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
         
         return (pil2tensor(crop), crop_data)
+
 
 
 # IMAGE SQUARE CROP LOCATION
@@ -2866,8 +2873,13 @@ class WAS_Image_Crop_Square_Location:
                 top = max(top - (size - (bottom - top)), 0)
         
         crop = image.crop((left, top, right, bottom))
+        
+        # Original Crop Data
+        crop_data = (crop.size, (left, top, right, bottom))
+        
+        # Output resize
         crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
-        crop_data = (crop.size, (top, left, bottom, right))
+        
         return (pil2tensor(crop), crop_data)
         
         
@@ -2979,7 +2991,8 @@ class WAS_Image_Paste_Crop:
                     
             return image.convert("L")
     
-        crop_size, (top, left, bottom, right) = crop_data
+        crop_size, (left, top, right, bottom) = crop_data
+        print(crop_data)
         crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
