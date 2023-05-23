@@ -299,8 +299,8 @@ if not os.access(WAS_SUITE_ROOT, os.W_OK) or not os.access(MODELS_DIR, os.W_OK):
 # SET TEXT TYPE
 TEXT_TYPE = "STRING"
 if was_config and was_config.__contains__('text_nodes_type'):
-    if was_config['text_node_type'].strip() != '':
-        TEXT_TYPE = was_config['text_node_type'].strip()
+    if was_config['text_nodes_type'].strip() != '':
+        TEXT_TYPE = was_config['text_nodes_type'].strip()
 if was_config and was_config.__contains__('use_legacy_ascii_text'):
     if was_config['use_legacy_ascii_text']:
         TEXT_TYPE = "ASCII"
