@@ -125,6 +125,7 @@
  - Image Transpose
  - Image fDOF Filter: Apply a fake depth of field effect to an image
  - Image to Latent Mask: Convert a image into a latent mask
+ - Image to Noise: Convert a image into noise, useful for init blending or init input to theme a diffusion.
  - Image Voronoi Noise Filter
    - A custom implementation of the worley voronoi noise diagram
  - Input Switch  (Disable until `*` wildcard fix)

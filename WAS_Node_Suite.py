@@ -3630,7 +3630,64 @@ class WAS_Image_Voronoi_Noise_Filter:
 
         return (pil2tensor(image), )        
 
+# IMAGE TO NOISE
 
+class WAS_Image_To_Noise:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "num_colors": ("INT", {"default": 16, "max": 256, "min": 2, "step": 2}),
+                "black_mix": ("INT", {"default": 0, "max": 20, "min": 0, "step": 1}),
+                "gaussian_mix": ("FLOAT", {"default": 0.0, "max": 1024, "min": 0, "step": 0.1}),
+                "brightness": ("FLOAT", {"default": 1.0, "max": 2.0, "min": 0.0, "step": 0.01}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "image_to_noise"
+
+    CATEGORY = "WAS Suite/Image/Generate/Noise"
+
+    def image_to_noise(self, image, num_colors, black_mix, gaussian_mix, brightness, seed):
+        return (pil2tensor(self.image2noise(tensor2pil(image), num_colors, black_mix, brightness, gaussian_mix, seed)), )  
+
+    def image2noise(self, image, num_colors=16, black_mix=0, brightness=1.0, gaussian_mix=0, seed=0):
+
+        random.seed(int(seed))
+        image = image.quantize(colors=num_colors)
+        image = image.convert("RGBA")
+        pixel_data = list(image.getdata())
+        random.shuffle(pixel_data)
+        randomized_image = Image.new("RGBA", image.size)
+        randomized_image.putdata(pixel_data)
+
+        width, height = image.size
+        black_noise = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+
+        for _ in range(black_mix):
+            for x in range(width):
+                for y in range(height):
+                    if random.randint(0,1) == 1:
+                        black_noise.putpixel((x, y), (0, 0, 0, 255))
+
+        randomized_image = Image.alpha_composite(randomized_image, black_noise)
+        enhancer = ImageEnhance.Brightness(randomized_image)
+        randomized_image = enhancer.enhance(brightness)
+
+        if gaussian_mix > 0:
+            original_noise = randomized_image.copy()
+            randomized_gaussian = randomized_image.filter(ImageFilter.GaussianBlur(radius=gaussian_mix))
+            randomized_image = Image.blend(randomized_image, randomized_gaussian, 0.65)
+            randomized_image = Image.blend(randomized_image, original_noise, 0.25)
+
+        return randomized_image
 
 # IMAGE MAKE SEAMLESS
 
@@ -9631,6 +9688,7 @@ class WAS_Load_Cache:
             
         return (latent, image, conditioning)
 
+
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "Cache Node": WAS_Cache,
@@ -9705,6 +9763,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Transpose": WAS_Image_Transpose,
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
+    "Image to Noise": WAS_Image_To_Noise,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
