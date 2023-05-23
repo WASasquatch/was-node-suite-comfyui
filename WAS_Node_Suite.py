@@ -2064,7 +2064,7 @@ class WAS_Image_Pixelate:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "pixelation_size": ("FLOAT", {"default": 164, "min": 16, "max": 256, "step": 1}),
+                "pixelation_size": ("FLOAT", {"default": 164, "min": 16, "max": 480, "step": 1}),
                 "num_colors": ("FLOAT", {"default": 16, "min": 2, "max": 256, "step": 1}),
                 "init_mode": (["k-means++", "random", "none"],),
                 "max_iterations": ("FLOAT", {"default": 100, "min": 1, "max": 256, "step": 1}),
