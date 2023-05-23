@@ -2975,7 +2975,7 @@ class WAS_Image_Paste_Crop:
                     
             return image.convert("L")
     
-        crop_size, (top, left, right, bottom) = crop_data
+        crop_size, (top, left, bottom, right) = crop_data
         crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
