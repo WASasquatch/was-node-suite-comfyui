@@ -232,7 +232,7 @@ if not os.path.exists(WAS_CONFIG_FILE):
         was_config = getSuiteConfig()
     else:
         cstr(f"Unable to create default conf file at `{WAS_CONFIG_FILE}`. Using internal config template.").error.print()
-        was_config = was_conf_tempalte
+        was_config = was_conf_template
     
 else:
     was_config = getSuiteConfig()
