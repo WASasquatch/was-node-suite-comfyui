@@ -1733,8 +1733,7 @@ class WAS_Tools_Class():
         
         
     # Perlin Noise (relies on perlin_noise package: https://github.com/salaxieb/perlin_noise/blob/master/perlin_noise/perlin_noise.py)
-    
-    def perlin_noise(self, width, height, shape, density, octaves, seed): 
+    def perlin_noise(self, width, height, shape, density, octaves, seed):
 
         if 'pythonperlin' not in packages():
             cstr("Installing pythonperlin...").msg.print()
@@ -1744,30 +1743,37 @@ class WAS_Tools_Class():
         
         if seed > 4294967294:
             seed = random.randint(0,4294967294)
-            cstr(f"Seed too large for perlin; rescaled to: {seed}").warning.print()
-        
+            cstr(f"Seed too large for perlin; rescaled to: {seed}").warning.print()    
+
         # Density range
         min_density = 1
         max_density = 100
 
         # Map the density to a range of 0 to 1
         density = int(10 ** (np.log10(min_density) + (1.0 - density) * (np.log10(max_density) - np.log10(min_density))))
-        
-        # Set grid shape for randomly seeded gradients
-        shape = (shape,shape)
 
-        # Calcualte shape and density
-        shape = (width // density, height // density)
-        density = min(width // shape[0], height // shape[1])
+        # Calculate shape and density based on the maximum dimension
+        max_size = max(width+100, height+100)
+        shape = (max_size // density, max_size // density)
+        max_density = min(max_size // shape[0], max_size // shape[1])
 
-        # Generate Noise
-        x = perlin(shape, dens=density, octaves=octaves, seed=seed)
-        
+        # Generate Noise at the maximum size
+        try:
+            x = perlin(shape, dens=max_density, octaves=octaves, seed=seed)
+        except RuntimeWarning:
+            x = perlin(shape, dens=max_density, octaves=octaves, seed=seed+1)
+
         min_val, max_val = np.min(x), np.max(x)
         data_scaled = (x - min_val) / (max_val - min_val) * 255
         data_scaled = data_scaled.astype(np.uint8)
-        
-        return Image.fromarray(data_scaled).convert('RGB')
+
+        # Create a PIL image at the maximum size
+        max_image = Image.fromarray(data_scaled, mode="L").convert("RGB")
+
+        # Crop the image to the specified width and height
+        image = max_image.crop((0, 0, width, height))
+
+        return image
         
     # Worley Noise Generator
         
@@ -1904,8 +1910,7 @@ class WAS_Tools_Class():
 
         return self.fig2img(plt)
         
-
-    def generate_palette(self, img, n_colors=16, cell_size=128, padding=10, font_path=None, font_size=15):
+    def generate_palette(self, img, n_colors=16, cell_size=128, padding=0, font_path=None, font_size=15, mode='chart'):
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
@@ -1918,14 +1923,56 @@ class WAS_Tools_Class():
         kmeans = KMeans(n_clusters=n_colors, random_state=0, n_init='auto').fit(pixels)
         cluster_centers = np.uint8(kmeans.cluster_centers_)
 
-        # Calculate the number of rows and columns based on the number of colors
-        num_rows = int(np.sqrt(n_colors))
-        num_cols = int(np.ceil(n_colors / num_rows))
+        # Get the sorted indices based on luminance
+        luminance = np.sqrt(np.dot(cluster_centers, [0.299, 0.587, 0.114]))
+        sorted_indices = np.argsort(luminance)
 
-        # Calculate the size of the palette image based on the number of rows and columns
-        palette_width = num_cols * cell_size
-        palette_height = num_rows * cell_size
-        palette_size = (palette_width + padding * 2, palette_height + padding * 2)
+        # Rearrange the cluster centers and luminance based on sorted indices
+        cluster_centers = cluster_centers[sorted_indices]
+        luminance = luminance[sorted_indices]
+
+        # Group colors by their individual types
+        reds = []
+        greens = []
+        blues = []
+        others = []
+
+        for i in range(n_colors):
+            color = cluster_centers[i]
+            color_type = np.argmax(color)  # Find the dominant color component
+
+            if color_type == 0:
+                reds.append((color, luminance[i]))
+            elif color_type == 1:
+                greens.append((color, luminance[i]))
+            elif color_type == 2:
+                blues.append((color, luminance[i]))
+            else:
+                others.append((color, luminance[i]))
+
+        # Sort each color group by luminance
+        reds.sort(key=lambda x: x[1])
+        greens.sort(key=lambda x: x[1])
+        blues.sort(key=lambda x: x[1])
+        others.sort(key=lambda x: x[1])
+
+        # Combine the sorted color groups
+        sorted_colors = reds + greens + blues + others
+
+        if mode == 'back_to_back':
+            # Calculate the size of the palette image based on the number of colors
+            palette_width = n_colors * cell_size
+            palette_height = cell_size
+        else:
+            # Calculate the number of rows and columns based on the number of colors
+            num_rows = int(np.sqrt(n_colors))
+            num_cols = int(np.ceil(n_colors / num_rows))
+
+            # Calculate the size of the palette image based on the number of rows and columns
+            palette_width = num_cols * cell_size
+            palette_height = num_rows * cell_size
+
+        palette_size = (palette_width, palette_height)
 
         palette = Image.new('RGB', palette_size, color='white')
         draw = ImageDraw.Draw(palette)
@@ -1933,29 +1980,35 @@ class WAS_Tools_Class():
             font = ImageFont.truetype(font_path, font_size)
         else:
             font = ImageFont.load_default()
-        stroke_width = 1
+
         hex_palette = []
-        for i in range(n_colors):
-            color = tuple(cluster_centers[i])
-            row = i % num_rows
-            col = i // num_rows
-            cell_x = col * cell_size + padding
-            cell_y = row * cell_size + padding
-            text_x = cell_x + (padding / 2)
-            text_y = int(cell_y + cell_size / 1.2) - font.getsize('A')[1] - padding
+        for i, (color, _) in enumerate(sorted_colors):
+            if mode == 'back_to_back':
+                cell_x = i * cell_size
+                cell_y = 0
+            else:
+                row = i % num_rows
+                col = i // num_rows
+                cell_x = col * cell_size
+                cell_y = row * cell_size
 
-            # Calculate the width and height of the cell without the border padding
-            cell_width = cell_size - padding * 2
-            cell_height = cell_size - padding * 2
+            cell_width = cell_size
+            cell_height = cell_size
 
-            draw.rectangle((cell_x, cell_y, cell_x + cell_width, cell_y + cell_height),
-                           fill=color, outline='black', width=1)
-            draw.text((text_x + 1, text_y + 1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black')
-            draw.text((text_x, text_y), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='white')
+            color = tuple(color)
+
+            cell = Image.new('RGB', (cell_width, cell_height), color=color)
+            palette.paste(cell, (cell_x, cell_y))
+
+            if mode != 'back_to_back':
+                text_x = cell_x + (cell_width / 2)
+                text_y = cell_y + cell_height + padding
+
+                draw.text((text_x + 1, text_y + 1), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='black', anchor='ms')
+                draw.text((text_x, text_y), f"R: {color[0]} G: {color[1]} B: {color[2]}", font=font, fill='white', anchor='ms')
 
             hex_palette.append('#%02x%02x%02x' % color)
 
-        palette = palette.resize((palette.width * 2, palette.height * 2), resample=Image.NEAREST)
         return palette, '\n'.join(hex_palette)
 
 
@@ -3734,6 +3787,7 @@ class WAS_Image_Color_Palette:
             "required": {
                 "image": ("IMAGE",),
                 "colors": ("INT", {"default": 16, "min": 8, "max": 256, "step": 1}),
+                "mode": (["Chart", "back_to_back"],),
             },
         }
 
@@ -3743,7 +3797,7 @@ class WAS_Image_Color_Palette:
 
     CATEGORY = "WAS Suite/Image/Analyze"
 
-    def image_generate_palette(self, image, colors=16):
+    def image_generate_palette(self, image, colors=16, mode="chart"):
 
         # Convert images to PIL
         image = tensor2pil(image)
@@ -3760,7 +3814,7 @@ class WAS_Image_Color_Palette:
             cstr(f'\Found font at `{font}`').msg.print()
 
         # Generate Color Palette
-        image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15)
+        image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15, mode.lower())
 
         return (pil2tensor(image), palette)
         
