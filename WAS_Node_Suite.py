@@ -3811,7 +3811,7 @@ class WAS_Image_Color_Palette:
         if not os.path.exists(font):
             font = None
         else:
-            cstr(f'\Found font at `{font}`').msg.print()
+            cstr(f'Found font at `{font}`').msg.print()
 
         # Generate Color Palette
         image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15, mode.lower())
