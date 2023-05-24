@@ -2157,12 +2157,8 @@ class WAS_Image_Pixelate:
                 carr = np.array(arr * 255, dtype=np.uint8)
                 return Image.fromarray(carr)
 
-            width, height = image.size
-
-            if mode == 'FloydSteinberg':
-                dithered_image = fs_dither(image, nc)
-                return dithered_image
-            elif mode == 'Ordered':
+            def ordered_dither(img, nc):
+                width, height = img.size
                 dither_matrix = [
                     [0, 8, 2, 10],
                     [12, 4, 14, 6],
@@ -2171,42 +2167,50 @@ class WAS_Image_Pixelate:
                 ]
                 dithered_image = Image.new('RGB', (width, height))
                 num_colors = min(2 ** int(np.log2(nc)), 16)
+                
                 for y in range(height):
                     for x in range(width):
-                        old_pixel = image.getpixel((x, y))
+                        old_pixel = img.getpixel((x, y))
                         threshold = dither_matrix[x % 4][y % 4] * num_colors
-                        new_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in old_pixel)
+                        new_pixel = tuple(int(c * num_colors / 256) * (256 // num_colors) for c in old_pixel)
                         error = tuple(old - new for old, new in zip(old_pixel, new_pixel))
                         dithered_image.putpixel((x, y), new_pixel)
                         
                         if x < width - 1:
-                            neighboring_pixel = image.getpixel((x + 1, y))
-                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_pixel = img.getpixel((x + 1, y))
+                            neighboring_pixel = tuple(int(c * num_colors / 256) * (256 // num_colors) for c in neighboring_pixel)
                             neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
                             neighboring_pixel = tuple(int(clamp(pixel + error * 7 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
-                            image.putpixel((x + 1, y), neighboring_pixel)
+                            img.putpixel((x + 1, y), neighboring_pixel)
 
                         if x < width - 1 and y < height - 1:
-                            neighboring_pixel = image.getpixel((x + 1, y + 1))
-                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_pixel = img.getpixel((x + 1, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 256) * (256 // num_colors) for c in neighboring_pixel)
                             neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
                             neighboring_pixel = tuple(int(clamp(pixel + error * 1 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
-                            image.putpixel((x + 1, y + 1), neighboring_pixel)
+                            img.putpixel((x + 1, y + 1), neighboring_pixel)
 
                         if y < height - 1:
-                            neighboring_pixel = image.getpixel((x, y + 1))
-                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_pixel = img.getpixel((x, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 256) * (256 // num_colors) for c in neighboring_pixel)
                             neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
                             neighboring_pixel = tuple(int(clamp(pixel + error * 5 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
-                            image.putpixel((x, y + 1), neighboring_pixel)
+                            img.putpixel((x, y + 1), neighboring_pixel)
 
                         if x > 0 and y < height - 1:
-                            neighboring_pixel = image.getpixel((x - 1, y + 1))
-                            neighboring_pixel = tuple(int(c * num_colors / 255) * (255 // num_colors) for c in neighboring_pixel)
+                            neighboring_pixel = img.getpixel((x - 1, y + 1))
+                            neighboring_pixel = tuple(int(c * num_colors / 256) * (256 // num_colors) for c in neighboring_pixel)
                             neighboring_error = tuple(neighboring - new for neighboring, new in zip(neighboring_pixel, new_pixel))
                             neighboring_pixel = tuple(int(clamp(pixel + error * 3 / 16)) for pixel, error in zip(neighboring_pixel, neighboring_error))
-                            image.putpixel((x - 1, y + 1), neighboring_pixel)
+                            img.putpixel((x - 1, y + 1), neighboring_pixel)
+
                 return dithered_image
+
+
+            if mode == 'FloydSteinberg':
+                return fs_dither(image, nc)
+            elif mode == 'Ordered':
+                return ordered_dither(image, nc)
 
             return image
 
