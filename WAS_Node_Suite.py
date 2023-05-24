@@ -27,6 +27,7 @@ import comfy.clip_vision
 import model_management
 import folder_paths as comfy_paths
 import model_management
+from comfy_extras.chainner_models import model_loading
 import glob
 import hashlib
 import json
@@ -2076,7 +2077,7 @@ class WAS_Image_Pixelate:
                 "dither_mode": (["FloydSteinberg", "Ordered"],),
             },
             "optional": {
-                "color_palette_string": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "color_palettes": ("LIST", {"forceInput": True}),
                 "color_palette_mode": (["Brightness", "BrightnessAndTonal", "Linear", "Tonal"],),
                 "reverse_palette":(["False","True"],),
             }
@@ -2086,10 +2087,10 @@ class WAS_Image_Pixelate:
     RETURN_NAMES = ("images",)
     FUNCTION = "image_pixelate"
     
-    CATEGORY = "WAS Suite/Image/Adjustment"
+    CATEGORY = "WAS Suite/Image/Process"
     
     def image_pixelate(self, images, pixelation_size=164, num_colors=16, init_mode='random', max_iterations=100, 
-                        color_palette_string=None, color_palette_mode="Linear", reverse_palette='False', dither='False', dither_mode='FloydSteinberg'):
+                        color_palettes=None, color_palette_mode="Linear", reverse_palette='False', dither='False', dither_mode='FloydSteinberg'):
     
         if 'scikit-learn' not in packages():
             cstr("Installing scikit-learn...").msg.print()
@@ -2101,13 +2102,15 @@ class WAS_Image_Pixelate:
         color_palette_mode = color_palette_mode
         dither = (dither == 'True')
         
-        color_palette = None
-        if color_palette_string:
-            color_palette = [color.strip() for color in color_palette_string.splitlines() if not color.startswith('//') or not color.startswith(';')]
+        color_palettes_list = []
+        if color_palettes:
+            for palette in color_palettes:
+                color_palettes_list.append([color.strip() for color in palette.splitlines() if not color.startswith('//') or not color.startswith(';')])
+        
         reverse_palette = (True if reverse_palette == 'True' else False)
 
         return ( self.pixel_art_batch(images, pixelation_size, num_colors, init_mode, max_iterations, 42, 
-                (color_palette if color_palette not in [None, ''] else None), color_palette_mode, reverse_palette, dither, dither_mode), )
+                (color_palettes_list if color_palettes_list else None), color_palette_mode, reverse_palette, dither, dither_mode), )
 
     def pixel_art_batch(self, batch, min_size, num_colors=16, init_mode='random', max_iter=100, random_state=42, 
                             palette=None, palette_mode="Linear", reverse_palette=False, dither=False, dither_mode='FloydSteinberg'):
@@ -2312,7 +2315,7 @@ class WAS_Image_Pixelate:
         if dither:
             pixel_art_images = [dither_image(image, dither_mode, num_colors) for image in pixel_art_images] 
         if palette:
-            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette, palette_mode, reverse_palette) for pixel_art_image in pixel_art_images]
+            pixel_art_images = [color_palette_from_hex_lines(pixel_art_image, palette[i], palette_mode, reverse_palette) for i, pixel_art_image in enumerate(pixel_art_images)]
         else:
             pixel_art_images = pixel_art_images
         pixel_art_images = [image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)]       
@@ -2996,7 +2999,6 @@ class WAS_Image_Paste_Crop:
             return image.convert("L")
     
         crop_size, (left, top, right, bottom) = crop_data
-        print(crop_data)
         crop_image = crop_image.resize(crop_size)
         
         if sharpen_amount > 0:
@@ -3812,34 +3814,41 @@ class WAS_Image_Color_Palette:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",TEXT_TYPE)
-    RETURN_NAMES = ("image","color_palette_string")
+    RETURN_TYPES = ("IMAGE","LIST")
+    RETURN_NAMES = ("image","color_palettes")
     FUNCTION = "image_generate_palette"
 
     CATEGORY = "WAS Suite/Image/Analyze"
 
     def image_generate_palette(self, image, colors=16, mode="chart"):
-
-        # Convert images to PIL
-        image = tensor2pil(image)
-        
+            
         # WAS Filters
         WTools = WAS_Tools_Class()
 
         res_dir = os.path.join(WAS_SUITE_ROOT, 'res')
         font = os.path.join(res_dir, 'font.ttf')
-        
+                
         if not os.path.exists(font):
             font = None
         else:
-            cstr(f'Found font at `{font}`').msg.print()
+            if mode == "Chart":
+                cstr(f'Found font at `{font}`').msg.print()
 
-        # Generate Color Palette
-        image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15, mode.lower())
-
-        return (pil2tensor(image), palette)
-        
-        
+        if len(image) > 1:
+            palette_strings = []
+            palette_images = []
+            for img in image:
+                img = tensor2pil(img)
+                palette_image, palette = WTools.generate_palette(img, colors, 128, 10, font, 15, mode.lower())
+                palette_images.append(pil2tensor(palette_image))
+                palette_strings.append(palette)
+            palette_images = torch.cat(palette_images, dim=0)
+            return (palette_images, palette_strings)
+        else:
+            image = tensor2pil(image)
+            palette_image, palette = WTools.generate_palette(image, colors, 128, 10, font, 15, mode.lower())
+            return (pil2tensor(palette_image), [palette,])
+            
 
 # IMAGE ANALYZE
 
@@ -4043,8 +4052,13 @@ class WAS_Image_Rescale:
 
     CATEGORY = "WAS Suite/Image/Transform"
 
-    def image_rescale(self, image: torch.Tensor, mode="rescale", supersample='true', resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
-        return (pil2tensor(self.apply_resize_image(tensor2pil(image), mode, supersample, rescale_factor, resize_width, resize_height, resampling)), )
+    def image_rescale(self, image, mode="rescale", supersample='true', resampling="lanczos", rescale_factor=2, resize_width=1024, resize_height=1024):
+        scaled_images = []
+        for img in image:
+            scaled_images.append(pil2tensor(self.apply_resize_image(tensor2pil(img), mode, supersample, rescale_factor, resize_width, resize_height, resampling)))
+        scaled_images = torch.cat(scaled_images, dim=0)
+            
+        return (scaled_images, )
 
     def apply_resize_image(self, image: Image.Image, mode='scale', supersample='true', factor: int = 2, width: int = 1024, height: int = 1024, resample='bicubic'):
 
@@ -4110,8 +4124,14 @@ class WAS_Load_Image_Batch:
         new_paths = fl.image_paths
         if mode == 'single_image':
             image, filename = fl.get_image_by_id(index)
+            if image == None:
+                cstr(f"No valid image was found for the inded `{index}`").error.print()
+                return (None, None)
         else:
             image, filename = fl.get_next_image()
+            if image == None:
+                cstr(f"No valid image was found for the next ID. Did you remove images from the source directory?").error.print()
+                return (None, None)
 
         # Update history
         update_history_images(new_paths)
@@ -6947,7 +6967,85 @@ class WAS_Text_Multiline:
                 new_text.append(line)
         new_text = "\n".join(new_text)
         return (new_text, )   
+        
+# Text List Node
 
+class WAS_Text_List_Concatenate:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "list_a": ("LIST", {"forceInput": True}),
+                "list_b": ("LIST", {"forceInput": True}),
+            },
+            "optional": {
+                "list_c": ("LIST", {"forceInput": True}),
+                "list_d": ("LIST", {"forceInput": True}),
+            }
+        }
+    RETURN_TYPES = ("LIST",)
+    FUNCTION = "text_concatenate_list"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_concatenate_list(self, list_a, list_b=None, list_c=None, list_d=None):
+        
+        text_list = list_a + list_b
+    
+        if list_c:
+            text_list + list_c
+        if list_d:
+            text_list + list_d
+
+        return (text_list,)      
+        
+# Text List Concatenate Node
+
+class WAS_Text_List:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text_a": ("STRING", {"forceInput": True}),
+            },
+            "optional": {
+                "text_b": ("STRING", {"forceInput": True}),
+                "text_c": ("STRING", {"forceInput": True}),
+                "text_d": ("STRING", {"forceInput": True}),
+                "text_e": ("STRING", {"forceInput": True}),
+                "text_f": ("STRING", {"forceInput": True}),
+                "text_g": ("STRING", {"forceInput": True}),
+            }
+        }
+    RETURN_TYPES = ("LIST",)
+    FUNCTION = "text_as_list"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_as_list(self, text_a, text_b=None, text_c=None, text_d=None, text_e=None, text_f=None, text_g=None):
+        
+        text_list = [text_a,]
+    
+        if text_b:
+            text_list.append(text_b)
+        if text_c:
+            text_list.append(text_c)
+        if text_d:
+            text_list.append(text_d)
+        if text_e:
+            text_list.append(text_e)
+        if text_f:
+            text_list.append(text_f)
+        if text_g:
+            text_list.append(text_g)
+
+        return (text_list,)
         
 # Text Parse Embeddings
 
@@ -9903,6 +10001,8 @@ NODE_CLASS_MAPPINGS = {
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
     "Text Input Switch": WAS_Text_Input_Switch,
+    "Text List": WAS_Text_List,
+    "Text List Concatenate": WAS_Text_List_Concatenate,
     "Text Multiline": WAS_Text_Multiline,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
