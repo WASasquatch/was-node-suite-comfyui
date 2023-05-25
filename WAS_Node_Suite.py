@@ -3704,7 +3704,128 @@ class WAS_Image_Voronoi_Noise_Filter:
         
         image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True).image
 
-        return (pil2tensor(image), )        
+        return (pil2tensor(image), )         
+
+# IMAGE POWER NOISE
+
+class WAS_Image_Power_Noise:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "width": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
+                "height": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
+                "frequency": ("FLOAT", {"default": 0.5, "max": 10.0, "min": -10.0, "step": 0.01}),
+                "attenuation": ("FLOAT", {"default": 0.5, "max": 10.0, "min": -10.0, "step": 0.01}),
+                "noise_type": (["grey", "white", "pink", "blue", "green"],),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "power_noise"
+
+    CATEGORY = "WAS Suite/Image/Generate/Noise"
+
+    def power_noise(self, width, height, frequency, attenuation, noise_type, seed):
+    
+        noise_image = self.generate_power_noise(width, height, frequency, attenuation, noise_type, seed)
+
+        return (pil2tensor(noise_image), )      
+
+
+    def generate_power_noise(self, width, height, frequency=None, attenuation=None, noise_type="white", seed=None):
+        '''
+            wdith: Noise Width in pixels
+            height: Noise Height in pixels
+            frequency: The frequency parameter controls the distribution of the noise across different frequencies. 
+                In the context of Fourier analysis, higher frequencies represent fine details or high-frequency components, 
+                while lower frequencies represent coarse details or low-frequency components. Adjusting the frequency 
+                parameter can result in different textures and levels of detail in the generated noise. The specific range 
+                and meaning of the frequency parameter may vary depending on the noise type.
+            attenuation: The attenuation parameter determines the strength or intensity of the noise. It controls how much 
+                the noise values deviate from the mean or central value. Higher values of attenuation lead to more significant 
+                variations and a stronger presence of noise, while lower values result in a smoother and less noticeable noise. 
+                The specific range and interpretation of the attenuation parameter may vary depending on the noise type.
+            noise_type: The tyoe of Power-Law noise to generate (white, grey, pink, green, blue)
+            seed: Seed to generate noise with
+        '''
+        
+        def white_noise(width, height):
+            noise = np.random.random((height, width))
+            return noise
+
+        def grey_noise(width, height, attenuation):
+            noise = np.random.normal(0, attenuation, (height, width))
+            return noise
+
+        def pink_noise(width, height, frequency, attenuation):
+            noise = grey_noise(width, height, attenuation)
+            scale = 1.0 / (width * height)
+            f = np.fft.fftfreq(height)[:, np.newaxis] ** 2 + np.fft.fftfreq(width) ** 2
+            power = np.sqrt(f)
+            power[0, 0] = 1
+            noise = np.fft.ifft2(np.fft.fft2(noise) * power)
+            noise *= scale / noise.std()
+            return noise
+
+        def green_noise(width, height, frequency, attenuation):
+            noise = grey_noise(width, height, attenuation)
+            scale = 1.0 / (width * height)
+            f = np.fft.fftfreq(height)[:, np.newaxis] ** 2 + np.fft.fftfreq(width) ** 2
+            power = np.sqrt(f)
+            power[0, 0] = 1
+            noise = np.fft.ifft2(np.fft.fft2(noise) / np.sqrt(power))
+            noise *= scale / noise.std()
+            return noise
+
+        def blue_noise(width, height, frequency, attenuation):
+            noise = grey_noise(width, height, attenuation)
+            scale = 1.0 / (width * height)
+            f = np.fft.fftfreq(height)[:, np.newaxis] ** 2 + np.fft.fftfreq(width) ** 2
+            power = np.sqrt(f)
+            power[0, 0] = 1
+            noise = np.fft.ifft2(np.fft.fft2(noise) / power)
+            noise *= scale / noise.std()
+            return noise
+            
+        def shorten_to_range(value, min_value, max_value):
+            range_length = max_value - min_value + 1
+            return ((value - min_value) % range_length) + min_value
+
+        if seed is not None:
+            if seed > 4294967294:
+                seed = shorten_to_range(seed, 0, 4294967293)
+                cstr(f"Seed too large for power noise; rescaled to: {seed}").warning.print()    
+            np.random.seed(seed)
+
+        if noise_type == "white":
+            noise = white_noise(width, height)
+        elif noise_type == "grey":
+            noise = grey_noise(width, height, attenuation)
+        elif noise_type == "pink":
+            if frequency is None:
+                cstr("Pink noise requires a frequency value.").error.print()
+            noise = pink_noise(width, height, frequency, attenuation)
+        elif noise_type == "green":
+            if frequency is None:
+                cstr("Green noise requires a frequency value.").error.print()
+            noise = green_noise(width, height, frequency, attenuation)
+        elif noise_type == "blue":
+            if frequency is None:
+                cstr("Blue noise requires a frequency value.").error.print()
+            noise = blue_noise(width, height, frequency, attenuation)
+        else:
+            cstr(f"Unsupported noise type `{noise_type}`").error.print()
+
+        noise = 255 * (noise - np.min(noise)) / (np.max(noise) - np.min(noise))
+        noise_image = Image.fromarray(noise.real.astype(np.uint8))
+
+        return noise_image        
 
 # IMAGE TO NOISE
 
@@ -9901,6 +10022,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Paste Crop": WAS_Image_Paste_Crop,
     "Image Paste Crop by Location": WAS_Image_Paste_Crop_Location,
     "Image Pixelate": WAS_Image_Pixelate,
+    "Image Power Noise": WAS_Image_Power_Noise,
     "Image Dragan Photography Filter": WAS_Dragon_Filter,
     "Image Edge Detection Filter": WAS_Image_Edge,
     "Image Film Grain": WAS_Film_Grain,

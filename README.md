@@ -79,7 +79,10 @@
  - Image Paste Face Crop: Paste face crop back on a image at it's original location and size
    - Features a better blending funciton than GFPGAN/CodeFormer so there shouldn't be visible seams, and coupled with Diffusion Result, looks better than GFPGAN/CodeFormer. 
  - Image Paste Crop: Paste a crop (such as from Image Crop Location) at it's original location and size utilizing the `crop_data` node input. This uses a different blending algorithm then Image Paste Face Crop, which may be desired in certain instances.
-   - Samplers can resize/crop odd sized images
+ - Image Power Noise: Generate power-law noise
+   - frequency: The frequency parameter controls the distribution of the noise across different frequencies. In the context of Fourier analysis, higher frequencies represent fine details or high-frequency components, while lower frequencies represent coarse details or low-frequency components. Adjusting the frequency parameter can result in different textures and levels of detail in the generated noise. The specific range and meaning of the frequency parameter may vary depending on the noise type.
+   - attenuation: The attenuation parameter determines the strength or intensity of the noise. It controls how much the noise values deviate from the mean or central value. Higher values of attenuation lead to more significant variations and a stronger presence of noise, while lower values result in a smoother and less noticeable noise. The specific range and interpretation of the attenuation parameter may vary depending on the noise type.
+   - noise_type: The tyoe of Power-Law noise to generate (white, grey, pink, green, blue)
  - Image Paste Crop by Location: Paste a crop top a custom location. This uses the same blending algorithm as Image Paste Crop. 
    - Samplers can resize/crop odd sized images
  - Image Pixelate: Turn a image into pixel art! Define the max number of colors, the pixelation mode, the random state, and max iterations, and max those sprites shine.
@@ -187,6 +190,8 @@
  - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary. 
    - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed. 
  - Text Input Switch: Switch between two text inputs
+ - Text List: Create a list of text strings
+ - Text Concatenate: Merge lists of strings
  - Text Multiline: Write a multiline text string
  - Text Parse A1111 Embeddings: Convert embeddings filenames in your prompts to `embedding:[filename]]` format based on your `/ComfyUI/models/embeddings/` files. 
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
