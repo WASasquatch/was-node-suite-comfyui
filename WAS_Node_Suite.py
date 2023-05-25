@@ -4955,50 +4955,16 @@ class WAS_Image_Levels:
     def apply_image_levels(self, image, black_level, mid_level, white_level):
 
         # Convert image to PIL
-        image = tensor2pil(image)
-
-        # apply image levels
-        # image = self.adjust_levels(image, black_level, mid_level, white_level)
-
-        levels = self.AdjustLevels(black_level, mid_level, white_level)
-        image = levels.adjust(image)
+        tensor_images = []
+        for img in image:
+            img = tensor2pil(img)
+            levels = self.AdjustLevels(black_level, mid_level, white_level)
+            tensor_images.append(pil2tensor(levels.adjust(img)))
+        tensor_images = torch.cat(tensor_images, dim=0)
 
         # Return adjust image tensor
-        return (pil2tensor(image), )
+        return (tensor_images, )
 
-    def adjust_levels(self, image, black=0.0, mid=1.0, white=255):
-        """
-        Adjust the black, mid, and white levels of an RGB image.
-        """
-        # Create a new empty image with the same size and mode as the original image
-        result = Image.new(image.mode, image.size)
-
-        # Check that the mid value is within the valid range
-        if mid < 0 or mid > 1:
-            raise ValueError("mid value must be between 0 and 1")
-
-        # Create a lookup table to map the pixel values to new values
-        lut = []
-        for i in range(256):
-            if i < black:
-                lut.append(0)
-            elif i > white:
-                lut.append(255)
-            else:
-                lut.append(int(((i - black) / (white - black)) ** mid * 255.0))
-
-        # Split the image into its red, green, and blue channels
-        r, g, b = image.split()
-
-        # Apply the lookup table to each channel
-        r = r.point(lut)
-        g = g.point(lut)
-        b = b.point(lut)
-
-        # Merge the channels back into an RGB image
-        result = Image.merge("RGB", (r, g, b))
-
-        return result
 
     class AdjustLevels:
         def __init__(self, min_level, mid_level, max_level):
@@ -5453,16 +5419,20 @@ class WAS_Image_fDOF:
         import cv2 as cv
 
         # Convert tensor to a PIL Image
-        i = 255. * image.cpu().numpy().squeeze()
-        img: Image.Image = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
-        d = 255. * depth.cpu().numpy().squeeze()
-        depth_img: Image.Image = Image.fromarray(
-            np.clip(d, 0, 255).astype(np.uint8))
+        tensor_images = []
+        for i in range(len(image)):
+            if i <= len(image):
+                img = tensor2pil(image[i])
+            else:
+                img = tensor2pil(image[-1])
+            if i <= len(depth):
+                dpth = tensor2pil(depth[i])
+            else:
+                dpth = tensor2pil(depth[-1])
+            tensor_images.append(pil2tensor(self.portraitBlur(img, dpth, radius, samples, mode)))
+        tensor_images = torch.cat(tensor_images, dim=0)
 
-        # Apply Fake Depth of Field
-        fdof_image = self.portraitBlur(img, depth_img, radius, samples, mode)
-
-        return (torch.from_numpy(np.array(fdof_image).astype(np.float32) / 255.0).unsqueeze(0), )
+        return (tensor_images, )
 
     def portraitBlur(self, img, mask, radius, samples, mode='mock'):
         mask = mask.resize(img.size).convert('L')
@@ -5520,9 +5490,12 @@ class WAS_Dragon_Filter:
     
         WTools = WAS_Tools_Class()
         
-        image = WTools.dragan_filter(tensor2pil(image), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)
+        tensor_images = []
+        for img in image:  
+            tensor_images.append(pil2tensor(WTools.dragan_filter(tensor2pil(image), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)))
+        tensor_images = torch.cat(tensor_images, dim=0)
         
-        return (pil2tensor(image), )
+        return (tensor_images, )
      
 
 
@@ -5550,13 +5523,14 @@ class WAS_Image_Median_Filter:
 
     def apply_median_filter(self, image, diameter, sigma_color, sigma_space):
 
-        # Numpy Image
-        image = tensor2pil(image)
+        tensor_images = []
+        for img in image:
+            img = tensor2pil(img)
+            # Apply Median Filter effect
+            tensor_images.append(pil2tensor(medianFilter(img, diameter, sigma_color, sigma_space)))
+        tensor_images = torch.cat(tensor_images, dim=0)
 
-        # Apply Median Filter effect
-        image = medianFilter(image, diameter, sigma_color, sigma_space)
-
-        return (pil2tensor(image), )
+        return (tensor_images, )
 
 # IMAGE SELECT COLOR
 
@@ -6762,6 +6736,7 @@ class MiDaS_Depth_Approx:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "midas_approx"
 
     CATEGORY = "WAS Suite/Image/AI"
@@ -6774,10 +6749,6 @@ class MiDaS_Depth_Approx:
             self.install_midas()
 
         import cv2 as cv
-
-        # Convert the input image tensor to a PIL Image
-        i = 255. * image.cpu().numpy().squeeze()
-        img = i
 
         cstr("Downloading and loading MiDaS Model...").msg.print()
         torch.hub.set_dir(self.midas_dir)
@@ -6794,41 +6765,49 @@ class MiDaS_Depth_Approx:
             transform = midas_transforms.dpt_transform
         else:
             transform = midas_transforms.small_transform
+            
+        tensor_images = []
+        for i, img in enumerate(image):
+        
+            img = np.array(tensor2pil(img))
 
-        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        input_batch = transform(img).to(device)
+            img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+            input_batch = transform(img).to(device)
 
-        cstr("Approximating depth from image.").msg.print()
+            cstr(f"Approximating depth for image {i}").msg.print()
 
-        with torch.no_grad():
-            prediction = midas(input_batch)
-            prediction = torch.nn.functional.interpolate(
-                prediction.unsqueeze(1),
-                size=img.shape[:2],
-                mode="bicubic",
-                align_corners=False,
-            ).squeeze()
+            with torch.no_grad():
+                prediction = midas(input_batch)
+                prediction = torch.nn.functional.interpolate(
+                    prediction.unsqueeze(1),
+                    size=img.shape[:2],
+                    mode="bicubic",
+                    align_corners=False,
+                ).squeeze()
 
-        # Invert depth map
-        if invert_depth == 'true':
-            depth = (255 - prediction.cpu().numpy().astype(np.uint8))
-            depth = depth.astype(np.float32)
-        else:
-            depth = prediction.cpu().numpy().astype(np.float32)
-        # depth = depth * 255 / (np.max(depth)) / 255
-        # Normalize depth to range [0, 1]
-        depth = (depth - depth.min()) / (depth.max() - depth.min())
+            
+            # Normalize and convert to uint8
+            min_val = torch.min(prediction)
+            max_val = torch.max(prediction)
+            prediction = (prediction - min_val) / (max_val - min_val)
+            prediction = (prediction * 255).clamp(0, 255).round().cpu().numpy().astype(np.uint8)
 
-        # depth to RGB
-        depth = cv.cvtColor(depth, cv.COLOR_GRAY2RGB)
+            depth = Image.fromarray(prediction)
 
-        tensor = torch.from_numpy(depth)[None,]
-        tensors = (tensor, )
+            # Invert depth map
+            if invert_depth == 'true':
+                depth = ImageOps.invert(depth)
+
+            depth.save(f"depth_{i}.png")
+
+            tensor_images.append(pil2tensor(depth))
+            
+        tensor_images = torch.cat(tensor_images, dim=0)
 
         del midas, device, midas_transforms
         del transform, img, input_batch, prediction
 
-        return tensors
+        return (tensor_images, )
 
     def install_midas(self):
         global MIDAS_INSTALLED
