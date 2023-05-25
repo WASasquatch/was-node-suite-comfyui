@@ -243,6 +243,8 @@ Text tokens can be used in the Save Text File and Save Image nodes. You can also
 
 The token name can be anything excluding the `:` character to define your token. It can also be simple Regular Expressions.
 
+Tokens can be used in most Text nodes, though if I bave forgotten to add supprt please let me know. this allows you to use the dynamic token creation nodes to save any number of things to use re-use in nodes. This includes converting saved numbers to number formats and applying math, and saving the token again to update it. You could use this to manipulate mumbers between runs. 
+
 ## Built-in Tokens
   - [time]
     - The current system microtime
