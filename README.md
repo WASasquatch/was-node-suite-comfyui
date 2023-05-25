@@ -54,6 +54,7 @@
    - RGB Levels
      - Depends on `matplotlib`, will attempt to install on first run
  - Diffusers Hub Down-Loader: Download a diffusers model from the HuggingFace Hub and load it
+ - Image Batch: Create one batch out of multiple batched tensors.
  - Image Blank: Create a blank image in any color
  - Image Blend by Mask: Blend two images by a mask
  - Image Blend: Blend two images by opacity
@@ -129,6 +130,7 @@
  - Image fDOF Filter: Apply a fake depth of field effect to an image
  - Image to Latent Mask: Convert a image into a latent mask
  - Image to Noise: Convert a image into noise, useful for init blending or init input to theme a diffusion.
+ - Image to Seed: Convert a image to a reproducible seed
  - Image Voronoi Noise Filter
    - A custom implementation of the worley voronoi noise diagram
  - Input Switch  (Disable until `*` wildcard fix)
@@ -242,8 +244,6 @@ Example [H264 Codecs](https://github.com/cisco/openh264/releases/tag/v1.8.0) (De
 Text tokens can be used in the Save Text File and Save Image nodes. You can also add your own custom tokens with the Text Add Tokens node.
 
 The token name can be anything excluding the `:` character to define your token. It can also be simple Regular Expressions.
-
-Tokens can be used in most Text nodes, though if I bave forgotten to add supprt please let me know. this allows you to use the dynamic token creation nodes to save any number of things to use re-use in nodes. This includes converting saved numbers to number formats and applying math, and saving the token again to update it. You could use this to manipulate mumbers between runs. 
 
 ## Built-in Tokens
   - [time]

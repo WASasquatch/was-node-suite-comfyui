@@ -386,6 +386,14 @@ def resizeImage(image, max_size):
     resized_image = image.resize((new_width, new_height))
     return resized_image
     
+# Image Seed
+def image2seed(image):
+    image_data = image.tobytes()
+    hash_object = hashlib.sha256(image_data)
+    hash_digest = hash_object.digest()
+    seed = int.from_bytes(hash_digest[:4], byteorder='big')
+    return seed
+    
 # NSP Function
 
 def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=None):
@@ -2324,7 +2332,6 @@ class WAS_Image_Pixelate:
         
         batch_tensor = torch.cat(tensor_images, dim=0)
         return batch_tensor
-
         
 # SIMPLE IMAGE ADJUST
 
@@ -3718,8 +3725,8 @@ class WAS_Image_Power_Noise:
             "required": {
                 "width": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
                 "height": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
-                "frequency": ("FLOAT", {"default": 0.5, "max": 10.0, "min": -10.0, "step": 0.01}),
-                "attenuation": ("FLOAT", {"default": 0.5, "max": 10.0, "min": -10.0, "step": 0.01}),
+                "frequency": ("FLOAT", {"default": 0.5, "max": 10.0, "min": 0.0, "step": 0.01}),
+                "attenuation": ("FLOAT", {"default": 0.5, "max": 10.0, "min": 0.0, "step": 0.01}),
                 "noise_type": (["grey", "white", "pink", "blue", "green", "mix"],),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
             },
@@ -3805,7 +3812,6 @@ class WAS_Image_Power_Noise:
                 elif noise_type == "blue":
                     noise = blue_noise(width, height, frequency, attenuation)
                     noise = Image.fromarray((255 * (noise - np.min(noise)) / (np.max(noise) - np.min(noise))).astype(np.uint8).real)
-                noise.save(f"noise_{i}.png")
                 
                 blended_image = Image.composite(blended_image, noise, mask)
                 i += 1
@@ -3861,7 +3867,7 @@ class WAS_Image_Power_Noise:
             noise = 255 * (noise - np.min(noise)) / (np.max(noise) - np.min(noise))
         noise_image = Image.fromarray(noise.astype(np.uint8).real)
 
-        return noise_image
+        return noise_image.convert("RGB")
 
 # IMAGE TO NOISE
 
@@ -3873,23 +3879,33 @@ class WAS_Image_To_Noise:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "images": ("IMAGE",),
                 "num_colors": ("INT", {"default": 16, "max": 256, "min": 2, "step": 2}),
                 "black_mix": ("INT", {"default": 0, "max": 20, "min": 0, "step": 1}),
                 "gaussian_mix": ("FLOAT", {"default": 0.0, "max": 1024, "min": 0, "step": 0.1}),
                 "brightness": ("FLOAT", {"default": 1.0, "max": 2.0, "min": 0.0, "step": 0.01}),
+                "output_mode": (["batch","list"],),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
             },
         }
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
+    OUTPUT_IS_LIST = (False,)
     FUNCTION = "image_to_noise"
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
 
-    def image_to_noise(self, image, num_colors, black_mix, gaussian_mix, brightness, seed):
-        return (pil2tensor(self.image2noise(tensor2pil(image), num_colors, black_mix, brightness, gaussian_mix, seed)), )  
+    def image_to_noise(self, images, num_colors, black_mix, gaussian_mix, brightness, output_mode, seed):
+    
+        noise_images = []
+        for image in images:
+            noise_images.append(pil2tensor(self.image2noise(tensor2pil(image), num_colors, black_mix, brightness, gaussian_mix, seed)))
+        if output_mode == "list":
+            self.OUTPUT_IS_LIST = (True,)
+        else:
+            noise_images = torch.cat(noise_images, dim=0)
+        return (noise_images, )  
 
     def image2noise(self, image, num_colors=16, black_mix=0, brightness=1.0, gaussian_mix=0, seed=0):
 
@@ -3953,6 +3969,41 @@ class WAS_Image_Make_Seamless:
 
         return (pil2tensor(image), )
         
+        
+# IMAGE TO NOISE
+
+class WAS_Image_Batch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images_a": ("IMAGE",),             
+                "images_b": ("IMAGE",),    
+            },
+            "optional": {
+                "images_c": ("IMAGE",),             
+                "images_d": ("IMAGE",),             
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "image_batch"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def image_batch(self, images_a, images_b, images_c=None, images_d=None):
+    
+        batched_tensors = torch.cat([images_a, images_b], dim=0)
+        if images_c:
+            batched_tensors = torch.cat([batched_tensors, images_c], dim=0)
+        if images_d:
+            batched_tensors = torch.cat([batched_tensors, images_d], dim=0)
+        
+        return (batched_tensors, )  
         
 
 # IMAGE GENERATE COLOR PALETTE
@@ -7027,7 +7078,6 @@ class WAS_KSampler:
 
 # SEED NODE
 
-
 class WAS_Seed:
     @classmethod
     def INPUT_TYPES(cls):
@@ -7043,6 +7093,32 @@ class WAS_Seed:
 
     def seed(self, seed):
         return ({"seed": seed, }, )
+        
+        
+# IMAGE SEED
+        
+class WAS_Image_To_Seed:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {
+                    "images": ("IMAGE",),
+                }
+            }
+
+    RETURN_TYPES = ("INT",)
+    OUTPUT_IS_LIST = (True,)
+    
+    FUNCTION = "image_to_seed"
+    CATEGORY = "WAS Suite/Image/Analyze"
+
+    def image_to_seed(self, images):
+
+        seeds = []
+        for image in images:
+            image = tensor2pil(image)
+            seeds.append(image2seed(image))
+
+        return (seeds, )
 
 
 #! TEXT NODES
@@ -10043,6 +10119,7 @@ NODE_CLASS_MAPPINGS = {
     "Logic Boolean": WAS_Boolean,
     "Lora Loader": WAS_Lora_Loader,
     "Image Analyze": WAS_Image_Analyze,
+    "Image Batch": WAS_Image_Batch,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
     "Image Blend": WAS_Image_Blend,
@@ -10095,6 +10172,7 @@ NODE_CLASS_MAPPINGS = {
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
     "Image to Noise": WAS_Image_To_Noise,
+    "Image to Seed": WAS_Image_To_Seed,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "KSampler (WAS)": WAS_KSampler,
     "Latent Noise Injection": WAS_Latent_Noise,
