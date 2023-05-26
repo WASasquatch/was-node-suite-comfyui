@@ -4463,7 +4463,7 @@ class WAS_Load_Image_Batch:
                 "mode": (["single_image", "incremental_image"],),
                 "index": ("INT", {"default": 0, "min": 0, "max": 150000, "step": 1}),
                 "label": ("STRING", {"default": 'Batch 001', "multiline": False}),
-                "path": ("STRING", {"default": './ComfyUI/input/', "multiline": False}),
+                "path": ("STRING", {"default": '', "multiline": False}),
                 "pattern": ("STRING", {"default": '*', "multiline": False}),
             },
         }
