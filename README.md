@@ -109,8 +109,8 @@
    - TV Distortion
      - A TV scanline and bleed distortion effect
  - Image Nova Filter: A image that uses a sinus frequency to break apart a image into RGB frequencies
- - Image Perlin Noise Filter
-   - Create perlin noise with [pythonperlin](https://pypi.org/project/pythonperlin/) module. Trust me, better then my implementations that took minutes... 
+ - Image Perlin Noise: Generate perlin noise
+ - Image Perlin Power Fractal: Generate a perlin power fractal
  - Image Remove Background (Alpha): Remove the background from a image by threshold and tolerance. 
  - Image Remove Color: Remove a color from a image and replace it with another
  - Image Resize

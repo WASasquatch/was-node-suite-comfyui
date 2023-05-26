@@ -34,6 +34,7 @@ import json
 import nodes
 import math
 import numpy as np
+from numba import jit
 import os
 import random
 import re
@@ -1745,46 +1746,160 @@ class WAS_Tools_Class():
         return result_image
         
         
-    # Perlin Noise (relies on perlin_noise package: https://github.com/salaxieb/perlin_noise/blob/master/perlin_noise/perlin_noise.py)
-    def perlin_noise(self, width, height, shape, density, octaves, seed):
-
-        if 'pythonperlin' not in packages():
-            cstr("Installing pythonperlin...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pythonperlin'])
-            
-        from pythonperlin import perlin
+    # Generate Perlin Noise (Finally in house version)
         
-        if seed > 4294967294:
-            seed = random.randint(0,4294967294)
-            cstr(f"Seed too large for perlin; rescaled to: {seed}").warning.print()    
+    def perlin_noise(self, width, height, octaves, persistence, scale, seed=None):
 
-        # Density range
-        min_density = 1
-        max_density = 100
+        @jit(nopython=True)
+        def fade(t):
+            return 6 * t**5 - 15 * t**4 + 10 * t**3
 
-        # Map the density to a range of 0 to 1
-        density = int(10 ** (np.log10(min_density) + (1.0 - density) * (np.log10(max_density) - np.log10(min_density))))
 
-        # Calculate shape and density based on the maximum dimension
-        max_size = max(width+100, height+100)
-        shape = (max_size // density, max_size // density)
-        max_density = min(max_size // shape[0], max_size // shape[1])
+        @jit(nopython=True)
+        def lerp(t, a, b):
+            return a + t * (b - a)
 
-        # Generate Noise at the maximum size
-        try:
-            x = perlin(shape, dens=max_density, octaves=octaves, seed=seed)
-        except RuntimeWarning:
-            x = perlin(shape, dens=max_density, octaves=octaves, seed=seed+1)
 
-        min_val, max_val = np.min(x), np.max(x)
-        data_scaled = (x - min_val) / (max_val - min_val) * 255
-        data_scaled = data_scaled.astype(np.uint8)
+        @jit(nopython=True)
+        def grad(hash, x, y, z):
+            h = hash & 15
+            u = x if h < 8 else y
+            v = y if h < 4 else (x if h == 12 or h == 14 else z)
+            return (u if (h & 1) == 0 else -u) + (v if (h & 2) == 0 else -v)
 
-        # Create a PIL image at the maximum size
-        max_image = Image.fromarray(data_scaled, mode="L").convert("RGB")
 
-        # Crop the image to the specified width and height
-        image = max_image.crop((0, 0, width, height))
+        @jit(nopython=True)
+        def noise(x, y, z, p):
+            X = np.int32(np.floor(x)) & 255
+            Y = np.int32(np.floor(y)) & 255
+            Z = np.int32(np.floor(z)) & 255
+
+            x -= np.floor(x)
+            y -= np.floor(y)
+            z -= np.floor(z)
+
+            u = fade(x)
+            v = fade(y)
+            w = fade(z)
+
+            A = p[X] + Y
+            AA = p[A] + Z
+            AB = p[A + 1] + Z
+            B = p[X + 1] + Y
+            BA = p[B] + Z
+            BB = p[B + 1] + Z
+
+            return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z), grad(p[BA], x - 1, y, z)),
+                                    lerp(u, grad(p[AB], x, y - 1, z), grad(p[BB], x - 1, y - 1, z))),
+                        lerp(v, lerp(u, grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1)),
+                                    lerp(u, grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1))))
+
+        if seed:
+            random.seed(seed)
+
+        p = np.arange(256, dtype=np.int32)
+        random.shuffle(p)
+        p = np.concatenate((p, p))
+
+        noise_map = np.zeros((height, width))
+        amplitude = 1.0
+        total_amplitude = 0.0
+
+        for octave in range(octaves):
+            frequency = 2 ** octave
+            total_amplitude += amplitude
+
+            for y in range(height):
+                for x in range(width):
+                    nx = x / scale * frequency
+                    ny = y / scale * frequency
+                    noise_value = noise(nx, ny, 0, p) * amplitude
+                    current_value = noise_map[y, x]
+                    noise_map[y, x] = current_value + noise_value
+
+            amplitude *= persistence
+
+        min_value = np.min(noise_map)
+        max_value = np.max(noise_map)
+        noise_map = np.interp(noise_map, (min_value, max_value), (0, 255)).astype(np.uint8)
+        image = Image.fromarray(noise_map, mode='L').convert("RGB")
+
+        return image
+        
+        
+    # Generate Perlin Power Fractal (Based on in-house perlin noise)
+    
+    def perlin_power_fractal(self, width, height, octaves, persistence, lacunarity, exponent, scale, seed=None):
+
+        @jit(nopython=True)
+        def fade(t):
+            return 6 * t**5 - 15 * t**4 + 10 * t**3
+
+        @jit(nopython=True)
+        def lerp(t, a, b):
+            return a + t * (b - a)
+
+        @jit(nopython=True)
+        def grad(hash, x, y, z):
+            h = hash & 15
+            u = x if h < 8 else y
+            v = y if h < 4 else (x if h == 12 or h == 14 else z)
+            return (u if (h & 1) == 0 else -u) + (v if (h & 2) == 0 else -v)
+
+        @jit(nopython=True)
+        def noise(x, y, z, p):
+            X = np.int32(np.floor(x)) & 255
+            Y = np.int32(np.floor(y)) & 255
+            Z = np.int32(np.floor(z)) & 255
+
+            x -= np.floor(x)
+            y -= np.floor(y)
+            z -= np.floor(z)
+
+            u = fade(x)
+            v = fade(y)
+            w = fade(z)
+
+            A = p[X] + Y
+            AA = p[A] + Z
+            AB = p[A + 1] + Z
+            B = p[X + 1] + Y
+            BA = p[B] + Z
+            BB = p[B + 1] + Z
+
+            return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z), grad(p[BA], x - 1, y, z)),
+                                    lerp(u, grad(p[AB], x, y - 1, z), grad(p[BB], x - 1, y - 1, z))),
+                        lerp(v, lerp(u, grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1)),
+                                    lerp(u, grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1))))
+
+        if seed:
+            random.seed(seed)
+
+        p = np.arange(256, dtype=np.int32)
+        random.shuffle(p)
+        p = np.concatenate((p, p))
+
+        noise_map = np.zeros((height, width))
+        amplitude = 1.0
+        total_amplitude = 0.0
+
+        for octave in range(octaves):
+            frequency = lacunarity ** octave
+            amplitude *= persistence
+            total_amplitude += amplitude
+
+            for y in range(height):
+                for x in range(width):
+                    nx = x / scale * frequency
+                    ny = y / scale * frequency
+                    noise_value = noise(nx, ny, 0, p) * amplitude ** exponent
+                    current_value = noise_map[y, x]
+                    noise_map[y, x] = current_value + noise_value
+
+        min_value = np.min(noise_map)
+        max_value = np.max(noise_map)
+        noise_map = np.interp(noise_map, (min_value, max_value), (0, 255)).astype(np.uint8)
+        image = Image.fromarray(noise_map, mode='L').convert("RGB")
 
         return image
         
@@ -2217,11 +2332,13 @@ class WAS_Image_Pixelate:
 
                 return dithered_image
 
-
             if mode == 'FloydSteinberg':
                 return fs_dither(image, nc)
             elif mode == 'Ordered':
                 return ordered_dither(image, nc)
+            else:
+                cstr(f"Inavlid dithering mode `{mode}` selected.").error.print()
+                return image
 
             return image
 
@@ -3644,9 +3761,9 @@ class WAS_Image_Monitor_Distortion_Filter:
         
         
 
-# IMAGE PERLIN NOISE FILTER
+# IMAGE PERLIN NOISE
 
-class WAS_Image_Perlin_Noise_Filter:
+class WAS_Image_Perlin_Noise:
     def __init__(self):
         pass
 
@@ -3656,27 +3773,60 @@ class WAS_Image_Perlin_Noise_Filter:
             "required": {
                 "width": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
                 "height": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
-                "shape": ("INT", {"default": 4, "max": 8, "min": 2, "step": 2}),
-                "density": ("FLOAT", {"default": 0.25, "max": 1.0, "min": 0.0, "step": 0.01}),
+                "scale": ("INT", {"default": 100, "max": 2048, "min": 2, "step": 1}),
                 "octaves": ("INT", {"default": 4, "max": 8, "min": 0, "step": 1}),
+                "persistence": ("FLOAT", {"default": 0.5, "max": 100.0, "min": 0.01, "step": 0.01}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),  
             },
         }
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
-    FUNCTION = "perlin_noise_filter"
+    FUNCTION = "perlin_noise"
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
 
-    def perlin_noise_filter(self, width, height, shape, density, octaves, seed):
-    
-        if width > 1024 or height > 1024 and octaves > 6:
-            octaves = 6
+    def perlin_noise(self, width, height, scale, octaves, persistence, seed):
     
         WTools = WAS_Tools_Class()
         
-        image = WTools.perlin_noise(width, height, shape, density, octaves, seed)
+        image = WTools.perlin_noise(width, height, octaves, persistence, scale, seed)
+
+        return (pil2tensor(image), )           
+        
+
+# IMAGE PERLIN POWER FRACTAL
+
+class WAS_Image_Perlin_Power_Fractal:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "width": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
+                "height": ("INT", {"default": 512, "max": 2048, "min": 64, "step": 1}),
+                "scale": ("INT", {"default": 100, "max": 2048, "min": 2, "step": 1}),
+                "octaves": ("INT", {"default": 4, "max": 8, "min": 0, "step": 1}),
+                "persistence": ("FLOAT", {"default": 0.5, "max": 100.0, "min": 0.01, "step": 0.01}),
+                "lacunarity": ("FLOAT", {"default": 2.0, "max": 100.0, "min": 0.01, "step": 0.01}),
+                "exponent": ("FLOAT", {"default": 2.0, "max": 100.0, "min": 0.01, "step": 0.01}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),  
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "perlin_power_fractal"
+
+    CATEGORY = "WAS Suite/Image/Generate/Noise"
+
+    def perlin_power_fractal(self, width, height, scale, octaves, persistence, lacunarity, exponent, seed):
+    
+        WTools = WAS_Tools_Class()
+        
+        image = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, seed)
 
         return (pil2tensor(image), )        
         
@@ -4325,6 +4475,8 @@ class WAS_Load_Image_Batch:
     CATEGORY = "WAS Suite/IO"
 
     def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001'):
+    
+        clear_counter = (clear_counter=='True')
         
         if not os.path.exists(path):
             return (None, )
@@ -4351,7 +4503,7 @@ class WAS_Load_Image_Batch:
             self.WDB = WDB
             self.image_paths = []
             self.load_images(directory_path, pattern)
-            self.image_paths.sort()  # sort the image paths by name
+            self.image_paths.sort()
             stored_directory_path = self.WDB.get('Batch Paths', label)
             stored_pattern = self.WDB.get('Batch Patterns', label)
             if stored_directory_path != directory_path or stored_pattern != pattern:
@@ -6797,8 +6949,6 @@ class MiDaS_Depth_Approx:
             # Invert depth map
             if invert_depth == 'true':
                 depth = ImageOps.invert(depth)
-
-            depth.save(f"depth_{i}.png")
 
             tensor_images.append(pil2tensor(depth))
             
@@ -10132,7 +10282,8 @@ NODE_CLASS_MAPPINGS = {
     "Image Monitor Effects Filter": WAS_Image_Monitor_Distortion_Filter,
     "Image Nova Filter": WAS_Image_Nova_Filter,
     "Image Padding": WAS_Image_Padding,
-    "Image Perlin Noise Filter": WAS_Image_Perlin_Noise_Filter,
+    "Image Perlin Noise": WAS_Image_Perlin_Noise,
+    "Image Perlin Power Fractal": WAS_Image_Perlin_Power_Fractal,
     "Image Remove Background (Alpha)": WAS_Remove_Background,
     "Image Remove Color": WAS_Image_Remove_Color,
     "Image Resize": WAS_Image_Rescale,
