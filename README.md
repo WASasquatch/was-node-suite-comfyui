@@ -11,7 +11,7 @@
 # Important Updates
 
  - **[Updated 5/23/2023]** `ASCII` **is deprecated**. The new preferred method of text node output is `STRING`. This is a change from `ASCII` so that it is more clear what data is being passed.
-   - The `was_suite_config.json` will automatically set `use_legacy_ascii_text` to `true` for a transition period. You can enable `TEXT` output by setting `use_legacy_ascii_text` to `false` 
+   - The `was_suite_config.json` will automatically set `use_legacy_ascii_text` to `true` for a transition period. You can enable `STRING` output by setting `use_legacy_ascii_text` to `false` 
  -  [Video Nodes](https://github.com/WASasquatch/was-node-suite-comfyui#video-nodes) - There are two new video nodes, `Write to Video` and `Create Video from Path`. These are experimental nodes. 
 
 # Current Nodes:
@@ -325,7 +325,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
     
-## Alternate Installation:
+## Alternate [Legacy] Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, and `WAS_Node_Suite.py` has write permissions.
 
   - Download `WAS_Node_Suite.py`
@@ -347,5 +347,6 @@ This method will not install the resources required for Image Crop Face node, an
 Create a new cell and add the following code, then run the cell. You may need to edit the path to your `custom_nodes` folder. You can also use the [colab hosted here](https://colab.research.google.com/github/WASasquatch/comfyui-colab-was-node-suite/blob/main/ComfyUI_%2B_WAS_Node_Suite.ipynb)
 
   - `!git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/was-node-suite-comfyui`
+  - `!pip install -r /content/ComfyUI/custom_nodes/was-node-suite-comfyui/requirements.txt`
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
