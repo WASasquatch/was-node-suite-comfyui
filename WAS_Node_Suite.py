@@ -10597,14 +10597,13 @@ if 'scipy' not in packages():
         print(e)
         
 # scikit-image handling
-if 'scikit-image' not in packages():
+try:
+    import skimage
+except ImportError as e:
     cstr("Installing `scikit-image`....").msg.print()
-    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', '--user', '--force-reinstall', '--upgrade', 'scikit-image'])
-    try:
-        import skimage
-    except ImportError as e:
-        cstr("Unable to import tools for certain masking procedures.").error.print()
-        print(e)
+    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'uninstall', 'scikit-image'])
+    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'scikit-image'])
+    import skimage
         
 was_conf = getSuiteConfig()
 
