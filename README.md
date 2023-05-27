@@ -325,7 +325,7 @@ If you're running on Linux, or non-admin account on windows you'll want to ensur
     - WAS Suite should uninstall legacy nodes automatically for you.
     - Tools will be located in the WAS Suite menu.
     
-## Alternate Installation:
+## Alternate [Legacy] Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, and `WAS_Node_Suite.py` has write permissions.
 
   - Download `WAS_Node_Suite.py`
