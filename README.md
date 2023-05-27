@@ -347,5 +347,6 @@ This method will not install the resources required for Image Crop Face node, an
 Create a new cell and add the following code, then run the cell. You may need to edit the path to your `custom_nodes` folder. You can also use the [colab hosted here](https://colab.research.google.com/github/WASasquatch/comfyui-colab-was-node-suite/blob/main/ComfyUI_%2B_WAS_Node_Suite.ipynb)
 
   - `!git clone https://github.com/WASasquatch/was-node-suite-comfyui /content/ComfyUI/custom_nodes/was-node-suite-comfyui`
+  - `!pip install -r /content/ComfyUI/custom_nodes/was-node-suite-comfyui/requirements.txt`
   - Restart Colab Runtime (don't disconnect)
     - Tools will be located in the WAS Suite menu.
