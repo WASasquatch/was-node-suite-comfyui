@@ -4144,7 +4144,7 @@ class WAS_Image_Make_Seamless:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "imagse": ("IMAGE",),
+                "images": ("IMAGE",),
                 "blending": ("FLOAT", {"default": 0.4, "max": 1.0, "min": 0.0, "step": 0.01}),
                 "tiled": (["true", "false"],),
                 "tiles": ("INT", {"default": 2, "max": 6, "min": 2, "step": 2}),
