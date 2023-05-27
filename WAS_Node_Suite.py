@@ -1946,6 +1946,7 @@ class WAS_Tools_Class():
             
             return Image.fromarray(data_scaled).convert('RGB')
             
+    # Make Image Seamless
             
     def make_seamless(self, image, blending=0.5, tiled=False, tiles=2):
     
@@ -1962,6 +1963,51 @@ class WAS_Tools_Class():
             
         return texture
             
+    # Image Displacement Warp
+
+    def displace_image(self, image, displacement_map, amplitude):
+
+        image = image.convert('RGB')
+        displacement_map = displacement_map.convert('L')
+        width, height = image.size
+        result = Image.new('RGB', (width, height))
+
+        for y in range(height):
+            for x in range(width):
+
+                # Calculate the displacements n' stuff
+                displacement = displacement_map.getpixel((x, y))
+                displacement_amount = amplitude * (displacement / 255)
+                new_x = x + int(displacement_amount)
+                new_y = y + int(displacement_amount)
+
+                # Apply mirror reflection at edges and corners
+                if new_x < 0:
+                    new_x = abs(new_x)
+                elif new_x >= width:
+                    new_x = 2 * width - new_x - 1
+
+                if new_y < 0:
+                    new_y = abs(new_y)
+                elif new_y >= height:
+                    new_y = 2 * height - new_y - 1
+
+                if new_x < 0:
+                    new_x = abs(new_x)
+                if new_y < 0:
+                    new_y = abs(new_y)
+
+                if new_x >= width:
+                    new_x = 2 * width - new_x - 1
+                if new_y >= height:
+                    new_y = 2 * height - new_y - 1
+
+                # Consider original image color at new location for RGB results, oops
+                pixel = image.getpixel((new_x, new_y))
+                result.putpixel((x, y), pixel)
+
+        return result    
+    
     # Analyze Filters
         
     def black_white_levels(self, image):
@@ -4098,7 +4144,7 @@ class WAS_Image_Make_Seamless:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "imagse": ("IMAGE",),
                 "blending": ("FLOAT", {"default": 0.4, "max": 1.0, "min": 0.0, "step": 0.01}),
                 "tiled": (["true", "false"],),
                 "tiles": ("INT", {"default": 2, "max": 6, "min": 2, "step": 2}),
@@ -4106,19 +4152,86 @@ class WAS_Image_Make_Seamless:
         }
 
     RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "make_seamless"
 
     CATEGORY = "WAS Suite/Image/Process"
 
-    def make_seamless(self, image, blending, tiled, tiles):
-    
+    def make_seamless(self, images, blending, tiled, tiles):
+
         WTools = WAS_Tools_Class()
         
-        image = WTools.make_seamless(tensor2pil(image), blending, tiled, tiles)
+        seamless_images = []
+        for image in images:
+            seamless_images.append(pil2tensor(WTools.make_seamless(tensor2pil(image), blending, tiled, tiles)))
 
-        return (pil2tensor(image), )
+        seamless_images = torch.cat(seamless_images, dim=0)
+
+        return (seamless_images, )
         
+        
+# IMAGE MAKE SEAMLESS
+
+class WAS_Image_Displacement_Warp:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "displacement_maps": ("IMAGE",),
+                "amplitude": ("FLOAT", {"default": 25.0, "min": -4096, "max": 4096, "step": 0.1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
+    FUNCTION = "displace_image"
+
+    CATEGORY = "WAS Suite/Image/Transform"
+
+    def displace_image(self, images, displacement_maps, amplitude):
+    
+        WTools = WAS_Tools_Class()
+
+        displaced_images = []
+        for i in range(len(images)):
+            img = tensor2pil(images[i])
+            if i < len(displacement_maps):
+                disp = tensor2pil(displacement_maps[i])
+            else:
+                disp = tensor2pil(displacement_maps[-1])
+            disp = self.resize_and_crop(disp, img.size)
+            displaced_images.append(pil2tensor(WTools.displace_image(img, disp, amplitude)))
+
+        displaced_images = torch.cat(displaced_images, dim=0)
+
+        return (displaced_images, )
+        
+        
+    def resize_and_crop(self, image, target_size):
+        width, height = image.size
+        target_width, target_height = target_size
+        aspect_ratio = width / height
+        target_aspect_ratio = target_width / target_height
+
+        if aspect_ratio > target_aspect_ratio:
+            new_height = target_height
+            new_width = int(new_height * aspect_ratio)
+        else:
+            new_width = target_width
+            new_height = int(new_width / aspect_ratio)
+
+        image = image.resize((new_width, new_height))
+        left = (new_width - target_width) // 2
+        top = (new_height - target_height) // 2
+        right = left + target_width
+        bottom = top + target_height
+        image = image.crop((left, top, right, bottom))
+
+        return image
         
 # IMAGE TO NOISE
 
@@ -10260,6 +10373,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Crop Face": WAS_Image_Crop_Face,
     "Image Crop Location": WAS_Image_Crop_Location,
     "Image Crop Square Location": WAS_Image_Crop_Square_Location,
+    "Image Displacement Warp": WAS_Image_Displacement_Warp,
     "Image Paste Face": WAS_Image_Paste_Face_Crop,
     "Image Paste Crop": WAS_Image_Paste_Crop,
     "Image Paste Crop by Location": WAS_Image_Paste_Crop_Location,
