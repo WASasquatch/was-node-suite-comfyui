@@ -193,7 +193,7 @@ was_conf_template = {
                     "sam_model_vitl_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
                     "sam_model_vitb_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
                     "history_display_limit": 32,
-                    "use_legacy_ascii_text": True, # ASCII Legacy is True For Now
+                    "use_legacy_ascii_text": False,
                     "ffmpeg_bin_path": "/path/to/ffmpeg",
                     "ffmpeg_extra_codecs": {
                         "avc1": ".mp4",
@@ -580,9 +580,6 @@ class WASDatabase:
             self._save()
             
     def updateCat(self, category, dictionary):
-        if self.data.__contains__(category):
-            cstr(f"The database category `{category}` already exists!").error.print()
-            return
         self.data[category].update(dictionary)
         self._save()
         
@@ -6271,7 +6268,8 @@ class WAS_Image_To_Mask:
                 channel_image = b
             elif channel == "alpha":
                 channel_image = a
-            return (pil2mask(tensor2pil(channel_image)).unsqueeze(0).unsqueeze(1), )
+            channel_mask = torch.tensor(np.array(channel_image) > 0, dtype=torch.uint8)
+            return (channel_mask, )
 
 
 # MASK TO IMAGE
@@ -7063,7 +7061,7 @@ class MiDaS_Depth_Approx:
             if invert_depth == 'true':
                 depth = ImageOps.invert(depth)
 
-            tensor_images.append(pil2tensor(depth))
+            tensor_images.append(pil2tensor(depth.convert("RGB")))
             
         tensor_images = torch.cat(tensor_images, dim=0)
 
