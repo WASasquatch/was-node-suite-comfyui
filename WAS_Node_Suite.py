@@ -4585,8 +4585,6 @@ class WAS_Load_Image_Batch:
     CATEGORY = "WAS Suite/IO"
 
     def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001'):
-    
-        clear_counter = (clear_counter=='True')
         
         if not os.path.exists(path):
             return (None, )
@@ -5043,7 +5041,7 @@ class WAS_Remove_Background:
         }
 
     RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("iamges",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "image_remove_background"
 
     CATEGORY = "WAS Suite/Image/Process"
