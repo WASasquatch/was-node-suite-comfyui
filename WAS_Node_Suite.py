@@ -6129,10 +6129,13 @@ class WAS_Image_Save:
                 
         if show_history == 'true':
             HDB = WASDatabase(WAS_HISTORY_DATABASE)
+            conf = getSuiteConfig()
             if HDB.catExists("History") and HDB.keyExists("History", "Output_Images"):
                 history_paths = HDB.get("History", "Output_Images")
             else:
                 history_paths = None
+            if conf.__contains__('history_display_limit'):
+                history_paths = history_paths[-conf['history_display_limit']:]
             history_paths.reverse()
             if history_paths:
                 for image_path in history_paths:
