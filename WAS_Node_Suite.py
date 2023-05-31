@@ -472,6 +472,21 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
                 text = text.replace(key, random_line)
 
     return text
+
+# Parse Dynamic Prompts
+
+def parse_dynamic_prompt(prompt, seed):
+    random.seed(seed)
+    
+    def replace_match(match):
+        options = match.group(1).split('|')
+        return random.choice(options)
+        
+    parse_prompt = re.sub(r'\<(.*?)\>', replace_match, prompt)
+    while re.search(r'\<(.*?)\>', parse_prompt):
+        parse_prompt = re.sub(r'\<(.*?)\>', replace_match, parse_prompt)
+        
+    return parse_prompt
     
 class PromptStyles:
     def __init__(self, styles_file, preview_length = 32):
@@ -703,7 +718,35 @@ def update_history_images(new_paths):
         if isinstance(new_paths, str):
             HDB.insert("History", "Images", [new_paths])
         elif isinstance(new_paths, list):
-            HDB.insert("History", "Images", new_paths)
+            HDB.insert("History", "Images", new_paths)  
+            
+# Update output image history
+
+def update_history_output_images(new_paths):
+    HDB = WASDatabase(WAS_HISTORY_DATABASE)
+    category = "Output_Images"
+    if HDB.catExists("History") and HDB.keyExists("History", category):
+        saved_paths = HDB.get("History", category)
+        for path_ in saved_paths:
+            if not os.path.exists(path_):
+                saved_paths.remove(path_)
+        if isinstance(new_paths, str):
+            if new_paths in saved_paths:
+                saved_paths.remove(new_paths)
+            saved_paths.append(new_paths)
+        elif isinstance(new_paths, list):
+            for path_ in new_paths:
+                if path_ in saved_paths:
+                    saved_paths.remove(path_)
+                saved_paths.append(path_)
+        HDB.update("History", category, saved_paths)
+    else:
+        if not HDB.catExists("History"):
+            HDB.insertCat("History")
+        if isinstance(new_paths, str):
+            HDB.insert("History", category, [new_paths])
+        elif isinstance(new_paths, list):
+            HDB.insert("History", category, new_paths)
 
 # Update text file history
 
@@ -5960,6 +6003,7 @@ class WAS_Image_Save:
                 "extension": (['png', 'jpeg', 'gif', 'tiff'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
+                "show_history": (["false", "true"],),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -5973,7 +6017,9 @@ class WAS_Image_Save:
 
     CATEGORY = "WAS Suite/IO"
 
-    def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', filename_number_padding=4):
+    def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', 
+                        extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', 
+                        filename_number_padding=4, show_history='false'):
         delimiter = filename_delimiter
         number_padding = filename_number_padding
 
@@ -6060,11 +6106,16 @@ class WAS_Image_Save:
                 else:
                     img.save(output_file)
                 cstr(f"Image file saved to: {output_file}").msg.print()
-                results.append({
-                    "filename": file,
-                    "subfolder": base_output,
-                    "type": self.type
-                })
+                if show_history != 'true':
+                    results.append({
+                        "filename": file,
+                        "subfolder": base_output,
+                        "type": self.type
+                    })
+                
+                # Update the output image history
+                update_history_output_images(output_file)
+            
             except OSError as e:
                 cstr(f'Unable to save file to: {output_file}').error.print()
                 print(e)
@@ -6075,6 +6126,24 @@ class WAS_Image_Save:
             if overwrite_mode == 'false':
                 counter += 1
                 
+                
+        if show_history == 'true':
+            HDB = WASDatabase(WAS_HISTORY_DATABASE)
+            if HDB.catExists("History") and HDB.keyExists("History", "Output_Images"):
+                history_paths = HDB.get("History", "Output_Images")
+            else:
+                history_paths = None
+            history_paths.reverse()
+            if history_paths:
+                for image_path in history_paths:
+                    results.append({
+                        "filename": os.path.basename(image_path),
+                        "subfolder": ( os.path.basename(os.path.dirname(image_path)) 
+                                        if os.path.basename(os.path.dirname(image_path)) != 'output'
+                                        else '' ),
+                        "type": self.type
+                    })
+                
         return {"ui": {"images": results}}
 
         
@@ -6082,7 +6151,7 @@ class WAS_Image_Save:
 class WAS_Load_Image:
 
     def __init__(self):
-        self.input_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', "input")
+        self.input_dir = comfy_paths.input_directory
         self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
 
     @classmethod
@@ -6914,7 +6983,6 @@ class WAS_Mask_Combine_Batch:
         combined_mask = torch.clamp(combined_mask, 0, 1)  # Ensure values are between 0 and 1
         return (combined_mask, )
 
-
 # LATENT UPSCALE NODE
 
 class WAS_Latent_Upscale:
@@ -7272,15 +7340,13 @@ class WAS_NSP_CLIPTextEncoder:
     def nsp_encode(self, clip, text, mode="Noodle Soup Prompts", noodle_key='__', seed=0):
     
         if mode == "Noodle Soup Prompts":
-
             new_text = nsp_parse(text, seed, noodle_key)
-            cstr(f"CLIPTextEncode NSP:\n {new_text}").msg.print()
-            
         else:
-        
             new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
-            cstr(f"CLIPTextEncode Wildcards:\n {new_text}").msg.print()
-
+            
+        new_text = parse_dynamic_prompt(new_text, seed)
+        cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
+        
         return ([[clip.encode(new_text), {}]], {"ui": {"prompt": new_text}})
 
 
@@ -10532,10 +10598,11 @@ if os.path.exists(BKAdvCLIP_dir):
             
             if mode == "Noodle Soup Prompts":
                 new_text = nsp_parse(text, int(seed), noodle_key)
-                cstr(f"CLIPTextEncode NSP:\n{new_text}").msg.print()
             else:
                 new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
-                cstr(f"CLIPTextEncode Wildcards:\n{new_text}").msg.print()
+                
+            new_text = parse_dynamic_prompt(new_text, seed)
+            cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
             
             encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
 
