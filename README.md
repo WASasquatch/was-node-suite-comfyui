@@ -214,6 +214,11 @@
  ### Extra Nodes
  
   - CLIPTextEncode (BlenderNeko Advanced + NSP): Only available if you have BlenderNeko's [Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb). Allows for NSP and Wildcard use with their advanced CLIPTextEncode. 
+  
+  
+ ### Notes:
+ 
+  - CLIPTextEncode (NSP) and CLIPTextEncode (BlenderNeko Advanced + NSP) accept dynamic prompts in `<option1|option2|option3>` format. This will respect the nodes input seed to yield reproducible results like NSP and Wildcards. 
  
 ---
  
