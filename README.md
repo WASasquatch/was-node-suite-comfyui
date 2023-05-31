@@ -218,7 +218,7 @@
   
  ### Notes:
  
-  - CLIPTextEncode (NSP) and CLIPTextEncode (BlenderNeko Advanced + NSP) accept dynamic prompts in `<option1|option2|option3>` format. This will respect the nodes input seed to yield reproducible results like NSP and Wildcards. 
+  - **CLIPTextEncode (NSP)** and **CLIPTextEncode (BlenderNeko Advanced + NSP)** accept dynamic prompts in `<option1|option2|option3>` format. This will respect the nodes input seed to yield reproducible results like NSP and Wildcards. 
  
 ---
  
