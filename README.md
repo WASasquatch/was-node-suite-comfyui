@@ -116,7 +116,7 @@
  - Image Resize
  - Image Rotate: Rotate an image
  - Image Save: A save image node with format support and path support.
-	- `show_history` will show previously saved images with the WAS Save Image node. 
+	- `show_history` will show previously saved images with the WAS Save Image node. ComfyUI unfortunately resizes displayed images to the same size however, so if images are in different sizes it will force them in a different size. 
 	- Doesn't display images saved outside `/ComfyUI/output/`
  - Image Seamless Texture: Create a seamless texture out of a image with optional tiling
  - Image Select Channel: Select a single channel of an RGB image
@@ -182,6 +182,7 @@
  - Number to Text
  - Random Number
  - Save Text File: Save a text string to a file
+ - Samples Passthrough (Stat System): Logs RAM, VRAM, and Disk usage to the console.
  - Seed: Return a seed
  - Tensor Batch to Image: Select a single image out of a latent batch for post processing with filters
  - Text Add Tokens: Add custom tokens to parse in filenames or other text.
