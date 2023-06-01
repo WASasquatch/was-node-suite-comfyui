@@ -5014,6 +5014,7 @@ class WAS_Image_Chromatic_Aberration:
             mask = ImageChops.multiply(mask, right)
             mask = ImageChops.multiply(mask, top)
             mask = ImageChops.multiply(mask, bottom)
+            mask = ImageChops.multiply(mask, mask)
 
             return mask
             
