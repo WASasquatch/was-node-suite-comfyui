@@ -472,6 +472,27 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
                 text = text.replace(key, random_line)
 
     return text
+    
+# Parse Prompt Variables
+    
+def parse_prompt_vars(input_string):
+    variables = {}
+    pattern = r"\$\((.*?)\)"
+    variable_count = 1
+
+    def replace_variable(match):
+        nonlocal variable_count
+        variable_name = f"${variable_count}"
+        variables[variable_name] = match.group(1)
+        variable_count += 1
+        return match.group(1)
+
+    output_string = re.sub(pattern, replace_variable, input_string)
+
+    for variable_name, phrase in variables.items():
+        output_string = output_string.replace(variable_name, phrase)
+
+    return output_string, variables
 
 # Parse Dynamic Prompts
 
@@ -7338,6 +7359,7 @@ class WAS_NSP_CLIPTextEncoder:
 
     OUTPUT_NODE = True
     RETURN_TYPES = ("CONDITIONING",)
+    RETURN_NAMES = ("conditioning",)
     FUNCTION = "nsp_encode"
 
     CATEGORY = "WAS Suite/Conditioning"
@@ -10401,7 +10423,65 @@ class WAS_Load_Cache:
             else:
                 cstr(f"Unable to locate cache file {file}").error.print()
             
-        return (latent, image, conditioning)
+        return (latent, image, conditioning)        
+        
+ 
+# SAMPLES PASS STAT SYSTEM
+        
+class WAS_Samples_Passthrough_Stat_System:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "samples": ("LATENT",),
+            }
+        }
+        
+    RETURN_TYPES = ("LATENT",)
+    RETURN_NAMES = ("samples",)
+    FUNCTION = "stat_system"
+
+    CATEGORY = "WAS Suite/Debug"
+
+    def stat_system(self, samples):
+
+        log = ""
+        for stat in self.get_system_stats():
+            log += stat + "\n"
+                
+        cstr("\n"+log).msg.print()
+            
+        return (samples,)
+        
+    def get_system_stats(self):
+        
+        import psutil
+        
+        # RAM
+        ram = psutil.virtual_memory()
+        ram_used = ram.used / (1024 ** 3)
+        ram_total = ram.total / (1024 ** 3)
+        ram_stats = f"Used RAM: {ram_used:.2f} GB / Total RAM: {ram_total:.2f} GB"
+        
+        # VRAM (with PyTorch)
+        vram_used = torch.cuda.memory_allocated() / (1024 ** 3)
+        vram_total = torch.cuda.max_memory_allocated() / (1024 ** 3)
+        vram_stats = f"Used VRAM: {vram_used:.2f} GB / Total VRAM: {vram_total:.2f} GB"
+        
+        # GPU Temperature
+        gpu_temperature = torch.cuda.max_memory_allocated()
+        gpu_stats = f"GPU Temperature: {gpu_temperature}"
+        
+        # Hard Drive Space
+        hard_drive = psutil.disk_usage("/")
+        used_space = hard_drive.used / (1024 ** 3)
+        total_space = hard_drive.total / (1024 ** 3)
+        hard_drive_stats = f"Used Space: {used_space:.2f} GB / Total Space: {total_space:.2f} GB"
+        
+        return [ram_stats, vram_stats, gpu_stats, hard_drive_stats]
 
 
 # NODE MAPPING
@@ -10531,6 +10611,7 @@ NODE_CLASS_MAPPINGS = {
     "SAM Parameters": WAS_SAM_Parameters,
     "SAM Parameters Combine": WAS_SAM_Combine_Parameters,
     "SAM Image Mask": WAS_SAM_Image_Mask,
+    "Samples Passthrough (Stat System)": WAS_Samples_Passthrough_Stat_System,
     "String to Text": WAS_String_To_Text,
     "Image Bounds": WAS_Image_Bounds,
     "Inset Image Bounds": WAS_Inset_Image_Bounds,
@@ -10613,7 +10694,7 @@ if os.path.exists(BKAdvCLIP_dir):
 
             return ([[encoded, {}]], )
                 
-    NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})    
+    NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
 
     if NODE_CLASS_MAPPINGS.__contains__("CLIPTextEncode (BlenderNeko Advanced + NSP)"):
         cstr('`CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.').msg.print()
