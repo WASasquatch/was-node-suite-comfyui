@@ -192,7 +192,7 @@ was_conf_template = {
                     "sam_model_vith_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
                     "sam_model_vitl_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
                     "sam_model_vitb_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
-                    "history_display_limit": 32,
+                    "history_display_limit": 36,
                     "use_legacy_ascii_text": False,
                     "ffmpeg_bin_path": "/path/to/ffmpeg",
                     "ffmpeg_extra_codecs": {
@@ -6139,6 +6139,8 @@ class WAS_Image_Save:
             history_paths.reverse()
             if history_paths:
                 for image_path in history_paths:
+                    if not os.path.exists(image_path):
+                        continue
                     results.append({
                         "filename": os.path.basename(image_path),
                         "subfolder": ( os.path.basename(os.path.dirname(image_path)) 
