@@ -493,8 +493,6 @@ def parse_prompt_vars(input_string, optional_vars=None):
         variable_pattern = re.escape(variable_name)
         output_string = re.sub(variable_pattern, phrase, output_string)
         
-    print("Variables:", variables)
-
     return output_string, variables
 
 # Parse Dynamic Prompts
@@ -6241,8 +6239,7 @@ class WAS_Image_Save:
                                         if os.path.basename(os.path.dirname(image_path)) != 'output'
                                         else '' ),
                         "type": self.type
-                    })
-                
+                    })                
         return {"ui": {"images": results}}
 
         
@@ -9805,7 +9802,7 @@ class WAS_Number_Input_Condition:
             "required": {
                 "number_a": ("NUMBER",),
                 "number_b": ("NUMBER",),
-                "comparison": (["greater-than", "greater-than or equels", "less-than", "less-than or equals", "equals", "does not equal", "divisible by", "if A odd", "if A even", "if A prime", "factor of"],),
+                "comparison": (["greater-than", "greater-than or equals", "less-than", "less-than or equals", "equals", "does not equal", "divisible by", "if A odd", "if A even", "if A prime", "factor of"],),
             }
         }
 
