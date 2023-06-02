@@ -475,22 +475,25 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
     
 # Parse Prompt Variables
     
-def parse_prompt_vars(input_string):
-    variables = {}
-    pattern = r"\$\((.*?)\)"
-    variable_count = 1
+def parse_prompt_vars(input_string, optional_vars=None):
+    variables = optional_vars or {}
+    pattern = r"\$\|(.*?)\|\$"
+    variable_count = len(variables) + 1
 
     def replace_variable(match):
         nonlocal variable_count
         variable_name = f"${variable_count}"
         variables[variable_name] = match.group(1)
         variable_count += 1
-        return match.group(1)
+        return variable_name
 
     output_string = re.sub(pattern, replace_variable, input_string)
 
     for variable_name, phrase in variables.items():
-        output_string = output_string.replace(variable_name, phrase)
+        variable_pattern = re.escape(variable_name)
+        output_string = re.sub(variable_pattern, phrase, output_string)
+        
+    print("Variables:", variables)
 
     return output_string, variables
 
@@ -5278,7 +5281,9 @@ class WAS_Image_High_Pass_Filter:
             "required": {
                 "image": ("IMAGE",),
                 "radius": ("INT", {"default": 10, "min": 1, "max": 500, "step": 1}),
-                "strength": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 255.0, "step": 0.1})
+                "strength": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 255.0, "step": 0.1}),
+                "color_output": (["true", "false"],),
+                "neutral_background": (["true", "false"],),
             }
         }
     RETURN_TYPES = ("IMAGE",)
@@ -5286,13 +5291,11 @@ class WAS_Image_High_Pass_Filter:
 
     CATEGORY = "WAS Suite/Image/Filter"
 
-    def high_pass(self, image, radius=10, strength=1.5):
-        hpf = tensor2pil(image).convert('L')
-        return (pil2tensor(self.apply_hpf(hpf.convert('RGB'), radius, strength)), )
+    def high_pass(self, image, radius=10, strength=1.5, color_output="true", neutral_background="true"):
+        return (pil2tensor(self.apply_hpf(tensor2pil(image), radius, strength, color_output, neutral_background)), )
 
-    def apply_hpf(self, img, radius=10, strength=1.5):
-
-        # pil to numpy
+    def apply_hpf(self, img, radius=10, strength=1.5, color_output="true", neutral_background="true"):
+        # PIL to numpy
         img_arr = np.array(img).astype('float')
 
         # Apply a Gaussian blur with the given radius
@@ -5303,8 +5306,23 @@ class WAS_Image_High_Pass_Filter:
         hpf_arr = img_arr - blurred_arr
         hpf_arr = np.clip(hpf_arr * strength, 0, 255).astype('uint8')
 
-        # Convert the numpy array back to a PIL image and return it
-        return Image.fromarray(hpf_arr, mode='RGB')
+        if color_output == "true":
+            # Create a color high pass image by applying the HPF to each channel separately
+            r = Image.fromarray(hpf_arr[:, :, 0], mode='L')
+            g = Image.fromarray(hpf_arr[:, :, 1], mode='L')
+            b = Image.fromarray(hpf_arr[:, :, 2], mode='L')
+            high_pass = Image.merge('RGB', (r, g, b))
+        else:
+            # Create a grayscale high pass image by converting the filtered array to mode 'L'
+            high_pass = Image.fromarray(hpf_arr, mode='L')
+
+        if neutral_background == "true":
+            # Apply neutral background
+            neutral_bg = Image.new("RGB", high_pass.size, (128, 128, 128))
+            high_pass = ImageChops.screen(neutral_bg, high_pass)
+
+        # Return the high pass image
+        return high_pass
 
 
 # IMAGE LEVELS NODE
@@ -6077,6 +6095,7 @@ class WAS_Image_Save:
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
                 "show_history": (["false", "true"],),
+                "embed_workflow": (["true", "false"],),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -6092,7 +6111,7 @@ class WAS_Image_Save:
 
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', 
                         extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', 
-                        filename_number_padding=4, show_history='false'):
+                        filename_number_padding=4, show_history='false', embed_workflow="true"):
         delimiter = filename_delimiter
         number_padding = filename_number_padding
 
@@ -6146,12 +6165,14 @@ class WAS_Image_Save:
         for image in images:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            
             metadata = PngInfo()
-            if prompt is not None:
-                metadata.add_text("prompt", json.dumps(prompt))
-            if extra_pnginfo is not None:
-                for x in extra_pnginfo:
-                    metadata.add_text(x, json.dumps(extra_pnginfo[x]))
+            if embed_workflow == 'true':
+                if prompt is not None:
+                    metadata.add_text("prompt", json.dumps(prompt))
+                if extra_pnginfo is not None:
+                    for x in extra_pnginfo:
+                        metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
             # Parse prefix tokens
             filename_prefix = tokens.parseTokens(filename_prefix)
@@ -7424,6 +7445,7 @@ class WAS_NSP_CLIPTextEncoder:
             new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
             
         new_text = parse_dynamic_prompt(new_text, seed)
+        new_text, text_vars = parse_prompt_vars(new_text)
         cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
         
         return ([[clip.encode(new_text), {}]], {"ui": {"prompt": new_text}})
@@ -9613,7 +9635,7 @@ class WAS_Number_Operation:
             "required": {
                 "number_a": ("NUMBER",),
                 "number_b": ("NUMBER",),
-                "operation": (["addition", "subtraction", "division", "floor division", "multiplication", "exponentiation", "modulus", "greater-than", "greater-than or equels", "less-than", "less-than or equals", "equals", "does not equal"],),
+                "operation": (["addition", "subtraction", "division", "floor division", "multiplication", "exponentiation", "modulus", "greater-than", "greater-than or equals", "less-than", "less-than or equals", "equals", "does not equal"],),
             }
         }
 
@@ -9653,7 +9675,7 @@ class WAS_Number_Operation:
             elif operation == 'does not equal':
                 return (+(number_a != number_b), )
             else:
-                return number_a
+                return (number_a, )
 
 # NUMBER MULTIPLE OF
 
@@ -10737,6 +10759,7 @@ if os.path.exists(BKAdvCLIP_dir):
                 new_text = replace_wildcards(text, (None if seed == 0 else seed), noodle_key)
                 
             new_text = parse_dynamic_prompt(new_text, seed)
+            new_text, text_vars = parse_prompt_vars(new_text)
             cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
             
             encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)

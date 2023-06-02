@@ -219,7 +219,8 @@
   
  ### Notes:
  
-  - **CLIPTextEncode (NSP)** and **CLIPTextEncode (BlenderNeko Advanced + NSP)** accept dynamic prompts in `<option1|option2|option3>` format. This will respect the nodes input seed to yield reproducible results like NSP and Wildcards. 
+  - **CLIPTextEncode (NSP)** and **CLIPTextEncode (BlenderNeko Advanced + NSP)**: Accept dynamic prompts in `<option1|option2|option3>` format. This will respect the nodes input seed to yield reproducible results like NSP and Wildcards. 
+  - **CLIPTextEncode (NSP)** and **CLIPTextEncode (BlenderNeko Advanced + NSP)**: Assign variables with `$|prompt words|$` format. You can then print this word again within the prompt with the number corresponding the order you created them. So the first prompt var would be printed with `$1` and the second with `$1` and so on.
  
 ---
  
