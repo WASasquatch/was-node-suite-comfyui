@@ -6301,11 +6301,10 @@ class WAS_Image_Save:
                         continue
                     filtered_paths.append(image_path)
                     
-                history_paths = filtered_paths
                 if conf.__contains__('history_display_limit'):
-                    history_paths = history_paths[-conf['history_display_limit']:]
+                    filtered_paths = filtered_paths[-conf['history_display_limit']:]
 
-                for image_path in history_paths:
+                for image_path in filtered_paths:
                     image_data = {
                         "filename": os.path.basename(image_path),
                         "subfolder": (os.path.basename(os.path.dirname(image_path)) if os.path.basename(os.path.dirname(image_path)) != 'output' else ''),
