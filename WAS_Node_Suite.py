@@ -6287,9 +6287,15 @@ class WAS_Image_Save:
             else:
                 history_paths = None
             
+        if show_history == 'true':
+            HDB = WASDatabase(WAS_HISTORY_DATABASE)
+            conf = getSuiteConfig()
+            if HDB.catExists("History") and HDB.keyExists("History", "Output_Images"):
+                history_paths = HDB.get("History", "Output_Images")
+            else:
+                history_paths = None
+
             if history_paths:
-            
-                history_paths.reverse()                
                 filtered_paths = []
 
                 for image_path in history_paths:
@@ -6300,9 +6306,11 @@ class WAS_Image_Save:
                     if show_history_by_prefix == 'true' and os.path.basename(os.path.dirname(image_path)) != os.path.basename(output_path):
                         continue
                     filtered_paths.append(image_path)
-                    
+
                 if conf.__contains__('history_display_limit'):
                     filtered_paths = filtered_paths[-conf['history_display_limit']:]
+
+                filtered_paths.reverse()
 
                 for image_path in filtered_paths:
                     image_data = {
@@ -6311,7 +6319,6 @@ class WAS_Image_Save:
                         "type": self.type
                     }
                     results.append(image_data)
-
 
         return {"ui": {"images": results}}
 
