@@ -6286,28 +6286,34 @@ class WAS_Image_Save:
                 history_paths = HDB.get("History", "Output_Images")
             else:
                 history_paths = None
-            if conf.__contains__('history_display_limit'):
-                history_paths = history_paths[-conf['history_display_limit']:]
-            history_paths.reverse()
+            
             if history_paths:
+            
+                history_paths.reverse()                
+                filtered_paths = []
+
                 for image_path in history_paths:
                     if not os.path.exists(image_path):
                         continue
-                    if ( show_history_by_prefix == 'true' 
-                        and not os.path.basename(image_path).startswith(filename_prefix+delimiter) ):
+                    if show_history_by_prefix == 'true' and not os.path.basename(image_path).startswith(filename_prefix+delimiter):
                         continue
-                    if ( show_history_by_prefix == 'true'
-                        and os.path.basename(os.path.dirname(image_path)) != os.path.basename(output_path) ):
+                    if show_history_by_prefix == 'true' and os.path.basename(os.path.dirname(image_path)) != os.path.basename(output_path):
                         continue
-                        
-                    print(filename_prefix+delimiter + " - " + os.path.basename(image_path))
-                    results.append({
+                    filtered_paths.append(image_path)
+                    
+                history_paths = filtered_paths
+                if conf.__contains__('history_display_limit'):
+                    history_paths = history_paths[-conf['history_display_limit']:]
+
+                for image_path in history_paths:
+                    image_data = {
                         "filename": os.path.basename(image_path),
-                        "subfolder": ( os.path.basename(os.path.dirname(image_path)) 
-                                        if os.path.basename(os.path.dirname(image_path)) != 'output'
-                                        else '' ),
+                        "subfolder": (os.path.basename(os.path.dirname(image_path)) if os.path.basename(os.path.dirname(image_path)) != 'output' else ''),
                         "type": self.type
-                    })                
+                    }
+                    results.append(image_data)
+
+
         return {"ui": {"images": results}}
 
         
