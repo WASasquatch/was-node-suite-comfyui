@@ -1729,12 +1729,17 @@ class WAS_Tools_Class():
         # Parse colors as JSON if it is a string
         if isinstance(colors, str):
             colors = json.loads(colors)
-        
-        colors = {int(k): [int(c) for c in v] for k, v in colors.items()}
 
         # Set default colors if not provided
         if colors is None:
-            colors = {0:[255,0,0],50:[0,255,0],100:[0,0,255]}
+            colors = {0: [255, 0, 0], 50: [0, 255, 0], 100: [0, 0, 255]}
+
+        # Convert color stop positions to integers and ensure color values are integers
+        colors = {int(k): [int(c) for c in v] for k, v in colors.items()}
+
+        # Add color stops at the beginning and end
+        colors[0] = colors[min(colors.keys())]
+        colors[255] = colors[max(colors.keys())]
 
         # Create a new image with a black background
         img = Image.new('RGB', size, color=(0, 0, 0))
@@ -1742,21 +1747,24 @@ class WAS_Tools_Class():
         # Determine the color spectrum between the color stops
         color_stop_positions = sorted(colors.keys())
         color_stop_count = len(color_stop_positions)
-        color_stop_index = 0
         spectrum = []
         for i in range(256):
-            if color_stop_index < color_stop_count - 1 and i > int(color_stop_positions[color_stop_index + 1]):
-                color_stop_index += 1
-            start_pos = color_stop_positions[color_stop_index]
-            end_pos = color_stop_positions[color_stop_index + 1] if color_stop_index < color_stop_count - 1 else start_pos
+            # Find the nearest color stops
+            start_pos = max(p for p in color_stop_positions if p <= i)
+            end_pos = min(p for p in color_stop_positions if p >= i)
             start = colors[start_pos]
             end = colors[end_pos]
-            if end_pos - start_pos == 0:
-                r, g, b = start
+
+            # Calculate the color interpolation factor
+            if start_pos == end_pos:
+                factor = 0
             else:
-                r = round(start[0] + (i - start_pos) * (end[0] - start[0]) / (end_pos - start_pos))
-                g = round(start[1] + (i - start_pos) * (end[1] - start[1]) / (end_pos - start_pos))
-                b = round(start[2] + (i - start_pos) * (end[2] - start[2]) / (end_pos - start_pos))
+                factor = (i - start_pos) / (end_pos - start_pos)
+
+            # Interpolate the RGB values
+            r = round(start[0] + (end[0] - start[0]) * factor)
+            g = round(start[1] + (end[1] - start[1]) * factor)
+            b = round(start[2] + (end[2] - start[2]) * factor)
             spectrum.append((r, g, b))
 
         # Draw the gradient
@@ -1775,10 +1783,21 @@ class WAS_Tools_Class():
                 if tolerance > 0:
                     color = tuple([round(c / tolerance) * tolerance for c in color])
                 draw.line((0, y, size[0], y), fill=color)
+        
+        blur = 1.5
+        if size[0] > 512 or size[1] > 512:
+            multiplier = max(size[0], size[1]) / 512
+            if multiplier < 1.5:
+                multiplier = 1.5
+            blur =  blur * multiplier
+
+        img = img.filter(ImageFilter.GaussianBlur(radius=blur))
 
         return img
-       
-    
+
+
+
+
     # Version 2 optimized based on Mark Setchell's ideas
     def gradient_map(self, image, gradient_map, reverse=False):
         
@@ -5187,6 +5206,46 @@ class WAS_Remove_Background:
 
         return batch
 
+# IMAGE REMBG
+
+class WAS_Remove_Rembg:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "transparency": (["true","false"],),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
+    FUNCTION = "image_rembg"
+
+    CATEGORY = "WAS Suite/Image/AI"
+
+    def image_rembg(self, images, transparency="true"):
+    
+        if "rembg" not in packages():
+            cstr("Installing `rembg`...").msg.print()
+            subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'rembg'])
+            
+        from rembg import remove
+    
+        os.environ['U2NET_HOME'] = os.path.join(MODELS_DIR, 'rembg')
+        os.makedirs(os.environ['U2NET_HOME'], exist_ok=True)
+    
+        batch_tensor = []
+        for image in images:
+            image = tensor2pil(image)
+            batch_tensor.append(pil2tensor(remove(image).convert(('RGBA' if transparency == 'true' else 'RGB'))))
+        batch_tensor = torch.cat(batch_tensor, dim=0)
+        
+        return (batch_tensor,)
+
 
 # IMAGE BLEND MASK NODE
 
@@ -5277,7 +5336,7 @@ class WAS_Image_High_Pass_Filter:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "images": ("IMAGE",),
                 "radius": ("INT", {"default": 10, "min": 1, "max": 500, "step": 1}),
                 "strength": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 255.0, "step": 0.1}),
                 "color_output": (["true", "false"],),
@@ -5285,12 +5344,19 @@ class WAS_Image_High_Pass_Filter:
             }
         }
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "high_pass"
 
     CATEGORY = "WAS Suite/Image/Filter"
 
-    def high_pass(self, image, radius=10, strength=1.5, color_output="true", neutral_background="true"):
-        return (pil2tensor(self.apply_hpf(tensor2pil(image), radius, strength, color_output, neutral_background)), )
+    def high_pass(self, images, radius=10, strength=1.5, color_output="true", neutral_background="true"):
+    
+        batch_tensor = []
+        for image in images:
+            batch_tensor.append(pil2tensor(self.apply_hpf(tensor2pil(image), radius, strength, color_output, neutral_background)))
+        batch_tensor = torch.cat(batch_tensor, dim=0)
+        
+        return (batch_tensor, )
 
     def apply_hpf(self, img, radius=10, strength=1.5, color_output="true", neutral_background="true"):
         # PIL to numpy
@@ -5365,22 +5431,15 @@ class WAS_Image_Levels:
             self.max_level = max_level
 
         def adjust(self, im):
-            # load the image
 
-            # convert the image to a numpy array
             im_arr = np.array(im)
-
-            # apply the min level adjustment
             im_arr[im_arr < self.min_level] = self.min_level
-
-            # apply the mid level adjustment
             im_arr = (im_arr - self.min_level) * \
                 (255 / (self.max_level - self.min_level))
             im_arr[im_arr < 0] = 0
             im_arr[im_arr > 255] = 255
             im_arr = im_arr.astype(np.uint8)
-
-            # apply the max level adjustment
+            
             im = Image.fromarray(im_arr)
             im = ImageOps.autocontrast(im, cutoff=self.max_level)
 
@@ -5416,45 +5475,27 @@ class WAS_Film_Grain:
         """
         Apply grayscale noise with specified density, intensity, and highlights to a PIL image.
         """
-        # Convert the image to grayscale
         img_gray = img.convert('L')
-
-        # Super Resolution noise image
         original_size = img.size
         img_gray = img_gray.resize(
             ((img.size[0] * supersample_factor), (img.size[1] * supersample_factor)), Image.Resampling(2))
-
-        # Calculate the number of noise pixels to add
         num_pixels = int(density * img_gray.size[0] * img_gray.size[1])
 
-        # Create a list of noise pixel positions
         noise_pixels = []
         for i in range(num_pixels):
             x = random.randint(0, img_gray.size[0]-1)
             y = random.randint(0, img_gray.size[1]-1)
             noise_pixels.append((x, y))
 
-        # Apply the noise to the grayscale image
         for x, y in noise_pixels:
             value = random.randint(0, 255)
             img_gray.putpixel((x, y), value)
-
-        # Convert the grayscale image back to RGB
+            
         img_noise = img_gray.convert('RGB')
-
-        # Blur noise image
         img_noise = img_noise.filter(ImageFilter.GaussianBlur(radius=0.125))
-
-        # Downsize noise image
         img_noise = img_noise.resize(original_size, Image.Resampling(1))
-
-        # Sharpen super resolution result
         img_noise = img_noise.filter(ImageFilter.EDGE_ENHANCE_MORE)
-
-        # Blend the noisy color image with the original color image
         img_final = Image.blend(img, img_noise, intensity)
-
-        # Adjust the highlights
         enhancer = ImageEnhance.Brightness(img_final)
         img_highlights = enhancer.enhance(highlights)
 
@@ -5472,28 +5513,30 @@ class WAS_Image_Flip:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "images": ("IMAGE",),
                 "mode": (["horizontal", "vertical",],),
             },
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "image_flip"
 
     CATEGORY = "WAS Suite/Image/Transform"
 
-    def image_flip(self, image, mode):
+    def image_flip(self, images, mode):
 
-        # PIL Image
-        image = tensor2pil(image)
+        batch_tensor = []
+        for image in images:
+            image = tensor2pil(image)
+            if mode == 'horizontal':
+                image = image.transpose(0)
+            if mode == 'vertical':
+                image = image.transpose(1)
+            batch_tensor.append(pil2tensor(image))
+        batch_tensor = torch.cat(batch_tensor, dim=0)
 
-        # Rotate Image
-        if mode == 'horizontal':
-            image = image.transpose(0)
-        if mode == 'vertical':
-            image = image.transpose(1)
-
-        return (pil2tensor(image), )
+        return (batch_tensor, )
 
 
 class WAS_Image_Rotate:
@@ -5504,7 +5547,7 @@ class WAS_Image_Rotate:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "images": ("IMAGE",),
                 "mode": (["transpose", "internal",],),
                 "rotation": ("INT", {"default": 0, "min": 0, "max": 360, "step": 90}),
                 "sampler": (["nearest", "bilinear", "bicubic"],),
@@ -5512,41 +5555,48 @@ class WAS_Image_Rotate:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "image_rotate"
 
     CATEGORY = "WAS Suite/Image/Transform"
 
-    def image_rotate(self, image, mode, rotation, sampler):
+    def image_rotate(self, images, mode, rotation, sampler):
 
-        # PIL Image
-        image = tensor2pil(image)
+        batch_tensor = []
+        for image in images:
+            # PIL Image
+            image = tensor2pil(image)
 
-        # Check rotation
-        if rotation > 360:
-            rotation = int(360)
-        if (rotation % 90 != 0):
-            rotation = int((rotation//90)*90)
+            # Check rotation
+            if rotation > 360:
+                rotation = int(360)
+            if (rotation % 90 != 0):
+                rotation = int((rotation//90)*90)
 
-        # Set Sampler
-        if sampler:
-            if sampler == 'nearest':
-                sampler = Image.NEAREST
-            elif sampler == 'bicubic':
-                sampler = Image.BICUBIC
-            elif sampler == 'bilinear':
-                sampler = Image.BILINEAR
+            # Set Sampler
+            if sampler:
+                if sampler == 'nearest':
+                    sampler = Image.NEAREST
+                elif sampler == 'bicubic':
+                    sampler = Image.BICUBIC
+                elif sampler == 'bilinear':
+                    sampler = Image.BILINEAR
+                else:
+                    sampler == Image.BILINEAR
+
+            # Rotate Image
+            if mode == 'internal':
+                image = image.rotate(rotation, sampler)
             else:
-                sampler == Image.BILINEAR
+                rot = int(rotation / 90)
+                for _ in range(rot):
+                    image = image.transpose(2)
+                    
+            batch_tensor.append(pil2tensor(image))
+            
+        batch_tensor = torch.cat(batch_tensor, dim=0)
 
-        # Rotate Image
-        if mode == 'internal':
-            image = image.rotate(rotation, sampler)
-        else:
-            rot = int(rotation / 90)
-            for _ in range(rot):
-                image = image.transpose(2)
-
-        return (torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0), )
+        return (batch_tensor, )
 
 
 # IMAGE NOVA SINE FILTER
@@ -5619,7 +5669,7 @@ class WAS_Canny_Filter:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "images": ("IMAGE",),
                 "enable_threshold": (['false', 'true'],),
                 "threshold_low": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "threshold_high": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -5627,18 +5677,26 @@ class WAS_Canny_Filter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "canny_filter"
 
     CATEGORY = "WAS Suite/Image/Filter"
 
-    def canny_filter(self, image, threshold_low, threshold_high, enable_threshold):
+    def canny_filter(self, images, threshold_low, threshold_high, enable_threshold):
 
         if enable_threshold == 'false':
             threshold_low = None
             threshold_high = None
 
-        image_canny = Image.fromarray(self.Canny_detector(
-            255. * image.cpu().numpy().squeeze(), threshold_low, threshold_high)).convert('RGB')
+        batch_tensor = []
+        for image in images:
+
+            image_canny = Image.fromarray(self.Canny_detector(
+                255. * image.cpu().numpy().squeeze(), threshold_low, threshold_high)).convert('RGB')
+                
+            batch_tensor.append(pil2tensor(image_canny))
+            
+        batch_tensor = torch.cat(batch_tensor, dim=0)
 
         return (pil2tensor(image_canny), )
 
@@ -10612,6 +10670,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Nova Filter": WAS_Image_Nova_Filter,
     "Image Padding": WAS_Image_Padding,
     "Image Perlin Noise": WAS_Image_Perlin_Noise,
+    "Image Rembg (Remove Background)": WAS_Remove_Rembg,
     "Image Perlin Power Fractal": WAS_Image_Perlin_Power_Fractal,
     "Image Remove Background (Alpha)": WAS_Remove_Background,
     "Image Remove Color": WAS_Image_Remove_Color,
