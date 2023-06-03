@@ -6151,6 +6151,7 @@ class WAS_Image_Save:
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
                 "show_history": (["false", "true"],),
+                "show_history_by_prefix": (["true", "false"],),
                 "embed_workflow": (["true", "false"],),
             },
             "hidden": {
@@ -6167,7 +6168,8 @@ class WAS_Image_Save:
 
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', 
                         extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', 
-                        filename_number_padding=4, show_history='false', embed_workflow="true"):
+                        filename_number_padding=4, show_history='false', show_history_by_prefix="true", 
+                        embed_workflow="true"):
         delimiter = filename_delimiter
         number_padding = filename_number_padding
 
@@ -6290,6 +6292,9 @@ class WAS_Image_Save:
             if history_paths:
                 for image_path in history_paths:
                     if not os.path.exists(image_path):
+                        continue
+                    if ( show_history_by_prefix == 'true' 
+                        and not os.path.basename(image_path).startswith(filename_prefix+delimiter) ):
                         continue
                     results.append({
                         "filename": os.path.basename(image_path),
