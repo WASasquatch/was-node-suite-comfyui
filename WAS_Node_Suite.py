@@ -6296,6 +6296,11 @@ class WAS_Image_Save:
                     if ( show_history_by_prefix == 'true' 
                         and not os.path.basename(image_path).startswith(filename_prefix+delimiter) ):
                         continue
+                    if ( show_history_by_prefix == 'true'
+                        and os.path.basename(os.path.dirname(image_path)) != os.path.basename(output_path) ):
+                        continue
+                        
+                    print(filename_prefix+delimiter + " - " + os.path.basename(image_path))
                     results.append({
                         "filename": os.path.basename(image_path),
                         "subfolder": ( os.path.basename(os.path.dirname(image_path)) 
