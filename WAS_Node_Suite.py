@@ -6143,7 +6143,7 @@ class WAS_Image_Save:
         return {
             "required": {
                 "images": ("IMAGE", ),
-                "output_path": ("STRING", {"default": './ComfyUI/output', "multiline": False}),
+                "output_path": ("STRING", {"default": './ComfyUI/output/[time(%Y-%m-%d)]', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "filename_delimiter": ("STRING", {"default":"_"}),
                 "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
