@@ -273,7 +273,7 @@ if was_config and was_config.__contains__('use_legacy_ascii_text'):
 # Convert WebUI Styles - TODO: Convert to PromptStyles class
 if was_config.__contains__('webui_styles'):
     
-    webui_styles_file = was_config['webui_styles'].strip()
+    webui_styles_file = was_config['webui_styles']
             
     if was_config.__contains__('webui_styles_persistent_update'):
         styles_persist = was_config['webui_styles_persistent_update']
@@ -7529,7 +7529,7 @@ class WAS_NSP_CLIPTextEncoder:
         new_text, text_vars = parse_prompt_vars(new_text)
         cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
         
-        return ([[clip.encode(new_text), {}]], {"ui": {"prompt": new_text}})
+        return ([[clip.encode(new_text), {}]], { "ui": { "string": new_text } })
 
 
 #! SAMPLING NODES
@@ -10856,6 +10856,7 @@ if os.path.exists(BKAdvCLIP_dir):
                 }
             
         RETURN_TYPES = ("CONDITIONING",)
+        OUTPUT_NODE = True
         FUNCTION = "encode"
 
         CATEGORY = "WAS Suite/Conditioning"
@@ -10873,7 +10874,7 @@ if os.path.exists(BKAdvCLIP_dir):
             
             encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
 
-            return ([[encoded, {}]], )
+            return ([[encoded, {}]], { "ui": { "string": new_text } } )
                 
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
 
