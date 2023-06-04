@@ -9882,6 +9882,7 @@ class WAS_Number_Input_Condition:
             "required": {
                 "number_a": ("NUMBER",),
                 "number_b": ("NUMBER",),
+                "return_boolean": (["false", "true"],),
                 "comparison": (["greater-than", "greater-than or equals", "less-than", "less-than or equals", "equals", "does not equal", "divisible by", "if A odd", "if A even", "if A prime", "factor of"],),
             }
         }
@@ -9891,33 +9892,59 @@ class WAS_Number_Input_Condition:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def number_input_condition(self, number_a, number_b, comparison="greater-than"):
+    def number_input_condition(self, number_a, number_b, return_boolean="false", comparison="greater-than"):
 
         if comparison:
-            if comparison == 'greater-than':
-                result = number_a if number_a > number_b else number_b
-            elif comparison == 'greater-than or equals':
-                result = number_a if number_a >= number_b else number_b
-            elif comparison == 'less-than':
-                result = number_a if number_a < number_b else number_b
-            elif comparison == 'less-than or equals':
-                result = number_a if number_a <= number_b else number_b
-            elif comparison == 'equals':
-                result = number_a if number_a == number_b else number_b
-            elif comparison == 'does not equal':
-                result = number_a if number_a != number_b else number_b
-            elif comparison == 'divisible by':
-                result = number_a if number_b % number_a == 0 else number_b
-            elif comparison == 'if A odd':
-                result = number_a if number_a % 2 != 0 else number_b
-            elif comparison == 'if A even':
-                result = number_a if number_a % 2 == 0 else number_b
-            elif comparison == 'if A prime':
-                result = number_a if self.is_prime(number_a) else number_b
-            elif comparison == 'factor of':
-                result = number_a if number_b % number_a == 0 else number_b
+            if return_boolean == 'true':
+                if comparison == 'greater-than':
+                    result = 1 if number_a > number_b else 0
+                elif comparison == 'greater-than or equals':
+                    result = 1 if number_a >= number_b else 0
+                elif comparison == 'less-than':
+                    result = 1 if number_a < number_b else 0
+                elif comparison == 'less-than or equals':
+                    result = 1 if number_a <= number_b else 0
+                elif comparison == 'equals':
+                    result = 1 if number_a == number_b else 0
+                elif comparison == 'does not equal':
+                    result = 1 if number_a != number_b else 0
+                elif comparison == 'divisible by':
+                    result = 1 if number_b % number_a == 0 else 0
+                elif comparison == 'if A odd':
+                    result = 1 if number_a % 2 != 0 else 0
+                elif comparison == 'if A even':
+                    result = 1 if number_a % 2 == 0 else 0
+                elif comparison == 'if A prime':
+                    result = 1 if self.is_prime(number_a) else 0
+                elif comparison == 'factor of':
+                    result = 1 if number_b % number_a == 0 else 0
+                else:
+                    result = 0
             else:
-                result = number_a
+                if comparison == 'greater-than':
+                    result = number_a if number_a > number_b else number_b
+                elif comparison == 'greater-than or equals':
+                    result = number_a if number_a >= number_b else number_b
+                elif comparison == 'less-than':
+                    result = number_a if number_a < number_b else number_b
+                elif comparison == 'less-than or equals':
+                    result = number_a if number_a <= number_b else number_b
+                elif comparison == 'equals':
+                    result = number_a if number_a == number_b else number_b
+                elif comparison == 'does not equal':
+                    result = number_a if number_a != number_b else number_b
+                elif comparison == 'divisible by':
+                    result = number_a if number_b % number_a == 0 else number_b
+                elif comparison == 'if A odd':
+                    result = number_a if number_a % 2 != 0 else number_b
+                elif comparison == 'if A even':
+                    result = number_a if number_a % 2 == 0 else number_b
+                elif comparison == 'if A prime':
+                    result = number_a if self.is_prime(number_a) else number_b
+                elif comparison == 'factor of':
+                    result = number_a if number_b % number_a == 0 else number_b
+                else:
+                    result = number_a
 
         return (result,)
         
