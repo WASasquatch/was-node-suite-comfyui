@@ -272,44 +272,46 @@ if was_config and was_config.__contains__('use_legacy_ascii_text'):
 
 # Convert WebUI Styles - TODO: Convert to PromptStyles class
 if was_config.__contains__('webui_styles'):
-    
-    webui_styles_file = was_config['webui_styles']
-            
-    if was_config.__contains__('webui_styles_persistent_update'):
-        styles_persist = was_config['webui_styles_persistent_update']
-    else:
-        styles_persist = True
-        
-    print(styles_persist)
-            
-    if webui_styles_file not in [None, 'none', 'None', ''] and os.path.exists(webui_styles_file):
 
-        cstr(f"Importing styles from `{webui_styles_file}`.").msg.print()
+    if was_config['webui_styles'] not in [None, 'None', 'none', '']:
         
-        import csv
+        webui_styles_file = was_config['webui_styles']
+                
+        if was_config.__contains__('webui_styles_persistent_update'):
+            styles_persist = was_config['webui_styles_persistent_update']
+        else:
+            styles_persist = True
             
-        styles = {}
-        with open(webui_styles_file, "r", encoding="utf-8-sig", newline='') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                prompt = row.get("prompt") or row.get("text", "") # Old files
-                negative_prompt = row.get("negative_prompt", "")
-                styles[row["name"]] = {
-                    "prompt": prompt,
-                    "negative_prompt": negative_prompt
-                }
+        print(styles_persist)
+                
+        if webui_styles_file not in [None, 'none', 'None', ''] and os.path.exists(webui_styles_file):
+
+            cstr(f"Importing styles from `{webui_styles_file}`.").msg.print()
             
-        if styles:
-            if not os.path.exists(STYLES_PATH) or styles_persist:
-                with open(STYLES_PATH, "w", encoding='utf-8') as f:
-                    json.dump(styles, f, indent=4)
-                    
-        del styles
-            
-        cstr(f"Styles import complete.").msg.print()
-    
-    else:
-        cstr(f"Styles file `{webui_styles_file}` does not exist.").error.print()
+            import csv
+                
+            styles = {}
+            with open(webui_styles_file, "r", encoding="utf-8-sig", newline='') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    prompt = row.get("prompt") or row.get("text", "") # Old files
+                    negative_prompt = row.get("negative_prompt", "")
+                    styles[row["name"]] = {
+                        "prompt": prompt,
+                        "negative_prompt": negative_prompt
+                    }
+                
+            if styles:
+                if not os.path.exists(STYLES_PATH) or styles_persist:
+                    with open(STYLES_PATH, "w", encoding='utf-8') as f:
+                        json.dump(styles, f, indent=4)
+                        
+            del styles
+                
+            cstr(f"Styles import complete.").msg.print()
+        
+        else:
+            cstr(f"Styles file `{webui_styles_file}` does not exist.").error.print()
 
 
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
