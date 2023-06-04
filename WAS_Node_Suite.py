@@ -1324,7 +1324,45 @@ class WAS_Tools_Class():
     # FILTERS
     
     class Masking:
-    
+
+        @staticmethod
+        def crop_dominant_region(image, padding=0):
+            from scipy.ndimage import label
+            grayscale_image = image.convert("L")
+            binary_image = grayscale_image.point(lambda x: 255 if x > 128 else 0, mode="1")
+            labeled_image, num_labels = label(np.array(binary_image))
+            largest_label = max(range(1, num_labels + 1), key=lambda i: np.sum(labeled_image == i))
+            largest_region_mask = (labeled_image == largest_label).astype(np.uint8) * 255
+            bbox = Image.fromarray(largest_region_mask, mode="L").getbbox()
+            cropped_image = image.crop(bbox)
+            size = max(cropped_image.size)
+            padded_size = size + 2 * padding
+            centered_crop = Image.new("L", (padded_size, padded_size), color="black")
+            left = (padded_size - cropped_image.width) // 2
+            top = (padded_size - cropped_image.height) // 2
+            centered_crop.paste(cropped_image, (left, top), mask=cropped_image)
+
+            return ImageOps.invert(centered_crop)
+
+        @staticmethod
+        def crop_minority_region(image, padding=0):
+            from scipy.ndimage import label
+            grayscale_image = image.convert("L")
+            binary_image = grayscale_image.point(lambda x: 255 if x > 128 else 0, mode="1")
+            labeled_image, num_labels = label(np.array(binary_image))
+            smallest_label = min(range(1, num_labels + 1), key=lambda i: np.sum(labeled_image == i))
+            smallest_region_mask = (labeled_image == smallest_label).astype(np.uint8) * 255
+            bbox = Image.fromarray(smallest_region_mask, mode="L").getbbox()
+            cropped_image = image.crop(bbox)
+            size = max(cropped_image.size)
+            padded_size = size + 2 * padding
+            centered_crop = Image.new("L", (padded_size, padded_size), color="black")
+            left = (padded_size - cropped_image.width) // 2
+            top = (padded_size - cropped_image.height) // 2
+            centered_crop.paste(cropped_image, (left, top), mask=cropped_image)
+
+            return ImageOps.invert(centered_crop)
+            
         @staticmethod
         def dominant_region(image, threshold=128):
             from scipy.ndimage import label
@@ -6494,21 +6532,11 @@ class WAS_Image_To_Mask:
 
     def image_to_mask(self, images, channel):
         mask_images = []
-        if len(images) > 1:
-            for image in images:
-                r, g, b, a = tensor2pil(image).convert("RGBA").split()
-                if channel == "red":
-                    channel_image = r
-                elif channel == "green":
-                    channel_image = g
-                elif channel == "blue":
-                    channel_image = b
-                elif channel == "alpha":
-                    channel_image = a
-                mask_images.append(pil2mask(tensor2pil(channel_image)).unsqueeze(0).unsqueeze(1))
-            return (torch.cat(mask_images, dim=0), )
-        else:
-            r, g, b, a = tensor2pil(images).convert("RGBA").split()
+        for image in images:
+
+            image = tensor2pil(image).convert("RGBA")
+            image.save("image.png")
+            r, g, b, a = image.split()
             if channel == "red":
                 channel_image = r
             elif channel == "green":
@@ -6517,8 +6545,12 @@ class WAS_Image_To_Mask:
                 channel_image = b
             elif channel == "alpha":
                 channel_image = a
-            channel_mask = torch.tensor(np.array(channel_image) > 0, dtype=torch.uint8)
-            return (channel_mask, )
+            channel_image.save("channel.png")
+
+            mask = torch.from_numpy(np.array(channel_image.convert("L")).astype(np.float32) / 255.0)
+            mask_images.append(mask)
+
+        return (torch.cat(mask_images, dim=0), )
 
 
 # MASK TO IMAGE
@@ -6557,6 +6589,86 @@ class WAS_Mask_To_Image:
         else:
             cstr("Invalid input shape. Expected [N, C, H, W] or [H, W].").error.print()
             return masks
+
+
+# MASK CROP DOMINANT REGION
+
+class WAS_Mask_Crop_Dominant_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "masks": ("MASK",),
+                        "padding": ("INT", {"default": 24, "min": 0, "max": 4096, "step": 1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "crop_dominant_region"
+
+    def crop_dominant_region(self, masks, padding=24):
+        if masks.ndim > 3:
+            regions = []
+            for mask in masks:
+                mask_pil = Image.fromarray(np.clip(255. * mask.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+                region_mask = self.WT.Masking.crop_dominant_region(mask_pil, padding)
+                region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
+                regions.append(region_tensor)
+            regions_tensor = torch.cat(regions, dim=0)
+            return (regions_tensor,)
+        else:
+            mask_pil = Image.fromarray(np.clip(255. * masks.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+            region_mask = self.WT.Masking.crop_dominant_region(mask_pil, padding)
+            region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
+            return (region_tensor,)
+
+
+# MASK CROP MINORITY REGION
+
+class WAS_Mask_Crop_Minority_Region:
+
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                    "required": {
+                        "masks": ("MASK",),
+                        "padding": ("INT", {"default": 24, "min": 0, "max": 4096, "step": 1}),
+                    }
+                }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "crop_minority_region"
+
+    def crop_minority_region(self, masks, padding=24):
+        if masks.ndim > 3:
+            regions = []
+            for mask in masks:
+                mask_pil = Image.fromarray(np.clip(255. * mask.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+                region_mask = self.WT.Masking.crop_minority_region(mask_pil, padding)
+                region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
+                regions.append(region_tensor)
+            regions_tensor = torch.cat(regions, dim=0)
+            return (regions_tensor,)
+        else:
+            mask_pil = Image.fromarray(np.clip(255. * masks.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+            region_mask = self.WT.Masking.crop_minority_region(mask_pil, padding)
+            region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
+            return (region_tensor,)
             
 # MASK DOMINANT REGION
 
@@ -10759,6 +10871,8 @@ NODE_CLASS_MAPPINGS = {
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
     "Mask Batch to Mask": WAS_Mask_Batch_to_Single_Mask,
     "Mask Ceiling Region": WAS_Mask_Ceiling_Region,
+    "Mask Crop Dominant Region": WAS_Mask_Crop_Dominant_Region,
+    "Mask Crop Minority Region": WAS_Mask_Crop_Minority_Region,
     "Mask Dilate Region": WAS_Mask_Dilate_Region,
     "Mask Dominant Region": WAS_Mask_Dominant_Region,
     "Mask Erode Region": WAS_Mask_Erode_Region,
