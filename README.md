@@ -153,6 +153,9 @@
  - Mask Subtract: Subtract from a mask by another.
  - Mask Dominant Region: Return the dominant region in a mask (the largest area)
  - Mask Minority Region: Return the smallest region in a mask (the smallest area)
+ - Mask Crop Dominant Region: Crop mask to the dominant region with optional padding in pixels
+ - Mask Crop Minority Region: Crop mask to the minority region with optional padding in pixels
+ - Mask Crop Region: Crop to dominant or minority region and return `crop_data` for pasting back. Additionally outputs region location and size for other nodes like Crop Image Location. 
  - Mask Arbitrary Region: Return a region that most closely matches the size input (size is not a direct representation of pixels, but approximate)
  - Mask Smooth Region: Smooth the boundaries of a mask
  - Mask Erode Region: Erode the boundaries of a mask
