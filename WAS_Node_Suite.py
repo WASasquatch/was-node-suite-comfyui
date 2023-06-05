@@ -876,7 +876,7 @@ class WAS_Tools_Class():
             image_a_mask = linear_gradient((0,0,0), (255,255,255), image_a.size, 0, fuzzy_zone, 'vertical')
             image_b_mask = linear_gradient((255,255,255), (0,0,0), image_b.size, int(image_b.size[1] - fuzzy_zone), image_b.size[1], 'vertical')
             im_ay = image_b.size[1] - fuzzy_zone
-        
+
         elif mode == 'bottom':
 
             image_a_mask = linear_gradient((255,255,255), (0,0,0), image_a.size, int(image_a.size[1] - fuzzy_zone), image_a.size[1], 'vertical')
@@ -889,18 +889,18 @@ class WAS_Tools_Class():
             image_b_mask = linear_gradient((255,255,255), (0,0,0), image_b.size, int(image_b.size[0] - fuzzy_zone), image_b.size[0], 'horizontal')
             im_ax = image_b.size[0] - fuzzy_zone
 
-
         elif mode == 'right':
 
             image_a_mask = linear_gradient((255,255,255), (0,0,0), image_a.size, int(image_a.size[0] - fuzzy_zone), image_a.size[0], 'horizontal')
             image_b_mask = linear_gradient((0,0,0), (255,255,255), image_b.size, 0, fuzzy_zone, 'horizontal')
-            im_bx = image_b.size[0] - fuzzy_zone
+            im_bx = image_a.size[0] - fuzzy_zone
 
-            
         Image.Image.paste(canvas, image_a, (im_ax, im_ay), image_a_mask.convert('L'))
         Image.Image.paste(canvas, image_b, (im_bx, im_by), image_b_mask.convert('L'))
 
+
         return canvas
+
 
     def morph_images(self, images, steps=10, max_size=512, loop=None, still_duration=30, duration=0.1, output_path='output', filename="morph", filetype="GIF"):
 
