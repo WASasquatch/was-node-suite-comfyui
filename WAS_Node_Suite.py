@@ -1362,7 +1362,36 @@ class WAS_Tools_Class():
             centered_crop.paste(cropped_image, (left, top), mask=cropped_image)
 
             return ImageOps.invert(centered_crop)
+                    
+        @staticmethod
+        def crop_region(mask, region_type, padding=0):
+            from scipy.ndimage import label, find_objects
+            binary_mask = np.array(mask.convert("L")) > 0
+            bbox = mask.getbbox()
+            if bbox is None:
+                return mask, (mask.size, (0, 0, 0, 0))
             
+            bbox_width = bbox[2] - bbox[0]
+            bbox_height = bbox[3] - bbox[1]
+            
+            side_length = max(bbox_width, bbox_height) + 2 * padding
+            
+            center_x = (bbox[2] + bbox[0]) // 2
+            center_y = (bbox[3] + bbox[1]) // 2
+            
+            crop_x = center_x - side_length // 2
+            crop_y = center_y - side_length // 2
+            
+            crop_x = max(crop_x, 0)
+            crop_y = max(crop_y, 0)
+            crop_x2 = min(crop_x + side_length, mask.width)
+            crop_y2 = min(crop_y + side_length, mask.height)
+            
+            cropped_mask = mask.crop((crop_x, crop_y, crop_x2, crop_y2))
+            crop_data = (cropped_mask.size, (crop_x, crop_y, crop_x2, crop_y2))
+
+            return cropped_mask, crop_data
+
         @staticmethod
         def dominant_region(image, threshold=128):
             from scipy.ndimage import label
@@ -3124,11 +3153,10 @@ class WAS_Image_Crop_Location:
         
         # Crop the image and resize
         crop = image.crop((crop_left, crop_top, crop_right, crop_bottom))
-        crop_data = (crop.size, (crop_top, crop_left, crop_right, crop_bottom))
+        crop_data = (crop.size, (crop_left, crop_top, crop_right, crop_bottom))
         crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
         
         return (pil2tensor(crop), crop_data)
-
 
 
 # IMAGE SQUARE CROP LOCATION
@@ -6669,6 +6697,151 @@ class WAS_Mask_Crop_Minority_Region:
             region_mask = self.WT.Masking.crop_minority_region(mask_pil, padding)
             region_tensor = pil2mask(region_mask).unsqueeze(0).unsqueeze(1)
             return (region_tensor,)
+            
+
+# MASK CROP REGION
+
+class WAS_Mask_Crop_Region:
+    def __init__(self):
+        self.WT = WAS_Tools_Class()
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "padding": ("INT",{"default": 24, "min": 0, "max": 4096, "step": 1}),
+                "region_type": (["dominant", "minority"],),
+            }
+        }
+    
+    RETURN_TYPES = ("MASK", "CROP_DATA", "INT", "INT", "INT", "INT", "INT", "INT")
+    RETURN_NAMES = ("cropped_mask", "crop_data", "left_int", "top_int", "right_int", "bottom_int", "width_int", "height_int")
+    FUNCTION = "mask_crop_region"
+    
+    CATEGORY = "WAS Suite/Image/Masking"
+    
+    def mask_crop_region(self, mask, padding=24, region_type="dominant"):
+
+        mask_pil = Image.fromarray(np.clip(255. * mask.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+        region_mask, crop_data = self.WT.Masking.crop_region(mask_pil, region_type, padding)
+        region_tensor = pil2mask(ImageOps.invert(region_mask)).unsqueeze(0).unsqueeze(1)
+        
+        (width, height), (left, top, right, bottom) = crop_data
+
+        return (region_tensor, crop_data, left, top, right, bottom, width, height)
+        
+         
+# IMAGE PASTE CROP
+
+class WAS_Mask_Paste_Region:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "crop_mask": ("MASK",),
+                "crop_data": ("CROP_DATA",),
+                "crop_blending": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "crop_sharpening": ("INT", {"default": 0, "min": 0, "max": 3, "step": 1}),
+            }
+        }
+            
+    RETURN_TYPES = ("MASK", "MASK")
+    FUNCTION = "mask_paste_region"
+    
+    CATEGORY = "WAS Suite/Image/Masking"
+    
+    def mask_paste_region(self, mask, crop_mask, crop_data=None, crop_blending=0.25, crop_sharpening=0):
+    
+        if crop_data == False:
+            cstr("No valid crop data found!").error.print()
+            return( pil2mask(Image.new("L", (512, 512), 0)).unsqueeze(0).unsqueeze(1), 
+                    pil2mask(Image.new("L", (512, 512), 0)).unsqueeze(0).unsqueeze(1) )
+
+        mask_pil = Image.fromarray(np.clip(255. * mask.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+        mask_crop_pil = Image.fromarray(np.clip(255. * crop_mask.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+        
+        result_mask, result_crop_mask = self.paste_image(mask_pil, mask_crop_pil, crop_data, crop_blending, crop_sharpening)
+        
+        return (pil2mask(result_mask).unsqueeze(0).unsqueeze(1), pil2mask(result_crop_mask).unsqueeze(0).unsqueeze(1))
+
+    def paste_image(self, image, crop_image, crop_data, blend_amount=0.25, sharpen_amount=1):
+    
+        def lingrad(size, direction, white_ratio):
+            image = Image.new('RGB', size)
+            draw = ImageDraw.Draw(image)
+            if direction == 'vertical':
+                black_end = int(size[1] * (1 - white_ratio))
+                range_start = 0
+                range_end = size[1]
+                range_step = 1
+                for y in range(range_start, range_end, range_step):
+                    color_ratio = y / size[1]
+                    if y <= black_end:
+                        color = (0, 0, 0)
+                    else:
+                        color_value = int(((y - black_end) / (size[1] - black_end)) * 255)
+                        color = (color_value, color_value, color_value)
+                    draw.line([(0, y), (size[0], y)], fill=color)
+            elif direction == 'horizontal':
+                black_end = int(size[0] * (1 - white_ratio))
+                range_start = 0
+                range_end = size[0]
+                range_step = 1
+                for x in range(range_start, range_end, range_step):
+                    color_ratio = x / size[0]
+                    if x <= black_end:
+                        color = (0, 0, 0)
+                    else:
+                        color_value = int(((x - black_end) / (size[0] - black_end)) * 255)
+                        color = (color_value, color_value, color_value)
+                    draw.line([(x, 0), (x, size[1])], fill=color)
+                    
+            return image.convert("L")
+    
+        crop_size, (left, top, right, bottom) = crop_data
+        crop_image = crop_image.resize(crop_size)
+        
+        if sharpen_amount > 0:
+            for _ in range(int(sharpen_amount)):
+                crop_image = crop_image.filter(ImageFilter.SHARPEN)
+
+        blended_image = Image.new('RGBA', image.size, (0, 0, 0, 255))
+        blended_mask = Image.new('L', image.size, 0)  # Update to 'L' mode for MASK image
+        crop_padded = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        blended_image.paste(image, (0, 0))
+        crop_padded.paste(crop_image, (left, top))
+        crop_mask = Image.new('L', crop_image.size, 0)
+        
+        if top > 0:
+            gradient_image = ImageOps.flip(lingrad(crop_image.size, 'vertical', blend_amount))
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+
+        if left > 0:
+            gradient_image = ImageOps.mirror(lingrad(crop_image.size, 'horizontal', blend_amount))
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+
+        if right < image.width:
+            gradient_image = lingrad(crop_image.size, 'horizontal', blend_amount)
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+
+        if bottom < image.height:
+            gradient_image = lingrad(crop_image.size, 'vertical', blend_amount)
+            crop_mask = ImageChops.screen(crop_mask, gradient_image)
+
+        crop_mask = ImageOps.invert(crop_mask)
+        blended_mask.paste(crop_mask, (left, top))
+        blended_mask = blended_mask.convert("L")
+        blended_image.paste(crop_padded, (0, 0), blended_mask)
+
+        return (ImageOps.invert(blended_image.convert("RGB")).convert("L"), ImageOps.invert(blended_mask.convert("RGB")).convert("L"))
+
+
+        
             
 # MASK DOMINANT REGION
 
@@ -10873,6 +11046,8 @@ NODE_CLASS_MAPPINGS = {
     "Mask Ceiling Region": WAS_Mask_Ceiling_Region,
     "Mask Crop Dominant Region": WAS_Mask_Crop_Dominant_Region,
     "Mask Crop Minority Region": WAS_Mask_Crop_Minority_Region,
+    "Mask Crop Region": WAS_Mask_Crop_Region,
+    "Mask Paste Region": WAS_Mask_Paste_Region,
     "Mask Dilate Region": WAS_Mask_Dilate_Region,
     "Mask Dominant Region": WAS_Mask_Dominant_Region,
     "Mask Erode Region": WAS_Mask_Erode_Region,
