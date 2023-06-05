@@ -6199,7 +6199,77 @@ class WAS_Image_RGB_Merge:
         # Merge the channels into the new image
         merged_img = Image.merge('RGB', (red, green, blue))
 
-        return merged_img
+        return merged_img        
+
+
+# EXPORT API
+
+class WAS_Export_API:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "save_prompt_api": (["true","true"],),
+                "output_path": ("STRING", {"default": "./ComfyUI/output/", "multiline": False}),
+                "filename_prefix": ("STRING", {"default": "ComfyUI_Prompt"}),
+                "filename_delimiter": ("STRING", {"default":"_"}),
+                "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
+            },
+            "hidden": {
+                "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ()
+    FUNCTION = "export_api"
+
+    CATEGORY = "WAS Suite/Debug"
+
+    def export_api(self, output_path=None, filename_prefix="ComfyUI", filename_number_padding=4,
+                    filename_delimiter='_', prompt=None, extra_pnginfo=None, save_prompt_api="true"):
+        delimiter = filename_delimiter
+        number_padding = filename_number_padding if filename_number_padding > 1 else 4
+
+        tokens = TextTokens()
+
+        if output_path in [None, '', "none", "."]:
+            output_path = comfy_paths.output_directory
+        else:
+            output_path = tokens.parseTokens(output_path)
+
+        pattern = f"{re.escape(filename_prefix)}{re.escape(filename_delimiter)}(\\d{{{number_padding}}})"
+        existing_counters = [
+            int(re.search(pattern, filename).group(1))
+            for filename in os.listdir(output_path)
+            if re.match(pattern, filename)
+        ]
+        existing_counters.sort(reverse=True)
+
+        if existing_counters:
+            counter = existing_counters[0] + 1
+        else:
+            counter = 1
+
+        file = f"{filename_prefix}{filename_delimiter}{counter:0{number_padding}}.json"
+        output_file = os.path.abspath(os.path.join(output_path, file))
+
+        if prompt:
+            prompt_json = json.dumps(prompt, indent=4)
+            cstr("Prompt API JSON").msg.print()
+            print(prompt_json)
+
+            if save_prompt_api == "true":
+            
+                with open(output_file, 'w') as f:
+                    f.write(prompt_json)
+
+                cstr(f"Output file path: {output_file}").msg.print()
+
+        return {"ui": {"string": prompt_json}}
 
 
 # Image Save (NSP Compatible)
@@ -6563,7 +6633,6 @@ class WAS_Image_To_Mask:
         for image in images:
 
             image = tensor2pil(image).convert("RGBA")
-            image.save("image.png")
             r, g, b, a = image.split()
             if channel == "red":
                 channel_image = r
@@ -6573,7 +6642,6 @@ class WAS_Image_To_Mask:
                 channel_image = b
             elif channel == "alpha":
                 channel_image = a
-            channel_image.save("channel.png")
 
             mask = torch.from_numpy(np.array(channel_image.convert("L")).astype(np.float32) / 255.0)
             mask_images.append(mask)
@@ -10969,6 +11037,7 @@ NODE_CLASS_MAPPINGS = {
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
     "Diffusers Hub Model Down-Loader": WAS_Diffusers_Hub_Model_Loader,
+    "Export API": WAS_Export_API,
     "Latent Input Switch": WAS_Latent_Input_Switch,
     "Load Cache": WAS_Load_Cache,
     "Logic Boolean": WAS_Boolean,
