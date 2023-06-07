@@ -9129,7 +9129,7 @@ class WAS_CLIPSeg:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "text": ("STRING", {"default":"", "multiline": True}),
+                "text": ("STRING", {"default":"", "multiline": False}),
             },
         }
 
@@ -10242,7 +10242,7 @@ class WAS_Number_Input_Condition:
                 "number_a": ("NUMBER",),
                 "number_b": ("NUMBER",),
                 "return_boolean": (["false", "true"],),
-                "comparison": (["greater-than", "greater-than or equals", "less-than", "less-than or equals", "equals", "does not equal", "divisible by", "if A odd", "if A even", "if A prime", "factor of"],),
+                "comparison": (["and", "or", "greater-than", "greater-than or equals", "less-than", "less-than or equals", "equals", "does not equal", "divisible by", "if A odd", "if A even", "if A prime", "factor of"],),
             }
         }
 
@@ -10255,7 +10255,11 @@ class WAS_Number_Input_Condition:
 
         if comparison:
             if return_boolean == 'true':
-                if comparison == 'greater-than':
+                if comparison == 'and':
+                    result = 1 if number_a != 0 and number_b != 0 else 0
+                elif comparison == 'or':
+                    result = 1 if number_a != 0 or number_b != 0 else 0
+                elif comparison == 'greater-than':
                     result = 1 if number_a > number_b else 0
                 elif comparison == 'greater-than or equals':
                     result = 1 if number_a >= number_b else 0
@@ -10280,7 +10284,11 @@ class WAS_Number_Input_Condition:
                 else:
                     result = 0
             else:
-                if comparison == 'greater-than':
+                if comparison == 'and':
+                    result = number_a if number_a != 0 and number_b != 0 else number_b
+                elif comparison == 'or':
+                    result = number_a if number_a != 0 or number_b != 0 else number_b
+                elif comparison == 'greater-than':
                     result = number_a if number_a > number_b else number_b
                 elif comparison == 'greater-than or equals':
                     result = number_a if number_a >= number_b else number_b
