@@ -8919,6 +8919,95 @@ class WAS_Text_Load_From_File:
         dictionary = {filename: lines}
             
         return ("\n".join(lines), dictionary)
+   
+# TEXT LOAD FROM FILE   
+        
+class WAS_Text_Load_Line_From_File:
+    def __init__(self):
+        self.HDB = WASDatabase(WAS_HISTORY_DATABASE)
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "file_path": ("STRING", {"default": '', "multiline": False}),
+                "dictionary_name": ("STRING", {"default": '[filename]', "multiline": False}),
+                "label": ("STRING", {"default": 'TextBatch', "multiline": False}),
+                "mode": (["automatic", "index"],),
+                "index": ("INT", {"default": 0, "min": 0, "step": 1}),
+            }
+        }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+
+    RETURN_TYPES = (TEXT_TYPE, "DICT")
+    RETURN_NAMES = ("line_text", "dictionary")
+    FUNCTION = "load_file"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def load_file(self, file_path='', dictionary_name='[filename]', label='TextBatch', mode='automatic', index=0):
+        if not os.path.exists(file_path):
+            cstr(f"The path `{file_path}` specified cannot be found.").error.print()
+            return ('', {dictionary_name: []})
+        file_list = self.TextFileLoader(file_path, label)
+        line, lines = None, []
+        if mode == 'automatic':
+            line, lines = file_list.get_next_line()
+        elif mode == 'index':
+            line, lines = file_list.get_line_by_index(index)
+        if line is None:
+            cstr("No valid line was found. The file may be empty or all lines have been read.").error.print()
+            return ('', {dictionary_name: []})
+        file_list.store_index()  # Store the index in the WASDatabase
+        update_history_text_files(file_path)
+
+        return (line, {dictionary_name: lines})
+
+    class TextFileLoader:
+        def __init__(self, file_path, label):
+            self.WDB = WDB
+            self.file_path = file_path
+            self.lines = []
+            self.index = 0
+            self.load_file(file_path, label)
+
+        def load_file(self, file_path, label):
+            stored_file_path = self.WDB.get('TextBatch Paths', label)
+            stored_index = self.WDB.get('TextBatch Counters', label)
+            if stored_file_path != file_path:
+                self.index = 0
+                self.WDB.insert('TextBatch Counters', label, 0)
+                self.WDB.insert('TextBatch Paths', label, file_path)
+            else:
+                self.index = stored_index
+            with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
+                self.lines = [line.strip() for line in file]
+
+        def get_next_line(self):
+            if self.index >= len(self.lines):
+                self.index = 0
+            line = self.lines[self.index]
+            self.index += 1
+            if self.index == len(self.lines):
+                self.index = 0
+            print(f'\033[34mWAS Node Suite \033[33mTextBatch\033[0m Index:', self.index)
+            return line, self.lines
+
+        def get_line_by_index(self, index):
+            if index < 0 or index >= len(self.lines):
+                cstr(f"Invalid line index `{index}`").error.print()
+                return None, []
+            self.index = index
+            line = self.lines[self.index]
+            print(f'\033[34mWAS Node Suite \033[33mTextBatch\033[0m Index:', self.index)
+            return line, self.lines
+
+        def store_index(self):
+            self.WDB.insert('TextBatch Counters', 'TextBatch', self.index)
+           
 
 
 class WAS_Text_To_String:
@@ -11179,6 +11268,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Input Switch": WAS_Text_Input_Switch,
     "Text List": WAS_Text_List,
     "Text List Concatenate": WAS_Text_List_Concatenate,
+    "Text Load Line From File": WAS_Text_Load_Line_From_File,
     "Text Multiline": WAS_Text_Multiline,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
