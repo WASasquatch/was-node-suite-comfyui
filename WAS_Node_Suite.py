@@ -128,7 +128,7 @@ class cstr(str):
 #! MESSAGE TEMPLATES
 cstr.color.add_code("msg", "\033[34mWAS Node Suite:\033[0m ")
 cstr.color.add_code("warning", "\033[34mWAS Node Suite \33[93mWarning:\033[0m ")
-cstr.color.add_code("error", "\033[34mWAS Node Suite \33[92mError:\033[0m ")
+cstr.color.add_code("error", "\033[31mWAS Node Suite \033[92mError:\033[0m ")
 
 #! GLOBALS
 NODE_FILE = os.path.abspath(__file__)
@@ -9136,15 +9136,18 @@ class WAS_Text_Random_Prompt:
         if not query:
             query = random.choice(["portrait","landscape","anime","superhero","animal","nature","scenery"])
         url = f"https://lexica.art/api/v1/search?q={query}"
-        response = requests.get(url)
-        data = response.json()
-        images = data.get("images", [])
+        try:
+            response = requests.get(url)
+            data = response.json()
+            images = data.get("images", [])
+            if not images:
+                return "404 not found error"
+            random_image = random.choice(images)
+            prompt = random_image.get("prompt")
+        except Exception:
+            cstr("Unable to establish connection to Lexica API.").error.print()
+            prompt = "404 not found error"
 
-        if not images:
-            return None
-
-        random_image = random.choice(images)
-        prompt = random_image.get("prompt")
         return prompt
         
         
