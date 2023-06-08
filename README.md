@@ -199,6 +199,7 @@
    - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed. 
  - Text Input Switch: Switch between two text inputs
  - Text List: Create a list of text strings
+ - Text Load Line From File: Load lines from a file sequentially each *batch prompt* run, or select a line index. 
  - Text Concatenate: Merge lists of strings
  - Text Multiline: Write a multiline text string
  - Text Parse A1111 Embeddings: Convert embeddings filenames in your prompts to `embedding:[filename]]` format based on your `/ComfyUI/models/embeddings/` files. 
