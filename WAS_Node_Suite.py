@@ -9124,6 +9124,8 @@ class WAS_Text_Random_Prompt:
     CATEGORY = "WAS Suite/Text"
 
     def random_prompt(self, search_seed=None):
+        if search_seed in ['', ' ']:
+            search_seed = None
         return (self.search_lexica_art(search_seed), )
         
     def search_lexica_art(self, query=None):

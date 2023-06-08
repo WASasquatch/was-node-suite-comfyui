@@ -210,6 +210,7 @@
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
  - Text Parse Tokens: Parse custom tokens in text.
  - Text Random Line: Select a random line from a text input string
+ - Text Random Prompt: Feeling lucky? Get a random prompt based on a search seed, such as "superhero"
  - Text String: Write a single line text string value
  - Text to Conditioning: Convert a text string to conditioning.
  - True Random.org Number Generator: Generate a truly random number online from atmospheric noise with [Random.org](https://random.org/)
