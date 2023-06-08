@@ -9113,6 +9113,10 @@ class WAS_Text_Random_Prompt:
                 "search_seed": ("STRING", {"multiline": False}),
             }
         }
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
 
     RETURN_TYPES = (TEXT_TYPE,)
     FUNCTION = "random_prompt"
