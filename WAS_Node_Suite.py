@@ -8935,6 +8935,9 @@ class WAS_Text_Load_Line_From_File:
                 "label": ("STRING", {"default": 'TextBatch', "multiline": False}),
                 "mode": (["automatic", "index"],),
                 "index": ("INT", {"default": 0, "min": 0, "step": 1}),
+            },
+            "optional": {
+                "multiline_text": (TEXT_TYPE, {"forceInput": True}),
             }
         }
         
@@ -8948,7 +8951,22 @@ class WAS_Text_Load_Line_From_File:
 
     CATEGORY = "WAS Suite/Text"
 
-    def load_file(self, file_path='', dictionary_name='[filename]', label='TextBatch', mode='automatic', index=0):
+    def load_file(self, file_path='', dictionary_name='[filename]', label='TextBatch', 
+                    mode='automatic', index=0, multiline_text=None):
+        if multiline_text is not None:
+            lines = multiline_text.strip().split('\n')
+            if mode == 'index':
+                if index < 0 or index >= len(lines):
+                    cstr(f"Invalid line index `{index}`").error.print()
+                    return ('', {dictionary_name: []})
+                line = lines[index]
+            else:
+                file_list = self.TextFileLoader(file_path, label)
+                line_index = file_list.get_line_index()
+                line = lines[line_index % len(lines)]
+                file_list.set_line_index(line_index + 1)
+            return (line, {dictionary_name: lines})
+
         if not os.path.exists(file_path):
             cstr(f"The path `{file_path}` specified cannot be found.").error.print()
             return ('', {dictionary_name: []})
@@ -8985,6 +9003,13 @@ class WAS_Text_Load_Line_From_File:
                 self.index = stored_index
             with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
                 self.lines = [line.strip() for line in file]
+
+        def get_line_index(self):
+            return self.index
+
+        def set_line_index(self, index):
+            self.index = index
+            self.WDB.insert('TextBatch Counters', 'TextBatch', self.index)
 
         def get_next_line(self):
             if self.index >= len(self.lines):
@@ -11268,7 +11293,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Input Switch": WAS_Text_Input_Switch,
     "Text List": WAS_Text_List,
     "Text List Concatenate": WAS_Text_List_Concatenate,
-    "Text Load Line From File": WAS_Text_Load_Line_From_File,
+    "Text Load Line From File": WAS_Text_Load_Line_From_File, 
     "Text Multiline": WAS_Text_Multiline,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
