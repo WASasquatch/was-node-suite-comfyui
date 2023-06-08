@@ -8732,6 +8732,7 @@ class WAS_Text_Add_Tokens:
         return {
             "required": {
                 "tokens": ("STRING", {"default": "[hello]: world", "multiline": True}),
+                "print_current_tokens": (["false", "true"],),
             }
         }
 
@@ -8740,7 +8741,7 @@ class WAS_Text_Add_Tokens:
     OUTPUT_NODE = True
     CATEGORY = "WAS Suite/Text/Tokens"
 
-    def text_add_tokens(self, tokens):
+    def text_add_tokens(self, tokens, print_current_tokens="false"):
     
         import io
     
@@ -8755,8 +8756,9 @@ class WAS_Text_Add_Tokens:
             tk.addToken(token, token_value)
         
         # Current Tokens
-        cstr(f'Current Custom Tokens:').msg.print()
-        print(json.dumps(tk.custom_tokens, indent=4))
+        if print_current_tokens == "true":
+            cstr(f'Current Custom Tokens:').msg.print()
+            print(json.dumps(tk.custom_tokens, indent=4))
         
         return tokens
         
@@ -8778,6 +8780,7 @@ class WAS_Text_Add_Token_Input:
             "required": {
                 "token_name": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "token_value": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "print_current_tokens": (["false", "true"],),
             }
         }
 
@@ -8786,7 +8789,7 @@ class WAS_Text_Add_Token_Input:
     OUTPUT_NODE = True
     CATEGORY = "WAS Suite/Text/Tokens"
 
-    def text_add_token(self, token_name, token_value):
+    def text_add_token(self, token_name, token_value, print_current_tokens="false"):
 
         if token_name.strip() == '':
             cstr(f'A `token_name` is required for a token; token name provided is empty.').error.print()
@@ -8799,8 +8802,9 @@ class WAS_Text_Add_Token_Input:
         tk.addToken(token_name, token_value)
         
         # Current Tokens
-        print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
-        print(json.dumps(tk.custom_tokens, indent=4))
+        if print_current_tokens == "true":
+            print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
+            print(json.dumps(tk.custom_tokens, indent=4))
         
         return (token_name, token_value)
         
