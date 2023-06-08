@@ -40,8 +40,11 @@
    - You can set a custom wildcards path in `was_suite_config.json` file with key:
      - `    "wildcards_path": "E:\\python\\automatic\\webui3\\stable-diffusion-webui\\extensions\\sd-dynamic-prompts\\wildcards"`
      - If no path is set the wildcards dir is located at the root of WAS Node Suite as `/wildcards`
+ - CLIP Input Switch: Switch between two CLIP inputs based on a boolean switch.
+ - CLIP Vision Input Switch: Switch between two CLIP Vision inputs based on a boolean swith.
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
+ - Control Net Model Input Switch: Switch between two Control Net Model inputs based on a boolean switch.
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
  - Create Morph Image: Create a GIF/APNG animation from two images, fading between them. 
  - Create Morph Image by Path: Create a GIF/APNG animation from a path to a directory containing images, with optional pattern. 
@@ -167,6 +170,7 @@
  - Mask Gaussian Region: Apply a Gaussian blur to the mask
  - Masks Combine Masks: Combine 2 or more masks into one mask.
  - Masks Combine Batch: Combine batched masks into one mask.
+ - Model Input Switch: Switch between two model inputs based on a boolean switch
  - ComfyUI Loaders: A set of ComfyUI loaders that also output a string that contains the name of the model being loaded. 
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height
@@ -210,9 +214,12 @@
  - Text to Conditioning: Convert a text string to conditioning.
  - True Random.org Number Generator: Generate a truly random number online from atmospheric noise with [Random.org](https://random.org/)
    - [Get your API key from your account page](https://accounts.random.org/)
+ - Upscale Model Input Switch: Switch between two Upscale Models inputs based on a boolean switch.
  - Write to Morph GIF: Write a new frame to an existing GIF (or create new one) with interpolation between frames. 
  - Write to Video: Write a frame as you generate to a video (Best used with FFV1 for lossless images)
+ - VAE Input Switch: Switch between two VAE inputs based on boolean input
 </details>
+
  
  <br>
  

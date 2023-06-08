@@ -10526,7 +10526,176 @@ class WAS_Conditioning_Input_Switch:
         if int(boolean_number) == 1:
             return (conditioning_a, )
         else:
-            return (conditioning_b, )   
+            return (conditioning_b, )    
+            
+# MODEL INPUT SWITCH
+
+class WAS_Model_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model_a": ("MODEL",),
+                "model_b": ("MODEL",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "model_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def model_switch(self, model_a, model_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (model_a, )
+        else:
+            return (model_b, )    
+            
+# VAE INPUT SWITCH
+
+class WAS_VAE_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "vae_a": ("VAE",),
+                "vae_b": ("VAE",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("VAE",)
+    FUNCTION = "vae_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def vae_switch(self, vae_a, vae_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (vae_a, )
+        else:
+            return (vae_b, )
+            
+# CLIP INPUT SWITCH
+
+class WAS_CLIP_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "clip_a": ("CLIP",),
+                "clip_b": ("CLIP",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("CLIP",)
+    FUNCTION = "clip_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def clip_switch(self, clip_a, clip_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (clip_a, )
+        else:
+            return (clip_b, )  
+            
+# UPSCALE MODEL INPUT SWITCH
+
+class WAS_Upscale_Model_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "upscale_model_a": ("UPSCALE_MODEL",),
+                "upscale_model_b": ("UPSCALE_MODEL",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("UPSCALE_MODEL",)
+    FUNCTION = "upscale_model_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def upscale_model_switch(self, upscale_model_a, upscale_model_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (upscale_model_a, )
+        else:
+            return (upscale_model_b, )     
+
+            
+# CONTROL NET INPUT SWITCH
+
+class WAS_Control_Net_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "control_net_a": ("CONTROL_NET",),
+                "control_net_b": ("CONTROL_NET",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("COPNTROL_NET",)
+    FUNCTION = "control_net_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def control_net_switch(self, control_net_a, control_net_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (control_net_a, )
+        else:
+            return (control_net_b, ) 
+            
+# CLIP VISION INPUT SWITCH
+
+class WAS_CLIP_Vision_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "clip_vision_a": ("CLIP_VISION",),
+                "clip_vision_b": ("CLIP_VISION",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("CLIP_VISION",)
+    FUNCTION = "clip_vision_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def clip_vision_switch(self, clip_vision_a, clip_vision_b, boolean_number=1):
+
+        if int(boolean_number) == 1:
+            return (clip_vision_a, )
+        else:
+            return (clip_vision_b)   
             
 # TEXT INPUT SWITCH
 
@@ -10593,8 +10762,23 @@ class WAS_Debug_Number_to_Console:
         
 # CUSTOM COMFYUI NODES
 
+class WAS_Checkpoint_Loader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "config_name": (comfy_paths.get_filename_list("configs"), ),
+                              "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), )}}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
+    FUNCTION = "load_checkpoint"
 
+    CATEGORY = "WAS Suite/Loaders/Advanced"
 
+    def load_checkpoint(self, config_name, ckpt_name, output_vae=True, output_clip=True):
+        config_path = comfy_paths.get_full_path("configs", config_name)
+        ckpt_path = comfy_paths.get_full_path("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint(config_path, ckpt_path, output_vae=True, output_clip=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
+        return (out[0], out[1], out[2], os.path.splitext(os.path.basename(ckpt_name))[0])
+        
 class WAS_Checkpoint_Loader:
     @classmethod
     def INPUT_TYPES(s):
@@ -11139,13 +11323,14 @@ class WAS_Samples_Passthrough_Stat_System:
 
         return [ram_stats, vram_stats, hard_drive_stats]
 
-
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "Cache Node": WAS_Cache,
     "Checkpoint Loader": WAS_Checkpoint_Loader, 
     "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
     "CLIPTextEncode (NSP)": WAS_NSP_CLIPTextEncoder,
+    "CLIP Input Switch": WAS_CLIP_Input_Switch,
+    "CLIP Vision Input Switch": WAS_CLIP_Vision_Input_Switch,
     "Conditioning Input Switch": WAS_Conditioning_Input_Switch,
     "Constant Number": WAS_Constant_Number,
     "Create Grid Image": WAS_Image_Grid_Image,
@@ -11155,6 +11340,7 @@ NODE_CLASS_MAPPINGS = {
     "CLIPSeg Masking": WAS_CLIPSeg,
     "CLIPSeg Batch Masking": WAS_CLIPSeg_Batch,
     "Convert Masks to Images": WAS_Mask_To_Image,
+    "Control Net Model Input Switch": WAS_Control_Net_Input_Switch,
     "Debug Number to Console": WAS_Debug_Number_to_Console,
     "Dictionary to Console": WAS_Dictionary_To_Console,
     "Diffusers Model Loader": WAS_Diffusers_Loader,
@@ -11253,6 +11439,7 @@ NODE_CLASS_MAPPINGS = {
     "Masks Combine Batch": WAS_Mask_Combine_Batch,
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
+    "Model Input Switch": WAS_Model_Input_Switch,
     "Number Operation": WAS_Number_Operation,
     "Number to Float": WAS_Number_To_Float,
     "Number Input Switch": WAS_Number_Input_Switch,
@@ -11307,8 +11494,10 @@ NODE_CLASS_MAPPINGS = {
     "True Random.org Number Generator": WAS_True_Random_Number,
     "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
     "Upscale Model Loader": WAS_Upscale_Model_Loader,
+    "Upscale Model Switch": WAS_Upscale_Model_Input_Switch,
     "Write to GIF": WAS_Image_Morph_GIF_Writer,
     "Write to Video": WAS_Video_Writer,
+    "VAE Input Switch": WAS_VAE_Input_Switch,
     "Video Dump Frames": WAS_Video_Frame_Dump,
 }    
 
