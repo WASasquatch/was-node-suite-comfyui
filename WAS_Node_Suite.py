@@ -9098,7 +9098,44 @@ class WAS_String_To_Text:
     CATEGORY = "WAS Suite/Text/Operations"
 
     def string_to_text(self, string):
-        return (string, )
+        return (string, )        
+        
+# Random Prompt
+        
+class WAS_Text_Random_Prompt:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "search_seed": ("STRING", {"multiline": False}),
+            }
+        }
+
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "random_prompt"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def random_prompt(self, search_seed=None):
+        return (self.search_lexica_art(search_seed), )
+        
+    def search_lexica_art(self, query=None):
+        if not query:
+            query = random.choice(["portrait","landscape","anime","superhero","animal","nature","scenery"])
+        url = f"https://lexica.art/api/v1/search?q={query}"
+        response = requests.get(url)
+        data = response.json()
+        images = data.get("images", [])
+
+        if not images:
+            return None
+
+        random_image = random.choice(images)
+        prompt = random_image.get("prompt")
+        return prompt
         
         
 # BLIP CAPTION IMAGE
@@ -11486,6 +11523,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
     "Text Parse Tokens": WAS_Text_Parse_Tokens,
     "Text Random Line": WAS_Text_Random_Line,
+    "Text Random Prompt": WAS_Text_Random_Prompt,
     "Text String": WAS_Text_String,
     "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,
@@ -11628,6 +11666,7 @@ if was_conf.__contains__('show_inspiration_quote'):
         show_quotes = False
 if show_quotes:
     art_quotes = [
+        # ARTISTIC INSPIRATION QUOTES
         '\033[93m"Every artist was first an amateur."\033[0m\033[3m - Ralph Waldo Emerson',
         '\033[93m"Art is not freedom from discipline, but disciplined freedom."\033[0m\033[3m - John F. Kennedy',
         '\033[93m"Art enables us to find ourselves and lose ourselves at the same time."\033[0m\033[3m - Thomas Merton',
@@ -11661,6 +11700,50 @@ if show_quotes:
         '\033[93m"Art is the breath of life."\033[0m\033[3m - Liza Donnelly',
         '\033[93m"Art is a harmony parallel with nature."\033[0m\033[3m - Paul Cézanne',
         '\033[93m"Art is the daughter of freedom."\033[0m\033[3m - Friedrich Schiller',
+        # GENERAL INSPIRATION QUOTES
+        '\033[93m"Believe you can and you\'re halfway there."\033[0m\033[3m - Theodore Roosevelt'
+        '\033[93m"The only way to do great work is to love what you do."\033[0m\033[3m - Steve Jobs'
+        '\033[93m"Success is not final, failure is not fatal: It is the courage to continue that counts."\033[0m\033[3m - Winston Churchill'
+        '\033[93m"Your time is limited, don\'t waste it living someone else\'s life."\033[0m\033[3m - Steve Jobs'
+        '\033[93m"The future belongs to those who believe in the beauty of their dreams."\033[0m\033[3m - Eleanor Roosevelt'
+        '\033[93m"Success is not the key to happiness. Happiness is the key to success."\033[0m\033[3m - Albert Schweitzer'
+        '\033[93m"The best way to predict the future is to create it."\033[0m\033[3m - Peter Drucker'
+        '\033[93m"Don\'t watch the clock; do what it does. Keep going."\033[0m\033[3m - Sam Levenson'
+        '\033[93m"Believe in yourself, take on your challenges, and dig deep within yourself to conquer fears."\033[0m\033[3m - Chantal Sutherland'
+        '\033[93m"Challenges are what make life interesting and overcoming them is what makes life meaningful."\033[0m\033[3m - Joshua J. Marine'
+        '\033[93m"Opportunities don\'t happen. You create them."\033[0m\033[3m - Chris Grosser'
+        '\033[93m"Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work."\033[0m\033[3m - Steve Jobs'
+        '\033[93m"The harder I work, the luckier I get."\033[0m\033[3m - Samuel Goldwyn'
+        '\033[93m"Don\'t be pushed around by the fears in your mind. Be led by the dreams in your heart."\033[0m\033[3m - Roy T. Bennett'
+        '\033[93m"Believe in yourself, and the rest will fall into place."\033[0m\033[3m - Unknown'
+        '\033[93m"Life is 10% what happens to us and 90% how we react to it."\033[0m\033[3m - Charles R. Swindoll'
+        '\033[93m"Success is not just about making money. It\'s about making a difference."\033[0m\033[3m - Unknown'
+        '\033[93m"The only limit to our realization of tomorrow will be our doubts of today."\033[0m\033[3m - Franklin D. Roosevelt'
+        '\033[93m"Great minds discuss ideas; average minds discuss events; small minds discuss people."\033[0m\033[3m - Eleanor Roosevelt'
+        '\033[93m"The future depends on what you do today."\033[0m\033[3m - Mahatma Gandhi'
+        '\033[93m"Don\'t be afraid to give up the good to go for the great."\033[0m\033[3m - John D. Rockefeller'
+        '\033[93m"Success usually comes to those who are too busy to be looking for it."\033[0m\033[3m - Henry David Thoreau'
+        '\033[93m"The secret to getting ahead is getting started."\033[0m\033[3m - Mark Twain'
+        '\033[93m"Every great dream begins with a dreamer."\033[0m\033[3m - Harriet Tubman'
+        '\033[93m"Do not wait for the opportunity. Create it."\033[0m\033[3m - George Bernard Shaw'
+        '\033[93m"Your time is now. Start where you are and never stop."\033[0m\033[3m - Roy T. Bennett'
+        '\033[93m"The only person you should try to be better than is the person you were yesterday."\033[0m\033[3m - Unknown'
+        '\033[93m"Success is not in what you have, but who you are."\033[0m\033[3m - Bo Bennett'
+        '\033[93m"Do one thing every day that scares you."\033[0m\033[3m - Eleanor Roosevelt'
+        '\033[93m"Failure is the opportunity to begin again more intelligently."\033[0m\033[3m - Henry Ford'
+        '\033[93m"Dream big and dare to fail."\033[0m\033[3m - Norman Vaughan'
+        '\033[93m"Everything you\'ve ever wanted is on the other side of fear."\033[0m\033[3m - George Addair'
+        '\033[93m"Believe you deserve it and the universe will serve it."\033[0m\033[3m - Unknown'
+        '\033[93m"Don\'t wait. The time will never be just right."\033[0m\033[3m - Napoleon Hill'
+        '\033[93m"The distance between insanity and genius is measured only by success."\033[0m\033[3m - Bruce Feirstein'
+        '\033[93m"Be the change that you wish to see in the world."\033[0m\033[3m - Mahatma Gandhi'
+        '\033[93m"Success is not about being better than someone else. It\'s about being better than you used to be."\033[0m\033[3m - Unknown'
+        '\033[93m"The best revenge is massive success."\033[0m\033[3m - Frank Sinatra'
+        '\033[93m"You have within you right now, everything you need to deal with whatever the world can throw at you."\033[0m\033[3m - Brian Tracy'
+        '\033[93m"Don\'t let yesterday take up too much of today."\033[0m\033[3m - Will Rogers'
+        '\033[93m"The biggest risk is not taking any risk. In a world that is changing quickly, the only strategy that is guaranteed to fail is not taking risks."\033[0m\033[3m - Mark Zuckerberg'
+        '\033[93m"The journey of a thousand miles begins with one step."\033[0m\033[3m - Lao Tzu'
+        '\033[93m"Every strike brings me closer to the next home run."\033[0m\033[3m - Babe Ruth'
     ]
-    print(f'\n\t\033[3m{random.choice(art_quotes)}\033[0m\n')
+    print(f'\n\t\033[3m{random.choice(art_quotes)}\033[0m\n') 
     
