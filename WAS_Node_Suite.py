@@ -6360,6 +6360,7 @@ class WAS_Image_Save:
                         extension='png', quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None, 
                         overwrite_mode='false', filename_number_padding=4, show_history='false', 
                         show_history_by_prefix="true", embed_workflow="true"):
+                        
         delimiter = filename_delimiter
         number_padding = filename_number_padding
         lossless_webp = (lossless_webp == "true")

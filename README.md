@@ -123,6 +123,7 @@
  - Image Save: A save image node with format support and path support.
 	- `show_history` will show previously saved images with the WAS Save Image node. ComfyUI unfortunately resizes displayed images to the same size however, so if images are in different sizes it will force them in a different size. 
 	- Doesn't display images saved outside `/ComfyUI/output/`
+	- You can save as `webp` if you have webp available to you system. On windows you can get that support with this [precompiled libarary](https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.3.0-windows-x64.zip) from the [webp project](https://developers.google.com/speed/webp/download). On linux you can run `apt-get install webp`. 
  - Image Seamless Texture: Create a seamless texture out of a image with optional tiling
  - Image Select Channel: Select a single channel of an RGB image
  - Image Select Color: Return the select image only on a black canvas
