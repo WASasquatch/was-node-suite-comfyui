@@ -118,6 +118,7 @@
  - Image Remove Color: Remove a color from a image and replace it with another
  - Image Resize
  - Image Rotate: Rotate an image
+ - Image Rotate Hue: Rotate the hue of a image. A hue_shift of `0.0` would represent no change, and `1.0` would represent a full circle of the hue, and also exhibit no change. 
  - Image Save: A save image node with format support and path support.
 	- `show_history` will show previously saved images with the WAS Save Image node. ComfyUI unfortunately resizes displayed images to the same size however, so if images are in different sizes it will force them in a different size. 
 	- Doesn't display images saved outside `/ComfyUI/output/`

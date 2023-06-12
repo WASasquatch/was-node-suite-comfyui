@@ -126,9 +126,9 @@ class cstr(str):
         print(self, **kwargs)
         
 #! MESSAGE TEMPLATES
-cstr.color.add_code("msg", "\033[34mWAS Node Suite:\033[0m ")
-cstr.color.add_code("warning", "\033[34mWAS Node Suite \33[93mWarning:\033[0m ")
-cstr.color.add_code("error", "\033[31mWAS Node Suite \033[92mError:\033[0m ")
+cstr.color.add_code("msg", f"{cstr.color.BLUE}WAS Node Suite: {cstr.color.END}")
+cstr.color.add_code("warning", f"{cstr.color.BLUE}WAS Node Suite {cstr.color.LIGHTYELLOW}Warning: {cstr.color.END}")
+cstr.color.add_code("error", f"{cstr.color.RED}WAS Node Suite {cstr.color.END}Error: {cstr.color.END}")
 
 #! GLOBALS
 NODE_FILE = os.path.abspath(__file__)
@@ -2339,7 +2339,6 @@ class WAS_Tools_Class():
 
         return palette, '\n'.join(hex_palette)
 
-
 #! IMAGE FILTER NODES
 
 # IMAGE ADJUSTMENTS NODES
@@ -2622,6 +2621,7 @@ class WAS_Image_Pixelate:
         pil_images = [tensor2pil(image) for image in batch]
         pixel_art_images = []
         original_sizes = []
+        total_images = len(pil_images)
         for image in pil_images:
             width, height = image.size
             original_sizes.append((width, height))
@@ -5179,6 +5179,53 @@ class WAS_Image_Bloom_Filter:
         return blended_image
 
 
+# IMAGE ROTATE HUE
+
+class WAS_Image_Rotate_Hue:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "hue_shift": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "rotate_hue"
+
+    CATEGORY = "WAS Suite/Image/Adjustment"
+
+    def rotate_hue(self, image, hue_shift=0.0):
+        if hue_shift > 1.0 or hue_shift < 0.0:
+            cstr(f"The hue_shift `{cstr.color.LIGHTYELLOW}{hue_shift}{cstr.color.END}` is out of range. Valid range is {cstr.color.BOLD}0.0 - 1.0{cstr.color.END}").error.print()
+            hue_shift = 0.0
+        return (pil2tensor(self.rotate_hue(tensor2pil(image), hue_shift)), )
+
+    def rotate_hue(self, image, hue_shift=0.0):
+        import colorsys
+        def rgb_to_hls(r, g, b):
+            h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+            return h, l, s
+        def hls_to_rgb(h, l, s):
+            r, g, b = colorsys.hls_to_rgb(h, l, s)
+            return int(r * 255), int(g * 255), int(b * 255)
+
+        rotated_image = Image.new("RGB", image.size)
+        for x in range(image.width):
+            for y in range(image.height):
+                r, g, b = image.getpixel((x, y))
+                h, l, s = rgb_to_hls(r, g, b)
+                h = (h + hue_shift) % 1.0
+                r, g, b = hls_to_rgb(h, l, s)
+                rotated_image.putpixel((x, y), (r, g, b))
+
+        return rotated_image
+
+
 # IMAGE REMOVE COLOR
 
 class WAS_Image_Remove_Color:
@@ -6289,8 +6336,9 @@ class WAS_Image_Save:
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "filename_delimiter": ("STRING", {"default":"_"}),
                 "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
-                "extension": (['png', 'jpeg', 'gif', 'tiff'], ),
+                "extension": (['png', 'jpeg', 'gif', 'tiff', 'webp'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
+                "lossless_webp": (["false", "true"],),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
                 "show_history": (["false", "true"],),
                 "show_history_by_prefix": (["true", "false"],),
@@ -6309,11 +6357,12 @@ class WAS_Image_Save:
     CATEGORY = "WAS Suite/IO"
 
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', 
-                        extension='png', quality=100, prompt=None, extra_pnginfo=None, overwrite_mode='false', 
-                        filename_number_padding=4, show_history='false', show_history_by_prefix="true", 
-                        embed_workflow="true"):
+                        extension='png', quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None, 
+                        overwrite_mode='false', filename_number_padding=4, show_history='false', 
+                        show_history_by_prefix="true", embed_workflow="true"):
         delimiter = filename_delimiter
         number_padding = filename_number_padding
+        lossless_webp = (lossless_webp == "true")
 
         # Define token system
         tokens = TextTokens()
@@ -6397,9 +6446,12 @@ class WAS_Image_Save:
                 elif extension == 'tiff':
                     img.save(output_file,
                              quality=quality, optimize=True)
-                else:
-                    img.save(output_file)
+                elif extension == 'webp':
+                    img.save(output_file, quality=quality, 
+                                lossless=lossless_webp, exif=metadata)
+                
                 cstr(f"Image file saved to: {output_file}").msg.print()
+                
                 if show_history != 'true':
                     results.append({
                         "filename": file,
@@ -11240,20 +11292,22 @@ class WAS_Cache:
         i_filename = ""
         c_filename = ""
         
+        tokens = TextTokens()
+        
         if latent != None:
-            l_filename = f'l_{latent_suffix}.latent'
+            l_filename = f'l_{tokens.parseTokens(latent_suffix)}.latent'
             out_file = os.path.join(output, l_filename)
             joblib.dump(latent, out_file)
             cstr(f"Latent saved to: {out_file}").msg.print()    
             
         if image != None:
-            i_filename = f'i_{image_suffix}.image'
+            i_filename = f'i_{tokens.parseTokens(image_suffix)}.image'
             out_file = os.path.join(output, i_filename)
             joblib.dump(image, out_file)
             cstr(f"Tensor batch saved to: {out_file}").msg.print()
         
         if conditioning != None:
-            c_filename = f'c_{conditioning_suffix}.conditioning'
+            c_filename = f'c_{tokens.parseTokens(conditioning_suffix)}.conditioning'
             out_file = os.path.join(output, c_filename)
             joblib.dump(conditioning, os.path.join(output, out_file))
             cstr(f"Conditioning saved to: {out_file}").msg.print()   
@@ -11443,6 +11497,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Remove Color": WAS_Image_Remove_Color,
     "Image Resize": WAS_Image_Rescale,
     "Image Rotate": WAS_Image_Rotate,
+    "Image Rotate Hue": WAS_Image_Rotate_Hue,
     "Image Save": WAS_Image_Save,
     "Image Seamless Texture": WAS_Image_Make_Seamless,
     "Image Select Channel": WAS_Image_Select_Channel,
@@ -11714,49 +11769,49 @@ if show_quotes:
         '\033[93m"Art is a harmony parallel with nature."\033[0m\033[3m - Paul Cézanne',
         '\033[93m"Art is the daughter of freedom."\033[0m\033[3m - Friedrich Schiller',
         # GENERAL INSPIRATION QUOTES
-        '\033[93m"Believe you can and you\'re halfway there."\033[0m\033[3m - Theodore Roosevelt'
-        '\033[93m"The only way to do great work is to love what you do."\033[0m\033[3m - Steve Jobs'
-        '\033[93m"Success is not final, failure is not fatal: It is the courage to continue that counts."\033[0m\033[3m - Winston Churchill'
-        '\033[93m"Your time is limited, don\'t waste it living someone else\'s life."\033[0m\033[3m - Steve Jobs'
-        '\033[93m"The future belongs to those who believe in the beauty of their dreams."\033[0m\033[3m - Eleanor Roosevelt'
-        '\033[93m"Success is not the key to happiness. Happiness is the key to success."\033[0m\033[3m - Albert Schweitzer'
-        '\033[93m"The best way to predict the future is to create it."\033[0m\033[3m - Peter Drucker'
-        '\033[93m"Don\'t watch the clock; do what it does. Keep going."\033[0m\033[3m - Sam Levenson'
-        '\033[93m"Believe in yourself, take on your challenges, and dig deep within yourself to conquer fears."\033[0m\033[3m - Chantal Sutherland'
-        '\033[93m"Challenges are what make life interesting and overcoming them is what makes life meaningful."\033[0m\033[3m - Joshua J. Marine'
-        '\033[93m"Opportunities don\'t happen. You create them."\033[0m\033[3m - Chris Grosser'
-        '\033[93m"Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work."\033[0m\033[3m - Steve Jobs'
-        '\033[93m"The harder I work, the luckier I get."\033[0m\033[3m - Samuel Goldwyn'
-        '\033[93m"Don\'t be pushed around by the fears in your mind. Be led by the dreams in your heart."\033[0m\033[3m - Roy T. Bennett'
-        '\033[93m"Believe in yourself, and the rest will fall into place."\033[0m\033[3m - Unknown'
-        '\033[93m"Life is 10% what happens to us and 90% how we react to it."\033[0m\033[3m - Charles R. Swindoll'
-        '\033[93m"Success is not just about making money. It\'s about making a difference."\033[0m\033[3m - Unknown'
-        '\033[93m"The only limit to our realization of tomorrow will be our doubts of today."\033[0m\033[3m - Franklin D. Roosevelt'
-        '\033[93m"Great minds discuss ideas; average minds discuss events; small minds discuss people."\033[0m\033[3m - Eleanor Roosevelt'
-        '\033[93m"The future depends on what you do today."\033[0m\033[3m - Mahatma Gandhi'
-        '\033[93m"Don\'t be afraid to give up the good to go for the great."\033[0m\033[3m - John D. Rockefeller'
-        '\033[93m"Success usually comes to those who are too busy to be looking for it."\033[0m\033[3m - Henry David Thoreau'
-        '\033[93m"The secret to getting ahead is getting started."\033[0m\033[3m - Mark Twain'
-        '\033[93m"Every great dream begins with a dreamer."\033[0m\033[3m - Harriet Tubman'
-        '\033[93m"Do not wait for the opportunity. Create it."\033[0m\033[3m - George Bernard Shaw'
-        '\033[93m"Your time is now. Start where you are and never stop."\033[0m\033[3m - Roy T. Bennett'
-        '\033[93m"The only person you should try to be better than is the person you were yesterday."\033[0m\033[3m - Unknown'
-        '\033[93m"Success is not in what you have, but who you are."\033[0m\033[3m - Bo Bennett'
-        '\033[93m"Do one thing every day that scares you."\033[0m\033[3m - Eleanor Roosevelt'
-        '\033[93m"Failure is the opportunity to begin again more intelligently."\033[0m\033[3m - Henry Ford'
-        '\033[93m"Dream big and dare to fail."\033[0m\033[3m - Norman Vaughan'
-        '\033[93m"Everything you\'ve ever wanted is on the other side of fear."\033[0m\033[3m - George Addair'
-        '\033[93m"Believe you deserve it and the universe will serve it."\033[0m\033[3m - Unknown'
-        '\033[93m"Don\'t wait. The time will never be just right."\033[0m\033[3m - Napoleon Hill'
-        '\033[93m"The distance between insanity and genius is measured only by success."\033[0m\033[3m - Bruce Feirstein'
-        '\033[93m"Be the change that you wish to see in the world."\033[0m\033[3m - Mahatma Gandhi'
-        '\033[93m"Success is not about being better than someone else. It\'s about being better than you used to be."\033[0m\033[3m - Unknown'
-        '\033[93m"The best revenge is massive success."\033[0m\033[3m - Frank Sinatra'
-        '\033[93m"You have within you right now, everything you need to deal with whatever the world can throw at you."\033[0m\033[3m - Brian Tracy'
-        '\033[93m"Don\'t let yesterday take up too much of today."\033[0m\033[3m - Will Rogers'
-        '\033[93m"The biggest risk is not taking any risk. In a world that is changing quickly, the only strategy that is guaranteed to fail is not taking risks."\033[0m\033[3m - Mark Zuckerberg'
-        '\033[93m"The journey of a thousand miles begins with one step."\033[0m\033[3m - Lao Tzu'
-        '\033[93m"Every strike brings me closer to the next home run."\033[0m\033[3m - Babe Ruth'
+        '\033[93m"Believe you can and you\'re halfway there."\033[0m\033[3m - Theodore Roosevelt',
+        '\033[93m"The only way to do great work is to love what you do."\033[0m\033[3m - Steve Jobs',
+        '\033[93m"Success is not final, failure is not fatal: It is the courage to continue that counts."\033[0m\033[3m - Winston Churchill',
+        '\033[93m"Your time is limited, don\'t waste it living someone else\'s life."\033[0m\033[3m - Steve Jobs',
+        '\033[93m"The future belongs to those who believe in the beauty of their dreams."\033[0m\033[3m - Eleanor Roosevelt',
+        '\033[93m"Success is not the key to happiness. Happiness is the key to success."\033[0m\033[3m - Albert Schweitzer',
+        '\033[93m"The best way to predict the future is to create it."\033[0m\033[3m - Peter Drucker',
+        '\033[93m"Don\'t watch the clock; do what it does. Keep going."\033[0m\033[3m - Sam Levenson',
+        '\033[93m"Believe in yourself, take on your challenges, and dig deep within yourself to conquer fears."\033[0m\033[3m - Chantal Sutherland',
+        '\033[93m"Challenges are what make life interesting and overcoming them is what makes life meaningful."\033[0m\033[3m - Joshua J. Marine',
+        '\033[93m"Opportunities don\'t happen. You create them."\033[0m\033[3m - Chris Grosser',
+        '\033[93m"Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work."\033[0m\033[3m - Steve Jobs',
+        '\033[93m"The harder I work, the luckier I get."\033[0m\033[3m - Samuel Goldwyn',
+        '\033[93m"Don\'t be pushed around by the fears in your mind. Be led by the dreams in your heart."\033[0m\033[3m - Roy T. Bennett',
+        '\033[93m"Believe in yourself, and the rest will fall into place."\033[0m\033[3m - Unknown',
+        '\033[93m"Life is 10% what happens to us and 90% how we react to it."\033[0m\033[3m - Charles R. Swindoll',
+        '\033[93m"Success is not just about making money. It\'s about making a difference."\033[0m\033[3m - Unknown',
+        '\033[93m"The only limit to our realization of tomorrow will be our doubts of today."\033[0m\033[3m - Franklin D. Roosevelt',
+        '\033[93m"Great minds discuss ideas; average minds discuss events; small minds discuss people."\033[0m\033[3m - Eleanor Roosevelt',
+        '\033[93m"The future depends on what you do today."\033[0m\033[3m - Mahatma Gandhi',
+        '\033[93m"Don\'t be afraid to give up the good to go for the great."\033[0m\033[3m - John D. Rockefeller',
+        '\033[93m"Success usually comes to those who are too busy to be looking for it."\033[0m\033[3m - Henry David Thoreau',
+        '\033[93m"The secret to getting ahead is getting started."\033[0m\033[3m - Mark Twain',
+        '\033[93m"Every great dream begins with a dreamer."\033[0m\033[3m - Harriet Tubman',
+        '\033[93m"Do not wait for the opportunity. Create it."\033[0m\033[3m - George Bernard Shaw',
+        '\033[93m"Your time is now. Start where you are and never stop."\033[0m\033[3m - Roy T. Bennett',
+        '\033[93m"The only person you should try to be better than is the person you were yesterday."\033[0m\033[3m - Unknown',
+        '\033[93m"Success is not in what you have, but who you are."\033[0m\033[3m - Bo Bennett',
+        '\033[93m"Do one thing every day that scares you."\033[0m\033[3m - Eleanor Roosevelt',
+        '\033[93m"Failure is the opportunity to begin again more intelligently."\033[0m\033[3m - Henry Ford',
+        '\033[93m"Dream big and dare to fail."\033[0m\033[3m - Norman Vaughan',
+        '\033[93m"Everything you\'ve ever wanted is on the other side of fear."\033[0m\033[3m - George Addair',
+        '\033[93m"Believe you deserve it and the universe will serve it."\033[0m\033[3m - Unknown',
+        '\033[93m"Don\'t wait. The time will never be just right."\033[0m\033[3m - Napoleon Hill',
+        '\033[93m"The distance between insanity and genius is measured only by success."\033[0m\033[3m - Bruce Feirstein',
+        '\033[93m"Be the change that you wish to see in the world."\033[0m\033[3m - Mahatma Gandhi',
+        '\033[93m"Success is not about being better than someone else. It\'s about being better than you used to be."\033[0m\033[3m - Unknown',
+        '\033[93m"The best revenge is massive success."\033[0m\033[3m - Frank Sinatra',
+        '\033[93m"You have within you right now, everything you need to deal with whatever the world can throw at you."\033[0m\033[3m - Brian Tracy',
+        '\033[93m"Don\'t let yesterday take up too much of today."\033[0m\033[3m - Will Rogers',
+        '\033[93m"The biggest risk is not taking any risk. In a world that is changing quickly, the only strategy that is guaranteed to fail is not taking risks."\033[0m\033[3m - Mark Zuckerberg',
+        '\033[93m"The journey of a thousand miles begins with one step."\033[0m\033[3m - Lao Tzu',
+        '\033[93m"Every strike brings me closer to the next home run."\033[0m\033[3m - Babe Ruth',
     ]
     print(f'\n\t\033[3m{random.choice(art_quotes)}\033[0m\n') 
     
