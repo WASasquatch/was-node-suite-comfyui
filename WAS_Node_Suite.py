@@ -8610,21 +8610,26 @@ class WAS_Text_Save:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "path": ("STRING", {"default": '', "multiline": False}),
-                "filename": ("STRING", {"default": f'text_[time]', "multiline": False}),
+                "text": ("STRING", {"forceInput": True}),
+                "path": ("STRING", {"default": './ComfyUI/output/[time(%Y-%m-%d)]', "multiline": False}),
+                "filename_prefix": ("STRING", {"default": "ComfyUI"}),
+                "filename_delimiter": ("STRING", {"default":"_"}),
+                "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
+
             }
         }
 
     OUTPUT_NODE = True
     RETURN_TYPES = ()
     FUNCTION = "save_text_file"
-
     CATEGORY = "WAS Suite/IO"
 
-    def save_text_file(self, text, path, filename):
-
-        # Ensure path exists
+    def save_text_file(self, text, path, filename_prefix='ComfyUI', filename_delimiter='_', filename_number_padding=4):
+    
+        tokens = TextTokens()
+        path = tokens.parseTokens(path)
+        filename_prefix = tokens.parseTokens(filename_prefix)
+    
         if not os.path.exists(path):
             cstr(f"The path `{path}` doesn't exist! Creating it...").warning.print()
             try:
@@ -8632,24 +8637,42 @@ class WAS_Text_Save:
             except OSError as e:
                 cstr(f"The path `{path}` could not be created! Is there write access?\n{e}").error.print()
 
-        # Ensure content to save
-        if text.strip == '':
+        if text.strip() == '':
             cstr(f"There is no text specified to save! Text is empty.").error.print()
 
-        # Parse filename tokens
-        tokens = TextTokens()
-        filename = tokens.parseTokens(filename)
+        delimiter = filename_delimiter
+        number_padding = int(filename_number_padding)
+        file_extension = '.txt'
+        filename = self.generate_filename(path, filename_prefix, delimiter, number_padding, file_extension)
+        file_path = os.path.join(path, filename)
 
-        # Write text file
-        file_path = os.path.join(path, filename + '.txt')
         self.writeTextFile(file_path, text)
-        
-        # Write file to file history
+
         update_history_text_files(file_path)
 
-        return (text, )
+        return (text, { "ui": { "string": text } } )
+        
+    def generate_filename(self, path, prefix, delimiter, number_padding, extension):
+        pattern = f"{re.escape(prefix)}{re.escape(delimiter)}(\\d{{{number_padding}}})"
+        existing_counters = [
+            int(re.search(pattern, filename).group(1))
+            for filename in os.listdir(path)
+            if re.match(pattern, filename)
+        ]
+        existing_counters.sort(reverse=True)
 
-    # Save Text FileNotFoundError
+        if existing_counters:
+            counter = existing_counters[0] + 1
+        else:
+            counter = 1
+
+        filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
+        while os.path.exists(os.path.join(path, filename)):
+            counter += 1
+            filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
+
+        return filename
+
     def writeTextFile(self, file, content):
         try:
             with open(file, 'w', encoding='utf-8', newline='\n') as f:
