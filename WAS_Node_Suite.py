@@ -401,6 +401,15 @@ def image2seed(image):
     seed = int.from_bytes(hash_digest[:4], byteorder='big')
     return seed
     
+    
+# SHA-256 Hash
+def get_sha256(file_path):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, 'rb') as file:
+        for chunk in iter(lambda: file.read(4096), b''):
+            sha256_hash.update(chunk)
+    return sha256_hash.hexdigest()
+    
 # NSP Function
 
 def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=None):
@@ -4802,9 +4811,22 @@ class WAS_Load_Image_Batch:
             self.WDB.insert('Batch Counters', self.label, self.index)
             return (Image.open(image_path), os.path.basename(image_path))
 
+        def get_current_image(self):
+            if self.index >= len(self.image_paths):
+                self.index = 0
+            image_path = self.image_paths[self.index]
+            return os.path.basename(image_path)
+
     @classmethod
     def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
+        if kwargs['mode'] != 'single_image':
+            return float("NaN")
+        else:
+            fl = WAS_Load_Image_Batch.BatchImageLoader(kwargs['path'], kwargs['label'], kwargs['pattern'])
+            filename = fl.get_current_image()
+            image = os.path.join(kwargs['path'], filename)
+            sha = get_sha256(image)
+            return sha
         
         
 # IMAGE HISTORY NODE
@@ -9023,7 +9045,6 @@ class WAS_Text_Load_Line_From_File:
         
     @classmethod
     def IS_CHANGED(cls, **kwargs):
-        print(kwargs)
         if kwargs['mode'] != 'index':
             return float("NaN")
         else:
