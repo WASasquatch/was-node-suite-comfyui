@@ -9023,7 +9023,17 @@ class WAS_Text_Load_Line_From_File:
         
     @classmethod
     def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
+        print(kwargs)
+        if kwargs['mode'] != 'index':
+            return float("NaN")
+        else:
+            m = hashlib.sha256()
+            if os.path.exists(kwargs['file_path']):
+                with open(kwargs['file_path'], 'rb') as f:
+                    m.update(f.read())
+                return m.digest().hex()
+            else:
+                return False
 
     RETURN_TYPES = (TEXT_TYPE, "DICT")
     RETURN_NAMES = ("line_text", "dictionary")
