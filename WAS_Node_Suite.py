@@ -1251,7 +1251,7 @@ class WAS_Tools_Class():
                 cstr(f"Unable to create video at: {output_file}").error.print()
                 return ""
                 
-        def extract(self, video_file, output_folder, prefix='frame_', extension="png"):
+        def extract(self, video_file, output_folder, prefix='frame_', extension="png", zero_padding_digits=-1):
             # Create the output folder if it doesn't exist
             os.makedirs(output_folder, exist_ok=True)
 
@@ -1269,7 +1269,13 @@ class WAS_Tools_Class():
 
                 if success:
                     # Save the frame as an image file
-                    frame_path = os.path.join(output_folder, f"{prefix}{frame_number}.{extension}")
+
+                    # If the user requested to pad the numbers:
+                    if zero_padding_digits > 0:                        
+                        frame_path = os.path.join(output_folder, f"{prefix}{frame_number:0{zero_padding_digits}}.{extension}")
+                    else:
+                        frame_path = os.path.join(output_folder, f"{prefix}{frame_number}.{extension}")
+
                     cv2.imwrite(frame_path, frame)
                     print(f"Saved frame {frame_number} to {frame_path}")
                     frame_number += 1
@@ -11264,6 +11270,7 @@ class WAS_Video_Frame_Dump:
                 "video_path": ("STRING", {"default":"./ComfyUI/input/MyVideo.mp4", "multiline":False}),
                 "output_path": ("STRING", {"default": "./ComfyUI/input/MyVideo", "multiline": False}),
                 "prefix": ("STRING", {"default": "frame_", "multiline": False}),
+                "filenumber_digits": ("INT", {"default":4, "min":-1, "max":8, "step":1}),
                 "extension": (["png","jpg","gif","tiff"],),
             }
         }
@@ -11278,7 +11285,7 @@ class WAS_Video_Frame_Dump:
     
     CATEGORY = "WAS Suite/Animation"
     
-    def dump_video_frames(self, video_path, output_path, prefix="fame_", extension="png"):
+    def dump_video_frames(self, video_path, output_path, prefix="fame_", extension="png",filenumber_digits=-1):
         
         conf = getSuiteConfig()
         if not conf.__contains__('ffmpeg_bin_path'):
@@ -11300,7 +11307,7 @@ class WAS_Video_Frame_Dump:
 
         WTools = WAS_Tools_Class()
         MP4Writer = WTools.VideoWriter()
-        processed = MP4Writer.extract(video_path, output_path, prefix, extension)
+        processed = MP4Writer.extract(video_path, output_path, prefix, extension,filenumber_digits)
         
         return (output_path, processed)
         
