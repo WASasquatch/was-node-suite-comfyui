@@ -121,7 +121,6 @@ class cstr(str):
         else:
             raise AttributeError(f"'cstr' object has no attribute '{attr}'")
 
-
     def print(self, **kwargs):
         print(self, **kwargs)
         
@@ -181,6 +180,7 @@ if f_disp:
 #! WAS SUITE CONFIG
 
 was_conf_template = {
+                    "run_requirements": True,
                     "suppress_uncomfy_warnings": True,
                     "show_startup_junk": True,
                     "show_inspiration_quote": True,
@@ -205,15 +205,16 @@ was_conf_template = {
 # Create, Load, or Update Config
 
 def getSuiteConfig():
+    global was_conf_template
     try:
         with open(WAS_CONFIG_FILE, "r") as f:
             was_config = json.load(f)
     except OSError as e:
-        print(e)
-        return False
+        cstr(f"Unable to load conf file at `{WAS_CONFIG_FILE}`. Using internal config template.").error.print()
+        return was_conf_template
     except Exception as e:
-        print(e)
-        return False
+        cstr(f"Unable to load conf file at `{WAS_CONFIG_FILE}`. Using internal config template.").error.print()
+        return was_conf_template
     return was_config
     return was_config
     
@@ -281,8 +282,6 @@ if was_config.__contains__('webui_styles'):
             styles_persist = was_config['webui_styles_persistent_update']
         else:
             styles_persist = True
-            
-        print(styles_persist)
                 
         if webui_styles_file not in [None, 'none', 'None', ''] and os.path.exists(webui_styles_file):
 
@@ -524,6 +523,73 @@ def parse_dynamic_prompt(prompt, seed):
         parse_prompt = re.sub(r'\<(.*?)\>', replace_match, parse_prompt)
         
     return parse_prompt
+    
+# Ambient Occlusion Factor
+
+@jit(nopython=True)
+def calculate_ambient_occlusion_factor(rgb_normalized, depth_normalized, height, width, radius):
+    occlusion_array = np.zeros((height, width), dtype=np.uint8)
+
+    for y in range(height):
+        for x in range(width):
+            if radius == 0:
+                occlusion_factor = 0
+            else:
+                y_min = max(y - radius, 0)
+                y_max = min(y + radius + 1, height)
+                x_min = max(x - radius, 0)
+                x_max = min(x + radius + 1, width)
+
+                neighborhood_depth = depth_normalized[y_min:y_max, x_min:x_max]
+                neighborhood_rgb = rgb_normalized[y_min:y_max, x_min:x_max, :]
+
+                depth_diff = depth_normalized[y, x] - neighborhood_depth
+                rgb_diff = np.abs(rgb_normalized[y, x] - neighborhood_rgb)
+                occlusion_factor = np.maximum(0, depth_diff).mean() + np.maximum(0, np.sum(rgb_diff, axis=2)).mean()
+
+            occlusion_value = int(255 - occlusion_factor * 255)
+            occlusion_array[y, x] = occlusion_value
+
+    return occlusion_array
+
+# Direct Occlusion Factor
+
+@jit(nopython=True)
+def calculate_direct_occlusion_factor(rgb_normalized, depth_normalized, height, width, radius):
+    occlusion_array = np.empty((int(height), int(width)), dtype=np.uint8)
+    depth_normalized = depth_normalized[:, :, 0]
+
+    for y in range(int(height)):
+        for x in range(int(width)):
+            if radius == 0:
+                occlusion_factor = 0
+            else:
+                y_min = max(int(y - radius), 0)
+                y_max = min(int(y + radius + 1), int(height))
+                x_min = max(int(x - radius), 0)
+                x_max = min(int(x + radius + 1), int(width))
+
+                neighborhood_depth = np.zeros((y_max - y_min, x_max - x_min), dtype=np.float64)
+                neighborhood_rgb = np.empty((y_max - y_min, x_max - x_min, 3))
+
+                for i in range(y_min, y_max):
+                    for j in range(x_min, x_max):
+                        neighborhood_depth[i - y_min, j - x_min] = depth_normalized[i, j]
+                        neighborhood_rgb[i - y_min, j - x_min, :] = rgb_normalized[i, j, :]
+
+                depth_diff = neighborhood_depth - depth_normalized[y, x]
+                rgb_diff = np.abs(neighborhood_rgb - rgb_normalized[y, x])
+                occlusion_factor = np.maximum(0, depth_diff).mean() + np.maximum(0, np.sum(np.abs(rgb_diff), axis=2)).mean()
+
+            occlusion_value = int(occlusion_factor * 255)
+            occlusion_array[y, x] = occlusion_value
+
+    occlusion_min = np.min(occlusion_array)
+    occlusion_max = np.max(occlusion_array)
+    occlusion_scaled = ((occlusion_array - occlusion_min) / (occlusion_max - occlusion_min) * 255).astype(np.uint8)
+
+    return occlusion_scaled
+
     
 class PromptStyles:
     def __init__(self, styles_file, preview_length = 32):
@@ -1284,8 +1350,6 @@ class WAS_Tools_Class():
 
             # Release the video file
             video.release()
-            
-            return frame_number
 
         def rescale(self, image, max_size):
             f1 = max_size / image.shape[1]
@@ -4813,7 +4877,7 @@ class WAS_Load_Image_Batch:
             self.index += 1
             if self.index == len(self.image_paths):
                 self.index = 0
-            print(f'\033[34mWAS Node Suite \033[33m{self.label}\033[0m Index:', self.index)
+            cstr(f'{cstr.color.YELLOW}{self.label}{cstr.color.END} Index: {self.index}').msg.print()
             self.WDB.insert('Batch Counters', self.label, self.index)
             return (Image.open(image_path), os.path.basename(image_path))
 
@@ -6274,8 +6338,251 @@ class WAS_Image_RGB_Merge:
         # Merge the channels into the new image
         merged_img = Image.merge('RGB', (red, green, blue))
 
-        return merged_img        
+        return merged_img    
+        
+# IMAGE Ambient Occlusion
 
+class WAS_Image_Ambient_Occlusion:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "depth_images": ("IMAGE",),
+                "strength": ("FLOAT", {"min": 0.0, "max": 5.0, "default": 1.0, "step": 0.01}),
+                "radius": ("FLOAT", {"min": 0.01, "max": 1024, "default": 30, "step": 0.01}),
+                "ao_blur": ("FLOAT", {"min": 0.01, "max": 1024, "default": 2.5, "step": 0.01}),
+                "specular_threshold": ("INT", {"min":0, "max": 255, "default": 25, "step": 1}),
+                "enable_specular_masking": (["True", "False"],),
+                "tile_size": ("INT", {"min": 1, "max": 512, "default": 1, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE","IMAGE","IMAGE")
+    RETURN_NAMES = ("composited_images", "ssao_images", "specular_mask_images")
+    FUNCTION = "ambient_occlusion"
+
+    CATEGORY = "WAS Suite/Image/Filter"
+
+    def ambient_occlusion(self, images, depth_images, strength, radius, ao_blur, specular_threshold, enable_specular_masking, tile_size):
+
+        enable_specular_masking = (enable_specular_masking == 'True')
+        composited = []
+        occlusions = []
+        speculars = []
+        for i, image in enumerate(images):
+            cstr(f"Processing SSAO image {i+1}/{len(images)} ...").msg.print()
+            composited_image, occlusion_image, specular_mask = self.create_ambient_occlusion(
+                tensor2pil(image),
+                tensor2pil(depth_images[(i if len(depth_images) >= i else -1)]),
+                strength=strength,
+                radius=radius,
+                ao_blur=ao_blur,
+                spec_threshold=specular_threshold,
+                enable_specular_masking=enable_specular_masking,
+                tile_size=tile_size
+            )
+            composited.append(pil2tensor(composited_image))
+            occlusions.append(pil2tensor(occlusion_image))
+            speculars.append(pil2tensor(specular_mask))
+            
+        composited = torch.cat(composited, dim=0)
+        occlusions = torch.cat(occlusions, dim=0)
+        speculars = torch.cat(speculars, dim=0)
+
+        return ( composited, occlusions, speculars )
+
+    def process_tile(self, tile_rgb, tile_depth, tile_x, tile_y, radius):
+        tile_occlusion = calculate_ambient_occlusion_factor(tile_rgb, tile_depth, tile_rgb.shape[0], tile_rgb.shape[1], radius)
+        return tile_x, tile_y, tile_occlusion
+
+
+    def create_ambient_occlusion(self, rgb_image, depth_image, strength=1.0, radius=30, ao_blur=5, spec_threshold=200, enable_specular_masking=False, tile_size=1):
+        
+        import concurrent.futures
+    
+        if depth_image.size != rgb_image.size:
+            depth_image = depth_image.resize(rgb_image.size)
+        rgb_normalized = np.array(rgb_image, dtype=np.float32) / 255.0
+        depth_normalized = np.array(depth_image, dtype=np.float32) / 255.0
+
+        height, width, _ = rgb_normalized.shape
+
+        if tile_size <= 1:
+            print("Processing single-threaded AO (highest quality) ...")
+            occlusion_array = calculate_ambient_occlusion_factor(rgb_normalized, depth_normalized, height, width, radius)
+        else:
+            tile_size = ((tile_size if tile_size <= 8 else 8) if tile_size > 1 else 1)
+            num_tiles_x = (width - 1) // tile_size + 1
+            num_tiles_y = (height - 1) // tile_size + 1
+
+            occlusion_array = np.zeros((height, width), dtype=np.uint8)
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
+
+                with tqdm(total=num_tiles_y * num_tiles_x) as pbar:
+                    for tile_y in range(num_tiles_y):
+                        for tile_x in range(num_tiles_x):
+                            tile_left = tile_x * tile_size
+                            tile_upper = tile_y * tile_size
+                            tile_right = min(tile_left + tile_size, width)
+                            tile_lower = min(tile_upper + tile_size, height)
+
+                            tile_rgb = rgb_normalized[tile_upper:tile_lower, tile_left:tile_right]
+                            tile_depth = depth_normalized[tile_upper:tile_lower, tile_left:tile_right]
+
+                            future = executor.submit(process_tile, tile_rgb, tile_depth, tile_x, tile_y, radius)
+                            futures.append(future)
+
+                    for future in concurrent.futures.as_completed(futures):
+                        tile_x, tile_y, tile_occlusion = future.result()
+                        tile_left = tile_x * tile_size
+                        tile_upper = tile_y * tile_size
+                        tile_right = min(tile_left + tile_size, width)
+                        tile_lower = min(tile_upper + tile_size, height)
+
+                        occlusion_array[tile_upper:tile_lower, tile_left:tile_right] = tile_occlusion
+
+                        pbar.update(1)
+
+        occlusion_array = (occlusion_array * strength).clip(0, 255).astype(np.uint8)
+
+        occlusion_image = Image.fromarray(occlusion_array, mode='L')
+        occlusion_image = occlusion_image.filter(ImageFilter.GaussianBlur(radius=ao_blur))
+        occlusion_image = occlusion_image.filter(ImageFilter.SMOOTH)
+        occlusion_image = ImageChops.multiply(occlusion_image, ImageChops.multiply(occlusion_image, occlusion_image))
+
+        mask = rgb_image.convert('L')
+        mask = mask.point(lambda x: x > spec_threshold, mode='1')
+        mask = mask.convert("RGB")
+        mask = mask.filter(ImageFilter.GaussianBlur(radius=2.5)).convert("L")
+
+        if enable_specular_masking:
+            occlusion_image = Image.composite(Image.new("L", rgb_image.size, 255), occlusion_image, mask)
+        occlsuion_result = ImageChops.multiply(rgb_image, occlusion_image.convert("RGB"))
+
+        return occlsuion_result, occlusion_image, mask  
+
+# IMAGE Direct Occlusion
+
+class WAS_Image_Direct_Occlusion:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "depth_images": ("IMAGE",),
+                "strength": ("FLOAT", {"min": 0.0, "max": 5.0, "default": 1.0, "step": 0.01}),
+                "radius": ("FLOAT", {"min": 0.01, "max": 1024, "default": 30, "step": 0.01}),
+                "specular_threshold": ("INT", {"min":0, "max": 255, "default": 128, "step": 1}),
+                "colored_occlusion": (["True", "False"],),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE","IMAGE","IMAGE", "IMAGE")
+    RETURN_NAMES = ("composited_images", "ssdo_images", "ssdo_image_masks", "light_source_image_masks")
+    FUNCTION = "direct_occlusion"
+
+    CATEGORY = "WAS Suite/Image/Filter"
+
+    def direct_occlusion(self, images, depth_images, strength, radius, specular_threshold, colored_occlusion):
+
+        composited = []
+        occlusions = []
+        occlusion_masks = []
+        light_sources = []
+        for i, image in enumerate(images):
+            cstr(f"Processing SSDO image {i+1}/{len(images)} ...").msg.print()
+            composited_image, occlusion_image, occlusion_mask, light_source = self.create_direct_occlusion(
+                tensor2pil(image), 
+                tensor2pil(depth_images[(i if len(depth_images) >= i else -1)]),
+                strength=strength, 
+                radius=radius, 
+                threshold=specular_threshold, 
+                colored=True
+            )
+            composited.append(pil2tensor(composited_image))
+            occlusions.append(pil2tensor(occlusion_image))
+            occlusion_masks.append(pil2tensor(occlusion_mask))
+            light_sources.append(pil2tensor(light_source))
+            
+        composited = torch.cat(composited, dim=0)
+        occlusions = torch.cat(occlusions, dim=0)
+        occlusion_masks = torch.cat(occlusion_masks, dim=0)
+        light_sources = torch.cat(light_sources, dim=0)
+
+        return ( composited, occlusions, occlusion_masks, light_sources )
+
+    def find_light_source(self, rgb_normalized, threshold):
+        from skimage.measure import regionprops
+        from skimage import measure
+        rgb_uint8 = (rgb_normalized * 255).astype(np.uint8)
+        rgb_to_grey = Image.fromarray(rgb_uint8, mode="RGB")
+        dominant = self.dominant_region(rgb_to_grey, threshold)
+        grayscale_image = np.array(dominant.convert("L"), dtype=np.float32) / 255.0
+        regions = measure.label(grayscale_image > 0)
+
+        if np.max(regions) > 0:
+            region_sums = measure.regionprops(regions, intensity_image=grayscale_image)
+            brightest_region = max(region_sums, key=lambda r: r.mean_intensity)
+            light_y, light_x = brightest_region.centroid
+            light_mask = (regions == brightest_region.label).astype(np.uint8)
+            light_mask_cluster = light_mask
+        else:
+            light_x, light_y = np.nan, np.nan
+            light_mask_cluster = np.zeros_like(dominant, dtype=np.uint8)
+        return light_mask_cluster, light_x, light_y
+
+
+    def dominant_region(self, image, threshold=128):
+        from scipy.ndimage import label
+        image = ImageOps.invert(image.convert("L"))
+        binary_image = image.point(lambda x: 255 if x > threshold else 0, mode="1")
+        l, n = label(np.array(binary_image))
+        sizes = np.bincount(l.flatten())
+        dominant = 0
+        try:
+            dominant = np.argmax(sizes[1:]) + 1
+        except ValueError:
+            pass
+        dominant_region_mask = (l == dominant).astype(np.uint8) * 255
+        result = Image.fromarray(dominant_region_mask, mode="L")
+        return result.convert("RGB")
+        
+    def create_direct_occlusion(self, rgb_image, depth_image, strength=1.0, radius=10, threshold=200, colored=False):
+        rgb_normalized = np.array(rgb_image, dtype=np.float32) / 255.0
+        depth_normalized = np.array(depth_image, dtype=np.float32) / 255.0
+        height, width, _ = rgb_normalized.shape
+        light_mask, light_x, light_y = self.find_light_source(rgb_normalized, threshold)
+        occlusion_array = calculate_direct_occlusion_factor(rgb_normalized, depth_normalized, height, width, radius)
+        #occlusion_scaled = (occlusion_array / np.max(occlusion_array) * 255).astype(np.uint8)
+        occlusion_scaled = ((occlusion_array - np.min(occlusion_array)) / (np.max(occlusion_array) - np.min(occlusion_array)) * 255).astype(np.uint8)
+        occlusion_image = Image.fromarray(occlusion_scaled, mode="L")
+        occlusion_image = occlusion_image.filter(ImageFilter.GaussianBlur(radius=0.5))
+        occlusion_image = occlusion_image.filter(ImageFilter.SMOOTH_MORE)
+
+        if colored:
+            occlusion_result = Image.composite(
+                Image.new("RGB", rgb_image.size, (0, 0, 0)),
+                rgb_image,
+                occlusion_image
+            )
+            occlusion_result = ImageOps.autocontrast(occlusion_result, cutoff=(0, strength))
+        else:
+            occlusion_result = Image.blend(occlusion_image, occlusion_image, strength)
+
+        light_image = ImageOps.invert(Image.fromarray(light_mask * 255, mode="L"))
+        
+        direct_occlusion_image = ImageChops.screen(rgb_image, occlusion_result.convert("RGB"))
+
+        return direct_occlusion_image, occlusion_result, occlusion_image, light_image
 
 # EXPORT API
 
@@ -7665,6 +7972,68 @@ class WAS_Latent_Noise:
 
 # MIDAS DEPTH APPROXIMATION NODE
 
+class MiDaS_Model_Loader:
+    def __init__(self):
+        self.midas_dir = os.path.join(MODELS_DIR, 'midas')
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "midas_model": (["DPT_Large", "DPT_Hybrid"],),
+            },
+        }
+
+    RETURN_TYPES = ("MIDAS_MODEL",)
+    RETURN_NAMES = ("midas_model",)
+    FUNCTION = "load_midas_model"
+
+    CATEGORY = "WAS Suite/Loaders"
+
+    def load_midas_model(self, midas_model):
+
+        global MIDAS_INSTALLED
+
+        if not MIDAS_INSTALLED:
+            self.install_midas()
+
+        if midas_model == 'DPT_Large':
+            model_name = 'dpt_large_384.pt'
+        elif midas_model == 'DPT_Hybrid':
+            model_name = 'dpt_hybrid_384.pt'
+        else:
+            model_name = 'dpt_large_384.pt'
+            
+        model_path = os.path.join(self.midas_dir, 'checkpoints'+os.sep+model_name)
+
+        torch.hub.set_dir(self.midas_dir)
+        if os.path.exists(model_path):
+            cstr(f"Loading MiDaS Model from `{model_path}`").msg.print()
+            midas_type = model_path
+        else:
+            cstr("Downloading and loading MiDaS Model...").msg.print()
+        midas = torch.hub.load("intel-isl/MiDaS", midas_model, trust_repo=True)
+        device = torch.device("cpu")
+
+        cstr(f"MiDaS is using passive device `{device}` until in use.").msg.print()
+
+        midas.to(device)
+        midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
+        transform = midas_transforms.dpt_transform
+            
+        return ( (midas, transform), )
+            
+    def install_midas(self):
+        global MIDAS_INSTALLED
+        if 'timm' not in packages():
+            cstr("Installing timm...").msg.print()
+            subprocess.check_call(
+                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
+        MIDAS_INSTALLED = True
+        
+
+# MIDAS DEPTH APPROXIMATION NODE
+
 class MiDaS_Depth_Approx:
     def __init__(self):
         self.midas_dir = os.path.join(MODELS_DIR, 'midas')
@@ -7675,9 +8044,12 @@ class MiDaS_Depth_Approx:
             "required": {
                 "image": ("IMAGE",),
                 "use_cpu": (["false", "true"],),
-                "midas_model": (["DPT_Large", "DPT_Hybrid", "DPT_Small"],),
+                "midas_type": (["DPT_Large", "DPT_Hybrid"],),
                 "invert_depth": (["false", "true"],),
             },
+            "optional": {
+                "midas_model": ("MIDAS_MODEL",),
+            }
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -7686,7 +8058,7 @@ class MiDaS_Depth_Approx:
 
     CATEGORY = "WAS Suite/Image/AI"
 
-    def midas_approx(self, image, use_cpu, midas_model, invert_depth):
+    def midas_approx(self, image, use_cpu, midas_type, invert_depth, midas_model=None):
 
         global MIDAS_INSTALLED
 
@@ -7694,22 +8066,40 @@ class MiDaS_Depth_Approx:
             self.install_midas()
 
         import cv2 as cv
-
-        cstr("Downloading and loading MiDaS Model...").msg.print()
-        torch.hub.set_dir(self.midas_dir)
-        midas = torch.hub.load("intel-isl/MiDaS", midas_model, trust_repo=True)
-        device = torch.device("cuda") if torch.cuda.is_available(
-        ) and use_cpu == 'false' else torch.device("cpu")
-
-        cstr(f"MiDaS is using device: {device}").msg.print()
-
-        midas.to(device).eval()
-        midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
-
-        if midas_model == "DPT_Large" or midas_model == "DPT_Hybrid":
-            transform = midas_transforms.dpt_transform
+        
+        if midas_model:
+        
+            midas = midas_model[0]
+            transform = midas_model[1]
+            device = torch.device("cuda") if torch.cuda.is_available() and use_cpu == 'false' else torch.device("cpu")
+            cstr(f"MiDaS is using device: {device}").msg.print()
+            midas.to(device).eval()
+            
         else:
-            transform = midas_transforms.small_transform
+        
+            if midas_model == 'DPT_Large':
+                model_name = 'dpt_large_384.pt'
+            elif midas_model == 'DPT_Hybrid':
+                model_name = 'dpt_hybrid_384.pt'
+            else:
+                model_name = 'dpt_large_384.pt'
+                
+            model_path = os.path.join(self.midas_dir, 'checkpoints'+os.sep+model_name)
+
+            torch.hub.set_dir(self.midas_dir)
+            if os.path.exists(model_path):
+                cstr(f"Loading MiDaS Model from `{model_path}`").msg.print()
+                midas_type = model_path
+            else:
+                cstr("Downloading and loading MiDaS Model...").msg.print()
+            midas = torch.hub.load("intel-isl/MiDaS", midas_type, trust_repo=True)
+
+            cstr(f"MiDaS is using device: {device}").msg.print()
+
+            midas.to(device).eval()
+            midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
+
+            transform = midas_transforms.dpt_transform
             
         tensor_images = []
         for i, img in enumerate(image):
@@ -7719,7 +8109,7 @@ class MiDaS_Depth_Approx:
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
             input_batch = transform(img).to(device)
 
-            cstr(f"Approximating depth for image {i}").msg.print()
+            cstr(f"Approximating depth for image {i+1}/{len(image)}").msg.print()
 
             with torch.no_grad():
                 prediction = midas(input_batch)
@@ -7746,9 +8136,9 @@ class MiDaS_Depth_Approx:
             tensor_images.append(pil2tensor(depth.convert("RGB")))
             
         tensor_images = torch.cat(tensor_images, dim=0)
-
-        del midas, device, midas_transforms
-        del transform, img, input_batch, prediction
+        if not midas_model:
+            del midas, device, midas_transforms
+        del midas, transform, img, input_batch, prediction
 
         return (tensor_images, )
 
@@ -8907,7 +9297,7 @@ class WAS_Text_Add_Token_Input:
         
         # Current Tokens
         if print_current_tokens == "true":
-            print(f'\033[34mWAS Node Suite\033[0m Current Custom Tokens:')
+            cstr(f'Current Custom Tokens:').msg.print()
             print(json.dumps(tk.custom_tokens, indent=4))
         
         return (token_name, token_value)
@@ -9135,7 +9525,7 @@ class WAS_Text_Load_Line_From_File:
             self.index += 1
             if self.index == len(self.lines):
                 self.index = 0
-            print(f'\033[34mWAS Node Suite \033[33mTextBatch\033[0m Index:', self.index)
+            cstr(f'{cstr.color.YELLOW}TextBatch{cstr.msg.END} Index: {self.index}')
             return line, self.lines
 
         def get_line_by_index(self, index):
@@ -9144,7 +9534,7 @@ class WAS_Text_Load_Line_From_File:
                 return None, []
             self.index = index
             line = self.lines[self.index]
-            print(f'\033[34mWAS Node Suite \033[33mTextBatch\033[0m Index:', self.index)
+            cstr(f'{cstr.color.YELLOW}TextBatch{cstr.msg.END} Index: {self.index}')
             return line, self.lines
 
         def store_index(self):
@@ -9262,7 +9652,95 @@ class WAS_Text_Random_Prompt:
             prompt = "404 not found error"
 
         return prompt
+
+# BLIP Model Loader
+
+class WAS_BLIP_Model_Loader:
+    def __init__(self):
+        pass
         
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "blip_model": (["caption", "interrogate"], ),
+            }
+        }
+        
+    RETURN_TYPES = ("BLIP_MODEL",)
+    FUNCTION = "blip_model"
+    
+    CATEGORY = "WAS Suite/Loaders"
+    
+    def blip_model(self, blip_model):
+    
+        if ( 'timm' not in packages() 
+            or 'transformers' not in packages() 
+            or 'GitPython' not in packages()
+            or 'fairscale' not in packages() ):
+            cstr(f"Modules or packages are missing to use BLIP models. Please run the `{os.path.join(WAS_SUITE_ROOT, 'requirements.txt')}` through ComfyUI's ptyhon executable.").error.print()
+            exit
+            
+        if 'transformers==4.26.1' not in packages(True):
+            cstr(f"`transformers==4.26.1` is required for BLIP models. Please run the `{os.path.join(WAS_SUITE_ROOT, 'requirements.txt')}` through ComfyUI's ptyhon executable.").error.print()
+            exit
+            
+        blip_dir = os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')
+
+        if not os.path.exists(blip_dir):
+            from git.repo.base import Repo
+            cstr("Installing BLIP...").msg.print()
+            Repo.clone_from('https://github.com/WASasquatch/BLIP-Python', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
+            
+        sys.path.append(blip_dir)
+            
+        device = 'cpu'
+        conf = getSuiteConfig()
+        size = 384
+            
+        if blip_model == 'caption':
+
+            from models.blip import blip_decoder
+            
+            blip_dir = os.path.join(MODELS_DIR, 'blip')
+            if not os.path.exists(blip_dir):
+                os.makedirs(blip_dir, exist_ok=True)
+                
+            torch.hub.set_dir(blip_dir)
+        
+            if conf.__contains__('blip_model_url'):
+                model_url = conf['blip_model_url']
+            else:
+                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+                
+            model = blip_decoder(pretrained=model_url, image_size=size, vit='base')
+            model.eval()
+            model = model.to(device)
+            
+        elif blip_model == 'interrogate':
+        
+            from models.blip_vqa import blip_vqa
+            
+            blip_dir = os.path.join(MODELS_DIR, 'blip')
+            if not os.path.exists(blip_dir):
+                os.makedirs(blip_dir, exist_ok=True)
+                
+            torch.hub.set_dir(blip_dir)
+
+            if conf.__contains__('blip_model_vqa_url'):
+                model_url = conf['blip_model_vqa_url']
+            else:
+                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth'
+        
+            model = blip_vqa(pretrained=model_url, image_size=size, vit='base')
+            model.eval()
+            model = model.to(device)
+            
+        result = ( model, blip_model )
+            
+        return ( result, )
+
+    
         
 # BLIP CAPTION IMAGE
 
@@ -9277,6 +9755,9 @@ class WAS_BLIP_Analyze_Image:
                 "image": ("IMAGE",),
                 "mode": (["caption", "interrogate"], ),
                 "question": ("STRING", {"default": "What does the background consist of?", "multiline": True}),
+            },
+            "optional": {
+                "blip_model": ("BLIP_MODEL",)
             }
         }
         
@@ -9285,7 +9766,7 @@ class WAS_BLIP_Analyze_Image:
     
     CATEGORY = "WAS Suite/Text/AI"
     
-    def blip_caption_image(self, image, mode, question):
+    def blip_caption_image(self, image, mode, question, blip_model=None):
     
         if ( 'timm' not in packages() 
             or 'transformers' not in packages() 
@@ -9340,25 +9821,31 @@ class WAS_BLIP_Analyze_Image:
             tensor = transformImage_legacy(image, size, device)
         else:
             tensor = transformImage(image, size, device)
+            
+        if blip_model:
+            mode = blip_model[1]
         
         if mode == 'caption':
         
-            from models.blip import blip_decoder
-            
-            blip_dir = os.path.join(MODELS_DIR, 'blip')
-            if not os.path.exists(blip_dir):
-                os.makedirs(blip_dir, exist_ok=True)
-                
-            torch.hub.set_dir(blip_dir)
-        
-            if conf.__contains__('blip_model_url'):
-                model_url = conf['blip_model_url']
+            if blip_model:
+                model = blip_model[0].to(device)
             else:
-                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+                from models.blip import blip_decoder
                 
-            model = blip_decoder(pretrained=model_url, image_size=size, vit='base')
-            model.eval()
-            model = model.to(device)
+                blip_dir = os.path.join(MODELS_DIR, 'blip')
+                if not os.path.exists(blip_dir):
+                    os.makedirs(blip_dir, exist_ok=True)
+                    
+                torch.hub.set_dir(blip_dir)
+            
+                if conf.__contains__('blip_model_url'):
+                    model_url = conf['blip_model_url']
+                else:
+                    model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+                    
+                model = blip_decoder(pretrained=model_url, image_size=size, vit='base')
+                model.eval()
+                model = model.to(device)
             
             with torch.no_grad():
                 caption = model.generate(tensor, sample=False, num_beams=6, max_length=74, min_length=20) 
@@ -9369,22 +9856,25 @@ class WAS_BLIP_Analyze_Image:
                 
         elif mode == 'interrogate':
         
-            from models.blip_vqa import blip_vqa
-            
-            blip_dir = os.path.join(MODELS_DIR, 'blip')
-            if not os.path.exists(blip_dir):
-                os.makedirs(blip_dir, exist_ok=True)
-                
-            torch.hub.set_dir(blip_dir)
-
-            if conf.__contains__('blip_model_vqa_url'):
-                model_url = conf['blip_model_vqa_url']
+            if blip_model:
+                model = blip_model[0].to(device)
             else:
-                model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth'
-        
-            model = blip_vqa(pretrained=model_url, image_size=size, vit='base')
-            model.eval()
-            model = model.to(device)
+                from models.blip_vqa import blip_vqa
+                
+                blip_dir = os.path.join(MODELS_DIR, 'blip')
+                if not os.path.exists(blip_dir):
+                    os.makedirs(blip_dir, exist_ok=True)
+                    
+                torch.hub.set_dir(blip_dir)
+
+                if conf.__contains__('blip_model_vqa_url'):
+                    model_url = conf['blip_model_vqa_url']
+                else:
+                    model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth'
+            
+                model = blip_vqa(pretrained=model_url, image_size=size, vit='base')
+                model.eval()
+                model = model.to(device)
 
             with torch.no_grad():
                 answer = model(tensor, question, train=False, inference='generate') 
@@ -11491,6 +11981,7 @@ class WAS_Samples_Passthrough_Stat_System:
 
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
+    "BLIP Model Loader": WAS_BLIP_Model_Loader,
     "Cache Node": WAS_Cache,
     "Checkpoint Loader": WAS_Checkpoint_Loader, 
     "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
@@ -11516,6 +12007,8 @@ NODE_CLASS_MAPPINGS = {
     "Load Cache": WAS_Load_Cache,
     "Logic Boolean": WAS_Boolean,
     "Lora Loader": WAS_Lora_Loader,
+    "Image SSAO (Ambient Occlusion)": WAS_Image_Ambient_Occlusion,
+    "Image SSDO (Direct Occlusion)": WAS_Image_Direct_Occlusion,
     "Image Analyze": WAS_Image_Analyze,
     "Image Batch": WAS_Image_Batch,
     "Image Blank": WAS_Image_Blank,
@@ -11604,6 +12097,7 @@ NODE_CLASS_MAPPINGS = {
     "Mask Threshold Region": WAS_Mask_Threshold_Region,
     "Masks Combine Regions": WAS_Mask_Combine,
     "Masks Combine Batch": WAS_Mask_Combine_Batch,
+    "MiDaS Model Loader": MiDaS_Model_Loader,
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Model Input Switch": WAS_Model_Input_Switch,

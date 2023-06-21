@@ -22,6 +22,7 @@
 
 <br/>
 
+ - BLIP Model Loader: Load a BLIP model to input into the BLIP Analyze node
  - BLIP Analyze Image: Get a text caption from a image, or interrogate the image with a question.
    - Model will download automatically from default URL, but you can point the download to another location/caption model in `was_suite_config`
    - Models will be stored in `ComfyUI/models/blip/checkpoints/`
@@ -58,6 +59,8 @@
    - RGB Levels
      - Depends on `matplotlib`, will attempt to install on first run
  - Diffusers Hub Down-Loader: Download a diffusers model from the HuggingFace Hub and load it
+ - Image SSAO (Ambient Occlusion): [Expiremental Beta Node] Create Screen Space Ambient Occlusion with a image and MiDaS depth approximation (or provided depth map).
+ - Image SSDO (Direct Occlusion): [Expiremental Beta Node] Create a Screen Space Direct Occlusion with a image input. Direct Occlusion presents you with direct lighting highliths, similar to how Ambient Occlusion finds the crevices and shadowy areas around objets.
  - Image Batch: Create one batch out of multiple batched tensors.
  - Image Blank: Create a blank image in any color
  - Image Blend by Mask: Blend two images by a mask
@@ -180,6 +183,7 @@
  - Latent Upscale by Factor: Upscale a latent image by a factor
  - Latent Input Switch: Switch between two latent inputs 
  - Logic Boolean: A simple `1` or `0` output to use with logic
+ - MiDaS Model Loader: Load a MiDaS model as an optional input for MiDaS Depth Approximation
  - MiDaS Depth Approximation: Produce a depth approximation of a single image input
  - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
  - Number Operation
