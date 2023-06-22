@@ -8338,8 +8338,8 @@ class WAS_NSP_CLIPTextEncoder:
         }
 
     OUTPUT_NODE = True
-    RETURN_TYPES = ("CONDITIONING",)
-    RETURN_NAMES = ("conditioning",)
+    RETURN_TYPES = ("CONDITIONING","STRING")
+    RETURN_NAMES = ("conditioning","prompt")
     FUNCTION = "nsp_encode"
 
     CATEGORY = "WAS Suite/Conditioning"
@@ -8355,7 +8355,7 @@ class WAS_NSP_CLIPTextEncoder:
         new_text, text_vars = parse_prompt_vars(new_text)
         cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
         
-        return ([[clip.encode(new_text), {}]], { "ui": { "string": new_text } })
+        return ([[clip.encode(new_text), {}]], new_text, { "ui": { "string": new_text } })
 
 
 #! SAMPLING NODES
@@ -12189,7 +12189,8 @@ if os.path.exists(BKAdvCLIP_dir):
                     }
                 }
             
-        RETURN_TYPES = ("CONDITIONING",)
+        RETURN_TYPES = ("CONDITIONING","STRING")
+        RETURN_NAMES = ("conditioning","prompt")
         OUTPUT_NODE = True
         FUNCTION = "encode"
 
@@ -12208,7 +12209,7 @@ if os.path.exists(BKAdvCLIP_dir):
             
             encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
 
-            return ([[encoded, {}]], { "ui": { "string": new_text } } )
+            return ([[encoded, {}]], new_text, { "ui": { "string": new_text } } )
                 
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
 
