@@ -3188,7 +3188,7 @@ class WAS_Image_Paste_Face_Crop:
         blended_mask = Image.new('L', image.size, 0)
         crop_padded = Image.new('RGBA', image.size, (0, 0, 0, 0))
         blended_image.paste(image, (0, 0))
-        crop_padded.paste(crop_image, (left, top))
+        crop_padded.paste(crop_image, (top, left)) 
         crop_mask = Image.new('L', crop_image.size, 0)
         
         if top > 0:
@@ -3208,7 +3208,7 @@ class WAS_Image_Paste_Face_Crop:
             crop_mask = ImageChops.screen(crop_mask, gradient_image)
 
         crop_mask = ImageOps.invert(crop_mask)
-        blended_mask.paste(crop_mask, (left, top))
+        blended_mask.paste(crop_mask, (top, left))
         blended_mask = blended_mask.convert("L")
         blended_image.paste(crop_padded, (0, 0), blended_mask)
 
