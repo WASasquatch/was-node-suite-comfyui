@@ -9878,6 +9878,37 @@ class WAS_BLIP_Analyze_Image:
             cstr(f"The selected mode `{mode}` is not a valid selection!").error.print()
             return ('Invalid BLIP mode!', )
             
+            
+# CLIPSeg Model Loader
+            
+class WAS_CLIPSeg_Model_Loader:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("STRING", {"default": "CIDAS/clipseg-rd64-refined", "multiline": False}),
+            },
+        }
+
+    RETURN_TYPES = ("CLIPSEG_MODEL",)
+    RETURN_NAMES = ("clipseg_model",)
+    FUNCTION = "clipseg_model"
+
+    CATEGORY = "WAS Suite/Loaders"
+
+    def clipseg_model(self, model):
+        from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
+
+        cache = os.path.join(MODELS_DIR, 'clipseg')
+
+        inputs = CLIPSegProcessor.from_pretrained(model, cache_dir=cache)
+        model = CLIPSegForImageSegmentation.from_pretrained(model, cache_dir=cache)
+
+        return ( (inputs, model), ) 
+            
 # CLIPSeg Node
         
 class WAS_CLIPSeg:
@@ -9891,6 +9922,9 @@ class WAS_CLIPSeg:
                 "image": ("IMAGE",),
                 "text": ("STRING", {"default":"", "multiline": False}),
             },
+            "optional": {
+                "clipseg_model": ("CLIPSEG_MODEL",),
+            }
         }
 
     RETURN_TYPES = ("MASK", "IMAGE")
@@ -9899,14 +9933,18 @@ class WAS_CLIPSeg:
 
     CATEGORY = "WAS Suite/Image/Masking"
 
-    def CLIPSeg_image(self, image, text=None):
+    def CLIPSeg_image(self, image, text=None, clipseg_model=None):
         from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
         
         image = tensor2pil(image)
         cache = os.path.join(MODELS_DIR, 'clipseg')
 
-        inputs = CLIPSegProcessor.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
-        model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
+        if clipseg_model:
+            inputs = clipseg_model[0]
+            model = clipseg_model[1]
+        else:
+            inputs = CLIPSegProcessor.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
+            model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
 
         with torch.no_grad():
             result = model(**inputs(text=text, images=image, padding=True, return_tensors="pt"))
@@ -9916,9 +9954,7 @@ class WAS_CLIPSeg:
         mask = mask.unsqueeze(0)
         mask = tensor2pil(mask).convert("L")
         mask = mask.resize(image.size)
-        
-        del inputs, model, result, tensor
-        
+                
         return (pil2mask(mask), pil2tensor(ImageOps.invert(mask.convert("RGB"))))           
         
 # CLIPSeg Node
@@ -12057,6 +12093,7 @@ NODE_CLASS_MAPPINGS = {
     "Create Morph Image from Path": WAS_Image_Morph_GIF_By_Path,
     "Create Video from Path": WAS_Create_Video_From_Path,
     "CLIPSeg Masking": WAS_CLIPSeg,
+    "CLIPSeg Model Loader": WAS_CLIPSeg_Model_Loader,
     "CLIPSeg Batch Masking": WAS_CLIPSeg_Batch,
     "Convert Masks to Images": WAS_Mask_To_Image,
     "Control Net Model Input Switch": WAS_Control_Net_Input_Switch,
