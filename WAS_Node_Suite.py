@@ -200,6 +200,7 @@ was_conf_template = {
                         "h264": ".mkv",
                     },
                     "wildcards_path": os.path.join(WAS_SUITE_ROOT, "wildcards"),
+                    "wildcard_api": True,
                 }
 
 # Create, Load, or Update Config
@@ -408,6 +409,29 @@ def get_sha256(file_path):
         for chunk in iter(lambda: file.read(4096), b''):
             sha256_hash.update(chunk)
     return sha256_hash.hexdigest()
+    
+# Download File
+def download_file(url, filename=None, path=None):
+    if not filename:
+        filename = url.split('/')[-1]
+    if not path:
+        path = '.'
+    save_path = os.path.join(path, filename)
+    response = requests.get(url, stream=True)
+    if response.status_code == requests.codes.ok:
+        file_size = int(response.headers.get('Content-Length', 0))
+        with open(save_path, 'wb') as file:
+            with tqdm(total=file_size, unit='B', unit_scale=True, unit_divisor=1024) as progress:
+                for chunk in response.iter_content(chunk_size=1024):
+                    file.write(chunk)
+                    progress.update(len(chunk))
+        print(f"Downloaded file saved at: {save_path}")
+        return True
+    elif response.status_code == requests.codes.not_found:
+        cstr("Error: File not found.").error.print()
+    else:
+        cstr(f"Error: Failed to download file. Status code: {response.status_code}").error.print()
+    return False
     
 # NSP Function
 
@@ -8338,8 +8362,8 @@ class WAS_NSP_CLIPTextEncoder:
         }
 
     OUTPUT_NODE = True
-    RETURN_TYPES = ("CONDITIONING",)
-    RETURN_NAMES = ("conditioning",)
+    RETURN_TYPES = ("CONDITIONING", TEXT_TYPE, TEXT_TYPE)
+    RETURN_NAMES = ("conditioning", "parsed_text", "raw_text")
     FUNCTION = "nsp_encode"
 
     CATEGORY = "WAS Suite/Conditioning"
@@ -8355,7 +8379,7 @@ class WAS_NSP_CLIPTextEncoder:
         new_text, text_vars = parse_prompt_vars(new_text)
         cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
         
-        return ([[clip.encode(new_text), {}]], { "ui": { "string": new_text } })
+        return ([[clip.encode(new_text), {}]], new_text, text, { "ui": { "string": new_text } })
 
 
 #! SAMPLING NODES
@@ -9767,33 +9791,6 @@ class WAS_BLIP_Analyze_Image:
     CATEGORY = "WAS Suite/Text/AI"
     
     def blip_caption_image(self, image, mode, question, blip_model=None):
-    
-        if ( 'timm' not in packages() 
-            or 'transformers' not in packages() 
-            or 'GitPython' not in packages()
-            or 'fairscale' not in packages() ):
-            cstr("Installing BLIP dependencies...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'transformers==4.26.1', 'timm>=0.4.12', 'gitpython', 'fairscale>=0.4.4'])
-           
-        if 'transformers==4.26.1' not in packages(True):
-            cstr("Installing BLIP compatible `transformers` (transformers==4.26.1)...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', '--upgrade', '--force-reinstall', 'transformers==4.26.1'])
-
-        if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')):
-            from git.repo.base import Repo
-            cstr("Installing BLIP...").msg.print()
-            Repo.clone_from('https://github.com/WASasquatch/BLIP-Python', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
-            
-        def transformImage_legacy(input_image, image_size, device):
-            raw_image = input_image.convert('RGB')   
-            raw_image = raw_image.resize((image_size, image_size))
-            transform = transforms.Compose([
-                transforms.Resize(raw_image.size, interpolation=InterpolationMode.BICUBIC),
-                transforms.ToTensor(),
-                transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-                ]) 
-            image = transform(raw_image).unsqueeze(0).to(device)   
-            return image
             
         def transformImage(input_image, image_size, device):
             raw_image = input_image.convert('RGB')   
@@ -9804,8 +9801,8 @@ class WAS_BLIP_Analyze_Image:
                 transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
             ]) 
             image = transform(raw_image).unsqueeze(0).to(device)   
-            return image.view(1, -1, image_size, image_size)  # Change the shape of the output tensor
-        
+            return image.view(1, -1, image_size, image_size)  # Change the shape of the output tensor       
+    
         sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
         
         from torchvision import transforms
@@ -9816,11 +9813,7 @@ class WAS_BLIP_Analyze_Image:
         conf = getSuiteConfig()
         image = tensor2pil(image)
         size = 384
-        
-        if 'transformers==4.26.1' in packages(True):
-            tensor = transformImage_legacy(image, size, device)
-        else:
-            tensor = transformImage(image, size, device)
+        tensor = transformImage(image, size, device)
             
         if blip_model:
             mode = blip_model[1]
@@ -10029,6 +10022,75 @@ class WAS_CLIPSeg_Batch:
         del inputs, model, result, tensor, masks, mask_images, images_pil
         
         return (images_tensor, masks_tensor, mask_images_tensor)
+
+
+# Lang SAM Model Loader
+# TODO: Fix Lang SAM Dependency Issues 
+
+class WAS_Lang_SAM_Model_Loader:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "model_type": (["vit_b", "vit_l", "vit_h"],),
+            }
+        }
+
+    RETURN_TYPES = ("LANG_SAM_MODEL",)
+    RETURN_NAMES = ("lang_sam_model",)
+    
+    CATEGORY = "WAS Suite/Loaders"
+    
+    FUNCTION = "lang_sam_model"
+    
+    def lang_sam_model(self, model_type):
+
+        from lang_sam import LangSAM
+        
+        model = LangSAM(model_type=model_type)
+        model.device = 'cpu'
+
+        return ( model, )
+
+
+# Lang SAM Masking
+
+class WAS_Lang_SAM_Masking:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "lang_sam_model": ("LANG_SAM_MODEL",),
+                "image": ("IMAGE",),
+                "prompt": ("STRING", {"default": "", "multiline": False}),
+            }
+        }
+
+    RETURN_TYPES = ("LANG_SAM_MODEL",)
+    RETURN_NAMES = ("lang_sam_model",)
+    
+    CATEGORY = "WAS Suite/Image/Masking"
+    
+    FUNCTION = "lang_sam_masking"
+    
+    def lang_sam_masking(self, lang_sam_model, image, prompt):
+
+        lang_sam_model.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        masks, boxes, phrases, logits = lang_sam_model.predict(tensor2pil(image), prompt)
+        
+        print(masks)
+        print(boxes)
+        print(logits)
+
+        return ( LandSAM(), )
+
 
 # SAM MODEL LOADER
 
@@ -12121,6 +12183,8 @@ NODE_CLASS_MAPPINGS = {
     "SAM Parameters": WAS_SAM_Parameters,
     "SAM Parameters Combine": WAS_SAM_Combine_Parameters,
     "SAM Image Mask": WAS_SAM_Image_Mask,
+    #"LangSAM Model Loader": WAS_Lang_SAM_Model_Loader,
+    #"LangSAM Masking": WAS_Lang_SAM_Masking,
     "Samples Passthrough (Stat System)": WAS_Samples_Passthrough_Stat_System,
     "String to Text": WAS_String_To_Text,
     "Image Bounds": WAS_Image_Bounds,
@@ -12189,7 +12253,8 @@ if os.path.exists(BKAdvCLIP_dir):
                     }
                 }
             
-        RETURN_TYPES = ("CONDITIONING",)
+        RETURN_TYPES = ("CONDITIONING", TEXT_TYPE, TEXT_TYPE)
+        RETURN_NAMES = ("conditioning", "parsed_text", "raw_text")
         OUTPUT_NODE = True
         FUNCTION = "encode"
 
@@ -12208,7 +12273,7 @@ if os.path.exists(BKAdvCLIP_dir):
             
             encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
 
-            return ([[encoded, {}]], { "ui": { "string": new_text } } )
+            return ([[encoded, {}]], new_text, text, { "ui": { "string": new_text } } )
                 
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
 
@@ -12279,8 +12344,7 @@ if was_conf.__contains__('suppress_uncomfy_warnings'):
         warnings.filterwarnings("ignore", category=UserWarning, module="safetensors")
         warnings.filterwarnings("ignore", category=UserWarning, module="torch")
         warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
-
-
+     
 # Well we got here, we're as loaded as we're gonna get. 
 print(" ".join([cstr("Finished.").msg, cstr("Loaded").green, cstr(len(NODE_CLASS_MAPPINGS.keys())).end, cstr("nodes successfully.").green]))
 
@@ -12370,4 +12434,3 @@ if show_quotes:
         '\033[93m"Every strike brings me closer to the next home run."\033[0m\033[3m - Babe Ruth',
     ]
     print(f'\n\t\033[3m{random.choice(art_quotes)}\033[0m\n') 
-    
