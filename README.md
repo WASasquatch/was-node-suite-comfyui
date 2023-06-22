@@ -11,6 +11,7 @@
 
 # Important Updates
 
+ - **[Update 6/22/2023]** The latest [commit to ComfyUI](https://github.com/comfyanonymous/ComfyUI/commit/f87ec10a97664c4a8e00d856c4c48836cfbfcbdf) breaks **CLIPTextEncode (BlenderNeko Advanced + NSP)** node. A fix should come soon, hopefully. 
  - **[Updated 5/29/2023]** `ASCII` **is deprecated**. The new preferred method of text node output is `STRING`. This is a change from `ASCII` so that it is more clear what data is being passed.
    - The `was_suite_config.json` will automatically set `use_legacy_ascii_text` to `false`. 
  -  [Video Nodes](https://github.com/WASasquatch/was-node-suite-comfyui#video-nodes) - There are two new video nodes, `Write to Video` and `Create Video from Path`. These are experimental nodes. 
