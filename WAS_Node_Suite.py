@@ -11372,7 +11372,7 @@ class WAS_Control_Net_Input_Switch:
             }
         }
 
-    RETURN_TYPES = ("COPNTROL_NET",)
+    RETURN_TYPES = ("CONTROL_NET",)
     FUNCTION = "control_net_switch"
 
     CATEGORY = "WAS Suite/Logic"
