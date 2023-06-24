@@ -8445,6 +8445,8 @@ class WAS_KSampler_Cycle:
                     "neg_add_strength": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
                     "neg_add_strength_scaling": (["enable", "disable"],),
                     "neg_add_strength_cutoff": ("FLOAT", {"default": 2.0, "min": 0.01, "max": 10.0, "step": 0.01}),
+                    "sharpen_strength": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 10.0, "step": 0.01}),
+                    "sharpen_radius": ("INT", {"default": 2, "min": 1, "max": 12, "step": 1}),
                 }
             }
 
@@ -8457,7 +8459,7 @@ class WAS_KSampler_Cycle:
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, tiled_vae, upscale_factor, 
                 upscale_steps, starting_denoise, cycle_denoise, scale_denoise, scale_sampling, vae, pos_additive=None, pos_add_strength=None, 
                 pos_add_strength_scaling=None, pos_add_strength_cutoff=None, neg_additive=None, neg_add_strength=None, 
-                neg_add_strength_scaling=None, neg_add_strength_cutoff=None, upscale_model=None):
+                neg_add_strength_scaling=None, neg_add_strength_cutoff=None, upscale_model=None, sharpen_strength=0, sharpen_radius=2):
                 
         division_factor = upscale_steps if steps >= upscale_steps else steps
         current_upscale_factor = upscale_factor ** (1 / (division_factor - 1))
@@ -8535,10 +8537,12 @@ class WAS_KSampler_Cycle:
                     }
                     import comfy_extras.nodes_upscale_model
                     upscaler = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel()
+                    
                     if tiled_vae:
                         tensors = vae.decode_tiled(samples[0]['samples'])
                     else:
                         tensors = vae.decode(samples[0]['samples'])
+                        
                     original_size = tensor2pil(tensors[0]).size
                     new_width = round(original_size[0] * current_upscale_factor)
                     new_height = round(original_size[1] * current_upscale_factor)
@@ -8547,8 +8551,16 @@ class WAS_KSampler_Cycle:
                     upscaled_tensors = upscaler.upscale(upscale_model, tensors)
                     tensor_images = []
                     for tensor in upscaled_tensors[0]:
-                        tensor_images.append(pil2tensor(tensor2pil(tensor).resize((new_width, new_height), Image.Resampling(resample_filters[scale_sampling]))))
+                        tensor = pil2tensor(tensor2pil(tensor).resize((new_width, new_height), Image.Resampling(resample_filters[scale_sampling])))
+                        size = max(tensor2pil(tensor).size)
+                        if sharpen_strength != 0.0:
+                            if size > 1024:
+                                sharpen_radius *= 2
+                                tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
+                        tensor_images.append(tensor)
+
                     tensor_images = torch.cat(tensor_images, dim=0)
+                    
                     if tiled_vae:
                         latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
                     else:
@@ -8558,18 +8570,26 @@ class WAS_KSampler_Cycle:
                         tensors = vae.decode_tiled(samples[0]['samples'])
                     else:
                         tensors = vae.decode(samples[0]['samples'])
+                        
                     tensor_images = []
                     scale = WAS_Image_Rescale()
                     for tensor in tensors:
-                        tensor_images.append(scale.image_rescale(tensor.unsqueeze(0), "rescale", "true", scale_sampling, current_upscale_factor, 0, 0)[0])
+                        tensor = scale.image_rescale(tensor.unsqueeze(0), "rescale", "true", scale_sampling, current_upscale_factor, 0, 0)[0]
+                        size = max(tensor2pil(tensor).size)
+                        if sharpen_strength > 0.0:
+                            if size > 1024:
+                                sharpen_radius *= 2
+                            tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
+                        tensor_images.append(tensor)
                     tensor_images = torch.cat(tensor_images, dim=0)
+             
                     if tiled_vae:
                         latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
                     else:
                         latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
 
                     del tensor, tensors, tensor_images, scale
-
+                    
         return (latent_image_result, )     
 
     @staticmethod
@@ -8581,6 +8601,17 @@ class WAS_KSampler_Cycle:
             y_offset = (pixels.shape[2] % 8) // 2
             pixels = pixels[:, x_offset:x + x_offset, y_offset:y + y_offset, :]
         return pixels
+        
+    @staticmethod
+    def unsharp_filter(image, radius=2, amount=1.0):
+        from skimage.filters import unsharp_mask
+        img_array = np.array(image)
+        img_array = img_array / 255.0
+        sharpened = unsharp_mask(img_array, radius=radius, amount=amount)
+        sharpened = (sharpened * 255.0).astype(np.uint8)
+        sharpened_pil = Image.fromarray(sharpened)
+
+        return sharpened_pil
     
 # SEED NODE
 
