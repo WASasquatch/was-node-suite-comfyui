@@ -8437,6 +8437,14 @@ class WAS_KSampler_Cycle:
                 },
                 "optional": {
                     "upscale_model": ("UPSCALE_MODEL",),
+                    "pos_additive": ("CONDITIONING",),
+                    "neg_additive": ("CONDITIONING",),
+                    "pos_add_strength": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
+                    "pos_add_strength_scaling": (["enable", "disable"],),
+                    "pos_add_strength_cutoff": ("FLOAT", {"default": 2.0, "min": 0.01, "max": 10.0, "step": 0.01}),
+                    "neg_add_strength": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
+                    "neg_add_strength_scaling": (["enable", "disable"],),
+                    "neg_add_strength_cutoff": ("FLOAT", {"default": 2.0, "min": 0.01, "max": 10.0, "step": 0.01}),
                 }
             }
 
@@ -8446,11 +8454,17 @@ class WAS_KSampler_Cycle:
 
     CATEGORY = "WAS Suite/Sampling"
 
-    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, tiled_vae, upscale_factor, upscale_steps, starting_denoise, cycle_denoise, scale_denoise, scale_sampling, vae, upscale_model=None):
+    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, tiled_vae, upscale_factor, 
+                upscale_steps, starting_denoise, cycle_denoise, scale_denoise, scale_sampling, vae, pos_additive=None, pos_add_strength=None, 
+                pos_add_strength_scaling=None, pos_add_strength_cutoff=None, neg_additive=None, neg_add_strength=None, 
+                neg_add_strength_scaling=None, neg_add_strength_cutoff=None, upscale_model=None):
+                
         division_factor = upscale_steps if steps >= upscale_steps else steps
         current_upscale_factor = upscale_factor ** (1 / (division_factor - 1))
         tiled_vae = (tiled_vae == "enable")
         scale_denoise = (scale_denoise == "enable")
+        pos_add_strength_scaling = (pos_add_strength_scaling == "enable")
+        neg_add_strength_scaling = (neg_add_strength_scaling == "enable")
 
         WTools = WAS_Tools_Class()
 
@@ -8459,6 +8473,40 @@ class WAS_KSampler_Cycle:
                 ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
                 if i > 0 else starting_denoise 
             )
+
+            if pos_additive:
+            
+                pos_strength = (
+                    ( round(pos_add_strength * (2 ** (i-1)), 2)
+                    if i > 0
+                    else pos_add_strength )
+                    if pos_add_strength_scaling
+                    else pos_add_strength
+                )
+                pos_strength = ( 
+                    pos_add_strength_cutoff
+                    if pos_strength > pos_add_strength_cutoff
+                    else pos_strength
+                )
+                comb = nodes.ConditioningAverage()
+                positive = comb.addWeighted(pos_additive, positive, pos_strength)[0]
+                
+            if neg_additive:
+
+                neg_strength = (
+                    ( round(neg_add_strength * (2 ** (i-1)), 2)
+                    if i > 0
+                    else neg_add_strength )
+                    if neg_add_strength_scaling
+                    else neg_add_strength
+                )
+                neg_strength = ( 
+                    neg_add_strength_cutoff
+                    if neg_strength > neg_add_strength_cutoff
+                    else neg_strength
+                )
+                comb = nodes.ConditioningAverage()
+                negative = comb.addWeighted(neg_additive, negative, neg_strength)[0]
             
             if i != 0:
                 latent_image = latent_image_result
@@ -8499,7 +8547,6 @@ class WAS_KSampler_Cycle:
                     upscaled_tensors = upscaler.upscale(upscale_model, tensors)
                     tensor_images = []
                     for tensor in upscaled_tensors[0]:
-                        print(tensor.shape)
                         tensor_images.append(pil2tensor(tensor2pil(tensor).resize((new_width, new_height), Image.Resampling(resample_filters[scale_sampling]))))
                     tensor_images = torch.cat(tensor_images, dim=0)
                     if tiled_vae:
