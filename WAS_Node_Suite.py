@@ -8471,6 +8471,9 @@ class WAS_KSampler_Cycle:
         WTools = WAS_Tools_Class()
 
         for i in range(division_factor):
+        
+            cstr(f"Cycle Pass {i+1}/{division_factor}").msg.print()
+        
             denoise = ( 
                 ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
                 if i > 0 else starting_denoise 
@@ -8582,13 +8585,13 @@ class WAS_KSampler_Cycle:
                             tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
                         tensor_images.append(tensor)
                     tensor_images = torch.cat(tensor_images, dim=0)
-             
+                               
                     if tiled_vae:
                         latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
                     else:
-                        latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
-
-                    del tensor, tensors, tensor_images, scale
+                       latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
+            else:
+                latent_image_result = samples[0]
                     
         return (latent_image_result, )     
 
@@ -8607,7 +8610,7 @@ class WAS_KSampler_Cycle:
         from skimage.filters import unsharp_mask
         img_array = np.array(image)
         img_array = img_array / 255.0
-        sharpened = unsharp_mask(img_array, radius=radius, amount=amount)
+        sharpened = unsharp_mask(img_array, radius=radius, amount=amount, channel_axis=2)
         sharpened = (sharpened * 255.0).astype(np.uint8)
         sharpened_pil = Image.fromarray(sharpened)
 
