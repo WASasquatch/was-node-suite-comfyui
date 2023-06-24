@@ -6177,7 +6177,7 @@ class WAS_Dragon_Filter:
         
         tensor_images = []
         for img in image:  
-            tensor_images.append(pil2tensor(WTools.dragan_filter(tensor2pil(image), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)))
+            tensor_images.append(pil2tensor(WTools.dragan_filter(tensor2pil(img), saturation, contrast, sharpness, brightness, highpass_radius, highpass_samples, highpass_strength, colorize)))
         tensor_images = torch.cat(tensor_images, dim=0)
         
         return (tensor_images, )
@@ -8412,6 +8412,129 @@ class WAS_KSampler:
         return nodes.common_ksampler(model, seed['seed'], steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
 
 
+class WAS_KSampler_Cycle:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                "required": {
+                    "model": ("MODEL",),
+                    "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                    "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
+                    "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                    "positive": ("CONDITIONING", ),
+                    "negative": ("CONDITIONING", ),
+                    "latent_image": ("LATENT", ),
+                    "tiled_vae": (["disable", "enable"], ),
+                    "upscale_factor": ("FLOAT", {"default":2.0, "min": 0.1, "max": 8.0, "step": 0.1}),
+                    "upscale_steps": ("INT", {"default": 2, "min": 2, "max": 12, "step": 1}), 
+                    "starting_denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    "cycle_denoise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    "scale_denoise": (["enable", "disable"],),
+                    "scale_sampling": (["bilinear", "bicubic", "nearest", "lanczos"],),
+                    "vae": ("VAE",),
+                },
+                "optional": {
+                    "upscale_model": ("UPSCALE_MODEL",),
+                }
+            }
+
+    RETURN_TYPES = ("LATENT",)
+    RETURN_NAMES =  ("latent(s)",)
+    FUNCTION = "sample"
+
+    CATEGORY = "WAS Suite/Sampling"
+
+    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, tiled_vae, upscale_factor, upscale_steps, starting_denoise, cycle_denoise, scale_denoise, scale_sampling, vae, upscale_model=None):
+        division_factor = upscale_steps if steps >= upscale_steps else steps
+        current_upscale_factor = upscale_factor ** (1 / (division_factor - 1))
+        tiled_vae = (tiled_vae == "enable")
+        scale_denoise = (scale_denoise == "enable")
+
+        WTools = WAS_Tools_Class()
+
+        for i in range(division_factor):
+            denoise = ( 
+                ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
+                if i > 0 else starting_denoise 
+            )
+            
+            if i != 0:
+                latent_image = latent_image_result
+
+            samples = nodes.common_ksampler(
+                model, 
+                seed, 
+                steps, 
+                cfg, 
+                sampler_name, 
+                scheduler, 
+                positive, 
+                negative, 
+                latent_image, 
+                denoise=denoise, 
+            )
+
+            # Upscale
+            if i < division_factor - 1:
+                if upscale_model:
+                    resample_filters = {
+                        'nearest': 0,
+                        'bilinear': 2,
+                        'bicubic': 3,
+                        'lanczos': 1
+                    }
+                    import comfy_extras.nodes_upscale_model
+                    upscaler = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel()
+                    if tiled_vae:
+                        tensors = vae.decode_tiled(samples[0]['samples'])
+                    else:
+                        tensors = vae.decode(samples[0]['samples'])
+                    original_size = tensor2pil(tensors[0]).size
+                    new_width = round(original_size[0] * current_upscale_factor)
+                    new_height = round(original_size[1] * current_upscale_factor)
+                    new_width = int(round(new_width / 8) * 8)
+                    new_height = int(round(new_height / 8) * 8)
+                    upscaled_tensors = upscaler.upscale(upscale_model, tensors)
+                    tensor_images = []
+                    for tensor in upscaled_tensors[0]:
+                        print(tensor.shape)
+                        tensor_images.append(pil2tensor(tensor2pil(tensor).resize((new_width, new_height), Image.Resampling(resample_filters[scale_sampling]))))
+                    tensor_images = torch.cat(tensor_images, dim=0)
+                    if tiled_vae:
+                        latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
+                    else:
+                        latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
+                else:
+                    if tiled_vae:
+                        tensors = vae.decode_tiled(samples[0]['samples'])
+                    else:
+                        tensors = vae.decode(samples[0]['samples'])
+                    tensor_images = []
+                    scale = WAS_Image_Rescale()
+                    for tensor in tensors:
+                        tensor_images.append(scale.image_rescale(tensor.unsqueeze(0), "rescale", "true", scale_sampling, current_upscale_factor, 0, 0)[0])
+                    tensor_images = torch.cat(tensor_images, dim=0)
+                    if tiled_vae:
+                        latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
+                    else:
+                        latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
+
+                    del tensor, tensors, tensor_images, scale
+
+        return (latent_image_result, )     
+
+    @staticmethod
+    def vae_encode_crop_pixels(pixels):
+        x = (pixels.shape[1] // 8) * 8
+        y = (pixels.shape[2] // 8) * 8
+        if pixels.shape[1] != x or pixels.shape[2] != y:
+            x_offset = (pixels.shape[1] % 8) // 2
+            y_offset = (pixels.shape[2] % 8) // 2
+            pixels = pixels[:, x_offset:x + x_offset, y_offset:y + y_offset, :]
+        return pixels
+    
 # SEED NODE
 
 class WAS_Seed:
@@ -12169,6 +12292,7 @@ NODE_CLASS_MAPPINGS = {
     "Image to Seed": WAS_Image_To_Seed,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "KSampler (WAS)": WAS_KSampler,
+    "KSampler Cycle": WAS_KSampler_Cycle,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Size to Number": WAS_Latent_Size_To_Number,
     "Latent Upscale by Factor (WAS)": WAS_Latent_Upscale,
