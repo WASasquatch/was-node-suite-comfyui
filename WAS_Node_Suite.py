@@ -7196,7 +7196,7 @@ class WAS_Mask_Crop_Region:
         }
     
     RETURN_TYPES = ("MASK", "CROP_DATA", "INT", "INT", "INT", "INT", "INT", "INT")
-    RETURN_NAMES = ("cropped_mask", "crop_data", "left_int", "top_int", "right_int", "bottom_int", "width_int", "height_int")
+    RETURN_NAMES = ("cropped_mask", "crop_data", "top_int", "left_int", "right_int", "bottom_int", "width_int", "height_int")
     FUNCTION = "mask_crop_region"
     
     CATEGORY = "WAS Suite/Image/Masking"
@@ -7209,7 +7209,7 @@ class WAS_Mask_Crop_Region:
         
         (width, height), (left, top, right, bottom) = crop_data
 
-        return (region_tensor, crop_data, left, top, right, bottom, width, height)
+        return (region_tensor, crop_data, top, left, right, bottom, width, height)
         
          
 # IMAGE PASTE CROP
@@ -8445,7 +8445,7 @@ class WAS_KSampler_Cycle:
                     "neg_add_strength": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
                     "neg_add_strength_scaling": (["enable", "disable"],),
                     "neg_add_strength_cutoff": ("FLOAT", {"default": 2.0, "min": 0.01, "max": 10.0, "step": 0.01}),
-                    "sharpen_strength": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 10.0, "step": 0.01}),
+                    "sharpen_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 10.0, "step": 0.01}),
                     "sharpen_radius": ("INT", {"default": 2, "min": 1, "max": 12, "step": 1}),
                 }
             }
