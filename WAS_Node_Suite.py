@@ -6705,18 +6705,29 @@ class WAS_Image_Save:
 
                 filtered_paths.reverse()
 
-                for image_path in filtered_paths:
-                    image_data = {
-                        "filename": os.path.basename(image_path),
-                        "subfolder": (os.path.basename(os.path.dirname(image_path)) if os.path.basename(os.path.dirname(image_path)) != 'output' else ''),
-                        "type": self.type
-                    }
-                    results.append(image_data)
+        for image_path in filtered_paths:
+            subfolder = self.get_subfolder_path(image_path, output_path)
+            image_data = {
+                "filename": os.path.basename(image_path),
+                "subfolder": subfolder,
+                "type": self.type
+            }
+            print(image_data)
+            results.append(image_data)
 
         if show_previews == 'true':
             return {"ui": {"images": results}}
         else:
             return {"ui": {"images": []}}
+            
+
+    def get_subfolder_path(self, image_path, output_path):
+        output_parts = output_path.strip(os.sep).split(os.sep)
+        image_parts = image_path.strip(os.sep).split(os.sep)
+        common_parts = os.path.commonprefix([output_parts, image_parts])
+        subfolder_parts = image_parts[len(common_parts):]
+        subfolder_path = os.sep.join(subfolder_parts[:-1])  # Exclude the filename from the subfolder path
+        return subfolder_path
 
         
 # LOAD IMAGE NODE
@@ -8334,10 +8345,10 @@ class WAS_KSampler_Cycle:
             if scale_denoise:
                 denoise = ( 
                     ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
-                    if i > 0 else starting_denoise 
+                    if i > 0 else round(starting_denoise, 2) 
                 )
             else:
-                denoise = cycle_denoise if i > 0 else starting_denoise
+                denoise = round((cycle_denoise if i > 0 else starting_denoise), 2)
             
             if i > (secondary_start_cycle - 1) and secondary_model:
                 run_model = secondary_model
