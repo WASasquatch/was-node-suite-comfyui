@@ -8477,7 +8477,7 @@ class WAS_KSampler_Cycle:
                     if processor_model:
                     
                         original_size = tensor2pil(tensors[0]).size
-                        upscaled_tensors = upscaler.upscale(upscale_model, tensors)
+                        upscaled_tensors = upscaler.upscale(processor_model, tensors)
                         tensor_images = []
                         for tensor in upscaled_tensors[0]:
                             pil = tensor2pil(tensor)
