@@ -6702,6 +6702,7 @@ class WAS_Image_Save:
                 "show_history": (["false", "true"],),
                 "show_history_by_prefix": (["true", "false"],),
                 "embed_workflow": (["true", "false"],),
+                "show_previews": (["true", "false"],),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -6718,7 +6719,7 @@ class WAS_Image_Save:
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', 
                         extension='png', quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None, 
                         overwrite_mode='false', filename_number_padding=4, show_history='false', 
-                        show_history_by_prefix="true", embed_workflow="true"):
+                        show_history_by_prefix="true", embed_workflow="true", show_previews="true"):
                         
         delimiter = filename_delimiter
         number_padding = filename_number_padding
@@ -6812,7 +6813,7 @@ class WAS_Image_Save:
                 
                 cstr(f"Image file saved to: {output_file}").msg.print()
                 
-                if show_history != 'true':
+                if show_history != 'true' and show_previews == 'true':
                     results.append({
                         "filename": file,
                         "subfolder": base_output,
@@ -6831,17 +6832,8 @@ class WAS_Image_Save:
             
             if overwrite_mode == 'false':
                 counter += 1
-                
-                
-        if show_history == 'true':
-            HDB = WASDatabase(WAS_HISTORY_DATABASE)
-            conf = getSuiteConfig()
-            if HDB.catExists("History") and HDB.keyExists("History", "Output_Images"):
-                history_paths = HDB.get("History", "Output_Images")
-            else:
-                history_paths = None
-            
-        if show_history == 'true':
+
+        if show_history == 'true' and show_previews == 'true':
             HDB = WASDatabase(WAS_HISTORY_DATABASE)
             conf = getSuiteConfig()
             if HDB.catExists("History") and HDB.keyExists("History", "Output_Images"):
@@ -6874,7 +6866,10 @@ class WAS_Image_Save:
                     }
                     results.append(image_data)
 
-        return {"ui": {"images": results}}
+        if show_previews == 'true':
+            return {"ui": {"images": results}}
+        else:
+            return {"ui": {"images": []}}
 
         
 # LOAD IMAGE NODE
@@ -8427,8 +8422,9 @@ class WAS_KSampler_Cycle:
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
                     "tiled_vae": (["disable", "enable"], ),
+                    "latent_upscale": (["disable","nearest-exact", "bilinear", "area", "bicubic", "bislerp"],),
                     "upscale_factor": ("FLOAT", {"default":2.0, "min": 0.1, "max": 8.0, "step": 0.1}),
-                    "upscale_steps": ("INT", {"default": 2, "min": 2, "max": 12, "step": 1}), 
+                    "upscale_cycles": ("INT", {"default": 2, "min": 2, "max": 12, "step": 1}), 
                     "starting_denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                     "cycle_denoise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
                     "scale_denoise": (["enable", "disable"],),
@@ -8436,17 +8432,26 @@ class WAS_KSampler_Cycle:
                     "vae": ("VAE",),
                 },
                 "optional": {
+                    "secondary_model": ("MODEL",),
+                    "secondary_start_cycle": ("INT", {"default": 2, "min": 2, "max": 16, "step": 1}),
                     "upscale_model": ("UPSCALE_MODEL",),
+                    "processor_model": ("UPSCALE_MODEL",),
                     "pos_additive": ("CONDITIONING",),
                     "neg_additive": ("CONDITIONING",),
+                    "pos_add_mode": (["increment", "decrement"],),
                     "pos_add_strength": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
                     "pos_add_strength_scaling": (["enable", "disable"],),
                     "pos_add_strength_cutoff": ("FLOAT", {"default": 2.0, "min": 0.01, "max": 10.0, "step": 0.01}),
+                    "neg_add_mode": (["increment", "decrement"],),
                     "neg_add_strength": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
                     "neg_add_strength_scaling": (["enable", "disable"],),
                     "neg_add_strength_cutoff": ("FLOAT", {"default": 2.0, "min": 0.01, "max": 10.0, "step": 0.01}),
                     "sharpen_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 10.0, "step": 0.01}),
                     "sharpen_radius": ("INT", {"default": 2, "min": 1, "max": 12, "step": 1}),
+                    "steps_scaling": (["enable", "disable"],),
+                    "steps_control": (["decrement", "increment"],),
+                    "steps_scaling_value": ("INT", {"default": 10, "min": 1, "max": 20, "step": 1}),
+                    "steps_cutoff": ("INT", {"default": 20, "min": 4, "max": 1000, "step": 1}),
                 }
             }
 
@@ -8456,17 +8461,22 @@ class WAS_KSampler_Cycle:
 
     CATEGORY = "WAS Suite/Sampling"
 
-    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, tiled_vae, upscale_factor, 
-                upscale_steps, starting_denoise, cycle_denoise, scale_denoise, scale_sampling, vae, pos_additive=None, pos_add_strength=None, 
-                pos_add_strength_scaling=None, pos_add_strength_cutoff=None, neg_additive=None, neg_add_strength=None, 
-                neg_add_strength_scaling=None, neg_add_strength_cutoff=None, upscale_model=None, sharpen_strength=0, sharpen_radius=2):
+    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, tiled_vae, latent_upscale, upscale_factor, 
+                upscale_cycles, starting_denoise, cycle_denoise, scale_denoise, scale_sampling, vae, secondary_model=None, secondary_start_cycle=None, 
+                pos_additive=None, pos_add_mode=None, pos_add_strength=None, pos_add_strength_scaling=None, pos_add_strength_cutoff=None, 
+                neg_additive=None, neg_add_mode=None, neg_add_strength=None, neg_add_strength_scaling=None, neg_add_strength_cutoff=None, 
+                upscale_model=None, processor_model=None, sharpen_strength=0, sharpen_radius=2, steps_scaling=None, steps_control=None, 
+                steps_scaling_value=None, steps_cutoff=None):
                 
+        upscale_steps = upscale_cycles
         division_factor = upscale_steps if steps >= upscale_steps else steps
         current_upscale_factor = upscale_factor ** (1 / (division_factor - 1))
         tiled_vae = (tiled_vae == "enable")
         scale_denoise = (scale_denoise == "enable")
         pos_add_strength_scaling = (pos_add_strength_scaling == "enable")
         neg_add_strength_scaling = (neg_add_strength_scaling == "enable")
+        steps_scaling = (steps_scaling == "enable")
+        run_model = model
 
         WTools = WAS_Tools_Class()
 
@@ -8478,46 +8488,106 @@ class WAS_KSampler_Cycle:
                 ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
                 if i > 0 else starting_denoise 
             )
+            
+            if i > (secondary_start_cycle - 1):
+                run_model = secondary_model
+                denoise = cycle_denoise
+                model = None
+                
+            if steps_scaling and i > 0:
+            
+                steps = (
+                    steps + steps_scaling_value 
+                    if steps_control == 'increment' 
+                    else steps - steps_scaling_value
+                )
+                steps = (
+                    ( steps 
+                    if steps <= steps_cutoff 
+                    else steps_cutoff )
+                    if steps_control == 'increment'
+                    else ( steps 
+                    if steps >= steps_cutoff 
+                    else steps_cutoff )
+                )
+            
+            print("Steps:", steps)  
+            print("Denoise:", denoise)
 
             if pos_additive:
             
-                pos_strength = (
-                    ( round(pos_add_strength * (2 ** (i-1)), 2)
-                    if i > 0
-                    else pos_add_strength )
-                    if pos_add_strength_scaling
-                    else pos_add_strength
-                )
-                pos_strength = ( 
-                    pos_add_strength_cutoff
-                    if pos_strength > pos_add_strength_cutoff
-                    else pos_strength
-                )
+                pos_strength = 0.  if i == 0 else pos_add_strength
+            
+                if pos_add_mode == 'increment':
+                    pos_strength = (
+                        ( round(pos_add_strength * (2 ** (i-1)), 2)
+                        if i > 0
+                        else pos_add_strength )
+                        if pos_add_strength_scaling
+                        else pos_add_strength
+                    )
+                    pos_strength = ( 
+                        pos_add_strength_cutoff
+                        if pos_strength > pos_add_strength_cutoff
+                        else pos_strength
+                    )
+                else:
+                    pos_strength = (
+                        ( round(pos_add_strength / (2 ** (i-1)), 2)
+                        if i > 0
+                        else pos_add_strength )
+                        if pos_add_strength_scaling
+                        else pos_add_strength
+                    )
+                    pos_strength = ( 
+                        pos_add_strength_cutoff
+                        if pos_strength < pos_add_strength_cutoff
+                        else pos_strength
+                    )
                 comb = nodes.ConditioningAverage()
                 positive = comb.addWeighted(pos_additive, positive, pos_strength)[0]
+                print("Positive Additive Strength:", pos_strength)
                 
             if neg_additive:
+                
+                neg_strength = 0. if i == 0 else pos_add_strength
 
-                neg_strength = (
-                    ( round(neg_add_strength * (2 ** (i-1)), 2)
-                    if i > 0
-                    else neg_add_strength )
-                    if neg_add_strength_scaling
-                    else neg_add_strength
-                )
-                neg_strength = ( 
-                    neg_add_strength_cutoff
-                    if neg_strength > neg_add_strength_cutoff
-                    else neg_strength
-                )
+                if neg_add_mode == 'increment':
+                    neg_strength = (
+                        ( round(neg_add_strength * (2 ** (i-1)), 2)
+                        if i > 0
+                        else neg_add_strength )
+                        if neg_add_strength_scaling
+                        else neg_add_strength
+                    )
+                    neg_strength = ( 
+                        neg_add_strength_cutoff
+                        if neg_strength > neg_add_strength_cutoff
+                        else neg_strength
+                    )
+                else:
+                    neg_strength = (
+                        ( round(neg_add_strength / (2 ** (i-1)), 2)
+                        if i > 0
+                        else neg_add_strength )
+                        if neg_add_strength_scaling
+                        else neg_add_strength
+                    )
+                    neg_strength = ( 
+                        neg_add_strength_cutoff
+                        if neg_strength < neg_add_strength_cutoff
+                        else neg_strength
+                    )
+                    
                 comb = nodes.ConditioningAverage()
                 negative = comb.addWeighted(neg_additive, negative, neg_strength)[0]
+                print("Negative Additive Strength:", neg_strength) 
             
             if i != 0:
                 latent_image = latent_image_result
 
             samples = nodes.common_ksampler(
-                model, 
+                run_model, 
                 seed, 
                 steps, 
                 cfg, 
@@ -8531,66 +8601,90 @@ class WAS_KSampler_Cycle:
 
             # Upscale
             if i < division_factor - 1:
-                if upscale_model:
-                    resample_filters = {
-                        'nearest': 0,
-                        'bilinear': 2,
-                        'bicubic': 3,
-                        'lanczos': 1
-                    }
-                    import comfy_extras.nodes_upscale_model
-                    upscaler = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel()
-                    
+
+                tensors = None
+                upscaler = None
+                
+                resample_filters = {
+                    'nearest': 0,
+                    'bilinear': 2,
+                    'bicubic': 3,
+                    'lanczos': 1
+                }
+                
+                if latent_upscale == 'disable':
+                
                     if tiled_vae:
                         tensors = vae.decode_tiled(samples[0]['samples'])
                     else:
-                        tensors = vae.decode(samples[0]['samples'])
-                        
-                    original_size = tensor2pil(tensors[0]).size
-                    new_width = round(original_size[0] * current_upscale_factor)
-                    new_height = round(original_size[1] * current_upscale_factor)
-                    new_width = int(round(new_width / 8) * 8)
-                    new_height = int(round(new_height / 8) * 8)
-                    upscaled_tensors = upscaler.upscale(upscale_model, tensors)
-                    tensor_images = []
-                    for tensor in upscaled_tensors[0]:
-                        tensor = pil2tensor(tensor2pil(tensor).resize((new_width, new_height), Image.Resampling(resample_filters[scale_sampling])))
-                        size = max(tensor2pil(tensor).size)
-                        if sharpen_strength != 0.0:
-                            if size > 1024:
-                                sharpen_radius *= 2
-                                tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
-                        tensor_images.append(tensor)
+                        tensors = vae.decode(samples[0]['samples'])       
 
-                    tensor_images = torch.cat(tensor_images, dim=0)
+                    if processor_model or upscale_model:
+
+                        import comfy_extras.nodes_upscale_model
+                        upscaler = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel()
+
+                    if processor_model:
                     
+                        original_size = tensor2pil(tensors[0]).size
+                        upscaled_tensors = upscaler.upscale(upscale_model, tensors)
+                        tensor_images = []
+                        for tensor in upscaled_tensors[0]:
+                            pil = tensor2pil(tensor)
+                            if pil.size[0] != original_size[0] or pil.size[1] != original_size[1]:
+                                pil = pil.resize((original_size[0], original_size[1]), Image.Resampling(resample_filters[scale_sampling]))
+                            if sharpen_strength != 0.0:
+                                pil = self.unsharp_filter(pil, sharpen_radius, sharpen_strength)
+                            tensor_images.append(pil2tensor(pil))
+
+                        tensor_images = torch.cat(tensor_images, dim=0)
+                    
+                    if upscale_model:
+                    
+                        if processor_model:
+                            tensors = tensor_images
+                            del tensor_images
+                            
+                        original_size = tensor2pil(tensors[0]).size
+                        new_width = round(original_size[0] * current_upscale_factor)
+                        new_height = round(original_size[1] * current_upscale_factor)
+                        new_width = int(round(new_width / 32) * 32)
+                        new_height = int(round(new_height / 32) * 32)
+                        upscaled_tensors = upscaler.upscale(upscale_model, tensors)
+                        tensor_images = []
+                        for tensor in upscaled_tensors[0]:
+                            tensor = pil2tensor(tensor2pil(tensor).resize((new_width, new_height), Image.Resampling(resample_filters[scale_sampling])))
+                            size = max(tensor2pil(tensor).size)
+                            if sharpen_strength != 0.0:
+                                tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
+                            tensor_images.append(tensor)
+
+                        tensor_images = torch.cat(tensor_images, dim=0)
+                            
+                    else:
+                    
+                        tensor_images = []
+                        scale = WAS_Image_Rescale()
+                        for tensor in tensors:
+                            tensor = scale.image_rescale(tensor.unsqueeze(0), "rescale", "true", scale_sampling, current_upscale_factor, 0, 0)[0]
+                            size = max(tensor2pil(tensor).size)
+                            if sharpen_strength > 0.0:
+                                tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
+                            tensor_images.append(tensor)
+                        tensor_images = torch.cat(tensor_images, dim=0)
+                                   
                     if tiled_vae:
                         latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
                     else:
                         latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
-                else:
-                    if tiled_vae:
-                        tensors = vae.decode_tiled(samples[0]['samples'])
-                    else:
-                        tensors = vae.decode(samples[0]['samples'])
                         
-                    tensor_images = []
-                    scale = WAS_Image_Rescale()
-                    for tensor in tensors:
-                        tensor = scale.image_rescale(tensor.unsqueeze(0), "rescale", "true", scale_sampling, current_upscale_factor, 0, 0)[0]
-                        size = max(tensor2pil(tensor).size)
-                        if sharpen_strength > 0.0:
-                            if size > 1024:
-                                sharpen_radius *= 2
-                            tensor = pil2tensor(self.unsharp_filter(tensor2pil(tensor), sharpen_radius, sharpen_strength))
-                        tensor_images.append(tensor)
-                    tensor_images = torch.cat(tensor_images, dim=0)
-                               
-                    if tiled_vae:
-                        latent_image_result = {"samples": vae.encode_tiled(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
-                    else:
-                       latent_image_result = {"samples": vae.encode(self.vae_encode_crop_pixels(tensor_images)[:,:,:,:3])}
+                else:
+                
+                    upscaler = nodes.LatentUpscaleBy()
+                    latent_image_result = upscaler.upscale(samples[0], latent_upscale, current_upscale_factor)
+                 
             else:
+            
                 latent_image_result = samples[0]
                     
         return (latent_image_result, )     
