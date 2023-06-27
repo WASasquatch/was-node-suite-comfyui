@@ -4885,8 +4885,8 @@ class WAS_Load_Image_Batch:
         def load_images(self, directory_path, pattern):
             for file_name in glob.glob(os.path.join(directory_path, pattern), recursive=True):
                 if file_name.lower().endswith(ALLOWED_EXT):
-                    image_path = os.path.join(directory_path, file_name)
-                    self.image_paths.append(image_path)
+                    abs_file_path = os.path.abspath(file_name)
+                    self.image_paths.append(abs_file_path)
 
         def get_image_by_id(self, image_id):
             if image_id < 0 or image_id >= len(self.image_paths):
