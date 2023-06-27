@@ -146,7 +146,7 @@
    - A custom implementation of the worley voronoi noise diagram
  - Input Switch  (Disable until `*` wildcard fix)
  - KSampler (WAS): A sampler that accepts a seed as a node inputs
- - KSampler Cycle: A KSampler able to do HR pass loops, you can specify an upscale factor, and how many steps to achieve that factor. Accepts a upscale_model.
+ - KSampler Cycle: A KSampler able to do HR pass loops, you can specify an upscale factor, and how many steps to achieve that factor. Accepts a upscale_model, as well as a 1x processor model. A secondary diffusion model can also be used. 
  - Load Cache: Load cached Latent, Tensor Batch (image), and Conditioning files. 
  - Load Text File
    - Now supports outputting a dictionary named after the file, or custom input. 
