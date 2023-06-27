@@ -1006,47 +1006,35 @@ class WAS_Tools_Class():
         import cv2
         import imageio
 
-        # File
         output_file = os.path.abspath(os.path.join(os.path.join(*output_path.split('/')), filename))
         output_file += ( '.png' if filetype == 'APNG' else '.gif' )
 
-        # Determine maximum width and height of all the images
         max_width = max(im.size[0] for im in images)
         max_height = max(im.size[1] for im in images)
         max_aspect_ratio = max_width / max_height
 
-        # Pad and resize images as necessary
         def padded_images():
             for im in images:
                 aspect_ratio = im.size[0] / im.size[1]
                 if aspect_ratio > max_aspect_ratio:
-                    # Add padding to top and bottom
                     new_height = int(max_width / aspect_ratio)
                     padding = (max_height - new_height) // 2
                     padded_im = Image.new('RGB', (max_width, max_height), color=(0, 0, 0))
                     padded_im.paste(im.resize((max_width, new_height)), (0, padding))
                 else:
-                    # Add padding to left and right
                     new_width = int(max_height * aspect_ratio)
                     padding = (max_width - new_width) // 2
                     padded_im = Image.new('RGB', (max_width, max_height), color=(0, 0, 0))
                     padded_im.paste(im.resize((new_width, max_height)), (padding, 0))
                 yield np.array(padded_im)
 
-        # Create a copy of the first image and append it to the end of the images list
         padded_images = list(padded_images())
         padded_images.append(padded_images[0].copy())
-
-        # Load images
         images = padded_images
-
-        # Initialize output frames and durations
         frames = []
         durations = []
 
-        # Create morph frames
         for i in range(len(images)-1):
-            # Add still frame to beginning of transition
             frames.append(Image.fromarray(images[i]).convert('RGB'))
             durations.append(still_duration)
 
@@ -1056,18 +1044,14 @@ class WAS_Tools_Class():
                 frames.append(Image.fromarray(morph).convert('RGB'))
                 durations.append(duration)
 
-        # Add still frame to end of last image
         frames.append(Image.fromarray(images[-1]).convert('RGB'))
-        # Add the still frame duration for the last image to the beginning of the durations list
         durations.insert(0, still_duration)
 
-        # Set durations for still frames during loop
         if loop is not None:
             for i in range(loop):
                 durations.insert(0, still_duration)
                 durations.append(still_duration)
-
-        # Save frames as GIF file
+  
         try:
             imageio.mimsave(output_file, frames, filetype, duration=durations, loop=loop)
         except OSError as e:
@@ -1094,61 +1078,43 @@ class WAS_Tools_Class():
             import cv2
         
             if not os.path.isfile(gif_path):
-                # Create the GIF file if it doesn't exist
                 with Image.new("RGBA", image.size) as new_gif:
-                    # Add first frame
                     new_gif.paste(image.convert("RGBA"))
                     new_gif.info["duration"] = self.still_image_delay_ms
                     new_gif.save(gif_path, format="GIF", save_all=True, append_images=[], duration=self.still_image_delay_ms, loop=0)
                 cstr(f"Created new GIF animation at: {gif_path}").msg.print()
             else:
                 with Image.open(gif_path) as gif:
-                    # Extract the last still frame of the GIF, if it exists
                     n_frames = gif.n_frames
                     if n_frames > 0:
-                        # Extract the last frame
                         gif.seek(n_frames - 1)
                         last_frame = gif.copy()
                     else:
                         last_frame = None
                     
-                    # Define end_image to be the input image
                     end_image = image
-
-                    # Calculate the number of transition frames to add
                     steps = self.transition_frames - 1 if last_frame is not None else self.transition_frames
 
-                    # Pad the new image to match the size of the last frame, if there is one
                     if last_frame is not None:
                         image = self.pad_to_size(image, last_frame.size)
 
-                    # Generate the transition frames from last_frame to image
                     frames = self.generate_transition_frames(last_frame, image, steps)
 
-                    # Create the still frame
                     still_frame = end_image.copy()
 
-                    # Populate with original GIF frames up to the last still frame
                     gif_frames = []
                     for i in range(n_frames):
                         gif.seek(i)
                         gif_frame = gif.copy()
                         gif_frames.append(gif_frame)
                                         
-                    # Append transition frames to gif_frames
                     for frame in frames:
                         frame.info["duration"] = self.duration_ms
                         gif_frames.append(frame)
 
-                    # Add the still frame to gif_frames
                     still_frame.info['duration'] = self.still_image_delay_ms
                     gif_frames.append(still_frame)
                     
-                    # Debug Durations
-                    #for i, gf in enumerate(gif_frames):
-                    #    print(f"Frame {i} Duration:", gf.info['duration'])
-
-                    # Save the new GIF
                     gif_frames[0].save(
                         gif_path,
                         format="GIF",
@@ -1162,7 +1128,6 @@ class WAS_Tools_Class():
 
                 
         def pad_to_size(self, image, size):
-            # Pad the image with transparent pixels to match the desired size
             new_image = Image.new("RGBA", size, color=(0, 0, 0, 0))
             x_offset = (size[0] - image.width) // 2
             y_offset = (size[1] - image.height) // 2
@@ -1171,14 +1136,12 @@ class WAS_Tools_Class():
 
         def generate_transition_frames(self, start_frame, end_image, num_frames):
 
-            # Generate transition frames between two images
             if start_frame is None:
                 return [image]
                 
             start_frame = start_frame.convert("RGBA")
             end_image = end_image.convert("RGBA")
 
-            # Create a list of interpolated frames
             frames = []
             for i in range(1, num_frames + 1):
                 weight = i / (num_frames + 1)
@@ -1204,33 +1167,25 @@ class WAS_Tools_Class():
             import cv2
             import os
 
-            # Setup video path extension
             video_path += self.extensions[self.codec]
-
-            # Convert the input image to a cv2 image
             end_image = self.rescale(self.pil2cv(image), self.max_size)
 
             if os.path.isfile(video_path):
-                # If the video file already exists, load it
                 cap = cv2.VideoCapture(video_path)
 
-                # Get the video dimensions
                 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 fps = int(cap.get(cv2.CAP_PROP_FPS))
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-                # Create a temporary file to hold the new frames
                 temp_file_path = video_path.replace(self.extensions[self.codec], '_temp'+self.extensions[self.codec])
                 fourcc = cv2.VideoWriter_fourcc(*self.codec)
                 out = cv2.VideoWriter(temp_file_path, fourcc, fps, (width, height), isColor=True)
 
-                # Write the original frames to the temporary file
                 for i in tqdm(range(total_frames), desc="Copying original frames"):
                     ret, frame = cap.read()
                     out.write(frame)
 
-                # Create transition
                 if self.transition_frames > 0:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
                     ret, last_frame = cap.read()
@@ -1239,15 +1194,12 @@ class WAS_Tools_Class():
                         transition_frame_resized = cv2.resize(transition_frame, (width, height))
                         out.write(transition_frame_resized)
 
-                # Add the new image frames to the temporary file
                 for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
                     out.write(end_image)
 
-                # Release resources
                 cap.release()
                 out.release()
 
-                # Replace the original video file with the temporary file
                 os.remove(video_path)
                 os.rename(temp_file_path, video_path)
 
@@ -1256,16 +1208,13 @@ class WAS_Tools_Class():
                 return video_path
 
             else:
-                # If the video file doesn't exist, create it
                 fourcc = cv2.VideoWriter_fourcc(*self.codec)
                 height, width, _ = end_image.shape
                 out = cv2.VideoWriter(video_path, fourcc, self.fps, (width, height), isColor=True)
 
-                # Write the still image for the specified duration
                 for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
                     out.write(end_image)
 
-                # Release resources
                 out.release()
 
                 cstr("Created new video at: {video_path}").msg.print()
@@ -1278,60 +1227,44 @@ class WAS_Tools_Class():
             import cv2
             from tqdm import tqdm
 
-            # Get a list of the image files in the folder, sorted alphabetically
             image_paths = sorted([os.path.join(image_folder, f) for f in os.listdir(image_folder) 
                                   if os.path.isfile(os.path.join(image_folder, f)) 
                                   and os.path.join(image_folder, f).lower().endswith(ALLOWED_EXT)])
 
-            # Check that there are image files in the folder
             if len(image_paths) == 0:
                 cstr(f"No valid image files found in `{image_folder}` directory.").error.print()
                 cstr(f"The valid formats are: {', '.join(sorted(ALLOWED_EXT))}").error.print()
                 return
 
-            # Output file including extension
             output_file = video_path + self.extensions[self.codec]
-
-            # Load the first image to get the dimensions
             image = self.rescale(cv2.imread(image_paths[0]), self.max_size)
             height, width = image.shape[:2]
-
-            # Create a VideoWriter object
             fourcc = cv2.VideoWriter_fourcc(*self.codec)
             out = cv2.VideoWriter(output_file, fourcc, self.fps, (width, height), isColor=True)
-
-            # Write still frames for the first image
             out.write(image)
             for _ in range(self.still_image_delay_frames - 1):
                 out.write(image)
 
             for i in tqdm(range(len(image_paths)), desc="Writing video frames"):
-                # Load frame(s)
                 start_frame = cv2.imread(image_paths[i])
                 end_frame = None
                 if i+1 <= len(image_paths)-1:
                     end_frame = self.rescale(cv2.imread(image_paths[i+1]), self.max_size)
 
-                # Create transition frames
                 if isinstance(end_frame, np.ndarray):
                     transition_frames = self.generate_transition_frames(start_frame, end_frame, self.transition_frames)
-                    # Resize transition frames to match video size
                     transition_frames = [cv2.resize(frame, (width, height)) for frame in transition_frames]
-                    # Write transition frames to the video
                     for _, frame in enumerate(transition_frames):
                         out.write(frame)
 
-                    # Write still frames for the current image after the transition frames
                     for _ in range(self.still_image_delay_frames - self.transition_frames):
                         out.write(end_frame)
 
                 else:
-                    # No transition frames for the last image in the folder
                     out.write(start_frame)
                     for _ in range(self.still_image_delay_frames - 1):
                         out.write(start_frame)
 
-            # Release resources
             out.release()
 
             if os.path.exists(output_file):
@@ -1342,25 +1275,17 @@ class WAS_Tools_Class():
                 return ""
                 
         def extract(self, video_file, output_folder, prefix='frame_', extension="png", zero_padding_digits=-1):
-            # Create the output folder if it doesn't exist
             os.makedirs(output_folder, exist_ok=True)
 
-            # Open the video file
             video = cv2.VideoCapture(video_file)
 
-            # Get some video properties
             fps = video.get(cv2.CAP_PROP_FPS)
             frame_number = 0
 
-            # Iterate over all frames
             while True:
-                # Read the next frame
                 success, frame = video.read()
 
                 if success:
-                    # Save the frame as an image file
-
-                    # If the user requested to pad the numbers:
                     if zero_padding_digits > 0:                        
                         frame_path = os.path.join(output_folder, f"{prefix}{frame_number:0{zero_padding_digits}}.{extension}")
                     else:
@@ -1372,7 +1297,6 @@ class WAS_Tools_Class():
                 else:
                     break
 
-            # Release the video file
             video.release()
 
         def rescale(self, image, max_size):
@@ -1388,7 +1312,6 @@ class WAS_Tools_Class():
             if img1 is None and img2 is None:
                 return []
             
-            # Resize the images if necessary
             if img1 is not None and img2 is not None:
                 if img1.shape != img2.shape:
                     img2 = cv2.resize(img2, img1.shape[:2][::-1])
@@ -1661,14 +1584,12 @@ class WAS_Tools_Class():
             alpha = image.getchannel('A')
             image = image.convert('RGB')
 
-        # Convert the image to grayscale
         grays = image.convert('L')
 
         if shadow_smooth is not None or highlight_smooth is not None and simplify_masks is not None:
             simplify = float(simplify_masks)
             grays = grays.filter(ImageFilter.GaussianBlur(radius=simplify))
 
-        # Create shadow and highlight masks
         shadow_mask = Image.eval(grays, lambda x: 255 if x < shadow_thresh else 0)
         highlight_mask = Image.eval(grays, lambda x: 255 if x > highlight_thresh else 0)
 
@@ -1741,11 +1662,7 @@ class WAS_Tools_Class():
         if alpha:
             final_image.putalpha(alpha)
             
-        return final_image
-    
-
-    # Sparkle - Fairy Tale Filter
-    
+        return final_image    
 
     def sparkle(self, image):
     
@@ -1768,7 +1685,7 @@ class WAS_Tools_Class():
         image = Image.alpha_composite(image, bloom)
 
         width, height = image.size
-        # Particls A
+
         particles = Image.new('RGBA', (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(particles)
         for i in range(5000):
@@ -1799,22 +1716,19 @@ class WAS_Tools_Class():
         return image
             
     def digital_distortion(self, image, amplitude=5, line_width=2):
-        # Convert the PIL image to a numpy array
+
         im = np.array(image)
         
-        # Create a sine wave with the given amplitude
         x, y, z = im.shape
         sine_wave = amplitude * np.sin(np.linspace(-np.pi, np.pi, y))
         sine_wave = sine_wave.astype(int)
         
-        # Create the left and right distortion matrices
         left_distortion = np.zeros((x, y, z), dtype=np.uint8)
         right_distortion = np.zeros((x, y, z), dtype=np.uint8)
         for i in range(y):
             left_distortion[:, i, :] = np.roll(im[:, i, :], -sine_wave[i], axis=0)
             right_distortion[:, i, :] = np.roll(im[:, i, :], sine_wave[i], axis=0)
         
-        # Combine the distorted images and add scan lines as a mask
         distorted_image = np.maximum(left_distortion, right_distortion)
         scan_lines = np.zeros((x, y), dtype=np.float32)
         scan_lines[::line_width, :] = 1
@@ -1823,60 +1737,36 @@ class WAS_Tools_Class():
         distorted_image = np.where(scan_lines > 0, np.random.permutation(im), distorted_image)
         distorted_image = np.roll(distorted_image, np.random.randint(0, y), axis=1)
         
-        # Convert the numpy array back to a PIL image
         distorted_image = Image.fromarray(distorted_image)
         
         return distorted_image
 
     def signal_distortion(self, image, amplitude):
-        # Convert the image to a numpy array for easy manipulation
+
         img_array = np.array(image)
-        
-        # Generate random shift values for each row of the image
         row_shifts = np.random.randint(-amplitude, amplitude + 1, size=img_array.shape[0])
-        
-        # Create an empty array to hold the distorted image
         distorted_array = np.zeros_like(img_array)
         
-        # Loop through each row of the image
         for y in range(img_array.shape[0]):
-            # Determine the X-axis shift value for this row
             x_shift = row_shifts[y]
-            
-            # Use modular function to determine where to shift
             x_shift = x_shift + y % (amplitude * 2) - amplitude
-            
-            # Shift the pixels in this row by the X-axis shift value
             distorted_array[y,:] = np.roll(img_array[y,:], x_shift, axis=0)
         
-        # Convert the distorted array back to a PIL image
         distorted_image = Image.fromarray(distorted_array)
         
         return distorted_image
 
     def tv_vhs_distortion(self, image, amplitude=10):
-        # Convert the PIL image to a NumPy array.
         np_image = np.array(image)
-
-        # Generate random shift values for each row of the image
         offset_variance = int(image.height / amplitude)
         row_shifts = np.random.randint(-offset_variance, offset_variance + 1, size=image.height)
-
-        # Create an empty array to hold the distorted image
         distorted_array = np.zeros_like(np_image)
 
-        # Loop through each row of the image
         for y in range(np_image.shape[0]):
-            # Determine the X-axis shift value for this row
             x_shift = row_shifts[y]
-
-            # Use modular function to determine where to shift
             x_shift = x_shift + y % (offset_variance * 2) - offset_variance
-
-            # Shift the pixels in this row by the X-axis shift value
             distorted_array[y,:] = np.roll(np_image[y,:], x_shift, axis=0)
 
-        # Apply distortion and noise to the image using NumPy functions.
         h, w, c = distorted_array.shape
         x_scale = np.linspace(0, 1, w)
         y_scale = np.linspace(0, 1, h)
@@ -1886,15 +1776,12 @@ class WAS_Tools_Class():
         distortion = np.sin(x_idx * 50) * 0.5 + np.sin(y_idx * 50) * 0.5
         distorted_array = distorted_array + distortion[:, :, np.newaxis] + noise
 
-        # Convert the distorted array back to a PIL image
         distorted_image = Image.fromarray(np.uint8(distorted_array))
         distorted_image = distorted_image.resize((image.width, image.height))
 
-        # Apply color enhancement to the original image.
         image_enhance = ImageEnhance.Color(image)
         image = image_enhance.enhance(0.5)
 
-        # Overlay the distorted image over the original image.
         effect_image = ImageChops.overlay(image, distorted_image)
         result_image = ImageChops.overlay(image, effect_image)
         result_image = ImageChops.blend(image, result_image, 0.25)
@@ -1902,48 +1789,39 @@ class WAS_Tools_Class():
         return result_image
         
     def gradient(self, size, mode='horizontal', colors=None, tolerance=0):
-        # Parse colors as JSON if it is a string
+
         if isinstance(colors, str):
             colors = json.loads(colors)
 
-        # Set default colors if not provided
         if colors is None:
             colors = {0: [255, 0, 0], 50: [0, 255, 0], 100: [0, 0, 255]}
 
-        # Convert color stop positions to integers and ensure color values are integers
         colors = {int(k): [int(c) for c in v] for k, v in colors.items()}
 
-        # Add color stops at the beginning and end
         colors[0] = colors[min(colors.keys())]
         colors[255] = colors[max(colors.keys())]
 
-        # Create a new image with a black background
         img = Image.new('RGB', size, color=(0, 0, 0))
 
-        # Determine the color spectrum between the color stops
         color_stop_positions = sorted(colors.keys())
         color_stop_count = len(color_stop_positions)
         spectrum = []
         for i in range(256):
-            # Find the nearest color stops
             start_pos = max(p for p in color_stop_positions if p <= i)
             end_pos = min(p for p in color_stop_positions if p >= i)
             start = colors[start_pos]
             end = colors[end_pos]
 
-            # Calculate the color interpolation factor
             if start_pos == end_pos:
                 factor = 0
             else:
                 factor = (i - start_pos) / (end_pos - start_pos)
 
-            # Interpolate the RGB values
             r = round(start[0] + (end[0] - start[0]) * factor)
             g = round(start[1] + (end[1] - start[1]) * factor)
             b = round(start[2] + (end[2] - start[2]) * factor)
             spectrum.append((r, g, b))
 
-        # Draw the gradient
         draw = ImageDraw.Draw(img)
         if mode == 'horizontal':
             for x in range(size[0]):
@@ -5935,41 +5813,25 @@ class WAS_Canny_Filter:
 
         return (pil2tensor(image_canny), )
 
-    # Defining the Canny Detector function
-    # From: https://www.geeksforgeeks.org/implement-canny-edge-detector-in-python-using-opencv/
-
-    # here weak_th and strong_th are thresholds for
-    # double thresholding step
     def Canny_detector(self, img, weak_th=None, strong_th=None):
 
         import cv2
 
-        # conversion of image to grayscale
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Noise reduction step
         img = cv2.GaussianBlur(img, (5, 5), 1.4)
-
-        # Calculating the gradients
         gx = cv2.Sobel(np.float32(img), cv2.CV_64F, 1, 0, 3)  # type: ignore
         gy = cv2.Sobel(np.float32(img), cv2.CV_64F, 0, 1, 3)  # type: ignore
 
-        # Conversion of Cartesian coordinates to polar
         mag, ang = cv2.cartToPolar(gx, gy, angleInDegrees=True)
 
-        # setting the minimum and maximum thresholds
-        # for double thresholding
         mag_max = np.max(mag)
         if not weak_th:
             weak_th = mag_max * 0.1
         if not strong_th:
             strong_th = mag_max * 0.5
 
-        # getting the dimensions of the input image
         height, width = img.shape
 
-        # Looping through every pixel of the grayscale
-        # image
         for i_x in range(width):
             for i_y in range(height):
 
@@ -5980,34 +5842,22 @@ class WAS_Canny_Filter:
                 neighb_1_x, neighb_1_y = -1, -1
                 neighb_2_x, neighb_2_y = -1, -1
 
-                # selecting the neighbours of the target pixel
-                # according to the gradient direction
-                # In the x axis direction
                 if grad_ang <= 22.5:
                     neighb_1_x, neighb_1_y = i_x-1, i_y
                     neighb_2_x, neighb_2_y = i_x + 1, i_y
 
-                # top right (diagonal-1) direction
                 elif grad_ang > 22.5 and grad_ang <= (22.5 + 45):
                     neighb_1_x, neighb_1_y = i_x-1, i_y-1
                     neighb_2_x, neighb_2_y = i_x + 1, i_y + 1
-
-                # In y-axis direction
                 elif grad_ang > (22.5 + 45) and grad_ang <= (22.5 + 90):
                     neighb_1_x, neighb_1_y = i_x, i_y-1
                     neighb_2_x, neighb_2_y = i_x, i_y + 1
-
-                # top left (diagonal-2) direction
                 elif grad_ang > (22.5 + 90) and grad_ang <= (22.5 + 135):
                     neighb_1_x, neighb_1_y = i_x-1, i_y + 1
                     neighb_2_x, neighb_2_y = i_x + 1, i_y-1
-
-                # Now it restarts the cycle
                 elif grad_ang > (22.5 + 135) and grad_ang <= (22.5 + 180):
                     neighb_1_x, neighb_1_y = i_x-1, i_y
                     neighb_2_x, neighb_2_y = i_x + 1, i_y
-
-                # Non-maximum suppression step
                 if width > neighb_1_x >= 0 and height > neighb_1_y >= 0:
                     if mag[i_y, i_x] < mag[neighb_1_y, neighb_1_x]:
                         mag[i_y, i_x] = 0
@@ -6021,7 +5871,6 @@ class WAS_Canny_Filter:
         strong_ids = np.zeros_like(img)
         ids = np.zeros_like(img)
 
-        # double thresholding step
         for i_x in range(width):
             for i_y in range(height):
 
@@ -6034,8 +5883,6 @@ class WAS_Canny_Filter:
                 else:
                     ids[i_y, i_x] = 2
 
-        # finally returning the magnitude of
-        # gradients of edges
         return mag
 
 # IMAGE EDGE DETECTION
@@ -8484,10 +8331,13 @@ class WAS_KSampler_Cycle:
         
             cstr(f"Cycle Pass {i+1}/{division_factor}").msg.print()
         
-            denoise = ( 
-                ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
-                if i > 0 else starting_denoise 
-            )
+            if scale_denoise:
+                denoise = ( 
+                    ( round(cycle_denoise * (2 ** (-(i-1))), 2) if i > 0 else cycle_denoise ) 
+                    if i > 0 else starting_denoise 
+                )
+            else:
+                denoise = cycle_denoise if i > 0 else starting_denoise
             
             if i > (secondary_start_cycle - 1) and secondary_model:
                 run_model = secondary_model
