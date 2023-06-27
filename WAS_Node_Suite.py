@@ -8489,7 +8489,7 @@ class WAS_KSampler_Cycle:
                 if i > 0 else starting_denoise 
             )
             
-            if i > (secondary_start_cycle - 1):
+            if i > (secondary_start_cycle - 1) and secondary_model:
                 run_model = secondary_model
                 denoise = cycle_denoise
                 model = None
@@ -8681,7 +8681,7 @@ class WAS_KSampler_Cycle:
                 else:
                 
                     upscaler = nodes.LatentUpscaleBy()
-                    latent_image_result = upscaler.upscale(samples[0], latent_upscale, current_upscale_factor)
+                    latent_image_result = upscaler.upscale(samples[0], latent_upscale, current_upscale_factor)[0]
                  
             else:
             
