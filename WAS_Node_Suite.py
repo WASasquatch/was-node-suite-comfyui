@@ -6726,7 +6726,7 @@ class WAS_Image_Save:
         image_parts = image_path.strip(os.sep).split(os.sep)
         common_parts = os.path.commonprefix([output_parts, image_parts])
         subfolder_parts = image_parts[len(common_parts):]
-        subfolder_path = os.sep.join(subfolder_parts[:-1])  # Exclude the filename from the subfolder path
+        subfolder_path = os.sep.join(subfolder_parts[:-1])
         return subfolder_path
 
         
@@ -8335,8 +8335,6 @@ class WAS_KSampler_Cycle:
         neg_add_strength_scaling = (neg_add_strength_scaling == "enable")
         steps_scaling = (steps_scaling == "enable")
         run_model = model
-
-        WTools = WAS_Tools_Class()
 
         for i in range(division_factor):
         
