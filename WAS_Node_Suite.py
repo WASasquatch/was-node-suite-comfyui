@@ -3135,7 +3135,7 @@ class WAS_Image_Crop_Location:
         # Crop the image and resize
         crop = image.crop((crop_left, crop_top, crop_right, crop_bottom))
         crop_data = (crop.size, (crop_left, crop_top, crop_right, crop_bottom))
-        crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
+        crop = crop.resize((((crop.size[0] // 8) * 8), ((crop.size[1] // 8) * 8)))
         
         return (pil2tensor(crop), crop_data)
 
@@ -3189,7 +3189,7 @@ class WAS_Image_Crop_Square_Location:
         crop_data = (crop.size, (left, top, right, bottom))
         
         # Output resize
-        crop = crop.resize((((crop.size[0] // 64) * 64 + 64), ((crop.size[1] // 64) * 64 + 64)))
+        crop = crop.resize((((crop.size[0] // 8) * 8), ((crop.size[1] // 8) * 8)))
         
         return (pil2tensor(crop), crop_data)
         
