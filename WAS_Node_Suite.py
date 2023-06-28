@@ -8480,8 +8480,8 @@ class WAS_KSampler_Cycle:
 
                     if processor_model or upscale_model:
 
-                        import comfy_extras.nodes_upscale_model
-                        upscaler = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel()
+                        from comfy_extras import nodes_upscale_model
+                        upscaler = nodes_upscale_model.ImageUpscaleWithModel()
 
                     if processor_model:
                     
@@ -8569,6 +8569,46 @@ class WAS_KSampler_Cycle:
 
         return sharpened_pil
     
+# Latent Blend
+
+
+class WAS_Blend_Latents:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "latent_a": ("LATENT",),
+                "latent_b": ("LATENT",),
+                "operation": (["add", "multiply", "divide", "subtract"],),
+                "blend": ("FLOAT", {"default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01}),
+            }
+        }
+
+    RETURN_TYPES = ("LATENT",)
+    FUNCTION = "latent_blend"
+
+    CATEGORY = "WAS Suite/Latent"
+
+    def latent_blend(self, latent_a, latent_b, operation, blend):
+        return ( {"samples": self.blend_latents(latent_a['samples'], latent_b['samples'], operation, blend)}, )
+        
+    def blend_latents(self, latent1, latent2, mode='add', blend_percentage=0.5):
+        blend_factor1 = blend_percentage
+        blend_factor2 = 1 - blend_percentage
+
+        if mode == 'add':
+            blended_latent = latent1 * blend_factor1 + latent2 * blend_factor2
+        elif mode == 'multiply':
+            blended_latent = latent1 ** blend_factor1 * latent2 ** blend_factor2
+        elif mode == 'divide':
+            blended_latent = latent1 ** blend_factor1 / latent2 ** blend_factor2
+        elif mode == 'subtract':
+            blended_latent = latent1 * blend_factor1 - latent2 * blend_factor2
+        else:
+            raise ValueError("Unsupported blending mode. Please choose from 'add', 'multiply', 'divide', 'subtract'.")
+
+        return blended_latent
+        
 # SEED NODE
 
 class WAS_Seed:
@@ -12237,6 +12277,7 @@ class WAS_Samples_Passthrough_Stat_System:
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "BLIP Model Loader": WAS_BLIP_Model_Loader,
+    "Blend Latents": WAS_Blend_Latents,
     "Cache Node": WAS_Cache,
     "Checkpoint Loader": WAS_Checkpoint_Loader, 
     "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
