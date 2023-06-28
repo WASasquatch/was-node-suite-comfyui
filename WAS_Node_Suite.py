@@ -6712,7 +6712,6 @@ class WAS_Image_Save:
                 "subfolder": subfolder,
                 "type": self.type
             }
-            print(image_data)
             results.append(image_data)
 
         if show_previews == 'true':
@@ -8597,13 +8596,13 @@ class WAS_Blend_Latents:
         blend_factor2 = 1 - blend_percentage
 
         if mode == 'add':
-            blended_latent = latent1 * blend_factor1 + latent2 * blend_factor2
+            blended_latent = ( latent1 * blend_factor1 ) + ( latent2 * blend_factor2 )
         elif mode == 'multiply':
-            blended_latent = latent1 ** blend_factor1 * latent2 ** blend_factor2
+            blended_latent = ( latent1 * blend_factor1 ) * ( latent2 * blend_factor2 )
         elif mode == 'divide':
-            blended_latent = latent1 ** blend_factor1 / latent2 ** blend_factor2
+            blended_latent = ( latent1 * blend_factor1 ) / ( latent2 * blend_factor2 )
         elif mode == 'subtract':
-            blended_latent = latent1 * blend_factor1 - latent2 * blend_factor2
+            blended_latent = ( latent1 * blend_factor1 ) - ( latent2 * blend_factor2 )
         else:
             raise ValueError("Unsupported blending mode. Please choose from 'add', 'multiply', 'divide', 'subtract'.")
 
