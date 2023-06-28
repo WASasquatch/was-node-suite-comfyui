@@ -6680,6 +6680,7 @@ class WAS_Image_Save:
             if overwrite_mode == 'false':
                 counter += 1
 
+        filtered_paths = []
         if show_history == 'true' and show_previews == 'true':
             HDB = WASDatabase(WAS_HISTORY_DATABASE)
             conf = getSuiteConfig()
@@ -6689,8 +6690,7 @@ class WAS_Image_Save:
                 history_paths = None
 
             if history_paths:
-                filtered_paths = []
-
+            
                 for image_path in history_paths:
                     if not os.path.exists(image_path):
                         continue
@@ -6705,14 +6705,15 @@ class WAS_Image_Save:
 
                 filtered_paths.reverse()
 
-        for image_path in filtered_paths:
-            subfolder = self.get_subfolder_path(image_path, output_path)
-            image_data = {
-                "filename": os.path.basename(image_path),
-                "subfolder": subfolder,
-                "type": self.type
-            }
-            results.append(image_data)
+        if filtered_paths:
+            for image_path in filtered_paths:
+                subfolder = self.get_subfolder_path(image_path, output_path)
+                image_data = {
+                    "filename": os.path.basename(image_path),
+                    "subfolder": subfolder,
+                    "type": self.type
+                }
+                results.append(image_data)
 
         if show_previews == 'true':
             return {"ui": {"images": results}}
