@@ -12173,6 +12173,7 @@ class WAS_Cache:
                 "conditioning_suffix": ("STRING", {"default": str(random.randint(999999, 99999999))+"_cache", "multiline":False}),
             },
             "optional": {
+                "output_path": ("STRING", {"default": os.path.join(WAS_SUITE_ROOT, 'cache'), "multiline": False}),
                 "latent": ("LATENT",),
                 "image": ("IMAGE",),
                 "conditioning": ("CONDITIONING",),
@@ -12182,10 +12183,11 @@ class WAS_Cache:
     RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,TEXT_TYPE)
     RETURN_NAMES = ("latent_filename","image_filename","conditioning_filename")
     FUNCTION = "cache_input"
+    OUTPUT_NODE = True
 
     CATEGORY = "WAS Suite/IO"
 
-    def cache_input(self, latent_suffix="_cache", image_suffix="_cache", conditioning_suffix="_cache", latent=None, image=None, conditioning=None):
+    def cache_input(self, latent_suffix="_cache", image_suffix="_cache", conditioning_suffix="_cache", output_path=None, latent=None, image=None, conditioning=None):
 
         if 'joblib' not in packages():
             cstr("Installing joblib...").msg.print()
@@ -12194,6 +12196,11 @@ class WAS_Cache:
         import joblib
             
         output = os.path.join(WAS_SUITE_ROOT, 'cache')
+        if output_path:
+            if output_path.strip() not in ['', 'none', 'None']:
+                output = output_path
+        if not os.path.isabs(output):
+            output = os.path.abspath(output)
         if not os.path.exists(output):
             os.makedirs(output, exist_ok=True)
 
@@ -12202,21 +12209,22 @@ class WAS_Cache:
         c_filename = ""
         
         tokens = TextTokens()
+        output = tokens.parseTokens(output)
         
         if latent != None:
-            l_filename = f'l_{tokens.parseTokens(latent_suffix)}.latent'
+            l_filename = f'{tokens.parseTokens(latent_suffix)}.latent'
             out_file = os.path.join(output, l_filename)
             joblib.dump(latent, out_file)
             cstr(f"Latent saved to: {out_file}").msg.print()    
             
         if image != None:
-            i_filename = f'i_{tokens.parseTokens(image_suffix)}.image'
+            i_filename = f'{tokens.parseTokens(image_suffix)}.image'
             out_file = os.path.join(output, i_filename)
             joblib.dump(image, out_file)
             cstr(f"Tensor batch saved to: {out_file}").msg.print()
         
         if conditioning != None:
-            c_filename = f'c_{tokens.parseTokens(conditioning_suffix)}.conditioning'
+            c_filename = f'{tokens.parseTokens(conditioning_suffix)}.conditioning'
             out_file = os.path.join(output, c_filename)
             joblib.dump(conditioning, os.path.join(output, out_file))
             cstr(f"Conditioning saved to: {out_file}").msg.print()   
@@ -12232,9 +12240,9 @@ class WAS_Load_Cache:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "latent_filename": ("STRING", {"default": "", "multiline":False}),
-                "image_filename": ("STRING", {"default": "", "multiline":False}),
-                "conditioning_filename": ("STRING", {"default": "", "multiline":False}),
+                "latent_path": ("STRING", {"default": "", "multiline":False}),
+                "image_path": ("STRING", {"default": "", "multiline":False}),
+                "conditioning_path": ("STRING", {"default": "", "multiline":False}),
             }
         }
         
@@ -12244,7 +12252,7 @@ class WAS_Load_Cache:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_cache(self, latent_filename=None, image_filename=None, conditioning_filename=None):
+    def load_cache(self, latent_path=None, image_path=None, conditioning_path=None):
 
         if 'joblib' not in packages():
             cstr("Installing joblib...").msg.print()
@@ -12258,26 +12266,23 @@ class WAS_Load_Cache:
         image = None
         conditioning = None
         
-        if latent_filename not in ["",None]:
-            file = os.path.join(input_path, latent_filename)
-            if os.path.exists(file):
-                latent = joblib.load(file)
+        if latent_path not in ["",None]:
+            if os.path.exists(latent_path):
+                latent = joblib.load(latent_path)
             else:
-                cstr(f"Unable to locate cache file {file}").error.print()
+                cstr(f"Unable to locate cache file {latent_path}").error.print()
                 
-        if image_filename not in ["",None]:
-            file = os.path.join(input_path, image_filename)
-            if os.path.exists(file):
-                image = joblib.load(file)
+        if image_path not in ["",None]:
+            if os.path.exists(image_path):
+                image = joblib.load(image_path)
             else:
-                cstr(f"Unable to locate cache file {file}").msg.print()             
+                cstr(f"Unable to locate cache file {image_path}").msg.print()             
                 
-        if conditioning_filename not in ["",None]:
-            file = os.path.join(input_path, conditioning_filename)
-            if os.path.exists(file):
-                conditioning = joblib.load(file)
+        if conditioning_path not in ["",None]:
+            if os.path.exists(conditioning_path):
+                conditioning = joblib.load(conditioning_path)
             else:
-                cstr(f"Unable to locate cache file {file}").error.print()
+                cstr(f"Unable to locate cache file {conditioning_path}").error.print()
             
         return (latent, image, conditioning)        
         
