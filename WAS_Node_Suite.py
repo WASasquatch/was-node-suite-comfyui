@@ -12092,12 +12092,12 @@ class WAS_Create_Video_From_Path:
             fps = 60
             
         tokens = TextTokens()
-        
+
         # Check if output_path is an absolute path
         if not os.path.isabs(output_path):
             output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
 
-        output_file = os.path.join(output_path, tokens.parseTokens(filename))
+        output_file = os.path.join(output_path, tokens.parseTokens(filename)) 
         
         if not os.path.exists(output_path):
             os.makedirs(output_path, exist_ok=True)
