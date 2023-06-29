@@ -8742,6 +8742,7 @@ class WAS_Prompt_Styles_Selector:
         }
         
     RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("positive_string", "negative_string")
     FUNCTION = "load_style"
     
     CATEGORY = "WAS Suite/Text"
