@@ -8348,7 +8348,7 @@ class WAS_KSampler_Cycle:
             else:
                 denoise = round((cycle_denoise if i > 0 else starting_denoise), 2)
             
-            if i > (secondary_start_cycle - 1) and secondary_model:
+            if i >= (secondary_start_cycle - 1) and secondary_model:
                 run_model = secondary_model
                 denoise = cycle_denoise
                 model = None
@@ -8750,7 +8750,6 @@ class WAS_Prompt_Styles_Selector:
     def load_style(self, style):
     
         styles = {}
-        # Load styles from file
         if os.path.exists(STYLES_PATH):
             with open(STYLES_PATH, 'r') as data:
                 styles = json.load(data)
@@ -8765,8 +8764,6 @@ class WAS_Prompt_Styles_Selector:
             negative_prompt = ''
             
         return (prompt, negative_prompt)
-        
-                
 
 # Text Multiline Node
 
