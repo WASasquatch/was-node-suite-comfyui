@@ -6530,15 +6530,14 @@ class WAS_Export_API:
 
 class WAS_Image_Save:
     def __init__(self):
-        self.output_dir = os.path.join(os.getcwd()+os.sep+'ComfyUI', "output")
-        self.type = "output"
-
+        self.output_dir = comfy_paths.output_directory
+        self.type = os.path.basename(self.output_dir)
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "images": ("IMAGE", ),
-                "output_path": ("STRING", {"default": './ComfyUI/output/[time(%Y-%m-%d)]', "multiline": False}),
+                "output_path": ("STRING", {"default": '[time(%Y-%m-%d)]', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "filename_delimiter": ("STRING", {"default":"_"}),
                 "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
@@ -6575,11 +6574,15 @@ class WAS_Image_Save:
         # Define token system
         tokens = TextTokens()
 
+        original_output = self.output_dir
+
         # Setup output path
         if output_path in [None, '', "none", "."]:
             output_path = self.output_dir
         else:
             output_path = tokens.parseTokens(output_path)
+        if not os.path.isabs(output_path):
+            output_path = os.path.join(self.output_dir, output_path)
         base_output = os.path.basename(output_path)
         if output_path.endswith("ComfyUI/output") or output_path.endswith("ComfyUI\output"):
             base_output = ""
@@ -6588,8 +6591,7 @@ class WAS_Image_Save:
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
                 cstr(f'The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.').warning.print()
-                os.makedirs(output_path.strip(), exist_ok=True)
-            self.output_dir = output_path.strip()
+                os.makedirs(output_path, exist_ok=True)
         
         # Find existing counter values
         pattern = f"{re.escape(filename_prefix)}{re.escape(delimiter)}(\\d{{{filename_number_padding}}})"
@@ -6638,11 +6640,11 @@ class WAS_Image_Save:
                 file = f"{filename_prefix}{file_extension}"
             else:
                 file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
-                if os.path.exists(os.path.join(self.output_dir, file)):
+                if os.path.exists(os.path.join(output_path, file)):
                     counter += 1
                     file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
             try:
-                output_file = os.path.abspath(os.path.join(self.output_dir, file))
+                output_file = os.path.abspath(os.path.join(output_path, file))
                 if extension == 'png':
                     img.save(output_file,
                              pnginfo=metadata, optimize=True)
@@ -6661,9 +6663,10 @@ class WAS_Image_Save:
                 cstr(f"Image file saved to: {output_file}").msg.print()
                 
                 if show_history != 'true' and show_previews == 'true':
+                    subfolder = self.get_subfolder_path(output_file, original_output)
                     results.append({
                         "filename": file,
-                        "subfolder": base_output,
+                        "subfolder": subfolder,
                         "type": self.type
                     })
                 
@@ -6693,10 +6696,13 @@ class WAS_Image_Save:
             
                 for image_path in history_paths:
                     if not os.path.exists(image_path):
+                        print("Image doesn't exist")
                         continue
                     if show_history_by_prefix == 'true' and not os.path.basename(image_path).startswith(filename_prefix+delimiter):
+                        print("Prefix mismatch...")
                         continue
-                    if show_history_by_prefix == 'true' and os.path.basename(os.path.dirname(image_path)) != os.path.basename(output_path):
+                    if show_history_by_prefix == 'true' and os.path.basename(os.path.dirname(image_path)) != os.path.basename(os.path.dirname(output_file)):
+                        print("Basename mismatch...")
                         continue
                     filtered_paths.append(image_path)
 
@@ -6704,10 +6710,14 @@ class WAS_Image_Save:
                     filtered_paths = filtered_paths[-conf['history_display_limit']:]
 
                 filtered_paths.reverse()
+                print("Filtered Paths:", filtered_paths)
 
         if filtered_paths:
             for image_path in filtered_paths:
-                subfolder = self.get_subfolder_path(image_path, output_path)
+                subfolder = self.get_subfolder_path(image_path, self.output_dir)
+                print("Image Path:", image_path)
+                print("Output Dir:", self.output_dir)
+                print("Subfolder:", subfolder)
                 image_data = {
                     "filename": os.path.basename(image_path),
                     "subfolder": subfolder,
