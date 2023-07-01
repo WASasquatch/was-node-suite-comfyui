@@ -6540,7 +6540,7 @@ class WAS_Image_Save:
                 "output_path": ("STRING", {"default": '[time(%Y-%m-%d)]', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "filename_delimiter": ("STRING", {"default":"_"}),
-                "filename_number_padding": ("INT", {"default":4, "min":2, "max":9, "step":1}),
+                "filename_number_padding": ("INT", {"default":4, "min":1, "max":9, "step":1}),
                 "extension": (['png', 'jpeg', 'gif', 'tiff', 'webp'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "lossless_webp": (["false", "true"],),
