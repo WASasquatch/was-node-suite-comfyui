@@ -12354,6 +12354,28 @@ class WAS_Samples_Passthrough_Stat_System:
 
         return [ram_stats, vram_stats, hard_drive_stats]
 
+# Class to count the number of places on an integer
+
+class WAS_Integer_Place_Counter:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "int_input": ("INT", {"default": 0, "min": 0, "max": 10000000, "step": 1}),
+            }
+        }
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("INT_PLACES",)
+    FUNCTION = "count_places"
+
+    CATEGORY = "WAS Suite/Integer"
+
+    def count_places(self, int_input):
+        output = len(str(int_input))
+        cstr("\nInteger Places Count: "+str(output)).msg.print()
+        return (output,)
+
+
 # NODE MAPPING
 NODE_CLASS_MAPPINGS = {
     "BLIP Model Loader": WAS_BLIP_Model_Loader,
@@ -12445,6 +12467,7 @@ NODE_CLASS_MAPPINGS = {
     "Image to Latent Mask": WAS_Image_To_Mask,
     "Image to Noise": WAS_Image_To_Noise,
     "Image to Seed": WAS_Image_To_Seed,
+    "Integer place counter": WAS_Integer_Place_Counter,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "KSampler (WAS)": WAS_KSampler,
     "KSampler Cycle": WAS_KSampler_Cycle,
