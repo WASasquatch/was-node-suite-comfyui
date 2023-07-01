@@ -6696,13 +6696,10 @@ class WAS_Image_Save:
             
                 for image_path in history_paths:
                     if not os.path.exists(image_path):
-                        print("Image doesn't exist")
                         continue
                     if show_history_by_prefix == 'true' and not os.path.basename(image_path).startswith(filename_prefix+delimiter):
-                        print("Prefix mismatch...")
                         continue
                     if show_history_by_prefix == 'true' and os.path.basename(os.path.dirname(image_path)) != os.path.basename(os.path.dirname(output_file)):
-                        print("Basename mismatch...")
                         continue
                     filtered_paths.append(image_path)
 
@@ -6710,14 +6707,10 @@ class WAS_Image_Save:
                     filtered_paths = filtered_paths[-conf['history_display_limit']:]
 
                 filtered_paths.reverse()
-                print("Filtered Paths:", filtered_paths)
 
         if filtered_paths:
             for image_path in filtered_paths:
                 subfolder = self.get_subfolder_path(image_path, self.output_dir)
-                print("Image Path:", image_path)
-                print("Output Dir:", self.output_dir)
-                print("Subfolder:", subfolder)
                 image_data = {
                     "filename": os.path.basename(image_path),
                     "subfolder": subfolder,
@@ -8320,6 +8313,7 @@ class WAS_KSampler_Cycle:
                     "steps_control": (["decrement", "increment"],),
                     "steps_scaling_value": ("INT", {"default": 10, "min": 1, "max": 20, "step": 1}),
                     "steps_cutoff": ("INT", {"default": 20, "min": 4, "max": 1000, "step": 1}),
+                    "denoise_cutoff": ("INT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
                 }
             }
 
@@ -8334,7 +8328,7 @@ class WAS_KSampler_Cycle:
                 pos_additive=None, pos_add_mode=None, pos_add_strength=None, pos_add_strength_scaling=None, pos_add_strength_cutoff=None, 
                 neg_additive=None, neg_add_mode=None, neg_add_strength=None, neg_add_strength_scaling=None, neg_add_strength_cutoff=None, 
                 upscale_model=None, processor_model=None, sharpen_strength=0, sharpen_radius=2, steps_scaling=None, steps_control=None, 
-                steps_scaling_value=None, steps_cutoff=None):
+                steps_scaling_value=None, steps_cutoff=None, denoise_cutoff=0.25):
                 
         upscale_steps = upscale_cycles
         division_factor = upscale_steps if steps >= upscale_steps else steps
@@ -8345,6 +8339,7 @@ class WAS_KSampler_Cycle:
         neg_add_strength_scaling = (neg_add_strength_scaling == "enable")
         steps_scaling = (steps_scaling == "enable")
         run_model = model
+        secondary_switched = False
 
         for i in range(division_factor):
         
@@ -8357,11 +8352,15 @@ class WAS_KSampler_Cycle:
                 )
             else:
                 denoise = round((cycle_denoise if i > 0 else starting_denoise), 2)
+                
+            if denoise < denoise_cutoff and scale_denoise:
+                denoise = denoise_cutoff
             
-            if i >= (secondary_start_cycle - 1) and secondary_model:
+            if i >= (secondary_start_cycle - 1) and secondary_model and not secondary_switched:
                 run_model = secondary_model
                 denoise = cycle_denoise
                 model = None
+                secondary_switched = True
                 
             if steps_scaling and i > 0:
             
@@ -8385,7 +8384,7 @@ class WAS_KSampler_Cycle:
 
             if pos_additive:
             
-                pos_strength = 0.  if i == 0 else pos_add_strength
+                pos_strength = 0.0 if i <= 0 else pos_add_strength
             
                 if pos_add_mode == 'increment':
                     pos_strength = (
@@ -8419,7 +8418,7 @@ class WAS_KSampler_Cycle:
                 
             if neg_additive:
                 
-                neg_strength = 0. if i == 0 else pos_add_strength
+                neg_strength = 0.0 if i <= 0 else pos_add_strength
 
                 if neg_add_mode == 'increment':
                     neg_strength = (
