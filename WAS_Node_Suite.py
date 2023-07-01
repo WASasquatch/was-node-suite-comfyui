@@ -6695,11 +6695,13 @@ class WAS_Image_Save:
             if history_paths:
             
                 for image_path in history_paths:
+                    image_subdir = self.get_subfolder_path(image_path, self.output_dir)
+                    current_subdir = self.get_subfolder_path(output_file, self.output_dir)
                     if not os.path.exists(image_path):
                         continue
-                    if show_history_by_prefix == 'true' and not os.path.basename(image_path).startswith(filename_prefix+delimiter):
+                    if show_history_by_prefix == 'true' and image_subdir != current_subdir:
                         continue
-                    if show_history_by_prefix == 'true' and os.path.basename(os.path.dirname(image_path)) != os.path.basename(os.path.dirname(output_file)):
+                    if show_history_by_prefix == 'true' and not os.path.basename(image_path).startswith(filename_prefix):
                         continue
                     filtered_paths.append(image_path)
 
