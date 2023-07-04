@@ -6598,7 +6598,7 @@ class WAS_Image_Save:
         existing_counters = [
             int(re.search(pattern, filename).group(1))
             for filename in os.listdir(output_path)
-            if re.match(pattern, filename)
+            if re.match(pattern, os.path.basename(filename))
         ]
         existing_counters.sort(reverse=True)
 
@@ -12596,8 +12596,11 @@ if os.path.exists(BKAdvCLIP_dir):
         RETURN_NAMES = ("conditioning", "parsed_text", "raw_text")
         OUTPUT_NODE = True
         FUNCTION = "encode"
-
         CATEGORY = "WAS Suite/Conditioning"
+        # Demo data for ComfyUI Node Classes
+        DESCRIPTION = "A node based on Blenderneko's <a href='https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_embw' target='_blank'>Advanced CLIP Text Encode</a>. This version adds the ability to use Noodle Soup Prompts and Wildcards. Wildcards are stored in WAS Node Suite root under the folder 'wildcards'. You can create the folder if it doesn't exist and move your wildcards into it."
+        URL = "https://github.com/WASasquatch/was-node-suite-comfyui"
+        IMAGES = ["https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png"]
 
         def encode(self, clip, text, token_normalization, weight_interpretation, seed=0, mode="Noodle Soup Prompts", noodle_key="__"):
             
