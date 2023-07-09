@@ -46,8 +46,16 @@ import time
 import torch
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-sys.path.append('..'+os.sep+'ComfyUI')
+MANIFEST = {
+    "name": "WAS Node Suite",
+    "version": (2,2,2),
+    "author": "WASasquatch",
+    "project": "https://github.com/WASasquatch/was-node-suite-comfyui",
+    "description": "An extensive node suite for ComfyUI with over 180 new nodes",
+}
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "was_node_suite_comfyui"))
+sys.path.append(comfy_paths.base_path)
 
 #! SYSTEM HOOKS
 
@@ -9759,7 +9767,7 @@ class WAS_Text_Load_Line_From_File:
     CATEGORY = "WAS Suite/Text"
 
     def load_file(self, file_path='', dictionary_name='[filename]', label='TextBatch', 
-                    mode='automatic', index=0, multiline_text=None):
+                  mode='automatic', index=0, multiline_text=None):
         if multiline_text is not None:
             lines = multiline_text.strip().split('\n')
             if mode == 'index':
@@ -9768,29 +9776,37 @@ class WAS_Text_Load_Line_From_File:
                     return ('', {dictionary_name: []})
                 line = lines[index]
             else:
-                file_list = self.TextFileLoader(file_path, label)
-                line_index = file_list.get_line_index()
+                line_index = self.HDB.get('TextBatch Counters', label)
+                if line_index is None:
+                    line_index = 0
                 line = lines[line_index % len(lines)]
-                file_list.set_line_index(line_index + 1)
+                self.HDB.insert('TextBatch Counters', label, line_index + 1)
             return (line, {dictionary_name: lines})
+
+        if file_path == '':
+            cstr("No file path specified.").error.print()
+            return ('', {dictionary_name: []})
 
         if not os.path.exists(file_path):
             cstr(f"The path `{file_path}` specified cannot be found.").error.print()
             return ('', {dictionary_name: []})
+
         file_list = self.TextFileLoader(file_path, label)
         line, lines = None, []
         if mode == 'automatic':
             line, lines = file_list.get_next_line()
         elif mode == 'index':
+            if index >= len(file_list.lines):
+                index = index % len(file_list.lines)
             line, lines = file_list.get_line_by_index(index)
         if line is None:
             cstr("No valid line was found. The file may be empty or all lines have been read.").error.print()
             return ('', {dictionary_name: []})
-        file_list.store_index()  # Store the index in the WASDatabase
+        file_list.store_index()
         update_history_text_files(file_path)
 
         return (line, {dictionary_name: lines})
-
+    
     class TextFileLoader:
         def __init__(self, file_path, label):
             self.WDB = WDB
@@ -9839,7 +9855,6 @@ class WAS_Text_Load_Line_From_File:
 
         def store_index(self):
             self.WDB.insert('TextBatch Counters', 'TextBatch', self.index)
-           
 
 
 class WAS_Text_To_String:
@@ -12581,9 +12596,6 @@ BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
 if os.path.exists(BKAdvCLIP_dir):
 
     cstr(f"BlenderNeko\'s Advanced CLIP Text Encode found, attempting to enable `CLIPTextEncode` support.").msg.print()
-    sys.path.append(BKAdvCLIP_dir)
-    
-    from adv_encode import advanced_encode
     
     class WAS_AdvancedCLIPTextEncode:
         @classmethod
@@ -12596,6 +12608,7 @@ if os.path.exists(BKAdvCLIP_dir):
                     "clip": ("CLIP", ),
                     "token_normalization": (["none", "mean", "length", "length+mean"],),
                     "weight_interpretation": (["comfy", "A1111", "compel", "comfy++"],),
+                    "affect_pooled": (["disable", "enable"],),
                     "text": ("STRING", {"multiline": True}),
                     }
                 }
@@ -12605,12 +12618,21 @@ if os.path.exists(BKAdvCLIP_dir):
         OUTPUT_NODE = True
         FUNCTION = "encode"
         CATEGORY = "WAS Suite/Conditioning"
-        # Demo data for ComfyUI Node Classes
+        
         DESCRIPTION = "A node based on Blenderneko's <a href='https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_embw' target='_blank'>Advanced CLIP Text Encode</a>. This version adds the ability to use Noodle Soup Prompts and Wildcards. Wildcards are stored in WAS Node Suite root under the folder 'wildcards'. You can create the folder if it doesn't exist and move your wildcards into it."
-        URL = "https://github.com/WASasquatch/was-node-suite-comfyui"
-        IMAGES = ["https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png","https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png"]
+        URL = { 
+            "Example Workflow": "https://github.com/WASasquatch/was-node-suite-comfyui",
+        }
+        IMAGES = [
+            "https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png",
+        ]
 
-        def encode(self, clip, text, token_normalization, weight_interpretation, seed=0, mode="Noodle Soup Prompts", noodle_key="__"):
+        def encode(self, clip, text, token_normalization, weight_interpretation, affect_pooled="disable", seed=0, mode="Noodle Soup Prompts", noodle_key="__"):       
+    
+            BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
+            sys.path.append(BKAdvCLIP_dir)
+            
+            from ComfyUI_ADV_CLIP_emb.nodes import AdvancedCLIPTextEncode
             
             if mode == "Noodle Soup Prompts":
                 new_text = nsp_parse(text, int(seed), noodle_key)
@@ -12621,9 +12643,16 @@ if os.path.exists(BKAdvCLIP_dir):
             new_text, text_vars = parse_prompt_vars(new_text)
             cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
             
-            encoded = advanced_encode(clip, new_text, token_normalization, weight_interpretation, w_max=1.0)
-
-            return ([[encoded, {}]], new_text, text, { "ui": { "string": new_text } } )
+            try:
+                res = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation, affect_pooled)
+                print(res[0][0][1]["pooled_output"])
+                return ([[res[0][0][0], {"pooled_output": res[0][0][1]["pooled_output"]}]], new_text, text, { "ui": { "string": new_text } } )
+            except Exception as e:
+                print(e)
+                cstr("It doesn't seem ComfyUI_ADV_CLIP_emb is up to date. Falling back to legacy method.").warning.print()
+                encode = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation)     
+                return ([[res[0][0][0], {}]], new_text, text, { "ui": { "string": new_text } } )
+                 
                 
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
 
