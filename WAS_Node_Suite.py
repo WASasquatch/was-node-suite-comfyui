@@ -4312,7 +4312,7 @@ class WAS_Image_Make_Seamless:
         return (seamless_images, )
         
         
-# IMAGE MAKE SEAMLESS
+# IMAGE DISPLACEMENT WARP
 
 class WAS_Image_Displacement_Warp:
     def __init__(self):
@@ -4374,7 +4374,7 @@ class WAS_Image_Displacement_Warp:
         image = image.crop((left, top, right, bottom))
 
         return image
-        
+ 
 # IMAGE TO BATCH
 
 class WAS_Image_Batch:
@@ -4461,7 +4461,7 @@ class WAS_Mask_Batch:
         self._check_mask_dimensions(batched_tensors, mask_names)
         batched_tensors = torch.stack(batched_tensors, dim=0)
         batched_tensors = batched_tensors.unsqueeze(1)  # Add a channel dimension
-        return (batched_tensors,)
+        return (batched_tensors,) 
 
 # IMAGE GENERATE COLOR PALETTE
 
@@ -9846,7 +9846,7 @@ class WAS_Text_Load_Line_From_File:
         if line is None:
             cstr("No valid line was found. The file may be empty or all lines have been read.").error.print()
             return ('', {dictionary_name: []})
-        file_list.store_index()
+        file_list.store_index() 
         update_history_text_files(file_path)
 
         return (line, {dictionary_name: lines})
@@ -12653,7 +12653,6 @@ if os.path.exists(BKAdvCLIP_dir):
                     "clip": ("CLIP", ),
                     "token_normalization": (["none", "mean", "length", "length+mean"],),
                     "weight_interpretation": (["comfy", "A1111", "compel", "comfy++"],),
-                    "affect_pooled": (["disable", "enable"],),
                     "text": ("STRING", {"multiline": True}),
                     }
                 }
@@ -12672,7 +12671,7 @@ if os.path.exists(BKAdvCLIP_dir):
             "https://i.postimg.cc/Jh4N2h5r/CLIPText-Encode-BLK-plus-NSP.png",
         ]
 
-        def encode(self, clip, text, token_normalization, weight_interpretation, affect_pooled="disable", seed=0, mode="Noodle Soup Prompts", noodle_key="__"):       
+        def encode(self, clip, text, token_normalization, weight_interpretation, seed=0, mode="Noodle Soup Prompts", noodle_key="__"):       
     
             BKAdvCLIP_dir = os.path.join(CUSTOM_NODES_DIR, "ComfyUI_ADV_CLIP_emb")
             sys.path.append(BKAdvCLIP_dir)
@@ -12688,15 +12687,9 @@ if os.path.exists(BKAdvCLIP_dir):
             new_text, text_vars = parse_prompt_vars(new_text)
             cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
             
-            try:
-                res = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation, affect_pooled)
-                print(res[0][0][1]["pooled_output"])
-                return ([[res[0][0][0], {"pooled_output": res[0][0][1]["pooled_output"]}]], new_text, text, { "ui": { "string": new_text } } )
-            except Exception as e:
-                print(e)
-                cstr("It doesn't seem ComfyUI_ADV_CLIP_emb is up to date. Falling back to legacy method.").warning.print()
-                encode = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation)     
-                return ([[res[0][0][0], {}]], new_text, text, { "ui": { "string": new_text } } )
+            cstr("It doesn't seem ComfyUI_ADV_CLIP_emb is up to date. Falling back to legacy method.").warning.print()
+            encode = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation)     
+            return ([[res[0][0][0], {}]], new_text, text, { "ui": { "string": new_text } } )
                  
                 
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
