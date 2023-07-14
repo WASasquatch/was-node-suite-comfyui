@@ -343,6 +343,8 @@ You can set `webui_styles_persistent_update` to `true` to update the WAS Node Su
 # Recommended Installation:
 If you're running on Linux, or non-admin account on windows you'll want to ensure `/ComfyUI/custom_nodes`, `was-node-suite-comfyui`, and `WAS_Node_Suite.py` has write permissions.
 
+There is now a **install.bat** you can run to install to portable if detected. Otherwise it will default to system and assume you followed ConfyUI's manual installation steps. 
+
   - Navigate to your `/ComfyUI/custom_nodes/` folder
   - Run `git clone https://github.com/WASasquatch/was-node-suite-comfyui/`
   - Navigate to your `was-node-suite-comfyui` folder
