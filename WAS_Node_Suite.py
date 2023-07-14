@@ -475,7 +475,7 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
         for _ in range(tcount):
             new_text = new_text.replace(
                 tkey, random.choice(nspterminology[term]), 1)
-            seed = seed + 1
+            seed += 1
             random.seed(seed)
 
     return new_text
@@ -1225,7 +1225,7 @@ class WAS_Tools_Class():
 
                 out.release()
 
-                cstr("Created new video at: {video_path}").msg.print()
+                cstr(f"Created new video at: {video_path}").msg.print()
 
                 return video_path
 
@@ -11853,7 +11853,7 @@ class WAS_Checkpoint_Loader:
     def INPUT_TYPES(s):
         return {"required": { "config_name": (comfy_paths.get_filename_list("configs"), ),
                               "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), )}}
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", TEXT_TYPE)
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
     FUNCTION = "load_checkpoint"
 
@@ -11870,7 +11870,7 @@ class WAS_Checkpoint_Loader:
     def INPUT_TYPES(s):
         return {"required": { "config_name": (comfy_paths.get_filename_list("configs"), ),
                               "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), )}}
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", TEXT_TYPE)
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
     FUNCTION = "load_checkpoint"
 
@@ -11887,7 +11887,7 @@ class WAS_Diffusers_Hub_Model_Loader:
     def INPUT_TYPES(s):
         return {"required": { "repo_id": ("STRING", {"multiline":False}),
                               "revision": ("STRING", {"default": "None", "multiline":False})}}
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", TEXT_TYPE)
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
     FUNCTION = "load_hub_checkpoint"
 
@@ -11916,7 +11916,7 @@ class WAS_Checkpoint_Loader_Simple:
     def INPUT_TYPES(s):
         return {"required": { "ckpt_name": (comfy_paths.get_filename_list("checkpoints"), ),
                              }}
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", TEXT_TYPE)
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
     FUNCTION = "load_checkpoint"
 
@@ -11935,7 +11935,7 @@ class WAS_Diffusers_Loader:
             if os.path.exists(search_path):
                 paths += next(os.walk(search_path))[1]
         return {"required": {"model_path": (paths,), }}
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", TEXT_TYPE)
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "NAME_STRING")
     FUNCTION = "load_checkpoint"
 
@@ -11970,6 +11970,9 @@ class WAS_unCLIP_Checkpoint_Loader:
         return (out[0], out[1], out[2], out[3], os.path.splitext(os.path.basename(ckpt_name))[0])
 
 class WAS_Lora_Loader:
+    def __init__(self):
+        self.loaded_lora = None;
+        
     @classmethod
     def INPUT_TYPES(s):
         file_list = comfy_paths.get_filename_list("loras")
@@ -11980,19 +11983,29 @@ class WAS_Lora_Loader:
                               "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                               "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                               }}
-    RETURN_TYPES = ("MODEL", "CLIP", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", TEXT_TYPE)
     RETURN_NAMES = ("MODEL", "CLIP", "NAME_STRING")
     FUNCTION = "load_lora"
 
     CATEGORY = "WAS Suite/Loaders"
 
     def load_lora(self, model, clip, lora_name, strength_model, strength_clip):
-        if lora_name == 'None':
-            lora_name = file_list = comfy_paths.get_filename_list("loras")[0]
-            strength_model = 0.0
-            strength_clip = 0.0
+        if strength_model == 0 and strength_clip == 0:
+            return (model, clip)
+
         lora_path = comfy_paths.get_full_path("loras", lora_name)
-        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora_path, strength_model, strength_clip)
+        lora = None
+        if self.loaded_lora is not None:
+            if self.loaded_lora[0] == lora_path:
+                lora = self.loaded_lora[1]
+            else:
+                del self.loaded_lora
+
+        if lora is None:
+            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+            self.loaded_lora = (lora_path, lora)
+
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         return (model_lora, clip_lora, os.path.splitext(os.path.basename(lora_name))[0])
         
 class WAS_Upscale_Model_Loader:
@@ -12687,9 +12700,8 @@ if os.path.exists(BKAdvCLIP_dir):
             new_text, text_vars = parse_prompt_vars(new_text)
             cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
             
-            cstr("It doesn't seem ComfyUI_ADV_CLIP_emb is up to date. Falling back to legacy method.").warning.print()
             encode = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation)     
-            return ([[res[0][0][0], {}]], new_text, text, { "ui": { "string": new_text } } )
+            return ([[encode[0][0][0], encode[0][0][1]]], new_text, text, { "ui": { "string": new_text } } )
                  
                 
     NODE_CLASS_MAPPINGS.update({"CLIPTextEncode (BlenderNeko Advanced + NSP)": WAS_AdvancedCLIPTextEncode})       
