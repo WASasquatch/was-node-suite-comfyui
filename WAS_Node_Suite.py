@@ -11073,7 +11073,7 @@ class WAS_Number_Counter:
     def IS_CHANGED(cls, **kwargs):
         return float("NaN")
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "increment_number"
 
     CATEGORY = "WAS Suite/Number"
@@ -11093,7 +11093,7 @@ class WAS_Number_Counter:
         
         result = int(counter) if number_type == 'integer' else float(counter)
         
-        return ( result, )
+        return ( result, float(counter), int(counter) )
             
         
 
