@@ -11065,7 +11065,8 @@ class WAS_Number_Counter:
                 "counter_id": ("STRING", {"default": "counter_001", "multiline": False}),
                 "number_type": (["integer", "float"],),
                 "mode": (["increment", "decrement"],),
-                "step": ("FLOAT", {"default": 1, "min": 0, "max": 99999, "step": 1}), 
+                "start": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
+                "step": ("FLOAT", {"default": 1, "min": 0, "max": 99999, "step": 0.01}), 
             }
         }
             
@@ -11074,13 +11075,14 @@ class WAS_Number_Counter:
         return float("NaN")
 
     RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
+    RETURN_NAMES = ("number", "float", "int")
     FUNCTION = "increment_number"
 
     CATEGORY = "WAS Suite/Number"
 
-    def increment_number(self, counter_id, number_type, mode, step):
+    def increment_number(self, counter_id, number_type, mode, start, step):
 
-        counter = 0
+        counter = int(start) if mode == 'integer' else start
         if self.counters.__contains__(counter_id):
             counter = self.counters[counter_id]
             
