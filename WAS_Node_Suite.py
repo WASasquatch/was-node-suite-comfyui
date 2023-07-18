@@ -11371,7 +11371,7 @@ class WAS_Number_Operation:
                 result = (+(number_a != number_b), )
                 return result, result, int(result)
             else:
-                return (number_a, number_a, int(number_a)
+                return (number_a, number_a, int(number_a))
 
 # NUMBER MULTIPLE OF
 
