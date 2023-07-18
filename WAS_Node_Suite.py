@@ -10927,7 +10927,7 @@ class WAS_Random_Number:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "return_randm_number"
 
     CATEGORY = "WAS Suite/Number"
@@ -10949,7 +10949,7 @@ class WAS_Random_Number:
                 return
 
         # Return number
-        return (number, )
+        return (number, float(number), int(number))
         
     @classmethod
     def IS_CHANGED(cls, **kwargs):
@@ -10971,7 +10971,7 @@ class WAS_True_Random_Number:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "return_true_randm_number"
 
     CATEGORY = "WAS Suite/Number"
@@ -11010,7 +11010,7 @@ class WAS_True_Random_Number:
         if response.status_code == 200:
             data = response.json()
             if "result" in data:
-                return data["result"]["random"]["data"]
+                return data["result"]["random"]["data"], float(data["result"]["random"]["data"]), int(data["result"]["random"]["data"])
                 
         return [0]
         
@@ -11034,7 +11034,7 @@ class WAS_Constant_Number:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "return_constant_number"
 
     CATEGORY = "WAS Suite/Number"
@@ -11050,7 +11050,7 @@ class WAS_Constant_Number:
             elif number_type == 'bool':
                 return ((1 if int(number) > 0 else 0), )
             else:
-                return (number, )
+                return (number, float(number), int(number) )
 
 # INCREMENT NUMBER
 
@@ -11275,13 +11275,13 @@ class WAS_Number_PI:
             "required": {}
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT")
     FUNCTION = "number_pi"
 
     CATEGORY = "WAS Suite/Number"
 
     def number_pi(self):
-        return (math.pi, )
+        return (math.pi, math.pi)
         
 # Boolean
 
@@ -11297,13 +11297,13 @@ class WAS_Boolean:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER","INT")
     FUNCTION = "return_boolean"
 
     CATEGORY = "WAS Suite/Logic"
 
     def return_boolean(self, boolean_number=1):
-        return (int(boolean_number), )
+        return (int(boolean_number), int(boolean_number))
 
 # NUMBER OPERATIONS
 
@@ -11322,7 +11322,7 @@ class WAS_Number_Operation:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "math_operations"
 
     CATEGORY = "WAS Suite/Number/Operations"
@@ -11332,33 +11332,46 @@ class WAS_Number_Operation:
         # Return random number
         if operation:
             if operation == 'addition':
-                return ((number_a + number_b), )
+                result = ((number_a + number_b), )
+                return result, result, int(result)
             elif operation == 'subtraction':
-                return ((number_a - number_b), )
+                result = ((number_a - number_b), )
+                return result, result, int(result)
             elif operation == 'division':
-                return ((number_a / number_b), )
+                result = ((number_a / number_b), )
+                return result, result, int(result)
             elif operation == 'floor division':
-                return ((number_a // number_b), )
+                result = ((number_a // number_b), )
+                return result, result, int(result)
             elif operation == 'multiplication':
-                return ((number_a * number_b), )
+                result = ((number_a * number_b), )
+                return result, result, int(result)
             elif operation == 'exponentiation':
-                return ((number_a ** number_b), )
+                result = ((number_a ** number_b), )
+                return result, result, int(result)
             elif operation == 'modulus':
-                return ((number_a % number_b), )
+                result = ((number_a % number_b), )
+                return result, result, int(result)
             elif operation == 'greater-than':
-                return (+(number_a > number_b), )
+                result = (+(number_a > number_b), )
+                return result, result, int(result)
             elif operation == 'greater-than or equals':
-                return (+(number_a >= number_b), )
+                result = (+(number_a >= number_b), )
+                return result, result, int(result)
             elif operation == 'less-than':
-                return (+(number_a < number_b), )
+                result = (+(number_a < number_b), )
+                return result, result, int(result)
             elif operation == 'less-than or equals':
-                return (+(number_a <= number_b), )
+                result = (+(number_a <= number_b), )
+                return result, result, int(result)
             elif operation == 'equals':
-                return (+(number_a == number_b), )
+                result = (+(number_a == number_b), )
+                return result, result, int(result)
             elif operation == 'does not equal':
-                return (+(number_a != number_b), )
+                result = (+(number_a != number_b), )
+                return result, result, int(result)
             else:
-                return (number_a, )
+                return (number_a, number_a, int(number_a)
 
 # NUMBER MULTIPLE OF
 
@@ -11375,7 +11388,7 @@ class WAS_Number_Multiple_Of:
             }
         }
     
-    RETURN_TYPES =("NUMBER",)
+    RETURN_TYPES =("NUMBER", "FLOAT", "INT")
     FUNCTION = "number_multiple_of"
     
     CATEGORY = "WAS Suite/Number/Functions"
@@ -11383,7 +11396,7 @@ class WAS_Number_Multiple_Of:
     def number_multiple_of(self, number, multiple=8):
         if number % multiple != 0:
             return ((number // multiple) * multiple + multiple, )
-        return (number, )
+        return (number, number, int(number))
 
 
 #! MISC
@@ -11402,8 +11415,8 @@ class WAS_Image_Size_To_Number:
             }
         }
 
-    RETURN_TYPES = ("NUMBER", "NUMBER",)
-    RETURN_NAMES = ("width_num", "height_num",)
+    RETURN_TYPES = ("NUMBER", "NUMBER", "FLOAT", "FLOAT", "INT", "INT")
+    RETURN_NAMES = ("width_num", "height_num", "width_float", "height_float", "width_int", "height_int")
     FUNCTION = "image_width_height"
 
     CATEGORY = "WAS Suite/Number/Operations"
@@ -11411,8 +11424,8 @@ class WAS_Image_Size_To_Number:
     def image_width_height(self, image):
         image = tensor2pil(image)
         if image.size:
-            return( image.size[0], image.size[1] )
-        return ( 0, 0 )
+            return( image.size[0], image.size[1], float(image.size[0]), float(image.size[1]), image.size[0], image.size[1] )
+        return ( 0, 0, 0, 0, 0, 0)
         
         
 # Latent Width and Height to Number
@@ -11429,7 +11442,7 @@ class WAS_Latent_Size_To_Number:
             }
         }
 
-    RETURN_TYPES = ("NUMBER","NUMBER")
+    RETURN_TYPES = ("NUMBER", "NUMBER", "FLOAT", "FLOAT", "INT", "INT")
     RETURN_NAMES = ("tensor_w_num","tensor_h_num")
     FUNCTION = "latent_width_height"
 
@@ -11445,7 +11458,7 @@ class WAS_Latent_Size_To_Number:
             tensor_height = shape[-2]
             tensor_width = shape[-1]
             size_dict.update({i:[tensor_width, tensor_height]})
-        return (size_dict[0][0], size_dict[0][1])
+        return ( size_dict[0][0], size_dict[0][1], float(size_dict[0][0]), float(size_dict[0][1]), size_dict[0][0], size_dict[0][1] )
         
             
 # LATENT INPUT SWITCH
@@ -11493,7 +11506,7 @@ class WAS_Number_Input_Condition:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "number_input_condition"
 
     CATEGORY = "WAS Suite/Logic"
@@ -11560,7 +11573,7 @@ class WAS_Number_Input_Condition:
                 else:
                     result = number_a
 
-        return (result,)
+        return (result, float(result), int(result))
         
     def is_prime(self, n):
         if n <= 1:
@@ -11592,7 +11605,7 @@ class WAS_Number_Input_Switch:
             }
         }
 
-    RETURN_TYPES = ("NUMBER",)
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "number_input_switch"
 
     CATEGORY = "WAS Suite/Logic"
@@ -11600,9 +11613,9 @@ class WAS_Number_Input_Switch:
     def number_input_switch(self, number_a, number_b, boolean_number=1):
 
         if int(boolean_number) == 1:
-            return (number_a, )
+            return (number_a, float(number_a), int(number_a))
         else:
-            return (number_b, )
+            return (number_b, float(number_b), int(number_b))
             
             
 # IMAGE INPUT SWITCH
