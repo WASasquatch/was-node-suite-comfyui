@@ -11052,6 +11052,51 @@ class WAS_Constant_Number:
             else:
                 return (number, )
 
+# INCREMENT NUMBER
+
+class WAS_Number_Counter:
+    def __init__(self):
+        self.counters = {}
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "counter_id": ("STRING", {"default": "counter_001", "multiline": False}),
+                "number_type": (["integer", "float"],),
+                "mode": (["increment", "decrement"],),
+                "step": ("INT", {"default": 1, "min": 0, "max": 99999, "step": 1}), 
+            }
+        }
+            
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("NaN")
+
+    RETURN_TYPES = ("NUMBER",)
+    FUNCTION = "increment_number"
+
+    CATEGORY = "WAS Suite/Number"
+
+    def increment_number(self, counter_id, number_type, mode, step):
+
+        counter = 0
+        if self.counters.__contains__(counter_id):
+            counter = self.counters[counter_id]
+            
+        if mode == 'increment':
+            counter += step
+        else:
+            counter -= step
+            
+        self.counters[counter_id] = counter
+        
+        result = int(counter) if number_type == 'integer' else float(counter)
+        
+        return ( result, )
+            
+        
+
 
 # NUMBER TO SEED
 
@@ -12583,6 +12628,7 @@ NODE_CLASS_MAPPINGS = {
     "MiDaS Depth Approximation": MiDaS_Depth_Approx,
     "MiDaS Mask Image": MiDaS_Background_Foreground_Removal,
     "Model Input Switch": WAS_Model_Input_Switch,
+    "Number Counter": WAS_Number_Counter,
     "Number Operation": WAS_Number_Operation,
     "Number to Float": WAS_Number_To_Float,
     "Number Input Switch": WAS_Number_Input_Switch,
