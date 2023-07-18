@@ -11065,7 +11065,7 @@ class WAS_Number_Counter:
                 "counter_id": ("STRING", {"default": "counter_001", "multiline": False}),
                 "number_type": (["integer", "float"],),
                 "mode": (["increment", "decrement"],),
-                "step": ("INT", {"default": 1, "min": 0, "max": 99999, "step": 1}), 
+                "step": ("FLOAT", {"default": 1, "min": 0, "max": 99999, "step": 1}), 
             }
         }
             
