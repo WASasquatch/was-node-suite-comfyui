@@ -515,7 +515,7 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
                     line = random.choice(lines).strip()
                     if not line.startswith('#') and not line.startswith('//'):
                         random_line = line
-                text = text.replace(key, random_line)
+                text = replace_wildcards(text.replace(key, random_line))
 
     return text
     
@@ -8296,9 +8296,10 @@ class WAS_NSP_CLIPTextEncoder:
         new_text = parse_dynamic_prompt(new_text, seed)
         new_text, text_vars = parse_prompt_vars(new_text)
         cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
-        embeddings, pooled = clip.encode(new_text)
+        CLIPTextEncode = nodes.CLIPTextEncode()
+        encoded = CLIPTextEncode.encode(clip=clip, text=new_text)
         
-        return ([[embeddings, {"pooled_output": pooled}]], new_text, text, { "ui": { "string": new_text } })
+        return (encoded[0], new_text, text, { "ui": { "string": new_text } })
 
 
 #! SAMPLING NODES
@@ -11329,47 +11330,50 @@ class WAS_Number_Operation:
     CATEGORY = "WAS Suite/Number/Operations"
 
     def math_operations(self, number_a, number_b, operation="addition"):
+    
+        print(number_a)
+        print(number_b)
 
         # Return random number
         if operation:
             if operation == 'addition':
-                result = ((number_a + number_b), )
+                result = (number_a + number_b)
                 return result, result, int(result)
             elif operation == 'subtraction':
-                result = ((number_a - number_b), )
+                result = (number_a - number_b)
                 return result, result, int(result)
             elif operation == 'division':
-                result = ((number_a / number_b), )
+                result = (number_a / number_b)
                 return result, result, int(result)
             elif operation == 'floor division':
-                result = ((number_a // number_b), )
+                result = (number_a // number_b)
                 return result, result, int(result)
             elif operation == 'multiplication':
-                result = ((number_a * number_b), )
+                result = (number_a * number_b)
                 return result, result, int(result)
             elif operation == 'exponentiation':
-                result = ((number_a ** number_b), )
+                result = (number_a ** number_b)
                 return result, result, int(result)
             elif operation == 'modulus':
-                result = ((number_a % number_b), )
+                result = (number_a % number_b)
                 return result, result, int(result)
             elif operation == 'greater-than':
-                result = (+(number_a > number_b), )
+                result = +(number_a > number_b)
                 return result, result, int(result)
             elif operation == 'greater-than or equals':
-                result = (+(number_a >= number_b), )
+                result = +(number_a >= number_b)
                 return result, result, int(result)
             elif operation == 'less-than':
-                result = (+(number_a < number_b), )
+                result = +(number_a < number_b)
                 return result, result, int(result)
             elif operation == 'less-than or equals':
-                result = (+(number_a <= number_b), )
+                result = +(number_a <= number_b)
                 return result, result, int(result)
             elif operation == 'equals':
-                result = (+(number_a == number_b), )
+                result = +(number_a == number_b)
                 return result, result, int(result)
             elif operation == 'does not equal':
-                result = (+(number_a != number_b), )
+                result = +(number_a != number_b)
                 return result, result, int(result)
             else:
                 return (number_a, number_a, int(number_a))
