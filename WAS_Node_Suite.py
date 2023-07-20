@@ -8296,8 +8296,9 @@ class WAS_NSP_CLIPTextEncoder:
         new_text = parse_dynamic_prompt(new_text, seed)
         new_text, text_vars = parse_prompt_vars(new_text)
         cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
+        embeddings, pooled = clip.encode(new_text)
         
-        return ([[clip.encode(new_text), {}]], new_text, text, { "ui": { "string": new_text } })
+        return ([[embeddings, {"pooled_output": pooled}]], new_text, text, { "ui": { "string": new_text } })
 
 
 #! SAMPLING NODES
