@@ -483,6 +483,21 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
 # Simple wildcard parser:
 
 def replace_wildcards(text, seed=None, noodle_key='__'):
+
+    def replace_nested(text, key_path_dict):
+        if re.findall(f"{noodle_key}(.+?){noodle_key}", text):
+            for key, file_path in key_path_dict.items():
+                with open(file_path, "r", encoding="utf-8") as file:
+                    lines = file.readlines()
+                    if lines:
+                        random_line = None
+                        while not random_line:
+                            line = random.choice(lines).strip()
+                            if not line.startswith('#') and not line.startswith('//'):
+                                random_line = line
+                        text = text.replace(key, random_line)
+        return text
+
     conf = getSuiteConfig()
     wildcard_dir = os.path.join(WAS_SUITE_ROOT, 'wildcards')
     if not os.path.exists(wildcard_dir):
@@ -516,18 +531,9 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
                     if not line.startswith('#') and not line.startswith('//'):
                         random_line = line
                 text = text.replace(key, random_line)
+                
     # Replace sub-wildacrds in result
-    if re.findall(f"{noodle_key}(.+?){noodle_key}", text):
-        for key, file_path in key_path_dict.items():
-            with open(file_path, "r", encoding="utf-8") as file:
-                lines = file.readlines()
-                if lines:
-                    random_line = None
-                    while not random_line:
-                        line = random.choice(lines).strip()
-                        if not line.startswith('#') and not line.startswith('//'):
-                            random_line = line
-                    text = text.replace(key, random_line)
+    text = replace_nested(text, key_path_dict)
 
     return text
     
