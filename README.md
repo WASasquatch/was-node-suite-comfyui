@@ -61,6 +61,7 @@
  - Diffusers Hub Down-Loader: Download a diffusers model from the HuggingFace Hub and load it
  - Image SSAO (Ambient Occlusion): [Expiremental Beta Node] Create Screen Space Ambient Occlusion with a image and MiDaS depth approximation (or provided depth map).
  - Image SSDO (Direct Occlusion): [Expiremental Beta Node] Create a Screen Space Direct Occlusion with a image input. Direct Occlusion presents you with direct lighting highliths, similar to how Ambient Occlusion finds the crevices and shadowy areas around objets.
+ - Image Aspect Ratio: Fetch image aspect ratio in float format, common format (eg 16:9), and in if the image is portrait, landscape, or square.
  - Image Batch: Create one batch out of multiple batched tensors.
  - Image Blank: Create a blank image in any color
  - Image Blend by Mask: Blend two images by a mask
