@@ -11615,24 +11615,26 @@ class WAS_Image_Aspect_Ratio:
     CATEGORY = "WAS Suite/Logic"
 
     def aspect(self, boolean_number=1, image=None, number_a=None, number_b=None):
-    
-        if not number_a and not number_b and image is None:
-            raise Exception("WAS_Image_Aspect_Ratio must have number_a, and number_b provided if no image is supplied.")
-        
-        if number_a and number_b:
-            width = number_a; height = number_b
-        if image is not None:
-            width, height = tensor2pil(image).size
 
-        aspect_ratio = width / height            
-        aspect_type = ( ( 'landscape' if aspect_ratio > 1 else 'portrait' ) if aspect_ratio != 0 else 'square' )
-        
+        if number_a and number_b:
+            width = number_a
+            height = number_b
+        elif image is not None:
+            width, height = tensor2pil(image).size
+        else:
+            raise Exception("WAS_Image_Aspect_Ratio must have number_a and number_b provided if no image tensori supplied.")
+
+        aspect_ratio = width / height
+        aspect_type = "landscape" if aspect_ratio > 1 else "portrait" if aspect_ratio < 1 else "square"
+
         landscape_bool = 0
-        if aspect_type == 'landscape':
+        if aspect_type == "landscape":
             landscape_bool = 1
-            
-        gcd = math.gcd(width, height)        
-        aspect_ratio_common = f"{(width // gcd)}:{(height // gcd)}"
+
+        gcd = math.gcd(width, height)
+        gcd_w = width // gcd
+        gcd_h = height // gcd
+        aspect_ratio_common = f"{int(str(gcd_w)[0])}:{int(str(gcd_h)[0])}"
 
         return aspect_ratio, aspect_ratio, landscape_bool, aspect_ratio_common, aspect_type
 
