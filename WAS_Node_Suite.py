@@ -11633,7 +11633,7 @@ class WAS_Image_Aspect_Ratio:
         gcd = math.gcd(width, height)
         gcd_w = width // gcd
         gcd_h = height // gcd
-        aspect_ratio_common = f"{int(str(gcd_w)[0])}:{int(str(gcd_h)[0])}"
+        aspect_ratio_common = f"{gcd_w}:{gcd_h}"
 
         return aspect_ratio, aspect_ratio, landscape_bool, aspect_ratio_common, aspect_type
 
