@@ -515,7 +515,19 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
                     line = random.choice(lines).strip()
                     if not line.startswith('#') and not line.startswith('//'):
                         random_line = line
-                text = replace_wildcards(text.replace(key, random_line))
+                text = text.replace(key, random_line)
+    # Replace sub-wildacrds in result
+    if re.findall(f"{noodle_key}(.+?){noodle_key}", text):
+        for key, file_path in key_path_dict.items():
+            with open(file_path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+                if lines:
+                    random_line = None
+                    while not random_line:
+                        line = random.choice(lines).strip()
+                        if not line.startswith('#') and not line.startswith('//'):
+                            random_line = line
+                    text = text.replace(key, random_line)
 
     return text
     
