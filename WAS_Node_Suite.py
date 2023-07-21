@@ -11603,8 +11603,8 @@ class WAS_Image_Aspect_Ratio:
             "required": {},
             "optional": {
                 "image": ("IMAGE",),
-                "number_a": ("NUMBER",),
-                "number_b": ("NUMBER",),
+                "width": ("NUMBER",),
+                "height": ("NUMBER",),
             }
         }
 
@@ -11614,15 +11614,14 @@ class WAS_Image_Aspect_Ratio:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def aspect(self, boolean_number=1, image=None, number_a=None, number_b=None):
+    def aspect(self, boolean_number=1, image=None, width=None, height=None):
 
-        if number_a and number_b:
-            width = number_a
-            height = number_b
+        if width and height:
+            width = width; height = height
         elif image is not None:
             width, height = tensor2pil(image).size
         else:
-            raise Exception("WAS_Image_Aspect_Ratio must have number_a and number_b provided if no image tensori supplied.")
+            raise Exception("WAS_Image_Aspect_Ratio must have width and height provided if no image tensori supplied.")
 
         aspect_ratio = width / height
         aspect_type = "landscape" if aspect_ratio > 1 else "portrait" if aspect_ratio < 1 else "square"
