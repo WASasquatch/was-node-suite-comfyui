@@ -11331,9 +11331,6 @@ class WAS_Number_Operation:
 
     def math_operations(self, number_a, number_b, operation="addition"):
     
-        print(number_a)
-        print(number_b)
-
         # Return random number
         if operation:
             if operation == 'addition':
@@ -11594,6 +11591,52 @@ class WAS_Number_Input_Condition:
             i += 6
         return True
         
+# ASPECT RATIO
+
+class WAS_Image_Aspect_Ratio:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {},
+            "optional": {
+                "image": ("IMAGE",),
+                "number_a": ("NUMBER",),
+                "number_b": ("NUMBER",),
+            }
+        }
+
+    RETURN_TYPES = ("NUMBER", "FLOAT", "NUMBER", TEXT_TYPE, TEXT_TYPE)
+    RETURN_NAMES = ("aspect_number", "aspect_float", "is_landscape_bool", "aspect_ratio_common", "aspect_type")
+    FUNCTION = "aspect"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def aspect(self, boolean_number=1, image=None, number_a=None, number_b=None):
+    
+        if not number_a and not number_b and image is None:
+            raise Exception("WAS_Image_Aspect_Ratio must have number_a, and number_b provided if no image is supplied.")
+        
+        if number_a and number_b:
+            width = number_a; height = number_b
+        if image is not None:
+            width, height = tensor2pil(image).size
+
+        aspect_ratio = width / height            
+        aspect_type = ( ( 'landscape' if aspect_ratio > 1 else 'portrait' ) if aspect_ratio != 0 else 'square' )
+        
+        landscape_bool = 0
+        if aspect_type == 'landscape':
+            landscape_bool = 1
+            
+        gcd = math.gcd(width, height)        
+        aspect_ratio_common = f"{(width // gcd)}:{(height // gcd)}"
+
+        return aspect_ratio, aspect_ratio, landscape_bool, aspect_ratio_common, aspect_type
+
+            
 # NUMBER INPUT SWITCH
 
 class WAS_Number_Input_Switch:
@@ -12554,6 +12597,7 @@ NODE_CLASS_MAPPINGS = {
     "Image SSAO (Ambient Occlusion)": WAS_Image_Ambient_Occlusion,
     "Image SSDO (Direct Occlusion)": WAS_Image_Direct_Occlusion,
     "Image Analyze": WAS_Image_Analyze,
+    "Image Aspect Ratio": WAS_Image_Aspect_Ratio, 
     "Image Batch": WAS_Image_Batch,
     "Image Blank": WAS_Image_Blank,
     "Image Blend by Mask": WAS_Image_Blend_Mask,
