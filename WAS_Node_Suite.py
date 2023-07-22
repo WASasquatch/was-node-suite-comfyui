@@ -3595,6 +3595,9 @@ class WAS_Image_Morph_GIF:
     def create_morph_gif(self, image_a, image_b, transition_frames=10, still_image_delay_ms=10, duration_ms=0.1, loops=0, max_size=512, 
                             output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
                 
+        tokens = TextTokens()
+        WTools = WAS_Tools_Class()
+                
         if 'imageio' not in packages():
             cstr("Installing imageio...").msg.print()
             subprocess.check_call(
@@ -3622,10 +3625,7 @@ class WAS_Image_Morph_GIF:
             duration_ms = 0.1
         elif duration_ms > 60000.0:
             duration_ms = 60000.0
-            
-        tokens = TextTokens()
-        WTools = WAS_Tools_Class()
-            
+                        
         output_file = WTools.morph_images([tensor2pil(image_a), tensor2pil(image_b)], steps=int(transition_frames), max_size=int(max_size), loop=int(loops), 
                             still_duration=int(still_image_delay_ms), duration=int(duration_ms), output_path=output_path,
                             filename=tokens.parseTokens(filename), filetype=filetype)
