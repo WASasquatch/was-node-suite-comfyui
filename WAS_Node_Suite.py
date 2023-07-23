@@ -6617,6 +6617,7 @@ class WAS_Image_Save:
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "filename_delimiter": ("STRING", {"default":"_"}),
                 "filename_number_padding": ("INT", {"default":4, "min":1, "max":9, "step":1}),
+                "filename_number_start": (["false", "true"],),
                 "extension": (['png', 'jpeg', 'gif', 'tiff', 'webp'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "lossless_webp": (["false", "true"],),
@@ -6640,8 +6641,9 @@ class WAS_Image_Save:
 
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_', 
                         extension='png', quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None, 
-                        overwrite_mode='false', filename_number_padding=4, show_history='false', 
-                        show_history_by_prefix="true", embed_workflow="true", show_previews="true"):
+                        overwrite_mode='false', filename_number_padding=4, filename_number_start='false',
+                        show_history='false', show_history_by_prefix="true", embed_workflow="true",
+                        show_previews="true"):
                         
         delimiter = filename_delimiter
         number_padding = filename_number_padding
@@ -6670,7 +6672,10 @@ class WAS_Image_Save:
                 os.makedirs(output_path, exist_ok=True)
         
         # Find existing counter values
-        pattern = f"{re.escape(filename_prefix)}{re.escape(delimiter)}(\\d{{{filename_number_padding}}})"
+        if filename_number_start == 'true':
+            pattern = f"(\\d{{{filename_number_padding}}}){re.escape(delimiter)}{re.escape(filename_prefix)}"
+        else:
+            pattern = f"{re.escape(filename_prefix)}{re.escape(delimiter)}(\\d{{{filename_number_padding}}})"
         existing_counters = [
             int(re.search(pattern, filename).group(1))
             for filename in os.listdir(output_path)
@@ -6715,10 +6720,12 @@ class WAS_Image_Save:
             if overwrite_mode == 'prefix_as_filename':
                 file = f"{filename_prefix}{file_extension}"
             else:
-                file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
+                if filename_number_start == 'true':
+                    file = f"{counter:0{number_padding}}{delimiter}{filename_prefix}{file_extension}"
+                else:
+                    file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
                 if os.path.exists(os.path.join(output_path, file)):
                     counter += 1
-                    file = f"{filename_prefix}{delimiter}{counter:0{number_padding}}{file_extension}"
             try:
                 output_file = os.path.abspath(os.path.join(output_path, file))
                 if extension == 'png':
