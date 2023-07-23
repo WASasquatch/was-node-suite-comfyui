@@ -2738,7 +2738,7 @@ class WAS_Image_Filters:
             del blend_mask, edge_enhanced_img
 
         # Output image
-        out_image = (pil2tensor(pil_image) if pil_image else image)
+        tensors.appendpil2tensor(pil2tensor(pil_image) if pil_image else image)
 
         return (out_image, )
 
@@ -2803,74 +2803,72 @@ class WAS_Image_Style_Filter:
         # Import Pilgram module
         import pilgram
 
-        # Convert image to PIL
-        image = tensor2pil(image)
-
         # WAS Filters
         WTools = WAS_Tools_Class()
 
         # Apply blending
-        if style:
+        tensors = []
+        for img in images:
             if style == "1977":
-                out_image = pilgram._1977(image)
+                tensors.append(pil2tensor(pilgram._1977(tensor2pil(img))))
             elif style == "aden":
-                out_image = pilgram.aden(image)
+                tensors.append(pil2tensor(pilgram.aden(tensor2pil(img))))
             elif style == "brannan":
-                out_image = pilgram.brannan(image)
+                tensors.append(pil2tensor(pilgram.brannan(tensor2pil(img))))
             elif style == "brooklyn":
-                out_image = pilgram.brooklyn(image)
+                tensors.append(pil2tensor(pilgram.brooklyn(tensor2pil(img))))
             elif style == "clarendon":
-                out_image = pilgram.clarendon(image)
+                tensors.append(pil2tensor(pilgram.clarendon(tensor2pil(img))))
             elif style == "earlybird":
-                out_image = pilgram.earlybird(image)
+                tensors.append(pil2tensor(pilgram.earlybird(tensor2pil(img))))
             elif style == "fairy tale":
-                out_image = WTools.sparkle(image)
+                tensors.append(pil2tensor(WTools.sparkle(tensor2pil(img))))
             elif style == "gingham":
-                out_image = pilgram.gingham(image)
+                tensors.append(pil2tensor(pilgram.gingham(tensor2pil(img))))
             elif style == "hudson":
-                out_image = pilgram.hudson(image)
+                tensors.append(pil2tensor(pilgram.hudson(tensor2pil(img))))
             elif style == "inkwell":
-                out_image = pilgram.inkwell(image)
+                tensors.append(pil2tensor(pilgram.inkwell(tensor2pil(img))))
             elif style == "kelvin":
-                out_image = pilgram.kelvin(image)
+                tensors.append(pil2tensor(pilgram.kelvin(tensor2pil(img))))
             elif style == "lark":
-                out_image = pilgram.lark(image)
+                tensors.append(pil2tensor(pilgram.lark(tensor2pil(img))))
             elif style == "lofi":
-                out_image = pilgram.lofi(image)
+                tensors.append(pil2tensor(pilgram.lofi(tensor2pil(img))))
             elif style == "maven":
-                out_image = pilgram.maven(image)
+                tensors.append(pil2tensor(pilgram.maven(tensor2pil(img))))
             elif style == "mayfair":
-                out_image = pilgram.mayfair(image)
+                tensors.append(pil2tensor(pilgram.mayfair(tensor2pil(img))))
             elif style == "moon":
-                out_image = pilgram.moon(image)
+                tensors.append(pil2tensor(pilgram.moon(tensor2pil(img))))
             elif style == "nashville":
-                out_image = pilgram.nashville(image)
+                tensors.append(pil2tensor(pilgram.nashville(tensor2pil(img))))
             elif style == "perpetua":
-                out_image = pilgram.perpetua(image)
+                tensors.appendpil2tensorpilgram.perpetua(tensor2pil(img))))
             elif style == "reyes":
-                out_image = pilgram.reyes(image)
+                tensors.appendpil2tensorpilgram.reyes(tensor2pil(img))))
             elif style == "rise":
-                out_image = pilgram.rise(image)
+                tensors.appendpil2tensorpilgram.rise(tensor2pil(img))))
             elif style == "slumber":
-                out_image = pilgram.slumber(image)
+                tensors.appendpil2tensorpilgram.slumber(tensor2pil(img))))
             elif style == "stinson":
-                out_image = pilgram.stinson(image)
+                tensors.appendpil2tensorpilgram.stinson(tensor2pil(img))))
             elif style == "toaster":
-                out_image = pilgram.toaster(image)
+                tensors.appendpil2tensorpilgram.toaster(tensor2pil(img))))
             elif style == "valencia":
-                out_image = pilgram.valencia(image)
+                tensors.appendpil2tensorpilgram.valencia(tensor2pil(img))))
             elif style == "walden":
-                out_image = pilgram.walden(image)
+                tensors.appendpil2tensorpilgram.walden(tensor2pil(img))))
             elif style == "willow":
-                out_image = pilgram.willow(image)
+                tensors.appendpil2tensorpilgram.willow(tensor2pil(img))))
             elif style == "xpro2":
-                out_image = pilgram.xpro2(image)
+                tensors.appendpil2tensorpilgram.xpro2(tensor2pil(img))))
             else:
-                out_image = image
+                tensors.append(img)
 
-        out_image = out_image.convert("RGB")
+        tensors = torch.cat(tensors, dim=0)
 
-        return (torch.from_numpy(np.array(out_image).astype(np.float32) / 255.0).unsqueeze(0), )
+        return (tensors, )
 
 
 # IMAGE CROP FACE
@@ -3840,43 +3838,43 @@ class WAS_Image_Blending_Mode:
         # Apply blending
         if mode:
             if mode == "color":
-                out_image = pilgram.css.blending.color(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.color(img_a, img_b)
             elif mode == "color_burn":
-                out_image = pilgram.css.blending.color_burn(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.color_burn(img_a, img_b)
             elif mode == "color_dodge":
-                out_image = pilgram.css.blending.color_dodge(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.color_dodge(img_a, img_b)
             elif mode == "darken":
-                out_image = pilgram.css.blending.darken(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.darken(img_a, img_b)
             elif mode == "difference":
-                out_image = pilgram.css.blending.difference(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.difference(img_a, img_b)
             elif mode == "exclusion":
-                out_image = pilgram.css.blending.exclusion(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.exclusion(img_a, img_b)
             elif mode == "hard_light":
-                out_image = pilgram.css.blending.hard_light(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.hard_light(img_a, img_b)
             elif mode == "hue":
-                out_image = pilgram.css.blending.hue(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.hue(img_a, img_b)
             elif mode == "lighten":
-                out_image = pilgram.css.blending.lighten(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.lighten(img_a, img_b)
             elif mode == "multiply":
-                out_image = pilgram.css.blending.multiply(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.multiply(img_a, img_b)
             elif mode == "add":
-                out_image = pilgram.css.blending.normal(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.normal(img_a, img_b)
             elif mode == "overlay":
-                out_image = pilgram.css.blending.overlay(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.overlay(img_a, img_b)
             elif mode == "screen":
-                out_image = pilgram.css.blending.screen(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.screen(img_a, img_b)
             elif mode == "soft_light":
-                out_image = pilgram.css.blending.soft_light(img_a, img_b)
+                tensors.appendpil2tensorpilgram.css.blending.soft_light(img_a, img_b)
             else:
-                out_image = img_a
+                tensors.appendpil2tensorimg_a
 
-        out_image = out_image.convert("RGB")
+        tensors.appendpil2tensorout_image.convert("RGB")
 
         # Blend image
         blend_mask = Image.new(mode="L", size=img_a.size,
                                color=(round(blend_percentage * 255)))
         blend_mask = ImageOps.invert(blend_mask)
-        out_image = Image.composite(img_a, out_image, blend_mask)
+        tensors.appendpil2tensorImage.composite(img_a, out_image, blend_mask)
 
         return (pil2tensor(out_image), )
 
