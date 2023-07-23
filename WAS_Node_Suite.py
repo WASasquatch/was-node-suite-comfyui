@@ -2810,65 +2810,65 @@ class WAS_Image_Style_Filter:
         tensors = []
         for img in image:
             if style == "1977":
-                tensors.append(pil2tensor(pilgram._1977(img)))
+                tensors.append(pil2tensor(pilgram._1977(tensor2pil(img))))
             elif style == "aden":
-                tensors.append(pil2tensor(pilgram.aden(img)))
+                tensors.append(pil2tensor(pilgram.aden(tensor2pil(img))))
             elif style == "brannan":
-                tensors.append(pil2tensor(pilgram.brannan(img)))
+                tensors.append(pil2tensor(pilgram.brannan(tensor2pil(img))))
             elif style == "brooklyn":
-                tensors.append(pil2tensor(pilgram.brooklyn(img)))
+                tensors.append(pil2tensor(pilgram.brooklyn(tensor2pil(img))))
             elif style == "clarendon":
-                tensors.append(pil2tensor(pilgram.clarendon(img)))
+                tensors.append(pil2tensor(pilgram.clarendon(tensor2pil(img))))
             elif style == "earlybird":
-                tensors.append(pil2tensor(pilgram.earlybird(img)))
+                tensors.append(pil2tensor(pilgram.earlybird(tensor2pil(img))))
             elif style == "fairy tale":
-                tensors.append(pil2tensor(WTools.sparkle(img)))
+                tensors.append(pil2tensor(WTools.sparkle(tensor2pil(img))))
             elif style == "gingham":
-                tensors.append(pil2tensor(pilgram.gingham(img)))
+                tensors.append(pil2tensor(pilgram.gingham(tensor2pil(img))))
             elif style == "hudson":
-                tensors.append(pil2tensor(pilgram.hudson(img)))
+                tensors.append(pil2tensor(pilgram.hudson(tensor2pil(img))))
             elif style == "inkwell":
-                tensors.append(pil2tensor(pilgram.inkwell(img)))
+                tensors.append(pil2tensor(pilgram.inkwell(tensor2pil(img))))
             elif style == "kelvin":
-                tensors.append(pil2tensor(pilgram.kelvin(img)))
+                tensors.append(pil2tensor(pilgram.kelvin(tensor2pil(img))))
             elif style == "lark":
-                tensors.append(pil2tensor(pilgram.lark(img)))
+                tensors.append(pil2tensor(pilgram.lark(tensor2pil(img))))
             elif style == "lofi":
-                tensors.append(pil2tensor(pilgram.lofi(img)))
+                tensors.append(pil2tensor(pilgram.lofi(tensor2pil(img))))
             elif style == "maven":
-                tensors.append(pil2tensor(pilgram.maven(img)))
+                tensors.append(pil2tensor(pilgram.maven(tensor2pil(img))))
             elif style == "mayfair":
-                tensors.append(pil2tensor(pilgram.mayfair(img)))
+                tensors.append(pil2tensor(pilgram.mayfair(tensor2pil(img))))
             elif style == "moon":
-                tensors.append(pil2tensor(pilgram.moon(img)))
+                tensors.append(pil2tensor(pilgram.moon(tensor2pil(img))))
             elif style == "nashville":
-                tensors.append(pil2tensor(pilgram.nashville(img)))
+                tensors.append(pil2tensor(pilgram.nashville(tensor2pil(img))))
             elif style == "perpetua":
-                tensors.append(pil2tensor(pilgram.perpetua(img)))
+                tensors.append(pil2tensor(pilgram.perpetua(tensor2pil(img))))
             elif style == "reyes":
-                tensors.append(pil2tensor(pilgram.reyes(img)))
+                tensors.append(pil2tensor(pilgram.reyes(tensor2pil(img))))
             elif style == "rise":
-                tensors.append(pil2tensor(pilgram.rise(img)))
+                tensors.append(pil2tensor(pilgram.rise(tensor2pil(img))))
             elif style == "slumber":
-                tensors.append(pil2tensor(pilgram.slumber(img)))
+                tensors.append(pil2tensor(pilgram.slumber(tensor2pil(img))))
             elif style == "stinson":
-                tensors.append(pil2tensor(pilgram.stinson(img)))
+                tensors.append(pil2tensor(pilgram.stinson(tensor2pil(img))))
             elif style == "toaster":
-                tensors.append(pil2tensor(pilgram.toaster(img)))
+                tensors.append(pil2tensor(pilgram.toaster(tensor2pil(img))))
             elif style == "valencia":
-                tensors.append(pil2tensor(pilgram.valencia(img)))
+                tensors.append(pil2tensor(pilgram.valencia(tensor2pil(img))))
             elif style == "walden":
-                tensors.append(pil2tensor(pilgram.walden(img)))
+                tensors.append(pil2tensor(pilgram.walden(tensor2pil(img))))
             elif style == "willow":
-                tensors.append(pil2tensor(pilgram.willow(img)))
+                tensors.append(pil2tensor(pilgram.willow(tensor2pil(img))))
             elif style == "xpro2":
-                tensors.append(pil2tensor(pilgram.xpro2(img)))
+                tensors.append(pil2tensor(pilgram.xpro2(tensor2pil(img))))
             else:
                 tensors.append(img)
 
-        out_image = out_image.convert("RGB")
+            tensors = torch.cat(tensors, dim=0)
 
-        return (torch.from_numpy(np.array(out_image).astype(np.float32) / 255.0).unsqueeze(0), )
+        return (tensors, )
 
 
 # IMAGE CROP FACE
