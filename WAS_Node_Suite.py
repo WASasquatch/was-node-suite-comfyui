@@ -8986,13 +8986,14 @@ class WAS_Text_Parse_Embeddings_By_Name:
         return (self.convert_a1111_embeddings(text), )
         
     def convert_a1111_embeddings(self, text):
-        import re
-        for filename in os.listdir(os.path.join(MODELS_DIR, 'embeddings')):
-            basename, ext = os.path.splitext(filename)
-            pattern = re.compile(r'\b{}\b'.format(re.escape(basename)))
-            replacement = 'embedding:{}'.format(basename)
-            text = re.sub(pattern, replacement, text)
-        return text        
+        for embeddings_path in comfy_paths.folder_names_and_paths["embeddings"][0]:
+            for filename in os.listdir(embeddings_path):
+                basename, ext = os.path.splitext(filename)
+                pattern = re.compile(r'\b{}\b'.format(re.escape(basename)))
+                replacement = 'embedding:{}'.format(basename)
+                text = re.sub(pattern, replacement, text)
+
+        return text  
                 
 
 # Text Dictionary Concatenate
