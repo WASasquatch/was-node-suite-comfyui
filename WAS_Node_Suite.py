@@ -2808,7 +2808,7 @@ class WAS_Image_Style_Filter:
 
         # Apply blending
         tensors = []
-        for img in images:
+        for img in image:
             if style == "1977":
                 tensors.append(pil2tensor(pilgram._1977(tensor2pil(img))))
             elif style == "aden":
