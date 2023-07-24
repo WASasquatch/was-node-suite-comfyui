@@ -2866,7 +2866,7 @@ class WAS_Image_Style_Filter:
             else:
                 tensors.append(img)
 
-            tensors = torch.cat(tensors, dim=0)
+        tensors = torch.cat(tensors, dim=0)
 
         return (tensors, )
 
@@ -8354,6 +8354,7 @@ class WAS_KSampler:
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=1.0):
         return nodes.common_ksampler(model, seed['seed'], steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
 
+# KSampler Cycle
 
 class WAS_KSampler_Cycle:
     @classmethod
