@@ -2675,6 +2675,7 @@ class WAS_Image_Filters:
                 "blur": ("INT", {"default": 0, "min": 0, "max": 16, "step": 1}),
                 "gaussian_blur": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1024.0, "step": 0.1}),
                 "edge_enhance": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "detail_enhance": (["false", "true"],),
             },
         }
 
@@ -2683,7 +2684,7 @@ class WAS_Image_Filters:
 
     CATEGORY = "WAS Suite/Image/Filter"
 
-    def image_filters(self, image, brightness, contrast, saturation, sharpness, blur, gaussian_blur, edge_enhance):
+    def image_filters(self, image, brightness, contrast, saturation, sharpness, blur, gaussian_blur, edge_enhance, detail_enhance):
 
         pil_image = None
 
@@ -2736,6 +2737,10 @@ class WAS_Image_Filters:
                 edge_enhanced_img, pil_image, blend_mask)
             # Clean-up
             del blend_mask, edge_enhanced_img
+            
+        if detail_enhance == "true":
+            pil_image = pil_image if pil_image else tensor2pil(image)
+            pil_image = pil_image.filter(ImageFilter.DETAIL)
 
         # Output image
         out_image = (pil2tensor(pil_image) if pil_image else image)
