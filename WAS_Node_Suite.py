@@ -11343,7 +11343,7 @@ class WAS_Boolean:
     CATEGORY = "WAS Suite/Logic"
 
     def return_boolean(self, boolean_number=1):
-        return (int(boolean_number), int(boolean_number))
+        return (int(round(boolean_number)), int(round(boolean_number)))
 
 # NUMBER OPERATIONS
 
@@ -11524,7 +11524,7 @@ class WAS_Latent_Input_Switch:
 
     def latent_input_switch(self, latent_a, latent_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (latent_a, )
         else:
             return (latent_b, )
@@ -11699,7 +11699,7 @@ class WAS_Number_Input_Switch:
 
     def number_input_switch(self, number_a, number_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (number_a, float(number_a), int(number_a))
         else:
             return (number_b, float(number_b), int(number_b))
@@ -11728,7 +11728,7 @@ class WAS_Image_Input_Switch:
 
     def image_input_switch(self, image_a, image_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (image_a, )
         else:
             return (image_b, )
@@ -11756,7 +11756,7 @@ class WAS_Conditioning_Input_Switch:
 
     def conditioning_input_switch(self, conditioning_a, conditioning_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (conditioning_a, )
         else:
             return (conditioning_b, )    
@@ -11784,7 +11784,7 @@ class WAS_Model_Input_Switch:
 
     def model_switch(self, model_a, model_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (model_a, )
         else:
             return (model_b, )    
@@ -11812,7 +11812,7 @@ class WAS_VAE_Input_Switch:
 
     def vae_switch(self, vae_a, vae_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (vae_a, )
         else:
             return (vae_b, )
@@ -11840,7 +11840,7 @@ class WAS_CLIP_Input_Switch:
 
     def clip_switch(self, clip_a, clip_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (clip_a, )
         else:
             return (clip_b, )  
@@ -11868,7 +11868,7 @@ class WAS_Upscale_Model_Input_Switch:
 
     def upscale_model_switch(self, upscale_model_a, upscale_model_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (upscale_model_a, )
         else:
             return (upscale_model_b, )     
@@ -11897,7 +11897,7 @@ class WAS_Control_Net_Input_Switch:
 
     def control_net_switch(self, control_net_a, control_net_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (control_net_a, )
         else:
             return (control_net_b, ) 
@@ -11925,7 +11925,7 @@ class WAS_CLIP_Vision_Input_Switch:
 
     def clip_vision_switch(self, clip_vision_a, clip_vision_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (clip_vision_a, )
         else:
             return (clip_vision_b)   
@@ -11953,7 +11953,7 @@ class WAS_Text_Input_Switch:
 
     def text_input_switch(self, text_a, text_b, boolean_number=1):
 
-        if int(boolean_number) == 1:
+        if int(round(boolean_number)) == 1:
             return (text_a, )
         else:
             return (text_b, )
