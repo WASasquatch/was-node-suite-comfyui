@@ -4859,7 +4859,9 @@ class WAS_Load_Image_Batch:
             if image_id < 0 or image_id >= len(self.image_paths):
                 cstr(f"Invalid image index `{image_id}`").error.print()
                 return
-            return (Image.open(self.image_paths[image_id]), os.path.basename(self.image_paths[image_id]))
+            i = Image.open(self.image_paths[image_id])
+            i = ImageOps.exif_transpose(i)
+            return (i, os.path.basename(self.image_paths[image_id]))
 
         def get_next_image(self):
             if self.index >= len(self.image_paths):
@@ -4870,7 +4872,9 @@ class WAS_Load_Image_Batch:
                 self.index = 0
             cstr(f'{cstr.color.YELLOW}{self.label}{cstr.color.END} Index: {self.index}').msg.print()
             self.WDB.insert('Batch Counters', self.label, self.index)
-            return (Image.open(image_path), os.path.basename(image_path))
+            i = Image.open(image_path)
+            i = ImageOps.exif_transpose(i)
+            return (i, os.path.basename(image_path))
 
         def get_current_image(self):
             if self.index >= len(self.image_paths):
