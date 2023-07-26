@@ -1661,12 +1661,16 @@ class WAS_Tools_Class():
             alpha = image.getchannel('A')
             
         grayscale_image = image if image.mode == 'L' else image.convert('L')
+        
         contrast_enhancer = ImageEnhance.Contrast(grayscale_image)
         contrast_image = contrast_enhancer.enhance(contrast)
+        
         saturation_enhancer = ImageEnhance.Color(contrast_image) if image.mode != 'L' else None
         saturation_image = contrast_image if saturation_enhancer is None else saturation_enhancer.enhance(saturation)
+        
         sharpness_enhancer = ImageEnhance.Sharpness(saturation_image)
         sharpness_image = sharpness_enhancer.enhance(sharpness)
+        
         brightness_enhancer = ImageEnhance.Brightness(sharpness_image)
         brightness_image = brightness_enhancer.enhance(brightness)
         
@@ -6097,7 +6101,7 @@ class WAS_Dragon_Filter:
                 "sharpness": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 6.0, "step": 0.01}),
                 "highpass_radius": ("FLOAT", {"default": 6.0, "min": 0.0, "max": 255.0, "step": 0.01}),
                 "highpass_samples": ("INT", {"default": 1, "min": 0, "max": 6.0, "step": 1}),
-                "highpass_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "highpass_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 3.0, "step": 0.01}),
                 "colorize": (["true","false"],),
             },
         }
@@ -8414,7 +8418,7 @@ class WAS_KSampler_Cycle:
                     "steps_control": (["decrement", "increment"],),
                     "steps_scaling_value": ("INT", {"default": 10, "min": 1, "max": 20, "step": 1}),
                     "steps_cutoff": ("INT", {"default": 20, "min": 4, "max": 1000, "step": 1}),
-                    "denoise_cutoff": ("INT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
+                    "denoise_cutoff": ("FLOAT", {"default": 0.25, "min": 0.01, "max": 1.0, "step": 0.01}),
                 }
             }
 
@@ -8678,9 +8682,9 @@ class WAS_KSampler_Cycle:
         sharpened_pil = Image.fromarray(sharpened)
 
         return sharpened_pil
+        
     
 # Latent Blend
-
 
 class WAS_Blend_Latents:
     @classmethod
@@ -11102,11 +11106,16 @@ class WAS_Number_Counter:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "counter_id": ("STRING", {"default": "counter_001", "multiline": False}),
                 "number_type": (["integer", "float"],),
                 "mode": (["increment", "decrement"],),
                 "start": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
                 "step": ("FLOAT", {"default": 1, "min": 0, "max": 99999, "step": 0.01}), 
+            },
+            "optional": {
+                "reset_bool": ("NUMBER",),
+            },
+            "hidden": {
+                "unique_id": "UNIQUE_ID",
             }
         }
             
@@ -11120,18 +11129,23 @@ class WAS_Number_Counter:
 
     CATEGORY = "WAS Suite/Number"
 
-    def increment_number(self, counter_id, number_type, mode, start, step):
+    def increment_number(self, number_type, mode, start, step, unique_id, reset_bool=0):
+    
+        print(unique_id)
 
         counter = int(start) if mode == 'integer' else start
-        if self.counters.__contains__(counter_id):
-            counter = self.counters[counter_id]
+        if self.counters.__contains__(unique_id):
+            counter = self.counters[unique_id]
+            
+        if round(reset_bool) >= 1:
+            counter = start
             
         if mode == 'increment':
             counter += step
         else:
             counter -= step
             
-        self.counters[counter_id] = counter
+        self.counters[unique_id] = counter
         
         result = int(counter) if number_type == 'integer' else float(counter)
         
@@ -12146,7 +12160,9 @@ class WAS_Lora_Loader:
             if self.loaded_lora[0] == lora_path:
                 lora = self.loaded_lora[1]
             else:
-                del self.loaded_lora
+                temp = self.loaded_lora
+                self.loaded_lora = None
+                del temp
 
         if lora is None:
             lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
