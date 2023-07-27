@@ -9933,7 +9933,7 @@ class WAS_Text_Load_Line_From_File:
             self.index += 1
             if self.index == len(self.lines):
                 self.index = 0
-            cstr(f'{cstr.color.YELLOW}TextBatch{cstr.msg.END} Index: {self.index}')
+            cstr(f'{cstr.color.YELLOW}TextBatch{cstr.msg.END} Index: {self.index}').msg.print()
             return line, self.lines
 
         def get_line_by_index(self, index):
@@ -9942,7 +9942,7 @@ class WAS_Text_Load_Line_From_File:
                 return None, []
             self.index = index
             line = self.lines[self.index]
-            cstr(f'{cstr.color.YELLOW}TextBatch{cstr.msg.END} Index: {self.index}')
+            cstr(f'{cstr.color.YELLOW}TextBatch{cstr.msg.END} Index: {self.index}').msg.print()
             return line, self.lines
 
         def store_index(self):
