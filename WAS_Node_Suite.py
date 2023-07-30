@@ -12821,7 +12821,7 @@ NODE_CLASS_MAPPINGS = {
     "Number to String": WAS_Number_To_String,
     "Number to Text": WAS_Number_To_Text,
     "Prompt Styles Selector": WAS_Prompt_Styles_Selector,
-    "Prompt Multiple Styles Selector": Was_Prompt_Multiple_Styles_Selector,
+    "Prompt Multiple Styles Selector": WAS_Prompt_Multiple_Styles_Selector,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
     "Seed": WAS_Seed,
