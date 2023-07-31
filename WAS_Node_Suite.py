@@ -9140,6 +9140,59 @@ class WAS_Text_String:
         return (text, text_b, text_c, text_d)
 
 
+# Text String Truncation
+
+class WAS_Text_String_Truncate:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"forceInput": True}),
+                "truncate_by": (["characters", "words"],),
+                "truncate_from": (["end", "beginning"],),
+                "truncate_to": ("INT", {"default": 10, "min": 1, "max": 99999999, "step": 1}),
+            },
+            "optional": {
+                "text_b": ("STRING", {"forceInput": True}),
+                "text_c": ("STRING", {"forceInput": True}),
+                "text_d": ("STRING", {"forceInput": True}),
+            }
+        }
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,TEXT_TYPE,TEXT_TYPE)
+    FUNCTION = "truncate_string"
+
+    CATEGORY = "WAS Suite/Text/Operations"
+
+    def truncate_string(self, text, truncate_by, truncate_from, truncate_to, text_b='', text_c='', text_d=''):
+        return (
+            self.truncate(text, truncate_to, truncate_from, truncate_by), 
+            self.truncate(text_b, truncate_to, truncate_from, truncate_by), 
+            self.truncate(text_c, truncate_to, truncate_from, truncate_by), 
+            self.truncate(text_d, truncate_to, truncate_from, truncate_by), 
+        )
+        
+    def truncate(self, string, max_length, mode='end', truncate_by='characters'):
+        if mode not in ['beginning', 'end']:
+            cstr("Invalid mode. 'mode' must be either 'beginning' or 'end'.").error.print()
+            mode = "end"
+        if truncate_by not in ['characters', 'words']:
+            cstr("Invalid truncate_by. 'truncate_by' must be either 'characters' or 'words'.").error.print()
+        if truncate_by == 'characters':
+            if mode == 'beginning':
+                return string[:max_length]
+            else:
+                return string[-max_length:]
+        words = string.split()
+        if mode == 'beginning':
+            return ' '.join(words[:max_length])
+        else:
+            return ' '.join(words[-max_length:])
+
+
+
 # Text Compare Strings
 
 class WAS_Text_Compare:
@@ -12865,6 +12918,7 @@ NODE_CLASS_MAPPINGS = {
     "Text to Console": WAS_Text_to_Console,
     "Text to Number": WAS_Text_To_Number,
     "Text to String": WAS_Text_To_String,
+    "Text String Truncate": WAS_Text_String_Truncate,
     "True Random.org Number Generator": WAS_True_Random_Number,
     "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
     "Upscale Model Loader": WAS_Upscale_Model_Loader,
