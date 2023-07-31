@@ -11735,7 +11735,7 @@ class WAS_Image_Input_Switch:
             "required": {
                 "image_a": ("IMAGE",),
                 "image_b": ("IMAGE",),
-                "boolean_number": ("NUMBER",),
+                "boolean_number": ("INT", {"default":1, "min":0, "max":1, "step":1}),
             }
         }
 
