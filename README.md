@@ -221,6 +221,7 @@
  - Text Random Line: Select a random line from a text input string
  - Text Random Prompt: Feeling lucky? Get a random prompt based on a search seed, such as "superhero"
  - Text String: Write a single line text string value
+ - Text String Truncate: Truncate a string from the beginning or end by characters or words.
  - Text to Conditioning: Convert a text string to conditioning.
  - True Random.org Number Generator: Generate a truly random number online from atmospheric noise with [Random.org](https://random.org/)
    - [Get your API key from your account page](https://accounts.random.org/)
