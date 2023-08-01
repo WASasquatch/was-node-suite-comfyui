@@ -6937,7 +6937,7 @@ class WAS_Images_To_RGB:
             },
         }
 
-    RETURN_TYPES = ("MASK",)
+    RETURN_TYPES = ("IMAGE",)
     FUNCTION = "images_to_rgb"
 
     CATEGORY = "WAS Suite/Image"
