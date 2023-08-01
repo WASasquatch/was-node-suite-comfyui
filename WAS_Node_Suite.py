@@ -6853,10 +6853,12 @@ class WAS_Load_Image:
 
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required":
-                {"image_path": (
-                    "STRING", {"default": './ComfyUI/input/example.png', "multiline": False}), }
+        return {
+                "required": {
+                    "image_path": ("STRING", {"default": './ComfyUI/input/example.png', "multiline": False}), 
+                    "RGBA": (["false","true"],),
                 }
+            }
 
     RETURN_TYPES = ("IMAGE", "MASK", TEXT_TYPE)
     RETURN_NAMES = ("image", "mask", "filename_text")
@@ -6864,7 +6866,9 @@ class WAS_Load_Image:
     
     CATEGORY = "WAS Suite/IO"
 
-    def load_image(self, image_path):
+    def load_image(self, image_path, RGBA='false'):
+    
+        RGBA = (RGBA == 'true')
 
         if image_path.startswith('http'):
             from io import BytesIO
@@ -6881,7 +6885,8 @@ class WAS_Load_Image:
         # Update history
         update_history_images(image_path)
 
-        image = i.convert('RGB')
+        if not RGBA:
+            image = i.convert('RGB')
         image = np.array(image).astype(np.float32) / 255.0
         image = torch.from_numpy(image)[None,]
 
@@ -6916,8 +6921,37 @@ class WAS_Load_Image:
         with open(image_path, 'rb') as f:
             m.update(f.read())
         return m.digest().hex()
+        
+        
+# IMAGES TO RGB
 
+class WAS_Images_To_RGB:
+    def __init__(self):
+        pass
 
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "images_to_rgb"
+
+    CATEGORY = "WAS Suite/Image"
+
+    def images_to_rgb(self, images):
+
+        tensors = []
+        for image in images:
+            tensors.append(pil2tensor(tensor2pil(image).convert("RGB")))
+        tensors = torch.cat(tensors, dim=0)
+
+        return (tensors,)
+        
+        
 # MASK BATCH TO MASK
 
 class WAS_Mask_Batch_to_Single_Mask:
@@ -12830,6 +12864,7 @@ NODE_CLASS_MAPPINGS = {
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
     "Image to Noise": WAS_Image_To_Noise,
+    "Images to RGB": WAS_Images_To_RGB,
     "Image to Seed": WAS_Image_To_Seed,
     "Integer place counter": WAS_Integer_Place_Counter,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
