@@ -6938,6 +6938,7 @@ class WAS_Images_To_RGB:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
     FUNCTION = "images_to_rgb"
 
     CATEGORY = "WAS Suite/Image"
