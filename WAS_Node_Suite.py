@@ -6674,6 +6674,8 @@ class WAS_Image_Save:
         tokens = TextTokens()
 
         original_output = self.output_dir
+        # Parse prefix tokens
+        filename_prefix = tokens.parseTokens(filename_prefix)
 
         # Setup output path
         if output_path in [None, '', "none", "."]:
@@ -6734,9 +6736,6 @@ class WAS_Image_Save:
                 if extra_pnginfo is not None:
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
-
-            # Parse prefix tokens
-            filename_prefix = tokens.parseTokens(filename_prefix)
 
             if overwrite_mode == 'prefix_as_filename':
                 file = f"{filename_prefix}{file_extension}"
