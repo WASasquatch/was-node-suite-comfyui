@@ -4805,6 +4805,7 @@ class WAS_Load_Image_Batch:
                 "label": ("STRING", {"default": 'Batch 001', "multiline": False}),
                 "path": ("STRING", {"default": '', "multiline": False}),
                 "pattern": ("STRING", {"default": '*', "multiline": False}),
+                "RGBA": (["false","true"],),
             },
         }
 
@@ -4814,7 +4815,9 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001'):
+    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001', RGBA='false'):
+    
+        RGBA = (RGBA == 'true')
         
         if not os.path.exists(path):
             return (None, )
@@ -4833,6 +4836,9 @@ class WAS_Load_Image_Batch:
 
         # Update history
         update_history_images(new_paths)
+        
+        if not RGBA:
+           image = image.convert("RGB")
 
         return (pil2tensor(image), filename)
 
