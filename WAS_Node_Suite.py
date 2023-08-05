@@ -9350,7 +9350,10 @@ class WAS_Text_Compare:
                                 similar_words.add(word1)
                             if word2 not in similar_words:
                                 similar_words.add(word2)
-            similarity_score = 1 - (dp[m][n]/max(m,n))
+            if(max(m,n) == 0):
+                similarity_score = 1
+            else:
+                similarity_score = 1 - (dp[m][n]/max(m,n))
             return (similarity_score, list(similar_words))
 
 
