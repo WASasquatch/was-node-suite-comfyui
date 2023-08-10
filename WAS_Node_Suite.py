@@ -2824,6 +2824,64 @@ class WAS_Image_Filters:
 
         return (tensors, )
 
+# RICHARDSON LUCY SHARPEN
+
+class WAS_Lucy_Sharpen:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "iterations": ("INT", {"default": 2, "min": 1, "max": 12, "step": 1}),
+                "kernel_size": ("INT", {"default": 3, "min": 1, "max": 16, "step": 1}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "sharpen"
+    
+    CATEGORY = "WAS Suite/Image/Filter"
+    
+    def sharpen(self, images, iterations, kernel_size):
+    
+        tensors = []
+        if len(images) > 1:
+            for img in images:
+                tensors.append(pil2tensor(self.lucy_sharpen(tensor2pil(img), iterations, kernel_size)))
+            tensors = torch.cat(tensors, dim=0)
+        else:
+            return (pil2tensor(self.lucy_sharpen(tensor2pil(images), iterations, kernel_size)),)
+            
+        return (tensors,)
+        
+        
+    def lucy_sharpen(self, image, iterations=10, kernel_size=3):
+        
+        from scipy.signal import convolve2d
+    
+        image_array = np.array(image, dtype=np.float32) / 255.0
+        kernel = np.ones((kernel_size, kernel_size), dtype=np.float32) / (kernel_size ** 2)
+        sharpened_channels = []
+
+        for channel in range(3):  
+            channel_array = image_array[:, :, channel]
+
+            for _ in range(iterations):
+                blurred_channel = convolve2d(channel_array, kernel, mode='same', boundary='wrap')
+                ratio = channel_array / (blurred_channel + 1e-6)
+                channel_array *= convolve2d(ratio, kernel, mode='same', boundary='wrap')
+
+            sharpened_channels.append(channel_array)
+        
+        sharpened_image_array = np.stack(sharpened_channels, axis=-1)
+        sharpened_image_array = np.clip(sharpened_image_array * 255.0, 0, 255).astype(np.uint8)
+        sharpened_image = Image.fromarray(sharpened_image_array)
+        return sharpened_image
+
+
 
 # IMAGE STYLE FILTER
 
@@ -6699,7 +6757,7 @@ class WAS_Export_API:
 class WAS_Image_Save:
     def __init__(self):
         self.output_dir = comfy_paths.output_directory
-        self.type = os.path.basename(self.output_dir)
+        self.type = 'output'
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -6761,6 +6819,8 @@ class WAS_Image_Save:
 
         # Check output destination
         if output_path.strip() != '':
+            if not os.path.isabs(output_path):
+                output_path = os.path.join(comfy_paths.output_directory, output_path)
             if not os.path.exists(output_path.strip()):
                 cstr(f'The path `{output_path.strip()}` specified doesn\'t exist! Creating directory.').warning.print()
                 os.makedirs(output_path, exist_ok=True)
@@ -12889,6 +12949,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Crop Location": WAS_Image_Crop_Location,
     "Image Crop Square Location": WAS_Image_Crop_Square_Location,
     "Image Displacement Warp": WAS_Image_Displacement_Warp,
+    "Image Lucy Sharpen": WAS_Lucy_Sharpen,
     "Image Paste Face": WAS_Image_Paste_Face_Crop,
     "Image Paste Crop": WAS_Image_Paste_Crop,
     "Image Paste Crop by Location": WAS_Image_Paste_Crop_Location,
