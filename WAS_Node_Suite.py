@@ -2861,21 +2861,25 @@ class WAS_Lucy_Sharpen:
     def lucy_sharpen(self, image, iterations=10, kernel_size=3):
         
         from scipy.signal import convolve2d
-    
+
         image_array = np.array(image, dtype=np.float32) / 255.0
         kernel = np.ones((kernel_size, kernel_size), dtype=np.float32) / (kernel_size ** 2)
         sharpened_channels = []
 
-        for channel in range(3):  
+        for channel in range(3):
             channel_array = image_array[:, :, channel]
 
             for _ in range(iterations):
-                blurred_channel = convolve2d(channel_array, kernel, mode='same', boundary='wrap')
+                padded_channel = np.pad(channel_array, kernel_size // 2, mode='edge')
+                
+                blurred_channel = convolve2d(padded_channel, kernel, mode='valid')
                 ratio = channel_array / (blurred_channel + 1e-6)
-                channel_array *= convolve2d(ratio, kernel, mode='same', boundary='wrap')
+
+                padded_ratio = np.pad(ratio, kernel_size // 2, mode='edge')
+                channel_array *= convolve2d(padded_ratio, kernel, mode='valid')
 
             sharpened_channels.append(channel_array)
-        
+
         sharpened_image_array = np.stack(sharpened_channels, axis=-1)
         sharpened_image_array = np.clip(sharpened_image_array * 255.0, 0, 255).astype(np.uint8)
         sharpened_image = Image.fromarray(sharpened_image_array)
