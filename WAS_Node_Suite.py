@@ -2866,26 +2866,22 @@ class WAS_Lucy_Sharpen:
         kernel = np.ones((kernel_size, kernel_size), dtype=np.float32) / (kernel_size ** 2)
         sharpened_channels = []
 
+        padded_image_array = np.pad(image_array, ((kernel_size, kernel_size), (kernel_size, kernel_size), (0, 0)), mode='edge')
+
         for channel in range(3):
-            channel_array = image_array[:, :, channel]
+            channel_array = padded_image_array[:, :, channel]
 
             for _ in range(iterations):
-                padded_channel = np.pad(channel_array, kernel_size // 2, mode='edge')
-                
-                blurred_channel = convolve2d(padded_channel, kernel, mode='valid')
+                blurred_channel = convolve2d(channel_array, kernel, mode='same')
                 ratio = channel_array / (blurred_channel + 1e-6)
-
-                padded_ratio = np.pad(ratio, kernel_size // 2, mode='edge')
-                channel_array *= convolve2d(padded_ratio, kernel, mode='valid')
+                channel_array *= convolve2d(ratio, kernel, mode='same')
 
             sharpened_channels.append(channel_array)
 
-        sharpened_image_array = np.stack(sharpened_channels, axis=-1)
-        sharpened_image_array = np.clip(sharpened_image_array * 255.0, 0, 255).astype(np.uint8)
+        cropped_sharpened_image_array = np.stack(sharpened_channels, axis=-1)[kernel_size:-kernel_size, kernel_size:-kernel_size, :]
+        sharpened_image_array = np.clip(cropped_sharpened_image_array * 255.0, 0, 255).astype(np.uint8)
         sharpened_image = Image.fromarray(sharpened_image_array)
         return sharpened_image
-
-
 
 # IMAGE STYLE FILTER
 
