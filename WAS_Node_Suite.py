@@ -4574,7 +4574,7 @@ class WAS_Image_Batch:
 
         self._check_image_dimensions(batched_tensors, image_names)
         batched_tensors = torch.cat(batched_tensors, dim=0)
-        return (batched_tensors,)
+        return (batched_tensors,) 
         
 
 # MASK TO BATCH
@@ -13000,7 +13000,7 @@ NODE_CLASS_MAPPINGS = {
     "Image to Seed": WAS_Image_To_Seed,
     "Integer place counter": WAS_Integer_Place_Counter,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
-    "KSampler (WAS)": WAS_KSampler,
+    "KSampler (Legacy)": WAS_KSampler,
     "KSampler Cycle": WAS_KSampler_Cycle,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Size to Number": WAS_Latent_Size_To_Number,
@@ -13049,7 +13049,7 @@ NODE_CLASS_MAPPINGS = {
     "Prompt Multiple Styles Selector": WAS_Prompt_Multiple_Styles_Selector,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
-    "Seed": WAS_Seed,
+    "Seed (Legacy)": WAS_Seed,
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
     "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
     "SAM Model Loader": WAS_SAM_Model_Loader,
