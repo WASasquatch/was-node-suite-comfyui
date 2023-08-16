@@ -4540,6 +4540,8 @@ class WAS_Image_Batch:
     @classmethod
     def INPUT_TYPES(cls):
         return {
+            "required": {
+            },
             "optional": {
                 "images_a": ("IMAGE",),
                 "images_b": ("IMAGE",),
