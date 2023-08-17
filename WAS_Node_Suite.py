@@ -4561,9 +4561,10 @@ class WAS_Image_Batch:
     def _check_image_dimensions(self, tensors, names):
         dimensions = [tensor.shape for tensor in tensors]
         if len(set(dimensions)) > 1:
-            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim != dimensions[0]]
+            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim[1:] != dimensions[0][1:]]
             mismatched_images = [names[i] for i in mismatched_indices]
-            raise ValueError(f"WAS Image Batch Warning: Input image dimensions do not match for images: {mismatched_images}")
+            if mismatched_images:
+                raise ValueError(f"WAS Image Batch Warning: Input image dimensions do not match for images: {mismatched_images}")
 
     def image_batch(self, **kwargs):
         batched_tensors = [kwargs[key] for key in kwargs if kwargs[key] is not None]
