@@ -11067,7 +11067,7 @@ class WAS_Bounded_Image_Blend:
         # Convert PyTorch tensors to PIL images
         target_pil = Image.fromarray((target.squeeze(0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8))
         source_pils = []
-        if source.ndim > 3:
+        if source.shape[0] > 1:
             for source_img in source:
                 source_pils.append(Image.fromarray((source_img.squeeze(0).cpu().numpy() * 255).astype(np.uint8)))
         else:
