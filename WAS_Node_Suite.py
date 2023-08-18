@@ -4561,9 +4561,10 @@ class WAS_Image_Batch:
     def _check_image_dimensions(self, tensors, names):
         dimensions = [tensor.shape for tensor in tensors]
         if len(set(dimensions)) > 1:
-            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim != dimensions[0]]
+            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim[1:] != dimensions[0][1:]]
             mismatched_images = [names[i] for i in mismatched_indices]
-            raise ValueError(f"WAS Image Batch Warning: Input image dimensions do not match for images: {mismatched_images}")
+            if mismatched_images:
+                raise ValueError(f"WAS Image Batch Warning: Input image dimensions do not match for images: {mismatched_images}")
 
     def image_batch(self, **kwargs):
         batched_tensors = [kwargs[key] for key in kwargs if kwargs[key] is not None]
@@ -11073,7 +11074,12 @@ class WAS_Bounded_Image_Blend:
     def bounded_image_blend(self, target, target_bounds, source, blend_factor, feathering):
         # Convert PyTorch tensors to PIL images
         target_pil = Image.fromarray((target.squeeze(0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8))
-        source_pil = Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8))
+        source_pils = []
+        if source.shape[0] > 1:
+            for source_img in source:
+                source_pils.append(Image.fromarray((source_img.squeeze(0).cpu().numpy() * 255).astype(np.uint8)))
+        else:
+            source_pils.append(Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8)))
 
         # Extract the target bounds
         rmin, rmax, cmin, cmax = target_bounds
@@ -11082,38 +11088,41 @@ class WAS_Bounded_Image_Blend:
         width = cmax - cmin + 1
         height = rmax - rmin + 1
 
-        # Resize the source image to match the dimensions of the target bounds
-        source_resized = source_pil.resize((width, height), Image.ANTIALIAS)
+        result_tensors = []
+        for source_pil in source_pils:
+            # Resize the source image to match the dimensions of the target bounds
+            source_resized = source_pil.resize((width, height), Image.ANTIALIAS)
 
-        # Create the blend mask with the same size as the target image
-        blend_mask = Image.new('L', target_pil.size, 0)
+            # Create the blend mask with the same size as the target image
+            blend_mask = Image.new('L', target_pil.size, 0)
 
-        # Create the feathered mask portion the size of the target bounds
-        if feathering > 0:
-            inner_mask = Image.new('L', (width - (2 * feathering), height - (2 * feathering)), 255)
-            inner_mask = ImageOps.expand(inner_mask, border=feathering, fill=0)
-            inner_mask = inner_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
-        else:
-            inner_mask = Image.new('L', (width, height), 255)
+            # Create the feathered mask portion the size of the target bounds
+            if feathering > 0:
+                inner_mask = Image.new('L', (width - (2 * feathering), height - (2 * feathering)), 255)
+                inner_mask = ImageOps.expand(inner_mask, border=feathering, fill=0)
+                inner_mask = inner_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
+            else:
+                inner_mask = Image.new('L', (width, height), 255)
 
-        # Paste the feathered mask portion into the blend mask at the target bounds position
-        blend_mask.paste(inner_mask, (cmin, rmin))
+            # Paste the feathered mask portion into the blend mask at the target bounds position
+            blend_mask.paste(inner_mask, (cmin, rmin))
 
-        # Create a blank image with the same size and mode as the target
-        source_positioned = Image.new(target_pil.mode, target_pil.size)
+            # Create a blank image with the same size and mode as the target
+            source_positioned = Image.new(target_pil.mode, target_pil.size)
 
-        # Paste the source image onto the blank image using the target bounds
-        source_positioned.paste(source_resized, (cmin, rmin))
+            # Paste the source image onto the blank image using the target bounds
+            source_positioned.paste(source_resized, (cmin, rmin))
 
-        # Create a blend mask using the blend_mask and blend factor
-        blend_mask = blend_mask.point(lambda p: p * blend_factor).convert('L')
+            # Create a blend mask using the blend_mask and blend factor
+            blend_mask = blend_mask.point(lambda p: p * blend_factor).convert('L')
 
-        # Blend the source and target images using the blend mask
-        result = Image.composite(source_positioned, target_pil, blend_mask)
+            # Blend the source and target images using the blend mask
+            result = Image.composite(source_positioned, target_pil, blend_mask)
 
-        # Convert the result back to a PyTorch tensor
-        result = torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0)
-        
+            # Convert the result back to a PyTorch tensor
+            result_tensors.append(torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0))
+
+        result = torch.cat(result_tensors, dim=0)
         return (result,)
 
 
@@ -11175,30 +11184,38 @@ class WAS_Bounded_Image_Blend_With_Mask:
         # Convert PyTorch tensors to PIL images
         target_pil = Image.fromarray((target.squeeze(0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8))
         target_mask_pil = Image.fromarray((target_mask.cpu().numpy() * 255).astype(np.uint8), mode='L')
-        source_pil = Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8))
+        source_pils = []
+        if source.ndim > 3:
+            for source_img in source:
+                source_pils.append(Image.fromarray((source_img.squeeze(0).cpu().numpy() * 255).astype(np.uint8)))
+        else:
+            source_pils.append(Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8)))
 
         # Extract the target bounds
         rmin, rmax, cmin, cmax = target_bounds
 
-        # Create a blank image with the same size and mode as the target
-        source_positioned = Image.new(target_pil.mode, target_pil.size)
+        result_tensors = []
+        for source_pil in source_pils:
+            # Create a blank image with the same size and mode as the target
+            source_positioned = Image.new(target_pil.mode, target_pil.size)
 
-        # Paste the source image onto the blank image using the target bounds
-        source_positioned.paste(source_pil, (cmin, rmin))
+            # Paste the source image onto the blank image using the target bounds
+            source_positioned.paste(source_pil, (cmin, rmin))
 
-        # Create a blend mask using the target mask and blend factor
-        blend_mask = target_mask_pil.point(lambda p: p * blend_factor).convert('L')
+            # Create a blend mask using the target mask and blend factor
+            blend_mask = target_mask_pil.point(lambda p: p * blend_factor).convert('L')
 
-        # Apply feathering (Gaussian blur) to the blend mask if feather_amount is greater than 0
-        if feathering > 0:
-            blend_mask = blend_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
+            # Apply feathering (Gaussian blur) to the blend mask if feather_amount is greater than 0
+            if feathering > 0:
+                blend_mask = blend_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
 
-        # Blend the source and target images using the blend mask
-        result = Image.composite(source_positioned, target_pil, blend_mask)
+            # Blend the source and target images using the blend mask
+            result = Image.composite(source_positioned, target_pil, blend_mask)
 
-        # Convert the result back to a PyTorch tensor
-        result_tensor = torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0)
+            # Convert the result back to a PyTorch tensor
+            result_tensors.append(torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0))
 
+        result_tensor = torch.cat(result_tensors, dim=0)
         return (result_tensor,)
 
 
