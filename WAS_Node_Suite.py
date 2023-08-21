@@ -2072,15 +2072,18 @@ class WAS_Tools_Class():
         
     class worley_noise:
 
-        def __init__(self, height=512, width=512, density=50, option=0, use_broadcast_ops=True):
+        def __init__(self, height=512, width=512, density=50, option=0, use_broadcast_ops=True, flat=False, seed=None):
 
             self.height = height
             self.width = width
             self.density = density
             self.use_broadcast_ops = use_broadcast_ops
-            self.image = self.generateImage(option)
+            self.seed = seed
+            self.image = self.generateImage(option, flat_mode=flat)
 
         def generate_points(self):
+            if self.seed is not None:
+                np.random.seed(self.seed)  # Use the provided seed
             self.points = np.random.randint(0, (self.width, self.height), (self.density, 2))
 
         def calculate_noise(self, option):
@@ -2099,17 +2102,28 @@ class WAS_Tools_Class():
             distances = np.sort(d, axis=0)
             self.data = distances[option]
 
-        def generateImage(self, option):
+        def generateImage(self, option, flat_mode=False):
             self.generate_points()
             if self.use_broadcast_ops:
                 self.broadcast_calculate_noise(option)
             else:
                 self.calculate_noise(option)
-            min_val, max_val = np.min(self.data), np.max(self.data)
-            data_scaled = (self.data - min_val) / (max_val - min_val) * 255
-            data_scaled = data_scaled.astype(np.uint8)
             
-            return Image.fromarray(data_scaled).convert('RGB')
+            non_flat_black_adjusted = np.zeros((self.height, self.width), dtype=np.float32)
+            for h in range(self.height):
+                for w in range(self.width):
+                    closest_point_idx = np.argmin(np.sum((self.points - np.array([w, h])) ** 2, axis=1))
+                    non_flat_black_adjusted[h, w] = self.data[h, w] + self.data[closest_point_idx]
+            
+            if flat_mode:
+                flat_color_data = np.ones((self.height, self.width, 3), dtype=np.uint8) * 255  # Initialize as white
+                flat_color_data[..., :2] -= non_flat_black_adjusted[..., np.newaxis] * 255  # Scale adjustment
+                return Image.fromarray(flat_color_data, 'RGB')
+            else:
+                min_val, max_val = np.min(self.data), np.max(self.data)
+                data_scaled = (self.data - min_val) / (max_val - min_val) * 255
+                data_scaled = data_scaled.astype(np.uint8)
+                return Image.fromarray(data_scaled, 'L')
             
     # Make Image Seamless
             
@@ -4189,6 +4203,7 @@ class WAS_Image_Voronoi_Noise_Filter:
                 "height": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
                 "density": ("INT", {"default": 50, "max": 256, "min": 10, "step": 2}),
                 "modulator": ("INT", {"default": 0, "max": 8, "min": 0, "step": 1}),
+                "flat": (["False", "True"],),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
             },
         }
@@ -4199,11 +4214,11 @@ class WAS_Image_Voronoi_Noise_Filter:
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
 
-    def voronoi_noise_filter(self, width, height, density, modulator, seed):
+    def voronoi_noise_filter(self, width, height, density, modulator, flat, seed):
     
         WTools = WAS_Tools_Class()
         
-        image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True).image
+        image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True, flat=(flat == "True")).image
 
         return (pil2tensor(image), )         
 
@@ -11281,8 +11296,10 @@ class WAS_Random_Number:
         return (number, float(number), int(number))
         
     @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
+    def IS_CHANGED(cls, seed, **kwargs):
+        m = hashlib.sha256()
+        m.update(seed)
+        return m.digest().hex()
 
 # TRUE RANDOM NUMBER
 
@@ -11297,6 +11314,7 @@ class WAS_True_Random_Number:
                 "api_key": ("STRING",{"default":"00000000-0000-0000-0000-000000000000", "multiline": False}),
                 "minimum": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
                 "maximum": ("FLOAT", {"default": 10000000, "min": -18446744073709551615, "max": 18446744073709551615}),
+                "mode": (["random", "fixed"],),
             }
         }
 
@@ -11313,7 +11331,7 @@ class WAS_True_Random_Number:
         # Return number
         return (number, )
         
-    def get_random_numbers(self, api_key=None, amount=1, minimum=0, maximum=10):
+    def get_random_numbers(self, api_key=None, amount=1, minimum=0, maximum=10, mode="random"):
         '''Get random number(s) from random.org'''
         if api_key in [None, '00000000-0000-0000-0000-000000000000', '']:
             cstr("No API key provided! A valid RANDOM.ORG API key is required to use `True Random.org Number Generator`").error.print()
@@ -11344,7 +11362,11 @@ class WAS_True_Random_Number:
         return [0]
         
     @classmethod
-    def IS_CHANGED(cls, **kwargs):
+    def IS_CHANGED(cls, api_key, mode, **kwargs):
+        m = hashlib.sha256()
+        m.update(api_key)
+        if mode == 'fixed':
+            return m.digest().hex()
         return float("NaN")
 
 
@@ -11373,9 +11395,9 @@ class WAS_Constant_Number:
         # Return number
         if number_type:
             if number_type == 'integer':
-                return (int(number), )
+                return (int(number), float(number), int(number) )
             elif number_type == 'integer':
-                return (float(number), )
+                return (float(number), float(number), int(number) )
             elif number_type == 'bool':
                 return ((1 if int(number) > 0 else 0), )
             else:
@@ -11710,6 +11732,7 @@ class WAS_Number_Operation:
                 result = +(number_a != number_b)
                 return result, result, int(result)
             else:
+                cstr("Invalid number operation selected.").error.print()
                 return (number_a, number_a, int(number_a))
 
 # NUMBER MULTIPLE OF
