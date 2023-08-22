@@ -2079,17 +2079,14 @@ class WAS_Tools_Class():
             self.density = density
             self.use_broadcast_ops = use_broadcast_ops
             self.seed = seed
-            self.generate_points()
-            self.generate_colors()  # Generate colors array
+            self.generate_points_and_colors()
+            self.calculate_noise(option)
             self.image = self.generateImage(option, flat_mode=flat)
 
-        def generate_points(self):
-            if self.seed is not None:
-                np.random.seed(self.seed)
-            self.points = np.random.randint(0, (self.width, self.height), size=(self.density, 2))
-                
-        def generate_colors(self):
-            self.colors = np.random.randint(0, 256, size=(self.density, 3))
+        def generate_points_and_colors(self):
+            rng = np.random.default_rng(self.seed)
+            self.points = rng.integers(0, self.width, (self.density, 2))
+            self.colors = rng.integers(0, 256, (self.density, 3))
 
         def calculate_noise(self, option):
             self.data = np.zeros((self.height, self.width))
@@ -2108,11 +2105,6 @@ class WAS_Tools_Class():
             self.data = distances[option]
 
         def generateImage(self, option, flat_mode=False):
-            if self.use_broadcast_ops:
-                self.broadcast_calculate_noise(option)
-            else:
-                self.calculate_noise(option)
-
             if flat_mode:
                 flat_color_data = np.zeros((self.height, self.width, 3), dtype=np.uint8)
                 for h in range(self.height):
@@ -4219,7 +4211,7 @@ class WAS_Image_Voronoi_Noise_Filter:
     
         WTools = WAS_Tools_Class()
         
-        image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True, flat=(flat == "True")).image
+        image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True, seed=seed, flat=(flat == "True")).image
 
         return (pil2tensor(image), )         
 
