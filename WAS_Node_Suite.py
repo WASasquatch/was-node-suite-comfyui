@@ -2079,12 +2079,17 @@ class WAS_Tools_Class():
             self.density = density
             self.use_broadcast_ops = use_broadcast_ops
             self.seed = seed
+            self.generate_points()
+            self.generate_colors()  # Generate colors array
             self.image = self.generateImage(option, flat_mode=flat)
 
         def generate_points(self):
             if self.seed is not None:
-                np.random.seed(self.seed)  # Use the provided seed
-            self.points = np.random.randint(0, (self.width, self.height), (self.density, 2))
+                np.random.seed(self.seed)
+            self.points = np.random.randint(0, (self.width, self.height), size=(self.density, 2))
+                
+        def generate_colors(self):
+            self.colors = np.random.randint(0, 256, size=(self.density, 3))
 
         def calculate_noise(self, option):
             self.data = np.zeros((self.height, self.width))
@@ -2103,21 +2108,17 @@ class WAS_Tools_Class():
             self.data = distances[option]
 
         def generateImage(self, option, flat_mode=False):
-            self.generate_points()
             if self.use_broadcast_ops:
                 self.broadcast_calculate_noise(option)
             else:
                 self.calculate_noise(option)
-            
-            non_flat_black_adjusted = np.zeros((self.height, self.width), dtype=np.float32)
-            for h in range(self.height):
-                for w in range(self.width):
-                    closest_point_idx = np.argmin(np.sum((self.points - np.array([w, h])) ** 2, axis=1))
-                    non_flat_black_adjusted[h, w] = self.data[h, w] + self.data[closest_point_idx]
-            
+
             if flat_mode:
-                flat_color_data = np.ones((self.height, self.width, 3), dtype=np.uint8) * 255  # Initialize as white
-                flat_color_data[..., :2] -= non_flat_black_adjusted[..., np.newaxis] * 255  # Scale adjustment
+                flat_color_data = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+                for h in range(self.height):
+                    for w in range(self.width):
+                        closest_point_idx = np.argmin(np.sum((self.points - np.array([w, h])) ** 2, axis=1))
+                        flat_color_data[h, w, :] = self.colors[closest_point_idx]
                 return Image.fromarray(flat_color_data, 'RGB')
             else:
                 min_val, max_val = np.min(self.data), np.max(self.data)
