@@ -11424,7 +11424,8 @@ class WAS_Constant_Number:
             elif number_type == 'integer':
                 return (float(number), float(number), int(number) )
             elif number_type == 'bool':
-                return ((1 if int(number) > 0 else 0), )
+                boolean = (1 if int(number) > 0 else 0)
+                return (int(boolean), float(boolean), int(boolan) )
             else:
                 return (number, float(number), int(number) )
 
