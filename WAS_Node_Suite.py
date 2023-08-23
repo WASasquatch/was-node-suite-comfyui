@@ -6432,7 +6432,7 @@ class WAS_Images_To_RGB:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_to_rgb"
 
-    CATEGORY = "WAS Suite/Image/Process"
+    CATEGORY = "WAS Suite/Image"
 
     def image_to_rgb(self, images):
 
@@ -6462,7 +6462,7 @@ class WAS_Images_To_Linear:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_to_linear"
 
-    CATEGORY = "WAS Suite/Image/Process"
+    CATEGORY = "WAS Suite/Image"
 
     def image_to_linear(self, images):
 
