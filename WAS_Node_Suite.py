@@ -4263,33 +4263,39 @@ class WAS_Image_Power_Noise:
             noise = np.random.normal(0, attenuation, (height, width))
             return noise
 
-        def pink_noise(width, height, frequency, attenuation):
+        def blue_noise(width, height, frequency, attenuation):
             noise = grey_noise(width, height, attenuation)
             scale = 1.0 / (width * height)
-            f = np.fft.fftfreq(height)[:, np.newaxis] ** 2 + np.fft.fftfreq(width) ** 2
+            fy = np.fft.fftfreq(height)[:, np.newaxis] ** 2
+            fx = np.fft.fftfreq(width) ** 2
+            f = fy + fx
             power = np.sqrt(f)
             power[0, 0] = 1
-            noise = np.fft.ifft2(np.fft.fft2(noise) * power)
+            noise = np.fft.ifft2(np.fft.fft2(noise) / power)
             noise *= scale / noise.std()
             return np.real(noise)
 
         def green_noise(width, height, frequency, attenuation):
             noise = grey_noise(width, height, attenuation)
             scale = 1.0 / (width * height)
-            f = np.fft.fftfreq(height)[:, np.newaxis] ** 2 + np.fft.fftfreq(width) ** 2
+            fy = np.fft.fftfreq(height)[:, np.newaxis] ** 2
+            fx = np.fft.fftfreq(width) ** 2
+            f = fy + fx
             power = np.sqrt(f)
             power[0, 0] = 1
             noise = np.fft.ifft2(np.fft.fft2(noise) / np.sqrt(power))
             noise *= scale / noise.std()
             return np.real(noise)
 
-        def blue_noise(width, height, frequency, attenuation):
+        def pink_noise(width, height, frequency, attenuation):
             noise = grey_noise(width, height, attenuation)
             scale = 1.0 / (width * height)
-            f = np.fft.fftfreq(height)[:, np.newaxis] ** 2 + np.fft.fftfreq(width) ** 2
+            fy = np.fft.fftfreq(height)[:, np.newaxis] ** 2
+            fx = np.fft.fftfreq(width) ** 2
+            f = fy + fx
             power = np.sqrt(f)
             power[0, 0] = 1
-            noise = np.fft.ifft2(np.fft.fft2(noise) / power)
+            noise = np.fft.ifft2(np.fft.fft2(noise) * power)
             noise *= scale / noise.std()
             return np.real(noise)
 
@@ -4304,6 +4310,9 @@ class WAS_Image_Power_Noise:
             
         def blend_noise(width, height, masks, noise_types, attenuations):
             blended_image = Image.new("L", (width, height), color=0)
+            fy = np.fft.fftfreq(height)[:, np.newaxis] ** 2
+            fx = np.fft.fftfreq(width) ** 2
+            f = fy + fx
             i = 0
             for mask, noise_type, attenuation in zip(masks, noise_types, attenuations):
                 mask = Image.fromarray((255 * (mask - np.min(mask)) / (np.max(mask) - np.min(mask))).astype(np.uint8).real)
