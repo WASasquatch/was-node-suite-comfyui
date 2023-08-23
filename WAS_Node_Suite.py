@@ -4196,9 +4196,12 @@ class WAS_Image_Voronoi_Noise_Filter:
                 "height": ("INT", {"default": 512, "max": 4096, "min": 64, "step": 1}),
                 "density": ("INT", {"default": 50, "max": 256, "min": 10, "step": 2}),
                 "modulator": ("INT", {"default": 0, "max": 8, "min": 0, "step": 1}),
-                "flat": (["False", "True"],),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),                
             },
+            "optional": {
+                "flat": (["False", "True"],),
+                "RGB_output": (["True", "False"],),
+            }
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -4207,11 +4210,16 @@ class WAS_Image_Voronoi_Noise_Filter:
 
     CATEGORY = "WAS Suite/Image/Generate/Noise"
 
-    def voronoi_noise_filter(self, width, height, density, modulator, flat, seed):
+    def voronoi_noise_filter(self, width, height, density, modulator, seed, flat="False", RGB_output="True"):
     
         WTools = WAS_Tools_Class()
         
         image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True, seed=seed, flat=(flat == "True")).image
+        
+        if RGB_output == "True":
+            image = image.convert("RGB")
+        else:
+            image = image.convert("L")
 
         return (pil2tensor(image), )         
 
@@ -6407,6 +6415,65 @@ class WAS_Image_Select_Channel:
 
         return channel_img
         
+# IMAGES TO RGB
+
+class WAS_Images_To_RGB:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_to_rgb"
+
+    CATEGORY = "WAS Suite/Image/Process"
+
+    def image_to_rgb(self, images):
+
+        if len(images) > 1:
+            tensors = []
+            for image in images:
+                tensors.append(pil2tensor(tensor2pil(image).convert('RGB')))
+            tensors = torch.cat(tensors, dim=0)
+            return (tensors, )
+        else:
+            return (pil2tensor(tensor2pil(images).convert("RGB")), )    
+            
+# IMAGES TO LINEAR
+
+class WAS_Images_To_Linear:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "image_to_linear"
+
+    CATEGORY = "WAS Suite/Image/Process"
+
+    def image_to_linear(self, images):
+
+        if len(images) > 1:
+            tensors = []
+            for image in images:
+                tensors.append(pil2tensor(tensor2pil(image).convert('L')))
+            tensors = torch.cat(tensors, dim=0)
+            return (tensors, )
+        else:
+            return (pil2tensor(tensor2pil(images).convert("L")), )
 
 
 # IMAGE MERGE RGB CHANNELS
@@ -7057,37 +7124,6 @@ class WAS_Load_Image:
         with open(image_path, 'rb') as f:
             m.update(f.read())
         return m.digest().hex()
-        
-        
-# IMAGES TO RGB
-
-class WAS_Images_To_RGB:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "images": ("IMAGE",),
-            },
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
-    FUNCTION = "images_to_rgb"
-
-    CATEGORY = "WAS Suite/Image"
-
-    def images_to_rgb(self, images):
-
-        tensors = []
-        for image in images:
-            tensors.append(pil2tensor(tensor2pil(image).convert("RGB")))
-        tensors = torch.cat(tensors, dim=0)
-
-        return (tensors,)
-        
         
 # MASK BATCH TO MASK
 
@@ -13038,8 +13074,9 @@ NODE_CLASS_MAPPINGS = {
     "Image fDOF Filter": WAS_Image_fDOF,
     "Image to Latent Mask": WAS_Image_To_Mask,
     "Image to Noise": WAS_Image_To_Noise,
-    "Images to RGB": WAS_Images_To_RGB,
     "Image to Seed": WAS_Image_To_Seed,
+    "Images to RGB": WAS_Images_To_RGB,
+    "Images to Linear": WAS_Images_To_Linear,
     "Integer place counter": WAS_Integer_Place_Counter,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
     "KSampler (Legacy)": WAS_KSampler,
