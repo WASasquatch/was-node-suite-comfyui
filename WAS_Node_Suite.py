@@ -6462,7 +6462,7 @@ class WAS_Images_To_Linear:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_to_linear"
 
-    CATEGORY = "WAS Suite/Image
+    CATEGORY = "WAS Suite/Image"
 
     def image_to_linear(self, images):
 
