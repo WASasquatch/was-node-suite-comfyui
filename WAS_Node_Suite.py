@@ -4214,7 +4214,7 @@ class WAS_Image_Voronoi_Noise_Filter:
     
         WTools = WAS_Tools_Class()
         
-        image = WTools.worley_noise(height=width, width=height, density=density, option=modulator, use_broadcast_ops=True, seed=seed, flat=(flat == "True")).image
+        image = WTools.worley_noise(height=height, width=width, density=density, option=modulator, use_broadcast_ops=True, seed=seed, flat=(flat == "True")).image
         
         if RGB_output == "True":
             image = image.convert("RGB")
@@ -6462,7 +6462,7 @@ class WAS_Images_To_Linear:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "image_to_linear"
 
-    CATEGORY = "WAS Suite/Image"
+    CATEGORY = "WAS Suite/Image
 
     def image_to_linear(self, images):
 
