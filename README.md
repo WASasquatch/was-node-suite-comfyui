@@ -197,6 +197,7 @@
  - Number to Int
  - Number to String
  - Number to Text
+ - Perlin Power Fractal Latent: Create a power fractal based latent image. Doesn't work with all samplers (unless you add noise). 
  - Random Number
  - Save Text File: Save a text string to a file
  - Samples Passthrough (Stat System): Logs RAM, VRAM, and Disk usage to the console.
