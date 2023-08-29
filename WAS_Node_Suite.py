@@ -5651,6 +5651,10 @@ class WAS_Remove_Background:
         return batch
 
 # IMAGE REMBG
+# Sam model needs additional input, may need to be new node entirely
+#   See: https://github.com/danielgatis/rembg/blob/main/USAGE.md#using-input-points
+# u2net_cloth_seg model needs additional inputs, may create a new node
+# An undocumented feature "putaplha" changes how alpha is applied, but does not appear to make a difference
 
 class WAS_Remove_Rembg:
     def __init__(self):
@@ -5662,8 +5666,18 @@ class WAS_Remove_Rembg:
             "required": {
                 "images": ("IMAGE",),
                 "transparency": (["true","false"],),
+                "model": (["u2net", "u2netp", "u2net_human_seg", "silueta", "isnet-general-use", "isnet-anime"],),
+                "post_processing": ([False, True],),
+                "only_mask": ([False, True],),
+                "alpha_matting": ([False, True],),
+                "alpha_matting_foreground_threshold": ("INT", {"default": 240, "min": 0, "max": 255}),
+                "alpha_matting_background_threshold": ("INT", {"default": 10, "min": 0, "max": 255}),
+                "alpha_matting_erode_size": ("INT", {"default": 10, "min": 0, "max": 255}),
+                "background_color": (["none", "black", "white", "magenta", "chroma green", "chroma blue"],),
+                #"putalpha": ([False, True],),
             },
         }
+
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
@@ -5671,21 +5685,66 @@ class WAS_Remove_Rembg:
 
     CATEGORY = "WAS Suite/Image/AI"
 
-    def image_rembg(self, images, transparency="true"):
-    
+    def image_rembg(
+        self, 
+        images, 
+        transparency="true", 
+        model="u2net", 
+        alpha_matting=False, 
+        alpha_matting_foreground_threshold=240,
+        alpha_matting_background_threshold=10,
+        alpha_matting_erode_size=10,
+        post_processing=False,
+        only_mask=False,
+        background_color = "none",
+        #putalpha = False,
+    ):
+
         if "rembg" not in packages():
             cstr("Installing `rembg`...").msg.print()
             subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'rembg'])
             
-        from rembg import remove
+        from rembg import remove, new_session
     
         os.environ['U2NET_HOME'] = os.path.join(MODELS_DIR, 'rembg')
         os.makedirs(os.environ['U2NET_HOME'], exist_ok=True)
     
+        # Set bgcolor
+        bgrgba = None
+        match background_color:
+            case "black":
+                bgrgba = [0, 0, 0, 255]
+            case "white":
+                bgrgba = [255, 255, 255, 255]
+            case "magenta":
+                bgrgba = [255, 0, 255, 255]
+            case "chroma green":
+                bgrgba = [0, 177, 64, 255]
+            case "chroma blue":
+                bgrgba = [0, 71, 187, 255]
+            case _:
+                bgrgba = None
+
+        if transparency == "true" and bgrgba is not None:
+            bgrgba[3] = 0
+
         batch_tensor = []
         for image in images:
             image = tensor2pil(image)
-            batch_tensor.append(pil2tensor(remove(image).convert(('RGBA' if transparency == 'true' else 'RGB'))))
+            batch_tensor.append(pil2tensor(
+                remove(
+                     image,
+                    session=new_session(model),
+                    post_process_mask = post_processing,
+                    alpha_matting = alpha_matting,
+                    alpha_matting_foreground_threshold = alpha_matting_foreground_threshold,
+                    alpha_matting_background_threshold = alpha_matting_background_threshold,
+                    alpha_matting_erode_size = alpha_matting_erode_size,
+                    only_mask = only_mask,
+                    bgcolor = bgrgba,
+                    #putalpha = putalpha,
+                    )
+                    .convert(('RGBA' if transparency == 'true' else 'RGB'))))
         batch_tensor = torch.cat(batch_tensor, dim=0)
         
         return (batch_tensor,)
