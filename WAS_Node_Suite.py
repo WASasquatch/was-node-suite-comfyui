@@ -2073,9 +2073,8 @@ class WAS_Tools_Class():
         image = Image.fromarray(noise_map, mode='L').convert("RGB")
 
         return image
-        
+
     # Worley Noise Generator
-        
     class worley_noise:
 
         def __init__(self, height=512, width=512, density=50, option=0, use_broadcast_ops=True, flat=False, seed=None):
@@ -4255,7 +4254,7 @@ class WAS_Perlin_Power_Fractal_Latent:
             tensors = rgb_noise
             
         latents = encoder.encode(pixels=tensors[0], vae=vae)
-
+        
         return latents             
         
 
@@ -13166,7 +13165,7 @@ NODE_CLASS_MAPPINGS = {
     "Images to Linear": WAS_Images_To_Linear,
     "Integer place counter": WAS_Integer_Place_Counter,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
-    "KSampler (Legacy)": WAS_KSampler,
+    "KSampler": WAS_KSampler,
     "KSampler Cycle": WAS_KSampler_Cycle,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Size to Number": WAS_Latent_Size_To_Number,
