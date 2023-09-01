@@ -13205,7 +13205,7 @@ NODE_CLASS_MAPPINGS = {
     "Images to Linear": WAS_Images_To_Linear,
     "Integer place counter": WAS_Integer_Place_Counter,
     "Image Voronoi Noise Filter": WAS_Image_Voronoi_Noise_Filter,
-    "KSampler": WAS_KSampler,
+    "KSampler (WAS)": WAS_KSampler,
     "KSampler Cycle": WAS_KSampler_Cycle,
     "Latent Noise Injection": WAS_Latent_Noise,
     "Latent Size to Number": WAS_Latent_Size_To_Number,
