@@ -9082,7 +9082,11 @@ class WAS_Blend_Latents:
         else:
             raise ValueError("Unsupported blending mode. Please choose from 'add', 'multiply', 'divide', 'subtract', 'overlay', 'screen', 'difference', 'exclusion', 'hard_light', 'linear_dodge', 'soft_light', 'custom_noise'.")
 
+        blended_latent = self.normalize(blended_latent)
         return blended_latent
+
+    def normalize(self, latent):
+        return (latent - latent.min()) / (latent.max() - latent.min())
 
 
         
