@@ -10032,8 +10032,10 @@ class WAS_Text_to_Conditioning:
     CATEGORY = "WAS Suite/Text/Operations"
 
     def text_to_conditioning(self, clip, text):
-        encode = clip.encode(text)
-        return ([[encode[0][0][0], encode[0][0][1], {}]], )
+        encoder = nodes.CLIPTextEncode()
+        encoded = encoder.encode(clip=clip, text=text) 
+        return (encoded[0], { "ui": { "string": text } })
+
 
 
 # TEXT PARSE TOKENS
