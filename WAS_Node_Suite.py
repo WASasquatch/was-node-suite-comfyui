@@ -4185,77 +4185,6 @@ class WAS_Image_Perlin_Power_Fractal:
         image = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, seed)
 
         return (pil2tensor(image), )      
-
-# PERLIN POWER FRACTAL LATENT
-
-class WAS_Perlin_Power_Fractal_Latent:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "vae": ("VAE",),
-                "width": ("INT", {"default": 512, "max": 8192, "min": 64, "step": 1}),
-                "height": ("INT", {"default": 512, "max": 8192, "min": 64, "step": 1}),
-                "scale": ("INT", {"default": 100, "max": 2048, "min": 2, "step": 1}),
-                "octaves": ("INT", {"default": 8, "max": 8, "min": 0, "step": 1}),
-                "persistence": ("FLOAT", {"default": 1.0, "max": 100.0, "min": 0.01, "step": 0.01}),
-                "lacunarity": ("FLOAT", {"default": 2.0, "max": 100.0, "min": 0.01, "step": 0.01}),
-                "exponent": ("FLOAT", {"default": 4.0, "max": 100.0, "min": 0.01, "step": 0.01}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}), 
-                "batch_size": ("INT", {"default": 1, "min": 1, "max": 64, "step": 1})
-            },
-        }
-
-    RETURN_TYPES = ("LATENT",)
-    RETURN_NAMES = ("latents",)
-    FUNCTION = "power_fractal_latent"
-
-    CATEGORY = "WAS Suite/Latent/Generate"
-
-    def power_fractal_latent(self, vae, width, height, scale, octaves, persistence, lacunarity, exponent, seed, batch_size):
-    
-        WTools = WAS_Tools_Class()
-        encoder = nodes.VAEEncode()
-        rgbmix = WAS_Image_RGB_Merge()
-        
-        if batch_size > 1:
-        
-            latents = []
-            seeds = seed_batch(seed, batch_size, 3)
-            
-            for batch in range(batch_size):
-            
-                batch_seeds = seeds[batch]
-                                
-                r = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, batch_seeds[0])
-                g = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, batch_seeds[1])
-                b = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, batch_seeds[2])
-                    
-                rgb_noise = rgbmix.merge_channels(pil2tensor(r), pil2tensor(g), pil2tensor(b))
-                encoded_noise = encoder.encode(pixels=rgb_noise[0], vae=vae)
-                
-                latents.append(encoded_noise[0]['samples'])
-
-            latents = torch.cat(latents)
-            
-            return ({'samples': latents}, )
-            
-        else:
-        
-            r = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, seed)
-            g = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, seed+1)
-            b = WTools.perlin_power_fractal(width, height, octaves, persistence, lacunarity, exponent, scale, seed+2)
-                    
-            rgb_noise = rgbmix.merge_channels(pil2tensor(r), pil2tensor(g), pil2tensor(b))
-            
-            tensors = rgb_noise
-            
-        latents = encoder.encode(pixels=tensors[0], vae=vae)
-        
-        return latents             
         
 
 # IMAGE VORONOI NOISE FILTER
@@ -13250,7 +13179,6 @@ NODE_CLASS_MAPPINGS = {
     "Number to Seed": WAS_Number_To_Seed,
     "Number to String": WAS_Number_To_String,
     "Number to Text": WAS_Number_To_Text,
-    "Perlin Power Fractal Latent": WAS_Perlin_Power_Fractal_Latent,
     "Prompt Styles Selector": WAS_Prompt_Styles_Selector,
     "Prompt Multiple Styles Selector": WAS_Prompt_Multiple_Styles_Selector,
     "Random Number": WAS_Random_Number,
