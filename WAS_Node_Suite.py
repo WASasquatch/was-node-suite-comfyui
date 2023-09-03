@@ -4963,6 +4963,9 @@ class WAS_Load_Image_Batch:
                 "pattern": ("STRING", {"default": '*', "multiline": False}),
                 "allow_RGBA_output": (["false","true"],),
             },
+            "optional": {
+                "filename_text_extension": (["true", "false"],),
+            }
         }
 
     RETURN_TYPES = ("IMAGE",TEXT_TYPE)
@@ -4971,7 +4974,7 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001', allow_RGBA_output='false'):
+    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001', allow_RGBA_output='false', filename_text_extension='true'):
     
         allow_RGBA_output = (allow_RGBA_output == 'true')
         
@@ -4995,6 +4998,9 @@ class WAS_Load_Image_Batch:
         
         if not allow_RGBA_output:
            image = image.convert("RGB")
+           
+        if filename_text_extension == "false":
+            filename = os.path.splitext(filename)[0]
 
         return (pil2tensor(image), filename)
 
@@ -6860,7 +6866,7 @@ class WAS_Image_Save:
                 "filename_delimiter": ("STRING", {"default":"_"}),
                 "filename_number_padding": ("INT", {"default":4, "min":1, "max":9, "step":1}),
                 "filename_number_start": (["false", "true"],),
-                "extension": (['png', 'jpeg', 'gif', 'tiff', 'webp'], ),
+                "extension": (['png', 'jpg', 'jpeg', 'gif', 'tiff', 'webp', 'bmp'], ),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "lossless_webp": (["false", "true"],),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
@@ -6976,7 +6982,7 @@ class WAS_Image_Save:
                              pnginfo=metadata, optimize=True)
                 elif extension == 'webp':
                     img.save(output_file, quality=quality)
-                elif extension == 'jpeg':
+                elif extension in ["jpg", "jpeg"]:
                     img.save(output_file,
                              quality=quality, optimize=True)
                 elif extension == 'tiff':
@@ -6985,6 +6991,8 @@ class WAS_Image_Save:
                 elif extension == 'webp':
                     img.save(output_file, quality=quality, 
                                 lossless=lossless_webp, exif=metadata)
+                elif extension == 'bmp':
+                    img.save(output_file)
                 
                 cstr(f"Image file saved to: {output_file}").msg.print()
                 
@@ -7074,6 +7082,9 @@ class WAS_Load_Image:
                 "required": {
                     "image_path": ("STRING", {"default": './ComfyUI/input/example.png', "multiline": False}), 
                     "RGBA": (["false","true"],),
+                },
+                "optional": {
+                    "filename_text_extension": (["true", "false"],),
                 }
             }
 
@@ -7083,7 +7094,7 @@ class WAS_Load_Image:
     
     CATEGORY = "WAS Suite/IO"
 
-    def load_image(self, image_path, RGBA='false'):
+    def load_image(self, image_path, RGBA='false', filename_text_extension="true"):
     
         RGBA = (RGBA == 'true')
 
@@ -7112,8 +7123,13 @@ class WAS_Load_Image:
             mask = 1. - torch.from_numpy(mask)
         else:
             mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+        
+        if filename_text_extension == "true":
+            filename = os.path.basename(image_path)
+        else:
+            filename = os.path.splitext(os.path.basename(image_path))[0]
             
-        return (image, mask, os.path.basename(image_path))
+        return (image, mask, filename)
 
     def download_image(self, url):
         try:
