@@ -9045,14 +9045,14 @@ class WAS_Seed:
                           "max": 0xffffffffffffffff})}
                 }
 
-    RETURN_TYPES = ("SEED", "FLOAT", "INT")
-    RETURN_NAMES = ("seed", "float", "int")
+    RETURN_TYPES = ("SEED", "NUMBER", "FLOAT", "INT")
+    RETURN_NAMES = ("seed", "number", "float", "int")
     FUNCTION = "seed"
 
     CATEGORY = "WAS Suite/Number"
 
     def seed(self, seed):
-        return ({"seed": seed, }, float(seed), int(seed) )
+        return ({"seed": seed, }, seed, float(seed), int(seed) )
         
         
 # IMAGE SEED
