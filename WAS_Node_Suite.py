@@ -9045,13 +9045,14 @@ class WAS_Seed:
                           "max": 0xffffffffffffffff})}
                 }
 
-    RETURN_TYPES = ("SEED",)
+    RETURN_TYPES = ("SEED", "FLOAT", "INT")
+    RETURN_NAMES = ("seed", "float", "int")
     FUNCTION = "seed"
 
     CATEGORY = "WAS Suite/Number"
 
     def seed(self, seed):
-        return ({"seed": seed, }, )
+        return ({"seed": seed, }, float(seed), int(seed) )
         
         
 # IMAGE SEED
@@ -13199,7 +13200,7 @@ NODE_CLASS_MAPPINGS = {
     "Prompt Multiple Styles Selector": WAS_Prompt_Multiple_Styles_Selector,
     "Random Number": WAS_Random_Number,
     "Save Text File": WAS_Text_Save,
-    "Seed (Legacy)": WAS_Seed,
+    "Seed": WAS_Seed,
     "Tensor Batch to Image": WAS_Tensor_Batch_to_Image,
     "BLIP Analyze Image": WAS_BLIP_Analyze_Image,
     "SAM Model Loader": WAS_SAM_Model_Loader,
