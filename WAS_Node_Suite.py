@@ -33,6 +33,7 @@ import hashlib
 import json
 import nodes
 import math
+import secrets
 import numpy as np
 from numba import jit
 import os
@@ -526,18 +527,17 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
             key = os.path.relpath(file_path, wildcard_dir).replace(os.path.sep, "/").rsplit(".", 1)[0]
             key_path_dict[f"{noodle_key}{key}{noodle_key}"] = os.path.abspath(file_path)
             
-    # Replace keys in text with random lines from corresponding files
     for key, file_path in key_path_dict.items():
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
             lines = file.readlines()
             if lines:
                 random_line = None
                 while not random_line:
-                    line = random.choice(lines).strip()
+                    line = secrets.choice(lines).strip()
                     if not line.startswith('#') and not line.startswith('//'):
                         random_line = line
                 text = text.replace(key, random_line)
-                
+                    
     # Replace sub-wildacrds in result
     text = replace_nested(text, key_path_dict)
 
