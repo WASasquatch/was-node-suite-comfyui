@@ -17,7 +17,7 @@
 from PIL import Image, ImageFilter, ImageEnhance, ImageOps, ImageDraw, ImageChops, ImageFont
 from PIL.PngImagePlugin import PngInfo
 from io import BytesIO
-from typing import Optional
+from typing import Optional, Union, List
 from urllib.request import urlopen
 import comfy.diffusers_convert
 import comfy.samplers
@@ -329,6 +329,21 @@ def packages(versions=False):
     import sys
     import subprocess
     return [( r.decode().split('==')[0] if not versions else r.decode() ) for r in subprocess.check_output([sys.executable, '-s', '-m', 'pip', 'freeze']).split()]
+
+def install_package(package, uninstall_first: Union[List[str], str] = None):
+    if os.getenv("WAS_BLOCK_AUTO_INSTALL", 'False').lower() in ('true', '1', 't'):
+        cstr(f"Preventing package install of '{package}' due to WAS_BLOCK_INSTALL env").msg.print()
+    else:
+        if uninstall_first is None:
+            return
+
+        if isinstance(uninstall_first, str):
+            uninstall_first = [uninstall_first]
+
+        cstr(f"Uninstalling {', '.join(uninstall_first)}..")
+        subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'uninstall', *uninstall_first])
+        cstr("Installing package...").msg.print()
+        subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', package])
 
 # Tensor to PIL
 def tensor2pil(image):
@@ -1606,8 +1621,7 @@ class WAS_Tools_Class():
     def shadows_and_highlights(self, image, shadow_thresh=30, highlight_thresh=220, shadow_factor=0.5, highlight_factor=1.5, shadow_smooth=None, highlight_smooth=None, simplify_masks=None):
 
         if 'pilgram' not in packages():
-            cstr("Installing pilgram...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
+            install_package('pilgram')
 
         import pilgram
 
@@ -1657,8 +1671,7 @@ class WAS_Tools_Class():
     def dragan_filter(self, image, saturation=1, contrast=1, sharpness=1, brightness=1, highpass_radius=3, highpass_samples=1, highpass_strength=1, colorize=True):
     
         if 'pilgram' not in packages():
-            cstr("Installing pilgram...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
+            install_package('pilgram')
 
         import pilgram
     
@@ -1703,8 +1716,7 @@ class WAS_Tools_Class():
     def sparkle(self, image):
     
         if 'pilgram' not in packages():
-            cstr("Installing pilgram...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
+            install_package('pilgram')
 
         import pilgram
 
@@ -2128,8 +2140,7 @@ class WAS_Tools_Class():
     def make_seamless(self, image, blending=0.5, tiled=False, tiles=2):
     
         if 'img2texture' not in packages():
-            cstr("Installing img2texture...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'git+https://github.com/WASasquatch/img2texture.git'])
+            install_package('git+https://github.com/WASasquatch/img2texture.git')
             
         from img2texture import img2tex
         from img2texture._tiling import tile
@@ -2190,8 +2201,7 @@ class WAS_Tools_Class():
     def black_white_levels(self, image):
     
         if 'matplotlib' not in packages():
-            cstr("Installing matplotlib...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'matplotlib'])
+            install_package('matplotlib')
             
         import matplotlib.pyplot as plt
 
@@ -2229,8 +2239,7 @@ class WAS_Tools_Class():
     def channel_frequency(self, image):
     
         if 'matplotlib' not in packages():
-            cstr("Installing matplotlib...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'matplotlib'])
+            install_package('matplotlib')
             
         import matplotlib.pyplot as plt
 
@@ -2263,8 +2272,7 @@ class WAS_Tools_Class():
         
     def generate_palette(self, img, n_colors=16, cell_size=128, padding=0, font_path=None, font_size=15, mode='chart'):
         if 'scikit-learn' not in packages():
-            cstr("Installing scikit-learn...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
+            install_package('scikit-learn')
 
         from sklearn.cluster import KMeans
 
@@ -2438,8 +2446,7 @@ class WAS_Image_Pixelate:
                         color_palettes=None, color_palette_mode="Linear", reverse_palette='False', dither='False', dither_mode='FloydSteinberg'):
     
         if 'scikit-learn' not in packages():
-            cstr("Installing scikit-learn...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'scikit-learn'])
+            install_package('scikit-learn')
             
         pixelation_size = int(pixelation_size)
         num_colors = int(num_colors)
@@ -2948,9 +2955,7 @@ class WAS_Image_Style_Filter:
 
         # Install Pilgram
         if 'pilgram' not in packages():
-            cstr("Installing Pilgram...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
+            install_package('pilgram')
 
         # Import Pilgram module
         import pilgram
@@ -3749,9 +3754,7 @@ class WAS_Image_Morph_GIF:
         WTools = WAS_Tools_Class()
                 
         if 'imageio' not in packages():
-            cstr("Installing imageio...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
+            install_package('imageio')
         
         if filetype not in ["APNG", "GIF"]:
             filetype = "GIF"
@@ -3818,9 +3821,7 @@ class WAS_Image_Morph_GIF_Writer:
                             output_path="./ComfyUI/output", filename="morph"):
                 
         if 'imageio' not in packages():
-            cstr("Installing imageio...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
+            install_package("imageio")
         
         if output_path.strip() in [None, "", "."]:
             output_path = "./ComfyUI/output"
@@ -3888,9 +3889,7 @@ class WAS_Image_Morph_GIF_By_Path:
                             input_path="./ComfyUI/output", input_pattern="*", output_path="./ComfyUI/output", filename="morph", filetype="GIF"):
                 
         if 'imageio' not in packages():
-            cstr("Installing imageio...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'imageio'])
+            install_package("imageio")
                 
         if not os.path.exists(input_path):
             cstr(f"The input_path `{input_path}` does not exist!").error.print()
@@ -3976,9 +3975,7 @@ class WAS_Image_Blending_Mode:
 
         # Install Pilgram
         if 'pilgram' not in packages():
-            cstr("Installing Pilgram...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'pilgram'])
+            install_package("pilgram")
 
         # Import Pilgram module
         import pilgram
@@ -5608,8 +5605,7 @@ class WAS_Remove_Rembg:
     def image_rembg(self, images, transparency="true"):
     
         if "rembg" not in packages():
-            cstr("Installing `rembg`...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'rembg'])
+            install_package("rembg")
             
         from rembg import remove
     
@@ -8254,9 +8250,7 @@ class MiDaS_Model_Loader:
     def install_midas(self):
         global MIDAS_INSTALLED
         if 'timm' not in packages():
-            cstr("Installing timm...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
+            install_package("timm")
         MIDAS_INSTALLED = True
         
 
@@ -8373,9 +8367,7 @@ class MiDaS_Depth_Approx:
     def install_midas(self):
         global MIDAS_INSTALLED
         if 'timm' not in packages():
-            cstr("Installing timm...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
+            install_package("timm")
         MIDAS_INSTALLED = True
 
 # MIDAS REMOVE BACKGROUND/FOREGROUND NODE
@@ -8538,9 +8530,7 @@ class MiDaS_Background_Foreground_Removal:
     def install_midas(self):
         global MIDAS_INSTALLED
         if 'timm' not in packages():
-            cstr("Installing timm...").msg.print()
-            subprocess.check_call(
-                [sys.executable, '-s', '-m', 'pip', '-q', 'install', 'timm'])
+            install_package("timm")
         MIDAS_INSTALLED = True
 
 
@@ -10946,10 +10936,9 @@ class WAS_SAM_Model_Loader:
         model_url = model_url_mapping[model_size]
         model_filename = model_filename_mapping[model_size]
     
-        if ( 'GitPython' not in packages() ):
-            cstr("Installing SAM dependencies...").error.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'gitpython'])
-        
+        if 'GitPython' not in packages():
+            install_package("gitpython")
+
         if not os.path.exists(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM')):
             from git.repo.base import Repo
             cstr("Installing SAM...").msg.print()
@@ -12500,8 +12489,8 @@ class WAS_Diffusers_Hub_Model_Loader:
         
     def download_diffusers_model(self, repo_id, local_dir, revision=None):
         if 'huggingface-hub' not in packages():
-            cstr("Installing `huggingface_hub` ...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'huggingface_hub'])
+            install_package("huggingface_hub")
+
         from huggingface_hub import snapshot_download
         model_path = os.path.join(local_dir, repo_id)
         ignore_patterns = ["*.ckpt","*.safetensors","*.onnx"]
@@ -12881,8 +12870,7 @@ class WAS_Cache:
     def cache_input(self, latent_suffix="_cache", image_suffix="_cache", conditioning_suffix="_cache", output_path=None, latent=None, image=None, conditioning=None):
 
         if 'joblib' not in packages():
-            cstr("Installing joblib...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'joblib'])
+            install_package('joblib')
             
         import joblib
             
@@ -12946,8 +12934,7 @@ class WAS_Load_Cache:
     def load_cache(self, latent_path=None, image_path=None, conditioning_path=None):
 
         if 'joblib' not in packages():
-            cstr("Installing joblib...").msg.print()
-            subprocess.check_call([sys.executable, '-s', '-m', 'pip', '-q', 'install', 'joblib'])
+            install_package('joblib')
             
         import joblib
         
@@ -13335,16 +13322,17 @@ if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
             cstr(f"OpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.").warning.print()
     except ImportError:
         cstr("OpenCV Python module cannot be found. Attempting install...").warning.print()
-        subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'uninstall', 'opencv-python', 'opencv-python-headless[ffmpeg]'])
-        subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
+        install_package(
+            package='opencv-python-headless[ffmpeg]',
+            uninstall_first=['opencv-python', 'opencv-python-headless[ffmpeg]']
+        )
         try:
             import cv2
             cstr("OpenCV Python installed.").msg.print()
         except ImportError:
             cstr("OpenCV Python module still cannot be imported. There is a system conflict.").error.print()
 else:
-    cstr("Installing `opencv-python-headless` ...").msg.print()
-    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'opencv-python-headless[ffmpeg]'])
+    install_package('opencv-python-headless[ffmpeg]')
     try:
         import cv2
         cstr("OpenCV Python installed.").msg.print()
@@ -13353,8 +13341,7 @@ else:
 
 # scipy handling
 if 'scipy' not in packages():
-    cstr("Installing `scipy` ...").msg.print()
-    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'scipy'])
+    install_package('scipy')
     try:
         import scipy
     except ImportError as e:
@@ -13365,9 +13352,10 @@ if 'scipy' not in packages():
 try:
     import skimage
 except ImportError as e:
-    cstr("Installing `scikit-image`....").msg.print()
-    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'uninstall', 'scikit-image'])
-    subprocess.check_call([sys.executable, '-s', '-m', 'pip', 'install', 'scikit-image'])
+    install_package(
+        package='scikit-image',
+        uninstall_first=['scikit-image']
+    )
     import skimage
         
 was_conf = getSuiteConfig()
