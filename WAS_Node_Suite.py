@@ -504,7 +504,7 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
     
 # Simple wildcard parser:
 
-def replace_wildcards(text, noodle_key='__'):
+def replace_wildcards(text, seed=None, noodle_key='__'):
 
     def get_random_line_from_file(file_path):
         with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
@@ -513,7 +513,12 @@ def replace_wildcards(text, noodle_key='__'):
             while True:
                 # Seek to a random line in the file using secrets
                 file.seek(0)
-                random_line_number = secrets.randbelow(line_count)
+                if seed is not None:
+                    random.seed(seed)
+                    offset = random.randint(0, line_count - 1)
+                    random_line_number = (offset + secrets.randbelow(line_count)) % line_count
+                else:
+                    random_line_number = secrets.randbelow(line_count)
                 for current_line_number, line in enumerate(file):
                     if current_line_number == random_line_number:
                         line = line.strip()
