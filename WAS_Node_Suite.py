@@ -33,11 +33,11 @@ import hashlib
 import json
 import nodes
 import math
-import secrets
 import numpy as np
 from numba import jit
 import os
 import random
+from random import SystemRandom
 import re
 import requests
 import socket
@@ -505,57 +505,64 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
 # Simple wildcard parser:
 
 def replace_wildcards(text, seed=None, noodle_key='__'):
-
-    def get_random_line_from_file(file_path):
+    def random_line_from_file(file_path):
+        non_comment_lines = []
         with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
-            # Get the total number of lines in the file
-            line_count = sum(1 for _ in file)
-            while True:
-                # Seek to a random line in the file using secrets
-                file.seek(0)
-                if seed is not None:
-                    random.seed(seed)
-                    offset = random.randint(0, line_count - 1)
-                    random_line_number = (offset + secrets.randbelow(line_count)) % line_count
-                else:
-                    random_line_number = secrets.randbelow(line_count)
-                for current_line_number, line in enumerate(file):
-                    if current_line_number == random_line_number:
-                        line = line.strip()
-                        if not line.startswith('#') and not line.startswith('//'):
-                            return line
+            for line in file:
+                line = line.strip()
+                if not line.startswith(('#', '//')):
+                    non_comment_lines.append(line)
+        return system_random.choice(non_comment_lines) if non_comment_lines else None
 
-    def replace_nested(text, key_path_dict):
-        for key, file_path in key_path_dict.items():
-            random_line = get_random_line_from_file(file_path)
-            if random_line:
-                text = text.replace(key, random_line)
-        return text
-
-    conf = getSuiteConfig()
-    wildcard_dir = os.path.join(WAS_SUITE_ROOT, 'wildcards')
-    if not os.path.exists(wildcard_dir):
-        os.makedirs(wildcard_dir, exist_ok=True)
-    if conf.__contains__('wildcards_path') and conf['wildcards_path']:
-        wildcard_dir = conf['wildcards_path']
-
-    cstr(f"Wildcard Path: {wildcard_dir}").msg.print()
-
-    # Create a dictionary of key to file path pairs
-    key_path_dict = {}
-    for root, dirs, files in os.walk(wildcard_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            key = os.path.relpath(file_path, wildcard_dir).replace(os.path.sep, "/").rsplit(".", 1)[0]
-            key_path_dict[f"{noodle_key}{key}{noodle_key}"] = os.path.abspath(file_path)
-
-    # Replace main wildcards
-    text = replace_nested(text, key_path_dict)
-
-    # Replace sub-wildcards in result
-    text = replace_nested(text, key_path_dict)
+    # Replace wildcards in the text
+    while noodle_key in text:
+        key_start = text.find(noodle_key)
+        key_end = text.find(noodle_key, key_start + len(noodle_key))
+        if key_start != -1 and key_end != -1:
+            key = text[key_start:key_end + len(noodle_key)]
+            file_path = key_path_dict.get(key)
+            if file_path:
+                random_line = random_line_from_file(file_path)
+                if random_line:
+                    # Replace the wildcard with the selected random line
+                    text = text.replace(key, random_line, 1)
 
     return text
+
+# Get the suite configuration
+conf = getSuiteConfig()
+# Default wildcard directory
+wildcard_dir = os.path.join(WAS_SUITE_ROOT, 'wildcards')
+# Create the directory if it doesn't exist
+if not os.path.exists(wildcard_dir):
+    os.makedirs(wildcard_dir, exist_ok=True)
+# Check if a custom wildcards_path is provided in the configuration
+if 'wildcards_path' in conf and conf['wildcards_path']:
+    wildcard_dir = conf['wildcards_path']
+
+# Print the wildcard directory
+cstr(f"Wildcard Path: {wildcard_dir}").msg.print()
+
+# Use the SystemRandom for better randomness
+system_random = SystemRandom()
+
+# Create a dictionary of key to file path pairs
+key_path_dict = {}
+for root, dirs, files in os.walk(wildcard_dir):
+    for file in files:
+        file_path = os.path.join(root, file)
+        key = os.path.relpath(file_path, wildcard_dir).replace(os.path.sep, "/").rsplit(".", 1)[0]
+        key_path_dict[f"{noodle_key}{key}{noodle_key}"] = os.path.abspath(file_path)
+
+# Set the random seed for reproducibility if provided
+if seed:
+    system_random.seed(seed)
+
+# Replace wildcards with random lines
+text = replace_wildcards(text, seed)
+
+return text
+
     
 # Parse Prompt Variables
     
