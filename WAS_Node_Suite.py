@@ -504,35 +504,37 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
     
 # Simple wildcard parser:
 
-def replace_wildcards(text, seed=None, noodle_key='__'):
+def replace_wildcards(text, noodle_key='__'):
+
+    def get_random_line_from_file(file_path):
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
+            # Get the total number of lines in the file
+            line_count = sum(1 for _ in file)
+            while True:
+                # Seek to a random line in the file using secrets
+                file.seek(0)
+                random_line_number = secrets.randbelow(line_count)
+                for current_line_number, line in enumerate(file):
+                    if current_line_number == random_line_number:
+                        line = line.strip()
+                        if not line.startswith('#') and not line.startswith('//'):
+                            return line
 
     def replace_nested(text, key_path_dict):
-        if re.findall(f"{noodle_key}(.+?){noodle_key}", text):
-            for key, file_path in key_path_dict.items():
-                with open(file_path, "r", encoding="utf-8") as file:
-                    lines = file.readlines()
-                    if lines:
-                        random_line = None
-                        while not random_line:
-                            line = random.choice(lines).strip()
-                            if not line.startswith('#') and not line.startswith('//'):
-                                random_line = line
-                        text = text.replace(key, random_line)
+        for key, file_path in key_path_dict.items():
+            random_line = get_random_line_from_file(file_path)
+            if random_line:
+                text = text.replace(key, random_line)
         return text
 
     conf = getSuiteConfig()
     wildcard_dir = os.path.join(WAS_SUITE_ROOT, 'wildcards')
     if not os.path.exists(wildcard_dir):
         os.makedirs(wildcard_dir, exist_ok=True)
-    if conf.__contains__('wildcards_path'):
-        if conf['wildcards_path'] not in [None, ""]:
-            wildcard_dir = conf['wildcards_path']
-        
-    cstr(f"Wildcard Path: {wildcard_dir}").msg.print()
+    if conf.__contains__('wildcards_path') and conf['wildcards_path']:
+        wildcard_dir = conf['wildcards_path']
 
-    # Set the random seed for reproducibility
-    if seed:
-        random.seed(seed)
+    cstr(f"Wildcard Path: {wildcard_dir}").msg.print()
 
     # Create a dictionary of key to file path pairs
     key_path_dict = {}
@@ -541,19 +543,11 @@ def replace_wildcards(text, seed=None, noodle_key='__'):
             file_path = os.path.join(root, file)
             key = os.path.relpath(file_path, wildcard_dir).replace(os.path.sep, "/").rsplit(".", 1)[0]
             key_path_dict[f"{noodle_key}{key}{noodle_key}"] = os.path.abspath(file_path)
-            
-    for key, file_path in key_path_dict.items():
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
-            lines = file.readlines()
-            if lines:
-                random_line = None
-                while not random_line:
-                    line = secrets.choice(lines).strip()
-                    if not line.startswith('#') and not line.startswith('//'):
-                        random_line = line
-                text = text.replace(key, random_line)
-                    
-    # Replace sub-wildacrds in result
+
+    # Replace main wildcards
+    text = replace_nested(text, key_path_dict)
+
+    # Replace sub-wildcards in result
     text = replace_nested(text, key_path_dict)
 
     return text
