@@ -5596,19 +5596,18 @@ class WAS_Remove_Rembg:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "transparency": (["true","false"],),
+                "transparency": ("BOOLEAN", {"default": True},),
                 "model": (["u2net", "u2netp", "u2net_human_seg", "silueta", "isnet-general-use", "isnet-anime"],),
-                "post_processing": ([False, True],),
-                "only_mask": ([False, True],),
-                "alpha_matting": ([False, True],),
+                "post_processing": ("BOOLEAN", {"default": False}),
+                "only_mask": ("BOOLEAN", {"default": False},),
+                "alpha_matting": ("BOOLEAN", {"default": False},),
                 "alpha_matting_foreground_threshold": ("INT", {"default": 240, "min": 0, "max": 255}),
                 "alpha_matting_background_threshold": ("INT", {"default": 10, "min": 0, "max": 255}),
                 "alpha_matting_erode_size": ("INT", {"default": 10, "min": 0, "max": 255}),
                 "background_color": (["none", "black", "white", "magenta", "chroma green", "chroma blue"],),
-                #"putalpha": ([False, True],),
+                # "putalpha": ("BOOLEAN", {"default": True},),
             },
         }
-
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
@@ -5616,29 +5615,53 @@ class WAS_Remove_Rembg:
 
     CATEGORY = "WAS Suite/Image/AI"
 
+    def __convertToBool(self, x):
+
+        # Convert strings
+        if type(x) == str:
+            x = x.strip()
+            return x.lower() == 'true' or x == '1'
+
+        # Convert int
+        if type(x) == int:
+            return x == 1
+
+        # Convert float
+        if type(x) == float:
+            return x == 1.0
+
+        # Anything else will be considered false
+        return False
+
     def image_rembg(
-        self, 
-        images, 
-        transparency="true", 
-        model="u2net", 
-        alpha_matting=False, 
-        alpha_matting_foreground_threshold=240,
-        alpha_matting_background_threshold=10,
-        alpha_matting_erode_size=10,
-        post_processing=False,
-        only_mask=False,
-        background_color = "none",
-        #putalpha = False,
+            self,
+            images,
+            transparency=True,
+            model="u2net",
+            alpha_matting=False,
+            alpha_matting_foreground_threshold=240,
+            alpha_matting_background_threshold=10,
+            alpha_matting_erode_size=10,
+            post_processing=False,
+            only_mask=False,
+            background_color="none",
+            # putalpha = False,
     ):
+
+        # ComfyUI will allow strings in place of booleans, validate the input.
+        transparency = transparency if type(transparency) is bool else self.__convertToBool(transparency)
+        alpha_matting = alpha_matting if type(alpha_matting) is bool else self.__convertToBool(alpha_matting)
+        post_processing = post_processing if type(post_processing) is bool else self.__convertToBool(post_processing)
+        only_mask = only_mask if type(only_mask) is bool else self.__convertToBool(only_mask)
 
         if "rembg" not in packages():
             install_package("rembg")
-            
+
         from rembg import remove, new_session
-    
+
         os.environ['U2NET_HOME'] = os.path.join(MODELS_DIR, 'rembg')
         os.makedirs(os.environ['U2NET_HOME'], exist_ok=True)
-    
+
         # Set bgcolor
         bgrgba = None
         match background_color:
@@ -5655,7 +5678,7 @@ class WAS_Remove_Rembg:
             case _:
                 bgrgba = None
 
-        if transparency == "true" and bgrgba is not None:
+        if transparency and bgrgba is not None:
             bgrgba[3] = 0
 
         batch_tensor = []
@@ -5663,20 +5686,20 @@ class WAS_Remove_Rembg:
             image = tensor2pil(image)
             batch_tensor.append(pil2tensor(
                 remove(
-                     image,
+                    image,
                     session=new_session(model),
-                    post_process_mask = post_processing,
-                    alpha_matting = alpha_matting,
-                    alpha_matting_foreground_threshold = alpha_matting_foreground_threshold,
-                    alpha_matting_background_threshold = alpha_matting_background_threshold,
-                    alpha_matting_erode_size = alpha_matting_erode_size,
-                    only_mask = only_mask,
-                    bgcolor = bgrgba,
-                    #putalpha = putalpha,
-                    )
-                    .convert(('RGBA' if transparency == 'true' else 'RGB'))))
+                    post_process_mask=post_processing,
+                    alpha_matting=alpha_matting,
+                    alpha_matting_foreground_threshold=alpha_matting_foreground_threshold,
+                    alpha_matting_background_threshold=alpha_matting_background_threshold,
+                    alpha_matting_erode_size=alpha_matting_erode_size,
+                    only_mask=only_mask,
+                    bgcolor=bgrgba,
+                    # putalpha = putalpha,
+                )
+                .convert(('RGBA' if transparency else 'RGB'))))
         batch_tensor = torch.cat(batch_tensor, dim=0)
-        
+
         return (batch_tensor,)
 
 
