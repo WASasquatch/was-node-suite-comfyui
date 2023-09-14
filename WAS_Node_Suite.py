@@ -5615,23 +5615,35 @@ class WAS_Remove_Rembg:
 
     CATEGORY = "WAS Suite/Image/AI"
 
+     # A helper function to convert from strings to logical boolean
+     # Conforms to https://docs.python.org/3/library/stdtypes.html#truth-value-testing
+     # With the addition of evaluating string representations of Falsey types
     def __convertToBool(self, x):
 
-        # Convert strings
+        # Evaluate string representation of False types
         if type(x) == str:
             x = x.strip()
-            return x.lower() == 'true' or x == '1'
+            if (x.lower() == 'false'
+                or x.lower() == 'none'
+                or x == '0'
+                or x == '0.0'
+                or x == '0j'
+                or x == "''"
+                or x == '""'
+                or x == "()"
+                or x == "[]"
+                or x == "{}"
+                or x.lower() == "decimal(0)"
+                or x.lower() == "fraction(0,1)"
+                or x.lower() == "set()"
+                or x.lower() == "range(0)"
+            ):
+                return False
+            else:
+                return True
 
-        # Convert int
-        if type(x) == int:
-            return x == 1
-
-        # Convert float
-        if type(x) == float:
-            return x == 1.0
-
-        # Anything else will be considered false
-        return False
+        # Anything else will be evaluated by the bool function
+        return bool(x)
 
     def image_rembg(
             self,
