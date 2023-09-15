@@ -11591,7 +11591,15 @@ class WAS_Constant_Number:
 
     CATEGORY = "WAS Suite/Number"
 
-    def return_constant_number(self, number_type, number):
+    def return_constant_number(self, number_type, number, number_as_text=None):
+    
+        if number_as_text:
+            if number_type == "integer":
+                number = int(number_as_text)
+            elif number_type == "float":
+                number = float(number_as_text)
+            else:
+                number = bool(number_as_text)
 
         # Return number
         if number_type:
@@ -11600,7 +11608,7 @@ class WAS_Constant_Number:
             elif number_type == 'integer':
                 return (float(number), float(number), int(number) )
             elif number_type == 'bool':
-                boolean = (1 if int(number) > 0 else 0)
+                boolean = (1 if float(number) > 0.5 else 0)
                 return (int(boolean), float(boolean), int(boolean) )
             else:
                 return (number, float(number), int(number) )
