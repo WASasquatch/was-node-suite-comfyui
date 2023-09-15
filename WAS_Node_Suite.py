@@ -724,8 +724,8 @@ class PromptStyles:
 
 class WASDatabase:
     """
-    The WAS Suite Database Class provides a simple key-value database that stores 
-    data in a flatfile using the JSON format. Each key-value pair is associated with 
+    The WAS Suite Database Class provides a simple key-value database that stores
+    data in a flatfile using the JSON format. Each key-value pair is associated with
     a category.
 
     Attributes:
@@ -747,17 +747,21 @@ class WASDatabase:
         self.filepath = filepath
         try:
             with open(filepath, 'r') as f:
-                 self.data = json.load(f)
+                self.data = json.load(f)
         except FileNotFoundError:
             self.data = {}
 
     def catExists(self, category):
-        return self.data.__contains__(category)
-        
+        return category in self.data
+
     def keyExists(self, category, key):
-        return self.data[category].__contains__(key)
+        return category in self.data and key in self.data[category]
 
     def insert(self, category, key, value):
+        if not isinstance(category, str) or not isinstance(key, str):
+            cstr("Category and key must be strings").error.print()
+            return
+
         if category not in self.data:
             self.data[category] = {}
         self.data[category][key] = value
@@ -767,27 +771,32 @@ class WASDatabase:
         if category in self.data and key in self.data[category]:
             self.data[category][key] = value
             self._save()
-            
+
     def updateCat(self, category, dictionary):
         self.data[category].update(dictionary)
         self._save()
-        
+
     def get(self, category, key):
         return self.data.get(category, {}).get(key, None)
-        
+
     def getDB(self):
         return self.data
-        
+
     def insertCat(self, category):
-        if self.data.__contains__(category):
-            cstr(f"The database category `{category}` already exists!").error.print()
+        if not isinstance(category, str):
+            cstr("Category must be a string").error.print()
+            return
+
+        if category in self.data:
+            cstr(f"The database category '{category}' already exists!").error.print()
             return
         self.data[category] = {}
         self._save()
-        
+
     def getDict(self, category):
-        if not self.data.__contains__(category):
-            cstr(f"\033[34mWAS Node Suite\033[0m Error: The database category `{category}` does not exist!").error.print()
+        if category not in self.data:
+            cstr(f"The database category '{category}' does not exist!").error.print()
+            return {}
         return self.data[category]
 
     def delete(self, category, key):
@@ -800,8 +809,10 @@ class WASDatabase:
             with open(self.filepath, 'w') as f:
                 json.dump(self.data, f, indent=4)
         except FileNotFoundError:
-            cstr(f"Cannot save database to file '{self.filepath}'."
-                  " Storing the data in the object instead. Does the folder and node file have write permissions?").warning.print()
+            cstr(f"Cannot save database to file '{self.filepath}'. "
+                 "Storing the data in the object instead. Does the folder and node file have write permissions?").warning.print()
+        except Exception as e:
+            cstr(f"Error while saving JSON data: {e}").error.print()
 
 # Initialize the settings database
 WDB = WASDatabase(WAS_DATABASE)
@@ -3047,7 +3058,8 @@ class WAS_Image_Crop_Face:
                                 "haarcascade_frontalface_alt2.xml",
                                 "haarcascade_frontalface_alt_tree.xml",
                                 "haarcascade_profileface.xml",
-                                "haarcascade_upperbody.xml"
+                                "haarcascade_upperbody.xml",
+                                "haarcascade_eye.xml"
                                 ],),
                 }
         }
@@ -9264,6 +9276,10 @@ class WAS_Text_Multiline:
                     line = line.replace("\n", '')
                 new_text.append(line)
         new_text = "\n".join(new_text)
+        
+        tokens = TextTokens()
+        new_text = tokens.parseTokens(new_text)
+        
         return (new_text, )   
         
 # Text List Node
@@ -9433,6 +9449,14 @@ class WAS_Text_String:
     CATEGORY = "WAS Suite/Text"
 
     def text_string(self, text='', text_b='', text_c='', text_d=''):
+    
+        tokens = TextTokens()
+        
+        text = tokens.parseTokens(text)
+        text_b = tokens.parseTokens(text_b)
+        text_c = tokens.parseTokens(text_c)
+        text_d = tokens.parseTokens(text_d)
+    
         return (text, text_b, text_c, text_d)
 
 
@@ -11556,7 +11580,10 @@ class WAS_Constant_Number:
             "required": {
                 "number_type": (["integer", "float", "bool"],),
                 "number": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
-            }
+            },
+            "optional": {
+                "number_as_text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+            }                
         }
 
     RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
