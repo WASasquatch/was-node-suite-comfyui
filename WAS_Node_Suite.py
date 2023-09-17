@@ -5471,24 +5471,26 @@ class WAS_Image_Rotate_Hue:
         if hue_shift > 1.0 or hue_shift < 0.0:
             cstr(f"The hue_shift `{cstr.color.LIGHTYELLOW}{hue_shift}{cstr.color.END}` is out of range. Valid range is {cstr.color.BOLD}0.0 - 1.0{cstr.color.END}").error.print()
             hue_shift = 0.0
-        return (pil2tensor(self.rotate_hue(tensor2pil(image), hue_shift)), )
+        shifted_hue = pil2tensor(self.hue_rotation(image, hue_shift))
+        return (shifted_hue, )
 
-    def rotate_hue(self, image, hue_shift=0.0):
+    def hue_rotation(self, image, hue_shift=0.0):
         import colorsys
-        def rgb_to_hls(r, g, b):
-            h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
-            return h, l, s
-        def hls_to_rgb(h, l, s):
-            r, g, b = colorsys.hls_to_rgb(h, l, s)
-            return int(r * 255), int(g * 255), int(b * 255)
+        if hue_shift > 1.0 or hue_shift < 0.0:
+            print(f"The hue_shift '{hue_shift}' is out of range. Valid range is 0.0 - 1.0")
+            hue_shift = 0.0
 
-        rotated_image = Image.new("RGB", image.size)
-        for x in range(image.width):
-            for y in range(image.height):
-                r, g, b = image.getpixel((x, y))
-                h, l, s = rgb_to_hls(r, g, b)
+        pil_image = tensor2pil(image)
+        width, height = pil_image.size
+        rotated_image = Image.new("RGB", (width, height))
+
+        for x in range(width):
+            for y in range(height):
+                r, g, b = pil_image.getpixel((x, y))
+                h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
                 h = (h + hue_shift) % 1.0
-                r, g, b = hls_to_rgb(h, l, s)
+                r, g, b = colorsys.hls_to_rgb(h, l, s)
+                r, g, b = int(r * 255), int(g * 255), int(b * 255)
                 rotated_image.putpixel((x, y), (r, g, b))
 
         return rotated_image
