@@ -10601,6 +10601,8 @@ class WAS_BLIP_Model_Loader:
             exit
             
         blip_dir = os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')
+        if blip_dir not in sys.path:
+            sys.path.append(blip_dir)
 
         if not os.path.exists(blip_dir):
             from git.repo.base import Repo
@@ -10693,8 +10695,10 @@ class WAS_BLIP_Analyze_Image:
             ]) 
             image = transform(raw_image).unsqueeze(0).to(device)   
             return image.view(1, -1, image_size, image_size)  # Change the shape of the output tensor       
-    
-        sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP'))
+        
+        blip_dir = os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'BLIP')
+        if blip_dir not in sys.path:
+            sys.path.append(blip_dir)
         
         from torchvision import transforms
         from torchvision.transforms.functional import InterpolationMode
