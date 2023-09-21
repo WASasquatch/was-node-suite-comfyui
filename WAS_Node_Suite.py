@@ -7057,7 +7057,7 @@ class WAS_Image_Save:
             cstr(f"The extension `{extension}` is not valid. The valid formats are: {', '.join(sorted(ALLOWED_EXT))}").error.print()
             file_extension = "png"
 
-        results = []
+        results = list()
         for image in images:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
@@ -7107,7 +7107,7 @@ class WAS_Image_Save:
                         "subfolder": subfolder,
                         "type": self.type
                     })
-
+                
                 # Update the output image history
                 update_history_output_images(output_file)
             
