@@ -46,6 +46,8 @@ import time
 import torch
 from tqdm import tqdm
 
+p310_plus = (sys.version_info >= (3, 10))
+
 MANIFEST = {
     "name": "WAS Node Suite",
     "version": (2,2,2),
@@ -5690,18 +5692,33 @@ class WAS_Remove_Rembg:
 
         # Set bgcolor
         bgrgba = None
-        match background_color:
-            case "black":
+        # Use faster match for 3.10+ python
+        if p310_plus:
+            match background_color:
+                case "black":
+                    bgrgba = [0, 0, 0, 255]
+                case "white":
+                    bgrgba = [255, 255, 255, 255]
+                case "magenta":
+                    bgrgba = [255, 0, 255, 255]
+                case "chroma green":
+                    bgrgba = [0, 177, 64, 255]
+                case "chroma blue":
+                    bgrgba = [0, 71, 187, 255]
+                case _:
+                    bgrgba = None
+        else:
+            if background_color == "black":
                 bgrgba = [0, 0, 0, 255]
-            case "white":
+            elif background_color == "white":
                 bgrgba = [255, 255, 255, 255]
-            case "magenta":
+            elif background_color == "magenta":
                 bgrgba = [255, 0, 255, 255]
-            case "chroma green":
+            elif background_color == "chroma green":
                 bgrgba = [0, 177, 64, 255]
-            case "chroma blue":
+            elif background_color == "chroma blue":
                 bgrgba = [0, 71, 187, 255]
-            case _:
+            else:
                 bgrgba = None
 
         if transparency and bgrgba is not None:
