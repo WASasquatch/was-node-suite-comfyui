@@ -5692,34 +5692,18 @@ class WAS_Remove_Rembg:
 
         # Set bgcolor
         bgrgba = None
-        # Use faster match for 3.10+ python
-        if p310_plus:
-            match background_color:
-                case "black":
-                    bgrgba = [0, 0, 0, 255]
-                case "white":
-                    bgrgba = [255, 255, 255, 255]
-                case "magenta":
-                    bgrgba = [255, 0, 255, 255]
-                case "chroma green":
-                    bgrgba = [0, 177, 64, 255]
-                case "chroma blue":
-                    bgrgba = [0, 71, 187, 255]
-                case _:
-                    bgrgba = None
+        if background_color == "black":
+            bgrgba = [0, 0, 0, 255]
+        elif background_color == "white":
+            bgrgba = [255, 255, 255, 255]
+        elif background_color == "magenta":
+            bgrgba = [255, 0, 255, 255]
+        elif background_color == "chroma green":
+            bgrgba = [0, 177, 64, 255]
+        elif background_color == "chroma blue":
+            bgrgba = [0, 71, 187, 255]
         else:
-            if background_color == "black":
-                bgrgba = [0, 0, 0, 255]
-            elif background_color == "white":
-                bgrgba = [255, 255, 255, 255]
-            elif background_color == "magenta":
-                bgrgba = [255, 0, 255, 255]
-            elif background_color == "chroma green":
-                bgrgba = [0, 177, 64, 255]
-            elif background_color == "chroma blue":
-                bgrgba = [0, 71, 187, 255]
-            else:
-                bgrgba = None
+            bgrgba = None
 
         if transparency and bgrgba is not None:
             bgrgba[3] = 0
