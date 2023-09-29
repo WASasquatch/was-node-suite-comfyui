@@ -9511,7 +9511,7 @@ class WAS_Text_String_Truncate:
                 "text": ("STRING", {"forceInput": True}),
                 "truncate_by": (["characters", "words"],),
                 "truncate_from": (["end", "beginning"],),
-                "truncate_to": ("INT", {"default": 10, "min": 1, "max": 99999999, "step": 1}),
+                "truncate_to": ("INT", {"default": 10, "min": -99999999, "max": 99999999, "step": 1}),
             },
             "optional": {
                 "text_b": ("STRING", {"forceInput": True}),
@@ -9540,14 +9540,15 @@ class WAS_Text_String_Truncate:
             cstr("Invalid truncate_by. 'truncate_by' must be either 'characters' or 'words'.").error.print()
         if truncate_by == 'characters':
             if mode == 'beginning':
-                return string[:max_length]
+                return string[:max_length] if max_length >= 0 else string[max_length:]
             else:
-                return string[-max_length:]
+                return string[-max_length:] if max_length >= 0 else string[:max_length]
         words = string.split()
         if mode == 'beginning':
-            return ' '.join(words[:max_length])
+            return ' '.join(words[:max_length]) if max_length >= 0 else ' '.join(words[max_length:])
         else:
-            return ' '.join(words[-max_length:])
+            return ' '.join(words[-max_length:]) if max_length >= 0 else ' '.join(words[:max_length])
+
 
 
 
