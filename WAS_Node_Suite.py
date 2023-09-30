@@ -46,6 +46,8 @@ import time
 import torch
 from tqdm import tqdm
 
+p310_plus = (sys.version_info >= (3, 10))
+
 MANIFEST = {
     "name": "WAS Node Suite",
     "version": (2,2,2),
@@ -5690,19 +5692,18 @@ class WAS_Remove_Rembg:
 
         # Set bgcolor
         bgrgba = None
-        match background_color:
-            case "black":
-                bgrgba = [0, 0, 0, 255]
-            case "white":
-                bgrgba = [255, 255, 255, 255]
-            case "magenta":
-                bgrgba = [255, 0, 255, 255]
-            case "chroma green":
-                bgrgba = [0, 177, 64, 255]
-            case "chroma blue":
-                bgrgba = [0, 71, 187, 255]
-            case _:
-                bgrgba = None
+        if background_color == "black":
+            bgrgba = [0, 0, 0, 255]
+        elif background_color == "white":
+            bgrgba = [255, 255, 255, 255]
+        elif background_color == "magenta":
+            bgrgba = [255, 0, 255, 255]
+        elif background_color == "chroma green":
+            bgrgba = [0, 177, 64, 255]
+        elif background_color == "chroma blue":
+            bgrgba = [0, 71, 187, 255]
+        else:
+            bgrgba = None
 
         if transparency and bgrgba is not None:
             bgrgba[3] = 0
@@ -9510,7 +9511,7 @@ class WAS_Text_String_Truncate:
                 "text": ("STRING", {"forceInput": True}),
                 "truncate_by": (["characters", "words"],),
                 "truncate_from": (["end", "beginning"],),
-                "truncate_to": ("INT", {"default": 10, "min": 1, "max": 99999999, "step": 1}),
+                "truncate_to": ("INT", {"default": 10, "min": -99999999, "max": 99999999, "step": 1}),
             },
             "optional": {
                 "text_b": ("STRING", {"forceInput": True}),
@@ -9539,14 +9540,15 @@ class WAS_Text_String_Truncate:
             cstr("Invalid truncate_by. 'truncate_by' must be either 'characters' or 'words'.").error.print()
         if truncate_by == 'characters':
             if mode == 'beginning':
-                return string[:max_length]
+                return string[:max_length] if max_length >= 0 else string[max_length:]
             else:
-                return string[-max_length:]
+                return string[-max_length:] if max_length >= 0 else string[:max_length]
         words = string.split()
         if mode == 'beginning':
-            return ' '.join(words[:max_length])
+            return ' '.join(words[:max_length]) if max_length >= 0 else ' '.join(words[max_length:])
         else:
-            return ' '.join(words[-max_length:])
+            return ' '.join(words[-max_length:]) if max_length >= 0 else ' '.join(words[:max_length])
+
 
 
 
