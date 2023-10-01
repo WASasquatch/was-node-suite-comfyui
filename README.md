@@ -43,7 +43,7 @@
      - `    "wildcards_path": "E:\\python\\automatic\\webui3\\stable-diffusion-webui\\extensions\\sd-dynamic-prompts\\wildcards"`
      - If no path is set the wildcards dir is located at the root of WAS Node Suite as `/wildcards`
  - CLIP Input Switch: Switch between two CLIP inputs based on a boolean switch.
- - CLIP Vision Input Switch: Switch between two CLIP Vision inputs based on a boolean swith.
+ - CLIP Vision Input Switch: Switch between two CLIP Vision inputs based on a boolean switch.
  - Conditioning Input Switch: Switch between two conditioning inputs.
  - Constant Number
  - Control Net Model Input Switch: Switch between two Control Net Model inputs based on a boolean switch.
@@ -95,7 +95,7 @@
  - Image Generate Gradient: Generate a gradient map with desired stops and colors
  - Image High Pass Filter: Apply a high frequency pass to the image returning the details
  - Image History Loader: Load images from history based on the Load Image Batch node. Can define max history in config file. *(requires restart to show last sessions files at this time)*
- - Image Input Switch: Switch between two image inputs
+ - Image Input Switch: Switch between two image inputs based on a boolean switch
  - Image Levels Adjustment: Adjust the levels of a image
  - Image Load: Load a *image* from any path on the system, or a url starting with `http`
  - Image Median Filter: Apply a median filter to a image, such as to smooth out details in surfaces
@@ -184,15 +184,16 @@
  - Latent Noise Injection: Inject latent noise into a latent image
  - Latent Size to Number: Latent sizes in tensor width/height
  - Latent Upscale by Factor: Upscale a latent image by a factor
- - Latent Input Switch: Switch between two latent inputs 
+ - Latent Input Switch: Switch between two latent inputs based on a boolean switch
  - Logic Boolean: A simple `1` or `0` output to use with logic
+ - Lora Input Switch: Switch between two LORAs based on a boolean switch
  - MiDaS Model Loader: Load a MiDaS model as an optional input for MiDaS Depth Approximation
  - MiDaS Depth Approximation: Produce a depth approximation of a single image input
  - MiDaS Mask Image: Mask a input image using MiDaS with a desired color
  - Number Operation
  - Number to Seed
  - Number to Float
- - Number Input Switch: Switch between two number inputs
+ - Number Input Switch: Switch between two number inputs based on a boolean switch
  - Number Input Condition: Compare between two inputs or against the A input
  - Number to Int
  - Number to String
