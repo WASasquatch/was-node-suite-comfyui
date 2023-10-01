@@ -11505,14 +11505,14 @@ class WAS_Random_Number:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "number_type": (["integer", "float", "bool", "shuffled_list"],),
+                "number_type": (["integer", "float", "bool"],),
                 "minimum": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
                 "maximum": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
 
-    RETURN_TYPES = ("NUMBER", "FLOAT", "INT", "STRING")
+    RETURN_TYPES = ("NUMBER", "FLOAT", "INT")
     FUNCTION = "return_randm_number"
 
     CATEGORY = "WAS Suite/Number"
@@ -11523,24 +11523,19 @@ class WAS_Random_Number:
         random.seed(seed)
 
         # Return random number
-        if number_type == 'integer':
-            number = random.randint(minimum, maximum)
-            return (number, float(number), int(number), str(number))
-        elif number_type == 'float':
-            number = random.uniform(minimum, maximum)
-            return (number, float(number), int(number), str(number))
-        elif number_type == 'bool':
-            number = random.random()
-            return (number, float(number), int(number + 0.5), str(number))
-        elif number_type == "shuffled_list":
-            # e.g. for min=0, max=3, will return something like 3,1,2,0
-            numlist = list(range(int(minimum), int(maximum) + 1))
-            random.shuffle(numlist)
-            string = ",".join([str(x) for x in numlist])
-            return (0, 0, 0, string)
-        else:
-            raise ValueError(f'Unexpected number_type: {number_type}')
+        if number_type:
+            if number_type == 'integer':
+                number = random.randint(minimum, maximum)
+            elif number_type == 'float':
+                number = random.uniform(minimum, maximum)
+            elif number_type == 'bool':
+                number = random.random()
+            else:
+                return
 
+        # Return number
+        return (number, float(number), int(number))
+        
     @classmethod
     def IS_CHANGED(cls, seed, **kwargs):
         m = hashlib.sha256()
@@ -11672,8 +11667,9 @@ class WAS_Number_Counter:
         return {
             "required": {
                 "number_type": (["integer", "float"],),
-                "mode": (["increment", "decrement"],),
+                "mode": (["increment", "decrement", "increment_to_stop", "decrement_to_stop"],),
                 "start": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
+                "stop": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
                 "step": ("FLOAT", {"default": 1, "min": 0, "max": 99999, "step": 0.01}), 
             },
             "optional": {
@@ -11694,9 +11690,7 @@ class WAS_Number_Counter:
 
     CATEGORY = "WAS Suite/Number"
 
-    def increment_number(self, number_type, mode, start, step, unique_id, reset_bool=0):
-    
-        print(unique_id)
+    def increment_number(self, number_type, mode, start, stop, step, unique_id, reset_bool=0):
 
         counter = int(start) if mode == 'integer' else start
         if self.counters.__contains__(unique_id):
@@ -11707,8 +11701,12 @@ class WAS_Number_Counter:
             
         if mode == 'increment':
             counter += step
-        else:
+        elif mode == 'deccrement':
             counter -= step
+        elif mode == 'increment_to_stop':
+            counter = counter + step if counter < stop else counter
+        elif mode == 'decrement_to_stop':
+            counter = counter - step if counter > stop else counter 
             
         self.counters[unique_id] = counter
         
@@ -11717,8 +11715,6 @@ class WAS_Number_Counter:
         return ( result, float(counter), int(counter) )
             
         
-
-
 # NUMBER TO SEED
 
 class WAS_Number_To_Seed:
