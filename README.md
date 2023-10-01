@@ -199,6 +199,10 @@
  - Number to Text
  - Perlin Power Fractal Latent: Create a power fractal based latent image. Doesn't work with all samplers (unless you add noise). 
  - Random Number
+   - Random integer between min and max (inclusive), uniformly distributed random number
+   - Random float between min and max (inclusive), uniformly distributed random number
+   - Random number from 0 to 1 inclusive, this will be a 0 or 1 boolean if you use the 'int' output
+   - Random shuffled list of integers between min and max inclusive.  E.g. if min=0 and max=3, a possible outcome would be the string '3,1,2,0'
  - Save Text File: Save a text string to a file
  - Samples Passthrough (Stat System): Logs RAM, VRAM, and Disk usage to the console.
  - Seed: Return a seed
