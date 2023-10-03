@@ -24,9 +24,8 @@ import comfy.samplers
 import comfy.sd
 import comfy.utils
 import comfy.clip_vision
-import model_management
+import comfy.model_management
 import folder_paths as comfy_paths
-import model_management
 from comfy_extras.chainner_models import model_loading
 import glob
 import hashlib
@@ -42,6 +41,7 @@ import requests
 import socket
 import subprocess
 import sys
+import datetime
 import time
 import torch
 from tqdm import tqdm
@@ -1197,7 +1197,7 @@ class WAS_Tools_Class():
         def generate_transition_frames(self, start_frame, end_image, num_frames):
 
             if start_frame is None:
-                return [image]
+                return []
                 
             start_frame = start_frame.convert("RGBA")
             end_image = end_image.convert("RGBA")
@@ -6735,7 +6735,7 @@ class WAS_Image_Ambient_Occlusion:
                             tile_rgb = rgb_normalized[tile_upper:tile_lower, tile_left:tile_right]
                             tile_depth = depth_normalized[tile_upper:tile_lower, tile_left:tile_right]
 
-                            future = executor.submit(process_tile, tile_rgb, tile_depth, tile_x, tile_y, radius)
+                            future = executor.submit(self.process_tile, tile_rgb, tile_depth, tile_x, tile_y, radius)
                             futures.append(future)
 
                     for future in concurrent.futures.as_completed(futures):
@@ -10957,74 +10957,6 @@ class WAS_CLIPSeg_Batch:
         return (images_tensor, masks_tensor, mask_images_tensor)
 
 
-# Lang SAM Model Loader
-# TODO: Fix Lang SAM Dependency Issues 
-
-class WAS_Lang_SAM_Model_Loader:
-    def __init__(self):
-        pass
-        
-    @classmethod
-    def INPUT_TYPES(self):
-        return {
-            "required": {
-                "model_type": (["vit_b", "vit_l", "vit_h"],),
-            }
-        }
-
-    RETURN_TYPES = ("LANG_SAM_MODEL",)
-    RETURN_NAMES = ("lang_sam_model",)
-    
-    CATEGORY = "WAS Suite/Loaders"
-    
-    FUNCTION = "lang_sam_model"
-    
-    def lang_sam_model(self, model_type):
-
-        from lang_sam import LangSAM
-        
-        model = LangSAM(model_type=model_type)
-        model.device = 'cpu'
-
-        return ( model, )
-
-
-# Lang SAM Masking
-
-class WAS_Lang_SAM_Masking:
-    def __init__(self):
-        pass
-        
-    @classmethod
-    def INPUT_TYPES(self):
-        return {
-            "required": {
-                "lang_sam_model": ("LANG_SAM_MODEL",),
-                "image": ("IMAGE",),
-                "prompt": ("STRING", {"default": "", "multiline": False}),
-            }
-        }
-
-    RETURN_TYPES = ("LANG_SAM_MODEL",)
-    RETURN_NAMES = ("lang_sam_model",)
-    
-    CATEGORY = "WAS Suite/Image/Masking"
-    
-    FUNCTION = "lang_sam_masking"
-    
-    def lang_sam_masking(self, lang_sam_model, image, prompt):
-
-        lang_sam_model.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        masks, boxes, phrases, logits = lang_sam_model.predict(tensor2pil(image), prompt)
-        
-        print(masks)
-        print(boxes)
-        print(logits)
-
-        return ( LandSAM(), )
-
-
 # SAM MODEL LOADER
 
 class WAS_SAM_Model_Loader:
@@ -12672,7 +12604,7 @@ class WAS_Diffusers_Loader:
                     model_path = os.path.join(search_path, model_path)
                     break
 
-        out = comfy.diffusers_convert.load_diffusers(model_path, fp16=model_management.should_use_fp16(), output_vae=output_vae, output_clip=output_clip, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
+        out = comfy.diffusers_convert.load_diffusers(model_path, fp16=comfy.model_management.should_use_fp16(), output_vae=output_vae, output_clip=output_clip, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
         return (out[0], out[1], out[2], os.path.basename(model_path))
 
 
@@ -13431,7 +13363,10 @@ if os.path.exists(BKAdvCLIP_dir):
             new_text, text_vars = parse_prompt_vars(new_text)
             cstr(f"CLIPTextEncode Prased Prompt:\n {new_text}").msg.print()
             
-            encode = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation)     
+            encode = AdvancedCLIPTextEncode().encode(clip, new_text, token_normalization, weight_interpretation)  
+
+            sys.path.remove(BKAdvCLIP_dir)
+
             return ([[encode[0][0][0], encode[0][0][1]]], new_text, text, { "ui": { "string": new_text } } )
                  
                 
