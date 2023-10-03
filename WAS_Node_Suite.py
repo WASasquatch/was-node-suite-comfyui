@@ -12624,6 +12624,34 @@ class WAS_unCLIP_Checkpoint_Loader:
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=comfy_paths.get_folder_paths("embeddings"))
         return (out[0], out[1], out[2], out[3], os.path.splitext(os.path.basename(ckpt_name))[0])
 
+
+class WAS_Lora_Input_Switch:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model_a": ("MODEL",),
+                "clip_a": ("CLIP",),
+                "model_b": ("MODEL",),
+                "clip_b": ("CLIP",),
+                "boolean_number": ("NUMBER",),
+            }
+        }
+    RETURN_TYPES = ("MODEL", "CLIP")
+    FUNCTION = "lora_input_switch"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def lora_input_switch(self, model_a, clip_a, model_b, clip_b, boolean_number=1):
+        if int(round(boolean_number)) == 1:
+            return (model_a, clip_a)
+        else:
+            return (model_b, clip_b)
+
+
 class WAS_Lora_Loader:
     def __init__(self):
         self.loaded_lora = None;
@@ -13216,6 +13244,7 @@ NODE_CLASS_MAPPINGS = {
     "Load Image Batch": WAS_Load_Image_Batch,
     "Load Text File": WAS_Text_Load_From_File,
     "Load Lora": WAS_Lora_Loader,
+    "Lora Input Switch": WAS_Lora_Input_Switch,
     "Masks Add": WAS_Mask_Add,
     "Masks Subtract": WAS_Mask_Subtract,
     "Mask Arbitrary Region": WAS_Mask_Arbitrary_Region,
