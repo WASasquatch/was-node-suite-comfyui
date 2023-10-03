@@ -11949,6 +11949,60 @@ class WAS_Number_Multiple_Of:
 
 #! MISC
 
+
+# Bus.  Converts the 5 main connectors into one, and back again.  You can provide a bus as input
+#       or the 5 separate inputs, or a combination.  If you provide a bus input and a separate
+#       input (e.g. a model), the model will take precedence.
+#
+#       The term 'bus' comes from computer hardware, see https://en.wikipedia.org/wiki/Bus_(computing)
+class WAS_Bus:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required":{},
+            "optional": {
+                "bus" : ("BUS",),
+                "model": ("MODEL",),
+                "clip": ("CLIP",),
+                "vae": ("VAE",),
+                "positive": ("CONDITIONING",),
+                "negative": ("CONDITIONING",),
+            }
+        }
+    RETURN_TYPES = ("BUS", "MODEL", "CLIP", "VAE", "CONDITIONING", "CONDITIONING",)
+    RETURN_NAMES = ("bus", "model", "clip", "vae", "positive",     "negative")
+    FUNCTION = "bus_fn"
+    CATEGORY = "WAS Suite/Utilities"
+
+    def bus_fn(self, bus=(None,None,None,None,None), model=None, clip=None, vae=None, positive=None, negative=None):
+
+        # Unpack the 5 constituents of the bus from the bus tuple.
+        (bus_model, bus_clip, bus_vae, bus_positive, bus_negative) = bus
+
+        # If you pass in specific inputs, they override what comes from the bus.
+        out_model       = model     or bus_model
+        out_clip        = clip      or bus_clip
+        out_vae         = vae       or bus_vae
+        out_positive    = positive  or bus_positive
+        out_negative    = negative  or bus_negative
+
+        # Squash all 5 inputs into the output bus tuple.
+        out_bus = (out_model, out_clip, out_vae, out_positive, out_negative)
+
+        if not out_model:
+            raise ValueError('Either model or bus containing a model should be supplied')
+        if not out_clip:
+            raise ValueError('Either clip or bus containing a clip should be supplied')
+        if not out_vae:
+            raise ValueError('Either vae or bus containing a vae should be supplied')
+        # We don't insist that a bus contains conditioning.
+
+        return (out_bus, out_model, out_clip, out_vae, out_positive, out_negative)
+
+
 # Image Width and Height to Number
 
 class WAS_Image_Size_To_Number:
@@ -13143,6 +13197,7 @@ class WAS_Integer_Place_Counter:
 NODE_CLASS_MAPPINGS = {
     "BLIP Model Loader": WAS_BLIP_Model_Loader,
     "Blend Latents": WAS_Blend_Latents,
+    "Bus Node": WAS_Bus,
     "Cache Node": WAS_Cache,
     "Checkpoint Loader": WAS_Checkpoint_Loader, 
     "Checkpoint Loader (Simple)": WAS_Checkpoint_Loader_Simple,
