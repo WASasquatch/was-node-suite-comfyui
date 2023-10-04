@@ -36,6 +36,7 @@
  - Bounded Image Blend with Mask: Blend a bounds image by mask
  - Bounded Image Crop: Crop a bounds image
  - Bounded Image Crop with Mask: Crop a bounds image by mask
+ - Bus Node: condense the 5 common connectors into one, keep your workspace tidy (Model, Clip, VAE, Positive Conditioning, Negative Conditioning)
  - Cache Node: Cache Latnet, Tensor Batches (Image), and Conditioning to disk to use later.
  - CLIPTextEncode (NSP): Parse noodle soups from the NSP pantry, or parse wildcards from a directory containing A1111 style wildacrds.
    - Wildcards are in the style of `__filename__`, which also includes subdirectories like `__appearance/haircolour__` (if you noodle_key is set to `__`)
