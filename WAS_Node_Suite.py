@@ -504,7 +504,7 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
 
     return new_text
     
-# Simple wildcard parser:
+# Advanced wildcard parser:
 import os
 import hashlib
 import cupy as cp
