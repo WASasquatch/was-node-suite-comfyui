@@ -7,10 +7,14 @@ echo Installing WAS-NS ...
 
 if exist "%python_exec%" (
     echo Installing with ComfyUI Portable
-    "%python_exec%" -s -m pip install -r "%requirements_txt%"
+    for /f "delims=" %%i in (%requirements_txt%) do (
+        %python_exec% -s -m pip install "%%i"
+    )
 ) else (
     echo Installing with system Python
-    pip install -r "%requirements_txt%"
+    for /f "delims=" %%i in (%requirements_txt%) do (
+        pip install "%%i"
+    )
 )
 
 pause
