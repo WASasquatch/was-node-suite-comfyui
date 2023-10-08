@@ -1,6 +1,7 @@
 cmake
 fairscale>=0.4.4
 git+https://github.com/WASasquatch/img2texture.git
+git+https://github.com/WASasquatch/cstr.git
 gitpython
 imageio
 joblib
