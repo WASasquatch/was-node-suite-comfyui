@@ -3617,6 +3617,87 @@ class WAS_Image_Paste_Crop_Location:
 
 # IMAGE GRID IMAGE
 
+class WAS_Image_Grid_Image_Batch:
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "border_width": ("INT", {"default":3, "min": 0, "max": 100, "step":1}),
+                "number_of_columns": ("INT", {"default":6, "min": 1, "max": 24, "step":1}),
+                "max_cell_size": ("INT", {"default":256, "min":32, "max":1280, "step":1}),
+                "border_red": ("INT", {"default":0, "min": 0, "max": 255, "step":1}),
+                "border_green": ("INT", {"default":0, "min": 0, "max": 255, "step":1}),
+                "border_blue": ("INT", {"default":0, "min": 0, "max": 255, "step":1}),
+            }
+        }
+        
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "smart_grid_image"
+    
+    CATEGORY = "WAS Suite/Image/Process"
+
+    def smart_grid_image(self, images, number_of_columns=6, max_cell_size=256, add_border=False, border_red=255, border_green=255, border_blue=255, border_width=3):
+        
+        cols = number_of_columns
+        size = (max_cell_size, max_cell_size)
+        border_color = (border_red, border_green, border_blue)
+
+        max_width, max_height = size
+        row_height = 0
+        images_resized = []
+        for tensor_img in images:
+            img = tensor2pil(tensor_img)
+            
+            img_w, img_h = img.size
+            aspect_ratio = img_w / img_h
+            if aspect_ratio > 1:  # landscape
+                thumb_w = min(max_width, img_w - border_width)
+                thumb_h = thumb_w / aspect_ratio
+            else:  # portrait
+                thumb_h = min(max_height, img_h - border_width)
+                thumb_w = thumb_h * aspect_ratio
+
+            pad_w = max_width - int(thumb_w)
+            pad_h = max_height - int(thumb_h)
+            left = pad_w // 2
+            top = pad_h // 2
+            right = pad_w - left
+            bottom = pad_h - top
+            padding = (left, top, right, bottom)
+            img_resized = ImageOps.expand(img.resize((int(thumb_w), int(thumb_h))), padding)
+
+            if add_border:
+                img_resized = ImageOps.expand(img_resized, border=border_width // 2, fill=border_color)
+
+            images_resized.append(img_resized)
+            row_height = max(row_height, img_resized.size[1])
+        
+        row_height = int(row_height)
+
+        total_images = len(images_resized)
+        rows = math.ceil(total_images / cols)
+        new_image = Image.new('RGB', (cols * size[0] + (cols - 1) * border_width,
+                                      rows * row_height + (rows - 1) * border_width), border_color)
+
+        for i, img in enumerate(images_resized):
+            x = (i % cols) * (size[0] + border_width)
+            y = (i // cols) * (row_height + border_width)
+            if img.size == (size[0], size[1]):
+                new_image.paste(img, (x, y, x + img.size[0], y + img.size[1]))
+            else:
+                img = img.resize((size[0], size[1]))
+                new_image.paste(img, (x, y, x + size[0], y + size[1]))
+        
+        new_image = ImageOps.expand(new_image, border=border_width, fill=border_color)
+
+        return (pil2tensor(new_image), )
+
+# IMAGE GRID IMAGE FROM PATH
+
 class WAS_Image_Grid_Image:
     def __init__(self):
         pass
@@ -13162,6 +13243,7 @@ NODE_CLASS_MAPPINGS = {
     "Conditioning Input Switch": WAS_Conditioning_Input_Switch,
     "Constant Number": WAS_Constant_Number,
     "Create Grid Image": WAS_Image_Grid_Image,
+    "Create Grid Image from Batch": WAS_Image_Grid_Image_Batch,
     "Create Morph Image": WAS_Image_Morph_GIF, 
     "Create Morph Image from Path": WAS_Image_Morph_GIF_By_Path,
     "Create Video from Path": WAS_Create_Video_From_Path,
@@ -13303,8 +13385,6 @@ NODE_CLASS_MAPPINGS = {
     "SAM Parameters": WAS_SAM_Parameters,
     "SAM Parameters Combine": WAS_SAM_Combine_Parameters,
     "SAM Image Mask": WAS_SAM_Image_Mask,
-    #"LangSAM Model Loader": WAS_Lang_SAM_Model_Loader,
-    #"LangSAM Masking": WAS_Lang_SAM_Masking,
     "Samples Passthrough (Stat System)": WAS_Samples_Passthrough_Stat_System,
     "String to Text": WAS_String_To_Text,
     "Image Bounds": WAS_Image_Bounds,

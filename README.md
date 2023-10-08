@@ -50,6 +50,7 @@
  - Constant Number
  - Control Net Model Input Switch: Switch between two Control Net Model inputs based on a boolean switch.
  - Create Grid Image: Create a image grid from images at a destination with customizable glob pattern. Optional border size and color. 
+ - Create Grid Image from Batch: Create a grid image from a batch tensor of images. 
  - Create Morph Image: Create a GIF/APNG animation from two images, fading between them. 
  - Create Morph Image by Path: Create a GIF/APNG animation from a path to a directory containing images, with optional pattern. 
  - Create Video from Path: Create video from images from a specified path. 
