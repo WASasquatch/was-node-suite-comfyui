@@ -3897,7 +3897,7 @@ class WAS_Image_Morph_GIF_Writer:
                 "duration_ms": ("FLOAT", {"default":0.1, "min":0.1, "max":60000.0, "step":0.1}),
                 "loops": ("INT", {"default":0, "min":0, "max":100, "step":1}),
                 "max_size": ("INT", {"default":512, "min":128, "max":1280, "step":1}),
-                "output_path": ("STRING", {"default": "./ComfyUI/output", "multiline": False}),
+                "output_path": ("STRING", {"default": comfy_paths.output_directory, "multiline": False}),
                 "filename": ("STRING", {"default": "morph_writer", "multiline": False}),
             }
         }
@@ -3907,23 +3907,23 @@ class WAS_Image_Morph_GIF_Writer:
         return float("NaN")
         
     RETURN_TYPES = ("IMAGE",TEXT_TYPE,TEXT_TYPE)
-    RETURN_NAMES = ("IMAGE_PASS","filepath_text","filename_text")
+    RETURN_NAMES = ("image_pass","filepath_text","filename_text")
     FUNCTION = "write_to_morph_gif"
     
     CATEGORY = "WAS Suite/Animation/Writer"
     
     def write_to_morph_gif(self, image, transition_frames=10, image_delay_ms=10, duration_ms=0.1, loops=0, max_size=512, 
                             output_path="./ComfyUI/output", filename="morph"):
-                
+        
         if 'imageio' not in packages():
             install_package("imageio")
         
         if output_path.strip() in [None, "", "."]:
             output_path = "./ComfyUI/output"
-            
-        if image == None:
-            image = pil2tensor(Image.new("RGB", (512,512), (0,0,0)))
-            
+        
+        if image is None:
+            image = pil2tensor(Image.new("RGB", (512, 512), (0, 0, 0))).unsqueeze(0)
+        
         if transition_frames < 2:
             transition_frames = 2
         elif transition_frames > 60:
@@ -3936,16 +3936,19 @@ class WAS_Image_Morph_GIF_Writer:
             
         tokens = TextTokens()
         output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
-        output_file = os.path.join(output_path, tokens.parseTokens(filename)+'.gif')
+        output_file = os.path.join(output_path, tokens.parseTokens(filename) + '.gif')
         
         if not os.path.exists(output_path):
             os.makedirs(output_path, exist_ok=True)
         
         WTools = WAS_Tools_Class()
         GifMorph = WTools.GifMorphWriter(int(transition_frames), int(duration_ms), int(image_delay_ms))
-        GifMorph.write(tensor2pil(image), output_file)
         
-        return (image, output_file, filename)        
+        for img in image:
+            pil_img = tensor2pil(img)
+            GifMorph.write(pil_img, output_file)
+        
+        return (image, output_file, filename)    
 
 # IMAGE MORPH GIF BY PATH
 
