@@ -11,7 +11,7 @@
 
 # Important Updates
 
-- **[Updated 10/8/2023]** BLIP is now a shipped module or WAS-NS and no longer requires the BLIP Repo
+- **[Updated 10/8/2023]** BLIP is now a shipped module of WAS-NS and no longer requires the BLIP Repo
  - **[Updated 5/29/2023]** `ASCII` **is deprecated**. The new preferred method of text node output is `STRING`. This is a change from `ASCII` so that it is more clear what data is being passed.
    - The `was_suite_config.json` will automatically set `use_legacy_ascii_text` to `false`. 
  -  [Video Nodes](https://github.com/WASasquatch/was-node-suite-comfyui#video-nodes) - There are two new video nodes, `Write to Video` and `Create Video from Path`. These are experimental nodes. 
