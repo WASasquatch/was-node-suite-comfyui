@@ -3562,12 +3562,14 @@ class WAS_Image_Paste_Crop_Location:
     CATEGORY = "WAS Suite/Image/Process"
     
     def image_paste_crop_location(self, image, crop_image, top=0, left=0, right=256, bottom=256, crop_blending=0.25, crop_sharpening=0):
-
         result_image, result_mask = self.paste_image(tensor2pil(image), tensor2pil(crop_image), top, left, right, bottom, crop_blending, crop_sharpening)
         return (result_image, result_mask)
     
     def paste_image(self, image, crop_image, top=0, left=0, right=256, bottom=256, blend_amount=0.25, sharpen_amount=1):
-    
+
+        image = image.convert("RGBA")
+        crop_image = crop_image.convert("RGBA")
+        
         def inset_border(image, border_width=20, border_color=(0)):
             width, height = image.size
             bordered_image = Image.new(image.mode, (width, height), border_color)
@@ -3575,7 +3577,7 @@ class WAS_Image_Paste_Crop_Location:
             draw = ImageDraw.Draw(bordered_image)
             draw.rectangle((0, 0, width-1, height-1), outline=border_color, width=border_width)
             return bordered_image
-    
+
         img_width, img_height = image.size
         
         # Ensure that the coordinates are within the image bounds
@@ -3585,9 +3587,9 @@ class WAS_Image_Paste_Crop_Location:
         right = min(max(right, 0), img_width)
         
         crop_size = (right - left, bottom - top)
-        crop_img = crop_image.convert("RGB")
-        crop_img = crop_img.resize(crop_size)
-            
+        crop_img = crop_image.resize(crop_size)
+        crop_img = crop_img.convert("RGBA")
+
         if sharpen_amount > 0:
             for _ in range(sharpen_amount):
                 crop_img = crop_img.filter(ImageFilter.SHARPEN)
@@ -3598,22 +3600,23 @@ class WAS_Image_Paste_Crop_Location:
             blend_amount = 0.0
         blend_ratio = (max(crop_size) / 2) * float(blend_amount)
 
-        blend = image.convert("RGBA")
+        blend = image.copy()
         mask = Image.new("L", image.size, 0)
         
         mask_block = Image.new("L", crop_size, 255)
         mask_block = inset_border(mask_block, int(blend_ratio/2), (0))
      
         Image.Image.paste(mask, mask_block, (left, top))
-        Image.Image.paste(blend, crop_img, (left, top))
-
+        blend.paste(crop_img, (left, top), crop_img)
+        
         mask = mask.filter(ImageFilter.BoxBlur(radius=blend_ratio/4))
         mask = mask.filter(ImageFilter.GaussianBlur(radius=blend_ratio/4))
-
+        
         blend.putalpha(mask)
-        image = Image.alpha_composite(image.convert("RGBA"), blend)
+        image = Image.alpha_composite(image, blend)
             
-        return (pil2tensor(image.convert('RGB')), pil2tensor(mask.convert('RGB'))) 
+        return (pil2tensor(image), pil2tensor(mask.convert('RGB')))
+    
 
 # IMAGE GRID IMAGE
 
