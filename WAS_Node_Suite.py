@@ -11401,8 +11401,8 @@ class WAS_Bounded_Image_Blend_With_Mask:
     def INPUT_TYPES(self):
         return {
             "required": {
-                "target": ("IMAGE",),
-                "target_mask": ("MASK",),
+                "image": ("IMAGE",),
+                "mask": ("MASK",),
                 "target_bounds": ("IMAGE_BOUNDS",),
                 "source": ("IMAGE",),
                 "blend_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0}),
@@ -11415,9 +11415,10 @@ class WAS_Bounded_Image_Blend_With_Mask:
     
     CATEGORY = "WAS Suite/Image/Bound"
     
-    def bounded_image_crop_with_mask(self, image, mask, padding_left, padding_right, padding_top, padding_bottom):
+    def bounded_image_blend_with_mask(self, image, mask, target_bounds, padding_left, padding_right, padding_top, padding_bottom):
         cropped_images = []
         bounds = []
+        rmin, rmax, cmin, cmax = target_bounds
         for img, msk in zip(image, mask):
             rows = torch.any(msk, axis=1)
             cols = torch.any(msk, axis=0)
