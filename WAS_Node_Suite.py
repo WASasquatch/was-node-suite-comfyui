@@ -11436,22 +11436,20 @@ class WAS_Bounded_Image_Blend_With_Mask:
     
     CATEGORY = "WAS Suite/Image/Bound"
     
-    def bounded_image_blend_with_mask(self, image, mask, target_bounds, padding_left, padding_right, padding_top, padding_bottom):
-        cropped_images = []
-        bounds = []
+    def bounded_image_blend_with_mask(self, target, target_mask, target_bounds, source, blend_factor, feathering):
+        target_pil = Image.fromarray((target.squeeze(0).cpu().numpy() * 255).clip(0, 255).astype(np.uint8))
+        target_mask_pil = Image.fromarray((target_mask.cpu().numpy() * 255).astype(np.uint8), mode='L')
+        source_pil = Image.fromarray((source.squeeze(0).cpu().numpy() * 255).astype(np.uint8))
         rmin, rmax, cmin, cmax = target_bounds
-        for img, msk in zip(image, mask):
-            rows = torch.any(msk, axis=1)
-            cols = torch.any(msk, axis=0)
-            rmin, rmax = torch.where(rows)[0][[0, -1]]
-            cmin, cmax = torch.where(cols)[0][[0, -1]]
-            rmin = max(rmin - padding_top, 0)
-            rmax = min(rmax + padding_bottom, msk.shape[0] - 1)
-            cmin = max(cmin - padding_left, 0)
-            cmax = min(cmax + padding_right, msk.shape[1] - 1)
-            cropped_images.append(img[:, rmin:rmax + 1, cmin:cmax + 1, :])
-            bounds.append((rmin, rmax, cmin, cmax))
-        return (torch.cat(cropped_images, dim=0), bounds)
+        source_positioned = Image.new(target_pil.mode, target_pil.size)
+        source_positioned.paste(source_pil, (cmin, rmin))
+        blend_mask = target_mask_pil.point(lambda p: p * blend_factor).convert('L')
+        if feathering > 0:
+            blend_mask = blend_mask.filter(ImageFilter.GaussianBlur(radius=feathering))
+        result = Image.composite(source_positioned, target_pil, blend_mask)
+        result_tensor = torch.from_numpy(np.array(result).astype(np.float32) / 255).unsqueeze(0)
+        
+        return (result_tensor,)
 
 class WAS_Bounded_Image_Crop_With_Mask:
     def __init__(self):
