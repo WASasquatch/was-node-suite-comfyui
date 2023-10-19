@@ -2947,7 +2947,6 @@ class WAS_Image_Style_Filter:
                     "perpetua",
                     "reyes",
                     "rise",
-                    "sci-fi",
                     "slumber",
                     "stinson",
                     "toaster",
