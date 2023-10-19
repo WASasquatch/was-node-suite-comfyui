@@ -11421,8 +11421,8 @@ class WAS_Bounded_Image_Blend_With_Mask:
     def INPUT_TYPES(self):
         return {
             "required": {
-                "image": ("IMAGE",),
-                "mask": ("MASK",),
+                "target": ("IMAGE",),
+                "target_mask": ("MASK",),
                 "target_bounds": ("IMAGE_BOUNDS",),
                 "source": ("IMAGE",),
                 "blend_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0}),
