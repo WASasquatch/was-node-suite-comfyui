@@ -11548,7 +11548,7 @@ class WAS_Random_Number:
                 return
 
         # Return number
-        return (number, float(number), int(number))
+        return (number, float(number), round(number))
         
     @classmethod
     def IS_CHANGED(cls, seed, **kwargs):
@@ -11922,7 +11922,7 @@ class WAS_Boolean:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "boolean_number": ("INT", {"default":1, "min":0, "max":1, "step":1}),
+                "boolean_number": ("FLOAT", {"default":1, "min":0, "max":1, "step":1}),
             }
         }
 
