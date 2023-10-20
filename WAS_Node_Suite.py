@@ -7519,6 +7519,11 @@ class WAS_Mask_To_Image:
             tensor = masks.permute(0, 2, 3, 1)
             tensor_rgb = torch.cat([tensor] * 3, dim=-1)
             return (tensor_rgb,)
+        elif masks.ndim == 3:
+            # If Input has shape [N, H, W]
+            tensor = masks.unsqueeze(-1)
+            tensor_rgb = torch.cat([tensor] * 3, dim=-1)
+            return (tensor_rgb, )
         elif masks.ndim == 2:
             # If input has shape [H, W]
             tensor = masks.unsqueeze(0).unsqueeze(-1)
