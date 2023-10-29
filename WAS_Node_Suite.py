@@ -827,8 +827,8 @@ class TextTokens:
         if not self.WDB.getDB().__contains__('custom_tokens'):
             self.WDB.insertCat('custom_tokens')
         self.custom_tokens = self.WDB.getDict('custom_tokens')
-                
-        self.tokens =  {
+        
+        self.tokens = {
             '[time]': str(time.time()).replace('.','_'),
             '[hostname]': socket.gethostname(),
         }
@@ -837,24 +837,23 @@ class TextTokens:
             self.tokens['[time]'] = self.tokens['[time]'].split('.')[0]
 
         try:
-            self.tokens['[user]'] = ( os.getlogin() if os.getlogin() else 'null' )
+            self.tokens['[user]'] = os.getlogin() if os.getlogin() else 'null'
         except Exception:
             self.tokens['[user]'] = 'null'
-                
+
     def addToken(self, name, value):
         self.custom_tokens.update({name: value})
         self._update()
-                
-    def removeToken (self, name):
+
+    def removeToken(self, name):
         self.custom_tokens.pop(name)
         self._update()
-        
+
     def format_time(self, format_code):
         return time.strftime(format_code, time.localtime(time.time()))
-        
+
     def parseTokens(self, text):
         tokens = self.tokens.copy()
-
         if self.custom_tokens:
             tokens.update(self.custom_tokens)
 
@@ -866,7 +865,8 @@ class TextTokens:
         for token, value in tokens.items():
             if token.startswith('[time('):
                 continue
-            text = text.replace(token, value)
+            pattern = re.compile(r'\b' + re.escape(token) + r'\b')
+            text = pattern.sub(value, text)
 
         def replace_custom_time(match):
             format_code = match.group(1)
@@ -875,7 +875,7 @@ class TextTokens:
         text = re.sub(r'\[time\((.*?)\)\]', replace_custom_time, text)
 
         return text
-                
+
     def _update(self):
         self.WDB.updateCat('custom_tokens', self.custom_tokens)
         
