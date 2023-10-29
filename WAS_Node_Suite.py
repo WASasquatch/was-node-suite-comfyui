@@ -5116,7 +5116,7 @@ class WAS_Load_Image_Batch:
             self.label = label
 
         def load_images(self, directory_path, pattern):
-            for file_name in glob.glob(os.path.join(directory_path, pattern), recursive=True):
+            for file_name in glob.glob(os.path.join(glob.escape(directory_path), pattern), recursive=True):
                 if file_name.lower().endswith(ALLOWED_EXT):
                     abs_file_path = os.path.abspath(file_name)
                     self.image_paths.append(abs_file_path)
