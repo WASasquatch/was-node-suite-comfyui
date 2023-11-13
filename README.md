@@ -294,8 +294,10 @@ The token name can be anything excluding the `:` character to define your token.
     - Example: `[hostname]_[time]__[time(%Y-%m-%d__%I-%M%p)]` would output: **SKYNET-MASTER_1680897261__2023-04-07__07-54PM**
   - [hostname]
     - The hostname of the system executing ComfyUI
-  - [user]
-    - The user that is executing ComfyUI
+  - [cuda_device]
+    - The cuda device from `comfy.model_management.get_cuda_device()`
+  - [cuda_name]
+    - The cuda name from `comfy.model_management.get_cuda_device_name()`
     
 <br>
     

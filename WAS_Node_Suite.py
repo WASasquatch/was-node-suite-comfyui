@@ -831,6 +831,8 @@ class TextTokens:
         self.tokens = {
             '[time]': str(time.time()).replace('.','_'),
             '[hostname]': socket.gethostname(),
+            '[cuda_device]': comfy.model_management.get_torch_device(),
+            '[cuda_name]': comfy.model_management.get_torch_device_name(),
         }
 
         if '.' in self.tokens['[time]']:
