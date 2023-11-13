@@ -865,7 +865,7 @@ class TextTokens:
         for token, value in tokens.items():
             if token.startswith('[time('):
                 continue
-            pattern = re.compile(r'\b' + re.escape(token) + r'\b')
+            pattern = re.compile(re.escape(token))
             text = pattern.sub(value, text)
 
         def replace_custom_time(match):
@@ -1224,9 +1224,6 @@ class WAS_Tools_Class():
             self.codec = codec.lower() if codec.lower() in self.valid_codecs else "mp4v"
 
         def write(self, image, video_path):
-            import cv2
-            import os
-
             video_path += self.extensions[self.codec]
             end_image = self.rescale(self.pil2cv(image), self.max_size)
 
@@ -1238,21 +1235,31 @@ class WAS_Tools_Class():
                 fps = int(cap.get(cv2.CAP_PROP_FPS))
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-                temp_file_path = video_path.replace(self.extensions[self.codec], '_temp'+self.extensions[self.codec])
+                if width <= 0 or height <= 0:
+                    raise ValueError("Invalid video dimensions")
+
+                temp_file_path = video_path.replace(self.extensions[self.codec], '_temp' + self.extensions[self.codec])
                 fourcc = cv2.VideoWriter_fourcc(*self.codec)
                 out = cv2.VideoWriter(temp_file_path, fourcc, fps, (width, height), isColor=True)
 
                 for i in tqdm(range(total_frames), desc="Copying original frames"):
                     ret, frame = cap.read()
+                    if not ret:
+                        break
                     out.write(frame)
 
                 if self.transition_frames > 0:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
                     ret, last_frame = cap.read()
-                    transition_frames = self.generate_transition_frames(last_frame, end_image, self.transition_frames)
-                    for i, transition_frame in tqdm(enumerate(transition_frames), desc="Generating transition frames", total=self.transition_frames):
-                        transition_frame_resized = cv2.resize(transition_frame, (width, height))
-                        out.write(transition_frame_resized)
+                    if ret:
+                        transition_frames = self.generate_transition_frames(last_frame, end_image, self.transition_frames)
+                        for i, transition_frame in tqdm(enumerate(transition_frames), desc="Generating transition frames", total=self.transition_frames):
+                            try:
+                                transition_frame_resized = cv2.resize(transition_frame, (width, height))
+                                out.write(transition_frame_resized)
+                            except cv2.error as e:
+                                print(f"Error resizing frame {i}: {e}")
+                                continue
 
                 for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
                     out.write(end_image)
@@ -1270,6 +1277,9 @@ class WAS_Tools_Class():
             else:
                 fourcc = cv2.VideoWriter_fourcc(*self.codec)
                 height, width, _ = end_image.shape
+                if width <= 0 or height <= 0:
+                    raise ValueError("Invalid image dimensions")
+
                 out = cv2.VideoWriter(video_path, fourcc, self.fps, (width, height), isColor=True)
 
                 for i in tqdm(range(self.still_image_delay_frames), desc="Adding new frames"):
@@ -1282,7 +1292,7 @@ class WAS_Tools_Class():
                 return video_path
 
             return ""
-
+    
         def create_video(self, image_folder, video_path):
             import cv2
             from tqdm import tqdm
@@ -13059,20 +13069,26 @@ class WAS_Video_Writer:
         elif fps > 60:
             fps = 60
 
-        image = self.rescale_image(tensor2pil(image), max_size)
+        results = []
+        for img in image:
+            print(img.shape)
+            new_image = self.rescale_image(tensor2pil(img), max_size)
+            print(new_image.size)
+                
+            tokens = TextTokens()
+            output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
+            output_file = os.path.join(output_path, tokens.parseTokens(filename))
             
-        tokens = TextTokens()
-        output_path = os.path.abspath(os.path.join(*tokens.parseTokens(output_path).split('/')))
-        output_file = os.path.join(output_path, tokens.parseTokens(filename))
+            if not os.path.exists(output_path):
+                os.makedirs(output_path, exist_ok=True)
+            
+            WTools = WAS_Tools_Class()
+            MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), max_size=max_size, codec=codec)
+            path = MP4Writer.write(new_image, output_file)
+
+            results.append(img)
         
-        if not os.path.exists(output_path):
-            os.makedirs(output_path, exist_ok=True)
-        
-        WTools = WAS_Tools_Class()
-        MP4Writer = WTools.VideoWriter(int(transition_frames), int(fps), int(image_delay_sec), max_size, codec)
-        path = MP4Writer.write(image, output_file)
-        
-        return (pil2tensor(image), path, filename)
+        return (torch.cat(results, dim=0), path, filename)
         
     def rescale_image(self, image, max_dimension):
         width, height = image.size
