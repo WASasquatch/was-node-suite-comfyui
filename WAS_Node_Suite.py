@@ -828,11 +828,13 @@ class TextTokens:
             self.WDB.insertCat('custom_tokens')
         self.custom_tokens = self.WDB.getDict('custom_tokens')
         
+        device = comfy.model_management.get_torch_device()
+
         self.tokens = {
             '[time]': str(time.time()).replace('.','_'),
             '[hostname]': socket.gethostname(),
-            '[cuda_device]': comfy.model_management.get_torch_device(),
-            '[cuda_name]': comfy.model_management.get_torch_device_name(),
+            '[cuda_device]': str(device),
+            '[cuda_name]': str(comfy.model_management.get_torch_device_name(device)),
         }
 
         if '.' in self.tokens['[time]']:
