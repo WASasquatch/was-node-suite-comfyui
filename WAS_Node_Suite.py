@@ -11650,8 +11650,8 @@ class WAS_Image_Bounds_to_Console:
 
     def debug_to_console(self, image_bounds, label):
         label_out = 'Debug to Console'
-        if label.strip() == '':
-            lable_out = label
+        if label.strip() != '':
+            label_out = label
 
         bounds_out = 'Empty'
         if len(bounds_out) > 0:
