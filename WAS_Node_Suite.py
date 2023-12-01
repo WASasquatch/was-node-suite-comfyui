@@ -145,10 +145,12 @@ MIDAS_INSTALLED = False
 CUSTOM_NODES_DIR = comfy_paths.folder_names_and_paths["custom_nodes"][0][0]
 MODELS_DIR =  comfy_paths.models_dir
 WAS_SUITE_ROOT = os.path.dirname(NODE_FILE)
-WAS_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_suite_settings.json')
-WAS_HISTORY_DATABASE = os.path.join(WAS_SUITE_ROOT, 'was_history.json')
-WAS_CONFIG_FILE = os.path.join(WAS_SUITE_ROOT, 'was_suite_config.json')
-STYLES_PATH = os.path.join(WAS_SUITE_ROOT, 'styles.json')
+WAS_CONFIGS_DIR = os.environ.get('WAS_CONFIGS_DIR', WAS_SUITE_ROOT)
+WAS_DATABASE = os.path.join(WAS_CONFIGS_DIR, 'was_suite_settings.json')
+WAS_HISTORY_DATABASE = os.path.join(WAS_CONFIGS_DIR, 'was_history.json')
+WAS_CONFIG_FILE = os.path.join(WAS_CONFIGS_DIR, 'was_suite_config.json')
+STYLES_PATH = os.path.join(WAS_CONFIGS_DIR, 'styles.json')
+DEFAULT_NSP_PANTRY_PATH = os.path.join(WAS_CONFIGS_DIR, 'nsp_pantry.json')
 ALLOWED_EXT = ('.jpeg', '.jpg', '.png',
                         '.tiff', '.gif', '.bmp', '.webp')
                         
@@ -470,7 +472,7 @@ def nsp_parse(text, seed=0, noodle_key='__', nspterminology=None, pantry_path=No
     if nspterminology is None:
         # Fetch the NSP Pantry
         if pantry_path is None:
-            pantry_path = os.path.join(WAS_SUITE_ROOT, 'nsp_pantry.json')
+            pantry_path = DEFAULT_NSP_PANTRY_PATH
         if not os.path.exists(pantry_path):
             response = urlopen('https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json')
             tmp_pantry = json.loads(response.read())
