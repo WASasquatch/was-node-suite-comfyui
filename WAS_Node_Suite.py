@@ -9481,7 +9481,8 @@ class WAS_Text_List_Concatenate:
 
         return (text_list,)      
         
-# Text List Concatenate Node
+
+# Text List Node
 
 class WAS_Text_List:
     def __init__(self):
@@ -9491,9 +9492,9 @@ class WAS_Text_List:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text_a": ("STRING", {"forceInput": True}),
             },
             "optional": {
+                "text_a": ("STRING", {"forceInput": True}),
                 "text_b": ("STRING", {"forceInput": True}),
                 "text_c": ("STRING", {"forceInput": True}),
                 "text_d": ("STRING", {"forceInput": True}),
@@ -9507,22 +9508,16 @@ class WAS_Text_List:
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_as_list(self, text_a, text_b=None, text_c=None, text_d=None, text_e=None, text_f=None, text_g=None):
-        
-        text_list = [text_a,]
-    
-        if text_b:
-            text_list.append(text_b)
-        if text_c:
-            text_list.append(text_c)
-        if text_d:
-            text_list.append(text_d)
-        if text_e:
-            text_list.append(text_e)
-        if text_f:
-            text_list.append(text_f)
-        if text_g:
-            text_list.append(text_g)
+    def text_as_list(self, **kwargs):
+        text_list: list[str] = []
+
+        # Iterate over the received inputs in sorted order.
+        for k in sorted(kwargs.keys()):
+            v = kwargs[k]
+
+            # Only process string input ports.
+            if isinstance(v, str):
+                text_list.append(v)
 
         return (text_list,)
         
