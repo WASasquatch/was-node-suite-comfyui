@@ -9523,6 +9523,37 @@ class WAS_Text_List:
                 text_list.append(v)
 
         return (text_list,)
+
+
+# Text List to Text Node
+
+class WAS_Text_List_to_Text:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "delimiter": ("STRING", {"default": ", "}),
+                "text_list": ("LIST", {"forceInput": True}),
+            }
+        }
+
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "text_list_to_text"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_list_to_text(self, delimiter, text_list):
+        # Handle special case where delimiter is "\n" (literal newline).
+        if delimiter == "\\n":
+            delimiter = "\n"
+
+        merged_text = delimiter.join(text_list)
+
+        return (merged_text,)
+
         
 # Text Parse Embeddings
 
@@ -13617,6 +13648,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Input Switch": WAS_Text_Input_Switch,
     "Text List": WAS_Text_List,
     "Text List Concatenate": WAS_Text_List_Concatenate,
+    "Text List to Text": WAS_Text_List_to_Text,
     "Text Load Line From File": WAS_Text_Load_Line_From_File, 
     "Text Multiline": WAS_Text_Multiline,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
