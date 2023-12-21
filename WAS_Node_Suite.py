@@ -5101,7 +5101,7 @@ class WAS_Load_Image_Batch:
                 cstr(f"No valid image was found for the next ID. Did you remove images from the source directory?").error.print()
                 return (None, None)
         else:
-            newindex = random.randint(0, len(fl.image_paths))
+            newindex = int(random.random() * len(fl.image_paths))
             image, filename = fl.get_image_by_id(newindex)
             if image == None:
                 cstr(f"No valid image was found for the next ID. Did you remove images from the source directory?").error.print()
