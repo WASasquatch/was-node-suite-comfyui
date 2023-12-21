@@ -9842,14 +9842,13 @@ class WAS_Text_Concatenate:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "linebreak_addition": (['false', 'true'],),
+                "delimiter": ("STRING", {"default": ", "}),
             },
             "optional": {
+                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "text_c": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "text_d": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "delimiter": ('STRING', {"forceInput": False}),
             }
         }
 
@@ -9858,26 +9857,30 @@ class WAS_Text_Concatenate:
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_concatenate(self, text_a, text_b, text_c=None, text_d=None, linebreak_addition='false', delimiter=''):
-        # Initialize return_text with text_a
-        return_text = text_a
+    def text_concatenate(self, delimiter, **kwargs):
+        text_inputs: list[str] = []
 
-        def append_text(base_text, new_text):
-            if linebreak_addition == 'true':
-                return base_text + "\n" + new_text
-            else:
-                return base_text + delimiter + new_text
+        # Handle special case where delimiter is "\n" (literal newline).
+        if delimiter == "\\n":
+            delimiter = "\n"
 
-        return_text = append_text(return_text, text_b)
+        # Iterate over the received inputs in sorted order.
+        for k in sorted(kwargs.keys()):
+            v = kwargs[k]
 
-        if text_c:
-            return_text = append_text(return_text, text_c)
+            # Only process string input ports.
+            if isinstance(v, str):
+                # Remove all leading and trailing whitespace.
+                v = v.strip()
 
-        if text_d:
-            return_text = append_text(return_text, text_d)
+                # Only use this input if it's a non-empty string.
+                if v != "":
+                    text_inputs.append(v)
 
-        return (return_text, )
+        # Merge the inputs. Will always generate an output, even if empty.
+        merged_text = delimiter.join(text_inputs)
 
+        return (merged_text,)
 
 
 # Text Search and Replace
