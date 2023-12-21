@@ -9445,8 +9445,9 @@ class WAS_Text_Multiline:
         new_text = tokens.parseTokens(new_text)
         
         return (new_text, )   
-        
-# Text List Node
+
+
+# Text List Concatenate Node
 
 class WAS_Text_List_Concatenate:
     def __init__(self):
@@ -9456,31 +9457,33 @@ class WAS_Text_List_Concatenate:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "list_a": ("LIST", {"forceInput": True}),
-                "list_b": ("LIST", {"forceInput": True}),
-                "delimiter": ("STRING", {"forceInput": True}),
             },
             "optional": {
+                "list_a": ("LIST", {"forceInput": True}),
+                "list_b": ("LIST", {"forceInput": True}),
                 "list_c": ("LIST", {"forceInput": True}),
                 "list_d": ("LIST", {"forceInput": True}),
             }
         }
+
     RETURN_TYPES = ("LIST",)
     FUNCTION = "text_concatenate_list"
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_concatenate_list(self, list_a, list_b=None, list_c=None, list_d=None):
-        
-        text_list = list_a + list_b
-    
-        if list_c:
-            text_list + list_c
-        if list_d:
-            text_list + list_d
+    def text_concatenate_list(self, **kwargs):
+        merged_list: list[str] = []
 
-        return (text_list,)      
-        
+        # Iterate over the received inputs in sorted order.
+        for k in sorted(kwargs.keys()):
+            v = kwargs[k]
+
+            # Only process "list" input ports.
+            if isinstance(v, list):
+                merged_list += v
+
+        return (merged_list,)
+
 
 # Text List Node
 
