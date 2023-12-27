@@ -9883,6 +9883,7 @@ class WAS_Text_Concatenate:
         return {
             "required": {
                 "delimiter": ("STRING", {"default": ", "}),
+                "clean_whitespace": (["true", "false"],),
             },
             "optional": {
                 "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
@@ -9897,7 +9898,7 @@ class WAS_Text_Concatenate:
 
     CATEGORY = "WAS Suite/Text"
 
-    def text_concatenate(self, delimiter, **kwargs):
+    def text_concatenate(self, delimiter, clean_whitespace, **kwargs):
         text_inputs: list[str] = []
 
         # Handle special case where delimiter is "\n" (literal newline).
@@ -9910,10 +9911,14 @@ class WAS_Text_Concatenate:
 
             # Only process string input ports.
             if isinstance(v, str):
-                # Remove all leading and trailing whitespace.
-                v = v.strip()
+                if clean_whitespace == "true":
+                    # Remove leading and trailing whitespace around this input.
+                    v = v.strip()
 
-                # Only use this input if it's a non-empty string.
+                # Only use this input if it's a non-empty string, since it
+                # never makes sense to concatenate totally empty inputs.
+                # NOTE: If whitespace cleanup is disabled, inputs containing
+                # 100% whitespace will be treated as if it's a non-empty input.
                 if v != "":
                     text_inputs.append(v)
 
