@@ -217,6 +217,7 @@
  - Text Compare: Compare two strings. Returns a boolean if they are the same, a score of similarity, and the similarity or difference text. 
  - Text Concatenate: Merge two strings
  - Text Dictionary Update: Merge two dictionaries
+ - Text Dictionary Get: Get a value from a dictionary (as a string)
  - Text File History: Show previously opened text files *(requires restart to show last sessions files at this time)*
  - Text Find and Replace: Find and replace a substring in a string
  - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary. 
