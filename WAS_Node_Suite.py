@@ -9677,6 +9677,94 @@ class WAS_Dictionary_Get:
         return (str(dictionary.get(key, default_value)), )
 
 
+# Text Dictionary New
+
+class WAS_Dictionary_New:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "key_1": ("STRING", {"default":"", "multiline": False}),
+                "value_1": ("STRING", {"default":"", "multiline": False}),
+            },
+            "optional": {
+                "key_2": ("STRING", {"default":"", "multiline": False}),
+                "value_2": ("STRING", {"default":"", "multiline": False}),
+                "key_3": ("STRING", {"default":"", "multiline": False}),
+                "value_3": ("STRING", {"default":"", "multiline": False}),
+                "key_4": ("STRING", {"default":"", "multiline": False}),
+                "value_4": ("STRING", {"default":"", "multiline": False}),
+                "key_5": ("STRING", {"default":"", "multiline": False}),
+                "value_5": ("STRING", {"default":"", "multiline": False}),
+            }
+        }
+    RETURN_TYPES = ("DICT",)
+    FUNCTION = "dictionary_new"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def append_to_dictionary(self, dictionary, key, value):
+        if key is not None and key != "":
+            dictionary[key] = value
+        return dictionary
+
+    def dictionary_new(self, key_1, value_1, key_2, value_2, key_3, value_3, key_4, value_4, key_5, value_5):
+        dictionary = {}
+        dictionary = self.append_to_dictionary(dictionary, key_1, value_1)
+        dictionary = self.append_to_dictionary(dictionary, key_2, value_2)
+        dictionary = self.append_to_dictionary(dictionary, key_3, value_3)
+        dictionary = self.append_to_dictionary(dictionary, key_4, value_4)
+        dictionary = self.append_to_dictionary(dictionary, key_5, value_5)
+        return (dictionary, )
+
+
+# Text Dictionary Keys
+
+class WAS_Dictionary_Keys:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "dictionary": ("DICT",)
+            },
+            "optional": {}
+        }
+    RETURN_TYPES = ("LIST",)
+    FUNCTION = "dictionary_keys"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def dictionary_keys(self, dictionary):
+        return (dictionary.keys(), )
+
+
+class WAS_Dictionary_to_Text:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "dictionary": ("DICT",)
+            },
+            "optional": {}
+        }
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "dictionary_to_text"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def dictionary_to_text(self, dictionary):
+        return (str(dictionary), )
+
+
 # Text String Node
 
 class WAS_Text_String:
@@ -13702,6 +13790,9 @@ NODE_CLASS_MAPPINGS = {
     "Text Dictionary Update": WAS_Dictionary_Update,
     "Text Dictionary Get": WAS_Dictionary_Get,
     "Text Dictionary Convert": WAS_Dictionary_Convert,
+    "Text Dictionary New": WAS_Dictionary_New,
+    "Text Dictionary Keys": WAS_Dictionary_Keys,
+    "Text Dictionary To Text": WAS_Dictionary_to_Text,
     "Text Add Tokens": WAS_Text_Add_Tokens,
     "Text Add Token by Input": WAS_Text_Add_Token_Input,
     "Text Compare": WAS_Text_Compare,
