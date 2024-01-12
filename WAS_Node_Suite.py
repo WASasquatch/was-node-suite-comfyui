@@ -4738,11 +4738,22 @@ class WAS_Latent_Batch:
     RETURN_NAMES = ("latent",)
     FUNCTION = "latent_batch"
     CATEGORY = "WAS Suite/Latent"
+    # def batch(self, samples1, samples2):
+    #     samples_out = samples1.copy()
+    #     s1 = samples1["samples"]
+    #     s2 = samples2["samples"]
 
+    #     if s1.shape[1:] != s2.shape[1:]:
+    #         s2 = comfy.utils.common_upscale(s2, s1.shape[3], s1.shape[2], "bilinear", "center")
+    #     s = torch.cat((s1, s2), dim=0)
+    #     samples_out["samples"] = s
+    #     samples_out["batch_index"] = samples1.get("batch_index", [x for x in range(0, s1.shape[0])]) + samples2.get("batch_index", [x for x in range(0, s2.shape[0])])
+    #     return (samples_out,)
+    
     def _check_latent_dimensions(self, tensors, names):
-        dimensions = [tensor.shape for tensor in tensors]
+        dimensions = [(tensor["samples"].shape) for tensor in tensors]
         if len(set(dimensions)) > 1:
-            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim[1:] != dimensions[0][1:]]
+            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim[1] != dimensions[0][1]]
             mismatched_latents = [names[i] for i in mismatched_indices]
             if mismatched_latents:
                 raise ValueError(f"WAS latent Batch Warning: Input latent dimensions do not match for latents: {mismatched_latents}")
@@ -4755,8 +4766,14 @@ class WAS_Latent_Batch:
             raise ValueError("At least one input latent must be provided.")
 
         self._check_latent_dimensions(batched_tensors, latent_names)
-        batched_tensors = torch.cat(batched_tensors, dim=0)
-        return (batched_tensors,)
+        samples_out = {} 
+        # s = [(tensor["samples"]) for tensor in batched_tensors]
+        samples_out["samples"]  = torch.cat([tensor["samples"] for tensor in batched_tensors], dim=0)            
+        samples_out["batch_index"] = []
+        for tensor in batched_tensors:
+            cindex = tensor.get("batch_index", list(range(tensor["samples"].shape[0])))
+            samples_out["batch_index"] += cindex        
+        return (samples_out,)
 
 
 # MASK TO BATCH
