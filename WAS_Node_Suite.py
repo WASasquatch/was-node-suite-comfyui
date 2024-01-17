@@ -4738,7 +4738,7 @@ class WAS_Latent_Batch:
     RETURN_NAMES = ("latent",)
     FUNCTION = "latent_batch"
     CATEGORY = "WAS Suite/Latent"
-        
+
     def _check_latent_dimensions(self, tensors, names):
         dimensions = [(tensor["samples"].shape) for tensor in tensors]
         if len(set(dimensions)) > 1:
@@ -4755,12 +4755,12 @@ class WAS_Latent_Batch:
             raise ValueError("At least one input latent must be provided.")
 
         self._check_latent_dimensions(batched_tensors, latent_names)
-        samples_out = {} 
-        samples_out["samples"]  = torch.cat([tensor["samples"] for tensor in batched_tensors], dim=0)            
+        samples_out = {}
+        samples_out["samples"]  = torch.cat([tensor["samples"] for tensor in batched_tensors], dim=0)
         samples_out["batch_index"] = []
         for tensor in batched_tensors:
             cindex = tensor.get("batch_index", list(range(tensor["samples"].shape[0])))
-            samples_out["batch_index"] += cindex        
+            samples_out["batch_index"] += cindex
         return (samples_out,)
 
 
@@ -12322,6 +12322,124 @@ class WAS_Boolean:
     def return_boolean(self, boolean_number=1):
         return (int(round(boolean_number)), int(round(boolean_number)))
 
+
+# Logical Comparisons Base Class
+
+class WAS_Logical_Comparisons:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "boolean_a": ("BOOLEAN", {"default": False}),
+                "boolean_b": ("BOOLEAN", {"default": False}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    FUNCTION = "do"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def do(self, boolean_a, boolean_b):
+        pass
+
+
+# Logical OR
+
+class WAS_Logical_OR(WAS_Logical_Comparisons):
+    def do(self, boolean_a, boolean_b):
+        return (boolean_a or boolean_b,)
+
+
+# Logical AND
+
+class WAS_Logical_AND(WAS_Logical_Comparisons):
+    def do(self, boolean_a, boolean_b):
+        return (boolean_a and boolean_b,)
+
+
+# Logical XOR
+
+class WAS_Logical_XOR(WAS_Logical_Comparisons):
+    def do(self, boolean_a, boolean_b):
+        return (boolean_a != boolean_b,)
+
+
+
+# Boolean
+
+class WAS_Boolean_Primitive:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "boolean": ("BOOLEAN", {"default": False}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    FUNCTION = "do"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def do(self, boolean):
+        return (boolean,)
+
+
+# Boolean
+
+class WAS_Boolean_To_Text:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "boolean": ("BOOLEAN", {"default": False}),
+            }
+        }
+
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "do"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def do(self, boolean):
+        if boolean:
+            return ("True",)
+        return ("False",)
+
+
+# Logical NOT
+
+class WAS_Logical_NOT:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "boolean": ("BOOLEAN", {"default": False}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    FUNCTION = "do"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def do(self, boolean):
+        return (not boolean,)
+
+
 # NUMBER OPERATIONS
 
 
@@ -12989,6 +13107,37 @@ class WAS_Text_Input_Switch:
             return (text_a, )
         else:
             return (text_b, )
+
+
+# TEXT CONTAINS
+
+class WAS_Text_Contains:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"default": '', "multiline": False}),
+                "sub_text": ("STRING", {"default": '', "multiline": False}),
+            },
+            "optional": {
+                "case_insensitive": ("BOOLEAN", {"default": True}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    FUNCTION = "text_contains"
+
+    CATEGORY = "WAS Suite/Logic"
+
+    def text_contains(self, text, sub_text, case_insensitive):
+        if case_insensitive:
+            sub_text = sub_text.lower()
+            text = text.lower()
+
+        return (sub_text in text,)
 
 
 # DEBUG INPUT TO CONSOLE
@@ -13700,6 +13849,11 @@ NODE_CLASS_MAPPINGS = {
     "Latent Input Switch": WAS_Latent_Input_Switch,
     "Load Cache": WAS_Load_Cache,
     "Logic Boolean": WAS_Boolean,
+    "Logic Boolean Primitive": WAS_Boolean_Primitive,
+    "Logic Comparison OR": WAS_Logical_OR,
+    "Logic Comparison AND": WAS_Logical_AND,
+    "Logic Comparison XOR": WAS_Logical_XOR,
+    "Logic NOT": WAS_Logical_NOT,
     "Lora Loader": WAS_Lora_Loader,
     "Image SSAO (Ambient Occlusion)": WAS_Image_Ambient_Occlusion,
     "Image SSDO (Direct Occlusion)": WAS_Image_Direct_Occlusion,
@@ -13815,6 +13969,7 @@ NODE_CLASS_MAPPINGS = {
     "Number to Seed": WAS_Number_To_Seed,
     "Number to String": WAS_Number_To_String,
     "Number to Text": WAS_Number_To_Text,
+    "Boolean To Text": WAS_Boolean_To_Text,
     "Prompt Styles Selector": WAS_Prompt_Styles_Selector,
     "Prompt Multiple Styles Selector": WAS_Prompt_Multiple_Styles_Selector,
     "Random Number": WAS_Random_Number,
@@ -13861,6 +14016,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Random Line": WAS_Text_Random_Line,
     "Text Random Prompt": WAS_Text_Random_Prompt,
     "Text String": WAS_Text_String,
+    "Text Contains": WAS_Text_Contains,
     "Text Shuffle": WAS_Text_Shuffle,
     "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,

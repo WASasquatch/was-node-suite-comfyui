@@ -190,6 +190,11 @@
  - Latent Upscale by Factor: Upscale a latent image by a factor
  - Latent Input Switch: Switch between two latent inputs based on a boolean switch
  - Logic Boolean: A simple `1` or `0` output to use with logic
+ - Logic Boolean Primitive: True/False boolean input, to use with native boolean nodes
+ - Logic AND: Given 2 booleans, performs "AND"
+ - Logic OR: Given 2 booleans, performs "OR"
+ - Logic XOR: Given 2 booleans, performs "!="
+ - Logic NOT: Given 1 boolean, returns the opposite
  - Lora Input Switch: Switch between two LORAs based on a boolean switch
  - MiDaS Model Loader: Load a MiDaS model as an optional input for MiDaS Depth Approximation
  - MiDaS Depth Approximation: Produce a depth approximation of a single image input
@@ -202,6 +207,7 @@
  - Number to Int
  - Number to String
  - Number to Text
+ - Boolean to Text
  - Perlin Power Fractal Latent: Create a power fractal based latent image. Doesn't work with all samplers (unless you add noise).
  - Random Number
    - Random integer between min and max (inclusive), uniformly distributed random number
@@ -230,6 +236,7 @@
  - Text List: Create a list of text strings
  - Text Load Line From File: Load lines from a file sequentially each *batch prompt* run, or select a line index.
  - Text Concatenate: Merge lists of strings
+ - Text Contains: Checks if substring is in another string (case insensitive optional)
  - Text Multiline: Write a multiline text string
  - Text Parse A1111 Embeddings: Convert embeddings filenames in your prompts to `embedding:[filename]]` format based on your `/ComfyUI/models/embeddings/` files.
  - Text Parse Noodle Soup Prompts: Parse NSP in a text input
