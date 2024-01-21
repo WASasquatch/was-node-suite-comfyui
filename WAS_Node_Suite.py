@@ -4698,12 +4698,11 @@ class WAS_Image_Batch:
     CATEGORY = "WAS Suite/Image"
 
     def _check_image_dimensions(self, tensors, names):
-        dimensions = [tensor.shape for tensor in tensors]
-        if len(set(dimensions)) > 1:
-            mismatched_indices = [i for i, dim in enumerate(dimensions) if dim[1:] != dimensions[0][1:]]
-            mismatched_images = [names[i] for i in mismatched_indices]
-            if mismatched_images:
-                raise ValueError(f"WAS Image Batch Warning: Input image dimensions do not match for images: {mismatched_images}")
+        reference_dimensions = tensors[0].shape[1:]  # Ignore batch dimension
+        mismatched_images = [names[i] for i, tensor in enumerate(tensors) if tensor.shape[1:] != reference_dimensions]
+
+        if mismatched_images:
+            raise ValueError(f"WAS Image Batch Warning: Input image dimensions do not match for images: {mismatched_images}")
 
     def image_batch(self, **kwargs):
         batched_tensors = [kwargs[key] for key in kwargs if kwargs[key] is not None]
@@ -4715,6 +4714,8 @@ class WAS_Image_Batch:
         self._check_image_dimensions(batched_tensors, image_names)
         batched_tensors = torch.cat(batched_tensors, dim=0)
         return (batched_tensors,)
+    
+
 # Latent TO BATCH
 
 class WAS_Latent_Batch:
