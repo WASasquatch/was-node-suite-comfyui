@@ -10987,11 +10987,7 @@ class WAS_BLIP_Model_Loader:
 
             from .modules.BLIP.blip_module import blip_decoder
 
-<<<<<<< HEAD
-            blip_dir = os.path.join(MODELS_DIR, 'blip')
-=======
             blip_dir = get_model_path_with_extra('blip')
->>>>>>> f92bc24 (support extra_model_paths config)
             if not os.path.exists(blip_dir):
                 os.makedirs(blip_dir, exist_ok=True)
 
@@ -11009,13 +11005,8 @@ class WAS_BLIP_Model_Loader:
         elif blip_model == 'interrogate':
 
             from .modules.BLIP.blip_module import blip_vqa
-<<<<<<< HEAD
-
-            blip_dir = os.path.join(MODELS_DIR, 'blip')
-=======
             
             blip_dir = get_model_path_with_extra('blip')
->>>>>>> f92bc24 (support extra_model_paths config)
             if not os.path.exists(blip_dir):
                 os.makedirs(blip_dir, exist_ok=True)
 
@@ -11092,13 +11083,8 @@ class WAS_BLIP_Analyze_Image:
                 model = blip_model[0].to(device)
             else:
                 from .modules.BLIP.blip_module import blip_decoder
-<<<<<<< HEAD
-
-                blip_dir = os.path.join(MODELS_DIR, 'blip')
-=======
                 
                 blip_dir = get_model_path_with_extra('blip')
->>>>>>> f92bc24 (support extra_model_paths config)
                 if not os.path.exists(blip_dir):
                     os.makedirs(blip_dir, exist_ok=True)
 
@@ -11126,13 +11112,8 @@ class WAS_BLIP_Analyze_Image:
                 model = blip_model[0].to(device)
             else:
                 from .modules.BLIP.blip_module import blip_vqa
-<<<<<<< HEAD
 
-                blip_dir = os.path.join(MODELS_DIR, 'blip')
-=======
-                
                 blip_dir = get_model_path_with_extra('blip')
->>>>>>> f92bc24 (support extra_model_paths config)
                 if not os.path.exists(blip_dir):
                     os.makedirs(blip_dir, exist_ok=True)
 
@@ -11384,13 +11365,8 @@ class WAS_SAM_Model_Loader:
             Repo.clone_from('https://github.com/facebookresearch/segment-anything', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
 
         sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
-<<<<<<< HEAD
-
-        sam_dir = os.path.join(MODELS_DIR, 'sam')
-=======
         
         sam_dir = get_model_path_with_extra('sam')
->>>>>>> f92bc24 (support extra_model_paths config)
         if not os.path.exists(sam_dir):
             os.makedirs(sam_dir, exist_ok=True)
 
