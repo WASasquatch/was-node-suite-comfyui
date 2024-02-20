@@ -155,7 +155,13 @@ DEFAULT_NSP_PANTRY_PATH = os.path.join(WAS_CONFIG_DIR, 'nsp_pantry.json')
 ALLOWED_EXT = ('.jpeg', '.jpg', '.png',
                         '.tiff', '.gif', '.bmp', '.webp')
 
-
+#! Get model path with extra_model_paths
+def get_model_path_with_extra(model_name):
+    if model_name in comfy_paths.folder_names_and_paths.keys():
+        return comfy_paths.folder_names_and_paths[model_name][0][0]
+    else:
+        return os.path.join(MODELS_DIR, model_name)
+    
 #! INSTALLATION CLEANUP
 
 # Delete legacy nodes
@@ -5840,7 +5846,7 @@ class WAS_Remove_Rembg:
 
         from rembg import remove, new_session
 
-        os.environ['U2NET_HOME'] = os.path.join(MODELS_DIR, 'rembg')
+        os.environ['U2NET_HOME'] = get_model_path_with_extra('rembg')
         os.makedirs(os.environ['U2NET_HOME'], exist_ok=True)
 
         # Set bgcolor
@@ -8491,7 +8497,7 @@ class WAS_Latent_Noise:
 
 class MiDaS_Model_Loader:
     def __init__(self):
-        self.midas_dir = os.path.join(MODELS_DIR, 'midas')
+            self.midas_dir = get_model_path_with_extra('midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -8551,7 +8557,7 @@ class MiDaS_Model_Loader:
 
 class MiDaS_Depth_Approx:
     def __init__(self):
-        self.midas_dir = os.path.join(MODELS_DIR, 'midas')
+        self.midas_dir =get_model_path_with_extra('midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -8668,7 +8674,7 @@ class MiDaS_Depth_Approx:
 
 class MiDaS_Background_Foreground_Removal:
     def __init__(self):
-        self.midas_dir = os.path.join(MODELS_DIR, 'midas')
+        self.midas_dir = get_model_path_with_extra('midas')
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -10981,7 +10987,11 @@ class WAS_BLIP_Model_Loader:
 
             from .modules.BLIP.blip_module import blip_decoder
 
+<<<<<<< HEAD
             blip_dir = os.path.join(MODELS_DIR, 'blip')
+=======
+            blip_dir = get_model_path_with_extra('blip')
+>>>>>>> f92bc24 (support extra_model_paths config)
             if not os.path.exists(blip_dir):
                 os.makedirs(blip_dir, exist_ok=True)
 
@@ -10999,8 +11009,13 @@ class WAS_BLIP_Model_Loader:
         elif blip_model == 'interrogate':
 
             from .modules.BLIP.blip_module import blip_vqa
+<<<<<<< HEAD
 
             blip_dir = os.path.join(MODELS_DIR, 'blip')
+=======
+            
+            blip_dir = get_model_path_with_extra('blip')
+>>>>>>> f92bc24 (support extra_model_paths config)
             if not os.path.exists(blip_dir):
                 os.makedirs(blip_dir, exist_ok=True)
 
@@ -11077,8 +11092,13 @@ class WAS_BLIP_Analyze_Image:
                 model = blip_model[0].to(device)
             else:
                 from .modules.BLIP.blip_module import blip_decoder
+<<<<<<< HEAD
 
                 blip_dir = os.path.join(MODELS_DIR, 'blip')
+=======
+                
+                blip_dir = get_model_path_with_extra('blip')
+>>>>>>> f92bc24 (support extra_model_paths config)
                 if not os.path.exists(blip_dir):
                     os.makedirs(blip_dir, exist_ok=True)
 
@@ -11106,8 +11126,13 @@ class WAS_BLIP_Analyze_Image:
                 model = blip_model[0].to(device)
             else:
                 from .modules.BLIP.blip_module import blip_vqa
+<<<<<<< HEAD
 
                 blip_dir = os.path.join(MODELS_DIR, 'blip')
+=======
+                
+                blip_dir = get_model_path_with_extra('blip')
+>>>>>>> f92bc24 (support extra_model_paths config)
                 if not os.path.exists(blip_dir):
                     os.makedirs(blip_dir, exist_ok=True)
 
@@ -11155,7 +11180,7 @@ class WAS_CLIPSeg_Model_Loader:
     def clipseg_model(self, model):
         from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
 
-        cache = os.path.join(MODELS_DIR, 'clipseg')
+        cache = get_model_path_with_extra('clipseg')
 
         inputs = CLIPSegProcessor.from_pretrained(model, cache_dir=cache)
         model = CLIPSegForImageSegmentation.from_pretrained(model, cache_dir=cache)
@@ -11190,7 +11215,7 @@ class WAS_CLIPSeg:
         from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
 
         image = tensor2pil(image)
-        cache = os.path.join(MODELS_DIR, 'clipseg')
+        cache = get_model_path_with_extra('clipseg')
 
         if clipseg_model:
             inputs = clipseg_model[0]
@@ -11284,7 +11309,7 @@ class WAS_CLIPSeg_Batch:
         if text_f:
             prompts.append(text_f)
 
-        cache = os.path.join(MODELS_DIR, 'clipseg')
+        cache = get_model_path_with_extra('clipseg')
 
         inputs = CLIPSegProcessor.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
         model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
@@ -11359,8 +11384,13 @@ class WAS_SAM_Model_Loader:
             Repo.clone_from('https://github.com/facebookresearch/segment-anything', os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
 
         sys.path.append(os.path.join(WAS_SUITE_ROOT, 'repos'+os.sep+'SAM'))
+<<<<<<< HEAD
 
         sam_dir = os.path.join(MODELS_DIR, 'sam')
+=======
+        
+        sam_dir = get_model_path_with_extra('sam')
+>>>>>>> f92bc24 (support extra_model_paths config)
         if not os.path.exists(sam_dir):
             os.makedirs(sam_dir, exist_ok=True)
 
