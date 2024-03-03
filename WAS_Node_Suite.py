@@ -9918,8 +9918,8 @@ class WAS_Text_Compare:
                 "tolerance": ("FLOAT", {"default":0.0,"min":0.0,"max":1.0,"step":0.01}),
             }
         }
-    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,"NUMBER","NUMBER",TEXT_TYPE)
-    RETURN_NAMES = ("TEXT_A_PASS","TEXT_B_PASS","BOOL_NUMBER","SCORE_NUMBER","COMPARISON_TEXT")
+    RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,"BOOLEAN","NUMBER",TEXT_TYPE)
+    RETURN_NAMES = ("TEXT_A_PASS","TEXT_B_PASS","BOOLEAN","SCORE_NUMBER","COMPARISON_TEXT")
     FUNCTION = "text_compare"
 
     CATEGORY = "WAS Suite/Text/Search"
@@ -9932,7 +9932,7 @@ class WAS_Text_Compare:
         sim_result = ' '.join(sim[1][::-1])
         sim_result = ' '.join(sim_result.split())
 
-        return (text_a, text_b, boolean, score, sim_result)
+        return (text_a, text_b, bool(boolean), score, sim_result)
 
     def string_compare(self, str1, str2, threshold=1.0, difference_mode=False):
         m = len(str1)
@@ -12320,7 +12320,7 @@ class WAS_Boolean:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def return_boolean(self, boolean_number=1):
+    def return_boolean(self, boolean_number=True):
         return (int(round(boolean_number)), int(round(boolean_number)))
 
 
@@ -12664,7 +12664,7 @@ class WAS_Latent_Input_Switch:
             "required": {
                 "latent_a": ("LATENT",),
                 "latent_b": ("LATENT",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12673,9 +12673,9 @@ class WAS_Latent_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def latent_input_switch(self, latent_a, latent_b, boolean_number=1):
+    def latent_input_switch(self, latent_a, latent_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (latent_a, )
         else:
             return (latent_b, )
@@ -12803,7 +12803,7 @@ class WAS_Image_Aspect_Ratio:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def aspect(self, boolean_number=1, image=None, width=None, height=None):
+    def aspect(self, boolean=True, image=None, width=None, height=None):
 
         if width and height:
             width = width; height = height
@@ -12839,7 +12839,7 @@ class WAS_Number_Input_Switch:
             "required": {
                 "number_a": ("NUMBER",),
                 "number_b": ("NUMBER",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12848,9 +12848,9 @@ class WAS_Number_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def number_input_switch(self, number_a, number_b, boolean_number=1):
+    def number_input_switch(self, number_a, number_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (number_a, float(number_a), int(number_a))
         else:
             return (number_b, float(number_b), int(number_b))
@@ -12868,7 +12868,7 @@ class WAS_Image_Input_Switch:
             "required": {
                 "image_a": ("IMAGE",),
                 "image_b": ("IMAGE",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12877,9 +12877,9 @@ class WAS_Image_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def image_input_switch(self, image_a, image_b, boolean_number=1):
+    def image_input_switch(self, image_a, image_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (image_a, )
         else:
             return (image_b, )
@@ -12896,7 +12896,7 @@ class WAS_Conditioning_Input_Switch:
             "required": {
                 "conditioning_a": ("CONDITIONING",),
                 "conditioning_b": ("CONDITIONING",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12905,9 +12905,9 @@ class WAS_Conditioning_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def conditioning_input_switch(self, conditioning_a, conditioning_b, boolean_number=1):
+    def conditioning_input_switch(self, conditioning_a, conditioning_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (conditioning_a, )
         else:
             return (conditioning_b, )
@@ -12924,7 +12924,7 @@ class WAS_Model_Input_Switch:
             "required": {
                 "model_a": ("MODEL",),
                 "model_b": ("MODEL",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12933,9 +12933,9 @@ class WAS_Model_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def model_switch(self, model_a, model_b, boolean_number=1):
+    def model_switch(self, model_a, model_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (model_a, )
         else:
             return (model_b, )
@@ -12952,7 +12952,7 @@ class WAS_VAE_Input_Switch:
             "required": {
                 "vae_a": ("VAE",),
                 "vae_b": ("VAE",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12961,9 +12961,9 @@ class WAS_VAE_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def vae_switch(self, vae_a, vae_b, boolean_number=1):
+    def vae_switch(self, vae_a, vae_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (vae_a, )
         else:
             return (vae_b, )
@@ -12980,7 +12980,7 @@ class WAS_CLIP_Input_Switch:
             "required": {
                 "clip_a": ("CLIP",),
                 "clip_b": ("CLIP",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -12989,9 +12989,9 @@ class WAS_CLIP_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def clip_switch(self, clip_a, clip_b, boolean_number=1):
+    def clip_switch(self, clip_a, clip_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (clip_a, )
         else:
             return (clip_b, )
@@ -13008,7 +13008,7 @@ class WAS_Upscale_Model_Input_Switch:
             "required": {
                 "upscale_model_a": ("UPSCALE_MODEL",),
                 "upscale_model_b": ("UPSCALE_MODEL",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -13017,9 +13017,9 @@ class WAS_Upscale_Model_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def upscale_model_switch(self, upscale_model_a, upscale_model_b, boolean_number=1):
+    def upscale_model_switch(self, upscale_model_a, upscale_model_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (upscale_model_a, )
         else:
             return (upscale_model_b, )
@@ -13037,7 +13037,7 @@ class WAS_Control_Net_Input_Switch:
             "required": {
                 "control_net_a": ("CONTROL_NET",),
                 "control_net_b": ("CONTROL_NET",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -13046,9 +13046,9 @@ class WAS_Control_Net_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def control_net_switch(self, control_net_a, control_net_b, boolean_number=1):
+    def control_net_switch(self, control_net_a, control_net_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (control_net_a, )
         else:
             return (control_net_b, )
@@ -13065,7 +13065,7 @@ class WAS_CLIP_Vision_Input_Switch:
             "required": {
                 "clip_vision_a": ("CLIP_VISION",),
                 "clip_vision_b": ("CLIP_VISION",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -13074,9 +13074,9 @@ class WAS_CLIP_Vision_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def clip_vision_switch(self, clip_vision_a, clip_vision_b, boolean_number=1):
+    def clip_vision_switch(self, clip_vision_a, clip_vision_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (clip_vision_a, )
         else:
             return (clip_vision_b)
@@ -13093,7 +13093,7 @@ class WAS_Text_Input_Switch:
             "required": {
                 "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
 
@@ -13102,9 +13102,9 @@ class WAS_Text_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def text_input_switch(self, text_a, text_b, boolean_number=1):
+    def text_input_switch(self, text_a, text_b, boolean=True):
 
-        if int(round(boolean_number)) == 1:
+        if boolean:
             return (text_a, )
         else:
             return (text_b, )
@@ -13311,7 +13311,7 @@ class WAS_Lora_Input_Switch:
                 "clip_a": ("CLIP",),
                 "model_b": ("MODEL",),
                 "clip_b": ("CLIP",),
-                "boolean_number": ("NUMBER",),
+                "boolean": ("BOOLEAN", {"forceInput": True}),
             }
         }
     RETURN_TYPES = ("MODEL", "CLIP")
@@ -13319,8 +13319,8 @@ class WAS_Lora_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def lora_input_switch(self, model_a, clip_a, model_b, clip_b, boolean_number=1):
-        if int(round(boolean_number)) == 1:
+    def lora_input_switch(self, model_a, clip_a, model_b, clip_b, boolean=True):
+        if boolean:
             return (model_a, clip_a)
         else:
             return (model_b, clip_b)
