@@ -12320,11 +12320,7 @@ class WAS_Boolean:
 
     CATEGORY = "WAS Suite/Logic"
 
-<<<<<<< HEAD
     def return_boolean(self, boolean_number=True):
-=======
-    def return_boolean(self, boolean=True):
->>>>>>> 596fc345ddf2edcda7cf444354afe586d630cddf
         return (int(round(boolean_number)), int(round(boolean_number)))
 
 
