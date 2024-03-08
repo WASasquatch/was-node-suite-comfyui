@@ -236,7 +236,6 @@ def getSuiteConfig():
         cstr(f"Unable to load conf file at `{WAS_CONFIG_FILE}`. Using internal config template.").error.print()
         return was_conf_template
     return was_config
-    return was_config
 
 def updateSuiteConfig(conf):
     try:
@@ -336,12 +335,18 @@ if was_config.__contains__('webui_styles'):
 #! SUITE SPECIFIC CLASSES & FUNCTIONS
 
 # Freeze PIP modules
+cached_packages = None
 def packages(versions=False):
-    import sys
-    import subprocess
-    return [( r.decode().split('==')[0] if not versions else r.decode() ) for r in subprocess.check_output([sys.executable, '-s', '-m', 'pip', 'freeze']).split()]
-
+    global cached_packages
+    if cached_packages is None:
+        cached_packages = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).split()
+    if versions:
+        return [r.decode() for r in cached_packages]
+    else:
+        return [r.decode().split('==')[0] for r in cached_packages]
+    
 def install_package(package, uninstall_first: Union[List[str], str] = None):
+    print(f"Installing {package}...")
     if os.getenv("WAS_BLOCK_AUTO_INSTALL", 'False').lower() in ('true', '1', 't'):
         cstr(f"Preventing package install of '{package}' due to WAS_BLOCK_INSTALL env").msg.print()
     else:
