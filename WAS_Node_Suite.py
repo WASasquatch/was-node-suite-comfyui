@@ -7132,6 +7132,7 @@ class WAS_Image_Save:
                 "filename_number_padding": ("INT", {"default":4, "min":1, "max":9, "step":1}),
                 "filename_number_start": (["false", "true"],),
                 "extension": (['png', 'jpg', 'jpeg', 'gif', 'tiff', 'webp', 'bmp'], ),
+                "dpi": ("INT", {"default": 300, "min": 1, "max": 2400, "step": 1}),
                 "quality": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
                 "lossless_webp": (["false", "true"],),
                 "overwrite_mode": (["false", "prefix_as_filename"],),
@@ -7153,7 +7154,7 @@ class WAS_Image_Save:
     CATEGORY = "WAS Suite/IO"
 
     def was_save_images(self, images, output_path='', filename_prefix="ComfyUI", filename_delimiter='_',
-                        extension='png', quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None,
+                        extension='png', dpi=96, quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None,
                         overwrite_mode='false', filename_number_padding=4, filename_number_start='false',
                         show_history='false', show_history_by_prefix="true", embed_workflow="true",
                         show_previews="true"):
@@ -7262,7 +7263,7 @@ class WAS_Image_Save:
                 output_file = os.path.abspath(os.path.join(output_path, file))
                 if extension in ["jpg", "jpeg"]:
                     img.save(output_file,
-                             quality=quality, optimize=True)
+                             quality=quality, optimize=True, dpi=(dpi, dpi))
                 elif extension == 'webp':
                     img.save(output_file,
                              quality=quality, lossless=lossless_webp, exif=exif_data)
