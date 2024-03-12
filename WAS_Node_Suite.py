@@ -7384,9 +7384,11 @@ class WAS_Load_Image:
         if image_path.startswith('http'):
             from io import BytesIO
             i = self.download_image(image_path)
+            i = ImageOps.exif_transpose(i)
         else:
             try:
                 i = Image.open(image_path)
+                i = ImageOps.exif_transpose(i)
             except OSError:
                 cstr(f"The image `{image_path.strip()}` specified doesn't exist!").error.print()
                 i = Image.new(mode='RGB', size=(512, 512), color=(0, 0, 0))
