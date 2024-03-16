@@ -4714,7 +4714,7 @@ class WAS_Image_Batch:
         self._check_image_dimensions(batched_tensors, image_names)
         batched_tensors = torch.cat(batched_tensors, dim=0)
         return (batched_tensors,)
-    
+
 
 # Latent TO BATCH
 
@@ -10113,6 +10113,38 @@ class WAS_Text_Concatenate:
         return (merged_text,)
 
 
+# Text Find
+
+
+# Note that these nodes are exposed as "Find", not "Search". This is the first class that follows the naming convention of the node itself.
+class WAS_Find:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "substring": ("STRING", {"default": '', "multiline": False}),
+                "pattern": ("STRING", {"default": '', "multiline": False}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN")
+    RETURN_NAMES = ("found")
+    FUNCTION = "execute"
+
+    CATEGORY = "WAS Suite/Text/Search"
+
+    def execute(self, text, substring, pattern):
+        if substring:
+            return substring in text
+
+        return bool(re.search(pattern, text))
+
+
+
 # Text Search and Replace
 
 class WAS_Search_and_Replace:
@@ -14005,6 +14037,7 @@ NODE_CLASS_MAPPINGS = {
     "Text Find and Replace by Dictionary": WAS_Search_and_Replace_Dictionary,
     "Text Find and Replace Input": WAS_Search_and_Replace_Input,
     "Text Find and Replace": WAS_Search_and_Replace,
+    "Text Find": WAS_Find,
     "Text Input Switch": WAS_Text_Input_Switch,
     "Text List": WAS_Text_List,
     "Text List Concatenate": WAS_Text_List_Concatenate,
