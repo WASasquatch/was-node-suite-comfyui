@@ -10190,6 +10190,7 @@ class WAS_Text_Sort:
                 "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
                 "split_separator": ("STRING", {"default": ',', "multiline": False}),
                 "join_separator": ("STRING", {"default": ', ', "multiline": False}),
+                "parse_token_groups": ("BOOLEAN", {"default": True}),
             }
         }
 
@@ -10198,10 +10199,16 @@ class WAS_Text_Sort:
 
     CATEGORY = "WAS Suite/Text/Operations"
 
-    def sort(self, text, split_separator, join_separator):
+    def sort(self, text, split_separator, join_separator, parse_token_groups):
         stripped_text = text.strip(f"\n\t{split_separator} ").replace("\n", "")
-        weighted_token_groups = re.findall(self.token_groups_regex(split_separator), stripped_text)
-        tokens = self.individually_wrap_tokens_in_weights(weighted_token_groups, split_separator, join_separator)
+
+        if parse_token_groups:
+            weighted_token_groups = re.findall(self.token_groups_regex(split_separator), stripped_text)
+            tokens = self.individually_wrap_tokens_in_weights(weighted_token_groups, split_separator, join_separator)
+            stripped_text = split_separator.join(tokens) # re-splitting later
+
+        tokens = list(map(lambda token: token.strip(), stripped_text.split(split_separator)))
+
         sorted_tokens = sorted(tokens, key=WAS_Text_Sort.token_without_weight)
 
         return (join_separator.join(sorted_tokens), )
