@@ -10203,7 +10203,7 @@ class WAS_Text_Sort:
         stripped_text = text.strip(f"\n\t{split_separator} ").replace("\n", "")
 
         if parse_token_groups:
-            weighted_token_groups = re.findall(self.token_groups_regex(split_separator), stripped_text)
+            weighted_token_groups = re.findall(self.token_groups_regex(split_separator), stripped_text + split_separator)
             tokens = self.individually_wrap_tokens_in_weights(weighted_token_groups, split_separator, join_separator)
             stripped_text = split_separator.join(tokens) # re-splitting later
 
