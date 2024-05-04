@@ -7,14 +7,14 @@ imageio
 joblib
 matplotlib
 numba
-numpy>=1.18.5, <1.25.0
+numpy
 opencv-python-headless[ffmpeg]<=4.7.0.72
 pilgram
 git+https://github.com/WASasquatch/ffmpy.git
 rembg
-scikit-image==0.20.0
+scikit-image>=0.20.0
 scikit-learn
 scipy
 timm>=0.4.12
 tqdm
-transformers==4.26.1
+transformers
