@@ -19,7 +19,7 @@
 
 # Current Nodes:
 
-### There is documentation available from [Salt AI](https://getsalt.ai/) available here: https://docs.getsalt.ai/md/was-node-suite-comfyui/
+### There is documentation from [Salt AI](https://getsalt.ai/) available here: https://docs.getsalt.ai/md/was-node-suite-comfyui/
 
 <details>
 	<summary>$\Large\color{orange}{Expand\ Node\ List}$</summary>
