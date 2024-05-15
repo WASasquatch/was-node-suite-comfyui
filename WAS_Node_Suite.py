@@ -11952,7 +11952,7 @@ class WAS_Constant_Number:
         return {
             "required": {
                 "number_type": (["integer", "float", "bool"],),
-                "number": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615}),
+                "number": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
             },
             "optional": {
                 "number_as_text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
@@ -11978,7 +11978,7 @@ class WAS_Constant_Number:
         if number_type:
             if number_type == 'integer':
                 return (int(number), float(number), int(number) )
-            elif number_type == 'integer':
+            elif number_type == 'float':
                 return (float(number), float(number), int(number) )
             elif number_type == 'bool':
                 boolean = (1 if float(number) > 0.5 else 0)
