@@ -12283,7 +12283,7 @@ class WAS_Boolean:
     CATEGORY = "WAS Suite/Logic"
 
     def return_boolean(self, boolean=1.0):
-        boolean_bool = int(round(boolean))
+        boolean_bool = bool(int(round(boolean)))
         int_bool = int(round(boolean))
         return (boolean_bool, int_bool, int_bool, boolean)
 
