@@ -12270,7 +12270,7 @@ class WAS_Boolean:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "boolean": ("FLOAT", {"default":1, "min":0, "max":1, "step":1}),
+                "boolean": ("FLOAT", {"default": 1, "min": 0.0, "max": 1.0, "step": 0.01}),
             }
         }
 
@@ -12279,7 +12279,7 @@ class WAS_Boolean:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def return_boolean(self, boolean=True):
+    def return_boolean(self, boolean=1.0):
         boolean_bool = int(round(boolean))
         int_bool = int(round(boolean))
         return (boolean_bool, int_bool, int_bool, boolean)
