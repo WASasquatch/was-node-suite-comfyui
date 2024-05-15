@@ -19,6 +19,8 @@
 
 # Current Nodes:
 
+### There is documentation from [Salt AI](https://getsalt.ai/) available here: https://docs.getsalt.ai/md/was-node-suite-comfyui/
+
 <details>
 	<summary>$\Large\color{orange}{Expand\ Node\ List}$</summary>
 
@@ -229,6 +231,7 @@
  - Text Dictionary Keys: Returns the keys, as a list from a dictionary object
  - Text Dictionary To Text: Returns the dictionary as text
  - Text File History: Show previously opened text files *(requires restart to show last sessions files at this time)*
+ - Text Find: Find a substring or pattern within another string. Returns boolean
  - Text Find and Replace: Find and replace a substring in a string
  - Text Find and Replace by Dictionary: Replace substrings in a ASCII text input with a dictionary.
    - The dictionary keys are used as the key to replace, and the list of lines it contains chosen at random based on the seed.
