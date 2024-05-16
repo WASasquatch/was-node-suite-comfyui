@@ -56,18 +56,14 @@ def test_with_dynamic_prompts():
 def test_with_weighted_dynamic_prompts():
     assert was_text_sort("(test:1.1), with, ({weighted|dynamic|prompts}:0.9)") == "(test:1.1), with, ({weighted|dynamic|prompts}:0.9)"
 
-# Without split_groups, the weight groups are treated as one
 def test_with_embeddings():
     assert was_text_sort("test, with, embedding:my_embed.pt") == "embedding:my_embed.pt, test, with"
 
-# Without split_groups, the weight groups are treated as one
 def test_with_lora():
     assert was_text_sort("test, with, lora:my_lora.safetensors") == "lora:my_lora.safetensors, test, with"
-    
-# Without split_groups, the weight groups are treated as one
+
 def test_with_grouped_weights():
     assert was_text_sort("(test, with:1), (grouped, weights:2.1)") == "(grouped, weights:2.1), (test, with:1)"
 
-# Without split_groups, the weight groups are treated as one
 def test_with_nested_weights():
     assert was_text_sort("(test, (with:1.2):1.1), ((nested:1), weights:2)") == "((nested:1), weights:2), (test, (with:1.2):1.1)"
