@@ -10188,9 +10188,7 @@ class WAS_Text_Sort:
         return {
             "required": {
                 "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "split_separator": ("STRING", {"default": ',', "multiline": False}),
-                "join_separator": ("STRING", {"default": ', ', "multiline": False}),
-                "parse_token_groups": ("BOOLEAN", {"default": True}),
+                "separator": ("STRING", {"default": ', ', "multiline": False}),
             }
         }
 
@@ -10199,56 +10197,29 @@ class WAS_Text_Sort:
 
     CATEGORY = "WAS Suite/Text/Operations"
 
-    def sort(self, text, split_separator, join_separator, parse_token_groups):
-        stripped_text = text.strip(f"\n\t{split_separator} ").replace("\n", "")
-
-        if parse_token_groups:
-            weighted_token_groups = re.findall(self.token_groups_regex(split_separator), stripped_text + split_separator)
-            tokens = self.individually_wrap_tokens_in_weights(weighted_token_groups, split_separator, join_separator)
-            stripped_text = split_separator.join(tokens) # re-splitting later
-
-        tokens = list(map(lambda token: token.strip(), stripped_text.split(split_separator)))
-
-        sorted_tokens = sorted(tokens, key=WAS_Text_Sort.token_without_weight)
-
-        return (join_separator.join(sorted_tokens), )
+    def sort(self, text, separator):
+        tokens = WAS_Text_Sort.split_using_protected_groups(text.strip(separator + " \t\n\r"), separator.strip())
+        sorted_tokens = sorted(tokens, key=WAS_Text_Sort.token_without_leading_brackets)
+        return (separator.join(sorted_tokens), )
 
     @staticmethod
-    def token_without_weight(token):
-        return re.sub(r"\((.*?):?\d+.?\d*\)", r"\1", token)
+    def token_without_leading_brackets(token):
+        return token.replace("\\(", "\0\1").replace("(", "").replace("\0\1", "(").strip()
 
-    def individually_wrap_tokens_in_weights(self, token_groups, split_separator, join_separator):
-        return list(
-            map(
-                (
-                    lambda token_group:
-                        token_group[0] if not token_group[1]
-                        else join_separator.join(
-                            map(
-                                lambda token: f"({token.strip()}:{token_group[1]})",
-                                token_group[0].split(split_separator)
-                            )
-                        )
-                ),
-                token_groups
-            )
-        )
+    @staticmethod
+    def split_using_protected_groups(text, separator):
+        protected_groups = ""
+        nesting_level = 0
+        for char in text:
+            if char == "(": nesting_level += 1
+            if char == ")": nesting_level -= 1
 
-    def token_groups_regex(self, split_separator):
-        return (
-            r"\(?" # an opening parenthesis
-                r"("
-                    r"[^\(\)" f"{split_separator}" r"]+?" # match token
-                    r"(?:"
-                        r"\s*" f"{split_separator}" r"\s*" # a splitter surrounded by whitespace
-                        r"[^\(\)" f"{split_separator}" r"]+?" # match additional tokens
-                    r")*"
-                r")?"
-                r"(?:"
-                    r":?(\d+\.?\d*)" # match weight
-                r")?"
-            r"\)?\s*" f"{split_separator}" r"\s*" # a closing parenthesis, then a splitter surrounded by whitespace
-        )
+            if char == separator and nesting_level > 0:
+                protected_groups += "\0"
+            else:
+                protected_groups += char
+
+        return list(map(lambda t: t.replace("\0", separator).strip(), protected_groups.split(separator)))
 
 
 
