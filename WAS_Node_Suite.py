@@ -2159,22 +2159,6 @@ class WAS_Tools_Class():
                 data_scaled = data_scaled.astype(np.uint8)
                 return Image.fromarray(data_scaled, 'L')
 
-    # Make Image Seamless
-
-    def make_seamless(self, image, blending=0.5, tiled=False, tiles=2):
-
-        if 'img2texture' not in packages():
-            install_package('git+https://github.com/WASasquatch/img2texture.git')
-
-        from img2texture import img2tex
-        from img2texture._tiling import tile
-
-        texture = img2tex(src=image, dst=None, pct=blending, return_result=True)
-        if tiled:
-            texture = tile(source=texture, target=None, horizontal=tiles, vertical=tiles, return_result=True)
-
-        return texture
-
     # Image Displacement Warp
 
     def displace_image(self, image, displacement_map, amplitude):
@@ -4588,42 +4572,6 @@ class WAS_Image_To_Noise:
             randomized_image = Image.blend(randomized_image, original_noise, 0.25)
 
         return randomized_image
-
-# IMAGE MAKE SEAMLESS
-
-class WAS_Image_Make_Seamless:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "images": ("IMAGE",),
-                "blending": ("FLOAT", {"default": 0.4, "max": 1.0, "min": 0.0, "step": 0.01}),
-                "tiled": (["true", "false"],),
-                "tiles": ("INT", {"default": 2, "max": 6, "min": 2, "step": 2}),
-            },
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
-    FUNCTION = "make_seamless"
-
-    CATEGORY = "WAS Suite/Image/Process"
-
-    def make_seamless(self, images, blending, tiled, tiles):
-
-        WTools = WAS_Tools_Class()
-
-        seamless_images = []
-        for image in images:
-            seamless_images.append(pil2tensor(WTools.make_seamless(tensor2pil(image), blending, tiled, tiles)))
-
-        seamless_images = torch.cat(seamless_images, dim=0)
-
-        return (seamless_images, )
-
 
 # IMAGE DISPLACEMENT WARP
 
@@ -13869,7 +13817,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Rotate": WAS_Image_Rotate,
     "Image Rotate Hue": WAS_Image_Rotate_Hue,
     "Image Save": WAS_Image_Save,
-    "Image Seamless Texture": WAS_Image_Make_Seamless,
+#    "Image Seamless Texture": WAS_Image_Make_Seamless, # git+https://github.com/WASasquatch/img2texture.git
     "Image Select Channel": WAS_Image_Select_Channel,
     "Image Select Color": WAS_Image_Select_Color,
     "Image Shadows and Highlights": WAS_Shadow_And_Highlight_Adjustment,
