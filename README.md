@@ -1,5 +1,17 @@
 # radius5 (Natsuki Ogino) slim down dependencies
 
+変更日時：2024/05/29
+
+ComfyUI本体に依存する以下のimport文を削除
+
+```
+from comfy_extras.chainner_models import model_loading
+```
+
+以下のノードを削除
+
+- WAS_Upscale_Model_Loader
+
 変更日時：2024/05/21
 
 以下の依存モジュールを削除

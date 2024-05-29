@@ -26,7 +26,6 @@ import comfy.utils
 import comfy.clip_vision
 import comfy.model_management
 import folder_paths as comfy_paths
-from comfy_extras.chainner_models import model_loading
 import ast
 import glob
 import hashlib
@@ -13279,23 +13278,6 @@ class WAS_Lora_Loader:
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         return (model_lora, clip_lora, os.path.splitext(os.path.basename(lora_name))[0])
 
-class WAS_Upscale_Model_Loader:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { "model_name": (comfy_paths.get_filename_list("upscale_models"), ),
-                             }}
-    RETURN_TYPES = ("UPSCALE_MODEL",TEXT_TYPE)
-    RETURN_NAMES = ("UPSCALE_MODEL","MODEL_NAME_TEXT")
-    FUNCTION = "load_model"
-
-    CATEGORY = "WAS Suite/Loaders"
-
-    def load_model(self, model_name):
-        model_path = comfy_paths.get_full_path("upscale_models", model_name)
-        sd = comfy.utils.load_torch_file(model_path)
-        out = model_loading.load_state_dict(sd).eval()
-        return (out,model_name)
-
 # VIDEO WRITER
 
 class WAS_Video_Writer:
@@ -13939,7 +13921,6 @@ NODE_CLASS_MAPPINGS = {
     "Text String Truncate": WAS_Text_String_Truncate,
     "True Random.org Number Generator": WAS_True_Random_Number,
     "unCLIP Checkpoint Loader": WAS_unCLIP_Checkpoint_Loader,
-    "Upscale Model Loader": WAS_Upscale_Model_Loader,
     "Upscale Model Switch": WAS_Upscale_Model_Input_Switch,
     "Write to GIF": WAS_Image_Morph_GIF_Writer,
     "Write to Video": WAS_Video_Writer,
