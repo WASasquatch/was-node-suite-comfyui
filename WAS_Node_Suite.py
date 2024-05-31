@@ -5362,7 +5362,7 @@ class WAS_Image_Padding:
 
     def image_padding(self, image, feathering, left_padding, right_padding, top_padding, bottom_padding, feather_second_pass=True):
         padding = self.apply_image_padding(tensor2pil(
-            image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=True)
+            image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=feather_second_pass)
         return (pil2tensor(padding[0]), pil2tensor(padding[1]))
 
     def apply_image_padding(self, image, left_pad=100, right_pad=100, top_pad=100, bottom_pad=100, feather_radius=50, second_pass=True):
