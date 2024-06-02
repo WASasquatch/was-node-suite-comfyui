@@ -9504,7 +9504,7 @@ class WAS_Text_Multiline:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"default": '', "multiline": True, "dynamicPrompts": False}),
+                "text": ("STRING", {"default": '', "multiline": True, "dynamicPrompts": True}),
             }
         }
     RETURN_TYPES = (TEXT_TYPE,)
@@ -9527,6 +9527,29 @@ class WAS_Text_Multiline:
 
         return (new_text, )
 
+
+class WAS_Text_Multiline_Raw:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"default": '', "multiline": True, "dynamicPrompts": False}),
+            }
+        }
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "text_multiline"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_multiline(self, text):
+        tokens = TextTokens()
+        new_text = tokens.parseTokens(text)
+
+        return (new_text, )
+    
 
 # Text List Concatenate Node
 
@@ -13976,6 +13999,7 @@ NODE_CLASS_MAPPINGS = {
     "Text List to Text": WAS_Text_List_to_Text,
     "Text Load Line From File": WAS_Text_Load_Line_From_File,
     "Text Multiline": WAS_Text_Multiline,
+    "Text Multiline (Code Compatible)": WAS_Text_Multiline_Raw,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
     "Text Parse Tokens": WAS_Text_Parse_Tokens,
