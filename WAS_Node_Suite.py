@@ -1923,7 +1923,6 @@ class WAS_Tools_Class():
 
         return img
 
-
     # Version 2 optimized based on Mark Setchell's ideas
     def gradient_map(self, image, gradient_map, reverse=False):
 
@@ -11076,9 +11075,7 @@ class WAS_BLIP_Analyze_Image:
 
         captions = []
         for image in images:
-
             pil_image = tensor2pil(image).convert("RGB")
-
             if mode == "caption":
                 cap = blip_model.generate_caption(image=pil_image, min_length=min_length, max_length=max_length, num_beams=num_beams, no_repeat_ngram_size=no_repeat_ngram_size, early_stopping=early_stopping)
                 captions.append(cap)
