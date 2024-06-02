@@ -10117,23 +10117,23 @@ class WAS_Text_Concatenate:
                 "clean_whitespace": (["true", "false"],),
             },
             "optional": {
-                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_c": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_d": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_a": ("STRING", {"forceInput": True}),
+                "text_b": ("STRING", {"forceInput": True}),
+                "text_c": ("STRING", {"forceInput": True}),
+                "text_d": ("STRING", {"forceInput": True}),
             }
         }
 
-    RETURN_TYPES = (TEXT_TYPE,)
+    RETURN_TYPES = ("STRING",)
     FUNCTION = "text_concatenate"
 
     CATEGORY = "WAS Suite/Text"
 
     def text_concatenate(self, delimiter, clean_whitespace, **kwargs):
-        text_inputs: list[str] = []
+        text_inputs = []
 
         # Handle special case where delimiter is "\n" (literal newline).
-        if delimiter == "\\n":
+        if delimiter in ("\n", "\\n"):
             delimiter = "\n"
 
         # Iterate over the received inputs in sorted order.
@@ -10157,6 +10157,7 @@ class WAS_Text_Concatenate:
         merged_text = delimiter.join(text_inputs)
 
         return (merged_text,)
+
 
 
 # Text Find
