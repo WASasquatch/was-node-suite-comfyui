@@ -5362,7 +5362,7 @@ class WAS_Image_Padding:
 
     def image_padding(self, image, feathering, left_padding, right_padding, top_padding, bottom_padding, feather_second_pass=True):
         padding = self.apply_image_padding(tensor2pil(
-            image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=True)
+            image), left_padding, right_padding, top_padding, bottom_padding, feathering, second_pass=feather_second_pass)
         return (pil2tensor(padding[0]), pil2tensor(padding[1]))
 
     def apply_image_padding(self, image, left_pad=100, right_pad=100, top_pad=100, bottom_pad=100, feather_radius=50, second_pass=True):
@@ -9553,7 +9553,7 @@ class WAS_Text_Multiline:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"default": '', "multiline": True, "dynamicPrompts": False}),
+                "text": ("STRING", {"default": '', "multiline": True, "dynamicPrompts": True}),
             }
         }
     RETURN_TYPES = (TEXT_TYPE,)
@@ -9576,6 +9576,29 @@ class WAS_Text_Multiline:
 
         return (new_text, )
 
+
+class WAS_Text_Multiline_Raw:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"default": '', "multiline": True, "dynamicPrompts": False}),
+            }
+        }
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "text_multiline"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def text_multiline(self, text):
+        tokens = TextTokens()
+        new_text = tokens.parseTokens(text)
+
+        return (new_text, )
+    
 
 # Text List Concatenate Node
 
@@ -10143,23 +10166,23 @@ class WAS_Text_Concatenate:
                 "clean_whitespace": (["true", "false"],),
             },
             "optional": {
-                "text_a": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_b": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_c": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
-                "text_d": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "text_a": ("STRING", {"forceInput": True}),
+                "text_b": ("STRING", {"forceInput": True}),
+                "text_c": ("STRING", {"forceInput": True}),
+                "text_d": ("STRING", {"forceInput": True}),
             }
         }
 
-    RETURN_TYPES = (TEXT_TYPE,)
+    RETURN_TYPES = ("STRING",)
     FUNCTION = "text_concatenate"
 
     CATEGORY = "WAS Suite/Text"
 
     def text_concatenate(self, delimiter, clean_whitespace, **kwargs):
-        text_inputs: list[str] = []
+        text_inputs = []
 
         # Handle special case where delimiter is "\n" (literal newline).
-        if delimiter == "\\n":
+        if delimiter in ("\n", "\\n"):
             delimiter = "\n"
 
         # Iterate over the received inputs in sorted order.
@@ -10183,6 +10206,7 @@ class WAS_Text_Concatenate:
         merged_text = delimiter.join(text_inputs)
 
         return (merged_text,)
+
 
 
 # Text Find
@@ -14025,6 +14049,7 @@ NODE_CLASS_MAPPINGS = {
     "Text List to Text": WAS_Text_List_to_Text,
     "Text Load Line From File": WAS_Text_Load_Line_From_File,
     "Text Multiline": WAS_Text_Multiline,
+    "Text Multiline (Code Compatible)": WAS_Text_Multiline_Raw,
     "Text Parse A1111 Embeddings": WAS_Text_Parse_Embeddings_By_Name,
     "Text Parse Noodle Soup Prompts": WAS_Text_Parse_NSP,
     "Text Parse Tokens": WAS_Text_Parse_Tokens,
