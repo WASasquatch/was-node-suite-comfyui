@@ -5923,12 +5923,6 @@ class WAS_Image_Blend_Mask:
 
     CATEGORY = "WAS Suite/Image"
 
-    def tensor2pil(self, image, squeeze=False):
-        numpified = image.cpu().numpy().squeeze()
-        if squeeze:
-            numpified = numpified.squeeze()
-        return Image.fromarray(np.clip(255. * numpified, 0, 255).astype(np.uint8))
-
     def pil2tensor(self, image, unsqueeze=False):
         result = torch.from_numpy(np.array(image).astype(np.float32) / 255.0)
         if unsqueeze:
@@ -5956,28 +5950,28 @@ class WAS_Image_Blend_Mask:
         """
 
         def broadcast_singletons(a, b, m):
-            max_len = max(len(a), len(b), len(m))        
-            if len(a) == 1:
-                a = a * max_len
-            if len(b) == 1:
-                b = b * max_len
-            if len(m) == 1:
-                m = m * max_len
+            max_len = max(a.shape[0], b.shape[0], m.shape[0])        
+            if a.shape[0] == 1:
+                a = torch.stack([a.squeeze() for _ in range(max_len)])
+            if b.shape[0] == 1:
+                b = torch.stack([b.squeeze() for _ in range(max_len)])
+            if m.shape[0] == 1:
+                m = torch.stack([m.squeeze() for _ in range(max_len)])
             return a, b, m
 
         image_a, image_b, mask = broadcast_singletons(image_a, image_b, mask)
-        
+
         result = []
         for img_a, img_b, msk in zip(image_a, image_b, mask):
             result.append(self.image_blend_mask_single(img_a, img_b, msk, blend_percentage))
         
-        return torch.stack(result)
+        return (torch.stack(result), )
 
     def image_blend_mask_single(self, image_a, image_b, mask, blend_percentage):
         # Convert images to PIL
-        img_a = self.tensor2pil(image_a)
-        img_b = self.tensor2pil(image_b)
-        mask = ImageOps.invert(self.tensor2pil(mask).convert('L'))
+        img_a = tensor2pil(image_a)
+        img_b = tensor2pil(image_b)
+        mask = ImageOps.invert(tensor2pil(mask).convert('L'))
 
         # Mask image
         masked_img = Image.composite(img_a, img_b, mask.resize(img_a.size))
