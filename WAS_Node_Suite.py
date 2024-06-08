@@ -4101,7 +4101,59 @@ class WAS_Image_Blending_Mode:
 
     CATEGORY = "WAS Suite/Image"
 
+
+    def tensor2pil(self, image, squeeze=False):
+        numpified = image.cpu().numpy().squeeze()
+        if squeeze:
+            numpified = numpified.squeeze()
+        return Image.fromarray(np.clip(255. * numpified, 0, 255).astype(np.uint8))
+
+    def pil2tensor(self, image, unsqueeze=False):
+        result = torch.from_numpy(np.array(image).astype(np.float32) / 255.0)
+        if unsqueeze:
+            result = result.unsqueeze(0)
+        return result
+
     def image_blending_mode(self, image_a, image_b, mode='add', blend_percentage=1.0):
+        """
+        This function assumes that `image_a`, `image_b`, and `mask` can be either batches of images/masks or singletons.
+        - If any of `image_a`, `image_b`, or `mask` is a singleton (i.e., a list or tensor with only one element), 
+        it will be replicated to match the batch size of the others.
+        - The batches (if any) must all have the same length.
+
+        Raises:
+            ValueError: Batch lengths do not match.
+
+        Code copied rather slavishly from WAS_Image_Blend_Mask.image_blend_mask()
+        """
+
+        def broadcast_singletons(a, b):
+            max_len = max(a.shape[0], b.shape[0])
+            print(f"DEBUG [broadcast_singletons] max_len = {max_len}")
+            if a.shape[0] == 1:
+                new_shape = [x for x in a.shape]
+                new_shape[0] = max_len
+                a = a.expand(new_shape)
+            if len(b) == 1:
+                new_shape = [x for x in b.shape]
+                new_shape[0] = max_len
+                b = b.expand(new_shape)
+            return a, b
+
+        print(f"DEBUG [image_blending_mode] image_a.shape = {image_a.shape}, image_b.shape = {image_b.shape}")
+        image_a, image_b = broadcast_singletons(image_a, image_b)
+        print(f"DEBUG [image_blending_mode] image_a.shape = {image_a.shape}, image_b.shape = {image_b.shape}", flush=True)
+        
+        result = []
+        for img_a, img_b in zip(image_a, image_b):
+            result.append(self.image_blending_mode_single(img_a, img_b, mode, blend_percentage))
+        
+        print(f"DEBUG [image_blending_mode] len(result) = {len(result)}")
+        result = torch.stack(result)
+        print(f"DEBUG [image_blending_mode] result.shape = {result.shape}", flush=True)
+        return (result, )
+
+    def image_blending_mode_single(self, image_a, image_b, mode, blend_percentage):
 
         # Install Pilgram
         if 'pilgram' not in packages():
@@ -4111,8 +4163,8 @@ class WAS_Image_Blending_Mode:
         import pilgram
 
         # Convert images to PIL
-        img_a = tensor2pil(image_a)
-        img_b = tensor2pil(image_b)
+        img_a = self.tensor2pil(image_a)
+        img_b = self.tensor2pil(image_b)
 
         # Apply blending
         if mode:
@@ -4155,7 +4207,7 @@ class WAS_Image_Blending_Mode:
         blend_mask = ImageOps.invert(blend_mask)
         out_image = Image.composite(img_a, out_image, blend_mask)
 
-        return (pil2tensor(out_image), )
+        return self.pil2tensor(out_image)
 
 
 # IMAGE BLEND NODE
