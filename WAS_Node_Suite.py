@@ -2452,7 +2452,6 @@ class WAS_Shadow_And_Highlight_Adjustment:
         WTools = WAS_Tools_Class()
 
         result, shadows, highlights = WTools.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
-        result, shadows, highlights = WTools.shadows_and_highlights(tensor2pil(image), shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation)
 
         return (pil2tensor(result), pil2tensor(shadows), pil2tensor(highlights) )
 
