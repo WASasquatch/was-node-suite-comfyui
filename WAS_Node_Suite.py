@@ -2448,6 +2448,17 @@ class WAS_Shadow_And_Highlight_Adjustment:
     CATEGORY = "WAS Suite/Image/Adjustment"
 
     def apply_shadow_and_highlight(self, image, shadow_threshold=30, highlight_threshold=220, shadow_factor=1.5, highlight_factor=0.5, shadow_smoothing=0, highlight_smoothing=0, simplify_isolation=0):
+        results = []
+        for img in image:
+            img = img.unsqueeze(0) # cannot use torch.split(), because images are not necessarily the same size
+            results.append(self.apply_shadow_and_highlight_single(img, shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation))
+        return (
+            torch.cat([result[0] for result in results]),
+            torch.cat([result[1] for result in results]),
+            torch.cat([result[2] for result in results]),
+        )
+
+    def apply_shadow_and_highlight_single(self, image, shadow_threshold, highlight_threshold, shadow_factor, highlight_factor, shadow_smoothing, highlight_smoothing, simplify_isolation):
 
         WTools = WAS_Tools_Class()
 
