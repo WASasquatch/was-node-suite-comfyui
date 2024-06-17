@@ -10257,6 +10257,51 @@ class WAS_Text_Shuffle:
         return (new_text, )
 
 
+# Text Sort
+
+class WAS_Text_Sort:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": (TEXT_TYPE, {"forceInput": (True if TEXT_TYPE == 'STRING' else False)}),
+                "separator": ("STRING", {"default": ', ', "multiline": False}),
+            }
+        }
+
+    RETURN_TYPES = (TEXT_TYPE,)
+    FUNCTION = "sort"
+
+    CATEGORY = "WAS Suite/Text/Operations"
+
+    def sort(self, text, separator):
+        tokens = WAS_Text_Sort.split_using_protected_groups(text.strip(separator + " \t\n\r"), separator.strip())
+        sorted_tokens = sorted(tokens, key=WAS_Text_Sort.token_without_leading_brackets)
+        return (separator.join(sorted_tokens), )
+
+    @staticmethod
+    def token_without_leading_brackets(token):
+        return token.replace("\\(", "\0\1").replace("(", "").replace("\0\1", "(").strip()
+
+    @staticmethod
+    def split_using_protected_groups(text, separator):
+        protected_groups = ""
+        nesting_level = 0
+        for char in text:
+            if char == "(": nesting_level += 1
+            if char == ")": nesting_level -= 1
+
+            if char == separator and nesting_level > 0:
+                protected_groups += "\0"
+            else:
+                protected_groups += char
+
+        return list(map(lambda t: t.replace("\0", separator).strip(), protected_groups.split(separator)))
+
+
 
 # Text Search and Replace
 
@@ -13995,6 +14040,7 @@ NODE_CLASS_MAPPINGS = {
     "Text String": WAS_Text_String,
     "Text Contains": WAS_Text_Contains,
     "Text Shuffle": WAS_Text_Shuffle,
+    "Text Sort": WAS_Text_Sort,
     "Text to Conditioning": WAS_Text_to_Conditioning,
     "Text to Console": WAS_Text_to_Console,
     "Text to Number": WAS_Text_To_Number,
