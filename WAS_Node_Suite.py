@@ -1922,7 +1922,6 @@ class WAS_Tools_Class():
         img = img.filter(ImageFilter.GaussianBlur(radius=blur))
 
         return img
-    
 
     # Version 2 optimized based on Mark Setchell's ideas
     def gradient_map(self, image, gradient_map, reverse=False):
@@ -10864,15 +10863,16 @@ class WAS_Text_Load_Line_From_File:
             self.file_path = file_path
             self.lines = []
             self.index = 0
-            self.load_file(file_path, label)
+            self.label = label
+            self.load_file(file_path)
 
-        def load_file(self, file_path, label):
-            stored_file_path = self.WDB.get('TextBatch Paths', label)
-            stored_index = self.WDB.get('TextBatch Counters', label)
+        def load_file(self, file_path):
+            stored_file_path = self.WDB.get('TextBatch Paths', self.label)
+            stored_index = self.WDB.get('TextBatch Counters', self.label)
             if stored_file_path != file_path:
                 self.index = 0
-                self.WDB.insert('TextBatch Counters', label, 0)
-                self.WDB.insert('TextBatch Paths', label, file_path)
+                self.WDB.insert('TextBatch Counters', self.label, 0)
+                self.WDB.insert('TextBatch Paths', self.label, file_path)
             else:
                 self.index = stored_index
             with open(file_path, 'r', encoding="utf-8", newline='\n') as file:
@@ -10883,7 +10883,7 @@ class WAS_Text_Load_Line_From_File:
 
         def set_line_index(self, index):
             self.index = index
-            self.WDB.insert('TextBatch Counters', 'TextBatch', self.index)
+            self.WDB.insert('TextBatch Counters', self.label, self.index)
 
         def get_next_line(self):
             if self.index >= len(self.lines):
@@ -10905,7 +10905,7 @@ class WAS_Text_Load_Line_From_File:
             return line, self.lines
 
         def store_index(self):
-            self.WDB.insert('TextBatch Counters', 'TextBatch', self.index)
+            self.WDB.insert('TextBatch Counters', self.label, self.index)
 
 
 class WAS_Text_To_String:
@@ -11087,9 +11087,7 @@ class WAS_BLIP_Analyze_Image:
 
         captions = []
         for image in images:
-            
             pil_image = tensor2pil(image).convert("RGB")
-            
             if mode == "caption":
                 cap = blip_model.generate_caption(image=pil_image, min_length=min_length, max_length=max_length, num_beams=num_beams, no_repeat_ngram_size=no_repeat_ngram_size, early_stopping=early_stopping)
                 captions.append(cap)
