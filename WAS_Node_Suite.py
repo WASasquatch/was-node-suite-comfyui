@@ -10391,9 +10391,8 @@ class WAS_Text_Save:
                 "text": ("STRING", {"forceInput": True}),
                 "path": ("STRING", {"default": './ComfyUI/output/[time(%Y-%m-%d)]', "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
-                "filename_delimiter": ("STRING", {"default":"_"}),
-                "filename_number_padding": ("INT", {"default":4, "min":0, "max":9, "step":1}),
-
+                "filename_delimiter": ("STRING", {"default": "_"}),
+                "filename_number_padding": ("INT", {"default": 4, "min": 0, "max": 9, "step": 1}),
             }
         }
 
@@ -10403,7 +10402,6 @@ class WAS_Text_Save:
     CATEGORY = "WAS Suite/IO"
 
     def save_text_file(self, text, path, filename_prefix='ComfyUI', filename_delimiter='_', filename_number_padding=4):
-
         tokens = TextTokens()
         path = tokens.parseTokens(path)
         filename_prefix = tokens.parseTokens(filename_prefix)
@@ -10423,42 +10421,30 @@ class WAS_Text_Save:
         file_extension = '.txt'
         filename = self.generate_filename(path, filename_prefix, delimiter, number_padding, file_extension)
         file_path = os.path.join(path, filename)
-
         self.writeTextFile(file_path, text)
-
         update_history_text_files(file_path)
-
-        return (text, { "ui": { "string": text } } )
+        return (text, {"ui": {"string": text}})
 
     def generate_filename(self, path, prefix, delimiter, number_padding, extension):
-        # Adjust the regex pattern to match one or more digits without fixed padding
-        pattern = f"{re.escape(prefix)}{re.escape(delimiter)}(\\d+)"
-        existing_counters = [
-            int(re.search(pattern, filename).group(1))
-            for filename in os.listdir(path)
-            if re.match(pattern, filename)
-        ]
-        existing_counters.sort(reverse=True)
-
-        if existing_counters:
-            counter = existing_counters[0] + 1
+        if number_padding == 0:
+            # If number_padding is 0, don't use a numerical suffix
+            filename = f"{prefix}{extension}"
         else:
-            counter = 1
-
-        # Adjust the format string based on number_padding
-        if number_padding > 0:
-            filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
-        else:
-            filename = f"{prefix}{delimiter}{counter}{extension}"
-
-        # Ensure the generated filename does not already exist
-        while os.path.exists(os.path.join(path, filename)):
-            counter += 1
-            if number_padding > 0:
-                filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
+            pattern = f"{re.escape(prefix)}{re.escape(delimiter)}(\\d{{{number_padding}}})"
+            existing_counters = [
+                int(re.search(pattern, filename).group(1))
+                for filename in os.listdir(path)
+                if re.match(pattern, filename)
+            ]
+            existing_counters.sort(reverse=True)
+            if existing_counters:
+                counter = existing_counters[0] + 1
             else:
-                filename = f"{prefix}{delimiter}{counter}{extension}"
-
+                counter = 1
+            filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
+            while os.path.exists(os.path.join(path, filename)):
+                counter += 1
+                filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
         return filename
 
     def writeTextFile(self, file, content):
