@@ -4936,7 +4936,73 @@ class WAS_Hex_to_HSL:
         return output
 
 
+# HSL TO HEX
+
+
+class WAS_HSL_to_Hex:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "hsl_color": ("STRING", {"default": "hsl(0, 100%, 50%)"}),
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("hex_color",)
+
+    FUNCTION = "hsl_to_hex"
+    CATEGORY = "WAS Suite/Utilities"
+
+    @staticmethod
+    def hsl_to_hex(hsl_color):
+        import re
+
+        hsl_pattern = re.compile(r'hsla?\(\s*(\d+),\s*(\d+)%?,\s*(\d+)%?(?:,\s*([\d.]+))?\s*\)')
+        match = hsl_pattern.match(hsl_color)
+
+        if not match:
+            raise ValueError("Invalid HSL(A) color format")
+
+        h, s, l = map(int, match.groups()[:3])
+        a = float(match.groups()[3]) if match.groups()[3] else 1.0
+
+        s /= 100
+        l /= 100
+
+        c = (1 - abs(2 * l - 1)) * s
+        x = c * (1 - abs((h / 60) % 2 - 1))
+        m = l - c/2
+
+        if 0 <= h < 60:
+            r, g, b = c, x, 0
+        elif 60 <= h < 120:
+            r, g, b = x, c, 0
+        elif 120 <= h < 180:
+            r, g, b = 0, c, x
+        elif 180 <= h < 240:
+            r, g, b = 0, x, c
+        elif 240 <= h < 300:
+            r, g, b = x, 0, c
+        elif 300 <= h < 360:
+            r, g, b = c, 0, x
+        else:
+            r, g, b = 0, 0, 0
+
+        r = int((r + m) * 255)
+        g = int((g + m) * 255)
+        b = int((b + m) * 255)
+        alpha = int(a * 255)
+
+        hex_color = f'#{r:02X}{g:02X}{b:02X}'
+        if a < 1:
+            hex_color += f'{alpha:02X}'
+
+        return (hex_color,)
+
+
 # IMAGE ANALYZE
+
 
 class WAS_Image_Analyze:
     def __init__(self):
@@ -13934,6 +14000,7 @@ NODE_CLASS_MAPPINGS = {
     "Logic NOT": WAS_Logical_NOT,
     "Lora Loader": WAS_Lora_Loader,
     "Hex to HSL": WAS_Hex_to_HSL,
+    "HSL to Hex": WAS_HSL_to_Hex,
     "Image SSAO (Ambient Occlusion)": WAS_Image_Ambient_Occlusion,
     "Image SSDO (Direct Occlusion)": WAS_Image_Direct_Occlusion,
     "Image Analyze": WAS_Image_Analyze,
