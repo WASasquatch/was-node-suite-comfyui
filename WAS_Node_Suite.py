@@ -4878,6 +4878,64 @@ class WAS_Image_Color_Palette:
             return (pil2tensor(palette_image), [palette,])
 
 
+# HEX TO HSL
+
+class WAS_Hex_to_HSL:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "hex_color": ("STRING", {"default": "#FF0000"}),
+            }, 
+            "optional": {
+                "include_alpha": ("BOOLEAN", {"default": False})
+            }
+        }
+    
+    RETURN_TYPES = ("INT", "INT", "INT", "FLOAT", "STRING")
+    RETURN_NAMES = ("hue", "saturation", "lightness", "alpha", "hsl")
+
+    FUNCTION = "hex_to_hsl"
+    CATEGORY = "WAS Suite/Utilities"
+
+    @staticmethod
+    def hex_to_hsl(hex_color, include_alpha=False):
+        if hex_color.startswith("#"):
+            hex_color = hex_color[1:]
+        
+        red = int(hex_color[0:2], 16) / 255.0
+        green = int(hex_color[2:4], 16) / 255.0
+        blue = int(hex_color[4:6], 16) / 255.0
+        alpha = int(hex_color[6:8], 16) / 255.0 if include_alpha and len(hex_color) == 8 else 1.0
+        max_val = max(red, green, blue)
+        min_val = min(red, green, blue)
+        delta = max_val - min_val
+        luminance = (max_val + min_val) / 2.0
+
+        if delta == 0:
+            hue = 0
+            saturation = 0
+        else:
+            saturation = delta / (1 - abs(2 * luminance - 1))
+            if max_val == red:
+                hue = ((green - blue) / delta) % 6
+            elif max_val == green:
+                hue = (blue - red) / delta + 2
+            elif max_val == blue:
+                hue = (red - green) / delta + 4
+            hue *= 60
+            if hue < 0:
+                hue += 360
+
+        luminance = luminance * 100
+        saturation = saturation * 100
+
+        hsl_string = f'hsl({round(hue)}, {round(saturation)}%, {round(luminance)}%)' if not include_alpha else f'hsla({round(hue)}, {round(saturation)}%, {round(luminance)}%, {round(alpha, 2)})'
+        output = (round(hue), round(saturation), round(luminance), round(alpha, 2), hsl_string)
+        
+        return output
+
+
 # IMAGE ANALYZE
 
 class WAS_Image_Analyze:
@@ -13875,6 +13933,7 @@ NODE_CLASS_MAPPINGS = {
     "Logic Comparison XOR": WAS_Logical_XOR,
     "Logic NOT": WAS_Logical_NOT,
     "Lora Loader": WAS_Lora_Loader,
+    "Hex to HSL": WAS_Hex_to_HSL,
     "Image SSAO (Ambient Occlusion)": WAS_Image_Ambient_Occlusion,
     "Image SSDO (Direct Occlusion)": WAS_Image_Direct_Occlusion,
     "Image Analyze": WAS_Image_Analyze,
