@@ -10462,7 +10462,6 @@ class WAS_Search_and_Replace_Input:
         return float("NaN")
 
 
-
 # Text Search and Replace By Dictionary
 
 class WAS_Search_and_Replace_Dictionary:
@@ -10546,7 +10545,7 @@ class WAS_Text_Parse_NSP:
         return (new_text, )
 
 
-# TEXT SEARCH AND REPLACE
+# TEXT SAVE
 
 class WAS_Text_Save:
     def __init__(self):
@@ -10561,6 +10560,10 @@ class WAS_Text_Save:
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
                 "filename_delimiter": ("STRING", {"default": "_"}),
                 "filename_number_padding": ("INT", {"default": 4, "min": 0, "max": 9, "step": 1}),
+            },
+            "optional": {
+                "file_extension": ("STRING", {"default": ".txt"}),
+                "encoding": ("STRING", {"default": "utf-8"})
             }
         }
 
@@ -10569,7 +10572,7 @@ class WAS_Text_Save:
     FUNCTION = "save_text_file"
     CATEGORY = "WAS Suite/IO"
 
-    def save_text_file(self, text, path, filename_prefix='ComfyUI', filename_delimiter='_', filename_number_padding=4):
+    def save_text_file(self, text, path, filename_prefix='ComfyUI', filename_delimiter='_', filename_number_padding=4, file_extension='.txt', encoding='utf-8'):
         tokens = TextTokens()
         path = tokens.parseTokens(path)
         filename_prefix = tokens.parseTokens(filename_prefix)
@@ -10586,10 +10589,9 @@ class WAS_Text_Save:
 
         delimiter = filename_delimiter
         number_padding = int(filename_number_padding)
-        file_extension = '.txt'
         filename = self.generate_filename(path, filename_prefix, delimiter, number_padding, file_extension)
         file_path = os.path.join(path, filename)
-        self.writeTextFile(file_path, text)
+        self.write_text_file(file_path, text, encoding)
         update_history_text_files(file_path)
         return (text, {"ui": {"string": text}})
 
@@ -10615,13 +10617,12 @@ class WAS_Text_Save:
                 filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
         return filename
 
-    def writeTextFile(self, file, content):
+    def write_text_file(self, file, content, encoding):
         try:
-            with open(file, 'w', encoding='utf-8', newline='\n') as f:
+            with open(file, 'w', encoding=encoding, newline='\n') as f:
                 f.write(content)
         except OSError:
             cstr(f"Unable to save file `{file}`").error.print()
-
 
 
 # TEXT FILE HISTORY NODE
