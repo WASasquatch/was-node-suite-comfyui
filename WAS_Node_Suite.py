@@ -1924,33 +1924,42 @@ class WAS_Tools_Class():
         return img
 
     # Version 2 optimized based on Mark Setchell's ideas
-    def gradient_map(self, image, gradient_map, reverse=False):
+    def gradient_map(self, image, gradient_map_input, reverse=False):
 
         # Reverse the image
         if reverse:
-            gradient_map = gradient_map.transpose(Image.FLIP_LEFT_RIGHT)
+            gradient_map_input = gradient_map_input.transpose(Image.FLIP_LEFT_RIGHT)
 
         # Convert image to Numpy array and average RGB channels
-        na = np.array(image)
-        grey = np.mean(na, axis=2).astype(np.uint8)
+        # grey = self.greyscale(np.array(image))
+        grey = np.array(image.convert('L'))
 
         # Convert gradient map to Numpy array
-        cmap = np.array(gradient_map.convert('RGB'))
+        cmap = np.array(gradient_map_input.convert('RGB'))
 
-        # Make output image, same height and width as grey image, but 3-channel RGB
-        result = np.zeros((*grey.shape, 3), dtype=np.uint8)
+        # smush the map into the proper size -- 256 gradient colors
+        cmap = cv2.resize(cmap, (256, 256))
 
-        # Reshape grey to match the shape of result
-        grey_reshaped = grey.reshape(-1)
+        # lop off a single row for the LUT mapper
+        cmap = cmap[0,:,:].reshape((256, 1, 3)).astype(np.uint8)
 
-        # Take entries from RGB gradient map according to grayscale values in image
-        np.take(cmap.reshape(-1, 3), grey_reshaped, axis=0, out=result.reshape(-1, 3))
+        # map with our "custom" LUT
+        result = cv2.applyColorMap(grey, cmap)
 
         # Convert result to PIL image
-        result_image = Image.fromarray(result)
+        return Image.fromarray(result)
 
-        return result_image
-
+    def greyscale(self, image):
+        if image.dtype in [np.float16, np.float32, np.float64]:
+            image = np.clip(image * 255, 0, 255).astype(np.uint8)
+        cc = image.shape[2] if image.ndim == 3 else 1
+        if cc == 1:
+            return image
+        typ = cv2.COLOR_BGR2HSV
+        if cc == 4:
+            typ = cv2.COLOR_BGRA2GRAY
+        image = cv2.cvtColor(image, typ)[:,:,2]
+        return np.expand_dims(image, -1)
 
     # Generate Perlin Noise (Finally in house version)
 
@@ -4886,12 +4895,12 @@ class WAS_Hex_to_HSL:
         return {
             "required": {
                 "hex_color": ("STRING", {"default": "#FF0000"}),
-            }, 
+            },
             "optional": {
                 "include_alpha": ("BOOLEAN", {"default": False})
             }
         }
-    
+
     RETURN_TYPES = ("INT", "INT", "INT", "FLOAT", "STRING")
     RETURN_NAMES = ("hue", "saturation", "lightness", "alpha", "hsl")
 
@@ -4902,7 +4911,7 @@ class WAS_Hex_to_HSL:
     def hex_to_hsl(hex_color, include_alpha=False):
         if hex_color.startswith("#"):
             hex_color = hex_color[1:]
-        
+
         red = int(hex_color[0:2], 16) / 255.0
         green = int(hex_color[2:4], 16) / 255.0
         blue = int(hex_color[4:6], 16) / 255.0
@@ -4932,7 +4941,7 @@ class WAS_Hex_to_HSL:
 
         hsl_string = f'hsl({round(hue)}, {round(saturation)}%, {round(luminance)}%)' if not include_alpha else f'hsla({round(hue)}, {round(saturation)}%, {round(luminance)}%, {round(alpha, 2)})'
         output = (round(hue), round(saturation), round(luminance), round(alpha, 2), hsl_string)
-        
+
         return output
 
 
@@ -4947,7 +4956,7 @@ class WAS_HSL_to_Hex:
                 "hsl_color": ("STRING", {"default": "hsl(0, 100%, 50%)"}),
             }
         }
-    
+
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("hex_color",)
 
@@ -7290,7 +7299,7 @@ class WAS_Image_Save:
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
-    
+
     FUNCTION = "was_save_images"
 
     OUTPUT_NODE = True
@@ -9674,7 +9683,7 @@ class WAS_Text_Multiline_Raw:
         new_text = tokens.parseTokens(text)
 
         return (new_text, )
-    
+
 
 # Text List Concatenate Node
 
