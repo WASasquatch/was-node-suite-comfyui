@@ -7381,15 +7381,16 @@ class WAS_Image_Save:
             # Delegate metadata/pnginfo
             if extension == 'webp':
                 img_exif = img.getexif()
-                workflow_metadata = ''
-                prompt_str = ''
-                if prompt is not None:
-                    prompt_str = json.dumps(prompt)
-                    img_exif[0x010f] = "Prompt:" + prompt_str
-                if extra_pnginfo is not None:
-                    for x in extra_pnginfo:
-                        workflow_metadata += json.dumps(extra_pnginfo[x])
-                img_exif[0x010e] = "Workflow:" + workflow_metadata
+                if embed_workflow == 'true':
+                    workflow_metadata = ''
+                    prompt_str = ''
+                    if prompt is not None:
+                        prompt_str = json.dumps(prompt)
+                        img_exif[0x010f] = "Prompt:" + prompt_str
+                    if extra_pnginfo is not None:
+                        for x in extra_pnginfo:
+                            workflow_metadata += json.dumps(extra_pnginfo[x])
+                    img_exif[0x010e] = "Workflow:" + workflow_metadata
                 exif_data = img_exif.tobytes()
             else:
                 metadata = PngInfo()
