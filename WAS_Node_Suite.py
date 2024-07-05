@@ -9819,7 +9819,7 @@ class WAS_Text_Parse_Embeddings_By_Name:
         for embeddings_path in comfy_paths.folder_names_and_paths["embeddings"][0]:
             for filename in os.listdir(embeddings_path):
                 basename, ext = os.path.splitext(filename)
-                pattern = re.compile(r'\b{}\b'.format(re.escape(basename)))
+                pattern = re.compile(r'\b(?<!embedding:){}\b'.format(re.escape(basename)))
                 replacement = 'embedding:{}'.format(basename)
                 text = re.sub(pattern, replacement, text)
 
