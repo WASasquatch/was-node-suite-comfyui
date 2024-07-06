@@ -7508,6 +7508,57 @@ class WAS_Image_Save:
         return subfolder_path
 
 
+# Image Send HTTP
+# Sends images over http
+class WAS_Image_Send_HTTP:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "url": ("STRING", {"default": "example.com"}),
+                "method_type": (["post", "put", "patch"], {"default": "post"}),
+                "request_field_name": ("STRING", {"default": "image"}),
+            },
+            "optional": {
+                "additional_request_headers": ("DICT",)
+            }
+        }
+
+    RETURN_TYPES = ("INT", "STRING")
+    RETURN_NAMES = ("status_code", "result_text")
+
+    FUNCTION = "was_send_images_http"
+    OUTPUT_NODE = True
+
+    CATEGORY = "WAS Suite/IO"
+
+    def was_send_images_http(self, images, url="example.com",
+                             method_type="post",
+                             request_field_name="image",
+                             additional_request_headers=None):
+        from io import BytesIO
+
+        images_to_send = []
+        for idx, image in enumerate(images):
+            i = 255. * image.cpu().numpy()
+            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            byte_io = BytesIO()
+            img.save(byte_io, 'png')
+            byte_io.seek(0)
+            images_to_send.append(
+                (request_field_name, (f"image_{idx}.png", byte_io, "image/png"))
+            )
+        request = requests.Request(url=url, method=method_type.upper(),
+                                   headers=additional_request_headers,
+                                   files=images_to_send)
+        prepped = request.prepare()
+        session = requests.Session()
+
+        response = session.send(prepped)
+        return (response.status_code, response.text,)
+
+
 # LOAD IMAGE NODE
 class WAS_Load_Image:
 
@@ -14060,6 +14111,7 @@ NODE_CLASS_MAPPINGS = {
     "Image Resize": WAS_Image_Rescale,
     "Image Rotate": WAS_Image_Rotate,
     "Image Rotate Hue": WAS_Image_Rotate_Hue,
+    "Image Send HTTP": WAS_Image_Send_HTTP,
     "Image Save": WAS_Image_Save,
     "Image Seamless Texture": WAS_Image_Make_Seamless,
     "Image Select Channel": WAS_Image_Select_Channel,
