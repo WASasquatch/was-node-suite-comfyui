@@ -11169,7 +11169,7 @@ class WAS_Text_To_Number:
     CATEGORY = "WAS Suite/Text/Operations"
 
     def text_to_number(self, text):
-        if text.replace(".", "").isnumeric():
+        if "." in text:
             number = float(text)
         else:
             number = int(text)
