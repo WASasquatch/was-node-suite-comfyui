@@ -9703,9 +9703,7 @@ class WAS_Text_Multiline:
         new_text = []
         for line in io.StringIO(text):
             if not line.strip().startswith('#'):
-                if not line.strip().startswith("\n"):
-                    line = line.replace("\n", '')
-                new_text.append(line)
+                new_text.append(line.replace("\n", ''))
         new_text = "\n".join(new_text)
 
         tokens = TextTokens()
@@ -10737,8 +10735,6 @@ class WAS_Text_File_History:
         lines = []
         for line in io.StringIO(text):
             if not line.strip().startswith('#'):
-                if not line.strip().startswith("\n"):
-                    line = line.replace("\n", '')
                 lines.append(line.replace("\n",''))
         dictionary = {filename: lines}
 
@@ -10998,11 +10994,7 @@ class WAS_Text_Load_From_File:
         lines = []
         for line in io.StringIO(text):
             if not line.strip().startswith('#'):
-                if ( not line.strip().startswith("\n")
-                    or not line.strip().startswith("\r")
-                    or not line.strip().startswith("\r\n") ):
-                    line = line.replace("\n", '').replace("\r",'').replace("\r\n",'')
-                lines.append(line.replace("\n",'').replace("\r",'').replace("\r\n",''))
+                lines.append(line.replace("\n",'').replace("\r",''))
         dictionary = {filename: lines}
 
         return ("\n".join(lines), dictionary)
