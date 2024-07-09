@@ -10,6 +10,6 @@ Repository = "https://github.com/WASasquatch/was-node-suite-comfyui"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = ""
-DisplayName = "PR-was-node-suite-comfyui-47064894"
+PublisherId = "was"
+DisplayName = "WAS Node Suite"
 Icon = ""
