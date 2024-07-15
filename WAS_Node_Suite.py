@@ -331,7 +331,13 @@ if was_config.__contains__('webui_styles'):
 def packages(versions=False):
     import sys
     import subprocess
-    return [( r.decode().split('==')[0] if not versions else r.decode() ) for r in subprocess.check_output([sys.executable, '-s', '-m', 'pip', 'freeze']).split()]
+    try:
+        result = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'], stderr=subprocess.STDOUT)
+        lines = result.decode().splitlines()
+        return [line if versions else line.split('==')[0] for line in lines]
+    except subprocess.CalledProcessError as e:
+        print("An error occurred while fetching packages:", e.output.decode())
+        return []
 
 def install_package(package, uninstall_first: Union[List[str], str] = None):
     if os.getenv("WAS_BLOCK_AUTO_INSTALL", 'False').lower() in ('true', '1', 't'):
