@@ -7303,8 +7303,8 @@ class WAS_Image_Save:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
+    RETURN_TYPES = ("IMAGE", "STRING",)
+    RETURN_NAMES = ("images", "files",)
 
     FUNCTION = "was_save_images"
 
@@ -7380,6 +7380,7 @@ class WAS_Image_Save:
             file_extension = "png"
 
         results = list()
+        output_files = list()
         for image in images:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
@@ -7441,6 +7442,7 @@ class WAS_Image_Save:
                              pnginfo=exif_data, optimize=optimize_image)
 
                 cstr(f"Image file saved to: {output_file}").msg.print()
+                output_files.append(output_file)
 
                 if show_history != 'true' and show_previews == 'true':
                     subfolder = self.get_subfolder_path(output_file, original_output)
@@ -7501,9 +7503,9 @@ class WAS_Image_Save:
                 results.append(image_data)
 
         if show_previews == 'true':
-            return {"ui": {"images": results}, "result": (images,)}
+            return {"ui": {"images": results, "files": output_files}, "result": (images, output_files,)}
         else:
-            return {"ui": {"images": []}, "result": (images,)}
+            return {"ui": {"images": []}, "result": (images, output_files,)}
 
     def get_subfolder_path(self, image_path, output_path):
         output_parts = output_path.strip(os.sep).split(os.sep)
