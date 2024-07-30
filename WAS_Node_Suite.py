@@ -11376,7 +11376,7 @@ class WAS_CLIPSeg:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "text": ("STRING", {"default":"", "multiline": False}),
+                "text": ("STRING", {"default": "", "multiline": False}),
             },
             "optional": {
                 "clipseg_model": ("CLIPSEG_MODEL",),
@@ -11392,7 +11392,8 @@ class WAS_CLIPSeg:
     def CLIPSeg_image(self, image, text=None, clipseg_model=None):
         from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
 
-        image = tensor2pil(image)
+        B, H, W, C = image.shape
+
         cache = os.path.join(MODELS_DIR, 'clipseg')
 
         if clipseg_model:
@@ -11402,16 +11403,30 @@ class WAS_CLIPSeg:
             inputs = CLIPSegProcessor.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
             model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined", cache_dir=cache)
 
-        with torch.no_grad():
-            result = model(**inputs(text=text, images=image, padding=True, return_tensors="pt"))
+        if B == 1:
+            image = tensor2pil(image)
+            with torch.no_grad():
+                result = model(**inputs(text=text, images=image, padding=True, return_tensors="pt"))
 
-        tensor = torch.sigmoid(result[0])
-        mask = 1. - (tensor - tensor.min()) / tensor.max()
-        mask = mask.unsqueeze(0)
-        mask = tensor2pil(mask).convert("L")
-        mask = mask.resize(image.size)
+            tensor = torch.sigmoid(result[0])
+            mask = 1. - (tensor - tensor.min()) / tensor.max()
+            mask = mask.unsqueeze(0)
+            mask = tensor2pil(mask).convert("L")
+            mask = mask.resize(image.size)
 
-        return (pil2mask(mask), pil2tensor(ImageOps.invert(mask.convert("RGB"))))
+            return (pil2mask(mask), pil2tensor(ImageOps.invert(mask.convert("RGB"))))
+        else:
+            import torchvision
+            with torch.no_grad():
+                image = image.permute(0, 3, 1, 2)
+                image = image * 255
+                result = model(**inputs(text=[text] * B, images=image, padding=True, return_tensors="pt"))
+                t = torch.sigmoid(result[0])
+                mask = (t - t.min()) / t.max()
+                mask = torchvision.transforms.functional.resize(mask, (H, W))
+                mask: torch.tensor = mask.unsqueeze(-1)
+                mask_img = mask.repeat(1, 1, 1, 3)
+            return (mask, mask_img,)
 
 # CLIPSeg Node
 
