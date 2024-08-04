@@ -10370,8 +10370,8 @@ class WAS_Find:
             }
         }
 
-    RETURN_TYPES = ("BOOLEAN")
-    RETURN_NAMES = ("found")
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("found",)
     FUNCTION = "execute"
 
     CATEGORY = "WAS Suite/Text/Search"
@@ -10380,7 +10380,7 @@ class WAS_Find:
         if substring:
             return substring in text
 
-        return bool(re.search(pattern, text))
+        return (bool(re.search(pattern, text)),)
 
 
 
