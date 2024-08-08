@@ -10290,10 +10290,6 @@ class WAS_Text_Random_Line:
         choice = random.choice(lines)
         return (choice, )
 
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
-
 
 # Text Concatenate
 
