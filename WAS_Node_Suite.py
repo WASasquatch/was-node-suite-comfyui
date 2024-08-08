@@ -2831,7 +2831,7 @@ class WAS_Image_Filters:
                     pil_image = pil_image.filter(ImageFilter.DETAIL)
 
                 # Output image
-                out_image = (pil2tensor(pil_image) if pil_image else img)
+                out_image = (pil2tensor(pil_image) if pil_image else img.unsqueeze(0))
 
                 tensors.append(out_image)
 
