@@ -6285,8 +6285,6 @@ class WAS_Film_Grain:
         return img_highlights
 
 
-
-
 # IMAGE FLIP NODE
 
 class WAS_Image_Flip:
