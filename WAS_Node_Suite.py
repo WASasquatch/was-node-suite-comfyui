@@ -14485,36 +14485,28 @@ if os.path.exists(BKAdvCLIP_dir):
         cstr('`CLIPTextEncode (BlenderNeko Advanced + NSP)` node enabled under `WAS Suite/Conditioning` menu.').msg.print()
 
 # opencv-python-headless handling
-if 'opencv-python' in packages() or 'opencv-python-headless' in packages():
-    try:
-        import cv2
-        build_info = ' '.join(cv2.getBuildInformation().split())
-        if "FFMPEG: YES" in build_info:
-            if was_config.__contains__('show_startup_junk'):
-                if was_config['show_startup_junk']:
-                    cstr("OpenCV Python FFMPEG support is enabled").msg.print()
-            if was_config.__contains__('ffmpeg_bin_path'):
-                if was_config['ffmpeg_bin_path'] == "/path/to/ffmpeg":
-                    cstr(f"`ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}` config file. Will attempt to use system ffmpeg binaries if available.").warning.print()
-                else:
-                    if was_config.__contains__('show_startup_junk'):
-                        if was_config['show_startup_junk']:
-                            cstr(f"`ffmpeg_bin_path` is set to: {was_config['ffmpeg_bin_path']}").msg.print()
-        else:
-            cstr(f"OpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.").warning.print()
-    except ImportError:
-        cstr("OpenCV Python module cannot be found. Attempting install...").warning.print()
-        install_package(
-            package='opencv-python-headless[ffmpeg]',
-            uninstall_first=['opencv-python', 'opencv-python-headless[ffmpeg]']
-        )
-        try:
-            import cv2
-            cstr("OpenCV Python installed.").msg.print()
-        except ImportError:
-            cstr("OpenCV Python module still cannot be imported. There is a system conflict.").error.print()
-else:
-    install_package('opencv-python-headless[ffmpeg]')
+try:
+    import cv2
+    build_info = ' '.join(cv2.getBuildInformation().split())
+    if "FFMPEG: YES" in build_info:
+        if was_config.__contains__('show_startup_junk'):
+            if was_config['show_startup_junk']:
+                cstr("OpenCV Python FFMPEG support is enabled").msg.print()
+        if was_config.__contains__('ffmpeg_bin_path'):
+            if was_config['ffmpeg_bin_path'] == "/path/to/ffmpeg":
+                cstr(f"`ffmpeg_bin_path` is not set in `{WAS_CONFIG_FILE}` config file. Will attempt to use system ffmpeg binaries if available.").warning.print()
+            else:
+                if was_config.__contains__('show_startup_junk'):
+                    if was_config['show_startup_junk']:
+                        cstr(f"`ffmpeg_bin_path` is set to: {was_config['ffmpeg_bin_path']}").msg.print()
+    else:
+        cstr(f"OpenCV Python FFMPEG support is not enabled\033[0m. OpenCV Python FFMPEG support, and FFMPEG binaries is required for video writing.").warning.print()
+except ImportError:
+    cstr("OpenCV Python module cannot be found. Attempting install...").warning.print()
+    install_package(
+        package='opencv-python-headless[ffmpeg]',
+        uninstall_first=['opencv-python', 'opencv-python-headless[ffmpeg]']
+    )
     try:
         import cv2
         cstr("OpenCV Python installed.").msg.print()
