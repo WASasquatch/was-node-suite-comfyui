@@ -11045,6 +11045,9 @@ class WAS_Text_Load_Line_From_File:
 
     def load_file(self, file_path='', dictionary_name='[filename]', label='TextBatch',
                   mode='automatic', index=0, multiline_text=None):
+        # Expand environment variables in the file path
+        file_path = os.path.expandvars(file_path)
+                      
         if multiline_text is not None:
             lines = multiline_text.strip().split('\n')
             if mode == 'index':
