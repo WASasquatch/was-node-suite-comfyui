@@ -10980,6 +10980,8 @@ class WAS_Text_Load_From_File:
     CATEGORY = "WAS Suite/IO"
 
     def load_file(self, file_path='', dictionary_name='[filename]]'):
+        # Expand environment variables in the file path
+        file_path = os.path.expandvars(file_path)
 
         filename = ( os.path.basename(file_path).split('.', 1)[0]
             if '.' in os.path.basename(file_path) else os.path.basename(file_path) )
