@@ -6212,16 +6212,19 @@ class WAS_Image_Levels:
 
         def adjust(self, im):
 
-            im_arr = np.array(im)
+            im_arr = np.array(im).astype(np.float32)
             im_arr[im_arr < self.min_level] = self.min_level
             im_arr = (im_arr - self.min_level) * \
                 (255 / (self.max_level - self.min_level))
-            im_arr[im_arr < 0] = 0
-            im_arr[im_arr > 255] = 255
+            im_arr = np.clip(im_arr, 0, 255)
+
+            # mid-level adjustment
+            gamma = math.log(0.5) / math.log((self.mid_level - self.min_level) / (self.max_level - self.min_level))
+            im_arr = np.power(im_arr / 255, gamma) * 255
+
             im_arr = im_arr.astype(np.uint8)
 
             im = Image.fromarray(im_arr)
-            im = ImageOps.autocontrast(im, cutoff=self.max_level)
 
             return im
 
