@@ -5596,7 +5596,10 @@ class WAS_Image_Threshold:
     CATEGORY = "WAS Suite/Image/Process"
 
     def image_threshold(self, image, threshold=0.5):
-        return (pil2tensor(self.apply_threshold(tensor2pil(image), threshold)), )
+        images = []
+        for img in image:
+            images.append(pil2tensor(self.apply_threshold(tensor2pil(img), threshold)))
+        return (torch.cat(images, dim=0), )
 
     def apply_threshold(self, input_image, threshold=0.5):
         # Convert the input image to grayscale
