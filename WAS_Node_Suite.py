@@ -10288,11 +10288,6 @@ class WAS_Text_Random_Line:
         choice = random.choice(lines)
         return (choice, )
 
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
-
-
 # Text Concatenate
 
 class WAS_Text_Concatenate:
@@ -10522,10 +10517,6 @@ class WAS_Search_and_Replace_Input:
             count += 1
         return (new_text, count, float(count), int(count))
 
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
-
 
 # Text Search and Replace By Dictionary
 
@@ -10566,10 +10557,6 @@ class WAS_Search_and_Replace_Dictionary:
                     random.seed(seed)
 
         return (new_text, )
-
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
 
 
 # Text Parse NSP
@@ -12139,12 +12126,6 @@ class WAS_Random_Number:
 
         # Return number
         return (number, float(number), round(number))
-
-    @classmethod
-    def IS_CHANGED(cls, seed, **kwargs):
-        m = hashlib.sha256()
-        m.update(seed)
-        return m.digest().hex()
 
 # TRUE RANDOM NUMBER
 
