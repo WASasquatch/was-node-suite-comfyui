@@ -10632,7 +10632,8 @@ class WAS_Text_Save:
             },
             "optional": {
                 "file_extension": ("STRING", {"default": ".txt"}),
-                "encoding": ("STRING", {"default": "utf-8"})
+                "encoding": ("STRING", {"default": "utf-8"}),
+                "filename_suffix": ("STRING", {"default": ""})
             }
         }
 
@@ -10641,7 +10642,8 @@ class WAS_Text_Save:
     FUNCTION = "save_text_file"
     CATEGORY = "WAS Suite/IO"
 
-    def save_text_file(self, text, path, filename_prefix='ComfyUI', filename_delimiter='_', filename_number_padding=4, file_extension='.txt', encoding='utf-8'):
+    def save_text_file(self, text, path, filename_prefix='ComfyUI', filename_delimiter='_', 
+                       filename_number_padding=4, file_extension='.txt', encoding='utf-8', filename_suffix=''):
         tokens = TextTokens()
         path = tokens.parseTokens(path)
         filename_prefix = tokens.parseTokens(filename_prefix)
@@ -10658,32 +10660,44 @@ class WAS_Text_Save:
 
         delimiter = filename_delimiter
         number_padding = int(filename_number_padding)
-        filename = self.generate_filename(path, filename_prefix, delimiter, number_padding, file_extension)
+        filename = self.generate_filename(path, filename_prefix, delimiter, number_padding, file_extension, filename_suffix)
         file_path = os.path.join(path, filename)
         self.write_text_file(file_path, text, encoding)
         update_history_text_files(file_path)
         return (text, {"ui": {"string": text}})
 
-    def generate_filename(self, path, prefix, delimiter, number_padding, extension):
+    def generate_filename(self, path, prefix, delimiter, number_padding, extension, suffix):
         if number_padding == 0:
             # If number_padding is 0, don't use a numerical suffix
-            filename = f"{prefix}{extension}"
+            filename = f"{prefix}{suffix}{extension}"
         else:
-            pattern = f"{re.escape(prefix)}{re.escape(delimiter)}(\\d{{{number_padding}}})"
+            if delimiter:
+                pattern = f"{re.escape(prefix)}{re.escape(delimiter)}(\\d{{{number_padding}}}){re.escape(suffix)}{re.escape(extension)}"
+            else:
+                pattern = f"{re.escape(prefix)}(\\d{{{number_padding}}}){re.escape(suffix)}{re.escape(extension)}"
+
             existing_counters = [
                 int(re.search(pattern, filename).group(1))
                 for filename in os.listdir(path)
-                if re.match(pattern, filename)
+                if re.match(pattern, filename) and filename.endswith(extension)
             ]
-            existing_counters.sort(reverse=True)
+            existing_counters.sort()
             if existing_counters:
-                counter = existing_counters[0] + 1
+                counter = existing_counters[-1] + 1
             else:
                 counter = 1
-            filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
+            if delimiter:
+                filename = f"{prefix}{delimiter}{counter:0{number_padding}}{suffix}{extension}"
+            else:
+                filename = f"{prefix}{counter:0{number_padding}}{suffix}{extension}"
+            
             while os.path.exists(os.path.join(path, filename)):
                 counter += 1
-                filename = f"{prefix}{delimiter}{counter:0{number_padding}}{extension}"
+                if delimiter:
+                    filename = f"{prefix}{delimiter}{counter:0{number_padding}}{suffix}{extension}"
+                else:
+                    filename = f"{prefix}{counter:0{number_padding}}{suffix}{extension}"
+                    
         return filename
 
     def write_text_file(self, file, content, encoding):
