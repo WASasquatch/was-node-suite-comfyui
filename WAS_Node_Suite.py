@@ -13032,7 +13032,7 @@ class WAS_Latent_Size_To_Number:
         }
 
     RETURN_TYPES = ("NUMBER", "NUMBER", "FLOAT", "FLOAT", "INT", "INT")
-    RETURN_NAMES = ("tensor_w_num","tensor_h_num")
+    RETURN_NAMES = ("tensor_w_num","tensor_h_num","tensor_w_float","tensor_h_float","tensor_w_int","tensor_h_int")
     FUNCTION = "latent_width_height"
 
     CATEGORY = "WAS Suite/Number/Operations"
