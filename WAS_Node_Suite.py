@@ -5270,6 +5270,7 @@ class WAS_Load_Image_Batch:
         return {
             "required": {
                 "mode": (["single_image", "incremental_image", "random"],),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "index": ("INT", {"default": 0, "min": 0, "max": 150000, "step": 1}),
                 "label": ("STRING", {"default": 'Batch 001', "multiline": False}),
                 "path": ("STRING", {"default": '', "multiline": False}),
@@ -5287,7 +5288,7 @@ class WAS_Load_Image_Batch:
 
     CATEGORY = "WAS Suite/IO"
 
-    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", label='Batch 001', allow_RGBA_output='false', filename_text_extension='true'):
+    def load_batch_images(self, path, pattern='*', index=0, mode="single_image", seed=0, label='Batch 001', allow_RGBA_output='false', filename_text_extension='true'):
 
         allow_RGBA_output = (allow_RGBA_output == 'true')
 
@@ -5306,6 +5307,7 @@ class WAS_Load_Image_Batch:
                 cstr(f"No valid image was found for the next ID. Did you remove images from the source directory?").error.print()
                 return (None, None)
         else:
+            random.seed(seed)
             newindex = int(random.random() * len(fl.image_paths))
             image, filename = fl.get_image_by_id(newindex)
             if image == None:
