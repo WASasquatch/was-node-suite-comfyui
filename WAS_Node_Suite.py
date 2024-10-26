@@ -10380,9 +10380,9 @@ class WAS_Find:
 
     def execute(self, text, substring, pattern):
         if substring:
-            return substring in text
+            return (substring in text, )
 
-        return bool(re.search(pattern, text))
+        return (bool(re.search(pattern, text)), )
 
 
 
