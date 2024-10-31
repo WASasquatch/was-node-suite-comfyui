@@ -3495,6 +3495,7 @@ class WAS_Image_Paste_Crop:
             }
 
     RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("IMAGE", "MASK")
     FUNCTION = "image_paste_crop"
 
     CATEGORY = "WAS Suite/Image/Process"
@@ -3603,6 +3604,7 @@ class WAS_Image_Paste_Crop_Location:
             }
 
     RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("IMAGE", "MASK")
     FUNCTION = "image_paste_crop_location"
 
     CATEGORY = "WAS Suite/Image/Process"
@@ -5496,6 +5498,7 @@ class WAS_Image_Padding:
         }
 
     RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("IMAGE", "MASK")
     FUNCTION = "image_padding"
 
     CATEGORY = "WAS Suite/Image/Transform"
@@ -7949,6 +7952,7 @@ class WAS_Mask_Paste_Region:
         }
 
     RETURN_TYPES = ("MASK", "MASK")
+    RETURN_NAMES = ("RESULT_MASK", "CROP_MASK")
     FUNCTION = "mask_paste_region"
 
     CATEGORY = "WAS Suite/Image/Masking"
@@ -8915,6 +8919,7 @@ class MiDaS_Background_Foreground_Removal:
         }
 
     RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("RESULT", "DEPTH")
     FUNCTION = "midas_remove"
 
     CATEGORY = "WAS Suite/Image/AI"
@@ -10078,6 +10083,7 @@ class WAS_Text_String:
             }
         }
     RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("TEXT", "TEXT_B", "TEXT_C", "TEXT_D")
     FUNCTION = "text_string"
 
     CATEGORY = "WAS Suite/Text"
@@ -10116,6 +10122,7 @@ class WAS_Text_String_Truncate:
             }
         }
     RETURN_TYPES = (TEXT_TYPE,TEXT_TYPE,TEXT_TYPE,TEXT_TYPE)
+    RETURN_NAMES = ("TEXT", "TEXT_B", "TEXT_C", "TEXT_D")
     FUNCTION = "truncate_string"
 
     CATEGORY = "WAS Suite/Text/Operations"
@@ -11327,6 +11334,7 @@ class WAS_BLIP_Analyze_Image:
         }
 
     RETURN_TYPES = (TEXT_TYPE, TEXT_TYPE)
+    RETURN_NAMES = ("FULL_CAPTIONS", "CAPTIONS")
     OUTPUT_IS_LIST = (False, True)
 
     FUNCTION = "blip_caption_image"
