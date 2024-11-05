@@ -12226,6 +12226,10 @@ class WAS_Bounded_Image_Crop_With_Mask:
                 "padding_right": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
                 "padding_top": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
                 "padding_bottom": ("INT", {"default": 64, "min": 0, "max": 0xffffffffffffffff}),
+                
+            },
+            "optional":{
+                "return_list": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -12234,7 +12238,7 @@ class WAS_Bounded_Image_Crop_With_Mask:
 
     CATEGORY = "WAS Suite/Image/Bound"
 
-    def bounded_image_crop_with_mask(self, image, mask, padding_left, padding_right, padding_top, padding_bottom):
+    def bounded_image_crop_with_mask(self, image, mask, padding_left, padding_right, padding_top, padding_bottom,return_list=False):
         # Ensure we are working with batches
         image = image.unsqueeze(0) if image.dim() == 3 else image
         mask = mask.unsqueeze(0) if mask.dim() == 2 else mask
@@ -12261,8 +12265,9 @@ class WAS_Bounded_Image_Crop_With_Mask:
             # Even if only a single mask, create a bounds for each cropped image
             all_bounds.append([rmin, rmax, cmin, cmax])
             cropped_images.append(image[i][rmin:rmax+1, cmin:cmax+1, :])
-
-            return torch.stack(cropped_images), all_bounds
+        if return_list:
+            return cropped_images, all_bounds
+        return torch.stack(cropped_images), all_bounds
 
 # DEBUG IMAGE BOUNDS TO CONSOLE
 
