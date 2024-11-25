@@ -6227,7 +6227,10 @@ class WAS_Image_Levels:
             im_arr = np.clip(im_arr, 0, 255)
 
             # mid-level adjustment
-            gamma = math.log(0.5) / math.log((self.mid_level - self.min_level) / (self.max_level - self.min_level))
+            if self.mid_level <= self.min_level:  
+                gamma = 1.0
+            else:
+                gamma = math.log(0.5) / math.log((self.mid_level - self.min_level) / (self.max_level - self.min_level))
             im_arr = np.power(im_arr / 255, gamma) * 255
 
             im_arr = im_arr.astype(np.uint8)
