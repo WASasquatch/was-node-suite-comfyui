@@ -8141,8 +8141,8 @@ class WAS_Mask_Rect_Area:
             "required": {
                 "x": ("INT", {"default": 0, "min": 0, "max": 100, "step": 1}),
                 "y": ("INT", {"default": 0, "min": 0, "max": 100, "step": 1}),
-                "w": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
-                "h": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
+                "width": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
+                "height": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
                 "blur_radius": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
             },
             "hidden": {"extra_pnginfo": "EXTRA_PNGINFO", "unique_id": "UNIQUE_ID"}
@@ -8159,8 +8159,8 @@ class WAS_Mask_Rect_Area:
         # Get node values
         min_x = kwargs["x"] / 100
         min_y = kwargs["y"] / 100
-        width = kwargs["w"] / 100
-        height = kwargs["h"] / 100
+        width = kwargs["width"] / 100
+        height = kwargs["height"] / 100
         blur_radius = kwargs["blur_radius"]
 
         # Create a mask with standard resolution (e.g., 512x512)
@@ -8208,8 +8208,8 @@ class WAS_Mask_Rect_Area_Advanced:
             "required": {
                 "x": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 64}),
                 "y": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 64}),
-                "w": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
-                "h": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
+                "width": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
+                "height": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
                 "image_width": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64}),
                 "image_height": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64}),
                 "blur_radius": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
@@ -8228,8 +8228,8 @@ class WAS_Mask_Rect_Area_Advanced:
          # Get node values
         min_x = kwargs["x"]
         min_y = kwargs["y"]
-        width = kwargs["w"]
-        height = kwargs["h"]
+        width = kwargs["width"]
+        height = kwargs["height"]
         image_width = kwargs["image_width"]
         image_height = kwargs["image_height"]
         blur_radius = kwargs["blur_radius"]
