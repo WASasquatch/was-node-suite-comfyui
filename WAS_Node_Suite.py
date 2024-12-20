@@ -8127,6 +8127,140 @@ class WAS_Mask_Minority_Region:
             return (region_tensor,)
 
 
+# MASK RECT AREA
+
+class WAS_Mask_Rect_Area:
+    # Creates a rectangle mask using percentage.
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "x": ("INT", {"default": 0, "min": 0, "max": 100, "step": 1}),
+                "y": ("INT", {"default": 0, "min": 0, "max": 100, "step": 1}),
+                "width": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
+                "height": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
+                "blur_radius": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
+            },
+            "hidden": {"extra_pnginfo": "EXTRA_PNGINFO", "unique_id": "UNIQUE_ID"}
+        }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "rect_mask"
+
+    def rect_mask(self, extra_pnginfo, unique_id, **kwargs):
+        # Get node values
+        min_x = kwargs["x"] / 100
+        min_y = kwargs["y"] / 100
+        width = kwargs["width"] / 100
+        height = kwargs["height"] / 100
+        blur_radius = kwargs["blur_radius"]
+
+        # Create a mask with standard resolution (e.g., 512x512)
+        resolution = 512
+        mask = torch.zeros((resolution, resolution))
+
+        # Calculate pixel coordinates
+        min_x_px = int(min_x * resolution)
+        min_y_px = int(min_y * resolution)
+        max_x_px = int((min_x + width) * resolution)
+        max_y_px = int((min_y + height) * resolution)
+
+        # Draw the rectangle on the mask
+        mask[min_y_px:max_y_px, min_x_px:max_x_px] = 1
+
+        # Apply blur if the radii are greater than 0
+        if blur_radius > 0:
+            dx = blur_radius * 2 + 1
+            dy = blur_radius * 2 + 1
+
+            # Convert the mask to a format compatible with OpenCV (numpy array)
+            mask_np = mask.cpu().numpy().astype("float32")
+
+            # Apply Gaussian Blur
+            blurred_mask = cv2.GaussianBlur(mask_np, (dx, dy), 0)
+
+            # Convert back to tensor
+            mask = torch.from_numpy(blurred_mask)
+
+        # Return the mask as a tensor with an additional channel
+        return (mask.unsqueeze(0),)
+
+
+# MASK RECT AREA ADVANCED
+
+class WAS_Mask_Rect_Area_Advanced:
+    # Creates a rectangle mask using pixels relative to image size.
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "x": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 64}),
+                "y": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 64}),
+                "width": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
+                "height": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
+                "image_width": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64}),
+                "image_height": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64}),
+                "blur_radius": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
+            },
+            "hidden": {"extra_pnginfo": "EXTRA_PNGINFO", "unique_id": "UNIQUE_ID"}
+        }
+
+    CATEGORY = "WAS Suite/Image/Masking"
+
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("MASKS",)
+
+    FUNCTION = "rect_mask_adv"
+
+    def rect_mask_adv(self, extra_pnginfo, unique_id, **kwargs):
+         # Get node values
+        min_x = kwargs["x"]
+        min_y = kwargs["y"]
+        width = kwargs["width"]
+        height = kwargs["height"]
+        image_width = kwargs["image_width"]
+        image_height = kwargs["image_height"]
+        blur_radius = kwargs["blur_radius"]
+
+        # Calculate maximum coordinates
+        max_x = min_x + width
+        max_y = min_y + height
+
+        # Create a mask with the image dimensions
+        mask = torch.zeros((image_height, image_width))
+
+        # Draw the rectangle on the mask
+        mask[int(min_y):int(max_y), int(min_x):int(max_x)] = 1
+
+        # Apply blur if the radii are greater than 0
+        if blur_radius > 0:
+            dx = blur_radius * 2 + 1
+            dy = blur_radius * 2 + 1
+
+            # Convert the mask to a format compatible with OpenCV (numpy array)
+            mask_np = mask.cpu().numpy().astype("float32")
+
+            # Apply Gaussian Blur
+            blurred_mask = cv2.GaussianBlur(mask_np, (dx, dy), 0)
+
+            # Convert back to tensor
+            mask = torch.from_numpy(blurred_mask)
+
+        # Return the mask as a tensor with an additional channel
+        return (mask.unsqueeze(0),)
+
 
 # MASK ARBITRARY REGION
 
@@ -14367,6 +14501,8 @@ NODE_CLASS_MAPPINGS = {
     "Mask Gaussian Region": WAS_Mask_Gaussian_Region,
     "Mask Invert": WAS_Mask_Invert,
     "Mask Minority Region": WAS_Mask_Minority_Region,
+    "Mask Rect Area": WAS_Mask_Rect_Area,
+    "Mask Rect Area (Advanced)": WAS_Mask_Rect_Area_Advanced,
     "Mask Smooth Region": WAS_Mask_Smooth_Region,
     "Mask Threshold Region": WAS_Mask_Threshold_Region,
     "Masks Combine Regions": WAS_Mask_Combine,

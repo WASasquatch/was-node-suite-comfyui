@@ -183,6 +183,8 @@
  - Mask Floor Region: Return the lower most pixel values as white (255)
  - Mask Threshold Region: Apply a thresholded image between a black value and white value
  - Mask Gaussian Region: Apply a Gaussian blur to the mask
+ - Mask Rect Area: Create a rectangular mask defined by percentages.
+ - Mask Rect Area (Advanced): Create a rectangular mask defined by pixels and image size.
  - Masks Combine Masks: Combine 2 or more masks into one mask.
  - Masks Combine Batch: Combine batched masks into one mask.
  - Model Input Switch: Switch between two model inputs based on a boolean switch
