@@ -8139,6 +8139,11 @@ class WAS_Mask_Rect_Area:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "x": ("INT", {"default": 0, "min": 0, "max": 100, "step": 1}),
+                "y": ("INT", {"default": 0, "min": 0, "max": 100, "step": 1}),
+                "w": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
+                "h": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}),
+                "blur_radius": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
             },
             "hidden": {"extra_pnginfo": "EXTRA_PNGINFO", "unique_id": "UNIQUE_ID"}
         }
@@ -8151,20 +8156,12 @@ class WAS_Mask_Rect_Area:
     FUNCTION = "rect_mask"
 
     def rect_mask(self, extra_pnginfo, unique_id, **kwargs):
-        # search for node
-        node_found = False
-        for node in extra_pnginfo["workflow"]["nodes"]:
-            if node["id"] == int(unique_id):
-                min_x = node["properties"].get("x", 0) / 100
-                min_y = node["properties"].get("y", 0) / 100
-                width = node["properties"].get("w", 0) / 100
-                height = node["properties"].get("h", 0) / 100
-                blur_radius = node["properties"].get("blur_radius", 0)
-                node_found = True
-                break
-
-        if not node_found:
-            raise ValueError("No node found with unique_id {unique_id}.")
+        # Get node values
+        min_x = kwargs["x"] / 100
+        min_y = kwargs["y"] / 100
+        width = kwargs["w"] / 100
+        height = kwargs["h"] / 100
+        blur_radius = kwargs["blur_radius"]
 
         # Create a mask with standard resolution (e.g., 512x512)
         resolution = 512
@@ -8209,6 +8206,13 @@ class WAS_Mask_Rect_Area_Advanced:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "x": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 64}),
+                "y": ("INT", {"default": 0, "min": 0, "max": 4096, "step": 64}),
+                "w": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
+                "h": ("INT", {"default": 256, "min": 0, "max": 4096, "step": 64}),
+                "image_width": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64}),
+                "image_height": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64}),
+                "blur_radius": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
             },
             "hidden": {"extra_pnginfo": "EXTRA_PNGINFO", "unique_id": "UNIQUE_ID"}
         }
@@ -8221,22 +8225,14 @@ class WAS_Mask_Rect_Area_Advanced:
     FUNCTION = "rect_mask_adv"
 
     def rect_mask_adv(self, extra_pnginfo, unique_id, **kwargs):
-        # search for node
-        node_found = False
-        for node in extra_pnginfo["workflow"]["nodes"]:
-            if node["id"] == int(unique_id):
-                min_x = node["properties"]["x"]
-                min_y = node["properties"]["y"]
-                width = node["properties"]["w"]
-                height = node["properties"]["h"]
-                image_width = node["properties"]["width"]
-                image_height = node["properties"]["height"]
-                blur_radius = node["properties"]["blur_radius"]
-                node_found = True
-                break
-
-        if not node_found:
-            raise ValueError("No node found with unique_id {unique_id}.")
+         # Get node values
+        min_x = kwargs["x"]
+        min_y = kwargs["y"]
+        width = kwargs["w"]
+        height = kwargs["h"]
+        image_width = kwargs["image_width"]
+        image_height = kwargs["image_height"]
+        blur_radius = kwargs["blur_radius"]
 
         # Calculate maximum coordinates
         max_x = min_x + width
