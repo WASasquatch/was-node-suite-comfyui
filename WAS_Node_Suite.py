@@ -8749,18 +8749,29 @@ class WAS_Mask_Combine:
     FUNCTION = "combine_masks"
 
     def combine_masks(self, mask_a, mask_b, mask_c=None, mask_d=None, mask_e=None, mask_f=None):
-        masks = [mask_a, mask_b]
-        if mask_c:
-            masks.append(mask_c)
-        if mask_d:
-            masks.append(mask_d)
-        if mask_e:
-            masks.append(mask_e)
-        if mask_f:
-            masks.append(mask_f)
-        combined_mask = torch.sum(torch.stack(masks, dim=0), dim=0)
-        combined_mask = torch.clamp(combined_mask, 0, 1)  # Ensure values are between 0 and 1
-        return (combined_mask, )
+        # Gather all masks in a list
+        masks = [m for m in [mask_a, mask_b, mask_c, mask_d, mask_e, mask_f] if m is not None]
+
+        # Skip any masks that are the known "empty" shape [1, 64, 64] from "Preview" etc
+        # (You can also use a sum-of-pixels check, or other logic.)
+        valid_masks = [m for m in masks if m.shape != (1, 64, 64)]
+        # cstr(f"mask shapes: ... `{valid_masks}`").msg.print()
+
+        # If no valid masks, decide on a fallback
+        if len(valid_masks) == 0:
+            # Could return a zeroed-out mask, or just return mask_a, or raise a warning
+            # Return mask_a so we don't break the graph
+            return (mask_a, )
+
+        # If there is exactly one valid mask, no combine needed
+        if len(valid_masks) == 1:
+            return (valid_masks[0], )
+
+        # Otherwise stack, sum, clamp
+        combined_mask = torch.sum(torch.stack(valid_masks, dim=0), dim=0)
+        combined_mask = torch.clamp(combined_mask, 0, 1)  # Keep values in 0..1
+
+        return (combined_mask,)
 
 class WAS_Mask_Combine_Batch:
 
