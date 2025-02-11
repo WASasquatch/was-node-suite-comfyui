@@ -1,5 +1,5 @@
 [project]
-name = "pr-was-node-suite-comfyui-47064894"
+name = "was-node-suite-comfyui"
 description = ""
 version = "1.0.2"
 license = { file = "LICENSE" }
