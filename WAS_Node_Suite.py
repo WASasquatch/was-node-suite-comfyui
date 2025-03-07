@@ -7445,7 +7445,7 @@ class WAS_Image_Save:
                              quality=quality, lossless=lossless_webp, exif=exif_data)
                 elif extension == 'png':
                     img.save(output_file,
-                             pnginfo=exif_data, optimize=optimize_image)
+                             pnginfo=exif_data, optimize=optimize_image, dpi=(dpi, dpi))
                 elif extension == 'bmp':
                     img.save(output_file)
                 elif extension == 'tiff':
