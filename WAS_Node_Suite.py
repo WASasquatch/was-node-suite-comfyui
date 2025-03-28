@@ -10721,7 +10721,8 @@ class WAS_Search_and_Replace_Dictionary:
             tkey = f'{replacement_key}{term}{replacement_key}'
             tcount = new_text.count(tkey)
             for _ in range(tcount):
-                new_text = new_text.replace(tkey, random.choice(dictionary[term]), 1)
+                _replace_value = random.choice(dictionary[term]) if isinstance(dictionary[term], list) else dictionary[term]
+                new_text = new_text.replace(tkey, _replace_value, 1)
                 if seed > 0 or seed < 0:
                     seed = seed + 1
                     random.seed(seed)
