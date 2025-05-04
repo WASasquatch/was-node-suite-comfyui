@@ -12629,7 +12629,7 @@ class WAS_Number_Counter:
         return {
             "required": {
                 "number_type": (["integer", "float"],),
-                "mode": (["increment", "decrement", "increment_to_stop", "decrement_to_stop"],),
+                "mode": (["increment", "decrement", "increment_to_stop", "decrement_to_stop", "reset_after_stop"],),
                 "start": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
                 "stop": ("FLOAT", {"default": 0, "min": -18446744073709551615, "max": 18446744073709551615, "step": 0.01}),
                 "step": ("FLOAT", {"default": 1, "min": 0, "max": 99999, "step": 0.01}),
@@ -12669,6 +12669,8 @@ class WAS_Number_Counter:
             counter = counter + step if counter < stop else counter
         elif mode == 'decrement_to_stop':
             counter = counter - step if counter > stop else counter
+        elif mode == 'reset_after_stop':
+            counter = counter + step if counter < stop else start + step
 
         self.counters[unique_id] = counter
 
