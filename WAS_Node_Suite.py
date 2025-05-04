@@ -12526,7 +12526,7 @@ class WAS_True_Random_Number:
 
     CATEGORY = "WAS Suite/Number"
 
-    def return_true_randm_number(self, api_key=None, minimum=0, maximum=10):
+    def return_true_randm_number(self, api_key=None, minimum=0, maximum=10, mode="random"):
 
         # Get Random Number
         number = self.get_random_numbers(api_key=api_key, minimum=minimum, maximum=maximum)[0]
