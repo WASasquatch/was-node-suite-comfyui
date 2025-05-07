@@ -13524,7 +13524,7 @@ class WAS_VAE_Input_Switch:
 
     CATEGORY = "WAS Suite/Logic"
 
-    def vae_switch(self, vae_a, vae_b, boolean=True):
+    def vae_switch(self, vae_a, vae_b, boolean=True, **kwargs):
 
         if boolean:
             return (vae_a, )
