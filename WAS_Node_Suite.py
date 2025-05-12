@@ -7403,7 +7403,7 @@ class WAS_Image_Save:
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
 
             # Delegate metadata/pnginfo
-            if extension == 'webp':
+            if extension == 'webp' or extension in ["jpg", "jpeg"]:
                 img_exif = img.getexif()
                 if embed_workflow == 'true':
                     workflow_metadata = ''
@@ -7442,7 +7442,7 @@ class WAS_Image_Save:
                 output_file = os.path.abspath(os.path.join(output_path, file))
                 if extension in ["jpg", "jpeg"]:
                     img.save(output_file,
-                             quality=quality, optimize=optimize_image, dpi=(dpi, dpi))
+                             quality=quality, optimize=optimize_image, dpi=(dpi, dpi), exif=exif_data)
                 elif extension == 'webp':
                     img.save(output_file,
                              quality=quality, lossless=lossless_webp, exif=exif_data)
