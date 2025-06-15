@@ -6269,24 +6269,27 @@ class WAS_Film_Grain:
         return (pil2tensor(self.apply_film_grain(tensor2pil(image), density, intensity, highlights, supersample_factor)), )
 
     def apply_film_grain(self, img, density=0.1, intensity=1.0, highlights=1.0, supersample_factor=4):
-        """
-        Apply grayscale noise with specified density, intensity, and highlights to a PIL image.
-        """
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        #Apply grayscale noise with specified density, intensity, and highlights to a PIL image.
         img_gray = img.convert('L')
         original_size = img.size
         img_gray = img_gray.resize(
             ((img.size[0] * supersample_factor), (img.size[1] * supersample_factor)), Image.Resampling(2))
         num_pixels = int(density * img_gray.size[0] * img_gray.size[1])
 
-        noise_pixels = []
-        for i in range(num_pixels):
-            x = random.randint(0, img_gray.size[0]-1)
-            y = random.randint(0, img_gray.size[1]-1)
-            noise_pixels.append((x, y))
-
-        for x, y in noise_pixels:
-            value = random.randint(0, 255)
-            img_gray.putpixel((x, y), value)
+        img_gray_tensor = torch.from_numpy(np.array(img_gray).astype(np.float32) / 255.0).to(device)
+        img_gray_flat = img_gray_tensor.view(-1)
+        num_pixels = int(density * img_gray_flat.numel())
+        indices = torch.randint(0, img_gray_flat.numel(), (num_pixels,), device=img_gray_flat.device)
+        values = torch.randint(0, 256, (num_pixels,), device=img_gray_flat.device, dtype=torch.float32) / 255.0
+        
+        img_gray_flat[indices] = values
+        img_gray = img_gray_flat.view(img_gray_tensor.shape)
+        
+        img_gray_np = (img_gray.cpu().numpy() * 255).astype(np.uint8)
+        img_gray = Image.fromarray(img_gray_np)
 
         img_noise = img_gray.convert('RGB')
         img_noise = img_noise.filter(ImageFilter.GaussianBlur(radius=0.125))
@@ -6296,7 +6299,6 @@ class WAS_Film_Grain:
         enhancer = ImageEnhance.Brightness(img_final)
         img_highlights = enhancer.enhance(highlights)
 
-        # Return the final image
         return img_highlights
 
 
