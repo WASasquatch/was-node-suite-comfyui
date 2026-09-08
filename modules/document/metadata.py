@@ -6,7 +6,7 @@ word and character counts are not fields here.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Any, Mapping
@@ -33,6 +33,15 @@ STAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 #: part of it: the container states its own version, and a support question about a file is
 #: answered by that rather than by the build that happened to write it.
 GENERATOR = "WAS Node Suite"
+
+
+def _empty_custom() -> Mapping[str, str]:
+    """A fresh read-only mapping for :attr:`Metadata.custom`.
+
+    ``MappingProxyType`` is mutable in the sense dataclasses forbid as a default, so it is
+    produced by a factory rather than given as one.
+    """
+    return MappingProxyType({})
 
 
 @dataclass(frozen=True)
@@ -69,7 +78,7 @@ class Metadata:
     created: str = ""
     modified: str = ""
     generator: str = ""
-    custom: Mapping[str, str] = MappingProxyType({})
+    custom: Mapping[str, str] = field(default_factory=_empty_custom)
 
     def __post_init__(self) -> None:
         # Both collections are normalized here rather than at every call site, and both end
