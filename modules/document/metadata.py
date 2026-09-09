@@ -6,7 +6,7 @@ word and character counts are not fields here.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Any, Mapping
@@ -69,7 +69,7 @@ class Metadata:
     created: str = ""
     modified: str = ""
     generator: str = ""
-    custom: Mapping[str, str] = MappingProxyType({})
+    custom: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         # Both collections are normalized here rather than at every call site, and both end
