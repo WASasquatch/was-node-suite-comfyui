@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **457 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **463 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -52,13 +52,13 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-457 nodes across a package of source files. The pack itself needs no packages, and nothing is
+463 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 457 |
+| Nodes | 220 | 463 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 128 files: browser libraries, fonts, eight face cascades, two sets of weights and one network, each with its licence |
@@ -71,7 +71,7 @@ on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, sci
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
 belongs to an optional group.
 
-## 241 new nodes
+## 247 new nodes
 
 | Area | New | |
 |---|--:|---|
@@ -81,11 +81,12 @@ belongs to an optional group.
 | **Layers** | 20 | a layer stack on the wire, with effects, arrangement and a canvas drawn on the node |
 | **Bounds** | 10 | a region as a value: measure it, draw it, crop to it and paste the result back |
 | **HDR and linear light** | 9 | decode above white, carry range through filters, read and write EXR and DNG |
+| **Affine sampling** | 6 | scale and offset a latent through a mask, on its own or from inside a running sampler |
 | **Everything else** | 107 | image transforms, LUTs and colour, masking, numbers, text lists and dictionaries, samplers, LoRA stacks, animation, the terminology pantry and the style library |
 
 ## Nodes that show their work
 
-188 nodes draw a panel on themselves: both sides of a picture, a histogram, what a loader read
+194 nodes draw a panel on themselves: both sides of a picture, a histogram, what a loader read
 off disk, a colour ramp, a 3D view, a text editor, a contact sheet you click to pick a look.
 
 ---
@@ -134,7 +135,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**457 nodes** across 47 categories. See [`NODES.md`](NODES.md), which also groups them by the
+**463 nodes** across 47 categories. See [`NODES.md`](NODES.md), which also groups them by the
 `config.yaml` switch that gates them: [feature gates](NODES.md#feature-gates).
 
 **28 of them are deprecated**, which ComfyUI marks in the Add Node menu. Each one opens its
@@ -144,6 +145,81 @@ turn them on: [`docs/CONFIG.md`](docs/CONFIG.md#legacy) has the group table.
 
 [**Content Viewer**](#content-viewer) renders whatever is wired into it, in the graph, and takes
 view extensions of its own, such as the OpenReel video editor.
+
+---
+# Pushing texture into a generation while it is still forming
+
+**Latent Affine** multiplies a latent and adds an offset to it, but only where a mask says
+to. The mask is procedural grain, a repeating shape, a reading of the latent's own detail or
+edges, or one you wire in: 25 patterns in all, each with its own settings on **Affine
+Options**.
+
+The same transform runs *during* sampling on **Affine Sampler**, **KSampler Affine Advanced**
+and **Custom Sampler Affine Advanced**, on a curve **Affine Schedule** defines.
+
+Every stock sampler carries it except `dpm_fast`, `dpm_adaptive`, `uni_pc` and `uni_pc_bh2`,
+which sample normally.
+
+On a video latent, `temporal_mode` sets whether the mask holds still, is redrawn each frame or
+slides. The four content-aware patterns are read off the frame the model has resolved, so they
+follow the subject and ignore it.
+
+`affine_acts_on` on the Affine samplers is the setting worth understanding:
+
+| Value | Multiplies |
+|---|---|
+| `content` | Only the picture the model has resolved so far. |
+| `latent` | The whole latent, the sampler's own noise included. |
+
+`latent` also multiplies the sampler's own noise draw, which prints as grain fixed in the
+frame: 19.4 units of noise per unit of detail at 95% noise, against none for `content`. On a
+model that holds a high noise level most of the way, such as MiniMax H3 at `shift = 12.0`,
+prefer `content` and start the schedule later than the default.
+
+**Affine Pattern Noise** puts the same transform on the starting draw instead of on a latent
+part way through, so the noise carries the pattern from the first step. It replaces
+**RandomNoise** on any custom sampler and takes the same **Affine Options**. The four patterns
+read off a picture are not offered, since a starting draw has no picture to read.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Latent/Transform** and **WAS Suite/Sampling**. Graphs:
+[`affine-krea2.json`](docs/workflows/affine-krea2.json) for a still image and
+[`affine-minimax-h3-example.json`](docs/workflows/affine-minimax-h3-example.json) for the
+affine running inside a sampler on a video latent.
+
+---
+# Filling out a video scene from the starting noise
+
+**Temporal Noise Hold** replaces **RandomNoise** on any custom sampler, carrying each video
+frame's noise pattern into the next rather than drawing every frame fresh. On MiniMax H3 the
+same prompt and seed give a bare alley at `hold 2.0` and parked cars, shop doors and a lit
+background street at `25.0`.
+
+At `0.0` it matches **RandomNoise** exactly. Ancestral and SDE samplers draw fresh noise every
+step and undo it.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**.
+
+---
+# Judging one render against another
+
+**Compare Video** plays two videos on the node under a divider that drags left and right, both
+from one clock, so the same frame is shown on each side. Wire a render into each socket.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Animation**.
+
+---
+# Deciding whether part of a graph runs at all
+
+**Execution Gate** passes a value on while its switch is on. Switched off, the branch feeding
+it is never evaluated and every node after it stops, so a slow sampler upstream and a Save
+downstream both go unrun.
+
+`bypass_downstream` sets those nodes to bypass on the canvas instead, where `open` is the
+gate's own switch rather than something wired in. They are drawn as bypassed and never reach
+the run. Left off, the nodes are stopped from the run and ComfyUI draws the first of them as
+failed.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Logic**.
 
 ---
 # Running a whole folder through a graph, keeping the filenames

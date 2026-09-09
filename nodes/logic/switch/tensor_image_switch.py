@@ -16,9 +16,10 @@ class TensorImageSwitch(io.ComfyNode):
         template = io.MatchType.Template("tensor_image_switch", [io.Image, io.Mask, io.Latent])
         return io.Schema(
             node_id="WASTensorImageSwitch",
-            display_name="Tensor Image Switch",
+            display_name="Tensor Switch",
             search_aliases=[
                 "WASTensorImageSwitch",
+                "Tensor Switch",
                 "Tensor Image Switch",
                 "switch",
                 "image switch",

@@ -12,7 +12,7 @@
         100
       ],
       "size": [
-        282.798828125,
+        283,
         314
       ],
       "flags": {},
@@ -95,7 +95,7 @@
         500
       ],
       "size": [
-        282.798828125,
+        283,
         314
       ],
       "flags": {},
@@ -133,7 +133,7 @@
         900
       ],
       "size": [
-        282.798828125,
+        283,
         314
       ],
       "flags": {},
@@ -327,7 +327,7 @@
       "type": "PreviewImage",
       "pos": [
         1030,
-        340
+        416
       ],
       "size": [
         140,
@@ -407,7 +407,7 @@
       "type": "PreviewImage",
       "pos": [
         1030,
-        580
+        732
       ],
       "size": [
         140,
@@ -487,7 +487,7 @@
       "type": "PreviewImage",
       "pos": [
         1030,
-        820
+        1048
       ],
       "size": [
         140,
@@ -567,7 +567,7 @@
       "type": "PreviewImage",
       "pos": [
         1030,
-        1060
+        1364
       ],
       "size": [
         140,
@@ -727,7 +727,7 @@
       "type": "PreviewImage",
       "pos": [
         1790,
-        340
+        416
       ],
       "size": [
         140,
@@ -807,7 +807,7 @@
       "type": "PreviewImage",
       "pos": [
         1790,
-        580
+        732
       ],
       "size": [
         140,
@@ -887,7 +887,7 @@
       "type": "PreviewImage",
       "pos": [
         1790,
-        820
+        1048
       ],
       "size": [
         140,
@@ -967,7 +967,7 @@
       "type": "PreviewImage",
       "pos": [
         1790,
-        1060
+        1364
       ],
       "size": [
         140,
@@ -1004,7 +1004,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 14,
@@ -1084,7 +1084,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 15,
@@ -1127,7 +1127,7 @@
       "type": "PreviewImage",
       "pos": [
         2550,
-        340
+        416
       ],
       "size": [
         140,
@@ -1164,7 +1164,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 16,
@@ -1207,7 +1207,7 @@
       "type": "PreviewImage",
       "pos": [
         2550,
-        580
+        732
       ],
       "size": [
         140,
@@ -1244,7 +1244,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 17,
@@ -1287,7 +1287,7 @@
       "type": "PreviewImage",
       "pos": [
         2550,
-        820
+        1048
       ],
       "size": [
         140,
@@ -1324,7 +1324,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 18,
@@ -1367,7 +1367,7 @@
       "type": "PreviewImage",
       "pos": [
         2550,
-        1060
+        1364
       ],
       "size": [
         140,
@@ -1527,7 +1527,7 @@
       "type": "PreviewImage",
       "pos": [
         3310,
-        340
+        416
       ],
       "size": [
         140,
@@ -1607,7 +1607,7 @@
       "type": "PreviewImage",
       "pos": [
         3310,
-        580
+        732
       ],
       "size": [
         140,
@@ -1687,7 +1687,7 @@
       "type": "PreviewImage",
       "pos": [
         3310,
-        820
+        1048
       ],
       "size": [
         140,
@@ -1847,7 +1847,7 @@
       "type": "PreviewImage",
       "pos": [
         4070,
-        340
+        416
       ],
       "size": [
         140,
@@ -1927,7 +1927,7 @@
       "type": "PreviewImage",
       "pos": [
         4070,
-        580
+        732
       ],
       "size": [
         140,
@@ -2087,7 +2087,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        340
+        416
       ],
       "size": [
         140,
@@ -2167,7 +2167,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        580
+        732
       ],
       "size": [
         140,
@@ -2247,7 +2247,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        820
+        1048
       ],
       "size": [
         140,
@@ -2327,7 +2327,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        1060
+        1364
       ],
       "size": [
         140,
@@ -2407,7 +2407,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        1300
+        1680
       ],
       "size": [
         140,
@@ -2487,7 +2487,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        1540
+        1996
       ],
       "size": [
         140,
@@ -2567,7 +2567,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        1780
+        2312
       ],
       "size": [
         140,
@@ -2647,7 +2647,7 @@
       "type": "PreviewImage",
       "pos": [
         4830,
-        2020
+        2628
       ],
       "size": [
         140,
@@ -2684,7 +2684,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 30,
@@ -2764,7 +2764,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 31,
@@ -2807,7 +2807,7 @@
       "type": "PreviewImage",
       "pos": [
         5590,
-        340
+        416
       ],
       "size": [
         140,
@@ -2844,7 +2844,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 32,
@@ -2887,7 +2887,7 @@
       "type": "PreviewImage",
       "pos": [
         5590,
-        580
+        732
       ],
       "size": [
         140,
@@ -3047,7 +3047,7 @@
       "type": "PreviewImage",
       "pos": [
         6350,
-        340
+        416
       ],
       "size": [
         140,
@@ -3127,7 +3127,7 @@
       "type": "PreviewImage",
       "pos": [
         6350,
-        580
+        732
       ],
       "size": [
         140,
@@ -3287,7 +3287,7 @@
       "type": "PreviewImage",
       "pos": [
         7110,
-        340
+        416
       ],
       "size": [
         140,
@@ -3367,7 +3367,7 @@
       "type": "PreviewImage",
       "pos": [
         7110,
-        580
+        732
       ],
       "size": [
         140,
@@ -3527,7 +3527,7 @@
       "type": "PreviewImage",
       "pos": [
         7870,
-        340
+        416
       ],
       "size": [
         140,
@@ -3563,7 +3563,7 @@
         100
       ],
       "size": [
-        234.61484375,
+        235,
         46
       ],
       "flags": {},
@@ -3760,7 +3760,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        340
+        348
       ],
       "size": [
         270,
@@ -3807,7 +3807,7 @@
       "type": "PreviewImage",
       "pos": [
         9350,
-        340
+        416
       ],
       "size": [
         140,
@@ -3840,7 +3840,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        580
+        596
       ],
       "size": [
         270,
@@ -3887,7 +3887,7 @@
       "type": "PreviewImage",
       "pos": [
         9350,
-        580
+        732
       ],
       "size": [
         140,
@@ -3920,7 +3920,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        820
+        844
       ],
       "size": [
         270,
@@ -3967,7 +3967,7 @@
       "type": "PreviewImage",
       "pos": [
         9350,
-        820
+        1048
       ],
       "size": [
         140,
@@ -4000,7 +4000,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        1060
+        1092
       ],
       "size": [
         270,
@@ -4047,7 +4047,7 @@
       "type": "PreviewImage",
       "pos": [
         9350,
-        1060
+        1364
       ],
       "size": [
         140,
@@ -4084,7 +4084,7 @@
       ],
       "size": [
         270,
-        106
+        130
       ],
       "flags": {},
       "order": 41,
@@ -4164,7 +4164,7 @@
       ],
       "size": [
         270,
-        106
+        130
       ],
       "flags": {},
       "order": 42,
@@ -4207,7 +4207,7 @@
       "type": "PreviewImage",
       "pos": [
         10110,
-        340
+        416
       ],
       "size": [
         140,
@@ -4244,7 +4244,7 @@
       ],
       "size": [
         270,
-        106
+        130
       ],
       "flags": {},
       "order": 43,
@@ -4287,7 +4287,7 @@
       "type": "PreviewImage",
       "pos": [
         10110,
-        580
+        732
       ],
       "size": [
         140,
@@ -4324,7 +4324,7 @@
       ],
       "size": [
         270,
-        106
+        130
       ],
       "flags": {},
       "order": 44,
@@ -4367,7 +4367,7 @@
       "type": "PreviewImage",
       "pos": [
         10110,
-        820
+        828
       ],
       "size": [
         140,
@@ -4404,7 +4404,7 @@
       ],
       "size": [
         270,
-        106
+        130
       ],
       "flags": {},
       "order": 45,
@@ -4447,7 +4447,7 @@
       "type": "PreviewImage",
       "pos": [
         10110,
-        1060
+        1144
       ],
       "size": [
         140,
@@ -4484,7 +4484,7 @@
       ],
       "size": [
         270,
-        106
+        130
       ],
       "flags": {},
       "order": 46,
@@ -4527,7 +4527,7 @@
       "type": "PreviewImage",
       "pos": [
         10110,
-        1300
+        1460
       ],
       "size": [
         140,
@@ -4564,7 +4564,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 113,
@@ -4644,7 +4644,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 114,
@@ -4687,7 +4687,7 @@
       "type": "PreviewImage",
       "pos": [
         10870,
-        340
+        416
       ],
       "size": [
         140,
@@ -4724,7 +4724,7 @@
       ],
       "size": [
         270,
-        130
+        154
       ],
       "flags": {},
       "order": 115,
@@ -4767,7 +4767,7 @@
       "type": "PreviewImage",
       "pos": [
         10870,
-        580
+        732
       ],
       "size": [
         140,
@@ -4800,7 +4800,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        1300
+        1340
       ],
       "size": [
         270,
@@ -4847,7 +4847,7 @@
       "type": "PreviewImage",
       "pos": [
         9350,
-        1300
+        1680
       ],
       "size": [
         140,
@@ -4880,7 +4880,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        1540
+        1588
       ],
       "size": [
         270,
@@ -4927,7 +4927,7 @@
       "type": "PreviewImage",
       "pos": [
         9350,
-        1540
+        1996
       ],
       "size": [
         140,
@@ -5924,8 +5924,8 @@
       "title": "Sources and what to look for",
       "bounding": [
         0,
-        40,
-        620,
+        14,
+        626,
         1660
       ],
       "color": "#3f789e",
@@ -5936,9 +5936,9 @@
       "title": "No model needed",
       "bounding": [
         660,
-        40,
+        14,
         700,
-        1300
+        1622
       ],
       "color": "#3f789e",
       "flags": {}
@@ -5948,9 +5948,9 @@
       "title": "Depth",
       "bounding": [
         1420,
-        40,
+        14,
         700,
-        1300
+        1622
       ],
       "color": "#88A",
       "flags": {}
@@ -5960,9 +5960,9 @@
       "title": "Normals",
       "bounding": [
         2180,
-        40,
+        14,
         700,
-        1300
+        1622
       ],
       "color": "#88A",
       "flags": {}
@@ -5972,9 +5972,9 @@
       "title": "Pose",
       "bounding": [
         2940,
-        40,
+        14,
         700,
-        1060
+        1306
       ],
       "color": "#8A8",
       "flags": {}
@@ -5984,9 +5984,9 @@
       "title": "Segments",
       "bounding": [
         3700,
-        40,
+        14,
         700,
-        820
+        990
       ],
       "color": "#8A8",
       "flags": {}
@@ -5996,9 +5996,9 @@
       "title": "Soft edges and lines",
       "bounding": [
         4460,
-        40,
+        14,
         700,
-        2260
+        2886
       ],
       "color": "#A88",
       "flags": {}
@@ -6008,9 +6008,9 @@
       "title": "Sweep: relief must keep rising",
       "bounding": [
         5220,
-        40,
+        14,
         700,
-        820
+        990
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6020,9 +6020,9 @@
       "title": "Sweep: edges must thin out",
       "bounding": [
         5980,
-        40,
+        14,
         700,
-        820
+        990
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6032,9 +6032,9 @@
       "title": "Sweep: confidence, blank at 0.95 is correct",
       "bounding": [
         6740,
-        40,
+        14,
         700,
-        820
+        990
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6044,9 +6044,9 @@
       "title": "Resolution",
       "bounding": [
         7500,
-        40,
+        14,
         700,
-        580
+        674
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6056,9 +6056,9 @@
       "title": "Batch of two, frames must differ",
       "bounding": [
         8260,
-        40,
+        14,
         700,
-        560
+        598
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6068,9 +6068,9 @@
       "title": "Intrinsics, a decomposition",
       "bounding": [
         8980,
-        40,
+        14,
         700,
-        1780
+        2254
       ],
       "color": "#3f789e",
       "flags": {}
@@ -6080,9 +6080,9 @@
       "title": "Restoration, the picture repaired",
       "bounding": [
         9740,
-        40,
+        14,
         700,
-        1540
+        1718
       ],
       "color": "#3f789e",
       "flags": {}
@@ -6091,9 +6091,9 @@
       "title": "Sweep: smoothing must reduce grain",
       "bounding": [
         10500,
-        40,
+        14,
         700,
-        820
+        990
       ],
       "color": "#3f789e",
       "font_size": 24,

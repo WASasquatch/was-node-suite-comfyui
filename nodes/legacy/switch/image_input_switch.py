@@ -18,7 +18,7 @@ class ImageInputSwitch(io.ComfyNode):
             search_aliases=["Image Input Switch", "image switch", "boolean switch"],
             category="WAS Suite/Logic/Switch",
             description=(
-                "Deprecated: use Tensor Image Switch instead. It takes the type of whatever is "
+                "Deprecated: use Tensor Switch instead. It takes the type of whatever is "
                 "connected, an image, a mask or a latent, and skips the branch it does not "
                 "select. This node passes one of two images on, chosen by a boolean: image_a "
                 "when the boolean is true, image_b when it is false."

@@ -13,7 +13,7 @@
       ],
       "size": [
         340,
-        120
+        314
       ],
       "flags": {},
       "order": 0,
@@ -51,7 +51,7 @@
       "type": "Text Multiline",
       "pos": [
         80,
-        340
+        464
       ],
       "size": [
         340,
@@ -84,7 +84,7 @@
       "type": "RepeatImageBatch",
       "pos": [
         80,
-        600
+        654
       ],
       "size": [
         340,
@@ -126,7 +126,7 @@
       ],
       "size": [
         340,
-        120
+        326
       ],
       "flags": {},
       "order": 3,
@@ -187,11 +187,11 @@
       "type": "WASBoundingBoxesToBounds",
       "pos": [
         80,
-        1120
+        1256
       ],
       "size": [
         340,
-        120
+        162
       ],
       "flags": {},
       "order": 4,
@@ -233,8 +233,8 @@
         80
       ],
       "size": [
-        340,
-        120
+        364,
+        402
       ],
       "flags": {},
       "order": 5,
@@ -284,11 +284,11 @@
       "type": "WASBoundsToMask",
       "pos": [
         540,
-        340
+        552
       ],
       "size": [
         340,
-        120
+        122
       ],
       "flags": {},
       "order": 6,
@@ -333,11 +333,11 @@
       "type": "LayersFromBoundingBoxes",
       "pos": [
         540,
-        600
+        744
       ],
       "size": [
         340,
-        120
+        166
       ],
       "flags": {},
       "order": 7,
@@ -388,11 +388,11 @@
       "type": "WASLayersToImageBatch",
       "pos": [
         540,
-        860
+        980
       ],
       "size": [
         340,
-        120
+        282
       ],
       "flags": {},
       "order": 8,
@@ -455,11 +455,11 @@
       "type": "Image Analyze",
       "pos": [
         540,
-        1120
+        1332
       ],
       "size": [
         340,
-        120
+        334
       ],
       "flags": {},
       "order": 9,
@@ -568,7 +568,7 @@
       ],
       "size": [
         340,
-        120
+        670
       ],
       "flags": {},
       "order": 11,
@@ -626,7 +626,7 @@
       "type": "PreviewImage",
       "pos": [
         1000,
-        600
+        1080
       ],
       "size": [
         340,
@@ -660,7 +660,7 @@
       "type": "MaskPreview",
       "pos": [
         1000,
-        860
+        1270
       ],
       "size": [
         340,
@@ -694,11 +694,11 @@
       "type": "PreviewAny",
       "pos": [
         1000,
-        1120
+        1460
       ],
       "size": [
         340,
-        120
+        122
       ],
       "flags": {},
       "order": 14,
@@ -732,7 +732,7 @@
       ],
       "size": [
         340,
-        120
+        122
       ],
       "flags": {},
       "order": 15,
@@ -766,7 +766,7 @@
       ],
       "size": [
         340,
-        120
+        122
       ],
       "flags": {},
       "order": 16,
@@ -800,7 +800,7 @@
       ],
       "size": [
         340,
-        120
+        122
       ],
       "flags": {},
       "order": 17,

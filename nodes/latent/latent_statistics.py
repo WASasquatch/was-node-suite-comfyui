@@ -263,13 +263,17 @@ class LatentStatistics(io.ComfyNode):
             samples: Whatever arrived on the samples input.
 
         Returns:
-            The tensor under the mapping's ``samples`` key.
+            The tensor under the mapping's ``samples`` key. A latent packing several
+            streams answers the first of them.
 
         Raises:
             ValueError: The value is not a latent, or its ``samples`` key holds something
                 other than a tensor.
         """
         tensor = samples.get("samples") if isinstance(samples, dict) else None
+        if getattr(tensor, "is_nested", False):
+            streams = list(tensor.unbind())
+            tensor = streams[0] if streams else None
         if not isinstance(tensor, torch.Tensor):
             raise ValueError(
                 f"{NODE} was given something on samples that is not a latent: a LATENT is a "

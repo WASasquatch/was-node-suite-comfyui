@@ -9,11 +9,11 @@
       "type": "Text Dictionary New",
       "pos": [
         60,
-        700
+        710
       ],
       "size": [
         400,
-        320
+        760
       ],
       "flags": {},
       "order": 0,
@@ -353,7 +353,7 @@
       "id": 3,
       "type": "WASViewDOCMetadata",
       "pos": [
-        700,
+        800,
         700
       ],
       "size": [
@@ -485,7 +485,7 @@
       "id": 4,
       "type": "WASDisplayAny",
       "pos": [
-        1120,
+        1410,
         700
       ],
       "size": [
@@ -520,7 +520,7 @@
       "id": 5,
       "type": "WASSaveDOC",
       "pos": [
-        700,
+        800,
         80
       ],
       "size": [
@@ -650,7 +650,7 @@
       "id": 6,
       "type": "WASSaveDOC",
       "pos": [
-        1140,
+        1430,
         80
       ],
       "size": [
@@ -780,7 +780,7 @@
       "id": 7,
       "type": "WASSaveDOC",
       "pos": [
-        1580,
+        1980,
         80
       ],
       "size": [
@@ -911,7 +911,7 @@
       "type": "WASLoadDocument",
       "pos": [
         60,
-        1040
+        1540
       ],
       "size": [
         460,
@@ -964,8 +964,8 @@
       "id": 9,
       "type": "WASViewDOCMetadata",
       "pos": [
-        580,
-        1040
+        680,
+        1250
       ],
       "size": [
         330,
@@ -1096,8 +1096,8 @@
       "id": 10,
       "type": "WASDisplayAny",
       "pos": [
-        580,
-        1580
+        680,
+        1800
       ],
       "size": [
         330,
@@ -1131,8 +1131,8 @@
       "id": 11,
       "type": "WASComfyViewer",
       "pos": [
-        970,
-        1040
+        1260,
+        1250
       ],
       "size": [
         660,

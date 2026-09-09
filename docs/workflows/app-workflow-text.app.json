@@ -60,7 +60,7 @@
       "id": 2,
       "type": "Text Find and Replace",
       "pos": [
-        420,
+        500,
         40
       ],
       "size": [
@@ -294,12 +294,12 @@
       "id": 3,
       "type": "WASDisplayAny",
       "pos": [
-        800,
+        960,
         40
       ],
       "size": [
         225,
-        119.390625
+        170
       ],
       "flags": {},
       "order": 2,

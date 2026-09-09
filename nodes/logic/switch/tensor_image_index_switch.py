@@ -22,9 +22,10 @@ class TensorImageIndexSwitch(io.ComfyNode):
         match = io.MatchType.Template("tensor_image_index_switch", [io.Image, io.Mask, io.Latent])
         return io.Schema(
             node_id="WASTensorImageIndexSwitch",
-            display_name="Tensor Image Index Switch",
+            display_name="Tensor Index Switch",
             search_aliases=[
                 "WASTensorImageIndexSwitch",
+                "Tensor Index Switch",
                 "Tensor Image Index Switch",
                 "index switch",
                 "select by index",
@@ -207,7 +208,7 @@ class TensorImageIndexSwitch(io.ComfyNode):
         if not names:
             return []
         try:
-            position = resolve(index, len(names), out_of_range, "Tensor Image Index Switch")
+            position = resolve(index, len(names), out_of_range, "Tensor Index Switch")
         except ValueError:
             return []
         chosen = names[position]
@@ -234,7 +235,7 @@ class TensorImageIndexSwitch(io.ComfyNode):
         names = cls.wired(slots)
         if not names:
             raise ValueError(
-                "Tensor Image Index Switch has nothing connected. Connect at least one input."
+                "Tensor Index Switch has nothing connected. Connect at least one input."
             )
-        position = resolve(index, len(names), out_of_range, "Tensor Image Index Switch")
+        position = resolve(index, len(names), out_of_range, "Tensor Index Switch")
         return io.NodeOutput(slots[names[position]], position, len(names))

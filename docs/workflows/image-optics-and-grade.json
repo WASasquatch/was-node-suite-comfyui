@@ -13,7 +13,7 @@
       ],
       "size": [
         330,
-        104
+        314
       ],
       "flags": {},
       "order": 0,
@@ -62,12 +62,12 @@
       "id": 2,
       "type": "WASImageAutoLevels",
       "pos": [
-        420,
+        430,
         40
       ],
       "size": [
-        330,
-        206
+        364,
+        374
       ],
       "flags": {},
       "order": 1,
@@ -152,12 +152,12 @@
       "id": 3,
       "type": "WASImageColorBalance",
       "pos": [
-        780,
+        854,
         40
       ],
       "size": [
-        330,
-        314
+        364,
+        478
       ],
       "flags": {},
       "order": 2,
@@ -290,12 +290,12 @@
       "id": 4,
       "type": "WASImageVignette",
       "pos": [
-        1140,
+        1278,
         40
       ],
       "size": [
-        330,
-        210
+        364,
+        382
       ],
       "flags": {},
       "order": 3,
@@ -388,7 +388,7 @@
       "id": 5,
       "type": "PreviewImage",
       "pos": [
-        1500,
+        1702,
         40
       ],
       "size": [
@@ -423,12 +423,12 @@
       "id": 6,
       "type": "WASImageLensDistortion",
       "pos": [
-        420,
+        430,
         560
       ],
       "size": [
-        330,
-        184
+        364,
+        358
       ],
       "flags": {},
       "order": 5,
@@ -511,8 +511,8 @@
       "id": 7,
       "type": "PreviewImage",
       "pos": [
-        780,
-        560
+        854,
+        588
       ],
       "size": [
         330,
@@ -546,12 +546,12 @@
       "id": 8,
       "type": "WASImageDirectionalBlur",
       "pos": [
-        420,
+        430,
         1000
       ],
       "size": [
-        330,
-        236
+        364,
+        406
       ],
       "flags": {},
       "order": 7,
@@ -654,7 +654,7 @@
       "id": 9,
       "type": "PreviewImage",
       "pos": [
-        780,
+        854,
         1000
       ],
       "size": [
@@ -689,8 +689,8 @@
       "id": 10,
       "type": "WASImagePerspective",
       "pos": [
-        420,
-        1440
+        430,
+        1476
       ],
       "size": [
         330,
@@ -845,7 +845,7 @@
       "id": 11,
       "type": "PreviewImage",
       "pos": [
-        780,
+        854,
         1440
       ],
       "size": [
@@ -880,7 +880,7 @@
       "id": 12,
       "type": "MaskPreview",
       "pos": [
-        780,
+        854,
         1780
       ],
       "size": [
@@ -915,7 +915,7 @@
       "id": 13,
       "type": "WASLinearLight",
       "pos": [
-        1900,
+        2092,
         40
       ],
       "size": [
@@ -974,12 +974,12 @@
       "id": 14,
       "type": "WASImageToneMap",
       "pos": [
-        2260,
+        2482,
         40
       ],
       "size": [
-        330,
-        232
+        364,
+        398
       ],
       "flags": {},
       "order": 13,
@@ -1074,7 +1074,7 @@
       "id": 15,
       "type": "PreviewImage",
       "pos": [
-        2620,
+        2906,
         40
       ],
       "size": [
@@ -1109,12 +1109,12 @@
       "id": 16,
       "type": "WASImageToneMap",
       "pos": [
-        2260,
+        2482,
         560
       ],
       "size": [
-        330,
-        232
+        364,
+        398
       ],
       "flags": {},
       "order": 15,
@@ -1209,7 +1209,7 @@
       "id": 17,
       "type": "PreviewImage",
       "pos": [
-        2620,
+        2906,
         560
       ],
       "size": [
@@ -1244,7 +1244,7 @@
       "id": 18,
       "type": "ImageToMask",
       "pos": [
-        1900,
+        2092,
         1000
       ],
       "size": [
@@ -1292,8 +1292,8 @@
       "id": 19,
       "type": "ThresholdMask",
       "pos": [
-        2260,
-        1000
+        2482,
+        1028
       ],
       "size": [
         330,
@@ -1340,12 +1340,12 @@
       "id": 20,
       "type": "WASImageMatte",
       "pos": [
-        2620,
+        2906,
         1000
       ],
       "size": [
-        330,
-        206
+        344,
+        362
       ],
       "flags": {},
       "order": 19,
@@ -1438,7 +1438,7 @@
       "id": 21,
       "type": "MaskPreview",
       "pos": [
-        2980,
+        3310,
         1000
       ],
       "size": [
@@ -1473,7 +1473,7 @@
       "id": 22,
       "type": "PreviewImage",
       "pos": [
-        2980,
+        3310,
         1340
       ],
       "size": [

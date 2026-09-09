@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **457** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **467** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-446 of them load in a fresh install. The other 11 wait behind a switch that starts off.
+456 of them load in a fresh install. The other 11 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 333 |
+| [Always loaded](#always-loaded) | always on | 343 |
 | [`features.network`](#featuresnetwork) | off | 4 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -39,9 +39,9 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-333 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+343 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
-- [WAS Suite/Animation](#was-suiteanimation) (9)
+- [WAS Suite/Animation](#was-suiteanimation) (10)
 - [WAS Suite/Archive](#was-suitearchive) (9)
 - [WAS Suite/Conditioning](#was-suiteconditioning) (1)
 - [WAS Suite/Debug](#was-suitedebug) (4)
@@ -62,16 +62,16 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Image/Transform](#was-suiteimagetransform) (9)
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
-- [WAS Suite/Latent/Transform](#was-suitelatenttransform) (1)
+- [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (1)
-- [WAS Suite/Logic](#was-suitelogic) (3)
+- [WAS Suite/Logic](#was-suitelogic) (4)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (2)
+- [WAS Suite/Sampling](#was-suitesampling) (8)
 - [WAS Suite/Text](#was-suitetext) (7)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -85,6 +85,26 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Workflow](#was-suiteworkflow) (1)
 
 ### WAS Suite/Animation
+
+<a id="node-wasvideocompare"></a>
+<details>
+<summary><b>Compare Video</b></summary>
+
+Play two videos on the node under a divider that drags left and right, so one run can be judged against another at the same frame. Both play from one clock. Wire a render into each socket; nothing is passed on.
+
+| | |
+|---|---|
+| Node id | `WASVideoCompare` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video_a` | `VIDEO` | No |  |  | The video drawn left of the divider. |
+| `video_b` | `VIDEO` | No |  |  | The video drawn right of the divider. |
+
+</details>
 
 <a id="node-create-morph-image"></a>
 <details>
@@ -6490,6 +6510,112 @@ A copy of the latent with random noise mixed in, so that resampling it brings ou
 
 ### WAS Suite/Latent/Transform
 
+<a id="node-wasaffineoptions"></a>
+<details>
+<summary><b>Affine Options</b></summary>
+
+Set the pattern an affine masks through and the parameters that shape it, then wire the result into Latent Affine or any of the Affine samplers. Only the chosen pattern's own settings are drawn, so the node stays short whichever one is picked. The pattern set here is the one the affine uses, and content_gate holds it back to the flat areas, the detail or the edges of the picture.
+
+| | |
+|---|---|
+| Node id | `WASAffineOptions` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `green_center_frac` | `FLOAT` | Yes | 0.35 |  | Where the green noise band sits, as a share of the finest detail the latent can hold. 0.1 = coarse blotches, 0.35 = mid, 0.8 = fine. |
+| `green_bandwidth_frac` | `FLOAT` | Yes | 0.15 |  | How wide that band is. 0.05 = one grain size, 0.4 = a broad mix. |
+| `black_bins_per_kpx` | `INT` | Yes | 512 |  | How many frequencies black noise keeps alive, per thousand samples. 16 = a few standing ripples, 512 = a busy weave. |
+| `hatch_freq_cyc_px` | `FLOAT` | Yes | 0.45 |  | Cycles per sample in each hatch line. 0.1 = wide bars, 0.45 = fine lines, above 0.5 the lines alias into moire on purpose. |
+| `hatch_angle1_deg` | `FLOAT` | Yes | 0.0 |  | Angle of the first set of lines, in degrees. 0 = horizontal. |
+| `hatch_angle2_deg` | `FLOAT` | Yes | 90.0 |  | Angle of the second set. 90 crosses the first at a right angle. |
+| `hatch_square` | `BOOLEAN` | Yes | False |  | `true` squares the waves off into hard bars; `false` leaves them smooth sinusoids. |
+| `hatch_phase_jitter` | `FLOAT` | Yes | 0.0 |  | How far the seed may slide the lines. 0.0 = fixed, 1.0 = anywhere. |
+| `hatch_supersample` | `INT` | Yes | 1 |  | How many times over the lines are drawn before averaging down. 1 = fast and jagged, 4 = smooth edges at four times the cost. |
+| `highpass_cutoff_frac` | `FLOAT` | Yes | 0.7 |  | Below this share of the finest detail the latent can hold, the noise is rolled off. 0.3 keeps most of it, 0.9 keeps only the finest grain. |
+| `highpass_order` | `INT` | Yes | 2 |  | How sharply that roll-off bites. 1 = gentle, 8 = a hard edge. |
+| `ring_center_frac` | `FLOAT` | Yes | 0.9 |  | Which single grain size the ring keeps. 0.9 is close to the finest. |
+| `ring_bandwidth_frac` | `FLOAT` | Yes | 0.05 |  | How pure that grain is. 0.01 = one size only, 0.2 = a small spread. |
+| `poisson_radius_px` | `FLOAT` | Yes | 8.0 |  | Closest two points may sit, in latent samples. 4 = a dense stipple, 24 = widely spaced dots with broad space between them. |
+| `poisson_softness` | `FLOAT` | Yes | 6.0 |  | How fast the field brightens away from a point. 1 = tight dots, 20 = soft cells. |
+| `worley_points_per_kpx` | `FLOAT` | Yes | 2.0 |  | Cell seeds per thousand samples. 0.5 = a few large cells, 20 = a fine mesh. |
+| `worley_metric` | `COMBO` | Yes | L2 | `L2`, `L1` | 'L2' grows round cells, 'L1' grows diamond ones with straight edges. |
+| `worley_edge_sharpness` | `FLOAT` | Yes | 1.0 |  | How thin the boundaries are drawn. 0.5 = broad seams, 4 = hairlines. |
+| `tile_line_tile_size` | `INT` | Yes | 32 |  | Tile side in latent samples. 8 = a fine weave, 64 = large panels. |
+| `tile_line_freq_cyc_px` | `FLOAT` | Yes | 0.4 |  | Cycles per sample inside a tile. 0.1 = wide bands, 0.4 = fine lines. |
+| `tile_line_jitter` | `FLOAT` | Yes | 0.25 |  | How far a tile's lines may slide. 0.0 lines the tiles up, 1.0 breaks them apart. |
+| `dot_cell_size` | `INT` | Yes | 12 |  | Halftone cell side in latent samples. 4 = a fine screen, 32 = a coarse one. |
+| `dot_jitter_px` | `FLOAT` | Yes | 1.5 |  | How far a dot strays from its cell centre, in samples. 0 = a rigid grid. |
+| `dot_fill_ratio` | `FLOAT` | Yes | 0.3 |  | Roughly what share of a cell a dot covers. 0.1 = pinpricks, 0.8 = nearly solid. |
+| `velvet_taps_per_kpx` | `INT` | Yes | 10 |  | Impulses per thousand samples. 2 = sparse sparkle, 200 = dense speckle. |
+| `perlin_scale` | `FLOAT` | Yes | 64.0 |  | Samples per blob. 16 = small blobs, 64 = medium, 256 = broad drifts. |
+| `perlin_octaves` | `INT` | Yes | 3 |  | How many passes are summed. 1 = smooth blobs, 6 = detail at every size. |
+| `perlin_persistence` | `FLOAT` | Yes | 0.5 |  | How much strength each finer pass keeps. 0.3 = smooth, 0.8 = rough. |
+| `perlin_lacunarity` | `FLOAT` | Yes | 2.0 |  | How much finer each pass is than the last. 2.0 doubles the detail each time. |
+| `checker_size` | `INT` | Yes | 8 |  | Square side in latent samples. 4 = a tight grid, 32 = large blocks. |
+| `bayer_size` | `INT` | Yes | 8 |  | Dither tile side. 2, 4, 8 and 16 are the ones that tile without a seam. |
+| `solid_alpha` | `FLOAT` | Yes | 1.0 |  | How much of the affine a solid mask lets through. 1.0 = the whole latent at full strength, 0.25 = a quarter of the way there. |
+| `content_window` | `INT` | Yes | 7 |  | How wide a neighbourhood the detail and smooth patterns measure over, in latent samples. 3 = fine texture, 15 = whole regions. |
+| `mask_strength` | `FLOAT` | Yes | 1.0 |  | Multiplies the mask before the affine reads it. 0.5 = half the effect everywhere, 1.0 = as drawn, 2.0 = double, which pushes past the scale and bias that were asked for. |
+| `threshold` | `FLOAT` | Yes | 0.0 |  | Cuts the mask into hard on and off at this level. 0.0 = off, leaving the mask smooth; 0.5 keeps the brighter half. |
+| `invert_mask` | `BOOLEAN` | Yes | False |  | `true` swaps where the affine lands for where it does not; `false` leaves the mask as drawn. |
+| `mask_blur` | `FLOAT` | Yes | 0.0 |  | Softens the mask's edges. 0.0 = off, 1.0 = a gentle feather, 6.0 = smears fine grain into broad patches. |
+| `mask_sharpen` | `FLOAT` | Yes | 0.0 |  | Raises the mask's contrast before anything else touches it. 0.0 = off, 0.3 = subtle, 1.0 = strong, negative softens instead. |
+| `sharpen_radius` | `FLOAT` | Yes | 0.8 |  | How wide the detail that sharpening lifts is. 0.5 = fine, 3.0 = broad. |
+| `sharpen_threshold` | `FLOAT` | Yes | 0.0 |  | Detail weaker than this is left alone. 0.0 sharpens everything. |
+| `clamp` | `BOOLEAN` | Yes | False |  | `true` holds the transformed latent inside clamp_min and clamp_max; `false` lets it go anywhere. Worth turning on where a large scale or bias sends values far past what the model has seen. |
+| `clamp_min` | `FLOAT` | Yes | -10.0 |  | Lowest value the latent may hold once clamping is on. -10 is wide enough for any ordinary latent; -4 is a tight leash. |
+| `clamp_max` | `FLOAT` | Yes | 10.0 |  | Highest value the latent may hold once clamping is on. 10 is wide enough for any ordinary latent; 4 is a tight leash. |
+| `frame_seed_stride` | `INT` | Yes | 9973 |  | How far the seed moves between frames on 'per_frame' and 'drift'. 1 makes neighbouring frames similar; a large prime such as 9973 makes each frame independent. |
+| `drift_speed` | `FLOAT` | Yes | 0.35 |  | How far the mask slides each frame on 'drift', in latent samples. 0.0 holds it still, 0.35 is a slow crawl, 2.0 sweeps across a short clip. |
+| `drift_angle_deg` | `FLOAT` | Yes | 0.0 |  | Which way it slides, in degrees. 0 = right, 90 = down, 180 = left, 270 = up. |
+| `drift_renew` | `FLOAT` | Yes | 0.0 |  | How much of the mask is replaced each frame on 'drift', on top of the slide. 0.0 slides one mask unchanged, 0.15 lets it turn over as well, 1.0 matches 'per_frame'. |
+| `bias_field` | `COMBO` | Yes | constant | `constant`, `gaussian` | What the bias adds where the mask is white. 'constant' = one offset everywhere, which shifts colour and tone. 'gaussian' = a noise field, one value per latent element. On 'gaussian' a bias of 0.02 is gentle and 0.1 is strong. |
+| `content_gate` | `COMBO` | Yes | off | `off`, `detail_region`, `smooth_region`, `edges_sobel`, `edges_laplacian` | Hold a generated pattern back to where the picture allows it. 'off' lets it cover the frame; 'smooth_region' keeps it to flat areas and off detail; 'detail_region' does the opposite; 'edges_sobel' and 'edges_laplacian' keep it to edges. Read off each frame, so the grain follows the subject. content_window sets how wide it reads. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `affine_options` | `DICT` | The pattern and its settings, for the affine_options socket of Latent Affine or any Affine sampler. |
+
+</details>
+
+<a id="node-waslatentaffine"></a>
+<details>
+<summary><b>Latent Affine</b></summary>
+
+Multiply a latent and add an offset to it, but only where a mask says to. The mask can be procedural grain, a repeating shape, a reading of the latent's own detail or edges, or one wired in. Small moves either side of 1.0 change texture and contrast before a second sampling pass; the same transform applied during sampling is what the Affine samplers do.
+
+| | |
+|---|---|
+| Node id | `WASLatentAffine` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The latent to transform. Image, video and packed audio and video latents are all handled. |
+| `scale` | `FLOAT` | Yes | 0.96 |  | What the latent is multiplied by where the mask is white. 1.0 = no change; 0.96 takes a little energy out, which softens; 1.2 pushes texture and contrast up. |
+| `bias` | `FLOAT` | Yes | 0.0 |  | What is added where the mask is white, beside scale rather than through it. 0.0 = no shift; 0.1 lifts, -0.1 drops. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
+| `streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
+| `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The transformed latent. |
+| `mask` | `MASK` | The mask the transform ran through, at latent resolution. White is where the full scale and bias landed. |
+
+</details>
+
 <a id="node-latent-upscale-by-factor-was"></a>
 <details>
 <summary><b>Latent Upscale by Factor</b></summary>
@@ -6703,6 +6829,33 @@ Pick a checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or scheduler fr
 | `combo` | `*` | The choice, on a wire a dropdown accepts. Connect it to a converted dropdown such as ckpt_name, lora_name or sampler_name. |
 | `name` | `STRING` | The choice as text: sd_xl_base_1.0.safetensors, euler, karras. |
 | `source` | `STRING` | Which list it came from: checkpoints, loras, samplers. |
+
+</details>
+
+<a id="node-wasexecutiongate"></a>
+<details>
+<summary><b>Execution Gate</b></summary>
+
+Pass a value on only while a switch is on. Switched off, the branch feeding the gate is never evaluated and every node after it stops, so an expensive sampler upstream and a save downstream both go unrun. Takes any type. Turn bypass_downstream on to draw those nodes as bypassed instead.
+
+| | |
+|---|---|
+| Node id | `WASExecutionGate` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `open` | `BOOLEAN` | Yes | True |  | Whether the branch runs. `true` passes value on. `false` skips everything wired into value and stops every node after the gate. |
+| `value` | `COMFY_MATCHTYPE_V3` | No |  |  | What to pass on, of any type. The first connection fixes the type. Nothing wired here is evaluated while the gate is closed. |
+| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` sets every node after the gate to bypass on the canvas while open is off, so they are drawn as bypassed and never reach the run. Read only where open is the gate's own switch: wire anything into open and the value is not known until the run, so the gate stops the nodes from the run instead and ComfyUI draws the first of them as failed. |
+| `closed_message` | `STRING` | No |  |  | Empty stops the run quietly. Any text, such as `no face found, nothing to upscale`, is drawn on the first blocked node as an error and raised as a notification. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `output` | `COMFY_MATCHTYPE_V3` | The value, while the gate is open. Nothing downstream of it runs while the gate is closed. |
 
 </details>
 
@@ -7733,7 +7886,7 @@ Test two numbers against each other and emit either 1/0 for the outcome or the n
 
 <a id="node-wastensorimageindexswitch"></a>
 <details>
-<summary><b>Tensor Image Index Switch</b></summary>
+<summary><b>Tensor Index Switch</b></summary>
 
 Pass one of any number of pictures on, chosen by a number, where a picture is an image, a mask or a latent. Wire a Number Counter or a loop's index in to step through them one per run. The sockets take those three types only, and just the chosen input is evaluated, so the rest is skipped.
 
@@ -7786,7 +7939,7 @@ Pass one of any number of pictures on, chosen by a number, where a picture is an
 
 <a id="node-wastensorimageswitch"></a>
 <details>
-<summary><b>Tensor Image Switch</b></summary>
+<summary><b>Tensor Switch</b></summary>
 
 Pass one of two pictures on, chosen by a boolean, where a picture is an image, a mask or a latent. The socket takes those three and refuses anything else, so a wrong wire is caught as it is drawn. The unselected input is not evaluated, so the work behind it is skipped.
 
@@ -8460,6 +8613,203 @@ Put a whole number, a decimal or a switch onto NUMBER, the wire this pack's own 
 
 ### WAS Suite/Sampling
 
+<a id="node-wasaffinepatternnoise"></a>
+<details>
+<summary><b>Affine Pattern Noise</b></summary>
+
+Starting noise with an affine mask laid over it: the draw is multiplied by max_scale and offset by max_bias wherever the pattern is white, so the noise carries the pattern's structure instead of being flat. Wire it into the noise socket of any custom sampler in place of Random Noise. The four patterns read off a picture are not offered, since a starting draw has no picture to read.
+
+| | |
+|---|---|
+| Node id | `WASAffinePatternNoise` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `pattern` | `COMBO` | Yes | white_noise |  | Which mask shapes the draw. `white_noise` is one value per latent element; `pink_noise`, `brown_noise` and `perlin` spread over larger areas; `checker`, `bayer` and `tile_lines` repeat. Affine Options carries each pattern's own settings. |
+| `noise_seed` | `INT` | Yes | 0 |  | The seed the draw and the mask are both taken from, as `0` or `12345`. One seed reproduces a clip exactly. |
+| `max_scale` | `FLOAT` | Yes | 1.1 |  | What the draw is multiplied by where the mask is white. 1.0 leaves the draw alone, 1.1 lifts it a tenth, 0.5 halves it. Away from the mask the draw is untouched. |
+| `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added where the mask is white. 0.0 adds nothing, 0.05 is a faint lift, 0.5 prints the pattern into the draw. |
+| `clamp_sigma` | `FLOAT` | Yes | 0.0 |  | Where the draw is cut off, in standard deviations. 0.0 leaves it uncut. 3.0 cuts the furthest 0.3 percent of values. |
+| `temporal_mode` | `COMBO` | No | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
+| `normalize` | `BOOLEAN` | No | True |  | `true` returns the draw at a spread of 1.0, which is the magnitude a sampler's schedule is built for. `false` returns whatever max_scale and max_bias worked out to. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `NOISE` | `NOISE` | The starting noise, for the noise socket of Sampler Custom Advanced or Custom Sampler Affine Advanced. |
+
+</details>
+
+<a id="node-wasaffinesampler"></a>
+<details>
+<summary><b>Affine Sampler</b></summary>
+
+Wrap a sampler so it scales and offsets the latent from inside its own denoising loop, then hand it to SamplerCustomAdvanced or anything else that takes a SAMPLER. Nothing is restarted, so multistep history, noise sequences and packed audio and video latents all survive the transform.
+
+| | |
+|---|---|
+| Node id | `WASAffineSampler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `sampler` | `SAMPLER` | Yes |  |  | The sampler to wrap, from KSamplerSelect or any other SAMPLER source. Every stock sampler carries the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which is reported in the console rather than failing the run. |
+| `affine_interval` | `INT` | Yes | 1 |  | Apply on every Nth step of the schedule. 1 = every step, 4 = every fourth, which leaves the sampler more room to settle between applications. |
+| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the peak of the schedule, compounding over every step it lands on. 1.0 = no change, 1.02 adds visible texture over a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 softens instead. |
+| `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added at the peak of the schedule, beside max_scale rather than through it. 0.0 = nothing, 0.005 = a gentle drift, 0.02 shifts the whole colour. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `affine_seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
+| `affine_seed_increment` | `BOOLEAN` | Yes | False |  | `true` advances the seed on every application, so the grain moves from step to step. `false` holds one mask for the whole run, which keeps the affine landing in the same places. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
+| `affine_streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
+| `affine_space` | `COMBO` | No | latent | `latent`, `model` | Which latent max_scale and max_bias are measured against. 'latent' = the same scale Latent Affine uses, so a value means the same thing in both places; 'model' = the sampler's own internal latent, which some models hold at a very different magnitude. |
+| `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+| `debug` | `BOOLEAN` | No | False |  | `true` logs every application to the console: the step, its sigma, the strength, the resolved scale and bias, and which streams were touched. `false` stays quiet. |
+| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies. 'content' = only the picture the model has resolved, so the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies that noise as well and prints it as fixed grain on a model that holds noise for most of its run. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `sampler` | `SAMPLER` | The same sampler, now applying the affine as it runs. |
+
+</details>
+
+<a id="node-wasaffineschedule"></a>
+<details>
+<summary><b>Affine Schedule</b></summary>
+
+Decide how strong an affine is at each step of a sampler run: where it starts, where it stops, where it peaks and how it eases in and out. The curve is drawn on the node so the shape can be read before the run. Wire it into the affine_schedule socket of any Affine sampler.
+
+| | |
+|---|---|
+| Node id | `WASAffineSchedule` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `start` | `FLOAT` | Yes | 0.2 |  | How far into the run the affine begins, as a share of the steps. 0.0 = from the first step, 0.2 = a fifth of the way in, once the composition has settled. |
+| `end` | `FLOAT` | Yes | 0.8 |  | Where it stops, on the same scale. 0.8 leaves the last fifth untouched, which lets the sampler resolve the detail cleanly; 1.0 carries it to the final step. |
+| `bias` | `FLOAT` | Yes | 0.5 |  | Where the peak sits between start and end. 0.5 = the middle, 0.1 = hits hard early then fades, 0.9 = builds slowly to the end. |
+| `exponent` | `FLOAT` | Yes | 1.0 |  | Bends the whole curve towards zero. 1.0 = as the easing draws it, 2.0 = a narrower peak, 0.5 = a broad plateau. 0.0 pins every active step at full strength. |
+| `start_offset` | `FLOAT` | Yes | 0.0 |  | Strength held before the curve begins. 0.0 = nothing until start, 0.3 = a third of the affine from the very first step. |
+| `end_offset` | `FLOAT` | Yes | 0.0 |  | Strength held after the curve ends. 0.0 = nothing after end, 0.3 = a third of the affine carried to the last step. |
+| `curve` | `COMBO` | Yes | ease_in_out_sine |  | How the strength travels between nothing and the peak. 'ease_in_out_sine' is a smooth swell; 'linear' is a plain ramp; the 'expo' and 'quint' curves stay near zero then rush; 'back' and 'elastic' overshoot, which pushes past the scale that was asked for. |
+| `preview_steps` | `INT` | No | 20 |  | How many steps the drawn curve is sampled at. 20 matches a default run; set it to the step count of the sampler this feeds and the plot is exactly what that run will do. The schedule itself is unchanged either way. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `affine_schedule` | `DICT` | The curve, for the affine_schedule socket of any Affine sampler. |
+
+</details>
+
+<a id="node-wascustomsampleraffineadvanced"></a>
+<details>
+<summary><b>Custom Sampler Affine Advanced</b></summary>
+
+Run a guider over a sigma schedule while scaling and offsetting the latent from inside the sampler's loop. The custom sampling form, for a graph that already builds its own noise, guider, sampler and sigmas. It answers the mask the affine ran through beside both latents.
+
+| | |
+|---|---|
+| Node id | `WASCustomSamplerAffineAdvanced` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `noise` | `NOISE` | Yes |  |  | Where the starting noise comes from. |
+| `guider` | `GUIDER` | Yes |  |  | What steers the denoising. |
+| `sampler` | `SAMPLER` | Yes |  |  | The sampler to wrap, from KSamplerSelect or any other SAMPLER source. Every stock sampler carries the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which is reported in the console rather than failing the run. |
+| `sigmas` | `SIGMAS` | Yes |  |  | The noise levels to step through. The affine curve is read over these, so one entry fewer than the length is the step count. |
+| `latent_image` | `LATENT` | Yes |  |  | The latent to denoise. Image, video and packed audio and video latents are all handled. |
+| `affine_interval` | `INT` | Yes | 1 |  | Apply on every Nth step of the schedule. 1 = every step, 4 = every fourth, which leaves the sampler more room to settle between applications. |
+| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the peak of the schedule, compounding over every step it lands on. 1.0 = no change, 1.02 adds visible texture over a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 softens instead. |
+| `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added at the peak of the schedule, beside max_scale rather than through it. 0.0 = nothing, 0.005 = a gentle drift, 0.02 shifts the whole colour. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `affine_seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
+| `affine_seed_increment` | `BOOLEAN` | Yes | False |  | `true` advances the seed on every application, so the grain moves from step to step. `false` holds one mask for the whole run, which keeps the affine landing in the same places. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
+| `affine_streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
+| `affine_space` | `COMBO` | No | latent | `latent`, `model` | Which latent max_scale and max_bias are measured against. 'latent' = the same scale Latent Affine uses, so a value means the same thing in both places; 'model' = the sampler's own internal latent, which some models hold at a very different magnitude. |
+| `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+| `debug` | `BOOLEAN` | No | False |  | `true` logs every application to the console: the step, its sigma, the strength, the resolved scale and bias, and which streams were touched. `false` stays quiet. |
+| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies. 'content' = only the picture the model has resolved, so the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies that noise as well and prints it as fixed grain on a model that holds noise for most of its run. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `output` | `LATENT` | The latent the sampler ended on. |
+| `denoised_output` | `LATENT` | The model's own estimate of the clean latent at the last step. |
+| `mask` | `MASK` | The mask the last application ran through, at latent resolution. All zero where no affine was applied. |
+
+</details>
+
+<a id="node-wasksampleraffineadvanced"></a>
+<details>
+<summary><b>KSampler Affine Advanced</b></summary>
+
+Denoise a latent while scaling and offsetting it from inside the sampler's own loop, on a curve that decides how strong the effect is at each step. Used to push texture and contrast into a generation as it forms. The run is never stopped and restarted, so it behaves the same on flow-matching, multistep and packed audio and video models.
+
+| | |
+|---|---|
+| Node id | `WASKSamplerAffineAdvanced` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The model to denoise with. |
+| `positive` | `CONDITIONING` | Yes |  |  | What the image should contain. |
+| `negative` | `CONDITIONING` | Yes |  |  | What it should avoid. |
+| `latent_image` | `LATENT` | Yes |  |  | The latent to denoise. Image, video and packed audio and video latents are all handled. |
+| `add_noise` | `BOOLEAN` | Yes | True |  | `true` adds fresh noise before the first step, which is what a run from an empty latent needs. `false` starts from the latent as it is, for the second half of a run another sampler began. |
+| `seed` | `INT` | Yes | 0 |  | Seeds the noise that is added. The same seed gives the same run; 0 is as good a seed as any. |
+| `steps` | `INT` | Yes | 20 |  | How many denoising steps to take. 20 suits most models, 8 for a turbo or lightning one, 40 where fine detail matters. |
+| `cfg` | `FLOAT` | Yes | 4.5 |  | How hard the prompt is enforced. 1.0 = the model's own idea, 4.5 suits most flow-matching models, 7.0 to 8.0 the older ones. |
+| `sampler_name` | `COMBO` | Yes | euler |  | The algorithm the steps are taken with. All of them carry the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which sample normally and say so in the console. |
+| `scheduler` | `COMBO` | Yes | normal |  | How the noise level falls across the steps. `normal` suits most models, `simple` and `beta` are common on flow-matching ones. |
+| `denoise` | `FLOAT` | Yes | 1.0 |  | How much of the latent is replaced. 1.0 = a fresh generation, 0.5 keeps the broad shape of what came in, 0.2 refines it only. |
+| `affine_interval` | `INT` | Yes | 1 |  | Apply on every Nth step of the schedule. 1 = every step, 4 = every fourth, which leaves the sampler more room to settle between applications. |
+| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the peak of the schedule, compounding over every step it lands on. 1.0 = no change, 1.02 adds visible texture over a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 softens instead. |
+| `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added at the peak of the schedule, beside max_scale rather than through it. 0.0 = nothing, 0.005 = a gentle drift, 0.02 shifts the whole colour. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `affine_seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
+| `affine_seed_increment` | `BOOLEAN` | Yes | False |  | `true` advances the seed on every application, so the grain moves from step to step. `false` holds one mask for the whole run, which keeps the affine landing in the same places. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `start_at_step` | `INT` | No | 0 |  | First step to run. The affine curve is still read over the whole 'steps' range, so a slice of a run carries the part of the curve that belongs to it. |
+| `end_at_step` | `INT` | No | 10000 |  | Step to stop before. 10000 runs to the end; 12 on a 20 step run hands the rest to a second sampler. |
+| `return_with_leftover_noise` | `BOOLEAN` | No | False |  | `true` leaves the latent partly noisy so another sampler can pick the run up. `false` finishes the denoise, which is what a final pass wants. |
+| `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
+| `affine_streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
+| `affine_space` | `COMBO` | No | latent | `latent`, `model` | Which latent max_scale and max_bias are measured against. 'latent' = the same scale Latent Affine uses, so a value means the same thing in both places; 'model' = the sampler's own internal latent, which some models hold at a very different magnitude. |
+| `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+| `debug` | `BOOLEAN` | No | False |  | `true` logs every application to the console: the step, its sigma, the strength, the resolved scale and bias, and which streams were touched. `false` stays quiet. |
+| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies. 'content' = only the picture the model has resolved, so the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies that noise as well and prints it as fixed grain on a model that holds noise for most of its run. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The denoised latent. |
+| `mask` | `MASK` | The mask the last application ran through, at latent resolution. All zero where no affine was applied. |
+
+</details>
+
 <a id="node-ksampler-cycle"></a>
 <details>
 <summary><b>KSampler Cycle</b></summary>
@@ -8550,6 +8900,31 @@ Sample the early steps at a reduced resolution and grow the latent partway throu
 | Name | Type | What it is |
 |---|---|---|
 | `SAMPLER` | `SAMPLER` | Feeds the SAMPLER socket of SamplerCustom. |
+
+</details>
+
+<a id="node-wastemporalnoisehold"></a>
+<details>
+<summary><b>Temporal Noise Hold</b></summary>
+
+Starting noise whose pattern carries over from one video frame to the next instead of being redrawn each time. The further it carries, the denser and more detailed the scene comes back. Wire it into the noise socket of any custom sampler in place of Random Noise. Only the first draw is shaped, so a sampler that draws fresh noise at every step overwrites it: the ancestral and SDE families, and anything run with eta above 0.
+
+| | |
+|---|---|
+| Node id | `WASTemporalNoiseHold` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `noise_seed` | `INT` | Yes | 0 |  | The seed the noise field is drawn from, as `0` or `12345`. The same seed and hold reproduce a clip exactly. |
+| `hold` | `FLOAT` | Yes | 2.0 |  | How many latent frames the noise pattern carries over. 0.0 draws ordinary noise and matches Random Noise exactly. Higher values cut the frame-to-frame change: 2.0 to 0.63 of ordinary noise, 8.0 to 0.34, 25.0 to 0.20, 64.0 to 0.12, 128.0 to 0.09. One latent frame is about 3.4 output frames on MiniMax H3, 4 on Wan and 8 on LTX. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `NOISE` | `NOISE` | The starting noise, for the noise socket of Sampler Custom Advanced or Custom Sampler Affine Advanced. |
 
 </details>
 
@@ -14421,7 +14796,7 @@ Deprecated: use Model Switch instead. It takes the type of whatever is connected
 <details>
 <summary><b>Image Input Switch</b></summary>
 
-Deprecated: use Tensor Image Switch instead. It takes the type of whatever is connected, an image, a mask or a latent, and skips the branch it does not select. This node passes one of two images on, chosen by a boolean: image_a when the boolean is true, image_b when it is false.
+Deprecated: use Tensor Switch instead. It takes the type of whatever is connected, an image, a mask or a latent, and skips the branch it does not select. This node passes one of two images on, chosen by a boolean: image_a when the boolean is true, image_b when it is false.
 
 | | |
 |---|---|
@@ -14448,7 +14823,7 @@ Deprecated: use Tensor Image Switch instead. It takes the type of whatever is co
 <details>
 <summary><b>Latent Input Switch</b></summary>
 
-Deprecated: use Tensor Image Switch instead. It takes the type of whatever is connected, an image, a mask or a latent, and skips the branch it does not select. This node passes one of two latents on, chosen by a boolean: latent_a when the boolean is true, latent_b when it is false.
+Deprecated: use Tensor Switch instead. It takes the type of whatever is connected, an image, a mask or a latent, and skips the branch it does not select. This node passes one of two latents on, chosen by a boolean: latent_a when the boolean is true, latent_b when it is false.
 
 | | |
 |---|---|

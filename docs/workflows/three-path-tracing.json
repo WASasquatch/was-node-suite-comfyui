@@ -117,7 +117,7 @@
       "type": "WASThreePlaneGeometry",
       "pos": [
         40,
-        300
+        312
       ],
       "size": [
         270,
@@ -194,7 +194,7 @@
       "type": "WASThreeBoxGeometry",
       "pos": [
         40,
-        470
+        512
       ],
       "size": [
         270,
@@ -290,11 +290,11 @@
       "id": 4,
       "type": "WASThreePhysicalMaterial",
       "pos": [
-        360,
+        370,
         40
       ],
       "size": [
-        282.46875,
+        282,
         922
       ],
       "flags": {},
@@ -688,11 +688,11 @@
       "id": 5,
       "type": "WASThreePhysicalMaterial",
       "pos": [
-        360,
-        640
+        370,
+        1032
       ],
       "size": [
-        282.46875,
+        282,
         922
       ],
       "flags": {},
@@ -1086,11 +1086,11 @@
       "id": 6,
       "type": "WASThreeStandardMaterial",
       "pos": [
-        360,
-        1240
+        370,
+        2024
       ],
       "size": [
-        275.375,
+        275,
         530
       ],
       "flags": {},
@@ -1326,11 +1326,11 @@
       "id": 7,
       "type": "WASThreeStandardMaterial",
       "pos": [
-        360,
-        1620
+        370,
+        2624
       ],
       "size": [
-        275.375,
+        275,
         530
       ],
       "flags": {},
@@ -1566,7 +1566,7 @@
       "id": 8,
       "type": "WASThreeMesh",
       "pos": [
-        700,
+        712,
         40
       ],
       "size": [
@@ -1645,7 +1645,7 @@
       "id": 9,
       "type": "WASThreeMesh",
       "pos": [
-        700,
+        712,
         240
       ],
       "size": [
@@ -1724,7 +1724,7 @@
       "id": 10,
       "type": "WASThreeMesh",
       "pos": [
-        700,
+        712,
         440
       ],
       "size": [
@@ -1803,7 +1803,7 @@
       "id": 11,
       "type": "WASThreeMesh",
       "pos": [
-        700,
+        712,
         640
       ],
       "size": [
@@ -1882,7 +1882,7 @@
       "id": 12,
       "type": "WASThreeTransformObject",
       "pos": [
-        1000,
+        1042,
         40
       ],
       "size": [
@@ -2035,8 +2035,8 @@
       "id": 13,
       "type": "WASThreeTransformObject",
       "pos": [
-        1000,
-        380
+        1042,
+        408
       ],
       "size": [
         270,
@@ -2188,8 +2188,8 @@
       "id": 14,
       "type": "WASThreeTransformObject",
       "pos": [
-        1000,
-        720
+        1042,
+        776
       ],
       "size": [
         270,
@@ -2341,8 +2341,8 @@
       "id": 15,
       "type": "WASThreeTransformObject",
       "pos": [
-        1000,
-        1060
+        1042,
+        1144
       ],
       "size": [
         270,
@@ -2494,7 +2494,7 @@
       "id": 16,
       "type": "WASThreeGroup",
       "pos": [
-        1320,
+        1372,
         40
       ],
       "size": [
@@ -2607,8 +2607,8 @@
       "id": 17,
       "type": "WASThreeEnvironment",
       "pos": [
-        1320,
-        320
+        1372,
+        332
       ],
       "size": [
         270,
@@ -2723,7 +2723,7 @@
       "id": 18,
       "type": "WASThreeScene",
       "pos": [
-        1600,
+        1702,
         40
       ],
       "size": [
@@ -2834,11 +2834,11 @@
       "id": 19,
       "type": "WASThreePerspectiveCamera",
       "pos": [
-        1600,
+        1702,
         380
       ],
       "size": [
-        276.2466796875,
+        276,
         250
       ],
       "flags": {},
@@ -2968,7 +2968,7 @@
       "id": 20,
       "type": "WASThreeApp",
       "pos": [
-        1900,
+        2039,
         40
       ],
       "size": [
@@ -3127,7 +3127,7 @@
       "id": 21,
       "type": "WASThreeViewer",
       "pos": [
-        2220,
+        2369,
         40
       ],
       "size": [
@@ -3160,8 +3160,8 @@
       "id": 23,
       "type": "WASThreeRender",
       "pos": [
-        2220,
-        1180
+        2369,
+        1537
       ],
       "size": [
         364,
@@ -3327,8 +3327,8 @@
       "id": 25,
       "type": "PreviewImage",
       "pos": [
-        2620,
-        1180
+        2769,
+        2099
       ],
       "size": [
         140,
@@ -3367,12 +3367,12 @@
       "id": 24,
       "type": "PreviewImage",
       "pos": [
-        2620,
-        560
+        2769,
+        1154
       ],
       "size": [
-        265.68215587464056,
-        312.8239631586998
+        266,
+        313
       ],
       "flags": {},
       "order": 25,
@@ -3407,11 +3407,11 @@
       "id": 22,
       "type": "WASThreePathTraceRender",
       "pos": [
-        2220,
+        2369,
         560
       ],
       "size": [
-        289.89453125,
+        290,
         524
       ],
       "flags": {},
@@ -3624,8 +3624,8 @@
       "id": 26,
       "type": "WASThreePathTraceViewer",
       "pos": [
-        2220,
-        1780
+        2369,
+        2415
       ],
       "size": [
         620,
@@ -3718,7 +3718,7 @@
       "id": 27,
       "type": "WASThreeAreaLight",
       "pos": [
-        1320,
+        1372,
         620
       ],
       "size": [

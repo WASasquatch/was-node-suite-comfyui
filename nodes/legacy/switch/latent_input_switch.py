@@ -18,7 +18,7 @@ class LatentInputSwitch(io.ComfyNode):
             search_aliases=["Latent Input Switch", "latent switch", "boolean switch"],
             category="WAS Suite/Logic/Switch",
             description=(
-                "Deprecated: use Tensor Image Switch instead. It takes the type of whatever is "
+                "Deprecated: use Tensor Switch instead. It takes the type of whatever is "
                 "connected, an image, a mask or a latent, and skips the branch it does not "
                 "select. This node passes one of two latents on, chosen by a boolean: latent_a "
                 "when the boolean is true, latent_b when it is false."

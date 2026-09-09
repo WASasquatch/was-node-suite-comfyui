@@ -57,8 +57,11 @@ def gaussian_blur_depthwise(x: torch.Tensor, sigma: float) -> torch.Tensor:
     kernel_y = kernel_1d.view(1, 1, ksize, 1)
 
     c = x.shape[1]
+    # Reflecting needs a row or column to fold back on, which a map only one or two samples
+    # tall does not have.
+    mode = "reflect" if radius < min(x.shape[-2], x.shape[-1]) else "replicate"
     # The 2D Gaussian is separable, so two 1D passes cost the radius rather than its square.
-    x_pad = F.pad(x, (radius, radius, radius, radius), mode="reflect")
+    x_pad = F.pad(x, (radius, radius, radius, radius), mode=mode)
     x_blur = F.conv2d(x_pad, kernel_x.expand(c, 1, 1, ksize), groups=c)
     x_blur = F.conv2d(x_blur, kernel_y.expand(c, 1, ksize, 1), groups=c)
     return x_blur
