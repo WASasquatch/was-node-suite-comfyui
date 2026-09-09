@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.0.2"
+version = "3.1.0"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
