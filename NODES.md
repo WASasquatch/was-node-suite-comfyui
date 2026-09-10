@@ -8617,7 +8617,7 @@ Put a whole number, a decimal or a switch onto NUMBER, the wire this pack's own 
 <details>
 <summary><b>Affine Pattern Noise</b></summary>
 
-Starting noise with an affine mask laid over it: the draw is multiplied by max_scale and offset by max_bias wherever the pattern is white, so the noise carries the pattern's structure instead of being flat. Wire it into the noise socket of any custom sampler in place of Random Noise. The four patterns read off a picture are not offered, since a starting draw has no picture to read.
+Starting noise with an affine mask laid over it: the draw is multiplied by max_scale and offset by max_bias wherever the pattern is white, so the noise carries the pattern's structure instead of being flat. Wire it into the noise socket of any custom sampler in place of RandomNoise. The four patterns read off a picture are not offered, since a starting draw has no picture to read.
 
 | | |
 |---|---|
@@ -8907,7 +8907,7 @@ Sample the early steps at a reduced resolution and grow the latent partway throu
 <details>
 <summary><b>Temporal Noise Hold</b></summary>
 
-Starting noise whose pattern carries over from one video frame to the next instead of being redrawn each time. The further it carries, the denser and more detailed the scene comes back. Wire it into the noise socket of any custom sampler in place of Random Noise. Only the first draw is shaped, so a sampler that draws fresh noise at every step overwrites it: the ancestral and SDE families, and anything run with eta above 0.
+Starting noise whose pattern carries over from one video frame to the next instead of being redrawn each time. The further it carries, the denser and more detailed the scene comes back. Wire it into the noise socket of any custom sampler in place of RandomNoise. Only the first draw is shaped, so a sampler that draws fresh noise at every step overwrites it: the ancestral and SDE families, and any sampler whose eta is above 0, which several default to. euler, heun, dpm_2, dpmpp_2m and the ode variants keep it.
 
 | | |
 |---|---|
@@ -8918,7 +8918,7 @@ Starting noise whose pattern carries over from one video frame to the next inste
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `noise_seed` | `INT` | Yes | 0 |  | The seed the noise field is drawn from, as `0` or `12345`. The same seed and hold reproduce a clip exactly. |
-| `hold` | `FLOAT` | Yes | 2.0 |  | How many latent frames the noise pattern carries over. 0.0 draws ordinary noise and matches Random Noise exactly. Higher values cut the frame-to-frame change: 2.0 to 0.63 of ordinary noise, 8.0 to 0.34, 25.0 to 0.20, 64.0 to 0.12, 128.0 to 0.09. One latent frame is about 3.4 output frames on MiniMax H3, 4 on Wan and 8 on LTX. |
+| `hold` | `FLOAT` | Yes | 2.0 |  | How many latent frames the noise pattern carries over. 0.0 draws ordinary noise and matches RandomNoise exactly. Higher values cut the frame-to-frame change: 2.0 to 0.63 of ordinary noise, 8.0 to 0.34, 25.0 to 0.20, 64.0 to 0.12, 128.0 to 0.09. One latent frame is about 3.4 output frames on MiniMax H3, 4 on Wan and 8 on LTX. |
 
 **Outputs**
 
