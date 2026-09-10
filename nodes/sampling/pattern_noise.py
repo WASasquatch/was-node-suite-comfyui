@@ -31,7 +31,7 @@ class AffinePatternNoise(io.ComfyNode):
                 "Starting noise with an affine mask laid over it: the draw is multiplied by "
                 "max_scale and offset by max_bias wherever the pattern is white, so the "
                 "noise carries the pattern's structure instead of being flat. Wire it into "
-                "the noise socket of any custom sampler in place of Random Noise. The four "
+                "the noise socket of any custom sampler in place of RandomNoise. The four "
                 "patterns read off a picture are not offered, since a starting draw has no "
                 "picture to read."
             ),

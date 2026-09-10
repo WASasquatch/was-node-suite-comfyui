@@ -18,6 +18,39 @@ all = [
 [project.urls]
 Repository = "https://github.com/WASasquatch/was-node-suite-comfyui"
 
+[tool.open_manager]
+branch = "main"
+docs = "https://github.com/WASasquatch/was-node-suite-comfyui/blob/main/NODES.md"
+funding = "https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US"
+release_note = """
+WAS-NS 3.x.x is flagged by the registry's automated scan for subprocess use. Both places that
+call it run pip, both are off in a fresh install, and both need config.yaml edited by hand to
+switch on: dependencies.install_missing, which installs a feature group's requirements at
+startup, and viewer.install_extensions, which installs what a content viewer extension needs.
+Left alone, neither runs and the pack starts no process.
+"""
+themes = ["themes/was-node-suite.json"]
+example_workflows = [
+    "docs/workflows/affine-minimax-h3-example.json",
+    "docs/workflows/affine-krea2.json",
+    "docs/workflows/image-style-filter.json",
+    "docs/workflows/image-optics-and-grade.json",
+    "docs/workflows/prompt-library.json",
+    "docs/workflows/prompt-lists.json",
+    "docs/workflows/noodle-soup-pick.json",
+    "docs/workflows/mask-bounds.json",
+    "docs/workflows/layers.json",
+    "docs/workflows/loops-for-loop.json",
+    "docs/workflows/preprocessors.json",
+    "docs/workflows/hdr.json",
+    "docs/workflows/analysis-readouts.json",
+    "docs/workflows/face-detection.json",
+    "docs/workflows/three-scene.json",
+    "docs/workflows/document-export.json",
+    "docs/workflows/zip-archives.json",
+    "docs/workflows/content-viewer.json",
+]
+
 [tool.comfy]
 PublisherId = "was"
 DisplayName = "WAS Node Suite v3"

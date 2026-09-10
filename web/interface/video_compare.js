@@ -136,25 +136,17 @@ export function createVideoComparePanel(node) {
   const dragging = { on: false };
   const paint = () => {
     right.style.clipPath = `inset(0 0 0 ${split}%)`;
-    const width = stage.getBoundingClientRect().width;
     const line = hovering ? LINE_HOVER : LINE_WIDTH;
     divider.style.width = `${line}px`;
-    if (!(width > 0)) {
-      divider.style.left = `${split}%`;
-      grip.style.left = `${split}%`;
-      return;
-    }
-    const at = (split / 100) * width;
-    divider.style.left = `${Math.max(0, Math.min(width - line, at - line / 2))}px`;
-    grip.style.left = `${Math.max(0, Math.min(width - GRIP_WIDTH, at - GRIP_WIDTH / 2))}px`;
+    // Placed against the same percentage the clip-path uses, so the canvas zoom cannot put
+    // the two out of step. The clamp keeps both inside the stage at either end.
+    const centre = (span) => `clamp(0px, calc(${split}% - ${span / 2}px), calc(100% - ${span}px))`;
+    divider.style.left = centre(line);
+    grip.style.left = centre(GRIP_WIDTH);
   };
 
   grip.addEventListener("pointerenter", () => { hovering = true; paint(); });
   grip.addEventListener("pointerleave", () => { if (!dragging.on) { hovering = false; paint(); } });
-
-  // The stage changes width with the node, and the divider is placed in pixels.
-  const watcher = typeof ResizeObserver === "function" ? new ResizeObserver(() => paint()) : null;
-  watcher?.observe(stage);
 
   const positionFrom = (event) => {
     const box = stage.getBoundingClientRect();
@@ -250,7 +242,6 @@ export function createVideoComparePanel(node) {
   const dispose = () => {
     try {
       stop?.();
-      watcher?.disconnect();
       for (const el of [left, right]) {
         el.pause();
         el.removeAttribute("src");
