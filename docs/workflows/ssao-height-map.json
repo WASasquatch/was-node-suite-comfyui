@@ -1,0 +1,387 @@
+{
+ "id": "ssao-height-map",
+ "revision": 0,
+ "last_node_id": 8,
+ "last_link_id": 8,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "LoadImage",
+   "pos": [
+    40,
+    100
+   ],
+   "size": [
+    320,
+    314
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      1,
+      2
+     ]
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "input_test_village.png",
+    "image"
+   ]
+  },
+  {
+   "id": 2,
+   "type": "MiDaS Model Loader",
+   "pos": [
+    40,
+    470
+   ],
+   "size": [
+    320,
+    60
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "midas_model",
+     "type": "MIDAS_MODEL",
+     "links": [
+      3
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "MiDaS Model Loader"
+   },
+   "widgets_values": [
+    "DPT_Small"
+   ]
+  },
+  {
+   "id": 3,
+   "type": "MiDaS Depth Approximation",
+   "pos": [
+    420,
+    100
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 2
+    },
+    {
+     "name": "midas_model",
+     "type": "MIDAS_MODEL",
+     "link": 3
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": [
+      4,
+      5
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "MiDaS Depth Approximation"
+   },
+   "widgets_values": [
+    false,
+    false
+   ]
+  },
+  {
+   "id": 4,
+   "type": "PreviewImage",
+   "pos": [
+    420,
+    270
+   ],
+   "size": [
+    330,
+    330
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 4
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 5,
+   "type": "Image SSAO (Ambient Occlusion)",
+   "pos": [
+    810,
+    100
+   ],
+   "size": [
+    360,
+    290
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 1
+    },
+    {
+     "name": "height_maps",
+     "type": "IMAGE",
+     "link": 5
+    }
+   ],
+   "outputs": [
+    {
+     "name": "composited_images",
+     "type": "IMAGE",
+     "links": [
+      6
+     ]
+    },
+    {
+     "name": "ssao_images",
+     "type": "IMAGE",
+     "links": [
+      7
+     ]
+    },
+    {
+     "name": "specular_mask_images",
+     "type": "IMAGE",
+     "links": [
+      8
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "Image SSAO (Ambient Occlusion)"
+   },
+   "widgets_values": [
+    1.0,
+    120,
+    128,
+    16,
+    24,
+    2.5,
+    200,
+    false
+   ]
+  },
+  {
+   "id": 6,
+   "type": "PreviewImage",
+   "pos": [
+    1230,
+    100
+   ],
+   "size": [
+    380,
+    330
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 6
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 7,
+   "type": "PreviewImage",
+   "pos": [
+    1230,
+    470
+   ],
+   "size": [
+    380,
+    330
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 7
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 8,
+   "type": "PreviewImage",
+   "pos": [
+    1230,
+    840
+   ],
+   "size": [
+    380,
+    330
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 8
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": []
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   0,
+   5,
+   0,
+   "IMAGE"
+  ],
+  [
+   2,
+   1,
+   0,
+   3,
+   0,
+   "IMAGE"
+  ],
+  [
+   3,
+   2,
+   0,
+   3,
+   1,
+   "MIDAS_MODEL"
+  ],
+  [
+   4,
+   3,
+   0,
+   4,
+   0,
+   "IMAGE"
+  ],
+  [
+   5,
+   3,
+   0,
+   5,
+   1,
+   "IMAGE"
+  ],
+  [
+   6,
+   5,
+   0,
+   6,
+   0,
+   "IMAGE"
+  ],
+  [
+   7,
+   5,
+   1,
+   7,
+   0,
+   "IMAGE"
+  ],
+  [
+   8,
+   5,
+   2,
+   8,
+   0,
+   "IMAGE"
+  ]
+ ],
+ "groups": [
+  {
+   "id": 1,
+   "title": "Height map from the frame",
+   "bounding": [
+    20,
+    20,
+    750,
+    600
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 2,
+   "title": "Occlusion traced off the relief",
+   "bounding": [
+    790,
+    20,
+    830,
+    1160
+   ],
+   "color": "#88A",
+   "flags": {}
+  }
+ ],
+ "config": {},
+ "extra": {},
+ "version": 0.4
+}
