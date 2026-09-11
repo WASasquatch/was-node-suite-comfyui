@@ -494,17 +494,19 @@ export function createReportPanel(node, options = {}) {
   const stopFinished = onNodeFinished(node, () => refresh());
   const stopEnded = onRunEnded(() => refresh());
 
-  // The panel takes every wheel gesture over it and the graph zooms from the canvas around
-  // the node, so a list at either end never turns the next tick into a zoom.
+  // A region under the pointer scrolls while it has somewhere left to go. Once it has not, the
+  // gesture is the graph's and zooms the node under the pointer.
   const releaseWheel = captureWheel(root, (event) => {
     const from = event.target instanceof Element ? event.target : root;
     for (let region = from; region; region = region.parentElement) {
       if (scrollable(region)) {
+        const before = region.scrollTop;
         region.scrollTop += wheelPixels(event, region).y;
-        return;
+        return region.scrollTop !== before;
       }
       if (region === root) break;
     }
+    return false;
   });
 
   refresh();

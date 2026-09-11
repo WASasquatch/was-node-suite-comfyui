@@ -399,9 +399,10 @@ export function createFrameTimelinePanel(node, options = {}) {
   // The rows are the only thing here that scrolls, and the panel takes every wheel gesture
   // over it, so the rows at either end leave the next tick doing nothing rather than zooming.
   const releaseWheel = captureWheel(root, (event) => {
-    if (table.scrollHeight > table.clientHeight && table.contains(event.target)) {
-      table.scrollTop += wheelPixels(event, table).y;
-    }
+    if (table.scrollHeight <= table.clientHeight || !table.contains(event.target)) return false;
+    const before = table.scrollTop;
+    table.scrollTop += wheelPixels(event, table).y;
+    return table.scrollTop !== before;
   });
 
   refresh();

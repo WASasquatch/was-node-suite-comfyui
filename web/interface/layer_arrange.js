@@ -606,12 +606,13 @@ export function createLayerArrangePanel(node, options = {}) {
     paint();
   }, LOG_NAME);
 
-  // The rows are the only thing here that scrolls, and the panel takes every wheel gesture
-  // over it, so the list at either end leaves the next tick doing nothing rather than zooming.
+  // The rows are the only thing here that scrolls. At either end of the list the gesture is
+  // the graph's and zooms the node under the pointer.
   const releaseWheel = captureWheel(root, (event) => {
-    if (list.scrollHeight > list.clientHeight && list.contains(event.target)) {
-      list.scrollTop += wheelPixels(event, list).y;
-    }
+    if (list.scrollHeight <= list.clientHeight || !list.contains(event.target)) return false;
+    const before = list.scrollTop;
+    list.scrollTop += wheelPixels(event, list).y;
+    return list.scrollTop !== before;
   });
 
   root.addEventListener("contextmenu", (event) => event.preventDefault());

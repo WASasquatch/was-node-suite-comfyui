@@ -1,9 +1,10 @@
 /**
- * Where a pointer is, in the pixels an interface draws in.
+ * Where a pointer is in the pixels an interface draws in, and which wheel gestures a panel keeps.
  *
- * A canvas inside a node is scaled by the graph's zoom, so a position in client pixels is not a
- * position in the interface's own pixels.
+ * A canvas inside a node is scaled by the graph's zoom, so client pixels are not its own pixels.
  */
+
+import { app } from "../../../scripts/app.js";
 
 /**
  * Read a pointer position in an element's own pixels.
@@ -49,19 +50,33 @@ export function wheelPixels(event, element) {
   return { x: event.deltaX, y: event.deltaY };
 }
 
+// How long a panel goes on taking gestures it has no use for after the last one it did use, in
+// milliseconds. Running a list to its end and holding the wheel down stays in the list.
+const LATCH_MS = 400;
+
 /**
- * Take every wheel gesture over a panel, so the graph's zoom is left to the canvas around it.
+ * Take the wheel gestures a panel uses, and leave the rest to the graph.
  *
  * @param {HTMLElement} element - The panel's own element.
- * @param {(event: WheelEvent) => void} [onWheel] - Called with each gesture, for a panel that
- *   scrolls or steps through something. Left out, the gesture is swallowed.
+ * @param {(event: WheelEvent) => boolean} [onWheel] - Called with each gesture, for a panel that
+ *   scrolls or steps through something. Answers true where the panel used the gesture. Left out,
+ *   the panel uses none of them.
  * @returns {() => void} Releases the listener.
  */
 export function captureWheel(element, onWheel) {
+  let usedAt = -Infinity;
   const handler = (event) => {
+    // Ctrl and Cmd are the frontend's own zoom modifier, and they reach the graph from anywhere
+    // on the panel, including one whose plain wheel means something else.
+    const zoom = event.ctrlKey || event.metaKey;
+    const used = !zoom && onWheel?.(event) === true;
+    if (used) {
+      usedAt = event.timeStamp;
+    } else if (zoom || event.timeStamp - usedAt >= LATCH_MS) {
+      app.canvas?.processMouseWheel?.(event);
+    }
     event.preventDefault();
     event.stopPropagation();
-    onWheel?.(event);
   };
   element.addEventListener("wheel", handler, { passive: false });
   return () => element.removeEventListener("wheel", handler);

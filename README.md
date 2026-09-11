@@ -88,7 +88,7 @@ What each area does: [`FEATURES.md`](FEATURES.md).
 
 No node id is renamed. Two nodes are now a different node under the same menu name, two ids
 are gone and another node does the job of each, and ComfyUI offers to swap all four in.
-Widgets, slot counts, three menu labels and three results changed, and a workflow saved
+Widgets, slot counts, three menu labels and four results changed, and a workflow saved
 before v3 is carried across as it loads.
 
 **Four retired ids.** Each one opens listed in ComfyUI's missing-node dialog. Tick it, press
@@ -116,13 +116,14 @@ read back onto the new widgets and everything wired stays wired. The three batch
 `Seed (Number Outputs)` and `Save Video` is `Save Video (Advanced)`, so none shares a name with
 a core ComfyUI node. Only the label changed, and the old names still find them in search.
 
-**Three changed results.**
+**Four changed results.**
 
 | Node | What changed | What to do |
 |---|---|---|
 | `Image Blending Mode` | 26 blend modes instead of 14, in linear light on the GPU, keeping values above white. `add` now adds the two layers rather than painting `image_b` over `image_a` | A graph using `add` comes out brighter. Switch it to `normal` for what it did before |
 | `Image Style Filter` | 37 looks, every graded one finished with a halation. The 26 period looks keep the colour their name has always meant | Nothing. A saved workflow opens on the same style |
 | `Mask Erode Region` | Holds the frame edge instead of treating outside the frame as unset | A mask that touched an edge comes out wider. One with a clear margin is unchanged |
+| `Image SSAO (Ambient Occlusion)` | Traces rays across the map as real relief instead of averaging neighbouring pixels, so the shading follows the surface and no longer reacts to the image's own colour. The `depth_images` input is now `height_maps`, `tile_size` is gone, and `height_scale`, `ray_count`, `step_count` and `angle_bias` set the relief and the tracing. The whole body is float now, so linear light above 1.0 is shaded rather than clipped, and a `precision` widget writes 8, 16 or 32 bit for EXR Save | Re-wire the depth map into `height_maps`, which opens unconnected. The other settings are read back onto the new widgets. Highlight masking now starts off, so the node shades as soon as it is dropped, and `strength` at 0 leaves the image untouched rather than black |
 
 ---
 

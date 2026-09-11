@@ -952,10 +952,11 @@ function createFilePicker(node) {
   function guard(handler) {
     return (event) => {
       try {
-        handler(event);
+        return handler(event);
       } catch (error) {
         console.error(`[${EXT_NAME}] File browser input failed:`, error);
       }
+      return undefined;
     };
   }
 
@@ -1097,11 +1098,13 @@ function createFilePicker(node) {
   };
 
   const onWheel = (event) => {
-    if (!event.deltaY) return;
+    if (!event.deltaY) return false;
     const step = event.deltaY > 0 ? WHEEL_ROWS : -WHEEL_ROWS;
-    // The panel takes every wheel gesture over it, so at either end of the listing, and for a
-    // listing that fits on screen, the next tick does nothing rather than zooming the graph.
+    // At either end of the listing, and for a listing that fits on screen, the view does not
+    // move and the gesture is the graph's.
+    const before = state.view;
     setView(state.view + step);
+    return state.view !== before;
   };
 
   /**

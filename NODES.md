@@ -3267,7 +3267,7 @@ Push an image's brightness through a sine wave, which turns smooth gradients int
 <details>
 <summary><b>Image SSAO (Ambient Occlusion)</b></summary>
 
-Add contact shadows to an image using a depth map: wherever the depth jumps, the shallower side is darkened, the way light fails to reach a crevice. Gives a flat render a sense of solidity.
+Shade an image as though its height map were real relief standing off the page. Rays are traced out from every pixel in a full circle, and a pixel is darkened by how much of the sky the surrounding ridges block. Sinks and the insides of corners go dark, open ground stays bright.
 
 | | |
 |---|---|
@@ -3277,21 +3277,25 @@ Add contact shadows to an image using a depth map: wherever the depth jumps, the
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `images` | `IMAGE` | Yes |  |  | The image to shade. A batch is handled one image at a time. |
-| `depth_images` | `IMAGE` | Yes |  |  | The matching depth map, where bright means near and dark means far. It is resized to the image, so it need not match its size. MiDaS Depth Approximation produces a suitable one. |
-| `strength` | `FLOAT` | Yes | 1.0 |  | How dark the shading goes. 1.0 is the measured amount, 0.5 is half as deep, 2.0 exaggerates it. 0.0 removes the shading, leaving the image black because the occlusion field itself goes to black. |
-| `radius` | `FLOAT` | Yes | 30 |  | How far around each pixel the depth is compared, in pixels. Small values such as 4 give tight outlines around objects; 30 gives broad soft shading. Cost grows with the square of this, so large values are very slow. |
-| `ao_blur` | `FLOAT` | Yes | 2.5 |  | How much the shading is softened before it is applied, in pixels. 2.5 smooths away the pixel-level noise; 20 turns the shading into a broad gradient. |
-| `specular_threshold` | `INT` | Yes | 25 |  | How bright a pixel has to be, on a 0-255 scale, to count as a highlight that should not be shaded. 25 protects almost everything that is not nearly black; 200 protects only the brightest highlights. Only read when enable_specular_masking is on, but it always decides the third output. |
-| `enable_specular_masking` | `BOOLEAN` | Yes | True |  | Keep the bright areas picked out by specular_threshold free of shading. On protects highlights and light sources from being darkened by their own depth edge; off shades the whole image. |
-| `tile_size` | `INT` | Yes | 1 |  | Measure the image in square tiles of this many pixels instead of all at once. 1 measures the whole image and is the only setting that gives correct shading; anything larger cuts each pixel's comparison off at the tile edge, which shows as a grid. Values above 8 are treated as 8. |
+| `images` | `IMAGE` | Yes |  |  | The image to shade. A batch is handled one image at a time. Linear light is carried through unclipped, so shading a plate on its way to EXR Save keeps every highlight above 1.0. |
+| `height_maps` | `IMAGE` | Yes |  |  | The matching height map, where bright stands high and dark lies low. It is resized to the image, so it need not match its size. MiDaS Depth Approximation produces a suitable one. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | How dark the shading goes. 1.0 is the measured amount, 0.5 is half as deep, 2.0 exaggerates it. 0.0 leaves the image exactly as it arrived. |
+| `radius` | `FLOAT` | Yes | 30 |  | How far each ray travels from its pixel, in pixels. 4 catches only the tight creases right at an edge; 30 gathers broad soft shading; 200 lets a distant ridge shade a whole valley. Cost does not grow with this, only with ray_count and step_count. |
+| `height_scale` | `FLOAT` | Yes | 64 |  | How far the map is extruded, in pixels, from black to white. This against radius is what sets the depth of the shading: 64 with a radius of 30 gives steep relief and heavy occlusion, 16 gives a gentle emboss. 0 flattens the map and the shading disappears. |
+| `ray_count` | `INT` | Yes | 16 |  | How many directions are traced around the circle. 8 is fast and can band on smooth gradients, 16 is clean for most images, 32 and above for large radii where the banding shows. Cost is directly this times step_count. |
+| `step_count` | `INT` | Yes | 16 |  | How many samples are taken along each ray. Too few for the radius and a narrow ridge is stepped straight over, so raise this when a large radius starts missing thin occluders. 16 suits a radius up to about 64; use 32 beyond that. |
+| `angle_bias` | `FLOAT` | Yes | 0.15 |  | How steep a ridge has to be before it shades at all, as a rise over a run. Most height maps arrive with only 256 levels, and every one of those steps is a tiny cliff that shades as concentric rings across ground that should be flat. 0.15 clears that at the default relief; raise it towards 0.3 if rings survive a larger height_scale, and drop it to 0 for a height map that came in as smooth floating point. |
+| `ao_blur` | `FLOAT` | Yes | 2.5 |  | How much the shading is softened before it is applied, in pixels. 2.5 smooths away the sampling noise; 20 turns the shading into a broad gradient. 0 applies it exactly as traced. |
+| `specular_threshold` | `INT` | Yes | 200 |  | How bright a pixel has to be, on a 0-255 scale, to count as a highlight that should not be shaded. 200 protects only genuine highlights; 25 protects everything that is not nearly black and leaves the shading doing nothing. Only read when enable_specular_masking is on, but it always decides the third output. |
+| `enable_specular_masking` | `BOOLEAN` | Yes | False |  | Keep the bright areas picked out by specular_threshold free of shading. On protects highlights and light sources from being darkened; off shades the whole image from its relief alone. |
+| `precision` | `COMBO` | Yes | 32 bit float | `8 bit`, `16 bit`, `32 bit float` | How finely the three outputs are stepped, measured on the 0 to 1 scale. '32 bit float' keeps every value and is what EXR Save and DNG Save want; '16 bit' rounds to steps of 1/65535, still smooth enough for a graded plate; '8 bit' rounds to steps of 1/255, which bands a soft gradient and only matches what a PNG can hold anyway. Nothing is clipped at any setting: linear light above 1.0 keeps its value and lands on the same ladder of steps, so a highlight at 4.0 has four times as many steps under it as one at 1.0. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `composited_images` | `IMAGE` | The source image with the shading multiplied into it. |
-| `ssao_images` | `IMAGE` | The shading on its own, as a greyscale image: white where light reaches, dark in the crevices. |
+| `composited_images` | `IMAGE` | The source image with the shading multiplied into it, on the scale it arrived on. Light above 1.0 is dimmed rather than clipped. |
+| `ssao_images` | `IMAGE` | The shading on its own, as a greyscale image: white where the sky reaches, dark in the crevices. |
 | `specular_mask_images` | `IMAGE` | The area treated as highlight, white where it was protected from shading. Produced whether or not the masking was enabled. |
 
 </details>

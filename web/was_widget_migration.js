@@ -15,6 +15,14 @@ const EXT_NAME = "WASNodeSuite.WidgetMigration";
 // is new, and takes its default rather than a value that was meant for the widget before it.
 const V2_WIDGET_ORDER = {
   "WASImageGradientMapNative": ["flip_left_right"],
+  "Image SSAO (Ambient Occlusion)": [
+    "strength",
+    "radius",
+    "ao_blur",
+    "specular_threshold",
+    "enable_specular_masking",
+    "tile_size",
+  ],
   "Load Image Batch": [
     "mode",
     "seed",

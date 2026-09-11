@@ -35,6 +35,7 @@ example_workflows = [
     "docs/workflows/affine-krea2.json",
     "docs/workflows/image-style-filter.json",
     "docs/workflows/image-optics-and-grade.json",
+    "docs/workflows/ssao-height-map.json",
     "docs/workflows/prompt-library.json",
     "docs/workflows/prompt-lists.json",
     "docs/workflows/noodle-soup-pick.json",

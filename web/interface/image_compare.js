@@ -314,13 +314,13 @@ export function createImageComparePanel(node) {
   observer?.observe(root);
 
   // The strip is the only thing here that scrolls, and only sideways, so a wheel over it walks
-  // the tabs. Everywhere else the panel takes the gesture and the graph zooms from the canvas
-  // around the node.
+  // the tabs. Everywhere else the gesture is the graph's and zooms the node under the pointer.
   const releaseWheel = captureWheel(root, (event) => {
-    if (strip.contains(event.target) && strip.scrollWidth > strip.clientWidth) {
-      const step = wheelPixels(event, strip);
-      strip.scrollLeft += step.x + step.y;
-    }
+    if (!strip.contains(event.target) || strip.scrollWidth <= strip.clientWidth) return false;
+    const step = wheelPixels(event, strip);
+    const before = strip.scrollLeft;
+    strip.scrollLeft += step.x + step.y;
+    return strip.scrollLeft !== before;
   });
 
   // A run replaces what the node published, so the panel asks again rather than holding a

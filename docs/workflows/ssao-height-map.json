@@ -1,387 +1,454 @@
 {
- "id": "ssao-height-map",
- "revision": 0,
- "last_node_id": 8,
- "last_link_id": 8,
- "nodes": [
-  {
-   "id": 1,
-   "type": "LoadImage",
-   "pos": [
-    40,
-    100
-   ],
-   "size": [
-    320,
-    314
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
+  "id": "8ab3b8f6-9c35-42ad-bf2e-3ca5ec85a098",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 16,
+  "nodes": [
     {
-     "name": "IMAGE",
-     "type": "IMAGE",
-     "links": [
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        3878.5529948779417,
+        -1241.7402879487042
+      ],
+      "size": [
+        904.5376632006398,
+        630.6731627760668
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        2982.798449203968,
+        -542.4099415440611
+      ],
+      "size": [
+        859.3587007243148,
+        490.728292822987
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "PreviewImage",
+      "pos": [
+        3881.5770959452652,
+        -549.2140027285745
+      ],
+      "size": [
+        902.3340082204393,
+        502.84948813010624
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASPowerPreprocessor",
+      "pos": [
+        2107.6547002977436,
+        -775.1011781086314
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASPowerPreprocessor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "depth_map",
+        "Depth Anything V2 Large",
+        1024,
+        100,
+        200,
+        3,
+        16,
+        0,
+        "fixed",
+        0,
+        4
+      ],
+      "widgets_values_named": {
+        "preprocessor": "depth_map",
+        "model": "Depth Anything V2 Large",
+        "resolution": 1024,
+        "threshold_low": 100,
+        "threshold_high": 200,
+        "radius": 3,
+        "strength": 16,
+        "seed": 0,
+        "fixed": "fixed",
+        "tile": 0,
+        "steps": 4
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASImageCompare",
+      "pos": [
+        2969.353224926447,
+        -1246.1238949043427
+      ],
+      "size": [
+        879.574079663821,
+        643.5757020892504
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 16
+        },
+        {
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 7,
+      "type": "Image SSAO (Ambient Occlusion)",
+      "pos": [
+        2517.5934279466314,
+        -1118.2353857315547
+      ],
+      "size": [
+        364,
+        518
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 14
+        },
+        {
+          "name": "height_maps",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "composited_images",
+          "type": "IMAGE",
+          "links": [
+            11,
+            15
+          ]
+        },
+        {
+          "name": "ssao_images",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        },
+        {
+          "name": "specular_mask_images",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Image SSAO (Ambient Occlusion)",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        2,
+        25,
+        174.4,
+        32,
+        16,
+        0,
+        7,
+        200,
+        true,
+        "32 bit float"
+      ],
+      "widgets_values_named": {
+        "strength": 2,
+        "radius": 25,
+        "height_scale": 174.4,
+        "ray_count": 32,
+        "step_count": 16,
+        "angle_bias": 0,
+        "ao_blur": 7,
+        "specular_threshold": 200,
+        "enable_specular_masking": true,
+        "precision": "32 bit float"
+      }
+    },
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        1529.8253651874993,
+        -1117.6851850985831
+      ],
+      "size": [
+        492.1652193095697,
+        630.2534519332122
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            14,
+            16
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "super_nintendo.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "super_nintendo.png",
+        "upload": "image"
+      }
+    }
+  ],
+  "links": [
+    [
       1,
-      2
-     ]
-    },
-    {
-     "name": "MASK",
-     "type": "MASK",
-     "links": null
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "LoadImage"
-   },
-   "widgets_values": [
-    "input_test_village.png",
-    "image"
-   ]
-  },
-  {
-   "id": 2,
-   "type": "MiDaS Model Loader",
-   "pos": [
-    40,
-    470
-   ],
-   "size": [
-    320,
-    60
-   ],
-   "flags": {},
-   "order": 1,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
-    {
-     "name": "midas_model",
-     "type": "MIDAS_MODEL",
-     "links": [
-      3
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "MiDaS Model Loader"
-   },
-   "widgets_values": [
-    "DPT_Small"
-   ]
-  },
-  {
-   "id": 3,
-   "type": "MiDaS Depth Approximation",
-   "pos": [
-    420,
-    100
-   ],
-   "size": [
-    330,
-    110
-   ],
-   "flags": {},
-   "order": 2,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "image",
-     "type": "IMAGE",
-     "link": 2
-    },
-    {
-     "name": "midas_model",
-     "type": "MIDAS_MODEL",
-     "link": 3
-    }
-   ],
-   "outputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "links": [
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      2,
+      0,
+      7,
+      1,
+      "IMAGE"
+    ],
+    [
+      11,
+      7,
+      0,
       4,
-      5
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "MiDaS Depth Approximation"
-   },
-   "widgets_values": [
-    false,
-    false
-   ]
-  },
-  {
-   "id": 4,
-   "type": "PreviewImage",
-   "pos": [
-    420,
-    270
-   ],
-   "size": [
-    330,
-    330
-   ],
-   "flags": {},
-   "order": 3,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "link": 4
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "PreviewImage"
-   },
-   "widgets_values": []
-  },
-  {
-   "id": 5,
-   "type": "Image SSAO (Ambient Occlusion)",
-   "pos": [
-    810,
-    100
-   ],
-   "size": [
-    360,
-    290
-   ],
-   "flags": {},
-   "order": 4,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "link": 1
+      0,
+      "IMAGE"
+    ],
+    [
+      12,
+      7,
+      1,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      7,
+      2,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      14,
+      1,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      15,
+      7,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      16,
+      1,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "ds": {
+      "scale": 0.443300960901153,
+      "offset": [
+        -533.1940667781704,
+        1888.5699533816062
+      ]
     },
-    {
-     "name": "height_maps",
-     "type": "IMAGE",
-     "link": 5
-    }
-   ],
-   "outputs": [
-    {
-     "name": "composited_images",
-     "type": "IMAGE",
-     "links": [
-      6
-     ]
-    },
-    {
-     "name": "ssao_images",
-     "type": "IMAGE",
-     "links": [
-      7
-     ]
-    },
-    {
-     "name": "specular_mask_images",
-     "type": "IMAGE",
-     "links": [
-      8
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "Image SSAO (Ambient Occlusion)"
-   },
-   "widgets_values": [
-    1.0,
-    120,
-    128,
-    16,
-    24,
-    2.5,
-    200,
-    false
-   ]
+    "links_added_by_ue": [],
+    "frontendVersion": "1.51.9",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
-  {
-   "id": 6,
-   "type": "PreviewImage",
-   "pos": [
-    1230,
-    100
-   ],
-   "size": [
-    380,
-    330
-   ],
-   "flags": {},
-   "order": 5,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "link": 6
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "PreviewImage"
-   },
-   "widgets_values": []
-  },
-  {
-   "id": 7,
-   "type": "PreviewImage",
-   "pos": [
-    1230,
-    470
-   ],
-   "size": [
-    380,
-    330
-   ],
-   "flags": {},
-   "order": 6,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "link": 7
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "PreviewImage"
-   },
-   "widgets_values": []
-  },
-  {
-   "id": 8,
-   "type": "PreviewImage",
-   "pos": [
-    1230,
-    840
-   ],
-   "size": [
-    380,
-    330
-   ],
-   "flags": {},
-   "order": 7,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "link": 8
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "PreviewImage"
-   },
-   "widgets_values": []
-  }
- ],
- "links": [
-  [
-   1,
-   1,
-   0,
-   5,
-   0,
-   "IMAGE"
-  ],
-  [
-   2,
-   1,
-   0,
-   3,
-   0,
-   "IMAGE"
-  ],
-  [
-   3,
-   2,
-   0,
-   3,
-   1,
-   "MIDAS_MODEL"
-  ],
-  [
-   4,
-   3,
-   0,
-   4,
-   0,
-   "IMAGE"
-  ],
-  [
-   5,
-   3,
-   0,
-   5,
-   1,
-   "IMAGE"
-  ],
-  [
-   6,
-   5,
-   0,
-   6,
-   0,
-   "IMAGE"
-  ],
-  [
-   7,
-   5,
-   1,
-   7,
-   0,
-   "IMAGE"
-  ],
-  [
-   8,
-   5,
-   2,
-   8,
-   0,
-   "IMAGE"
-  ]
- ],
- "groups": [
-  {
-   "id": 1,
-   "title": "Height map from the frame",
-   "bounding": [
-    20,
-    20,
-    750,
-    600
-   ],
-   "color": "#3f789e",
-   "flags": {}
-  },
-  {
-   "id": 2,
-   "title": "Occlusion traced off the relief",
-   "bounding": [
-    790,
-    20,
-    830,
-    1160
-   ],
-   "color": "#88A",
-   "flags": {}
-  }
- ],
- "config": {},
- "extra": {},
- "version": 0.4
+  "version": 0.4
 }

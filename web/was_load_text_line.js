@@ -1266,10 +1266,11 @@ function createLineBrowser(node) {
   function guard(handler) {
     return (event) => {
       try {
-        handler(event);
+        return handler(event);
       } catch (error) {
         console.error(`[${EXT_NAME}] Line browser input failed:`, error);
       }
+      return undefined;
     };
   }
 
@@ -1434,11 +1435,13 @@ function createLineBrowser(node) {
   };
 
   const onWheel = (event) => {
-    if (!event.deltaY) return;
+    if (!event.deltaY || !state.window) return false;
     const step = event.deltaY > 0 ? WHEEL_ROWS : -WHEEL_ROWS;
-    // The panel takes every wheel gesture over it, so at either end of the file, and for a file
-    // that fits on screen, the next tick does nothing rather than zooming the graph.
-    if (state.window) setView(state.view + step);
+    // At either end of the file, and for a file that fits on screen, the view does not move and
+    // the gesture is the graph's.
+    const before = state.view;
+    setView(state.view + step);
+    return state.view !== before;
   };
 
   const onKeyDown = (event) => {

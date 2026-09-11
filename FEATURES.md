@@ -72,9 +72,10 @@ For measuring a region once, then cropping to it, working on it and pasting the 
 
 49 nodes. **Image Style Filter** carries 37 looks. **Image Bloom Filter**, **Image Chromatic
 Aberration**, **Image Lens Distortion**, **Image Vignette**, **Image fDOF Filter**, **Image Film
-Grain** and **Image Monitor Effects Filter** are optical. **Image SSAO (Ambient Occlusion)** and
-**Image SSDO (Direct Occlusion)** shade from depth. **Vivid Sharpen**, **Image Lucy Sharpen**,
-**Image High Pass Filter**, **Image Median Filter** and **Image Guided Filter** work on detail.
+Grain** and **Image Monitor Effects Filter** are optical. **Image SSAO (Ambient Occlusion)**
+shades from a height map in 8, 16 or 32 bit and **Image SSDO (Direct Occlusion)** from depth.
+**Vivid Sharpen**, **Image Lucy Sharpen**, **Image High Pass Filter**, **Image Median Filter**
+and **Image Guided Filter** work on detail.
 
 **Image Crop Face (YuNet)**, **Image Paste Face**, **Image Crop Region**, **Image Paste Crop**,
 **Image Seamless Texture**, **Image Tiled**, **Image Draw Text**, **Image Pixelate**, **Image
@@ -82,8 +83,9 @@ Select Color**, **Image Remove Color** and **Create Grid Image** cover the proce
 
 For grading and finishing a render inside the graph.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Image/Filter** and **WAS Suite/Image/Process**. Graph:
-[`image-style-filter.json`](docs/workflows/image-style-filter.json).
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Filter** and **WAS Suite/Image/Process**. Graphs:
+[`image-style-filter.json`](docs/workflows/image-style-filter.json),
+[`ssao-height-map.json`](docs/workflows/ssao-height-map.json).
 
 ---
 
@@ -122,10 +124,14 @@ For matching shots to each other, and for moving a grade between graphs as a `.c
 Tone Map** brings it back down, and **EXR Load**, **EXR Save** and **DNG Save** read and write
 formats that hold it. **HDR VAE Decode** decodes without clipping.
 
+**Image SSAO (Ambient Occlusion)** works in the same light: it shades without clipping
+and its `precision` widget writes 8, 16 or 32 bit for EXR Save.
+
 For work where values above white have to survive the filter chain.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Image/HDR**. Graph:
-[`hdr.json`](docs/workflows/hdr.json).
+[`NODES.md`](NODES.md) under **WAS Suite/Image/HDR**. Graphs:
+[`hdr.json`](docs/workflows/hdr.json),
+[`ssao-height-map.json`](docs/workflows/ssao-height-map.json).
 
 ---
 

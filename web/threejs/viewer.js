@@ -137,8 +137,9 @@ function claimPointer(root) {
         root.addEventListener(type, (event) => event.stopPropagation());
     }
     // The wheel dollies the camera on the scene's own canvas, which has already run by the time
-    // the gesture reaches here, and the graph zooms from the canvas around the node.
-    return captureWheel(root);
+    // the gesture reaches here, so the viewer claims it rather than dollying and zooming at
+    // once. Ctrl or Cmd held reaches the graph.
+    return captureWheel(root, () => true);
 }
 
 class ViewerController {

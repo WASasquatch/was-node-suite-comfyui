@@ -1,7 +1,8 @@
-"""Screen-space occlusion estimated from an image and its depth map.
+"""Screen-space occlusion behind the occlusion nodes.
 
-The two neighbourhood kernels behind the occlusion nodes, in float64, and the picture-code
-operations the direct pass shades with. Picture codes are int64, 0 to 255.
+:func:`horizon_occlusion` traces rays over a height field in float32, and
+:func:`blurred_field` and :func:`quantised` finish a float result. The neighbourhood kernel
+the direct pass measures with is float64. Picture codes are int64, 0 to 255.
 """
 
 from __future__ import annotations
@@ -9,15 +10,19 @@ from __future__ import annotations
 import math
 
 import torch
+from torch.nn import functional
 
 from .. import log
 
 __all__ = [
+    "PRECISIONS",
     "blurred_codes",
-    "calculate_ambient_occlusion_factor",
+    "blurred_field",
     "calculate_direct_occlusion_factor",
     "darkened_codes",
     "grey_codes",
+    "horizon_occlusion",
+    "quantised",
     "screened_codes",
     "smoothed_codes",
     "stretched_codes",
@@ -44,30 +49,164 @@ SMOOTH_SCALE = 100.0
 BLUR_PASSES = 3
 GREY_WEIGHTS = (19595, 38470, 7471)
 
+#: Widget option -> steps one unit of an output is divided into. 0 keeps every value.
+PRECISIONS = {"8 bit": 255, "16 bit": 65535, "32 bit float": 0}
 
-def calculate_ambient_occlusion_factor(rgb_normalized, depth_normalized, height: int,
-                                       width: int, radius: float):
-    """Estimate ambient occlusion as brightness: bright where open, dark where occluded.
+
+def quantised(picture: torch.Tensor, levels: int) -> torch.Tensor:
+    """Snap a picture to evenly spaced levels.
 
     Args:
-        rgb_normalized: ``(height, width, channels)`` array or tensor scaled to ``[0, 1]``.
-        depth_normalized: ``(height, width)`` array or tensor scaled to ``[0, 1]``, or
-            ``(height, width, channels)``, in which case the depth term averages over the
-            channels as well as over the neighbourhood. The ambient-occlusion node passes
-            the second form, its depth map being an RGB image.
-        height: Row count.
-        width: Column count.
-        radius: Neighbourhood half-width in pixels.
+        picture: Float tensor on a 0 to 1 scale, unbounded above.
+        levels: Steps one unit is divided into, from :data:`PRECISIONS`. 0 or less
+            answers the picture untouched.
 
     Returns:
-        A ``(height, width)`` uint8 array for an array argument and a uint8 tensor for a
-        tensor argument. A pixel whose combined depth and colour difference exceeds 1.0 is
-        more occluded than the scale holds and comes back fully black; summing three colour
-        channels reaches that on ordinary input.
+        A float tensor of the same shape. Nothing is clamped, so light above 1.0 keeps
+        its magnitude and lands on the same ladder of steps.
     """
-    factor = _factors(rgb_normalized, depth_normalized, height, width, radius,
-                      from_neighbour=False)
-    return _answer(_codes(255 - factor * 255), rgb_normalized)
+    if levels <= 0:
+        return picture
+    return torch.round(picture * levels) / levels
+
+
+def blurred_field(plane: torch.Tensor, radius: float) -> torch.Tensor:
+    """Blur a float plane with a run of box filters standing in for a Gaussian kernel.
+
+    Args:
+        plane: ``(height, width)`` float tensor.
+        radius: Standard deviation of the kernel the run approximates, in pixels.
+
+    Returns:
+        A float32 tensor of the same shape. A radius of 0 answers the plane unchanged,
+        and the cost does not grow with the radius.
+    """
+    if radius <= 0:
+        return plane
+    box = _box_width(radius)
+    if box <= 0:
+        return plane
+    field = plane.to(torch.float32)
+    # The running sums below are differences of large partial sums, so the plane is
+    # centred first and the level put back at the end.
+    level = field.mean()
+    field = field - level
+    for _ in range(BLUR_PASSES):
+        field = _box_pass_field(field, box)
+    field = field.T.contiguous()
+    for _ in range(BLUR_PASSES):
+        field = _box_pass_field(field, box)
+    return field.T.contiguous() + level
+
+
+def _box_width(radius: float) -> float:
+    """The box half-width whose repeated passes approximate a Gaussian kernel.
+
+    Args:
+        radius: Standard deviation of the kernel the run approximates, in pixels.
+
+    Returns:
+        The half-width, which is 0 or less where the radius is too small to blur.
+    """
+    variance = radius * radius / BLUR_PASSES
+    length = math.sqrt(12.0 * variance + 1.0)
+    whole = float(int((length - 1.0) / 2.0))
+    part = (2 * whole + 1) * (whole * (whole + 1) - 3 * variance)
+    part /= 6 * (variance - (whole + 1) * (whole + 1))
+    return whole + part
+
+
+def _box_pass_field(plane: torch.Tensor, radius: float) -> torch.Tensor:
+    """One horizontal box-filter pass over a float plane.
+
+    Args:
+        plane: ``(rows, columns)`` float32 tensor.
+        radius: Box half-width in pixels. The fractional part weights the two samples just
+            outside the whole box.
+
+    Returns:
+        A float32 tensor of the same shape. Samples off the ends of a row read as the end
+        sample.
+    """
+    whole = int(radius)
+    weight = 1.0 / (radius * 2.0 + 1.0)
+    edge = (1.0 - (whole * 2 + 1) * weight) / 2.0
+    rows, width = plane.shape
+    reach = torch.arange(-whole - 1, width + whole + 1, device=plane.device)
+    padded = plane[:, reach.clamp(0, width - 1)]
+    running = torch.cat(
+        [plane.new_zeros((rows, 1)), torch.cumsum(padded, dim=1)], dim=1
+    )
+    far = 2 * whole + 2
+    inner = running[:, far:far + width] - running[:, 1:1 + width]
+    return inner * weight + (padded[:, 0:width] + padded[:, far:far + width]) * edge
+
+
+def horizon_occlusion(height_field: torch.Tensor, radius: float, rays: int, steps: int,
+                      relief: float, bias: float = 0.0) -> torch.Tensor:
+    """Occlude a height field by the horizon each pixel sees around the full circle.
+
+    Args:
+        height_field: ``(height, width)`` float tensor scaled to ``[0, 1]``, bright high.
+        radius: How far across the surface each ray travels, in pixels.
+        rays: Directions traced, spaced evenly around the circle.
+        steps: Samples taken along each ray.
+        relief: Pixels the full 0 to 1 height range stands above the base plane.
+        bias: Slope, as a rise over a run, taken off every horizon before it counts.
+
+    Returns:
+        A ``(height, width)`` float32 tensor. 0 is a pixel the open sky reaches from every
+        direction and 1 is one walled in on all of them. A ray leaving the frame reads the
+        edge height from there on.
+    """
+    field = height_field.to(torch.float32) * relief
+    rows, columns = field.shape
+    plane = field.unsqueeze(0).unsqueeze(0)
+    grid = _sample_grid(rows, columns, field.device)
+    shifted = torch.empty_like(grid)
+    offset = torch.zeros(2, dtype=torch.float32, device=field.device)
+    total = torch.zeros_like(field)
+    highest = torch.empty_like(field)
+
+    for ray in range(rays):
+        angle = 2.0 * math.pi * ray / rays
+        across, down = math.cos(angle), math.sin(angle)
+        highest.zero_()
+        for step in range(1, steps + 1):
+            reach = radius * step / steps
+            offset[0] = 2.0 * across * reach / columns
+            offset[1] = 2.0 * down * reach / rows
+            torch.add(grid, offset, out=shifted)
+            sampled = functional.grid_sample(plane, shifted, mode="bilinear",
+                                             padding_mode="border", align_corners=False)
+            # The tangent of the elevation angle to this sample, kept if it is the steepest.
+            torch.maximum(highest, (sampled[0, 0] - field) / reach, out=highest)
+        if bias > 0.0:
+            highest.sub_(bias).clamp_min_(0.0)
+        # sin of the horizon angle is the share of that direction's sky the ridge covers.
+        total += highest * torch.rsqrt(highest * highest + 1.0)
+
+    return total / rays
+
+
+def _sample_grid(rows: int, columns: int, device) -> torch.Tensor:
+    """The identity grid a shifted ``grid_sample`` reads a plane through.
+
+    Args:
+        rows: Row count.
+        columns: Column count.
+        device: Device the grid is built on.
+
+    Returns:
+        A ``(1, rows, columns, 2)`` float32 tensor holding each pixel's own position on the
+        ``align_corners=False`` scale, x before y.
+    """
+    across = (torch.arange(columns, dtype=torch.float32, device=device) * 2.0 + 1.0) / columns - 1.0
+    down = (torch.arange(rows, dtype=torch.float32, device=device) * 2.0 + 1.0) / rows - 1.0
+    grid = torch.empty((1, rows, columns, 2), dtype=torch.float32, device=device)
+    grid[0, :, :, 0] = across.unsqueeze(0)
+    grid[0, :, :, 1] = down.unsqueeze(1)
+    return grid
 
 
 def calculate_direct_occlusion_factor(rgb_normalized, depth_normalized, height: int,
@@ -90,8 +229,7 @@ def calculate_direct_occlusion_factor(rgb_normalized, depth_normalized, height: 
         channels reaches that on ordinary input. When every pixel carries the same
         occlusion value there is no range to stretch and the array comes back black.
     """
-    factor = _factors(rgb_normalized, depth_normalized[:, :, 0], height, width, radius,
-                      from_neighbour=True)
+    factor = _factors(rgb_normalized, depth_normalized[:, :, 0], height, width, radius)
     codes = _codes(factor * 255)
 
     lowest = int(codes.min())
@@ -129,12 +267,7 @@ def blurred_codes(plane: torch.Tensor, radius: float) -> torch.Tensor:
     """
     if radius <= 0:
         return plane
-    variance = radius * radius / BLUR_PASSES
-    length = math.sqrt(12.0 * variance + 1.0)
-    whole = float(int((length - 1.0) / 2.0))
-    part = (2 * whole + 1) * (whole * (whole + 1) - 3 * variance)
-    part /= 6 * (variance - (whole + 1) * (whole + 1))
-    box = whole + part
+    box = _box_width(radius)
     if box <= 0:
         return plane
     for _ in range(BLUR_PASSES):
@@ -238,8 +371,8 @@ def stretched_codes(rgb: torch.Tensor, cutoff: tuple[float, float]) -> torch.Ten
     return stretched
 
 
-def _factors(rgb_normalized, depth_normalized, height: int, width: int, radius: float, *,
-             from_neighbour: bool) -> torch.Tensor:
+def _factors(rgb_normalized, depth_normalized, height: int, width: int,
+             radius: float) -> torch.Tensor:
     """The occlusion factor of every pixel.
 
     Args:
@@ -250,11 +383,10 @@ def _factors(rgb_normalized, depth_normalized, height: int, width: int, radius: 
         height: Row count.
         width: Column count.
         radius: Neighbourhood half-width in pixels.
-        from_neighbour: Measure depth from each neighbour towards the centre pixel. False
-            measures it from the centre pixel towards each neighbour.
 
     Returns:
-        A ``(height, width)`` float64 tensor. 0 is a pixel with no occluder near it.
+        A ``(height, width)`` float64 tensor. 0 is a pixel with no occluder near it. Depth
+        is measured from each neighbour towards the centre pixel.
     """
     device = _device()
     rgb = torch.as_tensor(rgb_normalized, dtype=torch.float64, device=device)
@@ -281,7 +413,7 @@ def _factors(rgb_normalized, depth_normalized, height: int, width: int, radius: 
             stop = min(start + step, bottom)
             centre = depth[start:stop].unsqueeze(3)
             neighbour = depth_window[start + down:stop + down]
-            gap = neighbour - centre if from_neighbour else centre - neighbour
+            gap = neighbour - centre
             depth_total[start:stop] += gap.clamp_min_(0).mul_(inside).sum((2, 3))
             centre = rgb[start:stop].unsqueeze(3)
             neighbour = rgb_window[start + down:stop + down]

@@ -135,18 +135,19 @@ export function createHueDial(node, options = {}) {
    * Write a turn onto the widget, as one undo step.
    *
    * @param {number} turn - Fraction of the wheel, clamped and rounded to `step`.
-   * @returns {void}
+   * @returns {boolean} True where the widget moved.
    */
   function writeTurn(turn) {
     const widget = findWidget(node, widgetName);
-    if (!widget) return;
+    if (!widget) return false;
     const next = clamp(Math.round(turn / step) * step, 0, 1);
-    if (Math.abs(Number(widget.value) - next) < step / 2) return;
+    if (Math.abs(Number(widget.value) - next) < step / 2) return false;
     withGraphChange(() => {
       widget.value = next;
       widget.callback?.(next);
     });
     node.setDirtyCanvas?.(true, true);
+    return true;
   }
 
   /**
@@ -322,13 +323,15 @@ export function createHueDial(node, options = {}) {
    * Nudge the turn by a wheel notch.
    *
    * @param {WheelEvent} event - Wheel event.
-   * @returns {void}
+   * @returns {boolean} True where the notch moved the dial.
    */
   function onWheel(event) {
-    if (!event.deltaY) return;
+    if (!event.deltaY) return false;
     const notch = event.deltaY > 0 ? -step * 10 : step * 10;
-    writeTurn(readTurn() + notch);
+    // At either end of the turn the dial cannot move, and the gesture is the graph's.
+    if (!writeTurn(readTurn() + notch)) return false;
     schedulePaint();
+    return true;
   }
 
   root.addEventListener("pointerdown", onPointerDown);

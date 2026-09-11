@@ -106,7 +106,7 @@
       "slotHeight": 20
     },
     "links": {
-      "mode": "linear",
+      "mode": "spline",
       "border": true
     },
     "categories": {
