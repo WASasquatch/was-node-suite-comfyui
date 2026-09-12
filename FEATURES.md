@@ -15,9 +15,9 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 ## Nodes that show their work
 
-194 nodes draw a panel on themselves rather than answering only through a socket: both sides of
-a picture, a histogram, a waveform, what a loader read off disk, a colour ramp, a 3D view, a
-text editor, a contact sheet that picks a look on click.
+195 nodes draw a panel on themselves rather than answering only through a socket: both sides of
+a picture, a histogram, a waveform, what a loader read off disk, a colour ramp, a colour wheel,
+a 3D view, a text editor, a contact sheet that picks a look on click.
 
 For seeing whether a node did what was wanted without wiring a preview to find out.
 
@@ -42,7 +42,7 @@ For building a mask inside the graph rather than painting one by hand.
 
 ## A layer stack on the wire
 
-20 nodes. **Layers from Image Batch** and **Layer Edit** build a stack, **Layer Order**,
+22 nodes. **Layers from Image Batch** and **Layer Edit** build a stack, **Layer Order**,
 **Layer Align**, **Layer Fit** and **Layers Arrange** place it, **Layer Glow**, **Layer
 Shadow**, **Layer Bevel**, **Layer Stroke** and **Layer Overlay** style it, and **Layers
 Merge** flattens it. **Layers Canvas** draws the stack on the node.
@@ -51,6 +51,24 @@ For composition that would otherwise mean a round trip through an image editor.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Layers**. Graph:
 [`layers.json`](docs/workflows/layers.json).
+
+---
+
+## A layered PSD or TIFF, written and read
+
+2 nodes. **Layers Save** writes a stack as a `.psd` or a layered `.tif`, and **Layers Load**
+reads one back in. Each layer keeps its name, its place on the canvas, its opacity, its blend
+mode and whether it was hidden, at 8 bit, 16 bit or 32 bit float. Both layouts are written
+here, so nothing is installed for them.
+
+For handing a composite to Photoshop, Affinity Photo, GIMP or Krita and taking the result
+back, and for delivering an editable file instead of a flat picture.
+
+The group starts on. Set `features.photoshop` to false in `config.yaml` to leave both nodes
+out.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Layers**. Graph:
+[`layers-psd.json`](docs/workflows/layers-psd.json).
 
 ---
 
@@ -86,6 +104,29 @@ For grading and finishing a render inside the graph.
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Filter** and **WAS Suite/Image/Process**. Graphs:
 [`image-style-filter.json`](docs/workflows/image-style-filter.json),
 [`ssao-height-map.json`](docs/workflows/ssao-height-map.json).
+
+---
+
+## One node that measures a picture
+
+4 nodes. **Power Preprocessor** answers 25 questions about an image: depth, surface
+direction, body and animal pose, what every pixel is, edges, drawn lines, straight runs, the
+paint and the light it was lit by, and the frame with its noise or its darkness taken out.
+Picking the question redraws the node so only what that question reads is on it. **HDR
+Reconstruct**, **Image Remove Background** and its model loader sit beside it.
+
+Five answers need no model and most fetch a checkpoint on first use. **Marigold v2** is the
+exception: pick it from the model menu on `depth_map`, `normal_map` or `albedo` and the node
+reads a transformer and a decoder off two sockets, and finds that map's adapter and prompt
+embedding by name in ComfyUI's own model folders. One transformer serves all three maps, it
+takes a single step, and it is the sharpest of the three. See
+[`docs/MODELS.md`](docs/MODELS.md).
+
+For feeding a ControlNet, and for relighting, defocus, parallax, masking and stylising.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Preprocess**. Graph:
+[`preprocessors.json`](docs/workflows/preprocessors.json),
+[`marigold-v2.json`](docs/workflows/marigold-v2.json).
 
 ---
 

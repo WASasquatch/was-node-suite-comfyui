@@ -200,6 +200,8 @@ function capture(node, side, groups) {
  * @param {number|(() => number)} [options.minVisible] - The fewest to draw, two by default. A
  *   function is read on every fit, which is what a count driven by a widget needs: the captured
  *   declaration must not be taken again, so the caller keeps the returned refit and calls it.
+ * @param {() => number} [options.exactCount] - How many entries to draw. A wired socket is
+ *   kept whatever this answers.
  * @returns {() => void} A function that re-fits, for a caller with its own reason to.
  */
 export function growSockets(node, growable, options = {}) {
@@ -211,6 +213,8 @@ export function growSockets(node, growable, options = {}) {
         return Number.isFinite(value) ? value : MIN_VISIBLE;
       }
     : () => (Number.isFinite(options.minVisible) ? options.minVisible : MIN_VISIBLE);
+  // A caller naming the count itself.
+  const readExactCount = typeof options.exactCount === "function" ? options.exactCount : null;
   const groups = asGroups(growable);
   const plans = {
     inputs: capture(node, "inputs", groups),
@@ -223,10 +227,13 @@ export function growSockets(node, growable, options = {}) {
       // a carried value arrives as an input and is read as an output, so revealing the input
       // alone would leave the value with nowhere to be read from.
       const minVisible = readMinVisible();
-      const wanted = Math.max(
-        wantedCount(node.inputs ?? [], plans.inputs.groups, minVisible),
-        wantedCount(node.outputs ?? [], plans.outputs.groups, minVisible),
-      );
+      const asked = readExactCount ? Number(readExactCount()) : null;
+      const wanted = Number.isFinite(asked)
+        ? Math.max(0, Math.min(asked, groups.length))
+        : Math.max(
+            wantedCount(node.inputs ?? [], plans.inputs.groups, minVisible),
+            wantedCount(node.outputs ?? [], plans.outputs.groups, minVisible),
+          );
       // Before anything is counted or moved, since a duplicate makes both meaningless.
       const dedupedIn = dedupe(node, "inputs");
       const dedupedOut = dedupe(node, "outputs");

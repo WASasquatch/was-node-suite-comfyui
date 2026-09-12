@@ -1,0 +1,778 @@
+{
+  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "revision": 0,
+  "last_node_id": 254,
+  "last_link_id": 407,
+  "nodes": [
+    {
+      "id": 245,
+      "type": "UNETLoader",
+      "pos": [
+        40,
+        430
+      ],
+      "size": [
+        340,
+        100
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            396,
+            400,
+            404
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "qwen_image_edit_2509_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "qwen_image_edit_2509_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 246,
+      "type": "VAELoader",
+      "pos": [
+        440,
+        40
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            397
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "marigold_v2_depth_log_stage2_vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "marigold_v2_depth_log_stage2_vae.safetensors"
+      }
+    },
+    {
+      "id": 248,
+      "type": "PreviewImage",
+      "pos": [
+        1220,
+        40
+      ],
+      "size": [
+        300,
+        390
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 399
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 249,
+      "type": "VAELoader",
+      "pos": [
+        440,
+        500
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            401
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "marigold_v2_normals_vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "marigold_v2_normals_vae.safetensors"
+      }
+    },
+    {
+      "id": 250,
+      "type": "WASPowerPreprocessor",
+      "pos": [
+        840,
+        500
+      ],
+      "size": [
+        211.080078125,
+        262
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 402
+        },
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 400
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 401
+        },
+        {
+          "name": "conditioning",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            403
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASPowerPreprocessor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "normal_map",
+        "Marigold v2",
+        768,
+        100,
+        200,
+        3,
+        16,
+        0,
+        "fixed",
+        0,
+        4,
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "preprocessor": "normal_map",
+        "model_name": "Marigold v2",
+        "resolution": 768,
+        "threshold_low": 100,
+        "threshold_high": 200,
+        "radius": 3,
+        "strength": 16,
+        "seed": 0,
+        "fixed": "fixed",
+        "tile": 0,
+        "steps": 4,
+        "adapter_name": "auto",
+        "conditioning_name": "auto"
+      }
+    },
+    {
+      "id": 251,
+      "type": "PreviewImage",
+      "pos": [
+        1220,
+        500
+      ],
+      "size": [
+        300,
+        390
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 403
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 252,
+      "type": "VAELoader",
+      "pos": [
+        440,
+        960
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            405
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "marigold_v2_albedo_vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "marigold_v2_albedo_vae.safetensors"
+      }
+    },
+    {
+      "id": 253,
+      "type": "WASPowerPreprocessor",
+      "pos": [
+        840,
+        960
+      ],
+      "size": [
+        211.080078125,
+        286
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 406
+        },
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 404
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 405
+        },
+        {
+          "name": "conditioning",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            407
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASPowerPreprocessor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "albedo",
+        "Marigold v2",
+        768,
+        100,
+        200,
+        6,
+        16,
+        0,
+        "fixed",
+        0,
+        4,
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "preprocessor": "albedo",
+        "model_name": "Marigold v2",
+        "resolution": 768,
+        "threshold_low": 100,
+        "threshold_high": 200,
+        "radius": 6,
+        "strength": 16,
+        "seed": 0,
+        "fixed": "fixed",
+        "tile": 0,
+        "steps": 4,
+        "adapter_name": "auto",
+        "conditioning_name": "auto"
+      }
+    },
+    {
+      "id": 254,
+      "type": "PreviewImage",
+      "pos": [
+        1220,
+        960
+      ],
+      "size": [
+        300,
+        390
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 407
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 244,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        300,
+        340
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            398,
+            402,
+            406
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "134272351355384770.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "134272351355384770.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 247,
+      "type": "WASPowerPreprocessor",
+      "pos": [
+        840,
+        40
+      ],
+      "size": [
+        211.080078125,
+        214
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 398
+        },
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 396
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 397
+        },
+        {
+          "name": "conditioning",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            399
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASPowerPreprocessor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "depth_map",
+        "Marigold v2",
+        1280,
+        100,
+        200,
+        6,
+        16,
+        0,
+        "fixed",
+        0,
+        4,
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "preprocessor": "depth_map",
+        "model_name": "Marigold v2",
+        "resolution": 1280,
+        "threshold_low": 100,
+        "threshold_high": 200,
+        "radius": 6,
+        "strength": 16,
+        "seed": 0,
+        "fixed": "fixed",
+        "tile": 0,
+        "steps": 4,
+        "adapter_name": "auto",
+        "conditioning_name": "auto"
+      }
+    }
+  ],
+  "links": [
+    [
+      396,
+      245,
+      0,
+      247,
+      1,
+      "MODEL"
+    ],
+    [
+      397,
+      246,
+      0,
+      247,
+      2,
+      "VAE"
+    ],
+    [
+      398,
+      244,
+      0,
+      247,
+      0,
+      "IMAGE"
+    ],
+    [
+      399,
+      247,
+      0,
+      248,
+      0,
+      "IMAGE"
+    ],
+    [
+      400,
+      245,
+      0,
+      250,
+      1,
+      "MODEL"
+    ],
+    [
+      401,
+      249,
+      0,
+      250,
+      2,
+      "VAE"
+    ],
+    [
+      402,
+      244,
+      0,
+      250,
+      0,
+      "IMAGE"
+    ],
+    [
+      403,
+      250,
+      0,
+      251,
+      0,
+      "IMAGE"
+    ],
+    [
+      404,
+      245,
+      0,
+      253,
+      1,
+      "MODEL"
+    ],
+    [
+      405,
+      252,
+      0,
+      253,
+      2,
+      "VAE"
+    ],
+    [
+      406,
+      244,
+      0,
+      253,
+      0,
+      "IMAGE"
+    ],
+    [
+      407,
+      253,
+      0,
+      254,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [
+        -1520,
+        4840,
+        700,
+        990
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Sampling",
+      "bounding": [
+        -30,
+        4840,
+        690,
+        700
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Switch Model and Settings",
+      "bounding": [
+        -790,
+        4840,
+        730,
+        490
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Decoding and create video",
+      "bounding": [
+        -30,
+        5570,
+        690,
+        260
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "User Inputs",
+      "bounding": [
+        -1520,
+        5860,
+        2190,
+        1090
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Conditioning",
+      "bounding": [
+        -790,
+        5350,
+        730,
+        480
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.1595672000000052,
+      "offset": [
+        70.28026719302653,
+        194.7950678320587
+      ]
+    },
+    "frontendVersion": "1.51.9",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true,
+    "ue_links": [],
+    "links_added_by_ue": []
+  },
+  "version": 0.4
+}

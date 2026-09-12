@@ -243,6 +243,7 @@ list. Today that is `document_export` alone.
 | `features.document_export` | `python-docx`, `odfdo`, `xhtml2pdf`<br>`pip install -r requirements/document_export.txt` | off | No nodes. Lets `Save DOC` write `.docx`, `.odt` and `.pdf` |
 | `features.pssr` | four packages, and a 22 GB checkout placed by hand<br>see [`docs/MODELS.md`](MODELS.md) | off | `Video Super Resolution (PS-SR)` |
 | `features.preprocessors` | none. Every answer runs in torch on weights the pack publishes | **on** | `Power Preprocessor`, `Image Remove Background`, `Image Remove Background Model Loader`, `HDR Reconstruct` |
+| `features.photoshop` | none. The PSD and TIFF layouts are written and read by the pack | **on** | `Layers Save`, `Layers Load` |
 | `features.threejs` | none. three.js ships with the pack, and the browser fetches it only when a scene runs | **on** | The 43 `Three` nodes |
 | `features.extras` | none | **on** | The 27 WAS_Extras nodes |
 | `features.viewer` | none | **on** | `Content Viewer` and `CV Canvas Compose Batch`, the two nodes shared with the ComfyUI_Viewer pack |

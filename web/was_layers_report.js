@@ -31,6 +31,7 @@ const NODES = [
   "WASLayerTrim",
   "WASLayersCanvas",
   "WASLayersFromImageBatch",
+  "WASLayersLoad",
   "WASLayersMerge",
 ];
 

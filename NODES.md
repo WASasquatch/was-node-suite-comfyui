@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **467** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **469** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-456 of them load in a fresh install. The other 11 wait behind a switch that starts off.
+458 of them load in a fresh install. The other 11 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -24,6 +24,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 | [`features.diffusers`](#featuresdiffusers) | on | 2 |
 | [`features.extras`](#featuresextras) | on | 27 |
 | [`features.midas`](#featuresmidas) | on | 2 |
+| [`features.photoshop`](#featuresphotoshop) | on | 2 |
 | [`features.preprocessors`](#featurespreprocessors) | on | 4 |
 | [`features.sam`](#featuressam) | on | 4 |
 | [`features.threejs`](#featuresthreejs) | on | 43 |
@@ -3426,7 +3427,7 @@ Fall the frame off towards its corners, the way a wide lens does, or the other w
 <details>
 <summary><b>Image Blank</b></summary>
 
-Make a new image filled with a single colour, for use as a background, a matte, or a base to composite onto. Both sides are rounded down to a multiple of divisible_by, which saves a sampler rounding the size itself, so 513 becomes 512 at the default of 8. Use 16, 32 or 64 for a model that asks for a coarser step, and 1 for a matte that has to line up with something else exactly. A side shorter than divisible_by is taken up to one whole step rather than down to nothing.
+Make a new image filled with a single colour, for use as a background, a matte, or a base to composite onto. The colour is set from the wheel on the node or by typing the three levels. Both sides are rounded down to a multiple of divisible_by, which saves a sampler rounding the size itself, so 513 becomes 512 at the default of 8. Use 16, 32 or 64 for a model that asks for a coarser step, and 1 for a matte that has to line up with something else exactly. A side shorter than divisible_by is taken up to one whole step rather than down to nothing. batch_size repeats the fill, for matching a batch of frames.
 
 | | |
 |---|---|
@@ -3442,12 +3443,13 @@ Make a new image filled with a single colour, for use as a background, a matte, 
 | `green` | `INT` | Yes | 255 |  | Green level of the fill colour. 0 is none, 255 is full. |
 | `blue` | `INT` | Yes | 255 |  | Blue level of the fill colour. 0 is none, 255 is full. All three at 255 gives white, all three at 0 gives black. |
 | `divisible_by` | `INT` | Yes | 8 |  | Rounds width and height down to a multiple of this. 8 suits most latent models; set it to 1 to get the exact canvas asked for. |
+| `batch_size` | `INT` | Yes | 1 |  | How many copies the batch holds. 1 = a single image; 16 = sixteen identical fills, for matching a batch of frames a sampler or a video node is working on. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `IMAGE` | A batch of one image, filled edge to edge with the chosen colour, at the requested size rounded down to a multiple of divisible_by, with a side shorter than that taken up to one whole step instead. |
+| `<output0>` | `IMAGE` | A batch of batch_size images, each filled edge to edge with the chosen colour, at the requested size rounded down to a multiple of divisible_by, with a side shorter than that taken up to one whole step instead. |
 
 </details>
 
@@ -12650,6 +12652,75 @@ Load a MiDaS depth model for MiDaS Depth Approximation and MiDaS Mask Image. Ena
 
 ---
 
+## `features.photoshop`
+
+2 nodes. On in a fresh install: set `features.photoshop: false` in `config.yaml` and restart ComfyUI to leave these out.
+
+### WAS Suite/Image/Layers
+
+<a id="node-waslayersload"></a>
+<details>
+<summary><b>Layers Load</b></summary>
+
+Read a Photoshop document or a layered TIFF into a layer stack, so work done in an image editor carries on in a graph. Every layer arrives with its name, its place on the canvas, its opacity, its blend mode and whether it was hidden. Layers inside a group arrive as ordinary layers, and adjustment, text and shape layers arrive as the pixels the file stored for them.
+
+| | |
+|---|---|
+| Node id | `WASLayersLoad` |
+| Turn off with | `features.photoshop: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `file` | `COMBO` | Yes |  |  | Which document to read. Each entry carries the folder it sits in, as `art.psd [input]` or `plate.tif [output]`. A folder added under paths.allow_read in config.yaml appears under its own name. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `layers` | `LAYERS` | The stack the file held, lowest layer first; LAYERS. |
+| `composite` | `IMAGE` | The flattened picture the file stored, or the stack composited here where it stored none; IMAGE. |
+| `count` | `INT` | How many layers the stack holds; INT. |
+| `names` | `STRING` | What each layer is called, one per line, lowest first. |
+
+</details>
+
+<a id="node-waslayerssave"></a>
+<details>
+<summary><b>Layers Save</b></summary>
+
+Write a layer stack to a file an image editor opens with its layers intact. Every layer keeps its name, its place on the canvas, its opacity, its blend mode and whether it was hidden, so the composite can be taken apart and reworked in Photoshop, Affinity Photo, GIMP or Krita. A stack whose layers carry a batch is written as one file per frame.
+
+| | |
+|---|---|
+| Node id | `WASLayersSave` |
+| Turn off with | `features.photoshop: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `layers` | `LAYERS` | Yes |  |  | The stack to write, one file per frame it carries; LAYERS. |
+| `file_format` | `COMBO` | Yes | psd | `psd`, `tiff` | 'psd' = a Photoshop document, which every editor opens; 'tiff' = a layered TIFF, whose layers Photoshop and Affinity Photo read and whose flattened picture opens anywhere at all. |
+| `root` | `COMBO` | Yes |  |  | Which folder the files land in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. |
+| `filename_prefix` | `STRING` | Yes | ComfyUI_layers |  | Name and folder below the root, before the number. `ComfyUI_layers` gives `ComfyUI_layers_0001.psd`; `plates/shot` puts it in that subfolder. Tokens expand, so `[time(%Y-%m-%d)]/shot` dates the folder. |
+| `depth` | `COMBO` | Yes | 8 bit | `8 bit`, `16 bit`, `32 bit float` | '8 bit' = 256 levels a channel, the smallest file and what every editor expects; '16 bit' = 65536 levels, which keeps a graded plate off a banded gradient; '32 bit float' = the exact values on the wire, keeping anything above white for further grading. |
+| `compression` | `COMBO` | Yes | rle | `rle`, `zip`, `none` | 'rle' = the packing an editor writes itself, the most widely read; 'zip' = smaller layers, read by Photoshop 6 and later; 'none' = stored as they are, largest and fastest. All three are lossless, and the flattened picture is packed the same either way. |
+| `composite` | `IMAGE` | No |  |  | A flattened picture to store as the file's preview instead of the one this node composites; IMAGE. Wire the graded result so an editor shows that until it redraws the layers itself. It has to be the size of the canvas. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `files` | `STRING` | Full path of every file written this run, one per line, in frame order. |
+| `composite` | `IMAGE` | The flattened picture stored in each file, as a batch in frame order; IMAGE. |
+
+</details>
+
+---
+
 ## `features.preprocessors`
 
 4 nodes. On in a fresh install: set `features.preprocessors: false` in `config.yaml` and restart ComfyUI to leave these out.
@@ -12725,7 +12796,7 @@ Rebuild the light a clipped highlight lost, answering linear light with everythi
 <details>
 <summary><b>Power Preprocessor</b></summary>
 
-Measure an image and answer what it found: depth, surface direction, body pose, what every pixel is, edges, drawn lines, straight runs, the paint and the light it was lit by, or the frame with its noise or its darkness taken out. Feeding a ControlNet is the usual reason, and the same answers drive relighting, defocus, parallax, masking and stylising. Pick the question and the node draws only what that question reads, including which models can answer it. Five of them need no model and download nothing; the rest fetch a checkpoint on first use, or read one another pack already has.
+Measure an image and answer what it found: depth, surface direction, body pose, what every pixel is, edges, drawn lines, straight runs, the paint and the light it was lit by, or the frame with its noise or its darkness taken out. Feeding a ControlNet is the usual reason, and the same answers drive relighting, defocus, parallax, masking and stylising. Pick the question and the node draws only what that question reads. Five need no model at all and most fetch a checkpoint on first use. `Marigold v2` is the exception: it reads a transformer, a decoder and a prompt embedding placed by hand.
 
 | | |
 |---|---|
@@ -12737,8 +12808,8 @@ Measure an image and answer what it found: depth, surface direction, body pose, 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The images to measure. A whole batch is processed. |
-| `preprocessor` | `COMBO` | Yes | canny_pyramid |  | What to work out. `canny_pyramid`, `lineart_simple`, `scribble_xdog`, `binary` and `shuffle` need no model. `depth_map`, `normal_map`, `openpose`, `animal_pose`, `ade20k_segments`, `soft_edge`, `lineart_model`, `line_segments`, `anyline`, `albedo`, `roughness`, `metallicity`, `material`, `shading`, `residual`, `denoise` and `low_light` each run a model, chosen below. |
-| `model` | `COMBO` | Yes | Depth Anything V2 Small |  | Which model answers the question, listing only the ones that can. Within a family the smaller is quicker and the larger more accurate: `Depth Anything V2 Small` is 99 MB against `Large` at 1.3 GB. Ignored by the five that need no model. |
+| `preprocessor` | `COMBO` | Yes | canny_pyramid |  | What to work out. `canny_pyramid`, `lineart_simple`, `scribble_xdog`, `binary` and `shuffle` need no model; the rest run the model chosen below. |
+| `model_name` | `COMBO` | Yes | Depth Anything V2 Small |  | Which model answers the question, listing only the ones that can. Within a family the smaller is quicker and the larger more accurate: `Depth Anything V2 Small` is 99 MB against `Large` at 1.3 GB. `Marigold v2` is the sharpest, and the one read from the three inputs at the bottom rather than downloaded. |
 | `resolution` | `INT` | Yes | 512 |  | Longest edge the work is done at before the answer is scaled back to the image's own size. 512 is a sensible start; 1024 resolves finer detail and costs more. Anything above the image's own longest edge is held to it. `openpose`, `animal_pose`, `line_segments`, `denoise` and `low_light` ignore it. |
 | `threshold_low` | `FLOAT` | Yes | 100.0 |  | The lower cut-off, or the only one where a question takes one. Each preprocessor reads it over a range of its own, which the widget shows: `canny_pyramid` 1 to 255, `lineart_simple` 0 to 64, `openpose` 0.05 to 0.95, `line_segments` 0.01 to 0.40, `anyline` 1 to 256. Switching preprocessor moves it to that one's start. |
 | `threshold_high` | `FLOAT` | Yes | 200.0 |  | The upper cut-off, for a question that takes a pair. `canny_pyramid` reads 0 to 255 as the strength an edge must reach to start at all; `line_segments` reads 1 to 60 as the shortest run it keeps. |
@@ -12747,6 +12818,11 @@ Measure an image and answer what it found: depth, surface direction, body pose, 
 | `seed` | `INT` | Yes | 0 |  | Chooses between equally good random answers. `shuffle` reads it as the displacement: `0` and `1` scramble the same picture two different ways, and one seed always gives one scramble. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual` read it as the noise their first step starts from, and every frame of a batch starts from the same one. |
 | `tile` | `INT` | Yes | 0 |  | Work a square at a time instead of the whole frame, which holds VRAM down on a large picture. 0 reads the whole frame. 512 reads a 512 pixel square at a time, overlapping a quarter and faded together, so no join shows. A larger square is closer to the whole frame. Read only by `denoise` and `low_light`. |
 | `steps` | `INT` | Yes | 4 |  | How many passes a question that denoises takes. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual` read 1 to 20: 4 is what Marigold was tuned for, 1 is roughly twice as quick and coarser, and above 8 the answer stops changing much. |
+| `model` | `MODEL` | No |  |  | The transformer `Marigold v2` runs on: Load Diffusion Model on `qwen_image_edit_2509_int8_convrot`. One transformer answers every map; `adapter_name` puts the adapter on it here. |
+| `vae` | `VAE` | No |  |  | The decoder this map was trained with: Load VAE on `marigold_v2_depth_log_stage2_vae` for depth, `marigold_v2_normals_vae` for normals, `marigold_v2_albedo_vae` for albedo. It names the same map as the adapter. |
+| `adapter_name` | `COMBO` | No | auto |  | `auto` = this map's adapter, found by name in the loras folder; `already on the model` = apply none, for a LoRA put on the transformer before it arrives; `marigold_v2_normals.safetensors` = that file. |
+| `conditioning_name` | `COMBO` | No | auto |  | `auto` = this map's prompt embedding, found by name in the embeddings folder; `marigold_v2_depth_conditioning.safetensors` = that file. The `conditioning` socket beats this when wired. |
+| `conditioning` | `CONDITIONING` | No |  |  | A prompt embedding to read the map against, from a text encoder or a loaded conditioning. Used in place of `conditioning_name`. Keep it full length: a short prompt flattens the map, while the wording barely moves it. |
 
 **Outputs**
 

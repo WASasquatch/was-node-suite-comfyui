@@ -6,7 +6,7 @@
 #
 # docs/CONFIG.md is the reference for every key below.
 
-version: 14
+version: 15
 
 logging:
   level: info            # debug | info | warning | error
@@ -56,6 +56,9 @@ features:                # optional node groups
   preprocessors: true    #  4 nodes: Power Preprocessor, HDR Reconstruct, Image Remove Background
                          #           and its model loader. Every answer runs in torch on weights
                          #           the pack publishes
+  photoshop:   true      #  2 nodes: Layers Save and Layers Load, which write and read a
+                         #           layered .psd and .tif. Both formats are laid out here,
+                         #           so nothing is installed for them
   threejs:     true      # 43 nodes: build a Three.js scene on the canvas and render it in
                          #           the browser. Three.js ships with the pack, and the browser
                          #           fetches it only when a scene runs

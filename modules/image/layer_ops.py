@@ -15,13 +15,16 @@ __all__ = [
     "Frame",
     "aligned",
     "box_of",
+    "composited",
     "described",
     "drawn",
+    "framed",
     "drawn_size",
     "fitted",
     "duplicated",
     "entries",
     "found",
+    "longest",
     "matching",
     "merged",
     "moved",
@@ -290,6 +293,62 @@ def placed(frame: Frame, width: int, height: int, channels: int):
     canvas[top:bottom, left:right] = patch[:, :, :channels]
     cover[top:bottom, left:right] = frame.coverage[rows, columns]
     return canvas, cover
+
+
+def longest(document) -> int:
+    """How many pictures the layer carrying the most holds.
+
+    Args:
+        document: A ``LAYERS`` value, or a bare list of layer dictionaries.
+
+    Returns:
+        The largest batch any layer carries, and 0 for a document with no layers.
+    """
+    return max((_frames(entry) for entry in entries(document)), default=0)
+
+
+def framed(document, frame: int) -> dict:
+    """A document with every layer holding one of its pictures.
+
+    Args:
+        document: A ``LAYERS`` value.
+        frame: Which picture, counting 0. A layer with fewer holds its last.
+
+    Returns:
+        A new ``LAYERS`` document carrying the same canvas, whose layers each hold a
+        single picture and a single mask plane.
+    """
+    picked = []
+    for entry in entries(document):
+        held = dict(entry)
+        total = _frames(entry)
+        if total:
+            index = min(max(0, frame), total - 1)
+            picture = _picture(entry, index)
+            held["image"] = picture.unsqueeze(0)
+            cut = _cut(entry, index)
+            held["mask"] = None if cut is None else cut.unsqueeze(0)
+        picked.append(held)
+    return rebuilt(document, picked)
+
+
+def composited(layers, width: int, height: int):
+    """Every visible layer flattened onto the whole canvas.
+
+    Args:
+        layers: The layer dictionaries, lowest in the stack first.
+        width: Canvas width in pixels.
+        height: Canvas height in pixels.
+
+    Returns:
+        ``(image, coverage)``. The image is ``(height, width, 3)`` picture codes and the
+        coverage ``(height, width)``, 1 where a layer painted. A stack carrying light
+        above white comes back on the scale it arrived on.
+    """
+    scale = dynamic.peak(*[entry.get("image") for entry in layers])
+    canvas, _box = _flattened(layers, width, height, scale)
+    image = _to_srgb(canvas[..., :3].clamp(0.0, 1.0)).clamp(0.0, 1.0)
+    return (image * scale if scale != 1.0 else image), canvas[..., 3].clamp(0.0, 1.0)
 
 
 def report(node: str, summary: str, layers, counts=None, facts=None) -> None:

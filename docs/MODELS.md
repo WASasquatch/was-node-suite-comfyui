@@ -90,6 +90,65 @@ come from Marigold. They run in torch on the published safetensors and need noth
 installed. Both repositories publish the same autoencoder, and it is fetched once: the
 second checkpoint reads the copy the first one left in `ComfyUI/models/intrinsics`.
 
+### Marigold v2
+
+`Marigold v2` is a model for `depth_map`, `normal_map` and `albedo`, and the one model the
+node does not download. Picking it reads the `model`, `vae` and `conditioning_name`
+inputs instead. Take the files from
+[Comfy-Org/marigold-v2-0](https://huggingface.co/Comfy-Org/marigold-v2-0) and place them
+yourself:
+
+| File | Goes in | Size |
+|---|---|--:|
+| `qwen_image_edit_2509_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 19.1 GB |
+| `marigold_v2_depth_log_stage2.safetensors` | `ComfyUI/models/loras` | 1.6 GB |
+| `marigold_v2_normals.safetensors` | `ComfyUI/models/loras` | 1.6 GB |
+| `marigold_v2_albedo.safetensors` | `ComfyUI/models/loras` | 1.6 GB |
+| `marigold_v2_depth_log_stage2_vae.safetensors` | `ComfyUI/models/vae` | 0.24 GB |
+| `marigold_v2_normals_vae.safetensors` | `ComfyUI/models/vae` | 0.24 GB |
+| `marigold_v2_albedo_vae.safetensors` | `ComfyUI/models/vae` | 0.24 GB |
+| `marigold_v2_depth_conditioning.safetensors` | `ComfyUI/models/embeddings` | 2.4 MB |
+| `marigold_v2_normals_conditioning.safetensors` | `ComfyUI/models/embeddings` | 2.5 MB |
+| `marigold_v2_albedo_conditioning.safetensors` | `ComfyUI/models/embeddings` | 2.6 MB |
+
+Which map each answer takes:
+
+| Answer | LoRA | VAE | Conditioning |
+|---|---|---|---|
+| `depth_map` | `..._depth_log_stage2` | `..._depth_log_stage2_vae` | `..._depth_conditioning` |
+| `normal_map` | `..._normals` | `..._normals_vae` | `..._normals_conditioning` |
+| `albedo` | `..._albedo` | `..._albedo_vae` | `..._albedo_conditioning` |
+
+Wire **Load Diffusion Model** on the transformer into `model`, and **Load VAE** on that
+row's decoder into `vae`. The adapter is the node's own job: `adapter_name` stays on `auto` and it
+finds that row's LoRA by name. No **LoraLoaderModelOnly** is needed, and
+one transformer feeds every map.
+
+Set `adapter_name` to `already on the model` where you want to apply the LoRA yourself, at a
+strength of your own or stacked with others.
+
+`conditioning_name` stays on `auto`, which finds that map's embedding by name in
+the embeddings folder. Naming a file overrides it. It is the text encoder's saved output, so
+no text encoder is loaded.
+
+The LoRA is what decides the map. Running the depth adapter against another map's embedding
+moves the result by 0.005 on a 0 to 1 scale, and against a short one by 0.226, so an
+override is worth setting only to a full length embedding.
+
+One transformer serves all three answers, and only the LoRA, the VAE and the conditioning
+change. It occupies about 19 GB of VRAM, so a 24 GB card runs it with little room for a
+checkpoint beside it. The first answer costs about 10 seconds while the transformer loads,
+and each one after that about 0.8 seconds a frame.
+
+| Trouble | Cause |
+|---|---|
+| `model and vae are not wired` | `Marigold v2` reads both. Wire them. |
+| `found no adapter` | That map's LoRA is not in the loras folder, or the model already carries one and `adapter_name` was not set to `already on the model`. |
+| `found no prompt embedding` | That map's conditioning file is not in the embeddings folder. |
+| A map that looks like noise | The LoRA and the VAE name different maps. |
+| Depth flat or inverted | The answer already turns log depth over, so no invert node is wanted after it. |
+| The `conditioning` menu is empty | The files are not in `ComfyUI/models/embeddings`. Put them there and reload the page. |
+
 ## PS-SR video super resolution
 
 **Video Super Resolution (PS-SR)** reads a checkout placed by hand. Nothing here is fetched,

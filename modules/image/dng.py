@@ -6,21 +6,11 @@ Readings are 16 bit, one sample per pixel or three.
 
 from __future__ import annotations
 
-import struct
 from pathlib import Path
 
+from .tiff import ASCII, BYTE, LONG, RATIONAL, SHORT, SRATIONAL, build
+
 __all__ = ["write"]
-
-#: TIFF field types, by the code written into an entry.
-BYTE = 1
-ASCII = 2
-SHORT = 3
-LONG = 4
-RATIONAL = 5
-SRATIONAL = 10
-
-#: Denominator every rational is written over.
-SCALE = 1000000
 
 #: The version this file declares, and the oldest reader expected to open it.
 DNG_VERSION = (1, 4, 0, 0)
@@ -37,26 +27,6 @@ PLANE_COLOURS = (0, 1, 2)
 
 #: Levels a 16-bit sensor reading spans.
 FULL_SCALE = 65535
-
-
-def _pack(kind: int, values) -> bytes:
-    """One field's values as the bytes TIFF writes them in."""
-    if kind == ASCII:
-        return values.encode("ascii", "replace") + b"\0"
-    if kind == BYTE:
-        return bytes(values)
-    if kind == SHORT:
-        return b"".join(struct.pack("<H", int(v)) for v in values)
-    if kind == LONG:
-        return b"".join(struct.pack("<I", int(v)) for v in values)
-    if kind == RATIONAL:
-        return b"".join(struct.pack("<II", int(round(v * SCALE)), SCALE) for v in values)
-    return b"".join(struct.pack("<ii", int(round(v * SCALE)), SCALE) for v in values)
-
-
-def _count(kind: int, values) -> int:
-    """How many values a field holds, counting a string's terminator."""
-    return len(values) + 1 if kind == ASCII else len(values)
 
 
 def write(path, plane, profile, camera: str = "", samples: int = 1) -> Path:
@@ -106,11 +76,9 @@ def write(path, plane, profile, camera: str = "", samples: int = 1) -> Path:
         (262, SHORT, [PHOTOMETRIC_CFA if samples == 1 else PHOTOMETRIC_LINEAR]),
         (271, ASCII, "WAS"),
         (272, ASCII, named),
-        (273, LONG, [0]),
         (274, SHORT, [1]),
         (277, SHORT, [samples]),
         (278, LONG, [height]),
-        (279, LONG, [len(body)]),
         (282, RATIONAL, [72.0]),
         (283, RATIONAL, [72.0]),
         (284, SHORT, [1]),
@@ -133,40 +101,6 @@ def write(path, plane, profile, camera: str = "", samples: int = 1) -> Path:
             (50710, BYTE, PLANE_COLOURS),
             (50711, SHORT, [1]),
         ]
-    fields.sort(key=lambda field: field[0])
-
-    # An entry holds its values inline under four bytes and an offset over them.
-    header = 8
-    directory = 2 + 12 * len(fields) + 4
-    overflow_at = header + directory
-    overflow, placed = bytearray(), {}
-    for tag, kind, values in fields:
-        blob = _pack(kind, values)
-        if len(blob) > 4:
-            placed[tag] = overflow_at + len(overflow)
-            overflow += blob + (b"\0" if len(blob) % 2 else b"")
-    body_at = overflow_at + len(overflow)
-
-    entries = bytearray()
-    for tag, kind, values in fields:
-        blob = _pack(kind, values)
-        count = _count(kind, values)
-        if tag == 273:
-            payload = struct.pack("<I", body_at)
-        elif len(blob) > 4:
-            payload = struct.pack("<I", placed[tag])
-        else:
-            payload = blob.ljust(4, b"\0")
-        entries += struct.pack("<HHI", tag, kind, count) + payload
-
     out = Path(path)
-    with out.open("wb") as handle:
-        handle.write(struct.pack("<2sHI", b"II", 42, header))
-        handle.write(struct.pack("<H", len(fields)))
-        handle.write(bytes(entries))
-        handle.write(struct.pack("<I", 0))
-        handle.write(bytes(overflow))
-        handle.write(body)
+    out.write_bytes(build(fields, [body], "<"))
     return out
-
-

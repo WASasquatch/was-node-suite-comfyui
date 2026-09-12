@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-VERSION = 14
+VERSION = 15
 
 #: Feature defaults as each earlier version shipped them, newest first. A config written by
 #: an older build carries that build's answers, and nothing in the file records whether a
@@ -17,6 +17,21 @@ VERSION = 14
 #: was given is indistinguishable from no choice at all, and is moved with the rest, which
 #: is why every move is named in the log. Keyed by the version the entry describes.
 SUPERSEDED_FEATURE_DEFAULTS = {
+    14: {
+        "blip": True,
+        "clipseg": True,
+        "sam": True,
+        "midas": True,
+        "diffusers": True,
+        "network": False,
+        "yunet": True,
+        "document_export": False,
+        "pssr": False,
+        "preprocessors": True,
+        "extras": True,
+        "viewer": True,
+        "threejs": True,
+    },
     13: {
         "blip": True,
         "clipseg": True,
@@ -179,6 +194,7 @@ FEATURE_GROUPS = (
     "extras",
     "viewer",
     "threejs",
+    "photoshop",
 )
 
 #: Groups that start on. ``extras`` and ``viewer`` are the two other packs this one
@@ -190,7 +206,8 @@ FEATURE_GROUPS = (
 #: never runs one pays nothing for having them listed. ``yunet`` is on and costs nothing
 #: either: its detector runs in torch on weights that ship with the pack.
 #: ``preprocessors`` is on and costs nothing either: every answer it gives runs in torch on
-#: weights the pack publishes.
+#: weights the pack publishes. ``photoshop`` is on and costs nothing either: the PSD and
+#: TIFF layouts are written and read here, with no package behind them.
 #:
 #: Off, deliberately: network is a consent decision rather than a dependency one, since it
 #: permits outbound requests. ``document_export`` is the only group whose packages are not
@@ -209,6 +226,7 @@ FEATURE_DEFAULTS = {
     "yunet": True,
     "preprocessors": True,
     "threejs": True,
+    "photoshop": True,
 }
 
 LEGACY_GROUPS = (

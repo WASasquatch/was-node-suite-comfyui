@@ -13,13 +13,14 @@ const EXT_NAME = "WASNodeSuite.FileWritten";
 const SETTING_ID = "WAS.Files.ShowWritten";
 const LOG_NAME = "WASNodeSuite.FileWritten";
 
-// Every node in the pack that writes a file. Image Save is the one of the six the core
+// Every node in the pack that writes a file. Image Save is the one of the seven the core
 // frontend draws anything for, and what it draws is the pictures, not where they landed; the
-// other five draw nothing at all.
+// other six draw nothing at all.
 const NODES = [
   "Image Save",
   "WASDNGSave",
   "WASEXRSave",
+  "WASLayersSave",
   "Write to GIF",
   "Write to Video",
   "Create Morph Image",

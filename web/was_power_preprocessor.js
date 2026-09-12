@@ -5,6 +5,8 @@
 
 import { app } from "../../scripts/app.js";
 import { refreshRelevantWidgets, watchRelevantWidgets } from "./interface/relevant_widgets.js";
+import { growSockets } from "./interface/grow_sockets.js";
+import { setWidgetHidden } from "./interface/visibility.js";
 
 const EXT_NAME = "WASNodeSuite.PowerPreprocessorUI";
 const NODE_NAME = "WASPowerPreprocessor";
@@ -25,11 +27,13 @@ const TILE = {
 const INTRINSIC_STEPS = {
   steps: { label: "steps", min: 1, max: 20, start: 4, step: 1, precision: 0 },
 };
+// The model read from the node's own inputs.
+const WIRED_MODEL = "Marigold v2";
 const DEPTH = [
   "Depth Anything V2 Small", "Depth Anything V2 Base", "Depth Anything V2 Large",
-  "DPT SwinV2 Tiny", "DPT Large",
+  "DPT SwinV2 Tiny", "DPT Large", WIRED_MODEL,
 ];
-const model = (values) => ({ model: { label: "model", values } });
+const model = (values) => ({ model_name: { label: "model", values } });
 
 /** Preprocessor -> the shared widgets it reads, each under its label, bounds and models. */
 // A widget no preprocessor lists is left alone, `resolution` among them.
@@ -77,7 +81,7 @@ const MODES = {
     "HVI-CIDNet Extreme Dark",
   ]), ...TILE },
   albedo: {
-    ...model(["Marigold IID Appearance", "Marigold IID Lighting"]),
+    ...model(["Marigold IID Appearance", "Marigold IID Lighting", WIRED_MODEL]),
     ...INTRINSIC_STEPS,
     ...SEED_PAIR,
   },
@@ -118,6 +122,77 @@ function hidingEnabled() {
   return true;
 }
 
+// What the wired model reads.
+const WIRED_INPUTS = ["model", "vae", "conditioning"];
+const WIRED_WIDGETS = ["adapter_name", "conditioning_name"];
+const MODEL_WIDGET = "model_name";
+
+/**
+ * Draw the wired model's own inputs only while that model is chosen.
+ *
+ * A socket carrying a link stays drawn whatever is chosen.
+ *
+ * @param {object} node - The node to lay out.
+ * @returns {void}
+ */
+function wiredModelChosen(node) {
+  const widgets = node.widgets || [];
+  const chosen = widgets.find(widget => widget.name === MODEL_WIDGET)?.value;
+  const question = widgets.find(widget => widget.name === CONTROL_WIDGET)?.value;
+  // The question is read as well as the model.
+  const offered = MODES[question]?.model_name?.values || [];
+  return chosen === WIRED_MODEL && offered.includes(WIRED_MODEL);
+}
+
+/**
+ * Draw the wired model's own widget only while that model is chosen.
+ *
+ * @param {object} node - The node to lay out.
+ * @returns {void}
+ */
+function presentWiredWidget(node) {
+  const wanted = wiredModelChosen(node);
+  let moved = false;
+  for (const name of WIRED_WIDGETS) {
+    const widget = (node.widgets || []).find(entry => entry.name === name);
+    moved = setWidgetHidden(widget, !wanted) || moved;
+  }
+  if (moved) {
+    node.setSize?.(node.computeSize());
+    node.setDirtyCanvas?.(true, true);
+  }
+}
+
+/**
+ * Present the wired inputs now, and again whenever the model changes.
+ *
+ * @param {object} node - The node to govern.
+ * @returns {void}
+ */
+function watchWiredInputs(node) {
+  // One group, so the sockets appear together.
+  const refit = growSockets(node, [WIRED_INPUTS], {
+    exactCount: () => (wiredModelChosen(node) ? 1 : 0),
+  });
+  const present = () => {
+    refit();
+    presentWiredWidget(node);
+  };
+  // The question can change the model with it.
+  for (const name of [MODEL_WIDGET, CONTROL_WIDGET]) {
+    const widget = (node.widgets || []).find(entry => entry.name === name);
+    if (!widget) continue;
+    const previous = widget.callback;
+    widget.callback = function callback(...args) {
+      const answer = previous?.apply(this, args);
+      present();
+      return answer;
+    };
+  }
+  present();
+  return present;
+}
+
 app.registerExtension({
   name: EXT_NAME,
   settings: [
@@ -149,6 +224,7 @@ app.registerExtension({
       if (!hidingEnabled()) return result;
       try {
         watchRelevantWidgets(this, CONTROL_WIDGET, MODES);
+        watchWiredInputs(this);
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to lay the node out:`, error);
       }
@@ -161,6 +237,7 @@ app.registerExtension({
       if (!hidingEnabled()) return result;
       try {
         refreshRelevantWidgets(this, CONTROL_WIDGET, MODES);
+        presentWiredWidget(this);
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to lay the node out after loading:`, error);
       }

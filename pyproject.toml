@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.1.1"
+version = "3.1.3"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
@@ -31,25 +31,7 @@ Left alone, neither runs and the pack starts no process.
 """
 themes = ["themes/was-node-suite.json"]
 example_workflows = [
-    "docs/workflows/affine-minimax-h3-example.json",
-    "docs/workflows/affine-krea2.json",
-    "docs/workflows/image-style-filter.json",
-    "docs/workflows/image-optics-and-grade.json",
-    "docs/workflows/ssao-height-map.json",
-    "docs/workflows/prompt-library.json",
-    "docs/workflows/prompt-lists.json",
-    "docs/workflows/noodle-soup-pick.json",
-    "docs/workflows/mask-bounds.json",
-    "docs/workflows/layers.json",
-    "docs/workflows/loops-for-loop.json",
-    "docs/workflows/preprocessors.json",
-    "docs/workflows/hdr.json",
-    "docs/workflows/analysis-readouts.json",
-    "docs/workflows/face-detection.json",
-    "docs/workflows/three-scene.json",
-    "docs/workflows/document-export.json",
-    "docs/workflows/zip-archives.json",
-    "docs/workflows/content-viewer.json",
+    "docs/workflows/*.json",
 ]
 
 [tool.comfy]

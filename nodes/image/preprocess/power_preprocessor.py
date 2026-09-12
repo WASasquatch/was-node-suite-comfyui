@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import torch
 from comfy_api.latest import io
 
+from ....modules.model import marigold_v2
+
 
 #: Config group this module loads under.
 REQUIRES = "preprocessors"
@@ -54,12 +56,19 @@ STRENGTH = "strength"
 SEED = "seed"
 STEPS = "steps"
 TILE = "tile"
-MODEL = "model"
+MODEL = "model_name"
+
+#: The inputs a wired model reads its parts from.
+TRANSFORMER = "model"
+DECODER = "vae"
+CONDITIONING = "conditioning_name"
+ADAPTER = "adapter_name"
+PROMPT = "conditioning"
 
 #: Intrinsic answer -> the checkpoints that read it, the first being what it starts on.
 #: Every one of them takes a step count and a seed.
 INTRINSIC: dict[str, tuple[str, ...]] = {
-    "albedo": ("Marigold IID Appearance", "Marigold IID Lighting"),
+    "albedo": ("Marigold IID Appearance", "Marigold IID Lighting", marigold_v2.MODEL_NAME),
     "roughness": ("Marigold IID Appearance",),
     "metallicity": ("Marigold IID Appearance",),
     "material": ("Marigold IID Appearance",),
@@ -129,11 +138,11 @@ MODELS: dict[str, tuple[str, ...]] = {
     "shuffle": (),
     "depth_map": (
         "Depth Anything V2 Small", "Depth Anything V2 Base", "Depth Anything V2 Large",
-        "DPT SwinV2 Tiny", "DPT Large",
+        "DPT SwinV2 Tiny", "DPT Large", marigold_v2.MODEL_NAME,
     ),
     "normal_map": (
         "Depth Anything V2 Small", "Depth Anything V2 Base", "Depth Anything V2 Large",
-        "DPT SwinV2 Tiny", "DPT Large",
+        "DPT SwinV2 Tiny", "DPT Large", marigold_v2.MODEL_NAME,
     ),
     "openpose": ("ViTPose Base", "ViTPose Small", "ViTPose Wholebody"),
     "animal_pose": ("ViTPose Animal",),
@@ -320,9 +329,9 @@ class PowerPreprocessor(io.ComfyNode):
                 "the light it was lit by, or the frame with its noise or its darkness taken "
                 "out. Feeding a ControlNet is the usual reason, and the same answers drive "
                 "relighting, defocus, parallax, masking and stylising. Pick the question and "
-                "the node draws only what that question reads, including which models can "
-                "answer it. Five of them need no model and download nothing; the rest fetch a "
-                "checkpoint on first use, or read one another pack already has."
+                "the node draws only what that question reads. Five need no model at all and "
+                "most fetch a checkpoint on first use. `Marigold v2` is the exception: it "
+                "reads a transformer, a decoder and a prompt embedding placed by hand."
             ),
             inputs=[
                 io.Image.Input(
@@ -335,12 +344,8 @@ class PowerPreprocessor(io.ComfyNode):
                     default="canny_pyramid",
                     tooltip=(
                         "What to work out. `canny_pyramid`, `lineart_simple`, "
-                        "`scribble_xdog`, `binary` and `shuffle` need no model. `depth_map`, "
-                        "`normal_map`, `openpose`, `animal_pose`, `ade20k_segments`, "
-                        "`soft_edge`, `lineart_model`, `line_segments`, `anyline`, "
-                        "`albedo`, `roughness`, `metallicity`, `material`, `shading`, "
-                        "`residual`, `denoise` and `low_light` each run a model, chosen "
-                        "below."
+                        "`scribble_xdog`, `binary` and `shuffle` need no model; the rest "
+                        "run the model chosen below."
                     ),
                 ),
                 io.Combo.Input(
@@ -351,7 +356,8 @@ class PowerPreprocessor(io.ComfyNode):
                         "Which model answers the question, listing only the ones that can. "
                         "Within a family the smaller is quicker and the larger more "
                         "accurate: `Depth Anything V2 Small` is 99 MB against `Large` at "
-                        "1.3 GB. Ignored by the five that need no model."
+                        "1.3 GB. `Marigold v2` is the sharpest, and the one read from the "
+                        "three inputs at the bottom rather than downloaded."
                     ),
                 ),
                 io.Int.Input(
@@ -462,6 +468,58 @@ class PowerPreprocessor(io.ComfyNode):
                         "as quick and coarser, and above 8 the answer stops changing much."
                     ),
                 ),
+                io.Model.Input(
+                    TRANSFORMER,
+                    optional=True,
+                    tooltip=(
+                        "The transformer `Marigold v2` runs on: Load Diffusion Model on "
+                        "`qwen_image_edit_2509_int8_convrot`. One transformer answers "
+                        "every map; `adapter_name` puts the adapter on it here."
+                    ),
+                ),
+                io.Vae.Input(
+                    DECODER,
+                    optional=True,
+                    tooltip=(
+                        "The decoder this map was trained with: Load VAE on "
+                        "`marigold_v2_depth_log_stage2_vae` for depth, "
+                        "`marigold_v2_normals_vae` for normals, `marigold_v2_albedo_vae` "
+                        "for albedo. It names the same map as the adapter."
+                    ),
+                ),
+                io.Combo.Input(
+                    ADAPTER,
+                    options=marigold_v2.adapters(),
+                    default=marigold_v2.AUTOMATIC,
+                    optional=True,
+                    tooltip=(
+                        "`auto` = this map's adapter, found by name in the loras folder; "
+                        "`already on the model` = apply none, for a LoRA put on the "
+                        "transformer before it arrives; `marigold_v2_normals.safetensors` "
+                        "= that file."
+                    ),
+                ),
+                io.Combo.Input(
+                    CONDITIONING,
+                    options=marigold_v2.embeddings(),
+                    default=marigold_v2.AUTOMATIC,
+                    optional=True,
+                    tooltip=(
+                        "`auto` = this map's prompt embedding, found by name in the "
+                        "embeddings folder; `marigold_v2_depth_conditioning.safetensors` = "
+                        "that file. The `conditioning` socket beats this when wired."
+                    ),
+                ),
+                io.Conditioning.Input(
+                    PROMPT,
+                    optional=True,
+                    tooltip=(
+                        "A prompt embedding to read the map against, from a text encoder "
+                        "or a loaded conditioning. Used in place of `conditioning_name`. "
+                        "Keep it full length: a short prompt flattens the map, while the "
+                        "wording barely moves it."
+                    ),
+                ),
             ],
             outputs=[
                 io.Image.Output(
@@ -477,8 +535,10 @@ class PowerPreprocessor(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, image, preprocessor, model, resolution, threshold_low, threshold_high, radius,
-        strength, seed, steps, tile,
+        cls, image, preprocessor, model_name, resolution, threshold_low, threshold_high,
+        radius, strength, seed, steps, tile, model=None, vae=None,
+        adapter_name=marigold_v2.AUTOMATIC,
+        conditioning_name=marigold_v2.AUTOMATIC, conditioning=None,
     ) -> io.NodeOutput:
         """Work out the chosen answer.
 
@@ -502,19 +562,128 @@ class PowerPreprocessor(io.ComfyNode):
             TILE: int(bounded(TILE, int(tile), preprocessor)),
         }
 
+        if model_name == marigold_v2.MODEL_NAME and model_name in allowed:
+            return io.NodeOutput(
+                _wired(preprocessor, model, vae, adapter_name, conditioning_name,
+                       conditioning, image, int(resolution))
+            )
         if not allowed:
             result = _without_model(preprocessor, image, int(resolution), settings)
         else:
-            if model not in allowed:
+            if model_name not in allowed:
                 raise ValueError(
-                    f"{preprocessor!r} cannot be worked out by {model!r}. "
+                    f"{preprocessor!r} cannot be worked out by {model_name!r}. "
                     f"Choose one of: {', '.join(allowed)}."
                 )
-            loaded = Loaded(backend=build(model), name=model)
+            loaded = Loaded(backend=build(model_name), name=model_name)
             result = _with_model(preprocessor, loaded, image, int(resolution), settings)
 
         answer = (result.clamp(0.0, 255.0) / 255.0).permute(0, 2, 3, 1)
         return io.NodeOutput(answer.to(image.device, dtype=image.dtype).contiguous())
+
+
+def _prompt_of(conditioning):
+    """The embedding a wired ``CONDITIONING`` carries.
+
+    Args:
+        conditioning: A ``CONDITIONING`` value, or None.
+
+    Returns:
+        The first entry's tensor, or None where nothing was wired.
+
+    Raises:
+        ValueError: Something was wired that carries no embedding.
+    """
+    if conditioning is None:
+        return None
+    try:
+        held = conditioning[0][0]
+    except (TypeError, IndexError, KeyError):
+        held = None
+    if held is None or not hasattr(held, "ndim"):
+        raise ValueError(
+            f"the {PROMPT} input carries no prompt embedding. Wire a text encoder or a "
+            f"loaded conditioning, or leave it empty to read the map's own file."
+        )
+    return held if held.ndim == 3 else held.unsqueeze(0)
+
+
+def _wired(name, model, vae, adapter_name, conditioning_name, conditioning, image,
+           resolution: int):
+    """Work out one map from a transformer and a decoder wired into the node.
+
+    Args:
+        name: A key of :data:`marigold_v2.MODALITIES`.
+        model: The ``MODEL`` wired in, or None.
+        vae: The ``VAE`` wired in, or None.
+        adapter_name: The adapter's file name, or the automatic entry.
+        conditioning_name: The prompt embedding's file name, or the automatic entry.
+        conditioning: A ``CONDITIONING`` wired in, which wins over the file above.
+        image: ``(batch, height, width, channels)`` in ``[0, 1]``.
+        resolution: Longest edge the map is read at.
+
+    Returns:
+        A ``(batch, height, width, 3)`` tensor in ``[0, 1]``, the size it arrived at.
+
+    Raises:
+        ValueError: Either socket is empty.
+    """
+    import torch.nn.functional as functional
+
+    modality = marigold_v2.MODALITIES[name]
+    missing = [
+        socket
+        for socket, wired in ((TRANSFORMER, model), (DECODER, vae))
+        if wired is None
+    ]
+    if missing:
+        raise ValueError(
+            f"{marigold_v2.MODEL_NAME} reads its model off the node's own sockets, and "
+            f"{' and '.join(missing)} {'is' if len(missing) == 1 else 'are'} not wired.\n"
+            f"  Wire Load Diffusion Model on qwen_image_edit_2509_int8_convrot into "
+            f"{TRANSFORMER}, and Load VAE on the {modality} VAE into {DECODER}.\n"
+            f"  The {modality} adapter is put on the transformer here, so no LoRA loader "
+            f"is needed.\n"
+            f"  Nothing is downloaded for it: place the files in your models folders "
+            f"yourself, and the conditioning in ComfyUI/models/embeddings."
+        )
+
+    planes = image[..., :3].permute(0, 3, 1, 2).to(dtype=torch.float32)
+    height, width = planes.shape[-2:]
+    # Held to a multiple the decoder and the transformer both take.
+    working = _working_size(height, width, resolution)
+    step = marigold_v2.MULTIPLE
+    working = tuple(max(step, int(round(side / step)) * step) for side in working)
+    if working != (height, width):
+        planes = functional.interpolate(
+            planes, size=working, mode="bicubic", align_corners=False
+        ).clamp(0.0, 1.0)
+
+    # A wired conditioning wins over the file.
+    prompt = _prompt_of(conditioning)
+    if prompt is None:
+        prompt = marigold_v2.conditioning(conditioning_name, modality)
+    decoded = marigold_v2.predict(
+        marigold_v2.adapted(model, adapter_name, modality),
+        vae,
+        planes.permute(0, 2, 3, 1).contiguous(),
+        prompt,
+    )
+    if modality == "depth":
+        # Stretched over the whole batch.
+        answer = marigold_v2.depth(decoded)
+    elif modality == "normals":
+        answer = marigold_v2.normals(decoded)
+    else:
+        answer = marigold_v2.albedo(decoded)
+
+    answer = answer.permute(0, 3, 1, 2)
+    if answer.shape[-2:] != (height, width):
+        answer = functional.interpolate(
+            answer, size=(height, width), mode="bicubic", align_corners=False
+        )
+    answer = answer.clamp(0.0, 1.0).permute(0, 2, 3, 1)
+    return answer.to(image.device, dtype=image.dtype).contiguous()
 
 
 def _without_model(name, image, resolution: int, settings):

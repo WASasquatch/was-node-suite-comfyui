@@ -1,0 +1,1546 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "revision": 0,
+  "last_node_id": 14,
+  "last_link_id": 16,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            8
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "scene/road.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "scene/road.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        420
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "scene/lara.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "scene/lara.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        800
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "scene/logo.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "scene/logo.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 4,
+      "type": "AddLayer",
+      "pos": [
+        400,
+        40
+      ],
+      "size": [
+        270,
+        338
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "shape": 7,
+          "type": "LAYERS",
+          "link": null
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "x",
+          "name": "x",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "y",
+          "name": "y",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blend_mode",
+          "name": "blend_mode",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "blend_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation",
+          "name": "rotation",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "z_index",
+          "name": "z_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "z_index"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flip_h",
+          "name": "flip_h",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flip_h"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flip_v",
+          "name": "flip_v",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flip_v"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LAYERS",
+          "name": "LAYERS",
+          "type": "LAYERS",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "AddLayer"
+      },
+      "widgets_values": [
+        "road",
+        0,
+        0,
+        1,
+        "normal",
+        0,
+        0,
+        0,
+        0,
+        false,
+        false
+      ],
+      "widgets_values_named": {
+        "name": "road",
+        "x": 0,
+        "y": 0,
+        "opacity": 1,
+        "blend_mode": "normal",
+        "rotation": 0,
+        "width": 0,
+        "height": 0,
+        "z_index": 0,
+        "flip_h": false,
+        "flip_v": false
+      }
+    },
+    {
+      "id": 5,
+      "type": "AddLayer",
+      "pos": [
+        400,
+        370
+      ],
+      "size": [
+        270,
+        338
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "shape": 7,
+          "type": "LAYERS",
+          "link": 4
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 15
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "x",
+          "name": "x",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "y",
+          "name": "y",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blend_mode",
+          "name": "blend_mode",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "blend_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation",
+          "name": "rotation",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "z_index",
+          "name": "z_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "z_index"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flip_h",
+          "name": "flip_h",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flip_h"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flip_v",
+          "name": "flip_v",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flip_v"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LAYERS",
+          "name": "LAYERS",
+          "type": "LAYERS",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "AddLayer"
+      },
+      "widgets_values": [
+        "lara",
+        15,
+        237,
+        0.9,
+        "normal",
+        0,
+        610,
+        900,
+        1,
+        false,
+        false
+      ],
+      "widgets_values_named": {
+        "name": "lara",
+        "x": 15,
+        "y": 237,
+        "opacity": 0.9,
+        "blend_mode": "normal",
+        "rotation": 0,
+        "width": 610,
+        "height": 900,
+        "z_index": 1,
+        "flip_h": false,
+        "flip_v": false
+      }
+    },
+    {
+      "id": 6,
+      "type": "AddLayer",
+      "pos": [
+        400,
+        700
+      ],
+      "size": [
+        270,
+        338
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "shape": 7,
+          "type": "LAYERS",
+          "link": 5
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 16
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "x",
+          "name": "x",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "y",
+          "name": "y",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blend_mode",
+          "name": "blend_mode",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "blend_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation",
+          "name": "rotation",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "z_index",
+          "name": "z_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "z_index"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flip_h",
+          "name": "flip_h",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flip_h"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flip_v",
+          "name": "flip_v",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flip_v"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LAYERS",
+          "name": "LAYERS",
+          "type": "LAYERS",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "AddLayer"
+      },
+      "widgets_values": [
+        "logo",
+        60,
+        80,
+        0.75,
+        "screen",
+        0,
+        520,
+        222,
+        2,
+        false,
+        false
+      ],
+      "widgets_values_named": {
+        "name": "logo",
+        "x": 60,
+        "y": 80,
+        "opacity": 0.75,
+        "blend_mode": "screen",
+        "rotation": 0,
+        "width": 520,
+        "height": 222,
+        "z_index": 2,
+        "flip_h": false,
+        "flip_v": false
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASLayerStroke",
+      "pos": [
+        760,
+        700
+      ],
+      "size": [
+        270,
+        326
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "link": 6
+        },
+        {
+          "localized_name": "layer_index",
+          "name": "layer_index",
+          "type": "INT",
+          "widget": {
+            "name": "layer_index"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "layer_name",
+          "name": "layer_name",
+          "type": "STRING",
+          "widget": {
+            "name": "layer_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "alignment",
+          "name": "alignment",
+          "type": "COMBO",
+          "widget": {
+            "name": "alignment"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blend_mode",
+          "name": "blend_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "blend_mode"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLayerStroke"
+      },
+      "widgets_values": [
+        -1,
+        "logo",
+        "outer",
+        6,
+        "#ffb020",
+        0.95,
+        "normal"
+      ],
+      "widgets_values_named": {
+        "layer_index": -1,
+        "layer_name": "logo",
+        "alignment": "outer",
+        "width": 6,
+        "color": "#ffb020",
+        "opacity": 0.95,
+        "blend_mode": "normal"
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASLayersCanvas",
+      "pos": [
+        760,
+        370
+      ],
+      "size": [
+        360,
+        400
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "link": 7
+        },
+        {
+          "localized_name": "match",
+          "name": "match",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "anchor",
+          "name": "anchor",
+          "type": "COMBO",
+          "widget": {
+            "name": "anchor"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "links": [
+            9
+          ]
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLayersCanvas"
+      },
+      "widgets_values": [
+        0,
+        0,
+        "top left"
+      ],
+      "widgets_values_named": {
+        "width": 0,
+        "height": 0,
+        "anchor": "top left"
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASLayersSave",
+      "pos": [
+        1180,
+        40
+      ],
+      "size": [
+        400,
+        640
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "link": 9
+        },
+        {
+          "localized_name": "composite",
+          "name": "composite",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "file_format",
+          "name": "file_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "file_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "depth",
+          "name": "depth",
+          "type": "COMBO",
+          "widget": {
+            "name": "depth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "compression",
+          "name": "compression",
+          "type": "COMBO",
+          "widget": {
+            "name": "compression"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "files",
+          "name": "files",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "composite",
+          "name": "composite",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLayersSave"
+      },
+      "widgets_values": [
+        "psd",
+        "output",
+        "layers-round-trip",
+        "16 bit",
+        "rle"
+      ],
+      "widgets_values_named": {
+        "file_format": "psd",
+        "root": "output",
+        "filename_prefix": "layers-round-trip",
+        "depth": "16 bit",
+        "compression": "rle"
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASLayersLoad",
+      "pos": [
+        1180,
+        740
+      ],
+      "size": [
+        400,
+        462
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "links": [
+            10
+          ]
+        },
+        {
+          "localized_name": "composite",
+          "name": "composite",
+          "type": "IMAGE",
+          "links": [
+            14
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "STRING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLayersLoad"
+      },
+      "widgets_values": [
+        "layers-round-trip.psd [input]"
+      ],
+      "widgets_values_named": {
+        "file": "layers-round-trip.psd [input]"
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASLayersInfo",
+      "pos": [
+        1650,
+        740
+      ],
+      "size": [
+        360,
+        240
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "layers",
+          "name": "layers",
+          "type": "LAYERS",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "document",
+          "name": "document",
+          "type": "DICT",
+          "links": [
+            11
+          ]
+        },
+        {
+          "localized_name": "layer_info",
+          "name": "layer_info",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "canvas_width",
+          "name": "canvas_width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "canvas_height",
+          "name": "canvas_height",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLayersInfo"
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASDisplayAny",
+      "pos": [
+        1650,
+        1030
+      ],
+      "size": [
+        360,
+        200
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 6,
+          "type": "DICT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDisplayAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 13,
+      "type": "Text to Console",
+      "pos": [
+        2060,
+        1030
+      ],
+      "size": [
+        320,
+        120
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 12
+        },
+        {
+          "localized_name": "label",
+          "name": "label",
+          "type": "STRING",
+          "widget": {
+            "name": "label"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Text to Console"
+      },
+      "widgets_values": [
+        "",
+        "layers read back"
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "label": "layers read back"
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASImageCompare",
+      "pos": [
+        1650,
+        40
+      ],
+      "size": [
+        520,
+        620
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 13
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageCompare"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      1,
+      "LAYERS"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      1,
+      "LAYERS"
+    ],
+    [
+      6,
+      6,
+      0,
+      7,
+      0,
+      "LAYERS"
+    ],
+    [
+      7,
+      7,
+      0,
+      8,
+      0,
+      "LAYERS"
+    ],
+    [
+      8,
+      1,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      9,
+      8,
+      0,
+      9,
+      0,
+      "LAYERS"
+    ],
+    [
+      10,
+      10,
+      0,
+      11,
+      0,
+      "LAYERS"
+    ],
+    [
+      11,
+      11,
+      0,
+      12,
+      0,
+      "DICT"
+    ],
+    [
+      12,
+      10,
+      3,
+      13,
+      0,
+      "STRING"
+    ],
+    [
+      13,
+      9,
+      1,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      14,
+      10,
+      1,
+      14,
+      1,
+      "IMAGE"
+    ],
+    [
+      15,
+      2,
+      1,
+      5,
+      2,
+      "MASK"
+    ],
+    [
+      16,
+      3,
+      1,
+      6,
+      2,
+      "MASK"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.8264462809917354,
+      "offset": [
+        514.1899999999998,
+        164.31000000000006
+      ]
+    }
+  },
+  "version": 0.4
+}
