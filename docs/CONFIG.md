@@ -205,27 +205,7 @@ A 3840x2160 frame costs 7.9 MB and 315 ms to hold and encode, and 1.4 MB and 136
 
 | Key | Type | Default | Does |
 |---|---|---|---|
-| `viewer.install_extensions` | bool | `false` | Unpacks `.zip` view extensions dropped in `<user_dir>/was-node-suite/viewer-extensions/` at startup, and pip-installs whatever they require with the python that runs ComfyUI. Also copies in view extensions cloned into `custom_nodes` as `ComfyUI_Viewer_*`. |
-
----
-
-## `dependencies`
-
-| Key | Type | Default | Does |
-|---|---|---|---|
-| `dependencies.install_missing` | bool | `false` | Installs the requirements file of a switched-on feature group at startup when a package in it is absent. `false` logs the command to run instead. |
-
-Off out of the box, so a fresh install brings in nothing. A switched-on group missing a package
-is named in the log with the command that installs it, and the pack runs pip only once this is
-set to `true`.
-
-Set to `true`, a group with a requirements file installs it at startup when the group is on and
-something it needs is absent. It only ever adds: pip is asked what it would do first, and a plan
-that would replace an installed version is refused, printed in full and left for you to run.
-
-`requirements/<group>.txt` is the file for a group that needs a package, named exactly like the
-features key. A group that needs none has no file there, so `ls requirements/` is the whole
-list. Today that is `document_export` alone.
+| `viewer.install_extensions` | bool | `false` | Unpacks `.zip` view extensions dropped in `<user_dir>/was-node-suite/viewer-extensions/` at startup. Also copies in view extensions cloned into `custom_nodes` as `ComfyUI_Viewer_*`. A package that needs python libraries has them named in the log; install those yourself. |
 
 ---
 

@@ -18,27 +18,17 @@ CONFIG_NAMES = ("config.yaml", "config.json")
 ENV_CONFIG_FILE = "WAS_CONFIG"
 ENV_CONFIG_DIR = "WAS_CONFIG_DIR"
 
-#: Default of ``viewer.install_extensions``. Off, because installing a view extension runs
-#: ``pip install`` on a requirements file chosen by a downloaded package, and nothing else
-#: in this pack installs anything without being asked. Repeated from
-#: ``modules/config/defaults.py`` because that module is not importable this early.
-INSTALL_EXTENSIONS_DEFAULT = False
-
 #: Whether the viewer loads at all, read from ``features.viewer``. Repeated from
 #: ``modules/config/defaults.py`` for the same reason.
 VIEWER_DEFAULT = True
 
+#: Default of ``viewer.install_extensions``. Repeated from ``modules/config/defaults.py``
+#: because that module is not importable this early.
+INSTALL_EXTENSIONS_DEFAULT = False
+
 #: Where ``.zip`` view extensions are dropped, under the pack's config directory. In the
 #: user directory rather than the install directory so the packages survive an update.
 DROP_DIR_NAME = "viewer-extensions"
-
-#: Default of ``dependencies.install_missing``. Repeated from ``modules/config/defaults.py``
-#: because that module is not importable this early.
-INSTALL_MISSING_DEFAULT = False
-
-#: Feature groups whose requirements file is installed, each named exactly like its key
-#: under ``features``. A group with no file in ``requirements/`` needs nothing installed.
-REQUIREMENTS_DIR = "requirements"
 
 #: The pack's logger name and the prefix its records carry. Repeated from ``modules/log.py``
 #: because that module is not importable this early.
@@ -155,7 +145,7 @@ def viewer_installer():
 
 
 def prepare_viewer(features: dict, viewer: dict) -> None:
-    """Install view extensions if asked to, and list the ones that are present.
+    """Unpack view extensions if asked to, and list the ones that are present.
 
     Args:
         features: The config's ``features`` block, which decides whether the viewer loads.
@@ -167,18 +157,13 @@ def prepare_viewer(features: dict, viewer: dict) -> None:
     if module is None:
         return
 
-    import sys
-
     pack_root = Path(__file__).resolve().parent
     directory = config_directory()
     drop = (directory / DROP_DIR_NAME) if directory is not None else None
     try:
-        # Created either way. A directory that appears only once the setting is on is one
-        # nobody discovers the setting from, and the note inside it is where both the
-        # manual route and the setting are written down.
         if drop is not None and module.ensure_drop_dir(drop):
             if bool(viewer.get("install_extensions", INSTALL_EXTENSIONS_DEFAULT)):
-                module.install_all(pack_root, drop, sys.executable)
+                module.install_all(pack_root, drop)
                 module.sync_siblings(pack_root, pack_root.parent)
         module.write_manifest(pack_root)
     except Exception as error:
@@ -190,106 +175,12 @@ def prepare_viewer(features: dict, viewer: dict) -> None:
         logger.debug("the viewer extension pass failed", exc_info=True)
 
 
-def install_resolver():
-    """``modules/install_resolve.py``, loaded by path.
-
-    Returns:
-        The loaded module, or ``None`` when it cannot be read, which leaves every feature
-        group to report its own missing package on first use.
-    """
-    import importlib.util
-
-    path = Path(__file__).resolve().parent / "modules" / "install_resolve.py"
-    try:
-        spec = importlib.util.spec_from_file_location("was_node_suite_install_resolve", path)
-        if spec is None or spec.loader is None:
-            return None
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    except Exception as error:
-        logger.debug("%s could not be loaded (%s)", path, error)
-        return None
-    return module
-
-
-def prepare_requirements(features: dict, dependencies: dict) -> None:
-    """Install what a switched-on feature group needs, where nothing else moves.
-
-    Args:
-        features: The config's ``features`` block, deciding which groups are on.
-        dependencies: The config's ``dependencies`` block, holding ``install_missing``.
-    """
-    import sys
-
-    root = Path(__file__).resolve().parent / REQUIREMENTS_DIR
-    if not root.is_dir():
-        return
-    resolver = install_resolver()
-    if resolver is None:
-        return
-
-    asked = bool(dependencies.get("install_missing", INSTALL_MISSING_DEFAULT))
-    for path in sorted(root.glob("*.txt")):
-        group = path.stem
-        if not bool(features.get(group, False)):
-            continue
-        names = resolver.requirement_names(path)
-        absent = resolver.missing_from(names)
-        if not absent:
-            continue
-
-        required = ", ".join(absent)
-        command = resolver.install_instruction(path)
-
-        if not asked:
-            logger.warning(
-                "features.%s requires %s, and dependencies.install_missing is disabled. "
-                "Install the requirements file manually: %s",
-                group, required, command,
-            )
-            continue
-
-        answer = resolver.resolve_requirements(path, sys.executable)
-        if answer.failure:
-            logger.warning(
-                "features.%s requires %s. Dependency resolution failed (%s), so nothing was "
-                "installed. Install the requirements file manually: %s",
-                group, required, answer.failure, command,
-            )
-            continue
-        if not answer.safe:
-            moved = ", ".join(str(change) for change in answer.changes)
-            logger.warning(
-                "features.%s requires %s, which would %s. Installing it would modify packages "
-                "this environment already provides, so it was skipped. Install the "
-                "requirements file manually: %s",
-                group, required, moved, command,
-            )
-            continue
-
-        logger.info(
-            "features.%s requires %s. Installing %d package(s); no existing package is "
-            "modified.", group, required, len(answer.additions),
-        )
-        failure = resolver.apply_requirements(path, sys.executable)
-        if failure:
-            logger.warning(
-                "Installing the requirements for features.%s failed (%s). Its nodes will "
-                "report the missing package when they run. Install it manually: %s",
-                group, failure, command,
-            )
-        else:
-            logger.info("features.%s dependencies satisfied", group)
-
-
 def main() -> None:
-    """Install what the switched-on feature groups need, and prepare the viewer."""
+    """Prepare the viewer."""
     try:
         path = find_config_file()
         configure_logging(str(block_of(path, "logging").get("level", "info")))
-        features = block_of(path, "features")
-        prepare_requirements(features, block_of(path, "dependencies"))
-        prepare_viewer(features, block_of(path, "viewer"))
+        prepare_viewer(block_of(path, "features"), block_of(path, "viewer"))
     except Exception as error:
         logger.warning(
             "the content viewer's extensions could not be prepared (%s: %s). Its built-in "

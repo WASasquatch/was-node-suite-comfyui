@@ -78,9 +78,6 @@ CORE_VIEWS = frozenset({
 #: Machinery in the views directory that is not a view.
 NOT_VIEWS = frozenset({"base_view.js", "view_loader.js", "view_manifest.js"})
 
-#: How long ``pip install`` may run before it is abandoned, in seconds.
-PIP_TIMEOUT = 300
-
 #: Written into the drop directory. The name is the instruction, so it reads as one in a
 #: file listing without being opened.
 DROP_README = "HOW_TO_INSTALL_VIEW_EXTENSIONS.txt"
@@ -120,7 +117,6 @@ Restart ComfyUI. The view registers itself; there is no list to edit.
 If the extension ships a requirements.txt, install it yourself with the Python that runs
 ComfyUI. For the Windows portable build, from the ComfyUI_windows_portable directory:
 
-    python_embeded\\python.exe -m pip install -r <extension>\\requirements.txt
 
 
 Installing one automatically, opt in first
@@ -255,15 +251,13 @@ def write_manifest(pack_root: Path) -> list[str]:
     return found
 
 
-def install_all(pack_root: Path, drop_dir: Path, python_exe: str) -> int:
+def install_all(pack_root: Path, drop_dir: Path) -> int:
     """Unpack every ``.zip`` package in ``drop_dir`` that is not installed already.
 
     Args:
         pack_root: This pack's root directory, which the files are copied into.
         drop_dir: Directory holding the ``.zip`` packages, and a ``logs`` subdirectory
             recording what each one installed.
-        python_exe: Interpreter used for ``pip install``, which must be the one running
-            ComfyUI or the packages land in the wrong environment.
 
     Returns:
         How many packages were installed on this run.
@@ -282,7 +276,7 @@ def install_all(pack_root: Path, drop_dir: Path, python_exe: str) -> int:
         if _is_installed(record, pack_root):
             continue
         logger.info("content viewer: installing the view extension %s", package.name)
-        if _install(package, pack_root, record, python_exe):
+        if _install(package, pack_root, record):
             installed += 1
     return installed
 
@@ -420,7 +414,7 @@ def _is_installed(record: Path, pack_root: Path) -> bool:
     return all((pack_root / name).exists() for name in files)
 
 
-def _install(package: Path, pack_root: Path, record: Path, python_exe: str) -> bool:
+def _install(package: Path, pack_root: Path, record: Path) -> bool:
     """Unpack one package, install its requirements, and write its record."""
     written: list[str] = []
     requirements = ""
@@ -446,7 +440,7 @@ def _install(package: Path, pack_root: Path, record: Path, python_exe: str) -> b
         return False
 
     if requirements.strip():
-        _pip_install(requirements, package, python_exe)
+        _report_requirements(requirements, package)
 
     try:
         record.parent.mkdir(parents=True, exist_ok=True)
@@ -544,52 +538,23 @@ def _requirements(archive: zipfile.ZipFile, root: str) -> str:
         return ""
 
 
-def _pip_install(requirements: str, package: Path, python_exe: str) -> None:
-    """Install one package's requirements, reporting the command and the outcome.
+def _report_requirements(requirements: str, package: Path) -> None:
+    """Name what a view extension needs, for installing by hand.
 
     Args:
-        requirements: The package's ``requirements.txt``, written to a temp file and
-            installed whole. One holding only blank lines and ``#`` comments installs
-            nothing.
-        package: The package being installed, named in the messages.
-        python_exe: Interpreter ``pip install`` runs under.
+        requirements: The package's ``requirements.txt``. One holding only blank lines and
+            ``#`` comments names nothing.
+        package: The package being reported.
     """
-    import subprocess
-    import tempfile
-
-    wanted = [line.strip() for line in requirements.splitlines() if line.strip() and not line.startswith("#")]
+    wanted = [
+        line.strip()
+        for line in requirements.splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
     if not wanted:
         return
-
-    handle = None
-    try:
-        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as handle:
-            handle.write(requirements)
-        command = [python_exe, "-m", "pip", "install", "-r", handle.name]
-        logger.info(
-            "content viewer: %s requires %s, installing with: %s",
-            package.name, ", ".join(wanted), " ".join(command[:4]),
-        )
-        result = subprocess.run(command, capture_output=True, text=True, timeout=PIP_TIMEOUT)
-    except Exception as error:
-        logger.warning(
-            "installing the requirements for %s failed (%s: %s). Install %s by hand with "
-            "the python that runs ComfyUI; the extension's views are installed either way",
-            package.name, type(error).__name__, error, ", ".join(wanted),
-        )
-        return
-    finally:
-        if handle is not None:
-            try:
-                os.unlink(handle.name)
-            except OSError:
-                pass
-
-    if result.returncode == 0:
-        logger.info("content viewer: %s requirements installed", package.name)
-        return
     logger.warning(
-        "pip exited %s installing the requirements for %s. Install %s by hand with the "
-        "python that runs ComfyUI; the extension's views are installed either way.\n%s",
-        result.returncode, package.name, ", ".join(wanted), (result.stderr or "").strip()[-800:],
+        "the view extension %s needs %s. Install them with the python that runs ComfyUI; "
+        "its views are installed either way",
+        package.name, ", ".join(wanted),
     )

@@ -6,7 +6,7 @@
 #
 # docs/CONFIG.md is the reference for every key below.
 
-version: 15
+version: 16
 
 logging:
   level: info            # debug | info | warning | error
@@ -36,13 +36,7 @@ interface:
   preview_max_edge: 1024 # longest edge of a picture a node publishes to its own panel; 0 keeps full size
 
 viewer:
-  install_extensions: false  # unpack .zip view extensions and pip-install what they require
-
-dependencies:
-  install_missing: false # install a switched-on group's requirements file at startup. Off, so a
-                         # fresh install brings in nothing: the packages and the command that
-                         # installs them are named in the log instead. On, it only ever adds:
-                         # a plan that would replace an installed version is refused and printed
+  install_extensions: false  # unpack .zip view extensions; what they need is named in the log
 
 features:                # optional node groups
   extras:      true      # 27 nodes: LUTs, tiling, LoRA merging, sequence samplers, latent upscalers

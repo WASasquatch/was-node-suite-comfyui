@@ -17,11 +17,14 @@ __all__ = [
     "adapters",
     "albedo",
     "conditioning",
+    "decoder",
+    "decoders",
     "depth",
     "embeddings",
     "normals",
     "published",
     "published_adapter",
+    "published_decoder",
     "predict",
 ]
 
@@ -56,7 +59,7 @@ _TENSOR = "conditioning"
 #: The name a map's prompt embedding is published under.
 _PUBLISHED = "marigold_v2_{}_conditioning"
 
-#: The prefix a map's adapter is published under.
+#: The prefix a map's adapter and decoder are published under.
 _ADAPTER = "marigold_v2_{}"
 
 #: The menu entry naming the file the map publishes.
@@ -158,6 +161,74 @@ def adapted(model, name: str, modality: str):
     )
     logger.debug("%s applied %s for %s", MODEL_NAME, chosen, modality)
     return patched
+
+
+def decoders() -> list[str]:
+    """Every file ComfyUI's vae folder offers.
+
+    Returns:
+        :data:`AUTOMATIC` first, then the file names.
+    """
+    try:
+        import folder_paths
+
+        return [AUTOMATIC, *folder_paths.get_filename_list("vae")]
+    except Exception as error:
+        logger.debug("the vae folder could not be read: %s", error)
+        return [AUTOMATIC]
+
+
+def published_decoder(modality: str) -> str:
+    """The decoder file one map is published under, where the folder holds one.
+
+    Args:
+        modality: One of the values of :data:`MODALITIES`.
+
+    Returns:
+        The file name, or an empty string where nothing there matches.
+    """
+    wanted = _ADAPTER.format(modality)
+    for name in decoders():
+        stem = name.rsplit(".", 1)[0].replace("\\", "/").rsplit("/", 1)[-1]
+        if stem.startswith(wanted):
+            return name
+    return ""
+
+
+def decoder(name: str, modality: str):
+    """The decoder one map is read through.
+
+    Args:
+        name: A file the vae folder offers, or :data:`AUTOMATIC` for the map's own.
+        modality: The map being read.
+
+    Returns:
+        A loaded ``VAE``.
+
+    Raises:
+        ValueError: Nothing is picked and nothing matches, or the name names nothing there.
+    """
+    import comfy.sd
+    import comfy.utils
+    import folder_paths
+
+    picked = (name or "").strip()
+    chosen = published_decoder(modality) if picked in ("", AUTOMATIC) else picked
+    if not chosen:
+        raise ValueError(
+            f"{MODEL_NAME} found no decoder for {modality}.\n"
+            f"  Put {_ADAPTER.format(modality)}*_vae.safetensors in ComfyUI/models/vae and "
+            f"reload the page,\n"
+            f"  pick one in the decoder input, or wire a Load VAE into the vae socket."
+        )
+    path = folder_paths.get_full_path("vae", chosen)
+    if not path:
+        raise ValueError(
+            f"ComfyUI's vae folder holds no {chosen!r}. Reload the page after putting it "
+            f"there."
+        )
+    logger.debug("%s read %s for %s", MODEL_NAME, chosen, modality)
+    return comfy.sd.VAE(sd=comfy.utils.load_torch_file(path, safe_load=True))
 
 
 def published(modality: str) -> str:

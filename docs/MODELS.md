@@ -119,13 +119,18 @@ Which map each answer takes:
 | `normal_map` | `..._normals` | `..._normals_vae` | `..._normals_conditioning` |
 | `albedo` | `..._albedo` | `..._albedo_vae` | `..._albedo_conditioning` |
 
-Wire **Load Diffusion Model** on the transformer into `model`, and **Load VAE** on that
-row's decoder into `vae`. The adapter is the node's own job: `adapter_name` stays on `auto` and it
-finds that row's LoRA by name. No **LoraLoaderModelOnly** is needed, and
-one transformer feeds every map.
+Wire **Load Diffusion Model** on the transformer into `model`. That is the only wire the
+answer needs: `adapter_name`, `vae_name` and `conditioning_name` all stay on `auto` and find
+that row's files by name, so one transformer feeds every map and no LoRA or VAE loader is
+placed.
 
-Set `adapter_name` to `already on the model` where you want to apply the LoRA yourself, at a
-strength of your own or stacked with others.
+The three overrides, where a file is named something else or a loader is wanted:
+
+| Override | Use |
+|---|---|
+| `adapter_name` set to `already on the model` | A LoRA put on the transformer beforehand, at a strength of your own |
+| The `vae` socket | A decoder from **Load VAE** or any node answering a VAE |
+| The `conditioning` socket | A prompt embedding from a text encoder or a loaded conditioning |
 
 `conditioning_name` stays on `auto`, which finds that map's embedding by name in
 the embeddings folder. Naming a file overrides it. It is the text encoder's saved output, so

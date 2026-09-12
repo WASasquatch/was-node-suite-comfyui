@@ -117,7 +117,7 @@ Reconstruct**, **Image Remove Background** and its model loader sit beside it.
 
 Five answers need no model and most fetch a checkpoint on first use. **Marigold v2** is the
 exception: pick it from the model menu on `depth_map`, `normal_map` or `albedo` and the node
-reads a transformer and a decoder off two sockets, and finds that map's adapter and prompt
+reads a transformer off one socket and finds that map's adapter, decoder and prompt
 embedding by name in ComfyUI's own model folders. One transformer serves all three maps, it
 takes a single step, and it is the sharpest of the three. See
 [`docs/MODELS.md`](docs/MODELS.md).

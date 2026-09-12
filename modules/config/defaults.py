@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-VERSION = 15
+VERSION = 16
 
 #: Feature defaults as each earlier version shipped them, newest first. A config written by
 #: an older build carries that build's answers, and nothing in the file records whether a
@@ -17,6 +17,22 @@ VERSION = 15
 #: was given is indistinguishable from no choice at all, and is moved with the rest, which
 #: is why every move is named in the log. Keyed by the version the entry describes.
 SUPERSEDED_FEATURE_DEFAULTS = {
+    15: {
+        "blip": True,
+        "clipseg": True,
+        "sam": True,
+        "midas": True,
+        "diffusers": True,
+        "network": False,
+        "yunet": True,
+        "document_export": False,
+        "pssr": False,
+        "preprocessors": True,
+        "extras": True,
+        "viewer": True,
+        "threejs": True,
+        "photoshop": True,
+    },
     14: {
         "blip": True,
         "clipseg": True,
@@ -305,16 +321,6 @@ DEFAULTS = {
     #: imports any custom node.
     "viewer": {
         "install_extensions": False,
-    },
-    #: ``install_missing`` installs the requirements file of a feature group that is on but
-    #: has nothing installed for it, at startup, before ComfyUI imports any custom node. Off
-    #: by default, so nothing is installed for a user who did not ask: the group's packages
-    #: are named in the log with the command that installs them. On, it only ever adds: pip
-    #: is asked what it would do first, and a plan that would replace a version already
-    #: installed is refused and printed for the user to run themselves. Read straight off
-    #: disk at startup.
-    "dependencies": {
-        "install_missing": False,
     },
     "features": dict(FEATURE_DEFAULTS),
     "legacy": dict(LEGACY_DEFAULTS),

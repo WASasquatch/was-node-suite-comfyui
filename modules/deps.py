@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
-from . import install_resolve, log
+from . import log
 
 __all__ = [
     "DependencyError",
@@ -30,7 +30,11 @@ logger = log.get_logger("deps")
 REQUIREMENTS = Path(__file__).resolve().parent.parent / "requirements"
 
 #: Import name -> pip requirement, for packages whose two names differ.
-PIP_NAMES = install_resolve.DISTRIBUTIONS
+PIP_NAMES = {
+    "docx": "python-docx",
+    "git": "GitPython",
+    "huggingface_hub": "huggingface-hub",
+}
 
 _loaded: dict[str, ModuleType] = {}
 
@@ -214,4 +218,17 @@ def _pip(*arguments: str) -> str:
     Returns:
         The command, quoted wherever an argument holds a space.
     """
-    return install_resolve.pip_command(*arguments)
+    import sys
+
+    # The python running ComfyUI, not a bare pip: on a portable install the pip on PATH
+    # belongs to another interpreter.
+    if not sys.executable:
+        prefix = ["pip"]
+    elif sys.flags.no_user_site:
+        prefix = [sys.executable, "-s", "-m", "pip"]
+    else:
+        prefix = [sys.executable, "-m", "pip"]
+    return " ".join(
+        f'"{part}"' if " " in part else part
+        for part in (*prefix, "install", *arguments)
+    )

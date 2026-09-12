@@ -124,7 +124,7 @@ function hidingEnabled() {
 
 // What the wired model reads.
 const WIRED_INPUTS = ["model", "vae", "conditioning"];
-const WIRED_WIDGETS = ["adapter_name", "conditioning_name"];
+const WIRED_WIDGETS = ["adapter_name", "vae_name", "conditioning_name"];
 const MODEL_WIDGET = "model_name";
 
 /**

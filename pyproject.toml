@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.1.3"
+version = "3.2.0"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
@@ -23,11 +23,9 @@ branch = "main"
 docs = "https://github.com/WASasquatch/was-node-suite-comfyui/blob/main/NODES.md"
 funding = "https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US"
 release_note = """
-WAS-NS 3.x.x is flagged by the registry's automated scan for subprocess use. Both places that
-call it run pip, both are off in a fresh install, and both need config.yaml edited by hand to
-switch on: dependencies.install_missing, which installs a feature group's requirements at
-startup, and viewer.install_extensions, which installs what a content viewer extension needs.
-Left alone, neither runs and the pack starts no process.
+Nothing in this pack starts a process or installs a package. A feature group that needs a
+library names it in the log with the pip command to run; install it yourself with
+requirements/<group>.txt.
 """
 themes = ["themes/was-node-suite.json"]
 example_workflows = [

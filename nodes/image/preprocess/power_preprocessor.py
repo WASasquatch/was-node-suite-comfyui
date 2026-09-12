@@ -63,6 +63,7 @@ TRANSFORMER = "model"
 DECODER = "vae"
 CONDITIONING = "conditioning_name"
 ADAPTER = "adapter_name"
+DECODER_NAME = "vae_name"
 PROMPT = "conditioning"
 
 #: Intrinsic answer -> the checkpoints that read it, the first being what it starts on.
@@ -481,10 +482,9 @@ class PowerPreprocessor(io.ComfyNode):
                     DECODER,
                     optional=True,
                     tooltip=(
-                        "The decoder this map was trained with: Load VAE on "
-                        "`marigold_v2_depth_log_stage2_vae` for depth, "
-                        "`marigold_v2_normals_vae` for normals, `marigold_v2_albedo_vae` "
-                        "for albedo. It names the same map as the adapter."
+                        "A decoder to read the map through, in place of `vae_name`. Wire "
+                        "Load VAE, or anything answering a VAE, to use one this node "
+                        "cannot find by name."
                     ),
                 ),
                 io.Combo.Input(
@@ -497,6 +497,17 @@ class PowerPreprocessor(io.ComfyNode):
                         "`already on the model` = apply none, for a LoRA put on the "
                         "transformer before it arrives; `marigold_v2_normals.safetensors` "
                         "= that file."
+                    ),
+                ),
+                io.Combo.Input(
+                    DECODER_NAME,
+                    options=marigold_v2.decoders(),
+                    default=marigold_v2.AUTOMATIC,
+                    optional=True,
+                    tooltip=(
+                        "`auto` = this map's decoder, found by name in the vae folder; "
+                        "`marigold_v2_normals_vae.safetensors` = that file. The `vae` "
+                        "socket beats this when wired."
                     ),
                 ),
                 io.Combo.Input(
@@ -537,7 +548,7 @@ class PowerPreprocessor(io.ComfyNode):
     def execute(
         cls, image, preprocessor, model_name, resolution, threshold_low, threshold_high,
         radius, strength, seed, steps, tile, model=None, vae=None,
-        adapter_name=marigold_v2.AUTOMATIC,
+        adapter_name=marigold_v2.AUTOMATIC, vae_name=marigold_v2.AUTOMATIC,
         conditioning_name=marigold_v2.AUTOMATIC, conditioning=None,
     ) -> io.NodeOutput:
         """Work out the chosen answer.
@@ -564,8 +575,8 @@ class PowerPreprocessor(io.ComfyNode):
 
         if model_name == marigold_v2.MODEL_NAME and model_name in allowed:
             return io.NodeOutput(
-                _wired(preprocessor, model, vae, adapter_name, conditioning_name,
-                       conditioning, image, int(resolution))
+                _wired(preprocessor, model, vae, adapter_name, vae_name,
+                       conditioning_name, conditioning, image, int(resolution))
             )
         if not allowed:
             result = _without_model(preprocessor, image, int(resolution), settings)
@@ -608,8 +619,8 @@ def _prompt_of(conditioning):
     return held if held.ndim == 3 else held.unsqueeze(0)
 
 
-def _wired(name, model, vae, adapter_name, conditioning_name, conditioning, image,
-           resolution: int):
+def _wired(name, model, vae, adapter_name, vae_name, conditioning_name, conditioning,
+           image, resolution: int):
     """Work out one map from a transformer and a decoder wired into the node.
 
     Args:
@@ -617,6 +628,7 @@ def _wired(name, model, vae, adapter_name, conditioning_name, conditioning, imag
         model: The ``MODEL`` wired in, or None.
         vae: The ``VAE`` wired in, or None.
         adapter_name: The adapter's file name, or the automatic entry.
+        vae_name: The decoder's file name, read when no ``VAE`` is wired.
         conditioning_name: The prompt embedding's file name, or the automatic entry.
         conditioning: A ``CONDITIONING`` wired in, which wins over the file above.
         image: ``(batch, height, width, channels)`` in ``[0, 1]``.
@@ -626,26 +638,21 @@ def _wired(name, model, vae, adapter_name, conditioning_name, conditioning, imag
         A ``(batch, height, width, 3)`` tensor in ``[0, 1]``, the size it arrived at.
 
     Raises:
-        ValueError: Either socket is empty.
+        ValueError: No transformer is wired.
     """
     import torch.nn.functional as functional
 
     modality = marigold_v2.MODALITIES[name]
-    missing = [
-        socket
-        for socket, wired in ((TRANSFORMER, model), (DECODER, vae))
-        if wired is None
-    ]
-    if missing:
+    if model is None:
         raise ValueError(
-            f"{marigold_v2.MODEL_NAME} reads its model off the node's own sockets, and "
-            f"{' and '.join(missing)} {'is' if len(missing) == 1 else 'are'} not wired.\n"
+            f"{marigold_v2.MODEL_NAME} reads its transformer off the node's own socket, "
+            f"and {TRANSFORMER} is not wired.\n"
             f"  Wire Load Diffusion Model on qwen_image_edit_2509_int8_convrot into "
-            f"{TRANSFORMER}, and Load VAE on the {modality} VAE into {DECODER}.\n"
-            f"  The {modality} adapter is put on the transformer here, so no LoRA loader "
-            f"is needed.\n"
+            f"{TRANSFORMER}.\n"
+            f"  The {modality} adapter, decoder and prompt embedding are found by name "
+            f"here, so no other loader is needed.\n"
             f"  Nothing is downloaded for it: place the files in your models folders "
-            f"yourself, and the conditioning in ComfyUI/models/embeddings."
+            f"yourself."
         )
 
     planes = image[..., :3].permute(0, 3, 1, 2).to(dtype=torch.float32)
@@ -659,13 +666,13 @@ def _wired(name, model, vae, adapter_name, conditioning_name, conditioning, imag
             planes, size=working, mode="bicubic", align_corners=False
         ).clamp(0.0, 1.0)
 
-    # A wired conditioning wins over the file.
+    # A wired socket wins over the file it would otherwise find.
     prompt = _prompt_of(conditioning)
     if prompt is None:
         prompt = marigold_v2.conditioning(conditioning_name, modality)
     decoded = marigold_v2.predict(
         marigold_v2.adapted(model, adapter_name, modality),
-        vae,
+        vae if vae is not None else marigold_v2.decoder(vae_name, modality),
         planes.permute(0, 2, 3, 1).contiguous(),
         prompt,
     )
