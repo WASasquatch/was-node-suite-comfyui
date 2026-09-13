@@ -158,7 +158,7 @@ def video_labels() -> list[str]:
     from ..util import file_listing
 
     try:
-        entries = file_listing.view()
+        entries = file_listing.view(tags=file_listing.ROOTS)
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
         return list(input_videos())

@@ -32,7 +32,7 @@ def extensions() -> tuple[str, ...]:
 def options() -> list[str]:
     """The menu's entries, or ``[NO_DOCUMENTS]`` when there are none."""
     return list(
-        file_listing.labels(extensions(), file_listing.TAGS, MAX_OPTIONS)
+        file_listing.labels(extensions(), file_listing.ROOTS, MAX_OPTIONS)
     ) or [NO_DOCUMENTS]
 
 
@@ -156,7 +156,7 @@ def _named(file: str) -> str:
     label = str(file or "").strip()
     if not label or label == NO_DOCUMENTS:
         return ""
-    return file_listing.resolve(label, extensions(), file_listing.TAGS) or label
+    return file_listing.resolve(label, extensions(), file_listing.ROOTS) or label
 
 
 def _require_export_group(extension: str) -> None:

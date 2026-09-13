@@ -21,14 +21,14 @@ __all__ = [
 logger = log.get_logger("io.picker")
 
 #: Every root a picker offers: ComfyUI's own three, then whatever the config adds.
-ROOTS = (*file_listing.TAGS, file_listing.CONFIGURED)
+ROOTS = file_listing.ROOTS
 
 #: What the listing puts after a name in the input folder, taken off again so an uploaded
 #: file is a value in the menu.
 INPUT_TAG = f" [{file_listing.INPUT}]"
 
-#: How many folders a menu offers before the walk stops, so a dataset tree costs a bounded
-#: amount rather than the whole of itself.
+#: How many folders a menu offers in all, divided between the roots so a dataset tree costs
+#: a bounded amount rather than the whole of itself.
 MAX_FOLDERS = 2000
 
 #: Serializes the folder walk and its cache, which is read from ComfyUI's server thread for
@@ -73,7 +73,9 @@ def folders(extra=()) -> list[str]:
     Returns:
         A root's own name for the root itself, and ``<relative path> [tag]`` for each folder
         below it, to :data:`modules.util.file_listing.MAX_DEPTH` levels and
-        :data:`MAX_FOLDERS` entries. Empty outside ComfyUI and where no root can be read.
+        :data:`MAX_FOLDERS` entries in all, each root taking an equal share. A folder
+        holding no listable file is offered too. Empty outside ComfyUI and where no root
+        can be read.
     """
     global _cache
 
@@ -84,43 +86,21 @@ def folders(extra=()) -> list[str]:
         if labels and cached_key == key and now - stamp < file_listing.LISTING_TTL:
             return list(labels)
 
-        # Every folder holding a listable file, taken from the walk the file menus already
-        # made, so a folder menu costs no second pass over the same tree.
-        under: dict[str, set[str]] = {}
-        try:
-            entries = file_listing.scan()
-        except Exception as error:
-            logger.debug("the listing could not be read: %s", error)
-            entries = ()
-        for entry in entries:
-            parts = entry.relative.split("/")[:-1]
-            for depth in range(len(parts)):
-                under.setdefault(entry.tag, set()).add("/".join(parts[: depth + 1]))
-
-        offered, budget = [], MAX_FOLDERS
-        for tag, root in _rooted(()):
+        # The folders under each root, read straight off disk. A directory-only pass costs
+        # no per-file stat, and it offers an empty folder as readily as a full one.
+        held: list[tuple[str, list[str]]] = []
+        for tag, root in _rooted(extra):
             if not root.is_dir():
                 continue
-            offered.append(tag)
-            for relative in sorted(under.get(tag, ()), key=str.casefold):
-                if budget <= 0:
-                    break
-                offered.append(f"{relative} [{tag}]")
-                budget -= 1
+            found, left = _below(root, tag, MAX_FOLDERS)
+            held.append((tag, found))
+            if left <= 0:
+                logger.debug("the folders under %s stopped at %d entries", tag, MAX_FOLDERS)
 
-        # A folder of the node's own is not in that walk, so it is the one thing looked at
-        # here, and it is one directory rather than a tree of them.
-        for tag, directory in extra or ():
-            root = Path(directory)
-            if not root.is_dir():
-                continue
-            offered.append(tag)
-            found, budget = _below(root, tag, budget)
-            offered.extend(found)
-        if budget <= 0:
-            logger.debug("the folder menu stopped at %d entries", MAX_FOLDERS)
+        offered = _offered(held, MAX_FOLDERS)
         _cache = (now, key, tuple(offered))
         return offered
+
 
 def resolve_folder(label: str, extra=()) -> Path | None:
     """The folder one label names, resolved inside a permitted read root.
@@ -164,15 +144,66 @@ def _rooted(extra) -> list[tuple[str, Path]]:
     return found + [(tag, Path(directory)) for tag, directory in (extra or ())]
 
 
+def _offered(held: list[tuple[str, list[str]]], limit: int) -> list[str]:
+    """One menu out of what each root holds, capped at ``limit`` folders in all.
+
+    Args:
+        held: ``[(tag, folders)]`` in the order the menu names them.
+        limit: How many folders the menu offers, over and above the root names.
+
+    Returns:
+        Each root's own name followed by its folders, every root taking an equal share of
+        ``limit`` and a root holding fewer than its share leaving the rest to the others.
+    """
+    share = max(1, limit // max(1, len(held)))
+    taken = [rows[:share] for _tag, rows in held]
+    spare = limit - sum(len(rows) for rows in taken)
+    for index, (_tag, rows) in enumerate(held):
+        if spare <= 0:
+            break
+        more = rows[len(taken[index]):][:spare]
+        taken[index] = taken[index] + more
+        spare -= len(more)
+
+    offered: list[str] = []
+    for index, (tag, _rows) in enumerate(held):
+        offered.append(tag)
+        offered.extend(taken[index])
+    return offered
+
+
 def _below(root: Path, tag: str, budget: int) -> tuple[list[str], int]:
-    """The folders under one root, breadth first, and what is left of the budget."""
+    """The folders under one root, breadth first, and what is left of the budget.
+
+    Args:
+        root: The directory walked.
+        tag: The tag written into every label from this root.
+        budget: Folders that may still be named.
+
+    Returns:
+        ``(labels, remaining budget)``, to :data:`modules.util.file_listing.MAX_DEPTH`
+        levels. A directory that cannot be read contributes nothing and stops nothing.
+    """
     found, level = [], [(root, "", 0)]
     while level and budget > 0:
         directory, relative, depth = level.pop(0)
         if depth >= file_listing.MAX_DEPTH:
             continue
         try:
-            entries = sorted(entry for entry in directory.iterdir() if entry.is_dir())
+            # scandir rather than iterdir: the directory read already carries each entry's
+            # type, where Path.is_dir stats every name one at a time, and a root holding a
+            # hundred thousand files is a hundred thousand stat calls per menu. A dotted
+            # name is editor and tool state, and a symlink resolves wherever it likes.
+            with os.scandir(directory) as listing:
+                entries = sorted(
+                    (
+                        entry
+                        for entry in listing
+                        if not entry.name.startswith(".")
+                        and entry.is_dir(follow_symlinks=False)
+                    ),
+                    key=lambda entry: entry.name.casefold(),
+                )
         except OSError as error:
             logger.debug("%s could not be listed: %s", directory, error)
             continue
@@ -182,7 +213,7 @@ def _below(root: Path, tag: str, budget: int) -> tuple[list[str], int]:
             below = f"{relative}/{entry.name}" if relative else entry.name
             found.append(f"{below} [{tag}]")
             budget -= 1
-            level.append((entry, below, depth + 1))
+            level.append((Path(entry.path), below, depth + 1))
     return found, budget
 
 

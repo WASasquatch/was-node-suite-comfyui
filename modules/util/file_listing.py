@@ -1,7 +1,7 @@
 """The files under ComfyUI's own directories, as the labels a widget stores.
 
-A label is ``<relative path> [input]``, ``[output]`` or ``[temp]``, spelled with ``/`` and
-carrying its tag. :func:`scan` walks the three roots once, memoized for
+A label is ``<relative path> [tag]``: ``input``, ``output``, ``temp``, or a directory
+``paths.allow_read`` names. :func:`scan` walks each root on its own budget, memoized for
 :data:`LISTING_TTL` seconds.
 """
 
@@ -24,6 +24,7 @@ __all__ = [
     "MAX_SCAN",
     "OUTPUT",
     "CONFIGURED",
+    "ROOTS",
     "TAGS",
     "TEMP",
     "configured",
@@ -51,6 +52,10 @@ TEMP = "temp"
 #: each one, following the same spelling ``annotated_filepath`` uses for an annotated name.
 TAGS: tuple[str, ...] = (INPUT, OUTPUT, TEMP)
 
+#: ComfyUI's own roots and every directory ``paths.allow_read`` names, which is what a menu
+#: offering the whole of what a user may read asks for.
+ROOTS: tuple[str, ...] = (*TAGS, CONFIGURED)
+
 #: The ``folder_paths`` accessor behind each tag.
 _GETTERS = {
     INPUT: "get_input_directory",
@@ -63,9 +68,9 @@ _GETTERS = {
 #: those without enumerating a dataset tree.
 MAX_DEPTH = 3
 
-#: How many files are examined before the walk stops. A user with a 50000-file output folder
-#: pays this once per rebuild instead of paying for the whole tree. The roots are walked in
-#: :data:`TAGS` order, so a large temp directory can only cost its own entries.
+#: How many files are examined under one root before that root's walk stops. Each root
+#: carries a budget of its own, so a 50000-file output folder costs its own entries and
+#: leaves every other root's share of the listing whole.
 MAX_SCAN = 5000
 
 #: How many labels a view offers when it names no limit of its own.
@@ -120,10 +125,12 @@ def roots(tags: Sequence[str] = TAGS) -> list[tuple[str, Path]]:
 
     Args:
         tags: Which roots to answer, in :data:`TAGS` order whatever order they are given in.
+            :data:`CONFIGURED` adds every directory ``paths.allow_read`` names, and a
+            configured tag spelled outright adds that one.
 
     Returns:
-        ``[(tag, path)]``, dropping any root that cannot be reached and any tag that is not
-        one of :data:`TAGS`. Empty outside ComfyUI, where none of them can be found.
+        ``[(tag, path)]``, ComfyUI's own roots first and the configured ones after,
+        dropping any that cannot be reached. Empty outside ComfyUI.
     """
     asked = set(tags)
     wanted = [tag for tag in TAGS if tag in asked]
@@ -208,7 +215,8 @@ def view(
     Args:
         extensions: Lowercased suffixes to keep, such as ``(".txt", ".csv")``. ``None``
             keeps every file, whatever it is called.
-        tags: Which roots to read, from :data:`TAGS`.
+        tags: Which roots to read, from :data:`TAGS`, plus :data:`CONFIGURED` for every
+            directory ``paths.allow_read`` names or one configured tag by name.
         limit: How many entries the view holds. The newest by modification time are kept, so
             a file that was just written is always offered.
 
@@ -216,7 +224,7 @@ def view(
         The entries, ordered by casefolded relative path, then by root, then by path.
     """
     wanted = tuple(sorted(_suffixes(extensions))) if extensions is not None else None
-    kept = tuple(tag for tag in TAGS if tag in set(tags))
+    kept = tuple(sorted(_kept(tags)))
     key = (wanted, kept, max(0, int(limit)))
     with _lock:
         _, walk, entries = _scan()
@@ -279,12 +287,12 @@ def find(
         that has been deleted, renamed, or invented.
     """
     wanted = tuple(_suffixes(extensions)) if extensions is not None else None
-    kept = set(tag for tag in TAGS if tag in set(tags))
+    kept = _kept(tags)
     needle = (label or "").strip()
     if not needle:
         return None
     for entry in scan():
-        if entry.label != needle or entry.tag not in kept:
+        if entry.label != needle or not _holds(entry.tag, kept):
             continue
         if wanted is not None and not entry.relative.lower().endswith(wanted):
             continue
@@ -324,6 +332,38 @@ def _suffixes(extensions: Iterable[str]) -> set[str]:
     return found
 
 
+def _kept(tags: Sequence[str]) -> set[str]:
+    """The tags one view holds, reading :data:`CONFIGURED` as a sentinel.
+
+    Args:
+        tags: The tags a caller asked for.
+
+    Returns:
+        The names from :data:`TAGS` that were asked for, any configured tag named outright,
+        and :data:`CONFIGURED` itself where the sentinel was asked for.
+    """
+    asked = set(tags)
+    kept = {tag for tag in TAGS if tag in asked}
+    kept |= asked - set(TAGS) - {CONFIGURED}
+    if CONFIGURED in asked:
+        kept.add(CONFIGURED)
+    return kept
+
+
+def _holds(tag: str, tags: set[str]) -> bool:
+    """Whether one entry's tag belongs to a view.
+
+    Args:
+        tag: The entry's tag.
+        tags: What :func:`_kept` returned, where :data:`CONFIGURED` stands for every root
+            outside :data:`TAGS`, whose names are only known once the walk has run.
+
+    Returns:
+        ``True`` where the entry belongs in the view.
+    """
+    return tag in tags or (CONFIGURED in tags and tag not in TAGS)
+
+
 def _scan() -> tuple[float, int, tuple[Entry, ...]]:
     """The memoized walk, rebuilt when it is older than :data:`LISTING_TTL`."""
     global _scan_cache, _walks
@@ -333,16 +373,18 @@ def _scan() -> tuple[float, int, tuple[Entry, ...]]:
         if entries and now - stamp < LISTING_TTL:
             return _scan_cache
         found: list[Entry] = []
-        budget = MAX_SCAN
+        stopped: list[str] = []
         # ComfyUI's own three first, then whatever the config adds, so a menu offers the
-        # familiar folders before the rest.
+        # familiar folders before the rest. Each root is walked with its own budget.
         for order, (tag, directory) in enumerate(roots((*TAGS, CONFIGURED))):
-            rows, budget = _walk(directory, tag, order, budget)
+            rows, left = _walk(directory, tag, order, MAX_SCAN)
             found += rows
-        if budget <= 0:
+            if left <= 0:
+                stopped.append(tag)
+        if stopped:
             logger.debug(
-                "the file listing stopped after examining %d files; a menu offers the newest "
-                "of what was found", MAX_SCAN,
+                "the file listing stopped after examining %d files under %s; a menu offers "
+                "the newest of what was found", MAX_SCAN, ", ".join(stopped),
             )
         _walks += 1
         _scan_cache = (now, _walks, tuple(found))
@@ -357,7 +399,7 @@ def _build(
     Args:
         entries: The whole walk.
         extensions: Suffixes to keep, or ``None`` for every file.
-        tags: Roots to keep.
+        tags: Roots to keep, as :func:`_kept` returns them.
         limit: How many entries survive.
 
     Returns:
@@ -367,21 +409,20 @@ def _build(
     kept = [
         entry
         for entry in entries
-        if entry.tag in tags
+        if _holds(entry.tag, tags)
         and (extensions is None or entry.relative.lower().endswith(extensions))
     ]
     if len(kept) > limit:
-        kept = _shared(kept, tags, limit)
+        kept = _shared(kept, limit)
     kept.sort(key=lambda row: (row.relative.casefold(), row.order, row.path))
     return tuple(kept)
 
 
-def _shared(kept: list[Entry], tags: set[str], limit: int) -> list[Entry]:
+def _shared(kept: list[Entry], limit: int) -> list[Entry]:
     """The limit divided between the roots, so one busy root cannot fill the whole view.
 
     Args:
         kept: Every entry the view covers.
-        tags: Roots the view holds.
         limit: How many entries survive in all.
 
     Returns:
@@ -396,8 +437,10 @@ def _shared(kept: list[Entry], tags: set[str], limit: int) -> list[Entry]:
 
     share = max(1, limit // max(1, len(held)))
     taken: list[Entry] = []
-    for tag in TAGS:
-        taken.extend(held.get(tag, [])[:share])
+    # Every root the view holds, configured ones included, each taking its share in the
+    # order the walk reached it.
+    for tag in sorted(held, key=lambda name: held[name][0].order):
+        taken.extend(held[tag][:share])
     # What one root did not need is offered to the rest, newest first.
     if len(taken) < limit:
         already = {id(entry) for entry in taken}

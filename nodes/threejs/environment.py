@@ -28,7 +28,7 @@ SOURCES = ("studio room", "image", "file", "none")
 def options() -> list[str]:
     """The menu's entries, with :data:`NO_FILES` first."""
     return [NO_FILES] + list(
-        file_listing.labels(environments.SUFFIXES, file_listing.TAGS, MAX_OPTIONS)
+        file_listing.labels(environments.SUFFIXES, file_listing.ROOTS, MAX_OPTIONS)
     )
 
 
@@ -193,7 +193,7 @@ class ThreeEnvironment(io.ComfyNode):
                         "choose 'studio room', which needs no file."
                     )
                 chosen = file_listing.resolve(
-                    file, environments.SUFFIXES, file_listing.TAGS
+                    file, environments.SUFFIXES, file_listing.ROOTS
                 ) or file
             resolved = sandbox.resolve_read(chosen)
             url, kind = environments.carried(resolved)

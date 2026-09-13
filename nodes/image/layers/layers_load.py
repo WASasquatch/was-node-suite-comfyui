@@ -20,7 +20,7 @@ NODE_NAME = "Layers Load"
 ALLOWED_EXT = (".psd", ".psb", ".tif", ".tiff")
 
 #: Which folders the menu walks.
-TAGS = (*file_listing.TAGS, file_listing.CONFIGURED)
+TAGS = file_listing.ROOTS
 
 #: What a layer with no name in the file is called in the stack.
 UNNAMED = "layer"

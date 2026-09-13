@@ -24,7 +24,7 @@ NO_MODELS = "no model files found"
 def options() -> list[str]:
     """The menu's entries, or ``[NO_MODELS]`` when there are none."""
     return list(
-        file_listing.labels(models.SUFFIXES, file_listing.TAGS, MAX_OPTIONS)
+        file_listing.labels(models.SUFFIXES, file_listing.ROOTS, MAX_OPTIONS)
     ) or [NO_MODELS]
 
 
@@ -122,7 +122,7 @@ class ThreeLoadModel(io.ComfyNode):
                     ".obj, .3mf, .stl or .ply in ComfyUI's input folder and pick it, or wire "
                     "Load 3D's mesh_path into path."
                 )
-            chosen = file_listing.resolve(file, models.SUFFIXES, file_listing.TAGS) or file
+            chosen = file_listing.resolve(file, models.SUFFIXES, file_listing.ROOTS) or file
 
         resolved = sandbox.resolve_read(chosen)
         url, kind, sidecars = models.carried(resolved)

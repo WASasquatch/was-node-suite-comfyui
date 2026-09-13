@@ -38,7 +38,7 @@ __all__ = [
 TEXT_EXTENSIONS = (".txt", ".csv", ".tsv", ".json", ".jsonl", ".md", ".yaml", ".yml")
 
 #: The roots this view reads, and the tag order its labels sort in.
-TEXT_TAGS = (file_listing.INPUT, file_listing.OUTPUT)
+TEXT_TAGS = (file_listing.INPUT, file_listing.OUTPUT, file_listing.CONFIGURED)
 
 #: How many directories below a root the walk goes, from the shared walk.
 MAX_DEPTH = file_listing.MAX_DEPTH
@@ -81,7 +81,8 @@ def listing() -> dict[str, str]:
 
     Returns:
         The entries in the order the combo shows them: casefolded relative path first, then
-        input before output, then the raw path. At most :data:`MAX_OPTIONS` of them, the
+        input before output before a configured root, then the raw path. At most
+        :data:`MAX_OPTIONS` of them, the
         newest by modification time. Empty where nothing was found.
     """
     return file_listing.listing(TEXT_EXTENSIONS, TEXT_TAGS, MAX_OPTIONS)

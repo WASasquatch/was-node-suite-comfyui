@@ -24,7 +24,7 @@ logger = log.get_logger("archive.selection")
 MAX_LINES = 8192
 
 #: Why a chosen file did not reach the archive.
-UNLISTED = "no file of that name is in the input, output or temp folders"
+UNLISTED = "no file of that name is in the input, output, temp or allow_read folders"
 MISSING = "the file is no longer there"
 NOT_A_FILE = "that path is a folder rather than a file"
 
@@ -78,11 +78,12 @@ def sources(entries: Iterable[str]) -> tuple[list[Source], dict[str, str]]:
     """
     found: list[Source] = []
     missing: dict[str, str] = {}
+    known = _tags()
     for entry in entries:
-        listed = file_listing.find(entry)
+        listed = file_listing.find(entry, tags=file_listing.ROOTS)
         if listed is not None:
             source = Source(entry, Path(listed.path), listed.relative, listed.tag)
-        elif _looks_like_label(entry):
+        elif _looks_like_label(entry, known):
             missing[entry] = UNLISTED
             continue
         else:
@@ -117,9 +118,27 @@ def gone(missing: Sequence[str] | dict[str, str]) -> str:
     )
 
 
-def _looks_like_label(entry: str) -> bool:
-    """Whether an entry was written as a menu label rather than as a path."""
-    return any(entry.endswith(f"[{tag}]") for tag in file_listing.TAGS)
+def _tags() -> set[str]:
+    """Every tag a menu label can carry, ComfyUI's own three and the configured roots."""
+    try:
+        walked = {tag for tag, _root in file_listing.roots(file_listing.ROOTS)}
+    except Exception as error:
+        logger.debug("the roots could not be read: %s", error)
+        walked = set()
+    return set(file_listing.TAGS) | walked
+
+
+def _looks_like_label(entry: str, tags: set[str]) -> bool:
+    """Whether an entry was written as a menu label rather than as a path.
+
+    Args:
+        entry: The line, as the widget holds it.
+        tags: The tags a label can carry, from :func:`_tags`.
+
+    Returns:
+        ``True`` where the entry ends in one of those tags in brackets.
+    """
+    return any(entry.endswith(f"[{tag}]") for tag in tags)
 
 
 def _from_path(entry: str) -> Source:

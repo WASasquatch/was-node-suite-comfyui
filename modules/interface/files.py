@@ -36,9 +36,9 @@ def listing_payload() -> dict:
         them, and ``truncated`` says whether the walk found more than this answer holds.
     """
     try:
-        entries = file_listing.view(limit=MAX_ENTRIES)
+        entries = file_listing.view(tags=file_listing.ROOTS, limit=MAX_ENTRIES)
         walked = len(file_listing.scan())
-        reachable = [tag for tag, _ in file_listing.roots()]
+        reachable = [tag for tag, _ in file_listing.roots(file_listing.ROOTS)]
     except Exception as error:
         # A listing nobody can build is an empty panel, never a failed request: the widget
         # beside it still holds whatever was typed into it.

@@ -151,7 +151,7 @@ def chosen_path(label: str):
         logger.debug("`%s` could not be resolved through folder_paths: %s", chosen, error)
     if found is None:
         found = file_listing.resolve(
-            chosen, ALLOWED_EXT, tags=(*file_listing.TAGS, file_listing.CONFIGURED)
+            chosen, ALLOWED_EXT, tags=file_listing.ROOTS
         )
     if found is None:
         return None
@@ -168,7 +168,7 @@ def image_labels() -> list[str]:
     """
     try:
         found = file_listing.labels(
-            ALLOWED_EXT, tags=(*file_listing.TAGS, file_listing.CONFIGURED)
+            ALLOWED_EXT, tags=file_listing.ROOTS
         )
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
