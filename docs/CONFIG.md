@@ -28,7 +28,7 @@ they stay as a copy of the state at the moment it moved into the database.
 | `was_suite_settings.json` | Read into `was_state.db` on first start and then left alone. |
 | `was_history.json` | Read into `was_state.db` on first start and then left alone. |
 | `styles.json` | Imported into the style library each time the file changes. Never written to. |
-| `nsp_pantry.json` | Read into `was_state.db` on first start and then left alone. |
+| `nsp_pantry.json` | Read into `was_state.db` on first start and then left alone. Optional: the terminology ships with the pack and seeds the database without it. |
 | `wildcards/` | Wildcard `.txt` files, unless `paths.wildcards` names another directory. |
 | `cache/` | Files written by `Cache Node`, when `legacy.cache` is on. |
 
@@ -201,6 +201,22 @@ A 3840x2160 frame costs 7.9 MB and 315 ms to hold and encode, and 1.4 MB and 136
 
 ---
 
+## `threejs`
+
+| Key | Type | Default | Does |
+|---|---|---|---|
+| `threejs.allow_scripts` | bool | `false` | Lets a Three.js scene carry javascript the browser runs. `false` refuses such a scene at **Three Viewer**, **Three Path Trace Viewer** and **Three Render**. |
+
+**Custom Update**, **Custom Object**, **Custom Material**, **Custom Geometry** and **Script
+Module** put javascript into the scene they build. That code runs in the ComfyUI page, with
+everything the page can reach, and a scene arrives with whatever workflow was opened. Left
+`false`, a scene carrying code is refused and the node naming it says so. Every other Three.js
+node is unaffected.
+
+Set this to `true` only for workflows you wrote or have read.
+
+---
+
 ## `viewer`
 
 | Key | Type | Default | Does |
@@ -218,7 +234,7 @@ A 3840x2160 frame costs 7.9 MB and 315 ms to hold and encode, and 1.4 MB and 136
 | `features.sam` | none | **on** | `SAM Image Mask`, `SAM Model Loader`, `SAM Parameters`, `SAM Parameters Combine` |
 | `features.midas` | none | **on** | `MiDaS Depth Approximation`, `MiDaS Model Loader` |
 | `features.diffusers` | none. The two nodes load through ComfyUI's own diffusers-format loader | **on** | `Diffusers Model Loader`, `Diffusers Hub Model Down-Loader` |
-| `features.network` | none | off | `Download Image`, `Image Send HTTP`, `True Random.org Number Generator`, `Text Random Prompt` |
+| `features.network` | none | off | No nodes. Permits the model downloads a node makes when a file it needs is not already on disk |
 | `features.yunet` | none. The detector runs in torch on weights that ship with the pack | **on** | `YuNet Model Loader`, `Image Crop Face (YuNet)` |
 | `features.document_export` | `python-docx`, `odfdo`, `xhtml2pdf`<br>`pip install -r requirements/document_export.txt` | off | No nodes. Lets `Save DOC` write `.docx`, `.odt` and `.pdf` |
 | `features.pssr` | four packages, and a 22 GB checkout placed by hand<br>see [`docs/MODELS.md`](MODELS.md) | off | `Video Super Resolution (PS-SR)` |

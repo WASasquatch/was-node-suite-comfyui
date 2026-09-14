@@ -11,7 +11,10 @@ import zlib
 from pathlib import Path
 from typing import NamedTuple
 
-__all__ = ["COMPRESSIONS", "DEPTHS", "PACKINGS", "Reading", "read", "write"]
+__all__ = [
+    "COMPRESSIONS", "DEPTHS", "MAX_CHANNELS", "MAX_PIXELS", "MAX_SIDE", "PACKINGS",
+    "Reading", "read", "write",
+]
 
 #: What an OpenEXR file opens with, and the version it declares.
 MAGIC = 20000630
@@ -33,6 +36,18 @@ WIDTHS = {UINT: 4, HALF: 2, FLOAT: 4}
 NO_COMPRESSION, RLE, ZIPS, ZIP = 0, 1, 2, 3
 
 #: Every compression the format defines: its name, and the scanlines one block holds.
+#: Longest side a data window may name.
+MAX_SIDE = 30000
+
+#: Most pixels a data window may cover, whatever the length of its sides.
+MAX_PIXELS = 1 << 28
+
+#: Most channels a channel list may name.
+MAX_CHANNELS = 1024
+
+#: Bytes of picture one byte of file may describe.
+MAX_RATIO = 2048
+
 COMPRESSIONS = {
     NO_COMPRESSION: ("none", 1),
     RLE: ("rle", 1),
@@ -181,10 +196,10 @@ def _compress(packing: int, raw: bytes) -> bytes:
 
 
 def _decompress(packing: int, payload: bytes, size: int) -> bytes:
-    """One block's bytes as they were before packing."""
+    """One block's bytes as they were before packing, up to ``size`` bytes."""
     if packing == RLE:
         return _unpredict(_unrle(payload, size))
-    return _unpredict(zlib.decompress(payload))
+    return _unpredict(zlib.decompressobj().decompress(payload, size))
 
 
 def _attributes(raw: bytes) -> tuple[dict, int]:
@@ -364,6 +379,22 @@ def read(path) -> Reading:
     width, height = right - left + 1, bottom - top + 1
     if width < 1 or height < 1:
         raise ValueError(f"{named} declares a {width} by {height} data window, which holds no pixels")
+    if max(width, height) > MAX_SIDE:
+        raise ValueError(
+            f"{named} declares a {width} by {height} data window, longer than the "
+            f"{MAX_SIDE} pixel limit of this reader, so the file was not read"
+        )
+    if width * height > MAX_PIXELS:
+        raise ValueError(
+            f"{named} declares a {width} by {height} data window of {width * height} "
+            f"pixels, more than the {MAX_PIXELS} this reader unpacks, so the file was "
+            f"not read"
+        )
+    if len(channels) > MAX_CHANNELS:
+        raise ValueError(
+            f"{named} names {len(channels)} channels, more than the {MAX_CHANNELS} this "
+            f"reader unpacks, so the file was not read"
+        )
 
     packing, per_block = COMPRESSIONS.get(code, (f"code {code}", 1))
     if code not in READABLE:
@@ -399,19 +430,26 @@ def read(path) -> Reading:
     if ALPHA in held:
         wanted.append(ALPHA)
 
-    gathered = {name: torch.zeros(height, width, dtype=torch.float32) for name in wanted}
     per_row = sum(width * WIDTHS[kind] for _n, kind, _x, _y in channels)
     count = -(-height // per_block)
     damaged = (
         f"{named} could not be unpacked, so the file is truncated or damaged. Write it "
         f"again from its source"
     )
+    carried = len(body) - (table + 8 * count)
+    if carried < (height * per_row) // MAX_RATIO:
+        raise ValueError(
+            f"{named} describes {height * per_row} bytes of pixels and carries "
+            f"{max(0, carried)} bytes to unpack them from, so its header does not "
+            f"describe the file. Write it again from its source"
+        )
     try:
         starts = _starts(body, table, count)
     except struct.error as error:
         raise ValueError(damaged) from error
     if len(starts) != count:
         raise ValueError(damaged)
+    gathered = {name: torch.zeros(height, width, dtype=torch.float32) for name in wanted}
 
     for start in starts:
         try:

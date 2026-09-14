@@ -14,6 +14,9 @@ __all__ = [
     "FLOAT",
     "IMAGE_SOURCE_DATA",
     "LONG",
+    "MAX_PIXELS",
+    "MAX_SIDE",
+    "MAX_TOTAL_SAMPLES",
     "NONE",
     "RATIONAL",
     "SHORT",
@@ -30,6 +33,24 @@ __all__ = [
 
 import struct
 import zlib
+
+#: Longest side a picture may name.
+MAX_SIDE = 30000
+
+#: Most pixels a picture may cover, whatever the length of its sides.
+MAX_PIXELS = 1 << 28
+
+#: Most samples one pixel may carry.
+MAX_SAMPLES = 1024
+
+#: Most samples a picture may hold across every pixel and every one of their samples.
+MAX_TOTAL_SAMPLES = 1 << 30
+
+#: Bits per sample a picture is read at.
+READABLE_BITS = (8, 16, 32)
+
+#: Bytes of picture one byte of file may describe.
+MAX_RATIO = 2048
 
 #: TIFF field types, by the code written into an entry.
 BYTE = 1
@@ -279,6 +300,32 @@ def plane(data: bytes) -> tuple[int, int, int, int, int, bytes]:
 
     if not width or not height:
         raise ValueError("this TIFF names no picture size")
+    if max(width, height) > MAX_SIDE:
+        raise ValueError(
+            f"this TIFF names a {width}x{height} picture, longer than the {MAX_SIDE} pixel "
+            f"limit of this reader, so the file was not read"
+        )
+    if width * height > MAX_PIXELS:
+        raise ValueError(
+            f"this TIFF names a {width}x{height} picture of {width * height} pixels, more "
+            f"than the {MAX_PIXELS} this reader unpacks, so the file was not read"
+        )
+    if not 1 <= samples <= MAX_SAMPLES:
+        raise ValueError(
+            f"this TIFF names {samples} samples per pixel, and one to {MAX_SAMPLES} are "
+            f"read here"
+        )
+    if width * height * samples > MAX_TOTAL_SAMPLES:
+        raise ValueError(
+            f"this TIFF names a {width}x{height} picture of {samples} sample(s), which is "
+            f"{width * height * samples} samples and more than the {MAX_TOTAL_SAMPLES} this "
+            f"reader unpacks, so the file was not read"
+        )
+    if bits not in READABLE_BITS:
+        raise ValueError(
+            f"this TIFF stores {bits} bits per sample, and "
+            f"{', '.join(str(one) for one in READABLE_BITS)} are read here"
+        )
     if layout != 1:
         raise ValueError("a TIFF storing each colour in its own plane is not read here")
     if packing not in (NONE, DEFLATE, ZIP):
@@ -291,17 +338,29 @@ def plane(data: bytes) -> tuple[int, int, int, int, int, bytes]:
     lengths = numbers(order, fields.get(STRIP_BYTE_COUNTS))
     rows = numbers(order, fields.get(ROWS_PER_STRIP), (height,))[0] or height
 
+    wanted = width * height * samples * (bits // 8)
+    # One byte of file describes at most MAX_RATIO bytes of picture, so a file this small
+    # does not carry the picture its fields name.
+    if wanted // MAX_RATIO > len(data):
+        raise ValueError(
+            f"this TIFF names a {width}x{height} picture of {samples} sample(s) at {bits} "
+            f"bits, which needs {wanted} bytes, and the file holds {len(data)} to unpack "
+            f"them from"
+        )
     body = bytearray()
     for index, (start, length) in enumerate(zip(offsets, lengths)):
+        # The picture is as long as its size names, so a strip beyond that is not unpacked
+        # and a packed one yields no more than the bytes still to be filled.
+        if len(body) >= wanted:
+            break
         strip = data[start : start + length]
         if packing in (DEFLATE, ZIP):
-            strip = zlib.decompress(strip)
+            strip = zlib.decompressobj().decompress(strip, wanted - len(body))
         if predictor == 2:
             tall = min(rows, height - index * rows)
             strip = _undone(strip, width, samples, bits, order)[: tall * width * samples * (bits // 8)]
         body += strip
 
-    wanted = width * height * samples * (bits // 8)
     if len(body) < wanted:
         raise ValueError(
             f"this TIFF names a {width}x{height} picture of {samples} sample(s) at {bits} "

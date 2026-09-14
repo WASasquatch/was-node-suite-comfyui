@@ -267,7 +267,7 @@ def resolve(label: str, extensions, extra=()) -> str | None:
     try:
         import folder_paths
 
-        if folder_paths.exists_annotated_filepath(chosen):
+        if not sandbox.names_another_host(chosen) and folder_paths.exists_annotated_filepath(chosen):
             found = folder_paths.get_annotated_filepath(chosen)
     except Exception as error:
         logger.debug("`%s` could not be resolved through folder_paths: %s", chosen, error)

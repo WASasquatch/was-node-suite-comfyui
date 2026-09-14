@@ -241,9 +241,10 @@ For prompt sets, per-run variation, and carrying structured values between nodes
 ## Prompt terminology and a style library
 
 `__animals__` in a prompt is replaced with a random word from the Noodle Soup Prompts pantry:
-around 17,500 words across 82 terminologies. Terminologies and saved prompt pairs can be added,
-browsed, and moved between machines as JSON or an AUTOMATIC1111 `styles.csv`. Both live in
-`was_state.db` beside `config.yaml`.
+17,518 words across 82 terminologies, which ship with the pack and are read into the database on
+first start. Terminologies and saved prompt pairs can be added, browsed, and moved between
+machines as JSON or an AUTOMATIC1111 `styles.csv`. Both live in `was_state.db` beside
+`config.yaml`.
 
 For prompt variation without editing the prompt, and for carrying a style set across installs.
 

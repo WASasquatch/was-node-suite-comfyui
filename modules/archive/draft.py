@@ -9,6 +9,30 @@ from typing import Iterable, NamedTuple
 from ..log import get_logger
 from . import container, save
 
+
+def _carried(source, entry, spent: int) -> tuple[bytes, int]:
+    """One entry's bytes, and what the draft has unpacked once it is added.
+
+    Args:
+        source: The archive being copied from.
+        entry: The entry to read.
+        spent: Bytes unpacked into this draft so far.
+
+    Returns:
+        ``(bytes, spent)``.
+
+    Raises:
+        ValueError: The draft would hold more than :data:`container.MAX_TOTAL_BYTES`.
+    """
+    body = source.read(entry)
+    spent += len(body)
+    if spent > container.MAX_TOTAL_BYTES:
+        raise ValueError(
+            f"the archive unpacks to more than {container.MAX_TOTAL_BYTES} bytes, which is "
+            f"more than one draft holds. Take fewer entries, or work on it in parts."
+        )
+    return body, spent
+
 logger = get_logger("archive.draft")
 
 __all__ = ["Addition", "extended", "kept", "unique_name"]
@@ -84,9 +108,11 @@ def extended(
     buffer = io.BytesIO()
     taken: set[str] = set()
     with zipfile.ZipFile(buffer, "w", compression=method) as target:
+        spent = 0
         for entry in carried:
             name = unique_name(entry.name, taken)
-            target.writestr(name, source.read(entry))
+            body, spent = _carried(source, entry, spent)
+            target.writestr(name, body)
         for addition in additions:
             name, refusal = container.safe_name(addition.name)
             if refusal:
@@ -121,11 +147,13 @@ def kept(
     wanted = {str(name).strip() for name in names if str(name).strip()}
     buffer = io.BytesIO()
     written = 0
+    spent = 0
     with zipfile.ZipFile(buffer, "w", compression=method) as target:
         for entry in source.files:
             if entry.name not in wanted:
                 continue
-            target.writestr(entry.name, source.read(entry))
+            body, spent = _carried(source, entry, spent)
+            target.writestr(entry.name, body)
             written += 1
     logger.debug(
         "kept %d of %d entr(y/ies), %d byte(s)", written, len(source.files), buffer.tell(),

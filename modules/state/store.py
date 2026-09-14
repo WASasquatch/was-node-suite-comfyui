@@ -64,6 +64,14 @@ NSP = "nsp"
 #: Every store name.
 STORES = (SETTINGS, HISTORY, STYLES, NSP)
 
+#: One statement per table a store writes to, each naming its table outright.
+_HOLDS_ANYTHING = (
+    "SELECT 1 FROM kv WHERE store = ? LIMIT 1",
+    "SELECT 1 FROM kv_category WHERE store = ? LIMIT 1",
+    "SELECT 1 FROM records WHERE store = ? LIMIT 1",
+    "SELECT 1 FROM record_category WHERE store = ? LIMIT 1",
+)
+
 #: The category a record store uses when its records form one flat list.
 DEFAULT_CATEGORY = ""
 
@@ -753,11 +761,8 @@ class StateStore:
         """
 
         def work(connection):
-            for table in ("kv", "kv_category", "records", "record_category"):
-                row = connection.execute(
-                    f"SELECT 1 FROM {table} WHERE store = ? LIMIT 1", (store,)
-                ).fetchone()
-                if row is not None:
+            for statement in _HOLDS_ANYTHING:
+                if connection.execute(statement, (store,)).fetchone() is not None:
                     return False
             return True
 

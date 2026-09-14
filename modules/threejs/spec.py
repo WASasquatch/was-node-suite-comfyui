@@ -7,13 +7,16 @@ taken from its contents, so two identical descriptors share one browser-side res
 from __future__ import annotations
 
 __all__ = [
+    "ALLOW_SCRIPTS",
     "SCHEMA_VERSION",
     "WRAPPER_KEY",
+    "carries_script",
     "compact_deps",
     "create_spec",
     "identifier",
     "parse_json_array",
     "parse_json_object",
+    "refuse_script",
     "require_spec",
 ]
 
@@ -65,6 +68,53 @@ def identifier(payload: dict[str, Any]) -> str:
         _settled(payload), sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()[:DIGEST_CHARS]
+
+
+SCRIPT_PARAM = "javascript"
+
+#: Config key that lets a scene carry code the browser runs.
+ALLOW_SCRIPTS = "threejs.allow_scripts"
+
+
+def carries_script(value) -> bool:
+    """Whether a descriptor, or anything under it, carries browser code.
+
+    Args:
+        value: A descriptor, or any part of one.
+
+    Returns:
+        True when a ``params.javascript`` anywhere in the tree holds a non-empty string.
+    """
+    if isinstance(value, dict):
+        params = value.get("params")
+        if isinstance(params, dict) and str(params.get(SCRIPT_PARAM) or "").strip():
+            return True
+        return any(carries_script(entry) for entry in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(carries_script(entry) for entry in value)
+    return False
+
+
+def refuse_script(value, where: str) -> None:
+    """Stop a scene carrying browser code unless the config permits it.
+
+    Args:
+        value: The descriptor about to reach the browser.
+        where: Name of the node, for the message.
+
+    Raises:
+        ValueError: The scene carries code and ``threejs.allow_scripts`` is off.
+    """
+    from ..config import group_enabled
+
+    if not carries_script(value) or group_enabled(ALLOW_SCRIPTS):
+        return
+    raise ValueError(
+        f"{where} was given a scene carrying javascript, which runs in this browser with "
+        f"the same reach as ComfyUI itself. It is refused while {ALLOW_SCRIPTS} is false. "
+        f"Set it to true in config.yaml to run scenes that script themselves, and only for "
+        f"workflows you wrote or have read."
+    )
 
 
 def create_spec(

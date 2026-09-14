@@ -51,8 +51,8 @@ class NoodleSoupTermEdit(io.ComfyNode):
                 "Add words to a Noodle Soup Prompts terminology, take words out of one, or "
                 "make a terminology of your own, so __your_term__ draws from your own list "
                 "in Text Parse Noodle Soup Prompts and Prompt Parse. Entries you add are "
-                "kept apart from the ones the published pantry supplied, and Noodle Soup "
-                "Pantry Refresh never removes them."
+                "kept apart from the ones the bundled pantry supplied, and a later "
+                "release of that pantry never removes them."
             ),
             inputs=[
                 io.String.Input(

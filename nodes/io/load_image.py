@@ -195,8 +195,7 @@ class ImageLoad(io.ComfyNode):
                 "output and temp folders, and any folder listed under paths.allow_read in "
                 "config.yaml. Upload one with the button and it is selected. A file tagged "
                 "with a colour profile is converted to sRGB as it is read, or kept in "
-                "its own space, and either way the profile comes out on its own socket. "
-                "Download Image is the node for an address rather than a file. Anything "
+                "its own space, and either way the profile comes out on its own socket. Anything "
                 "that cannot be read gives a black 512x512 image so the rest of the "
                 "workflow still runs."
             ),

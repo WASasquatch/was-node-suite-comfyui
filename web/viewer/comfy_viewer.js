@@ -16,6 +16,7 @@ import {
   getViewSandboxAttributes,
   viewNeedsBlobUrl,
   getViewDirectUrl,
+  getDirectUrlSandbox,
   getViewContentMessage
 } from "./views/view_loader.js";
 import { loadPrismScripts } from "./views/code_scripts.js";
@@ -483,7 +484,7 @@ function ensureElementsForNode(node) {
   `;
 
   const iframe = document.createElement("iframe");
-  iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-downloads");
+  iframe.setAttribute("sandbox", getViewSandboxAttributes("html"));
   iframe.setAttribute("allow", "fullscreen");
   iframe.style.cssText = `
     position: absolute;
@@ -805,6 +806,12 @@ function updateIframeContent(node, elements, forceView = null) {
   // Pass content even if empty, views like OpenReel can load standalone for manual use.
   const directUrl = getViewDirectUrl(contentType, finalContent || '', theme);
 
+  // An app loaded by URL is the view's own code and reads what ComfyUI serves it. Content
+  // built here is framed without that access, whatever the view asked for.
+  if (directUrl) {
+    elements.pendingSandbox = getDirectUrlSandbox(contentType, directUrl);
+  }
+
   // If the view provides a directUrl AND we already loaded it, send content
   // updates via postMessage instead of reloading the iframe.
   
@@ -812,6 +819,11 @@ function updateIframeContent(node, elements, forceView = null) {
   if (directUrl && !displayContent && !elements.directUrlLoaded && !manualViewType) {
     // Show placeholder, don't load the app yet
     const placeholderHtml = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>Waiting for video content...</p>", "html", theme, [], nodeId);
+    const placeholderSandbox = getViewSandboxAttributes("html");
+    if (elements.iframe.getAttribute("sandbox") !== placeholderSandbox) {
+      elements.iframe.setAttribute("sandbox", placeholderSandbox);
+    }
+    elements.iframe.removeAttribute("src");
     elements.iframe.srcdoc = placeholderHtml;
     elements.lastContentHash = effectiveHash;
     return;

@@ -16,13 +16,11 @@ from pathlib import Path
 
 from . import state_path
 from .. import log
-from ..config import group_enabled
 from ..state import store as store_module
 
 __all__ = [
-    "FEATURE",
     "PANTRY_FILE",
-    "PANTRY_URL",
+    "bundled_pantry",
     "SOURCE",
     "YOURS",
     "add_entries",
@@ -38,7 +36,6 @@ __all__ = [
     "nsp_parse",
     "pantry",
     "pantry_file",
-    "refresh_pantry",
     "remove_entries",
     "search_entries",
     "set_term_entries",
@@ -51,16 +48,6 @@ logger = log.get_logger("prompt.nsp")
 
 #: The file name a pantry is imported from and exported to when no other is named.
 PANTRY_FILE = "nsp_pantry.json"
-
-#: Where the pantry is fetched from.
-PANTRY_URL = "https://raw.githubusercontent.com/WASasquatch/noodle-soup-prompts/main/nsp_pantry.json"
-
-#: Config key of the group that permits the fetch. The nodes themselves are default tier,
-#: and a stored pantry answers every run after the first without touching the network.
-FEATURE = "features.network"
-
-#: Seconds the download is given before it is abandoned.
-DOWNLOAD_TIMEOUT = 30
 
 #: Meta key whose value changes with every pantry write.
 GENERATION = "nsp:generation"
@@ -577,22 +564,24 @@ def _validate(payload, where: str) -> dict[str, list[str]]:
     return checked
 
 
-def _fetch() -> dict[str, list[str]]:
-    """Download the published pantry and check its shape.
+def bundled_pantry() -> dict[str, list[str]]:
+    """The terminology snapshot shipped with the pack.
 
     Returns:
         ``{term: [entry, ...]}``.
 
     Raises:
-        URLError: The download failed.
-        ValueError: What came back is not a pantry.
+        OSError: The snapshot could not be read.
+        ValueError: It does not unpack, or does not hold a pantry.
     """
-    from urllib.request import urlopen
+    from ..data.paths import pantry_seed
 
-    logger.info("downloading the Noodle Soup Prompts pantry from %s", PANTRY_URL)
-    with urlopen(PANTRY_URL, timeout=DOWNLOAD_TIMEOUT) as response:
-        payload = json.loads(response.read())
-    return _validate(payload, PANTRY_URL)
+    path = pantry_seed()
+    try:
+        body = zlib.decompress(path.read_bytes())
+    except zlib.error as error:
+        raise ValueError(f"{path} is not a packed pantry ({error})") from error
+    return _validate(json.loads(body.decode("utf-8")), str(path))
 
 
 def _seed(published: Mapping[str, list[str]]) -> bool:
@@ -608,27 +597,28 @@ def _seed(published: Mapping[str, list[str]]) -> bool:
 
 
 def ensure_pantry() -> bool:
-    """Fetch the published pantry when the database holds none.
+    """Seed the database from the bundled terminology when it holds none.
 
     Returns:
         True when the database holds a pantry.
 
     Raises:
-        ValueError: The database holds no pantry and ``features.network`` is off, or what
-            came back is not a pantry.
-        URLError: The pantry could not be fetched.
+        ValueError: The database holds no pantry and the copy shipped with the pack could
+            not be read.
     """
     if terms():
         return True
-    if not group_enabled(FEATURE):
-        raise ValueError(
-            f"no Noodle Soup Prompts terminology is stored and {FEATURE} is off, so this "
-            f"pack makes no network request of its own. Turn that group on in config.yaml "
-            f"to let the pantry download once, or put a copy of {PANTRY_FILE} in "
-            f"{pantry_file().parent} yourself"
-        )
-    _seed(_fetch())
-    return bool(terms())
+    try:
+        _seed(bundled_pantry())
+    except (OSError, ValueError) as error:
+        logger.debug("the bundled pantry could not be read (%s)", error)
+    else:
+        return bool(terms())
+    raise ValueError(
+        f"no Noodle Soup Prompts terminology is stored and the copy shipped with the pack "
+        f"could not be read. Reinstall the pack, or put a copy of {PANTRY_FILE} in "
+        f"{pantry_file().parent} and load it with Noodle Soup Pantry Import."
+    )
 
 
 def import_pantry(source=None, replace: bool = False) -> dict:
@@ -741,112 +731,6 @@ def _offered(entries, declined, report) -> list[str]:
     return offered
 
 
-def refresh_pantry(preview: bool = False) -> dict[str, int]:
-    """Merge the published pantry into the stored one, keeping every local change.
-
-    Args:
-        preview: Work out the merge and report it without storing anything.
-
-    Returns:
-        Counts under ``terms_added``, ``terms_updated``, ``terms_retired``,
-        ``entries_added``, ``entries_retired``, ``entries_kept`` and ``entries_declined``,
-        plus ``saved``, which is False for a preview and for a write that did not commit.
-
-    Raises:
-        ValueError: ``features.network`` is off, or what came back is not a pantry.
-        URLError: The download failed.
-    """
-    if not group_enabled(FEATURE):
-        raise ValueError(
-            f"{FEATURE} is off, so this pack makes no network request of its own. Turn "
-            f"that group on in config.yaml to refresh the Noodle Soup Prompts pantry"
-        )
-    published = _fetch()
-    base = _snapshot() or {}
-    stored = _records()
-    tombstones = _removed()
-
-    report = dict.fromkeys(
-        (
-            "terms_added",
-            "terms_updated",
-            "terms_retired",
-            "entries_added",
-            "entries_retired",
-            "entries_kept",
-            "entries_declined",
-        ),
-        0,
-    )
-    merged: dict[str, list[tuple[str, dict | None]]] = {}
-
-    # Terms already stored come first, in the order they are stored in.
-    for term, held in stored.items():
-        was_published = set(base.get(term, []))
-        if term not in published:
-            local = [row for row in held if row[0] not in was_published]
-            report["entries_retired"] += len(held) - len(local)
-            if local:
-                merged[term] = local
-                report["entries_kept"] += len(local)
-            elif was_published:
-                report["terms_retired"] += 1
-            else:
-                merged[term] = held
-            continue
-        entries = published[term]
-        offered = _offered(entries, tombstones.get(term, []), report)
-        still_published = set(entries)
-        kept = [
-            row for row in held if row[0] in still_published or row[0] not in was_published
-        ]
-        present = {name for name, _fields in kept}
-        added = [entry for entry in offered if entry not in present]
-        merged[term] = kept + [(entry, None) for entry in added]
-        report["entries_added"] += len(added)
-        report["entries_retired"] += len(held) - len(kept)
-        report["entries_kept"] += len([row for row in kept if row[0] not in still_published])
-        if added or len(held) != len(kept):
-            report["terms_updated"] += 1
-
-    for term, entries in published.items():
-        if term in stored:
-            continue
-        merged[term] = [
-            (entry, None) for entry in _offered(entries, tombstones.get(term, []), report)
-        ]
-        report["terms_added"] += 1
-        report["entries_added"] += len(merged[term])
-
-    report["saved"] = False
-    if preview:
-        return report
-    packed = _pack(published)
-
-    def work(connection):
-        store_module.write_records(connection, store_module.NSP, merged)
-        store_module.write_meta(connection, UPSTREAM, packed)
-
-    if not _write(work, "the refreshed Noodle Soup Prompts pantry"):
-        return report
-    report["saved"] = True
-    logger.info(
-        "pantry refreshed: %s term(s) added, %s updated, %s retired, %s entry(s) added, "
-        "%s retired, %s of your own kept, %s you removed not put back",
-        report["terms_added"],
-        report["terms_updated"],
-        report["terms_retired"],
-        report["entries_added"],
-        report["entries_retired"],
-        report["entries_kept"],
-        report["entries_declined"],
-    )
-    return report
-
-
-# Parsing
-
-
 def nsp_parse(text, seed=0, noodle_key="__", nspterminology=None, pantry_path=None):
     """Replace each noodle in ``text`` with a random pantry entry.
 
@@ -864,8 +748,8 @@ def nsp_parse(text, seed=0, noodle_key="__", nspterminology=None, pantry_path=No
         The parsed text. A noodle naming a term the pantry does not have is left as it is.
 
     Raises:
-        ValueError: The database holds no pantry and ``features.network`` is off.
-        URLError: The database holds no pantry and it could not be fetched.
+        ValueError: The database holds no pantry and the copy shipped with the pack could
+            not be read.
         OSError: ``pantry_path`` could not be read.
         JSONDecodeError: ``pantry_path`` is not valid JSON.
     """

@@ -17,6 +17,7 @@ from ..config import load_config, paths
 __all__ = [
     "PathNotAllowed",
     "contains",
+    "names_another_host",
     "configured_read_roots",
     "configured_write_roots",
     "read_roots",
@@ -168,6 +169,38 @@ def contains(root: Path, target: Path) -> bool:
     return root == target or root in target.parents
 
 
+def names_another_host(value: str | os.PathLike) -> bool:
+    r"""Whether a path names a host rather than this machine.
+
+    Args:
+        value: The raw path, as written.
+
+    Returns:
+        True for a UNC path such as ``\\server\share\file``. Reading one reaches that host
+        over the network, which resolving the path is enough to do.
+    """
+    drive = PureWindowsPath(str(value).strip()).drive
+    return drive.startswith("\\\\") or drive.startswith("//")
+
+
+def _host_permitted(text: str, roots: list[Path]) -> bool:
+    r"""Whether a permitted root sits on the same host and share as ``text``.
+
+    Args:
+        text: The raw path, as written.
+        roots: Permitted roots.
+
+    Returns:
+        True when a root names the same ``\\server\share``. Compared as written, so no path
+        is resolved to answer this.
+    """
+    drive = PureWindowsPath(text).drive.replace("/", "\\").casefold()
+    return any(
+        PureWindowsPath(str(root)).drive.replace("/", "\\").casefold() == drive
+        for root in roots
+    )
+
+
 def _rebased(text: str) -> Path | None:
     """Read ``./ComfyUI/output/x`` against ComfyUI's own root.
 
@@ -271,6 +304,11 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
     if not text:
         raise PathNotAllowed(f"no path given to {purpose}")
     roots = list(roots)
+    if names_another_host(text) and not _host_permitted(text, roots):
+        raise PathNotAllowed(
+            f"`{text}` names another machine. A path is {purpose} from this computer only. "
+            f"Add the share to {key} in config.yaml to reach it."
+        )
     candidates = _candidates(text)
     for target in candidates:
         for root in roots:

@@ -35,6 +35,9 @@ video:
 interface:
   preview_max_edge: 1024 # longest edge of a picture a node publishes to its own panel; 0 keeps full size
 
+threejs:
+  allow_scripts: false      # let a Three.js scene carry javascript this browser runs
+
 viewer:
   install_extensions: false  # unpack .zip view extensions; what they need is named in the log
 
@@ -60,7 +63,7 @@ features:                # optional node groups
                          #           whose packages ComfyUI does not already require, so it
                          #           starts off and nothing is installed for a fresh install
                          #           pip install -r requirements/document_export.txt
-  network:     false     #  4 nodes: nodes that make outbound requests
+  network:     false     #  0 nodes: permits model downloads when a file is not already on disk
                          #           The (ComfyUI Native) node beside each loads either way
   pssr:        false     #  1 node:  PS-SR video super resolution. Needs a 22 GB checkout
                          #           placed by hand, and diffsynth; see docs/MODELS.md
@@ -81,5 +84,5 @@ legacy:                  # nodes another node does better
 
 nodes:                   # per-node overrides; these beat both blocks above
   enable: []             # e.g. ["KSampler (WAS)", "Cache Node"]
-  disable: []            # e.g. ["Image Send HTTP"]
+  disable: []            # e.g. ["Download Image"]
                          # Names are node ids

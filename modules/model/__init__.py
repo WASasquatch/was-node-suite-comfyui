@@ -174,8 +174,10 @@ def shared_roots() -> list[Path]:
         left out, so the result is only places worth reading.
     """
     roots: list[Path] = []
-    hub = os.environ.get("HF_HUB_CACHE") or os.environ.get("HUGGINGFACE_HUB_CACHE")
-    home = os.environ.get("HF_HOME")
+    from ..config.paths import env_value
+
+    hub = env_value("HF_HUB_CACHE") or env_value("HUGGINGFACE_HUB_CACHE")
+    home = env_value("HF_HOME")
     candidates = [Path(hub)] if hub else []
     if home:
         candidates.append(Path(home) / "hub")

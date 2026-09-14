@@ -11,6 +11,7 @@ __all__ = [
     "DEPTHS",
     "EXTENSIONS",
     "FORMATS",
+    "MAX_SAMPLES",
     "MAX_SIDE",
     "PACKINGS",
     "Plate",
@@ -44,6 +45,11 @@ EXTENSIONS = {"psd": "psd", "tiff": "tif"}
 
 #: Longest side a PSD may name.
 MAX_SIDE = 30000
+
+#: How many float samples one document's layers may unpack to in total. A layer pads a
+#: short channel out to its whole box, so a small file can name a very large plane, and a
+#: document names as many layers as it likes.
+MAX_SAMPLES = 1 << 28
 
 #: The compositor's blend mode names against the four letter keys a document stores.
 BLEND_KEYS = {
@@ -514,7 +520,7 @@ def _unpacked(blob: bytes, bits: int, height: int, width: int) -> "torch.Tensor"
             at += length
         raw = b"".join(row.ljust(stride, b"\0")[:stride] for row in rows)
     elif packing in (_ZIP, _ZIP_PREDICTED):
-        raw = zlib.decompress(body)
+        raw = zlib.decompressobj().decompress(body, height * stride)
         if packing == _ZIP_PREDICTED:
             raw = _unpredicted(raw, bits, height, width)
     else:
@@ -572,14 +578,26 @@ def _plates(info: bytes, bits: int) -> list[Plate]:
         )
 
     found = []
+    spent = 0
     for head in heads:
         left, top, right, bottom = head["box"]
         width, height = max(0, right - left), max(0, bottom - top)
+        if max(width, height) > MAX_SIDE:
+            raise ValueError(
+                f"a layer of {width}x{height} is larger than the {MAX_SIDE} pixel limit of "
+                f"this reader, so the file was not read"
+            )
         planes = {}
         for ident, length in head["channels"]:
             blob = info[at : at + length]
             at += length
             if width and height and ident >= _ALPHA:
+                spent += width * height
+                if spent > MAX_SAMPLES:
+                    raise ValueError(
+                        f"the layers unpack to more than {MAX_SAMPLES} samples, which is "
+                        f"more than this reader holds, so the file was not read"
+                    )
                 planes[ident] = _unpacked(blob, bits, height, width)
         if not width or not height or 0 not in planes:
             continue
@@ -635,6 +653,17 @@ def _read_psd(data: bytes) -> tuple[tuple[int, int], list[Plate], "torch.Tensor 
         )
     if bits not in _LAYER_KEYS:
         raise ValueError(f"this document is {bits} bits per channel, which is not read here")
+    if max(width, height) > MAX_SIDE:
+        raise ValueError(
+            f"this document is {width}x{height}, longer than the {MAX_SIDE} pixel limit of "
+            f"this reader, so the file was not read"
+        )
+    if width * height > MAX_SAMPLES:
+        raise ValueError(
+            f"this document is {width}x{height}, which is {width * height} samples per "
+            f"channel and more than the {MAX_SAMPLES} this reader unpacks, so the file "
+            f"was not read"
+        )
 
     at = 26
     for _ in range(2):

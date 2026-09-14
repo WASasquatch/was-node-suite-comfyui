@@ -55,10 +55,22 @@ def user_directory() -> Path:
     return fallback
 
 
+def env_value(name: str) -> str:
+    """One environment variable's value.
+
+    Args:
+        name: The variable's name.
+
+    Returns:
+        Its value with surrounding space removed, or ``""`` where it is unset or empty.
+    """
+    return (os.environ.get(name) or "").strip()
+
+
 def _data_home() -> Path:
     """The platform's per-user data directory."""
     for name in ("LOCALAPPDATA", "XDG_DATA_HOME"):
-        value = os.environ.get(name)
+        value = env_value(name)
         if value:
             return Path(value)
     return Path.home() / ".local" / "share"
@@ -66,7 +78,7 @@ def _data_home() -> Path:
 
 def config_directory() -> Path:
     """``<user_dir>/was-node-suite``, or ``$WAS_CONFIG_DIR`` when that is set."""
-    override = os.environ.get(ENV_CONFIG_DIR)
+    override = env_value(ENV_CONFIG_DIR)
     return Path(override) if override else user_directory() / CONFIG_DIR_NAME
 
 
@@ -77,7 +89,7 @@ def state_file(name: str) -> Path:
 
 def find_config_file() -> Path | None:
     """``$WAS_CONFIG``, then the config directory, then the repo root. YAML before JSON."""
-    explicit = os.environ.get(ENV_CONFIG_FILE)
+    explicit = env_value(ENV_CONFIG_FILE)
     if explicit:
         path = Path(explicit)
         if path.is_file():

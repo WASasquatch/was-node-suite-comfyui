@@ -144,29 +144,6 @@ def publish_pixels(node_cls, node_id: str) -> None:
     apply(node_cls, node_id)
 
 
-def register_viewer_routes(config: Mapping) -> None:
-    """Register the content viewer's HTTP routes, when that group is on.
-
-    Args:
-        config: The config mapping. Routes are registered only when ``features.viewer``
-            is true.
-    """
-    if not setting(config, "features", "viewer", False):
-        return
-    try:
-        # Imported inside the call and guarded: load_custom_node turns anything escaping
-        # comfy_entrypoint into zero registered nodes.
-        from .modules.viewer.routes import load_routes
-    except Exception as error:
-        logger.debug("the viewer routes are unavailable (%s)", error)
-        return
-    try:
-        load_routes()
-    except Exception as error:
-        logger.warning("the viewer routes could not be registered (%s)", error)
-        logger.debug("%s", traceback.format_exc())
-
-
 def register_interface_routes() -> None:
     """Register the read-only HTTP routes the node interfaces fetch from."""
     # Imported inside the call and guarded: load_custom_node turns anything escaping
@@ -574,7 +551,6 @@ else:
                 level=setting(self.config, "logging", "level", "info"),
                 rich=setting(self.config, "logging", "rich", True),
             )
-            register_viewer_routes(self.config)
             register_interface_routes()
             await register_replacements()
 

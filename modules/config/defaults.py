@@ -315,10 +315,15 @@ DEFAULTS = {
     "video": {
         "extra_codecs": {},
     },
+    #: ``allow_scripts`` lets a Three.js scene carry javascript the browser runs. That code
+    #: runs in the ComfyUI page with the same reach the page has, and a scene arrives with
+    #: whatever workflow was opened, so a scene carrying code is refused while this is off.
+    "threejs": {
+        "allow_scripts": False,
+    },
     #: ``install_extensions`` unpacks ``.zip`` view extensions for the content viewer at
-    #: startup and pip-installs anything they require. Off leaves a view extension to be
-    #: installed by copying two files. Read straight off disk at startup, before ComfyUI
-    #: imports any custom node.
+    #: startup. Off leaves a view extension to be installed by copying two files. Read
+    #: straight off disk at startup, before ComfyUI imports any custom node.
     "viewer": {
         "install_extensions": False,
     },

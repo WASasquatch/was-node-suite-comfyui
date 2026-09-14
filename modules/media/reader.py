@@ -189,6 +189,8 @@ def input_path(name: str) -> str:
             "no video was chosen. Pick one from the file list, or put a video in ComfyUI's "
             "input, output or temp folder and use the upload button on the node"
         )
+    if sandbox.names_another_host(chosen):
+        raise ValueError(f"`{chosen}` names another machine, which a video is not read from")
     if not folder_paths.exists_annotated_filepath(chosen):
         raise ValueError(
             f"`{chosen}` is not in ComfyUI's input, output or temp folder any more. Pick "

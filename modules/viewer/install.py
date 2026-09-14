@@ -33,11 +33,7 @@ EXTENSION_PREFIX = "ComfyUI_Viewer_"
 #: Where the viewer's own files live, relative to the pack root.
 VIEWS_DIR = Path("web") / "viewer" / "views"
 PARSERS_DIR = Path("modules") / "viewer" / "parsers"
-ROUTES_DIR = Path("modules") / "viewer" / "routes"
-
-#: Built single-page applications an extension embeds in the viewer. A sibling of the
-#: routes directory, which an extension's route file reaches as
-#: ``os.path.join(os.path.dirname(__file__), "..", "apps", name)``.
+#: Built single-page applications an extension embeds in the viewer.
 APPS_DIR = Path("modules") / "viewer" / "apps"
 
 #: ComfyUI nodes an extension ships, written against the V1 node API.
@@ -49,7 +45,6 @@ NODES_DIR = Path("modules") / "viewer" / "extension_nodes"
 EXTRACT = {
     "web/views": VIEWS_DIR,
     "modules/parsers": PARSERS_DIR,
-    "routes": ROUTES_DIR,
     "apps": APPS_DIR,
     "nodes": NODES_DIR,
 }
@@ -102,15 +97,17 @@ Copy two files out of the extension into WAS Node Suite:
     web/views/<name>.js                 ->  <pack>/web/viewer/views/
     modules/parsers/<name>_parser.py    ->  <pack>/modules/viewer/parsers/
 
-where <pack> is ComfyUI/custom_nodes/was-node-suite-comfyui. If the extension has a
-routes/ directory, its files go in <pack>/modules/viewer/routes/, and an apps/ directory
-goes in <pack>/modules/viewer/apps/. The contents of a nodes/ directory go in
+where <pack> is ComfyUI/custom_nodes/was-node-suite-comfyui. An apps/ directory goes in
+<pack>/modules/viewer/apps/. The contents of a nodes/ directory go in
 
     <pack>/modules/viewer/extension_nodes/<extension name>/
 
 in a directory of its own, so two extensions cannot collide on a file name. Leave that
 directory's own __init__.py behind if it has one: each node module is imported on its own
 here, and the automatic route drops the file for the same reason.
+
+An extension serving its own HTTP routes registers them from its own __init__.py, which
+ComfyUI imports the way it imports any pack, and nothing of its routes is copied here.
 
 Restart ComfyUI. The view registers itself; there is no list to edit.
 

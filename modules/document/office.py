@@ -709,7 +709,7 @@ def _parsed(payload: bytes, part: str):
         )
         return None
     try:
-        return ElementTree.fromstring(payload)
+        return ElementTree.fromstring(payload)  # noqa: S314
     except (ElementTree.ParseError, ValueError) as error:
         logger.debug("%s could not be read (%s)", part, error)
         return None

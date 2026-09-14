@@ -77,7 +77,6 @@ LITERAL_INPUTS = {
     "HSL to Hex": ("hsl_color",),
     "WASImageTileExtract": ("border_color",),
     "WASImageTileShuffle": ("border_color",),
-    "True Random.org Number Generator": ("api_key",),
     "WASImageDrawText": ("text_color", "stroke_color", "background_color"),
     "WASDrawImageBounds": ("color",),
     "WASImagePaletteMap": ("palette",),

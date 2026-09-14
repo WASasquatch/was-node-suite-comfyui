@@ -7,7 +7,6 @@ batch, and :data:`MAX_RESOLUTION` mirrors the constant of that name in ComfyUI's
 
 from __future__ import annotations
 
-import importlib
 import sys
 
 __all__ = ["MAX_RESOLUTION", "max_resolution"]
@@ -46,7 +45,7 @@ def _from_core() -> int:
     module = sys.modules.get("nodes")
     if module is None:
         try:
-            module = importlib.import_module("nodes")
+            import nodes as module
         except Exception:
             return MAX_RESOLUTION
     value = getattr(module, "MAX_RESOLUTION", None)

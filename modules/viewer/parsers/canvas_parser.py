@@ -169,7 +169,7 @@ class CanvasParser(BaseParser):
             else:
                 pil_img = Image.fromarray(img_array)
 
-            img_hash = hashlib.md5(img_array.tobytes()).hexdigest()[:12]
+            img_hash = hashlib.md5(img_array.tobytes(), usedforsecurity=False).hexdigest()[:12]
             filename = f"{idx:04d}_{img_hash}.png"
             filepath = os.path.join(full_subdir, filename)
 

@@ -167,6 +167,12 @@ function buildListContent(content, theme, excluded, nodeId) {
  * @param {string|number} [nodeId=''] - Node ID for message routing
  * @returns {string} Complete HTML document
  */
+// The policy every framed document carries. The frame holds no origin, so `'self'` matches
+// nothing it could fetch or connect to.
+const POLICY = "default-src 'self' data: blob:; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' data: blob:; frame-src 'none'; object-src 'none'; form-action 'none'";
+
+const POLICY_TAG = `<meta http-equiv="Content-Security-Policy" content="${POLICY}">`;
+
 export function buildIframeContent(content, contentType, theme, excluded = [], nodeId = '') {
   // Only include base styles if the view wants them
   const useBase = viewUsesBaseStyles(contentType);
@@ -187,14 +193,9 @@ export function buildIframeContent(content, contentType, theme, excluded = [], n
       // The theme goes in first, at the lowest specificity the page can carry, so a
       // document that styles itself paints over it and one that does not reads as the
       // node around it.
-      const themed = `<style id="was-theme-base">${baseStyles}</style>`;
-      if (/<head[\s>]/i.test(content)) {
-        return content.replace(/<head([^>]*)>/i, `<head$1>${themed}`);
-      }
-      if (/<html[\s>]/i.test(content)) {
-        return content.replace(/<html([^>]*)>/i, `<html$1><head>${themed}</head>`);
-      }
-      return themed + content;
+      // The policy leads the document. Anything after it is covered, including markup that
+      // opens a script before it opens a head.
+      return `${POLICY_TAG}<style id="was-theme-base">${baseStyles}</style>${content}`;
     }
     
     bodyContent = renderContent(content, contentType, theme);
@@ -277,7 +278,7 @@ export function buildIframeContent(content, contentType, theme, excluded = [], n
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' data: blob:; frame-src 'none'; object-src 'none'; form-action 'none'">
+  ${POLICY_TAG}
   ${bootstrapScript}
   <style>${baseStyles}${listStyles}${viewStyles}${prismTheme}</style>
   ${katexStyles}

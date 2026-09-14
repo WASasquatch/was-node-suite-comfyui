@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **469 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **464 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -51,20 +51,20 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-469 nodes across a package of source files. The pack itself needs no packages, and nothing is
+464 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 469 |
+| Nodes | 220 | 464 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 128 files: browser libraries, fonts, eight face cascades, two sets of weights and one network, each with its licence |
 | Optional node groups | none | 22 keys in `config.yaml`, 8 of them off out of the box. Per-node disable group. |
 
-216 of the 220 node ids are unchanged. Four are retired, and the section below says what opens
-in their place. Face detection, gradient maps, background removal, frame interpolation,
+213 of the 220 node ids are unchanged. Four are retired onto replacements, three are removed
+outright, and the section below says what opens in their place. Face detection, gradient maps, background removal, frame interpolation,
 seamless textures, colour matching, levels, palettes, masks and deconvolution all run on torch,
 on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, scikit-learn and
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
@@ -87,9 +87,9 @@ What each area does: [`FEATURES.md`](FEATURES.md).
 # Opening a workflow saved before v3
 
 No node id is renamed. Two nodes are now a different node under the same menu name, two ids
-are gone and another node does the job of each, and ComfyUI offers to swap all four in.
-Widgets, slot counts, three menu labels and four results changed, and a workflow saved
-before v3 is carried across as it loads.
+are gone and another node does the job of each, and ComfyUI offers to swap all four in. Three
+ids are removed with nothing in their place. Widgets, slot counts, three menu labels and four
+results changed, and a workflow saved before v3 is carried across as it loads.
 
 **Four retired ids.** Each one opens listed in ComfyUI's missing-node dialog. Tick it, press
 the replace button, and the node comes back in place. Leave the dialog and it stays missing.
@@ -104,6 +104,19 @@ The old name still finds its replacement in the Add Node search.
 
 The two face and gradient nodes ran through OpenCV, which the pack no longer installs. Their
 replacements run on ComfyUI's own device and need nothing installed.
+
+**Five removed ids.** Each opens as a red box where it stood, with its links dropped. There
+is no replacement for any of them; delete the node.
+
+| Saved as | What it did | What to do |
+|---|---|---|
+| `Image Send HTTP` | Posted an image batch to an address | Write the batch with **Image Save** |
+| `Text Random Prompt` | Read a prompt from lexica.art | Write the prompt, or use **Prompt Library** |
+| `True Random.org Number Generator` | Drew a seed from RANDOM.ORG | Use **Random Number** or **Seed** |
+| `WASDownloadImage` | Read an image from a web address | Save the file, then use **Load Image** |
+| `WASNoodleSoupPantryRefresh` | Downloaded the Noodle Soup pantry | Nothing. The pantry ships with the pack and seeds the database on first start |
+
+The pack now makes no outbound request of its own from any node.
 
 **Widgets and slots, carried across for you.** Thirty-six dropdowns reading `true` and `false`
 are now checkboxes, and fourteen nodes that stopped at four to eight slots now declare
@@ -129,7 +142,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**469 nodes** across 47 categories. [`NODES.md`](NODES.md) carries every input, output and
+**464 nodes** across 47 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 
@@ -181,6 +194,15 @@ The software licences place no conditions on what you make with the suite: docum
 and images you produce are yours. Open RAIL++-M, covering one 8 KB embedding, is the exception.
 It claims no rights in output but its use restrictions reach any use of that output, including
 the intrinsic maps **Power Preprocessor** answers with.
+
+---
+
+# Security
+
+Outbound requests are off out of the box, nothing starts a process or installs a package, and a
+node input naming a file is resolved against an allowlist before the filesystem is touched.
+What the pack does and does not do, and how to report a vulnerability:
+[`SECURITY.md`](SECURITY.md).
 
 ---
 

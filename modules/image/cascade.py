@@ -377,7 +377,7 @@ def _parse(path: Path, name: str) -> Cascade:
     Raises:
         ValueError: The file is not a cascade, or holds features this cannot evaluate.
     """
-    root = ET.parse(path).getroot()
+    root = ET.parse(path).getroot()  # noqa: S314
     node = root.find("cascade")
     if node is not None:
         return _parse_current(node, name)

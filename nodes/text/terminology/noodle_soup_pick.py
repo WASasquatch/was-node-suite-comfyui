@@ -14,8 +14,8 @@ logger = log.get_logger("nodes.text.terminology")
 
 #: Where a user is pointed when the pantry holds nothing to pick from.
 NO_PANTRY = (
-    "the pantry holds no terminology yet, so nothing could be picked. Run Noodle Soup "
-    "Pantry Refresh to fetch it, or turn on features.network in config.yaml"
+    "the pantry holds no terminology yet, so nothing could be picked. The bundled pantry "
+    "seeds the database on first start; restart ComfyUI to read it in"
 )
 
 

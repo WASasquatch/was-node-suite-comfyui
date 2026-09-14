@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import gc
 import math
-import os
 import pathlib
 import sys
 from typing import Iterable
@@ -17,6 +16,7 @@ from typing import Iterable
 import torch
 
 from .. import log
+from ..config.paths import env_value
 from . import model_directories
 
 logger = log.get_logger("modules.model.pssr")
@@ -54,8 +54,9 @@ def find_root(explicit: str | None = None) -> pathlib.Path:
     candidates: list[pathlib.Path] = []
     if explicit:
         candidates.append(pathlib.Path(explicit))
-    if os.environ.get("PSSR_ROOT"):
-        candidates.append(pathlib.Path(os.environ["PSSR_ROOT"]))
+    root = env_value("PSSR_ROOT")
+    if root:
+        candidates.append(pathlib.Path(root))
     # Registering each name means an extra_model_paths entry spelling it takes effect, so a
     # checkout kept on another drive is found where it lies.
     for name in MODEL_DIRS:

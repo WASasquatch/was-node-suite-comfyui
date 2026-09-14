@@ -35,7 +35,7 @@ def text_path(file: str) -> str:
 
 
 #: Widget value that keeps the dictionary keyed on the file's own name.
-FILENAME_TOKEN = "[filename]"
+FILENAME_KEYWORD = "[filename]"
 
 
 class LoadTextFile(io.ComfyNode):
@@ -104,7 +104,7 @@ class LoadTextFile(io.ComfyNode):
         file_path = text_path(file)
         base = os.path.basename(file_path)
         name = base.split(".", 1)[0] if "." in base else base
-        if dictionary_name != FILENAME_TOKEN:
+        if dictionary_name != FILENAME_KEYWORD:
             name = dictionary_name
 
         # An empty widget names nothing to contain, and reports the same missing file as a

@@ -19,7 +19,6 @@ const LOG_NAME = "WASNodeSuite.ImageReport";
 const NODES = [
   "Image Load",
   "Load Image Batch",
-  "WASDownloadImage",
   "WASImagePreview",
   "WASHDRVAEDecode",
 ];

@@ -78,9 +78,9 @@ CROP_DATA = io.Custom("CROP_DATA")
 #: built from.
 EMA_VFI_MODEL = io.Custom("EMA_VFI_MODEL")
 
-#: The dictionary passed between the 12 dictionary nodes, `Text Dictionary New` through
-#: `Image Send HTTP`. Wire-compatible with core's `io.Dict`, which emits the same io_type;
-#: declared here so all custom sockets resolve from one module.
+#: The dictionary passed between the dictionary nodes. Wire-compatible with core's
+#: `io.Dict`, which emits the same io_type; declared here so all custom sockets resolve
+#: from one module.
 DICT = io.Custom("DICT")
 
 #: A whole document travelling between the document nodes: the markup, the metadata and any

@@ -6,7 +6,7 @@ from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_APP
 from ...modules.interface import three_render
-from ...modules.threejs.spec import require_spec
+from ...modules.threejs.spec import refuse_script, require_spec
 
 REQUIRES = "threejs"
 
@@ -202,6 +202,7 @@ class ThreeRender(io.ComfyNode):
             InterruptProcessingException: The run was cancelled while waiting.
         """
         require_spec(app, "app")
+        refuse_script(app, "Three Render")
         token = three_render.file_job(
             app, int(width), int(height), bool(transparent),
             cls.moments(int(num_frames), float(start), float(fps)),

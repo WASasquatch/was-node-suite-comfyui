@@ -69,13 +69,13 @@
           "localized_name": "entries",
           "name": "entries",
           "type": "ARRAY",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "entry_count",
           "name": "entry_count",
           "type": "INT",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -483,13 +483,13 @@
           "localized_name": "positive_string",
           "name": "positive_string",
           "type": "STRING",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "negative_string",
           "name": "negative_string",
           "type": "STRING",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -811,13 +811,13 @@
           "localized_name": "path",
           "name": "path",
           "type": "STRING",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "styles",
           "name": "styles",
           "type": "INT",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -875,25 +875,25 @@
           "localized_name": "entries",
           "name": "entries",
           "type": "ARRAY",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "text",
           "name": "text",
           "type": "STRING",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "count",
           "name": "count",
           "type": "INT",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "yours",
           "name": "yours",
           "type": "INT",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -1224,19 +1224,19 @@
           "localized_name": "path",
           "name": "path",
           "type": "STRING",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "terms",
           "name": "terms",
           "type": "INT",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "entries",
           "name": "entries",
           "type": "INT",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -1287,19 +1287,19 @@
           "localized_name": "report",
           "name": "report",
           "type": "STRING",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "terms",
           "name": "terms",
           "type": "INT",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "entries",
           "name": "entries",
           "type": "INT",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -1349,19 +1349,19 @@
           "localized_name": "names",
           "name": "names",
           "type": "ARRAY",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "imported",
           "name": "imported",
           "type": "INT",
-          "links": null
+          "links": []
         },
         {
           "localized_name": "total",
           "name": "total",
           "type": "INT",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -1370,64 +1370,6 @@
       "widgets_values": [
         "",
         "add to the library"
-      ]
-    },
-    {
-      "id": 12,
-      "type": "WASNoodleSoupPantryRefresh",
-      "pos": [
-        2340,
-        992
-      ],
-      "size": [
-        400,
-        358
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 2,
-      "inputs": [
-        {
-          "localized_name": "mode",
-          "name": "mode",
-          "type": "COMBO",
-          "widget": {
-            "name": "mode"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "localized_name": "report",
-          "name": "report",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "localized_name": "terms_added",
-          "name": "terms_added",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "localized_name": "entries_added",
-          "name": "entries_added",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "localized_name": "yours_kept",
-          "name": "yours_kept",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "WASNoodleSoupPantryRefresh"
-      },
-      "widgets_values": [
-        "check what is new"
       ]
     }
   ],

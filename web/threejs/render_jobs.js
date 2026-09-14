@@ -5,6 +5,7 @@
  */
 
 import { app } from "../../../scripts/app.js";
+import { api } from "../../../scripts/api.js";
 import * as THREE from "../vendor/three/three.module.js";
 
 import { createPathTracer, prepareFrame, traceFrame } from "./pathtrace.js";
@@ -225,6 +226,15 @@ async function drawJob(job, onFrame, onProgress) {
 }
 
 /**
+ * This tab's ComfyUI session id, which is the one its prompts are queued under.
+ *
+ * @returns {string} The session id, or an empty string before the socket has connected.
+ */
+function sessionId() {
+    return String(api?.clientId || api?.initialClientId || "");
+}
+
+/**
  * Take whatever jobs are waiting, draw them and post each one back.
  *
  * @returns {Promise<number>} How many jobs were taken.
@@ -232,7 +242,8 @@ async function drawJob(job, onFrame, onProgress) {
 async function serveJobs() {
     let taken = [];
     try {
-        const answer = await fetch(ROUTE, { cache: "no-store" });
+        const asking = `${ROUTE}?client_id=${encodeURIComponent(sessionId())}`;
+        const answer = await fetch(asking, { cache: "no-store" });
         if (!answer.ok) return 0;
         taken = (await answer.json()).jobs || [];
     } catch (error) {

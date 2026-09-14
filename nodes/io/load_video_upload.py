@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
-from pathlib import Path
-from urllib.parse import urlsplit
 
 from comfy_api.latest import io
 
@@ -19,126 +16,9 @@ from .load_video import load
 
 logger = log.get_logger("nodes.io")
 
-#: Config key of the group that permits this node to reach the network. The node itself is
-#: default tier and normally given a file from the input folder.
-FEATURE = "features.network"
-
-#: Text before the digest in the name a downloaded video is cached under.
-NAME_PREFIX = "was_video_"
-
-#: Container extensions a downloaded name may keep. Anything else is saved as ``.mp4``,
-#: since libavformat reads a file by its content rather than by its name.
-EXTENSIONS = frozenset(reader.VIDEO_EXTENSIONS)
-
-
-def cache_name(url: str) -> str:
-    """The temp file one address is kept in.
-
-    Args:
-        url: The address, as the widget holds it.
-
-    Returns:
-        A file name built from the address's digest, so the same address always names the
-        same file and is fetched once.
-    """
-    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
-    extension = os.path.splitext(urlsplit(url).path)[1].lower()
-    return f"{NAME_PREFIX}{digest}{extension if extension in EXTENSIONS else '.mp4'}"
-
-
-def fetch(url: str) -> str:
-    """Download a video into ComfyUI's temp folder, when the network group permits it.
-
-    Args:
-        url: An ``http`` or ``https`` address naming a video file.
-
-    Returns:
-        The path the video was written to. An address already fetched is read from the temp
-        folder instead of being fetched again.
-
-    Raises:
-        DependencyError: ``requests`` or ``tqdm`` is not installed.
-        PathNotAllowed: ComfyUI's temp folder is outside every permitted write root.
-        ValueError: ``features.network`` is off, the address is not an ``http`` one, the
-            download did not complete, or what arrived holds no video.
-    """
-    import folder_paths
-
-    from ...modules.config import group_enabled
-    from ...modules.util import net
-
-    address = (url or "").strip()
-    if not address.lower().startswith(("http://", "https://")):
-        raise ValueError(
-            f"`{address}` is not a web address. url takes an http or https address naming a "
-            f"video file. Leave it empty to read the file chosen above instead"
-        )
-    if not group_enabled(FEATURE):
-        raise ValueError(
-            f"not fetching {address}: {FEATURE} is off, so this pack makes no network "
-            f"request of its own. Turn that group on in config.yaml to let this node "
-            f"download, or leave url empty and pick a file from the list above"
-        )
-
-    target = sandbox.resolve_write_file(folder_paths.get_temp_directory(), cache_name(address))
-    if target.is_file() and target.stat().st_size:
-        logger.info("reading %s from %s, which an earlier run downloaded", address, target)
-        return str(sandbox.resolve_read(target))
-
-    os.makedirs(target.parent, exist_ok=True)
-    # Written under a part name and moved into place, so an interrupted download is not
-    # read back as a complete one on the next run.
-    partial = sandbox.resolve_write_file(target.parent, target.name + ".part")
-    try:
-        arrived = net.download_file(address, partial.name, str(partial.parent))
-    except Exception as error:
-        partial.unlink(missing_ok=True)
-        raise ValueError(
-            f"{address} could not be reached: {error}. Check that the address opens in a "
-            f"browser, and that this machine is allowed out to it"
-        ) from error
-    if not arrived:
-        partial.unlink(missing_ok=True)
-        raise ValueError(
-            f"{address} did not download; the log names the status the server answered "
-            f"with. An address behind a sign-in page answers this way"
-        )
-    _reject_unreadable(address, partial)
-    os.replace(partial, target)
-    logger.info("downloaded %s to %s", address, target)
-    return str(sandbox.resolve_read(target))
-
-
-def _reject_unreadable(url: str, path: Path) -> None:
-    """Delete a download that holds no video, before it is cached under its address.
-
-    Args:
-        url: The address it came from, named in the message.
-        path: The file the response body was written to.
-
-    Raises:
-        DependencyError: PyAV is not installed.
-        ValueError: The file holds nothing that reads as a video.
-    """
-    from ...modules.deps import DependencyError
-
-    try:
-        reader.probe(str(path))
-    except DependencyError:
-        raise
-    except Exception as error:
-        size = path.stat().st_size if path.is_file() else 0
-        path.unlink(missing_ok=True)
-        raise ValueError(
-            f"{url} answered {size} byte(s) that hold no video ({error}). An address behind "
-            f"a sign-in page, a consent screen or a player page answers with a web page, "
-            f"which downloads like a file. Open the address in a browser and use the one "
-            f"the video itself is served from, ending in .mp4 or another container"
-        ) from error
-
 
 class LoadVideoUpload(io.ComfyNode):
-    """Load a video chosen in ComfyUI's input folder, or downloaded from a web address."""
+    """Load a video chosen in ComfyUI's input folder."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
@@ -148,20 +28,15 @@ class LoadVideoUpload(io.ComfyNode):
             search_aliases=[
                 "WASLoadVideoUpload",
                 "Load Video (Upload)",
-                "video from url",
-                "download video",
                 "upload video",
-                "video link",
             ],
             category="WAS Suite/IO",
             description=(
                 "Load a video and hand on everything in it at once: the video itself, its "
-                "frames as an image batch, its sound, and how long it is. Upload a file "
-                "with the button on the node and play it back there, or paste a web address "
-                "into url and the file is downloaded to ComfyUI's temp folder first. "
-                "Downloading needs features.network on in config.yaml. Frames are chosen "
-                "and sized exactly as Load Video beside it does them, 16 of them unless "
-                "told otherwise."
+                "frames as an image batch, its sound, and how long it is. Upload a file with "
+                "the button on the node and play it back there. Frames are chosen and sized "
+                "exactly as Load Video beside it does them, 16 of them unless told "
+                "otherwise."
             ),
             inputs=[
                 io.Combo.Input(
@@ -170,19 +45,7 @@ class LoadVideoUpload(io.ComfyNode):
                     upload=io.UploadType.video,
                     tooltip=(
                         "Which video to read, from ComfyUI's input folder. The button below "
-                        "uploads one and selects it, and the player shows what is selected. "
-                        "Ignored while url holds an address."
-                    ),
-                ),
-                io.String.Input(
-                    "url",
-                    default="",
-                    multiline=False,
-                    tooltip=(
-                        "A web address to download the video from instead, such as "
-                        "https://example.com/clip.mp4. It lands in ComfyUI's temp folder and "
-                        "is fetched once, then read from there. Needs features.network on in "
-                        "config.yaml. Empty reads the file chosen above."
+                        "uploads one and selects it, and the player shows what is selected."
                     ),
                 ),
                 io.Int.Input(
@@ -383,7 +246,7 @@ class LoadVideoUpload(io.ComfyNode):
 
     @classmethod
     def fingerprint_inputs(
-        cls, file, url="", num_frames=16, strategy="uniform", nth=1, seed=0, target_fps=0.0,
+        cls, file, num_frames=16, strategy="uniform", nth=1, seed=0, target_fps=0.0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
@@ -391,11 +254,6 @@ class LoadVideoUpload(io.ComfyNode):
         """The address, or when the chosen file was last written, so an edit is read again."""
         import folder_paths
 
-        address = (url or "").strip()
-        if address:
-            # The address itself, so a downloaded video is fetched once and read from the
-            # temp folder on every run after it.
-            return address
         # An empty name resolves to the input folder itself, which exists, so it is refused
         # before the folder is asked about it.
         chosen = (file or "").strip()
@@ -404,14 +262,14 @@ class LoadVideoUpload(io.ComfyNode):
         return os.path.getmtime(reader.input_path(file))
 
     @classmethod
-    def validate_inputs(cls, file, url=""):
+    def validate_inputs(cls, file):
         """Whether there is something to read: an address, or a file still in the folder."""
         import folder_paths
 
-        if (url or "").strip():
-            return True
         if not (file or "").strip():
-            return "nothing to load. Pick a video from the list, upload one, or paste an address into url"
+            return "nothing to load. Pick a video from the list, or upload one"
+        if sandbox.names_another_host(file):
+            return "a path naming another machine is not read"
         if not folder_paths.exists_annotated_filepath(file):
             return (
                 f"`{file}` is not in ComfyUI's input, output or temp folder. Pick "
@@ -421,22 +279,19 @@ class LoadVideoUpload(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, file, url="", num_frames=16, strategy="uniform", nth=1, seed=0, target_fps=0.0,
+        cls, file, num_frames=16, strategy="uniform", nth=1, seed=0, target_fps=0.0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
     ) -> io.NodeOutput:
-        """Read the chosen or downloaded video and hand on its frames, sound and measurements.
+        """Read the chosen video and hand on its frames, sound and measurements.
 
         Raises:
-            DependencyError: PyAV is not installed, or requests is not installed for a
-                download.
+            DependencyError: PyAV is not installed.
             PathNotAllowed: The file resolved outside every permitted read root.
-            ValueError: Nothing was chosen, ``features.network`` is off for an address, the
-                download failed, or no frame could be decoded.
+            ValueError: Nothing was chosen, or no frame could be decoded.
         """
-        address = (url or "").strip()
-        path = fetch(address) if address else reader.input_path(file)
+        path = reader.input_path(file)
         return load(
             path, num_frames, strategy, nth, seed, target_fps, resize_mode, width, height,
             start, end, max_size, interpolation, align, pad_color, channels,

@@ -7,7 +7,7 @@ import json
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_APP
-from ...modules.threejs.spec import require_spec
+from ...modules.threejs.spec import refuse_script, require_spec
 
 REQUIRES = "threejs"
 
@@ -55,5 +55,6 @@ class ThreeViewer(io.ComfyNode):
             ValueError: ``app`` is not an app descriptor.
         """
         require_spec(app, "app")
+        refuse_script(app, "Three Viewer")
         payload = {"app": app}
         return io.NodeOutput(ui={"three_app": [json.dumps(payload, separators=(",", ":"))]})

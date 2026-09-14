@@ -22,16 +22,21 @@ __all__ = [
     "FONT_DIR",
     "FONT_SUFFIXES",
     "LEGACY_FONT",
+    "PANTRY_SEED",
     "cascade_file",
     "data_directory",
     "font_catalog",
     "font_file",
     "font_names",
+    "pantry_seed",
     "user_font_directory",
 ]
 
 #: Subdirectory holding the OpenCV classifier cascades.
 CASCADE_DIR = "cascades"
+
+#: The Noodle Soup Prompts snapshot shipped with the pack, zlib-compressed JSON.
+PANTRY_SEED = "nsp_pantry.pack"
 
 #: Subdirectory holding fonts, under this package and under the config directory alike.
 FONT_DIR = "fonts"
@@ -302,6 +307,15 @@ def cascade_file(name: str) -> Path:
         ValueError: ``name`` is not a bundled cascade.
     """
     return _resolve(name, CASCADES, data_directory() / CASCADE_DIR)
+
+
+def pantry_seed() -> Path:
+    """Path to the bundled Noodle Soup Prompts snapshot.
+
+    Returns:
+        The packed terminology a fresh database is seeded from. Existence is not checked.
+    """
+    return data_directory() / PANTRY_SEED
 
 
 def _resolve(name: str, allowed: tuple[str, ...], directory: Path) -> Path:

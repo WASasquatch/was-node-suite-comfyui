@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **469** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **464** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-458 of them load in a fresh install. The other 11 wait behind a switch that starts off.
+457 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,8 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 343 |
-| [`features.network`](#featuresnetwork) | off | 4 |
+| [Always loaded](#always-loaded) | always on | 342 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -40,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-343 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+342 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (10)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -80,7 +79,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Text/Parse](#was-suitetextparse) (3)
 - [WAS Suite/Text/Search](#was-suitetextsearch) (5)
 - [WAS Suite/Text/Styles](#was-suitetextstyles) (5)
-- [WAS Suite/Text/Terminology](#was-suitetextterminology) (5)
+- [WAS Suite/Text/Terminology](#was-suitetextterminology) (4)
 - [WAS Suite/Text/Tokens](#was-suitetexttokens) (3)
 - [WAS Suite/Utilities](#was-suiteutilities) (10)
 - [WAS Suite/Workflow](#was-suiteworkflow) (1)
@@ -1150,7 +1149,7 @@ List what is in a folder: every full path on one wire, every name on another, an
 <details>
 <summary><b>Image Load</b></summary>
 
-Load an image chosen from a menu of every picture in ComfyUI's input, output and temp folders, and any folder listed under paths.allow_read in config.yaml. Upload one with the button and it is selected. A file tagged with a colour profile is converted to sRGB as it is read, or kept in its own space, and either way the profile comes out on its own socket. Download Image is the node for an address rather than a file. Anything that cannot be read gives a black 512x512 image so the rest of the workflow still runs.
+Load an image chosen from a menu of every picture in ComfyUI's input, output and temp folders, and any folder listed under paths.allow_read in config.yaml. Upload one with the button and it is selected. A file tagged with a colour profile is converted to sRGB as it is read, or kept in its own space, and either way the profile comes out on its own socket. Anything that cannot be read gives a black 512x512 image so the rest of the workflow still runs.
 
 | | |
 |---|---|
@@ -1401,7 +1400,7 @@ Load a video from ComfyUI's input folder and hand on everything in it at once: t
 <details>
 <summary><b>Load Video (Upload)</b></summary>
 
-Load a video and hand on everything in it at once: the video itself, its frames as an image batch, its sound, and how long it is. Upload a file with the button on the node and play it back there, or paste a web address into url and the file is downloaded to ComfyUI's temp folder first. Downloading needs features.network on in config.yaml. Frames are chosen and sized exactly as Load Video beside it does them, 16 of them unless told otherwise.
+Load a video and hand on everything in it at once: the video itself, its frames as an image batch, its sound, and how long it is. Upload a file with the button on the node and play it back there. Frames are chosen and sized exactly as Load Video beside it does them, 16 of them unless told otherwise.
 
 | | |
 |---|---|
@@ -1411,8 +1410,7 @@ Load a video and hand on everything in it at once: the video itself, its frames 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which video to read, from ComfyUI's input folder. The button below uploads one and selects it, and the player shows what is selected. Ignored while url holds an address. |
-| `url` | `STRING` | Yes |  |  | A web address to download the video from instead, such as https://example.com/clip.mp4. It lands in ComfyUI's temp folder and is fetched once, then read from there. Needs features.network on in config.yaml. Empty reads the file chosen above. |
+| `file` | `COMBO` | Yes |  |  | Which video to read, from ComfyUI's input folder. The button below uploads one and selects it, and the player shows what is selected. |
 | `num_frames` | `INT` | Yes | 16 |  | How many frames to keep, chosen by the strategy below. 16 by default; a clip can hold thousands and a batch is one tensor in memory. 0 takes every frame in the range, up to the 4096 ceiling. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. uniform gives a contact sheet of a whole clip, head gives a run that plays. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
@@ -10399,34 +10397,6 @@ Read a Noodle Soup Prompts pantry file into the stored pantry, so a terminology 
 
 </details>
 
-<a id="node-wasnoodlesouppantryrefresh"></a>
-<details>
-<summary><b>Noodle Soup Pantry Refresh</b></summary>
-
-Fetch the published Noodle Soup Prompts pantry and merge it into the stored one. Words you added are kept, words you removed are not put back, and a terminology of your own is untouched. The download is checked in full before anything is stored, so a failed fetch changes nothing. Needs features.network on in config.yaml.
-
-| | |
-|---|---|
-| Node id | `WASNoodleSoupPantryRefresh` |
-| Output node | Yes, it runs even with nothing wired after it |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `mode` | `COMBO` | Yes |  | `check what is new`, `merge it in` | `check what is new` downloads the published pantry and reports what a merge would change, storing nothing. `merge it in` stores the merged result. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `report` | `STRING` | What the merge did, or would do, as one line per figure. Eg: 'terms added 2'. |
-| `terms_added` | `INT` | Terminologies the published pantry has that the stored one did not. |
-| `entries_added` | `INT` | Words the published pantry has that the stored one did not. |
-| `yours_kept` | `INT` | Words kept that the published pantry no longer has, which are the ones added here. |
-
-</details>
-
 <a id="node-wasnoodlesouppick"></a>
 <details>
 <summary><b>Noodle Soup Pick</b></summary>
@@ -10461,7 +10431,7 @@ Choose words out of the Noodle Soup Prompts pantry and answer them as a list, as
 <details>
 <summary><b>Noodle Soup Term Edit</b></summary>
 
-Add words to a Noodle Soup Prompts terminology, take words out of one, or make a terminology of your own, so __your_term__ draws from your own list in Text Parse Noodle Soup Prompts and Prompt Parse. Entries you add are kept apart from the ones the published pantry supplied, and Noodle Soup Pantry Refresh never removes them.
+Add words to a Noodle Soup Prompts terminology, take words out of one, or make a terminology of your own, so __your_term__ draws from your own list in Text Parse Noodle Soup Prompts and Prompt Parse. Entries you add are kept apart from the ones the bundled pantry supplied, and a later release of that pantry never removes them.
 
 | | |
 |---|---|
@@ -10865,136 +10835,6 @@ Run a workflow saved in app mode as a single node. Its exposed inputs become val
 | `output_2` | `*` | The second result the workflow presents; any type. It carries whatever feeds that node, so a workflow ending in a Preview Image answers the IMAGE itself, and choosing a workflow renames this socket to what it carries. |
 | `output_3` | `*` | The third result the workflow presents; any type. It carries whatever feeds that node, so a workflow ending in a Preview Image answers the IMAGE itself, and choosing a workflow renames this socket to what it carries. |
 | `output_4` | `*` | The fourth result the workflow presents; any type. It carries whatever feeds that node, so a workflow ending in a Preview Image answers the IMAGE itself, and choosing a workflow renames this socket to what it carries. |
-
-</details>
-
----
-
-## `features.network`
-
-4 nodes. Off in a fresh install: set `features.network: true` in `config.yaml` and restart ComfyUI to load these.
-
-### WAS Suite/IO
-
-<a id="node-wasdownloadimage"></a>
-<details>
-<summary><b>Download Image</b></summary>
-
-Fetch an image from an http or https address and hand it on as a picture, a mask, its name and its colour profile, the same four things Image Load answers with. A file tagged with a colour profile is converted to sRGB as it is read, or kept in its own space. This node is in the network group, so it only appears with features.network on in config.yaml, and it is the only node in the pack that fetches a picture.
-
-| | |
-|---|---|
-| Node id | `WASDownloadImage` |
-| Enable with | `features.network: true` in `config.yaml` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `url` | `STRING` | Yes |  |  | The address to fetch, such as 'https://example.com/photo.jpg'. It is read on every run, since nothing on the wire says whether it has changed. |
-| `RGBA` | `BOOLEAN` | Yes | False |  | `off` discards any transparency and hands on a plain colour image, which is what samplers and most nodes expect; `on` keeps the transparency channel in the image itself. The mask output is produced either way. |
-| `filename_text_extension` | `BOOLEAN` | No | True |  | Whether the filename_text output keeps the extension. On = 'cat.png', off = 'cat'. The name is the last part of the address. |
-| `colour_space` | `COMBO` | No | sRGB |  | Which colour space the picture comes out in. "the file's own" leaves a tagged file exactly as it was written. 'sRGB' is what a sampler, a filter and a LUT expect. The rest, such as 'Adobe RGB (1998)' and 'Display P3', are for a photograph that goes back out in its own space. |
-| `icc_mode` | `COMBO` | No |  | `convert`, `assign` | What to do with the space above. 'convert' changes the numbers so the colour stays put, which is what a photograph wants. 'assign' leaves the numbers alone and says they were in that space all along, which is how an untagged file that is really Display P3 is put right. Ignored for "the file's own". |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `image` | `IMAGE` | The picture that was fetched, as a batch of one. |
-| `mask` | `MASK` | The image's transparency as a mask, with the transparent parts white and the opaque parts black. An image with no transparency gives an empty 64x64 mask. |
-| `filename_text` | `STRING` | The last part of the address, for reuse as a caption or a save prefix. |
-| `profile` | `WAS_COLOUR_PROFILE` | The colour profile the file was tagged with, such as Adobe RGB (1998). Wire it into Image Save to write the result back in that space rather than in sRGB. Empty for a file carrying no profile. |
-
-</details>
-
-<a id="node-image-send-http"></a>
-<details>
-<summary><b>Image Send HTTP</b></summary>
-
-Send the images to an HTTP endpoint as a multipart upload. This node makes an outbound request with the image data, so it is only loaded when features.network is enabled.
-
-| | |
-|---|---|
-| Node id | `Image Send HTTP` |
-| Enable with | `features.network: true` in `config.yaml` |
-| Output node | Yes, it runs even with nothing wired after it |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `images` | `IMAGE` | Yes |  |  | The images to upload. Every image in the batch is encoded as a PNG and sent in the same request, named 'image_0.png', 'image_1.png' and so on. |
-| `url` | `STRING` | Yes | example.com |  | Full address the images are sent to, e.g. 'https://example.com/api/upload'. The default is a placeholder and has to be replaced. |
-| `method_type` | `COMBO` | Yes | post | `post`, `put`, `patch` | Which HTTP verb the request uses. `post` is the usual choice for an upload; pick `put` or `patch` if the receiving endpoint asks for one of those. |
-| `request_field_name` | `STRING` | Yes | image |  | Name of the form field the files are attached under. It has to match whatever the receiving endpoint expects, often 'image' or 'file'. |
-| `additional_request_headers` | `DICT` | No |  |  | Extra HTTP headers to send, as a dictionary of names to values, an 'Authorization' entry for an endpoint that needs a token, for instance. Disconnected, only the default headers are sent. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `status_code` | `INT` | The HTTP status the endpoint answered with: 200 or 201 for success, 401 for a rejected token, 404 for a wrong address, 500 for a fault at the far end. |
-| `result_text` | `STRING` | The body of the endpoint's reply, as text, often JSON holding an id or a link for the uploaded image. |
-
-</details>
-
-### WAS Suite/Number
-
-<a id="node-true-randomorg-number-generator"></a>
-<details>
-<summary><b>True Random.org Number Generator</b></summary>
-
-Draw a true random integer from RANDOM.ORG, which derives it from atmospheric noise rather than a pseudo-random generator. Requires a free API key from https://api.random.org and an internet connection; without one the node emits 0.
-
-| | |
-|---|---|
-| Node id | `True Random.org Number Generator` |
-| Enable with | `features.network: true` in `config.yaml` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `api_key` | `STRING` | Yes | 00000000-0000-0000-0000-000000000000 |  | A RANDOM.ORG API key, free from https://api.random.org, in the form of a UUID. The all-zero default is a placeholder: while it is there, no request is sent and the node reports the missing key and emits 0. |
-| `minimum` | `FLOAT` | Yes | 0 |  | The lowest number that can be drawn, itself included. Any fraction is cut off first, since the service only draws whole numbers. |
-| `maximum` | `FLOAT` | Yes | 10000000 |  | The highest number that can be drawn, itself included. Any fraction is cut off first. A range the service will not accept comes back as 0, with the refusal in the log. |
-| `mode` | `COMBO` | Yes |  | `random`, `fixed` | How often a new number is fetched. `random` asks the service for a fresh one on every prompt. `fixed` keeps handing out the number already drawn until the key or one of the bounds changes, which saves requests while the rest of a workflow is being tuned. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `<output0>` | `NUMBER` | The drawn whole number, or 0 when no key was given or the service did not answer. |
-| `<output1>` | `FLOAT` | The same number as a decimal, so 42 leaves here as 42.0. |
-| `<output2>` | `INT` | The same number on an INT socket, for a seed widget. |
-
-</details>
-
-### WAS Suite/Text
-
-<a id="node-text-random-prompt"></a>
-<details>
-<summary><b>Text Random Prompt</b></summary>
-
-Search lexica.art and return the prompt of one random result. An empty search term picks a subject at random. Needs an internet connection.
-
-| | |
-|---|---|
-| Node id | `Text Random Prompt` |
-| Enable with | `features.network: true` in `config.yaml` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `search_seed` | `STRING` | Yes |  |  | Subject to search lexica.art for, for example 'cyberpunk city'. Left empty, one of portrait, landscape, anime, superhero, animal, nature or scenery is searched for instead. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `<output0>` | `STRING` | The prompt of one random image the search matched. Reads '404 not found error' when the search returned nothing or the site could not be reached. |
 
 </details>
 

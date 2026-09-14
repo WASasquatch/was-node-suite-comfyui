@@ -22,7 +22,7 @@ HISTORY_KEY = "TextFiles"
 EMPTY = "No History"
 
 #: Widget value that keeps the dictionary keyed on the file's own name.
-FILENAME_TOKEN = "[filename]"
+FILENAME_KEYWORD = "[filename]"
 
 #: Seconds a combo option list is reused for before the history is read again.
 OPTIONS_TTL = 1.0
@@ -145,7 +145,7 @@ class TextFileHistoryLoader(io.ComfyNode):
         file_path = recent.get(entry) or labelled_history().get(entry, entry)
         base = os.path.basename(file_path)
         name = base.split(".", 1)[0] if "." in base else base
-        if dictionary_name != FILENAME_TOKEN:
+        if dictionary_name != FILENAME_KEYWORD:
             name = dictionary_name
 
         # A selection the history does not list maps to itself.

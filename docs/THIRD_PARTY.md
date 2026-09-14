@@ -37,6 +37,12 @@ Counting every file rather than every component, the pack carries 128 third-part
 of the repository: browser libraries, fonts, the eight face cascades, two sets of weights and
 one network.
 
+## Verifying a copy
+
+`web/vendor/MANIFEST.json` records a SHA-256 for every file under `web/vendor/`, with the npm
+package and version each directory was taken from. Fetch that package and compare digests to
+confirm a copy is unmodified.
+
 ## Where DOMPurify sits
 
 DOMPurify is not a file of its own. It is compiled into three files, each carrying DOMPurify's own

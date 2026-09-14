@@ -24,6 +24,12 @@ ESCAPED = re.compile(r"\\\[[^\]]*\]")
 #: cannot occur in a widget value, which carries text a person typed.
 HOLD = "\x00was-escape-{0}\x00"
 
+#: Longest a value may grow to while its tokens are replaced. A token whose value names
+#: another token is replaced again by every later token in the pass, so a short value can
+#: grow by a multiple on each one.
+MAX_EXPANDED = 1 << 20
+
+
 class TextTokens:
     """The token table for one execution.
 
@@ -119,6 +125,12 @@ class TextTokens:
             # \U escape and a value holding \1 is a group reference, and the value cannot
             # be escaped the way the pattern is, being the text to insert.
             text = pattern.sub(lambda match, replacement=value: replacement, text)
+            if len(text) > MAX_EXPANDED:
+                raise ValueError(
+                    f"expanding tokens grew the text past {MAX_EXPANDED} characters at "
+                    f"{token}. A token whose value names another token grows on every "
+                    f"replacement; give one of them a plain value."
+                )
 
         def replace_custom_time(match):
             format_code = match.group(1)

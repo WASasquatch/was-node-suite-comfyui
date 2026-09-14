@@ -9,6 +9,7 @@ __all__ = [
     "DELIVERED",
     "FAILED",
     "MAX_FRAMES",
+    "MAX_FRAME_BYTES",
     "ROUTE",
     "TIMED_OUT",
     "deliver",
@@ -45,6 +46,9 @@ MAX_JOBS = 16
 #: Most frames one job may ask for.
 MAX_FRAMES = 512
 
+#: Largest one delivered frame may be, in bytes.
+MAX_FRAME_BYTES = 64 * 1024 * 1024
+
 _jobs: dict[str, dict] = {}
 _lock = Lock()
 
@@ -77,8 +81,15 @@ def file_job(
 
     Returns:
         The token the job is claimed and answered by.
+
+    Raises:
+        ValueError: The scene carries browser code and ``threejs.allow_scripts`` is off.
     """
+    from ..threejs.spec import refuse_script
+
+    refuse_script(app, "This render")
     token = uuid.uuid4().hex
+    client = _asking_client()
     with _lock:
         while len(_jobs) >= MAX_JOBS:
             oldest = min(_jobs, key=lambda key: _jobs[key]["filed"])
@@ -97,6 +108,7 @@ def file_job(
             "total": int(progress_total) or len(times),
             "done": 0,
             "note": "",
+            "client": client,
             "claimed": False,
             "frames": {kind: {} for kind in PASSES},
             "error": "",
@@ -104,16 +116,33 @@ def file_job(
     return token
 
 
-def pending() -> list[dict]:
-    """The jobs no browser has claimed yet, and claim them.
+def _asking_client() -> str:
+    """The client id of the prompt being run, or ``""`` outside one."""
+    try:
+        from server import PromptServer
+
+        return str(getattr(PromptServer.instance, "client_id", "") or "")
+    except Exception:
+        return ""
+
+
+def pending(client: str = "") -> list[dict]:
+    """The jobs this browser has not claimed yet, and claim them.
+
+    Args:
+        client: The asking browser's ComfyUI client id. A job filed for another client is
+            not offered, so a token never reaches a caller the prompt did not come from.
 
     Returns:
         One entry per job, each with its token, descriptor, frame size and moments.
     """
     taken = []
+    asking = str(client or "").strip()
     with _lock:
         for token, job in _jobs.items():
             if job["claimed"] or any(job["frames"].values()):
+                continue
+            if job["client"] and job["client"] != asking:
                 continue
             job["claimed"] = True
             taken.append({
@@ -152,9 +181,16 @@ def deliver(
         if error:
             job["error"] = error
             return True
+        place = int(index)
+        # A frame belongs to a moment the job asked for, and is no larger than one frame.
+        if place < 0 or place >= len(job["times"]):
+            return False
         for kind, body in bodies.items():
-            if kind in job["frames"] and body is not None:
-                job["frames"][kind][int(index)] = body
+            if kind not in job["frames"] or body is None:
+                continue
+            if len(body) > MAX_FRAME_BYTES:
+                return False
+            job["frames"][kind][place] = body
     return True
 
 
@@ -283,8 +319,9 @@ def register_routes() -> bool:
 
         @PromptServer.instance.routes.get(ROUTE)
         async def get_render_jobs(request):
+            asking = str(request.query.get("client_id", "")).strip()
             return web.json_response(
-                {"jobs": pending()}, headers={"Cache-Control": "no-store"}
+                {"jobs": pending(asking)}, headers={"Cache-Control": "no-store"}
             )
 
         @PromptServer.instance.routes.post(ROUTE)

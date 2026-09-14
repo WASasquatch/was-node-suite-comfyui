@@ -16,7 +16,6 @@ const SETTING_ID = "WAS.PromptLibrary.ShowReport";
 // The nodes this draws on.
 const NODES = [
   "WASNoodleSoupTermEdit",
-  "WASNoodleSoupPantryRefresh",
   "WASNoodleSoupPantryImport",
   "WASNoodleSoupPantryExport",
   "WASPromptStyleSave",

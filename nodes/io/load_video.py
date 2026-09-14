@@ -11,6 +11,7 @@ from ...modules.compat import limits
 from ...modules.compat.types import WAS_VIDEO_METADATA
 from ...modules.image import sizing
 from ...modules.media import reader, sampling
+from ...modules.util import sandbox
 
 logger = log.get_logger("nodes.io")
 
@@ -374,6 +375,8 @@ class LoadVideo(io.ComfyNode):
 
         if not (file or "").strip():
             return "no video was chosen. Pick one from the list, or upload one with the button"
+        if sandbox.names_another_host(file):
+            return "a path naming another machine is not read"
         if not folder_paths.exists_annotated_filepath(file):
             return (
                 f"`{file}` is not in ComfyUI's input, output or temp folder. Pick "

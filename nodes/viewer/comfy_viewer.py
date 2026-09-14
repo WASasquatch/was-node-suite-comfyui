@@ -68,7 +68,7 @@ def input_hash(values) -> str:
     combined = "".join(to_string(value) for value in values or () if value is not None)
     if not combined:
         return ""
-    return hashlib.md5(combined.encode("utf-8", errors="replace")).hexdigest()
+    return hashlib.md5(combined.encode("utf-8", errors="replace"), usedforsecurity=False).hexdigest()
 
 
 def content_hash(source: str) -> str:
