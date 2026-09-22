@@ -29,6 +29,21 @@ function waiting(node) {
 }
 
 /**
+ * Publish the held state to both canvas and reactive widget renderers.
+ *
+ * @param {object} node - The node whose buttons need updating.
+ * @returns {void}
+ */
+function updateButtons(node) {
+  const disabled = !waiting(node);
+  for (const widget of node.widgets ?? []) {
+    if (widget.name === "was_pause_resume" || widget.name === "was_pause_cancel") {
+      widget.disabled = disabled;
+    }
+  }
+}
+
+/**
  * Let a held node carry on.
  *
  * @param {object} node - The node to release.
@@ -81,6 +96,7 @@ function redraw(nodeId) {
     ?? app.graph?.getNodeById?.(nodeId);
   if (node) {
     const held = waiting(node);
+    updateButtons(node);
     node.color = held ? "#7a5a1e" : undefined;
     node.__was_viewer_held = held;
     node.__was_paint_hold?.();
@@ -128,14 +144,13 @@ app.registerExtension({
           name: "was_pause_resume",
           label: "▶ Resume",
           onClick: (node) => release(node, "resume"),
-          disabled: (node) => !waiting(node),
         });
         addButton(this, {
           name: "was_pause_cancel",
           label: "✕ Cancel run",
           onClick: (node) => release(node, "cancel"),
-          disabled: (node) => !waiting(node),
         });
+        updateButtons(this);
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to add the resume controls:`, error);
       }
