@@ -14,15 +14,15 @@ logger = get_logger("nodes.extras.debug")
 PLAIN_TYPES = (str, int, float, bool, list, dict, tuple)
 
 
-class DebugInput(io.ComfyNode):
+class WASDebugInput(io.ComfyNode):
     """Show what is actually travelling down a wire."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="DebugInput",
+            node_id="WASDebugInput",
             display_name="Debug Input",
-            search_aliases=["DebugInput", "WAS Extras", "print", "inspect", "debug any"],
+            search_aliases=["WASDebugInput", "WAS Extras", "print", "inspect", "debug any"],
             category="WAS Suite/Debug",
             description=(
                 "Print whatever is connected to it to the console, and for anything that is "

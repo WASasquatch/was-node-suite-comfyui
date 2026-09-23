@@ -8,7 +8,7 @@
 import { api } from "../../../scripts/api.js";
 import { fetchWithin } from "./request.js";
 import { app } from "../../../scripts/app.js";
-import { executionId, nodeLocator } from "./preview.js";
+import { executionId, nodeLocator, placed } from "./preview.js";
 
 const LOG_NAME = "WASNodeSuite.ComfyMaskEditor";
 
@@ -103,7 +103,7 @@ function report(detail) {
  */
 function previewUrl(node) {
   const id = executionId(node);
-  if (!id) return "";
+  if (!placed(id)) return "";
   return api.apiURL(
     `${PREVIEW_ROUTE}?node_id=${encodeURIComponent(id)}&side=output`
       + `&filename=${encodeURIComponent(SOURCE_FILENAME)}`

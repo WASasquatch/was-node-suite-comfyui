@@ -132,7 +132,10 @@ def clone_iteration(dynprompt, start_id, end_id, next_values, end_class_type):
         if node_id not in clones:
             node_info = dynprompt.get_node(node_id)
             inputs = {name: remapped(value) for name, value in node_info["inputs"].items()}
-            clones[node_id] = graph.node(node_info["class_type"], **inputs)
+            # The clone keeps the copied node's id under this iteration's prefix, and draws on it.
+            clone = graph.node(node_info["class_type"], node_id, **inputs)
+            clone.set_override_display_id(node_id)
+            clones[node_id] = clone
         return clones[node_id]
 
     for node_id in body_ids:
@@ -140,5 +143,9 @@ def clone_iteration(dynprompt, start_id, end_id, next_values, end_class_type):
             clone_of(node_id)
 
     end_inputs = dynprompt.get_node(end_id)["inputs"]
-    end_node = graph.node(end_class_type, **{name: remapped(value) for name, value in end_inputs.items()})
+    end_node = graph.node(
+        end_class_type, end_id,
+        **{name: remapped(value) for name, value in end_inputs.items()},
+    )
+    end_node.set_override_display_id(end_id)
     return graph.finalize(), end_node

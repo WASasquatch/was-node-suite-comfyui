@@ -65,16 +65,16 @@ def keyframes_for(kind: str, frame_count: int, conditioning_count: int) -> list:
     raise ValueError("Unsupported cond_keyframes_type: " + kind)
 
 
-class CLIPTextEncodeSequence2(io.ComfyNode):
+class WASCLIPTextEncodeSequence2(io.ComfyNode):
     """Encode a list of prompts and schedule when each one takes over."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="CLIPTextEncodeSequence2",
+            node_id="WASCLIPTextEncodeSequence2",
             display_name="CLIP Text Encode Sequence (v2)",
             search_aliases=[
-                "CLIPTextEncodeSequence2",
+                "WASCLIPTextEncodeSequence2",
                 "CLIP Text Encode Sequence (v2)",
                 "prompt schedule",
                 "prompt travel",
@@ -84,8 +84,8 @@ class CLIPTextEncodeSequence2(io.ComfyNode):
             description=(
                 "Encode one prompt per line and work out the frame each one takes over on, "
                 "spread across the length of the run. The three outputs plug straight into "
-                "KSamplerSeq2's positive_seq or negative_seq, cond_keyframes and "
-                "frame_count, so a prompt list becomes an animation schedule with no "
+                "KSampler Sequence (v2)'s positive_seq or negative_seq, cond_keyframes "
+                "and frame_count, so a prompt list becomes an animation schedule with no "
                 "numbers typed by hand."
             ),
             inputs=[
@@ -157,21 +157,22 @@ class CLIPTextEncodeSequence2(io.ComfyNode):
                     display_name="conditioning_sequence",
                     tooltip=(
                         "Every prompt, encoded, in the order they were written. Wire it into "
-                        "KSamplerSeq2's positive_seq or negative_seq."
+                        "KSampler Sequence (v2)'s positive_seq or negative_seq."
                     ),
                 ),
                 io.Int.Output(
                     display_name="cond_keyframes",
                     tooltip=(
                         "The frames at which the run steps to the next prompt. Wire it into "
-                        "KSamplerSeq2's cond_keyframes."
+                        "KSampler Sequence (v2)'s cond_keyframes."
                     ),
                 ),
                 io.Int.Output(
                     display_name="frame_count",
                     tooltip=(
                         "The frame count as it was given, passed straight through so one wire "
-                        "carries it to KSamplerSeq2 rather than the number being typed twice."
+                        "carries it to KSampler Sequence (v2) rather than the number being "
+                        "typed twice."
                     ),
                 ),
             ],

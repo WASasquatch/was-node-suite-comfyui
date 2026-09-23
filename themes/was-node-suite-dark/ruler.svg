@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+  <g stroke="#a2d299" stroke-opacity="0.10" stroke-width="1">
+    <path d="M0 0.5 H80"/>
+    <path d="M0.5 0 V80"/>
+  </g>
+  <g stroke="#a2d299" stroke-opacity="0.26" stroke-width="1">
+    <path d="M0 0.5 H10"/>
+    <path d="M70 0.5 H80"/>
+    <path d="M0.5 0 V10"/>
+    <path d="M0.5 70 V80"/>
+  </g>
+  <g stroke="#a2d299" stroke-opacity="0.14" stroke-width="1">
+    <path d="M20 0.5 H22"/>
+    <path d="M40 0.5 H42"/>
+    <path d="M60 0.5 H62"/>
+    <path d="M0.5 20 V22"/>
+    <path d="M0.5 40 V42"/>
+    <path d="M0.5 60 V62"/>
+  </g>
+</svg>

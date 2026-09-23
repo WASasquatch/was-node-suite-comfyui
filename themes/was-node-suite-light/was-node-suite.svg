@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="340 680 1368 744" role="img" aria-labelledby="title desc">
+  <title id="title">WAS W logo</title>
+  <desc id="desc">Clean vector recreation of the rounded W logo with a light beveled face and subtle lower depth.</desc>
+
+  <defs>
+    <path id="logo-shape" d="
+      M 440 706
+      L 557 706
+      C 597 706 630 739 630 780
+      L 630 1036
+      C 630 1049 640 1059 653 1059
+      L 870 1059
+      C 883 1059 893 1049 893 1036
+      L 893 780
+      C 893 739 926 706 967 706
+      L 1082 706
+      C 1123 706 1156 739 1156 780
+      L 1156 1036
+      C 1156 1049 1166 1059 1179 1059
+      L 1397 1059
+      C 1410 1059 1420 1049 1420 1036
+      L 1420 780
+      C 1420 739 1453 706 1494 706
+      L 1608 706
+      C 1649 706 1681 739 1681 780
+      L 1681 1110
+      C 1681 1157 1643 1195 1596 1195
+      L 1532 1195
+      C 1517 1195 1505 1207 1505 1222
+      L 1505 1296
+      C 1505 1337 1472 1370 1431 1370
+      L 1142 1370
+      C 1101 1370 1068 1337 1068 1296
+      L 1068 1212
+      C 1068 1200 1058 1190 1046 1190
+      L 1002 1190
+      C 990 1190 980 1200 980 1212
+      L 980 1296
+      C 980 1337 947 1370 906 1370
+      L 617 1370
+      C 576 1370 543 1337 543 1296
+      L 543 1222
+      C 543 1207 531 1195 516 1195
+      L 452 1195
+      C 405 1195 367 1157 367 1110
+      L 367 780
+      C 367 739 399 706 440 706
+      Z"/>
+
+    <clipPath id="face-clip">
+      <use href="#logo-shape"/>
+    </clipPath>
+
+    <linearGradient id="face" x1="0" y1="706" x2="0" y2="1370" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#202b1a"/>
+      <stop offset="0.32" stop-color="#1c2617"/>
+      <stop offset="1" stop-color="#1a2415"/>
+    </linearGradient>
+
+    <linearGradient id="edge" x1="0" y1="706" x2="0" y2="1370" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3c4f32"/>
+      <stop offset="0.42" stop-color="#35462c"/>
+      <stop offset="0.72" stop-color="#2a3823"/>
+      <stop offset="1" stop-color="#1e2918"/>
+    </linearGradient>
+  </defs>
+
+  <use href="#logo-shape" transform="translate(0 26)" fill="#5c7352"/>
+  <use href="#logo-shape" fill="url(#face)"/>
+  <use href="#logo-shape" fill="none" stroke="url(#edge)" stroke-width="34" stroke-linejoin="round" clip-path="url(#face-clip)"/>
+</svg>

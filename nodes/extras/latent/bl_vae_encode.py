@@ -147,10 +147,10 @@ class BundleLatentVAEEncode(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="BLVAEEncode",
+            node_id="WASBLVAEEncode",
             display_name="VAEEncode (Bundle Latent)",
             search_aliases=[
-                "BLVAEEncode",
+                "WASBLVAEEncode",
                 "VAEEncode (Bundle Latent)",
                 "bundle latent",
                 "vae encode",

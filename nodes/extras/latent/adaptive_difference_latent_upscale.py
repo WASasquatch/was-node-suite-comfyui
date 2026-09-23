@@ -233,10 +233,10 @@ class AdaptiveDifferenceLatentUpscale(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WAS_AdaptiveDifferenceLatentUpscale",
+            node_id="WASNSAdaptiveDifferenceLatentUpscale",
             display_name="WAS Adaptive Difference Latent Upscale (Damped)",
             search_aliases=[
-                "WAS_AdaptiveDifferenceLatentUpscale",
+                "WASNSAdaptiveDifferenceLatentUpscale",
                 "WAS Adaptive Difference Latent Upscale (Damped)",
                 "adaptive latent upscale",
                 "latent upscale",

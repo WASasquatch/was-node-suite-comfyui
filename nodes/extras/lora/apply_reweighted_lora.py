@@ -36,10 +36,10 @@ class ApplyReweightedLoRA(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASApplyReweightedLoRA",
+            node_id="WASNSApplyReweightedLoRA",
             display_name="Apply Reweighted LoRA",
             search_aliases=[
-                "WASApplyReweightedLoRA",
+                "WASNSApplyReweightedLoRA",
                 "WAS Apply Reweighted LoRA",
                 "WAS Extras",
                 "lora block weight",

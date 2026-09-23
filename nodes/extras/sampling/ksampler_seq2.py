@@ -96,10 +96,10 @@ class KSamplerSequence2(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="KSamplerSeq2",
+            node_id="WASKSamplerSeq2",
             display_name="KSampler Sequence (v2)",
             search_aliases=[
-                "KSamplerSeq2",
+                "WASKSamplerSeq2",
                 "KSampler Sequence (v2)",
                 "prompt travel",
                 "animation sampler",
@@ -109,8 +109,9 @@ class KSamplerSequence2(io.ComfyNode):
             description=(
                 "Run the sampler once per frame and stack the results into one latent "
                 "batch, stepping to the next prompt whenever the frame is one of the "
-                "keyframes. Built to be driven by CLIPTextEncodeSequence2, which produces "
-                "the prompt list, the keyframe schedule and the frame count together. "
+                "keyframes. Built to be driven by CLIP Text Encode Sequence (v2), which "
+                "produces the prompt list, the keyframe schedule and the frame count "
+                "together. "
                 "Noise injection, a swinging denoise and a keyed seed are all here to keep "
                 "a long run moving instead of settling on one image."
             ),
@@ -200,9 +201,9 @@ class KSamplerSequence2(io.ComfyNode):
                     max=1024,
                     step=1,
                     tooltip=(
-                        "How many frames to render. Wire it from CLIPTextEncodeSequence2's "
-                        "frame_count output. At 0, or with no keyframes connected, the run is "
-                        "one frame per prompt instead."
+                        "How many frames to render. Wire it from CLIP Text Encode Sequence "
+                        "(v2)'s frame_count output. At 0, or with no keyframes connected, "
+                        "the run is one frame per prompt instead."
                     ),
                 ),
                 io.Int.Input(
@@ -213,16 +214,16 @@ class KSamplerSequence2(io.ComfyNode):
                     step=1,
                     tooltip=(
                         "The frame numbers at which the run steps to the next prompt. Wire it "
-                        "from CLIPTextEncodeSequence2's cond_keyframes output, which builds "
-                        "the whole schedule; a single number here means one changeover at "
-                        "that frame."
+                        "from CLIP Text Encode Sequence (v2)'s cond_keyframes output, which "
+                        "builds the whole schedule; a single number here means one "
+                        "changeover at that frame."
                     ),
                 ),
                 io.Conditioning.Input(
                     "positive_seq",
                     tooltip=(
-                        "The list of positive prompts to work through, from "
-                        "CLIPTextEncodeSequence2. One plain conditioning also works and is "
+                        "The list of positive prompts to work through, from CLIP Text "
+                        "Encode Sequence (v2). One plain conditioning also works and is "
                         "then used for every frame."
                     ),
                 ),

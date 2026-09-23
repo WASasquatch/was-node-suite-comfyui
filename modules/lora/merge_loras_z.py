@@ -712,6 +712,8 @@ def _infer_block_mix_preset(prefixes: List[str]) -> str:
     for p in prefixes:
         if p.startswith("diffusion_model.layers."):
             return "zimg-turbo"
+        if p.startswith("diffusion_model.blocks.") or p.startswith("diffusion_model.token_refiner."):
+            return "dit"
         if p.startswith("lora_unet_double_blocks_") or p.startswith("lora_unet_single_blocks_"):
             return "flux"
         if p.startswith("lora_unet_blocks_"):
@@ -753,6 +755,15 @@ def _block_mix_role(prefix: str, preset: str) -> str:
         if ".attn." in p:
             return "concept"
         if ".mlp." in p or "_mlp" in p:
+            return "style"
+        return "concept"
+
+    if preset == "dit":
+        if "adaln" in p or "modulation" in p or ".norm" in p:
+            return "style"
+        if ".attn." in p:
+            return "concept"
+        if ".mlp." in p or ".ffn." in p or ".feed_forward." in p:
             return "style"
         return "concept"
 

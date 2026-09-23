@@ -1,7 +1,7 @@
 /**
  * Saved v2 widget values, put back on the widget they were written for.
  *
- * `V2_WIDGET_ORDER` holds each node's v2 widget order. `V2_BOOLEAN_WIDGETS` names widgets that
+ * `V2_WIDGET_ORDER` holds each node's earlier widget order. `V2_BOOLEAN_WIDGETS` names widgets that
  * took the strings "false" and "true" before becoming a checkbox.
  */
 
@@ -10,10 +10,13 @@ import { migrateWidgetValues } from "./interface/widget_migration.js";
 
 const EXT_NAME = "WASNodeSuite.WidgetMigration";
 
-// Node id -> the widgets a v2 save's `widgets_values` holds, in the order it holds them. Read
+// Node id -> the widgets an earlier save's `widgets_values` holds, in the order it holds them. Read
 // left to right against the node's current widgets: anything the node has that is not named here
 // is new, and takes its default rather than a value that was meant for the widget before it.
 const V2_WIDGET_ORDER = {
+  // Three Custom Material took a typed body before it took a module file. The saved body is
+  // dropped rather than landing on the module menu.
+  "WASThreeCustomMaterial": ["javascript", "module"],
   "WASImageGradientMapNative": ["flip_left_right"],
   "Image SSAO (Ambient Occlusion)": [
     "strength",
@@ -56,6 +59,14 @@ const V2_WIDGET_ORDER = {
   "Text Sort": ["separator"],
   "Text String Truncate": ["truncate_by", "truncate_from", "truncate_to"],
   "Text to Console": ["label"],
+  // MiniMax H3 Conditioning gained a continuity menu on each row, after that row's overlap.
+  "WASMiniMaxH3Conditioning": [
+    "mode", "aspect_ratio", "megapixels", "width", "height",
+    "prompt_header", "prompt_footer",
+    ...Array.from({ length: 24 }, (unused, index) => [
+      `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
+    ]).flat(),
+  ],
 };
 
 // Node id -> widgets that took the strings "false" and "true" before becoming a checkbox. A

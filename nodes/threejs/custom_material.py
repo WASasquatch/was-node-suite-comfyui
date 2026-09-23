@@ -1,25 +1,31 @@
-"""A surface built by hand-written JavaScript."""
+"""A surface built by a Three.js module file."""
 
 from __future__ import annotations
 
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_MATERIAL, THREE_TEXTURE
+from ...modules.threejs import module_file
 from ...modules.threejs.spec import compact_deps, create_spec
 
 REQUIRES = "threejs"
 
-DEFAULT_BODY = (
-    'return new THREE.MeshStandardMaterial({color: "#ffffff", roughness: 0.35, metalness: 0.1});'
+TEXTURE_TOOLTIP = (
+    "A texture the module receives under the name its header declares. The first declared "
+    "texture arrives here, the second in the slot below, and so on."
 )
 
-TEXTURE_TOOLTIP = (
-    "A texture reachable in the body as `texture1` through `texture4`, by the slot it fills."
-)
+#: Textures a material module may declare, which is how many slots this node draws.
+SLOTS = 4
+
+
+def options() -> list[str]:
+    """The module menu's entries."""
+    return module_file.options()
 
 
 class ThreeCustomMaterial(io.ComfyNode):
-    """Build a material from a JavaScript body."""
+    """Build a material from a module file."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
@@ -31,25 +37,29 @@ class ThreeCustomMaterial(io.ComfyNode):
                 "Three Custom Material",
                 "custom material",
                 "javascript",
+                "module",
                 "toon",
             ],
             category="WAS Suite/Three",
             description=(
-                "Reach any Three.js material class the pack has no node for, by returning one "
-                "from a short JavaScript body. `THREE` is in scope, and any texture wired in "
-                "arrives as `texture1` through `texture4`, so a toon, matcap, lambert or "
-                "depth material is one line away. The code runs in your browser when the "
-                "viewer loads, with the same reach as any frontend extension, so only run a "
-                "workflow carrying custom JavaScript if you trust where it came from."
+                "Reach any Three.js material class the pack has no node for, from a module "
+                "file you place in ComfyUI's input folder or a folder under "
+                "paths.allow_read. The module's header names the textures it wants and the "
+                "node's slots take those names. Code is never typed on the node and never "
+                "travels inside a workflow, so a graph from someone else cannot bring "
+                "javascript with it. A module runs in your browser when the viewer loads, "
+                "with the same reach as any frontend extension, and only while "
+                "threejs.allow_scripts is on."
             ),
             inputs=[
-                io.String.Input(
-                    "javascript",
-                    default=DEFAULT_BODY,
-                    multiline=True,
+                io.Combo.Input(
+                    "module",
+                    options=options(),
                     tooltip=(
-                        "A body returning a material, as "
-                        "`return new THREE.MeshToonMaterial({map: texture1});`."
+                        "Which module builds the material. The menu lists every `.js` and "
+                        "`.txt` file opening with `// was-threejs-module 1` in ComfyUI's "
+                        "input, output and temp folders and in any folder under "
+                        "paths.allow_read."
                     ),
                 ),
                 THREE_TEXTURE.Input("texture1", optional=True, tooltip=TEXTURE_TOOLTIP),
@@ -60,21 +70,55 @@ class ThreeCustomMaterial(io.ComfyNode):
             outputs=[
                 THREE_MATERIAL.Output(
                     display_name="material",
-                    tooltip="The surface the code returned, for the material socket on Three Mesh.",
+                    tooltip="The surface the module returned, for the material socket on Three Mesh.",
                 ),
             ],
         )
 
     @classmethod
     def execute(
-        cls, javascript, texture1=None, texture2=None, texture3=None, texture4=None
+        cls, module, texture1=None, texture2=None, texture3=None, texture4=None
     ) -> io.NodeOutput:
-        """Carry the code and its textures to the browser."""
+        """Carry the module's body and its textures to the browser.
+
+        Raises:
+            PermissionError: ``threejs.allow_scripts`` is off.
+            ValueError: No module is chosen, the module builds something other than a
+                material, or it declares more textures than this node has slots.
+        """
+        if not module_file.chosen(module):
+            raise ValueError(
+                f"no module was chosen. Put a `.js` or `.txt` file opening with "
+                f"`// {module_file.MARKER} {module_file.VERSION}` in ComfyUI's input folder, "
+                f"or in a folder under paths.allow_read, and pick it from the menu"
+            )
+        declared = module_file.load(module)
+        if declared.kind != "material":
+            raise ValueError(
+                f"`{module}` builds a {declared.kind}, and this node needs a material. Use "
+                f"the Three Custom {declared.kind.title()} node, or change the module's "
+                f"`@kind` line"
+            )
+        wanted = [one for one in declared.wires if one.kind != "texture"]
+        if wanted:
+            raise ValueError(
+                f"`{module}` declares {wanted[0].kind} `{wanted[0].name}`, and a material "
+                f"module takes textures only. Drop that line from its header"
+            )
+        if len(declared.wires) > SLOTS:
+            raise ValueError(
+                f"`{module}` declares {len(declared.wires)} textures and this node has "
+                f"{SLOTS} slots. Drop one, or read it from a Three Script Module"
+            )
         return io.NodeOutput(
             create_spec(
                 "material",
                 "CustomMaterial",
-                params={"javascript": javascript},
+                params={
+                    "javascript": declared.body,
+                    "names": [one.name for one in declared.wires],
+                    "values": {one.name: one.default for one in declared.values},
+                },
                 deps=compact_deps(
                     texture1=texture1,
                     texture2=texture2,

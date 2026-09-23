@@ -19,10 +19,10 @@ class CombineLUT(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASCombineLUT",
+            node_id="WASNSCombineLUT",
             display_name="LUT Blender",
             search_aliases=[
-                "WASCombineLUT", "WAS LUT Blender", "lut", "blend", "mix", "grade",
+                "WASNSCombineLUT", "WAS LUT Blender", "lut", "blend", "mix", "grade",
             ],
             category="WAS Suite/Image/LUT",
             description=(

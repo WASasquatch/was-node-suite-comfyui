@@ -137,6 +137,22 @@ const watched = new Map();
 let refreshInstalled = false;
 
 /**
+ * Whether an execution id names a node the server could hold anything for.
+ *
+ * @param {string} id - What {@link executionId} answered.
+ * @returns {boolean} False for a blank id and for one carrying a negative part, which is
+ *   what a node litegraph has built but not placed in a graph reports.
+ */
+export function placed(id) {
+  const text = String(id ?? "").trim();
+  if (!text) return false;
+  return text.split(":").every((part) => {
+    const value = Number(part);
+    return !Number.isFinite(value) || value >= 0;
+  });
+}
+
+/**
  * Send one registration request, which never raises and never blocks the caller.
  *
  * @param {string[]} ids - Execution ids to register or release.
@@ -144,7 +160,7 @@ let refreshInstalled = false;
  * @returns {void}
  */
 function postSubscription(ids, keep) {
-  const wanted = ids.filter((id) => id && id !== "-1");
+  const wanted = ids.filter((id) => placed(id));
   if (!wanted.length) return;
   const query = new URLSearchParams();
   for (const id of wanted) query.append("node_id", id);
@@ -218,7 +234,7 @@ async function fetchPreview(nodeOrId, options = {}) {
   const id = (typeof nodeOrId === "object" && nodeOrId !== null
     ? executionId(nodeOrId)
     : String(nodeOrId ?? "")).trim();
-  if (!id) return result(PREVIEW_STATE.WAITING, null, side);
+  if (!placed(id)) return result(PREVIEW_STATE.WAITING, null, side);
   if (!connected()) return result(PREVIEW_STATE.CONNECTING, null, side);
   // The parameter is left off entirely for a node holding one image, so the request an
   // interface written before slots existed sends is the one it always sent.

@@ -13,6 +13,9 @@ const HEADER_HEIGHT = 22;
 // Node -> the decorations on it, in no particular order.
 const DECORATIONS = new WeakMap();
 
+// Nodes with a repair already queued for this turn of the event loop.
+const SCHEDULED = new WeakSet();
+
 /**
  * Arm a node so its decorations are lifted out of the widget list while anything walks it.
  *
@@ -51,9 +54,56 @@ function armed(node) {
   }
   const originalConfigure = node.configure?.bind(node);
   if (originalConfigure) {
-    node.configure = (...args) => without(() => originalConfigure(...args));
+    node.configure = (info, ...rest) =>
+      without(() => originalConfigure(withoutDecorationValues(node, info, decorations), ...rest));
   }
   return decorations;
+}
+
+/**
+ * A node's saved values with any decoration slots taken back out.
+ *
+ * @param {object} node - The node being configured.
+ * @param {object} info - The saved node, as the workflow holds it.
+ * @param {Set<object>} decorations - The decorations on the node.
+ * @returns {object} The same info, or a copy whose `widgets_values` holds values only.
+ */
+function withoutDecorationValues(node, info, decorations) {
+  const values = info?.widgets_values;
+  const widgets = node?.widgets;
+  if (!Array.isArray(values) || !Array.isArray(widgets) || decorations.size === 0) return info;
+  const spots = new Set();
+  widgets.forEach((widget, index) => {
+    if (decorations.has(widget)) spots.add(index);
+  });
+  // A save that counted the decorations holds one value per widget, decorations included.
+  if (spots.size === 0 || values.length !== widgets.length) return info;
+  return { ...info, widgets_values: values.filter((unused, index) => !spots.has(index)) };
+}
+
+/**
+ * Put a workflow's values back on the right widgets where its save counted the decorations.
+ *
+ * @param {object} node - The decorated node.
+ * @param {Set<object>} decorations - The decorations on it.
+ * @returns {boolean} Whether anything was moved.
+ */
+function repairShiftedValues(node, decorations) {
+  const raw = node?.widgets_values;
+  const widgets = node?.widgets;
+  if (!Array.isArray(raw) || !Array.isArray(widgets) || decorations.size === 0) return false;
+  if (raw.length !== widgets.length) return false;
+
+  const values = raw.filter((unused, index) => !decorations.has(widgets[index]));
+  let at = 0;
+  for (const widget of widgets) {
+    if (decorations.has(widget)) continue;
+    if (at < values.length) widget.value = values[at];
+    at += 1;
+  }
+  node.widgets_values = values;
+  node.graph?.setDirtyCanvas(true, true);
+  return true;
 }
 
 /**
@@ -74,8 +124,25 @@ export function addDecoration(node, widget, before) {
     at = widgets.findIndex((existing) => existing?.name === before);
     if (at < 0) return null;
   }
+  // Serialisers that walk the widget list themselves read this rather than `node.serialize`.
+  widget.serialize = false;
   widgets.splice(at, 0, widget);
-  armed(node).add(widget);
+  const decorations = armed(node);
+  decorations.add(widget);
+  // Once every decoration for this node is in place, after the workflow has been applied.
+  if (!SCHEDULED.has(node)) {
+    SCHEDULED.add(node);
+    setTimeout(() => {
+      SCHEDULED.delete(node);
+      try {
+        if (repairShiftedValues(node, decorations)) {
+          console.warn(`[${LOG_NAME}] Put ${node?.type}'s saved values back on their widgets.`);
+        }
+      } catch (error) {
+        console.error(`[${LOG_NAME}] Failed to repair ${node?.type}'s saved values:`, error);
+      }
+    }, 0);
+  }
   return widget;
 }
 

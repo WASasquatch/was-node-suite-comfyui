@@ -46,10 +46,10 @@ class VAEEncodeForInpaintWAS(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="VAEEncodeForInpaint (WAS)",
+            node_id="WASVAEEncodeForInpaint",
             display_name="Inpainting VAE Encode",
             search_aliases=[
-                "VAEEncodeForInpaint (WAS)",
+                "WASVAEEncodeForInpaint",
                 "Inpainting VAE Encode (WAS)",
                 "inpaint encode",
                 "noise mask",

@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **464 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **468 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -51,13 +51,13 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-464 nodes across a package of source files. The pack itself needs no packages, and nothing is
+468 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 464 |
+| Nodes | 220 | 468 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 128 files: browser libraries, fonts, eight face cascades, two sets of weights and one network, each with its licence |
@@ -125,6 +125,14 @@ read back onto the new widgets and everything wired stays wired. The three batch
 `count` output below the one they had. `Image Save`'s `prefix_as_filename` is now
 `overwrite_mode`, ticked where it read `true`.
 
+**Three Custom Material takes a module file.** Its `javascript` box is gone. The node now picks
+a `.js` or `.txt` module from ComfyUI's `input` folder or a folder under `paths.allow_read`, and
+the module's header names the textures it wants, which the node's slots then read as. A body
+typed into an older workflow is dropped rather than read onto the menu, so open one, put the
+body in a file and pick it. Code no longer travels inside a workflow, so a graph from someone
+else cannot bring javascript with it. [docs/CONFIG.md](docs/CONFIG.md#threejs) has the setting
+that permits a module to run at all.
+
 **Three renamed labels.** `KSampler` is now `KSampler (Seed Socket)`, `Seed` is
 `Seed (Number Outputs)` and `Save Video` is `Save Video (Advanced)`, so none shares a name with
 a core ComfyUI node. Only the label changed, and the old names still find them in search.
@@ -142,7 +150,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**464 nodes** across 47 categories. [`NODES.md`](NODES.md) carries every input, output and
+**468 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 

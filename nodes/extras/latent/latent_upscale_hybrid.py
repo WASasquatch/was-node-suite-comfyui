@@ -717,10 +717,10 @@ class LatentUpscaleHybrid(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASLatentUpscaleHybrid",
+            node_id="WASNSLatentUpscaleHybrid",
             display_name="Latent Hybrid Upscale",
             search_aliases=[
-                "WASLatentUpscaleHybrid",
+                "WASNSLatentUpscaleHybrid",
                 "Latent Hybrid Upscale",
                 "hybrid latent upscale",
                 "edge mask upscale",

@@ -19,7 +19,7 @@ const NODES = [
   "WASLoadImageSequence",
   "WASLayersToImageBatch",
   "WASEMAVFIFrameInterpolation",
-  "WASCameraMotionTrajectory",
+  "WASNSCameraMotionTrajectory",
 ];
 
 const UI_WIDGET_NAME = "was_batch_state_ui";

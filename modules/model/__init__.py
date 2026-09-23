@@ -33,6 +33,7 @@ __all__ = [
     "resolve",
     "shared_file",
     "shared_roots",
+    "unpin_staged",
 ]
 
 logger = log.get_logger("model")
@@ -496,6 +497,27 @@ def compute_device(name: str | None = None):
         )
         return managed
     return managed if device.index is None else device
+
+
+def unpin_staged() -> bool:
+    """Hand back the device pages a finished model has staged.
+
+    Returns:
+        True where the pages were handed back, False on an install that stages nothing.
+    """
+    try:
+        import comfy.memory_management
+        import comfy.model_management
+        import comfy.model_prefetch
+        import comfy_aimdo.model_vbar
+    except ImportError:
+        return False
+    if not getattr(comfy.memory_management, "aimdo_enabled", False):
+        return False
+    comfy.model_prefetch.cleanup_prefetch_queues()
+    comfy.model_management.reset_cast_buffers()
+    comfy_aimdo.model_vbar.vbars_reset_watermark_limits()
+    return True
 
 
 def offload_device(load_device=None):

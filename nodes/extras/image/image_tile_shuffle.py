@@ -17,9 +17,9 @@ class ImageTileShuffle(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASImageTileShuffle",
+            node_id="WASNSImageTileShuffle",
             display_name="Image Tile Shuffle",
-            search_aliases=["WASImageTileShuffle", "tile", "shuffle", "scramble", "mosaic"],
+            search_aliases=["WASNSImageTileShuffle", "tile", "shuffle", "scramble", "mosaic"],
             category="WAS Suite/Image/Transform",
             description=(
                 "Cut each picture into a grid of equal tiles and lay them back down in a "

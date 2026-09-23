@@ -27,10 +27,10 @@ class PowerLoraMergerOptions(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASPowerLoraMergerOptions",
+            node_id="WASNSPowerLoraMergerOptions",
             display_name="Power LoRA Merger Options",
             search_aliases=[
-                "WASPowerLoraMergerOptions",
+                "WASNSPowerLoraMergerOptions",
                 "WAS Power LoRA Merger Options",
                 "WAS Extras",
                 "lora merge options",

@@ -72,6 +72,29 @@ function applyTransform(object, params = {}) {
     return object;
 }
 
+/**
+ * The parameter names a script body receives, and the values to pass for them.
+ *
+ * @param {object} params - The descriptor's `params`. `names` renames the slots in declared
+ *     order and `values` appends widgets; without them the slot names are used as they are.
+ * @param {string[]} slots - The node's own slot names, in order.
+ * @param {object} resolved - The resolved value per slot name.
+ * @returns {{names: string[], args: unknown[]}} Names and values, in matching order.
+ */
+function scriptBindings(params, slots, resolved) {
+  const declared = Array.isArray(params?.names) ? params.names : null;
+  const names = declared ? declared.slice(0, slots.length) : slots.slice();
+  const args = names.map((_name, index) => resolved[slots[index]] ?? null);
+  const values = params?.values;
+  if (values && typeof values === "object") {
+    for (const [name, value] of Object.entries(values)) {
+      names.push(name);
+      args.push(value);
+    }
+  }
+  return { names, args };
+}
+
 function createAsyncFunction(...args) {
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
     return new AsyncFunction(...args);
@@ -783,23 +806,18 @@ export function createRuntime(canvas, statusElement) {
                     deps[key] = value ? await resolveTexture(value) : null;
                 }
                 const source = spec.params?.javascript || "";
+                const bound = scriptBindings(
+                    spec.params,
+                    ["texture1", "texture2", "texture3", "texture4"],
+                    deps
+                );
                 const fn = createAsyncFunction(
                     "THREE",
                     "ctx",
-                    "texture1",
-                    "texture2",
-                    "texture3",
-                    "texture4",
+                    ...bound.names,
                     `"use strict";\n${source}`
                 );
-                material = await fn(
-                    THREE,
-                    ctx,
-                    deps.texture1 ?? null,
-                    deps.texture2 ?? null,
-                    deps.texture3 ?? null,
-                    deps.texture4 ?? null
-                );
+                material = await fn(THREE, ctx, ...bound.args);
                 if (!material?.isMaterial) {
                     throw new Error("Custom material code must return THREE.Material.");
                 }

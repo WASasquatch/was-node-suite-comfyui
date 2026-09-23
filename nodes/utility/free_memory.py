@@ -1,6 +1,6 @@
 """Handing memory back to the compute device partway through a run.
 
-Every figure in this module is gigabytes of the device ComfyUI computes on.
+Every memory figure in this module is gigabytes of the device ComfyUI computes on.
 """
 
 from __future__ import annotations
@@ -165,6 +165,20 @@ class FreeMemory(io.ComfyNode):
                         "makes unload_models worth more."
                     ),
                 ),
+                io.Float.Input(
+                    "release_fraction",
+                    default=0.0,
+                    min=0.0,
+                    max=1.0,
+                    step=0.05,
+                    optional=True,
+                    tooltip=(
+                        "Move weights to system memory when less than this share of the "
+                        "card is free, as `0.5` before a VAE decode. `0` does nothing, and "
+                        "so does any share already free. The weights come back from memory "
+                        "rather than from disk, unlike unload_models."
+                    ),
+                ),
             ],
             outputs=[
                 io.MatchType.Output(
@@ -224,6 +238,7 @@ class FreeMemory(io.ComfyNode):
         unload_models=True,
         empty_cache=True,
         collect_garbage=True,
+        release_fraction=0.0,
     ) -> io.NodeOutput:
         """Free what was asked for and answer the figures either side of it.
 
@@ -232,6 +247,8 @@ class FreeMemory(io.ComfyNode):
             unload_models: Whether every loaded model is handed back.
             empty_cache: Whether torch's reserved blocks go back to the driver.
             collect_garbage: Whether Python's collector runs first.
+            release_fraction: Share of the device to make free by moving weights to
+                system memory.
 
         Returns:
             The value that came in, the gigabytes in use before and after, the gigabytes
@@ -241,12 +258,27 @@ class FreeMemory(io.ComfyNode):
 
         import comfy.model_management as management
 
-        from ...modules.model import compute_device
+        from ...modules.model import compute_device, unpin_staged
 
         device = compute_device()
         before = usage(management, device)
 
         steps: list[str] = []
+        share = min(1.0, max(0.0, float(release_fraction or 0.0)))
+        if share > 0.0:
+            # Staged pages are handed back before the release is asked for.
+            try:
+                unpinned = unpin_staged()
+                wanted = share * management.get_total_memory(device)
+                moved = management.free_memory(wanted, device, for_dynamic=False)
+                staged = "unpinned the staged pages and " if unpinned else ""
+                steps.append(
+                    f"{staged}released {len(moved)} model(s) to make "
+                    f"{gigabytes(wanted):.2f} GB free"
+                )
+            except Exception as error:
+                logger.warning("the models could not be released: %s", error)
+                steps.append(f"could not release the models ({error})")
         if unload_models:
             try:
                 management.unload_all_models()

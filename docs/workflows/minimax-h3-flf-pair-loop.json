@@ -1,0 +1,1797 @@
+{
+  "id": "4a68803f-e6a8-4e5b-bf53-be9841a086e0",
+  "revision": 0,
+  "last_node_id": 23,
+  "last_link_id": 31,
+  "nodes": [
+    {
+      "id": 11,
+      "type": "PreviewImage",
+      "pos": [
+        970,
+        890
+      ],
+      "size": [
+        360,
+        258
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 20,
+      "type": "CreateVideo",
+      "pos": [
+        4078.805688088953,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        126
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 26
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB"
+      }
+    },
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        555.7418234757694,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 21,
+      "type": "SaveVideo",
+      "pos": [
+        4082.915632232817,
+        391.2962342636272
+      ],
+      "size": [
+        1033.8424299041217,
+        694.4475557139164
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "video/h3_flf_scenes",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/h3_flf_scenes",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 19,
+      "type": "WASWhileLoopClose",
+      "pos": [
+        3667.7993491364496,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        314
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "iterator",
+          "type": "WAS_LOOP",
+          "link": 23
+        },
+        {
+          "name": "value_1",
+          "shape": 7,
+          "type": "*",
+          "link": 25
+        },
+        {
+          "name": "value_2",
+          "shape": 7,
+          "type": "*",
+          "link": 30
+        },
+        {
+          "name": "value_3",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "continue_loop",
+          "type": "BOOLEAN,NUMBER,INT,FLOAT",
+          "widget": {
+            "name": "continue_loop"
+          },
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "metadata",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "name": "value_1",
+          "type": "IMAGE",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "value_2",
+          "type": "AUDIO",
+          "links": [
+            31
+          ]
+        },
+        {
+          "name": "value_3",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASWhileLoopClose",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "continue_loop": false,
+        "accumulate": true
+      }
+    },
+    {
+      "id": 15,
+      "type": "BasicGuider",
+      "pos": [
+        2600,
+        390
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASMiniMaxH3ClipSelect",
+      "pos": [
+        2600,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        118
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompts",
+          "type": "WAS_H3_PROMPTS",
+          "link": 11
+        },
+        {
+          "name": "index",
+          "type": "INT",
+          "widget": {
+            "name": "index"
+          },
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            18
+          ]
+        },
+        {
+          "name": "frames",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASMiniMaxH3ClipSelect",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "index": 0
+      }
+    },
+    {
+      "id": 23,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        3300,
+        320
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 28
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": "WASNumberExpression",
+      "pos": [
+        3420,
+        430
+      ],
+      "size": [
+        300,
+        288
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "a"
+          },
+          "link": 21
+        },
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "b"
+          },
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": [
+            24
+          ]
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNumberExpression",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "a + 1 < b",
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "a + 1 < b",
+        "decimals": 6,
+        "on_error": "error"
+      }
+    },
+    {
+      "id": 17,
+      "type": "VAEDecode",
+      "pos": [
+        3300,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 19
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASWhileLoopOpen",
+      "pos": [
+        2216.338258078826,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        138
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value_1",
+          "shape": 7,
+          "type": "*",
+          "link": 10
+        },
+        {
+          "name": "value_2",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "iterator",
+          "type": "WAS_LOOP",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "index",
+          "type": "INT",
+          "links": [
+            12,
+            21
+          ]
+        },
+        {
+          "name": "metadata",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "name": "value_1",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "value_2",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASWhileLoopOpen",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        16
+      ],
+      "widgets_values_named": {
+        "max_iterations": 16
+      }
+    },
+    {
+      "id": 16,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        2958.3798601888184,
+        207.8872473070582
+      ],
+      "size": [
+        300,
+        326.00000000000006
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 14
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 15
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 16
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 17
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            19,
+            28
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        555.7418234757694,
+        326.5973906604903
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "H3\\taomate_h3_3step_comfy.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "H3\\taomate_h3_3step_comfy.safetensors",
+        "strength_model": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "ModelAttentionBackend",
+      "pos": [
+        555.7418234757694,
+        466.5973906604903
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelAttentionBackend",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "comfy kitchen attention"
+      ],
+      "widgets_values_named": {
+        "attention": "comfy kitchen attention"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MiniMaxLowVRAMAttention",
+      "pos": [
+        555.7418234757694,
+        596.5973906604901
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            4,
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxLowVRAMAttention",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "head_chunks": 4
+      }
+    },
+    {
+      "id": 5,
+      "type": "CLIPLoader",
+      "pos": [
+        555.7418234757694,
+        716.5973906604901
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    {
+      "id": 6,
+      "type": "VAELoader",
+      "pos": [
+        555.7418234757694,
+        886.5973906604901
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            8,
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_int8_convrot.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+      }
+    },
+    {
+      "id": 22,
+      "type": "VAELoader",
+      "pos": [
+        555.7418234757694,
+        1006.5973906604901
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      }
+    },
+    {
+      "id": 8,
+      "type": "BasicScheduler",
+      "pos": [
+        2210.6811856992576,
+        886.7422830468934
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "beta57",
+        3,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "beta57",
+        "steps": 3,
+        "denoise": 1
+      }
+    },
+    {
+      "id": 9,
+      "type": "RandomNoise",
+      "pos": [
+        2210.6811856992576,
+        1046.742283046893
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        777,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 777,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 7,
+      "type": "KSamplerSelect",
+      "pos": [
+        2210.6811856992576,
+        776.7422830468935
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "res_2s"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "res_2s"
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASLoadImageSequence",
+      "pos": [
+        980,
+        207.8872473070582
+      ],
+      "size": [
+        330,
+        642
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6,
+            9
+          ]
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "filenames",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "image_list",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "filename_list",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLoadImageSequence",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "h3_pairs [input]",
+        "*",
+        5,
+        "uniform",
+        1,
+        0,
+        "fixed",
+        "stretch",
+        832,
+        480,
+        0,
+        -1,
+        1024,
+        "lanczos",
+        "middle center",
+        "#000000",
+        "RGB"
+      ],
+      "widgets_values_named": {
+        "folder": "h3_pairs [input]",
+        "pattern": "*",
+        "num_frames": 5,
+        "strategy": "uniform",
+        "nth": 1,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "resize_mode": "stretch",
+        "width": 832,
+        "height": 480,
+        "start": 0,
+        "end": -1,
+        "max_size": 1024,
+        "interpolation": "lanczos",
+        "align": "middle center",
+        "pad_color": "#000000",
+        "channels": "RGB"
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASMiniMaxH3Conditioning",
+      "pos": [
+        1460,
+        207.8872473070582
+      ],
+      "size": [
+        620,
+        696.0000000000001
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 7
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 8
+        },
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "prompts",
+          "type": "WAS_H3_PROMPTS",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "segments",
+          "type": "INT",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "latents",
+          "shape": 6,
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASMiniMaxH3Conditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "fl2va_batched",
+        "16:9",
+        0.4,
+        0,
+        0,
+        "",
+        "",
+        "id=\"x001\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Open desert of fine red-orange sand at low sun, deep wind-combed ripples running across the ground, low dunes on the horizon.\n<Prop or VFX>: Loose surface sand that lifts in low plumes where the boots break it. A column of black smoke that rises beyond the dunes and bends sideways in the wind.\n\nsummary:\nWalking away across clean rippled sand, the astronaut continues until a column of black smoke has risen into view above the dunes ahead, closing with the smoke established in frame.\n\ndetailed_description:\nA low-angle medium-wide handheld tracking shot frames the astronaut from behind at knee height. The astronaut begins in the pose of the opening frame, walking steadily, each heel compressing the ripples and throwing a low plume that drifts back past the ankle. Beyond the dunes a column of black smoke rises and widens, bending sideways in the wind. The camera tracks forward at walking pace, holding the astronaut centred with a small handheld sway. The astronaut's head lifts toward the smoke and the pace firms. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nSteady low desert wind across open sand, granular crunch of dry sand under each boot in time with the footfalls, faint suit-fabric rustle, muffled regulated helmet breathing, and a very distant low roar of burning thin on the wind.\n\nnon_diegetic_music:\nNone.",
+        7.3,
+        22,
+        "as set",
+        "id=\"x002\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Open desert of red-orange sand rising into low dunes, low sun, a haze of drifting smoke thickening the air ahead.\n<Prop or VFX>: A crashed craft on the sand beyond the dune, hull split along one flank with orange fire inside the break and black smoke pouring upward. Loose sand sliding where the boots break it.\n\nsummary:\nContinuing from the opening pose toward the smoke, the astronaut crests the rise and the burning wreck comes into full view on the sand ahead, closing in the pose of the final frame with the wreck established in frame.\n\ndetailed_description:\nA low-angle medium-wide handheld tracking shot frames the astronaut from behind. The astronaut begins in the pose of the opening frame and walks on toward the smoke, the ground rising so the stride shortens and the torso leans forward. As the rise is crested the ground beyond opens and the crashed craft is revealed on the sand, hull split and burning. The pace quickens. The camera tracks forward and pulls back slightly to open the space beyond, holding the astronaut centred. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nDesert wind, granular crunch and slip of sand under each boot, breathing quickening inside the helmet, and the low roar of burning growing steadily closer with intermittent metallic ticking and popping.\n\nnon_diegetic_music:\nNone.",
+        7.3,
+        22,
+        "as set",
+        "id=\"x003\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Flat open sand at the foot of the dunes, low sun, drifting smoke thickening the air, firelight on the ground ahead.\n<Prop or VFX>: The crashed craft close ahead, hull split open with fire inside the break, torn insulation fluttering in the updraught, heat haze bending the air above it.\n\nsummary:\nCrossing the last stretch of open sand from the opening pose, the astronaut reaches the wreck and sets a gloved hand against the split hull, closing in the pose of the final frame.\n\ndetailed_description:\nA low-angle medium handheld tracking shot frames the astronaut from behind, the burning hull filling the right of frame. The astronaut begins in the pose of the opening frame at a steady walk that lengthens as the ground flattens. Heat haze bends the air above the break and loose insulation flutters in the updraught. The camera tracks forward and arcs slightly to bring the hull alongside. The stride shortens on approach, the arm lifts, and the astronaut sets a gloved hand against the scorched panel. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nFirm even footfalls in sand slowing to spaced steps, strained helmet breathing, close roar of burning with irregular crackling, metal ticking and groaning as it cools, and wind dragging smoke across the microphone.\n\nnon_diegetic_music:\nNone.",
+        7.3,
+        22,
+        "as set",
+        "id=\"x004\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Immediately inside the split hull, firelight on the suit, smoke crossing frame, low sun outside.\n<Prop or VFX>: Buckled hull panels, torn insulation batting, loose cabling and scattered debris. Orange fire deeper inside the break.\n\nsummary:\nFrom the opening pose the astronaut works into the split hull, pulling a buckled panel aside and sweeping insulation and cabling away while searching, closing in the pose of the final frame with one arm deep inside.\n\ndetailed_description:\nA medium handheld shot frames the astronaut in three-quarter view against the split hull, firelight on the suit. The astronaut begins in the pose of the opening frame with a hand on the panel, then sets both hands under its edge. The pull meets resistance, then the panel gives and is swung aside, raising a small plume of dust. The astronaut leans further in, sweeping torn insulation and loose cabling aside with the back of one forearm, and reaches deeper into the interior. The camera pushes in slowly and drifts to follow the hands. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nGloved hands scraping scorched metal, the deep groan and sudden bang of a panel giving way, dry rustle of insulation pushed aside, cable ends clicking against the hull, close fire crackling throughout, and effortful helmet breathing.\n\nnon_diegetic_music:\nNone.",
+        7.3,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "",
+        5.2,
+        22,
+        "as set",
+        "match"
+      ],
+      "widgets_values_named": {
+        "mode": "fl2va_batched",
+        "width": 0,
+        "height": 0,
+        "prompt_1": "id=\"x001\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Open desert of fine red-orange sand at low sun, deep wind-combed ripples running across the ground, low dunes on the horizon.\n<Prop or VFX>: Loose surface sand that lifts in low plumes where the boots break it. A column of black smoke that rises beyond the dunes and bends sideways in the wind.\n\nsummary:\nWalking away across clean rippled sand, the astronaut continues until a column of black smoke has risen into view above the dunes ahead, closing with the smoke established in frame.\n\ndetailed_description:\nA low-angle medium-wide handheld tracking shot frames the astronaut from behind at knee height. The astronaut begins in the pose of the opening frame, walking steadily, each heel compressing the ripples and throwing a low plume that drifts back past the ankle. Beyond the dunes a column of black smoke rises and widens, bending sideways in the wind. The camera tracks forward at walking pace, holding the astronaut centred with a small handheld sway. The astronaut's head lifts toward the smoke and the pace firms. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nSteady low desert wind across open sand, granular crunch of dry sand under each boot in time with the footfalls, faint suit-fabric rustle, muffled regulated helmet breathing, and a very distant low roar of burning thin on the wind.\n\nnon_diegetic_music:\nNone.",
+        "duration_1": 7.3,
+        "overlap_1": 22,
+        "prompt_2": "id=\"x002\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Open desert of red-orange sand rising into low dunes, low sun, a haze of drifting smoke thickening the air ahead.\n<Prop or VFX>: A crashed craft on the sand beyond the dune, hull split along one flank with orange fire inside the break and black smoke pouring upward. Loose sand sliding where the boots break it.\n\nsummary:\nContinuing from the opening pose toward the smoke, the astronaut crests the rise and the burning wreck comes into full view on the sand ahead, closing in the pose of the final frame with the wreck established in frame.\n\ndetailed_description:\nA low-angle medium-wide handheld tracking shot frames the astronaut from behind. The astronaut begins in the pose of the opening frame and walks on toward the smoke, the ground rising so the stride shortens and the torso leans forward. As the rise is crested the ground beyond opens and the crashed craft is revealed on the sand, hull split and burning. The pace quickens. The camera tracks forward and pulls back slightly to open the space beyond, holding the astronaut centred. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nDesert wind, granular crunch and slip of sand under each boot, breathing quickening inside the helmet, and the low roar of burning growing steadily closer with intermittent metallic ticking and popping.\n\nnon_diegetic_music:\nNone.",
+        "duration_2": 7.3,
+        "overlap_2": 22,
+        "prompt_3": "id=\"x003\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Flat open sand at the foot of the dunes, low sun, drifting smoke thickening the air, firelight on the ground ahead.\n<Prop or VFX>: The crashed craft close ahead, hull split open with fire inside the break, torn insulation fluttering in the updraught, heat haze bending the air above it.\n\nsummary:\nCrossing the last stretch of open sand from the opening pose, the astronaut reaches the wreck and sets a gloved hand against the split hull, closing in the pose of the final frame.\n\ndetailed_description:\nA low-angle medium handheld tracking shot frames the astronaut from behind, the burning hull filling the right of frame. The astronaut begins in the pose of the opening frame at a steady walk that lengthens as the ground flattens. Heat haze bends the air above the break and loose insulation flutters in the updraught. The camera tracks forward and arcs slightly to bring the hull alongside. The stride shortens on approach, the arm lifts, and the astronaut sets a gloved hand against the scorched panel. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nFirm even footfalls in sand slowing to spaced steps, strained helmet breathing, close roar of burning with irregular crackling, metal ticking and groaning as it cools, and wind dragging smoke across the microphone.\n\nnon_diegetic_music:\nNone.",
+        "duration_3": 7.3,
+        "overlap_3": 22,
+        "prompt_4": "id=\"x004\"\n\nsubject_definitions:\n<Subject 1>: An astronaut in a worn white pressure suit, ribbed panels at the knees and elbows, dark grey gloves, a scuffed hard-shell backpack with a shoulder patch, black-soled boots.\n<Environment>: Immediately inside the split hull, firelight on the suit, smoke crossing frame, low sun outside.\n<Prop or VFX>: Buckled hull panels, torn insulation batting, loose cabling and scattered debris. Orange fire deeper inside the break.\n\nsummary:\nFrom the opening pose the astronaut works into the split hull, pulling a buckled panel aside and sweeping insulation and cabling away while searching, closing in the pose of the final frame with one arm deep inside.\n\ndetailed_description:\nA medium handheld shot frames the astronaut in three-quarter view against the split hull, firelight on the suit. The astronaut begins in the pose of the opening frame with a hand on the panel, then sets both hands under its edge. The pull meets resistance, then the panel gives and is swung aside, raising a small plume of dust. The astronaut leans further in, sweeping torn insulation and loose cabling aside with the back of one forearm, and reaches deeper into the interior. The camera pushes in slowly and drifts to follow the hands. The shot closes in the pose of the final frame.\n\noverall_soundscape:\nGloved hands scraping scorched metal, the deep groan and sudden bang of a panel giving way, dry rustle of insulation pushed aside, cable ends clicking against the hull, close fire crackling throughout, and effortful helmet breathing.\n\nnon_diegetic_music:\nNone.",
+        "duration_4": 7.3,
+        "overlap_4": 22,
+        "prompt_5": "",
+        "duration_5": 5.2,
+        "overlap_5": 22,
+        "prompt_6": "",
+        "duration_6": 5.2,
+        "overlap_6": 22,
+        "prompt_7": "",
+        "duration_7": 5.2,
+        "overlap_7": 22,
+        "prompt_8": "",
+        "duration_8": 5.2,
+        "overlap_8": 22,
+        "prompt_9": "",
+        "duration_9": 5.2,
+        "overlap_9": 22,
+        "prompt_10": "",
+        "duration_10": 5.2,
+        "overlap_10": 22,
+        "prompt_11": "",
+        "duration_11": 5.2,
+        "overlap_11": 22,
+        "prompt_12": "",
+        "duration_12": 5.2,
+        "overlap_12": 22,
+        "prompt_13": "",
+        "duration_13": 5.2,
+        "overlap_13": 22,
+        "prompt_14": "",
+        "duration_14": 5.2,
+        "overlap_14": 22,
+        "prompt_15": "",
+        "duration_15": 5.2,
+        "overlap_15": 22,
+        "prompt_16": "",
+        "duration_16": 5.2,
+        "overlap_16": 22,
+        "prompt_17": "",
+        "duration_17": 5.2,
+        "overlap_17": 22,
+        "prompt_18": "",
+        "duration_18": 5.2,
+        "overlap_18": 22,
+        "prompt_19": "",
+        "duration_19": 5.2,
+        "overlap_19": 22,
+        "prompt_20": "",
+        "duration_20": 5.2,
+        "overlap_20": 22,
+        "prompt_21": "",
+        "duration_21": 5.2,
+        "overlap_21": 22,
+        "prompt_22": "",
+        "duration_22": 5.2,
+        "overlap_22": 22,
+        "prompt_23": "",
+        "duration_23": 5.2,
+        "overlap_23": 22,
+        "prompt_24": "",
+        "duration_24": 5.2,
+        "overlap_24": 22,
+        "megapixels": 0.4,
+        "prompt_header": "",
+        "prompt_footer": "",
+        "aspect_ratio": "16:9"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "MODEL"
+    ],
+    [
+      4,
+      4,
+      0,
+      8,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      4,
+      0,
+      15,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      10,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      5,
+      0,
+      12,
+      0,
+      "CLIP"
+    ],
+    [
+      8,
+      6,
+      0,
+      12,
+      1,
+      "VAE"
+    ],
+    [
+      9,
+      10,
+      0,
+      12,
+      2,
+      "IMAGE"
+    ],
+    [
+      10,
+      12,
+      0,
+      13,
+      0,
+      "LATENT"
+    ],
+    [
+      11,
+      12,
+      1,
+      14,
+      0,
+      "WAS_H3_PROMPTS"
+    ],
+    [
+      12,
+      13,
+      1,
+      14,
+      1,
+      "INT"
+    ],
+    [
+      13,
+      14,
+      0,
+      15,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      9,
+      0,
+      16,
+      0,
+      "NOISE"
+    ],
+    [
+      15,
+      15,
+      0,
+      16,
+      1,
+      "GUIDER"
+    ],
+    [
+      16,
+      7,
+      0,
+      16,
+      2,
+      "SAMPLER"
+    ],
+    [
+      17,
+      8,
+      0,
+      16,
+      3,
+      "SIGMAS"
+    ],
+    [
+      18,
+      14,
+      1,
+      16,
+      4,
+      "LATENT"
+    ],
+    [
+      19,
+      16,
+      0,
+      17,
+      0,
+      "LATENT"
+    ],
+    [
+      20,
+      6,
+      0,
+      17,
+      1,
+      "VAE"
+    ],
+    [
+      21,
+      13,
+      1,
+      18,
+      0,
+      "INT"
+    ],
+    [
+      22,
+      12,
+      2,
+      18,
+      1,
+      "INT"
+    ],
+    [
+      23,
+      13,
+      0,
+      19,
+      0,
+      "WAS_LOOP"
+    ],
+    [
+      24,
+      18,
+      3,
+      19,
+      4,
+      "BOOLEAN"
+    ],
+    [
+      25,
+      17,
+      0,
+      19,
+      1,
+      "IMAGE"
+    ],
+    [
+      26,
+      19,
+      1,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      27,
+      20,
+      0,
+      21,
+      0,
+      "VIDEO"
+    ],
+    [
+      28,
+      16,
+      0,
+      23,
+      0,
+      "LATENT"
+    ],
+    [
+      29,
+      22,
+      0,
+      23,
+      1,
+      "VAE"
+    ],
+    [
+      30,
+      23,
+      0,
+      19,
+      2,
+      "AUDIO"
+    ],
+    [
+      31,
+      19,
+      2,
+      20,
+      1,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 7,
+      "title": "Models",
+      "bounding": [
+        525.7418234757695,
+        116.5973906604903,
+        358.776021603324,
+        1083.3659405908593
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Sampling Settings",
+      "bounding": [
+        2180.6811856992576,
+        696.7422830468935,
+        360,
+        470
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "Keyframe pairs",
+      "bounding": [
+        940,
+        120,
+        420,
+        1080
+      ],
+      "color": "#593f3f",
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "Scenes and prompts",
+      "bounding": [
+        1430,
+        120,
+        680,
+        820
+      ],
+      "color": "#4a3f59",
+      "flags": {}
+    },
+    {
+      "id": 11,
+      "title": "Inference Loop",
+      "bounding": [
+        2180,
+        120,
+        1820,
+        550
+      ],
+      "color": "#3f593f",
+      "flags": {}
+    },
+    {
+      "id": 13,
+      "title": "Assemble",
+      "bounding": [
+        4043.180120769659,
+        125.10901792327387,
+        1100.3327708795605,
+        974.4189456748853
+      ],
+      "color": "#59563f",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.9466323279016646,
+      "offset": [
+        -1218.7966710304572,
+        98.27320952805269
+      ]
+    },
+    "frontendVersion": "1.51.9",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

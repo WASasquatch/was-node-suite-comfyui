@@ -11,10 +11,38 @@ import torch
 __all__ = ["tiled_upscale"]
 
 
+#: Masks already built, keyed by shape, fade widths, dtype and device.
+_MASKS: dict = {}
+
+#: Masks held before the oldest is dropped.
+_MASK_CACHE = 16
+
+
+def _ramp(length: int, taper: int, device, dtype) -> torch.Tensor:
+    """A 1-D weight running up from near zero at each faded end.
+
+    Args:
+        length: Axis length in pixels.
+        taper: Pixels faded at each end, capped at half the length.
+        device: Where the ramp is built.
+        dtype: Working dtype.
+
+    Returns:
+        A ``length`` long tensor, 1.0 across the middle.
+    """
+    weights = torch.ones(length, device=device, dtype=dtype)
+    taper = min(int(taper), length // 2)
+    if taper > 0:
+        rising = torch.arange(1, taper + 1, device=device, dtype=dtype) / float(taper)
+        weights[:taper] = rising
+        weights[length - taper:] = rising.flip(0)
+    return weights
+
+
 # A tile is upscaled without knowing what its neighbours contain, so the model's guesses
 # disagree along the join. The cross-fade hides that seam.
 def _feather_mask(tile: torch.Tensor, rows: int, columns: int) -> torch.Tensor:
-    """Build the cross-fade mask for one upscaled tile.
+    """The cross-fade mask for one upscaled tile.
 
     Args:
         tile: The upscaled tile, used for its size, device and dtype.
@@ -25,21 +53,48 @@ def _feather_mask(tile: torch.Tensor, rows: int, columns: int) -> torch.Tensor:
         A ``(1, 1, height, width)`` mask that is 1.0 in the middle and falls linearly to
         near zero at each faded edge.
     """
-    mask = torch.ones(
-        (1, 1, tile.shape[2], tile.shape[3]), device=tile.device, dtype=tile.dtype
-    )
-    rows = min(rows, tile.shape[2] // 2)
-    for step in range(rows):
-        weight = float(step + 1) / float(rows)
-        mask[:, :, step:step + 1, :].mul_(weight)
-        mask[:, :, tile.shape[2] - 1 - step:tile.shape[2] - step, :].mul_(weight)
-    columns = min(columns, tile.shape[3] // 2)
-    for step in range(columns):
-        weight = float(step + 1) / float(columns)
-        mask[:, :, :, step:step + 1].mul_(weight)
-        mask[:, :, :, tile.shape[3] - 1 - step:tile.shape[3] - step].mul_(weight)
+    height, width = tile.shape[2], tile.shape[3]
+    key = (height, width, int(rows), int(columns), tile.dtype, str(tile.device))
+    held = _MASKS.get(key)
+    if held is not None:
+        return held
+    mask = (_ramp(height, rows, tile.device, tile.dtype)[:, None]
+            * _ramp(width, columns, tile.device, tile.dtype)[None, :])
+    mask = mask.reshape(1, 1, height, width)
+    if len(_MASKS) >= _MASK_CACHE:
+        _MASKS.pop(next(iter(_MASKS)))
+    _MASKS[key] = mask
     return mask
 
+
+
+#: Video memory left free beyond the accumulators, for the tiles themselves.
+_HEADROOM = 1024 * 1024 * 1024
+
+
+def _fits(device, height: int, width: int, channels: int, element_size: int) -> bool:
+    """Whether the accumulators for a whole picture fit on the compute device.
+
+    Args:
+        device: The compute device.
+        height: Target height in pixels.
+        width: Target width in pixels.
+        channels: Colour channels the model answers with.
+        element_size: Bytes per value.
+
+    Returns:
+        True where they fit with :data:`_HEADROOM` to spare.
+    """
+    if str(device) == "cpu":
+        return False
+    try:
+        from comfy import model_management
+
+        free = model_management.get_free_memory(device)
+    except Exception:
+        return False
+    wanted = height * width * (channels + 1) * element_size
+    return free > wanted + _HEADROOM
 
 
 def _starts(length: int, tile: int, step: int) -> list[int]:
@@ -129,11 +184,14 @@ def tiled_upscale(
         device = model_management.get_torch_device()
 
     samples = samples.to(output_device)
-    batch_size, _channels, in_height, in_width = samples.shape
+    batch_size, channels, in_height, in_width = samples.shape
 
     scale_y = float(target_height) / float(in_height)
     scale_x = float(target_width) / float(in_width)
 
+    # Accumulators sit on the compute device where they fit, on the output device otherwise.
+    gather = device if _fits(device, target_height, target_width, channels,
+                             samples.element_size()) else output_device
     blended = None
 
     for index in range(batch_size):
@@ -158,12 +216,12 @@ def tiled_upscale(
                 if accumulator is None:
                     accumulator = torch.zeros(
                         (1, tile_native.shape[1], target_height, target_width),
-                        device=output_device,
+                        device=gather,
                         dtype=tile_native.dtype,
                     )
                     weights = torch.zeros(
                         (1, 1, target_height, target_width),
-                        device=output_device,
+                        device=gather,
                         dtype=tile_native.dtype,
                     )
 
@@ -178,7 +236,7 @@ def tiled_upscale(
                     )
                 else:
                     tile_scaled = tile_native
-                tile = tile_scaled.to(output_device)
+                tile = tile_scaled.to(gather)
 
                 if feather is None or feather <= 0:
                     rows = int(round(overlap * scale_y))
@@ -196,14 +254,12 @@ def tiled_upscale(
                     pbar.update(1)
 
                 del tile_scaled, tile_native, tile_source
-                torch.cuda.empty_cache()
 
         # A pixel no tile reached keeps a zero weight; dividing by one there leaves it black
         # rather than turning it into a division by zero.
         safe = torch.where(weights == 0.0, torch.ones_like(weights), weights)
-        blended[index:index + 1] = accumulator / safe
+        blended[index:index + 1] = (accumulator / safe).to(output_device)
 
-        del accumulator, weights
-        torch.cuda.empty_cache()
+        del accumulator, weights, safe
 
     return blended.to(output_device)

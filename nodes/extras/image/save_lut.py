@@ -24,10 +24,10 @@ class SaveLUT(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASSaveLUT",
+            node_id="WASNSSaveLUT",
             display_name="Save LUT (.cube)",
             search_aliases=[
-                "WASSaveLUT", "WAS Save LUT (.cube)", "lut", "cube", "save", "export",
+                "WASNSSaveLUT", "WAS Save LUT (.cube)", "lut", "cube", "save", "export",
             ],
             category="WAS Suite/Image/LUT",
             description=(

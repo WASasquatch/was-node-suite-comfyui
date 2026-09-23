@@ -25,11 +25,11 @@ const STRIP_SLOT = "lut_strip";
 
 // Every node this draws on. Apply LUT is deliberately absent: it already carries the before
 // and after band, and two panels on one node leave neither of them room.
-const NODES = ["WASLoadLUT", "WASCombineLUT", "WASSaveLUT", "WASLUTFromReference"];
+const NODES = ["WASNSLoadLUT", "WASNSCombineLUT", "WASNSSaveLUT", "WASLUTFromReference"];
 
 // Of those, the two that build a table with no picture anywhere near them, which get the
 // curves and the chart. The rest state what the table is and leave looking to a preview node.
-const NODES_WITH_CHART = ["WASLoadLUT", "WASCombineLUT"];
+const NODES_WITH_CHART = ["WASNSLoadLUT", "WASNSCombineLUT"];
 
 // Rows of the published strip, matching `modules/image/lut_preview.py`. The ramp is read for
 // the curves and the two bands below it are drawn as the chart.

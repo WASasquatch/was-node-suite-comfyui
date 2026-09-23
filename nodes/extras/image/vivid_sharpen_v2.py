@@ -9,15 +9,15 @@ from ....modules.image import dynamic
 REQUIRES = "extras"
 
 
-class VividSharpenV2(io.ComfyNode):
+class WASVividSharpenV2(io.ComfyNode):
     """Sharpen a whole batch at once, with the high-pass layer under manual control."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="VividSharpenV2",
+            node_id="WASVividSharpenV2",
             display_name="Vivid Sharpen (V2)",
-            search_aliases=["VividSharpenV2", "sharpen", "high pass", "clarity", "detail"],
+            search_aliases=["WASVividSharpenV2", "sharpen", "high pass", "clarity", "detail"],
             category="WAS Suite/Image/Filter",
             description=(
                 "Sharpen images by blending an inverted, blurred copy back over them in "

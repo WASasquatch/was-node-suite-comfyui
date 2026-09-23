@@ -17,10 +17,10 @@ class ImageTileExtract(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASImageTileExtract",
+            node_id="WASNSImageTileExtract",
             display_name="Image Tile Extract (Quadrants)",
             search_aliases=[
-                "WASImageTileExtract", "Image Tile Extract",
+                "WASNSImageTileExtract", "Image Tile Extract",
                 "tile", "quadrant", "quarters", "split", "crop", "four tiles",
             ],
             category="WAS Suite/Image/Transform",

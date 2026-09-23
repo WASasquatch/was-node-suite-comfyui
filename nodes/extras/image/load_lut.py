@@ -37,10 +37,10 @@ class LoadLUT(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASLoadLUT",
+            node_id="WASNSLoadLUT",
             display_name="Load LUT",
             search_aliases=[
-                "WASLoadLUT", "WAS Load LUT", "lut", "cube", "grade", "color grading", "look",
+                "WASNSLoadLUT", "WAS Load LUT", "lut", "cube", "grade", "color grading", "look",
             ],
             category="WAS Suite/Image/LUT",
             description=(

@@ -5,7 +5,7 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **467** across **47** categories |
+| Nodes | **468** across **48** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 194 nodes draw their own readout, picture or editor on the canvas |
@@ -132,14 +132,17 @@ For feeding a ControlNet, and for relighting, defocus, parallax, masking and sty
 
 ## Geometry and transforms
 
-12 nodes. **Image Resize**, **Image Rotate (Advanced)**, **Image Perspective**, **Image Flip**,
+13 nodes. **Image Resize**, **Image Rotate (Advanced)**, **Image Perspective**, **Image Flip**,
 **Image Transpose**, **Image Padding** and **Image Displacement Warp** move pixels. **Image
 Tile Extract (Grid)**, **Image Tile Extract (Quadrants)**, **Image Tile Shuffle** and **Image
-Stitch (Advanced)** split an image and put it back.
+Stitch (Advanced)** split an image and put it back. **Tiled Image Upscale (With Model)** runs an
+upscale model over overlapping tiles and cross-fades them, to any magnification rather than the
+model's own, and its `precision` runs the model in half precision where the model declares that
+safe.
 
 For tiled work and for fitting an image to a target without leaving the canvas.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Image/Transform**.
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Transform** and **WAS Suite/Image/Upscaling**.
 
 ---
 
@@ -291,6 +294,71 @@ For getting frames in and out of a graph, and for finishing a clip after samplin
 
 ---
 
+## A clip extended one segment at a time
+
+**H3 Extend Window** opens one segment of a MiniMax H3 clip for a sampler. The first segment
+samples an empty latent. Every segment after it picks up from the clip so far: `carry` copies
+the clip's last frames into the window and masks them, so the sampler holds those frames and
+generates only what follows, and `reference` decodes them and encodes them again as a video
+reference. `refresh` decodes the carried frames, softens the fine detail they gained and
+encodes them again, metered against the clip's opening frames rather than against a fixed
+amount, and `handoff` starts the next segment on the last frame alone. `cut`, or an overlap
+of `0`, samples a new scene from an empty latent with nothing carried, and H3 Extend Append
+joins it after the clip's last full 17 frame block. `drift_control` takes the contrast and
+fine detail the carried frames have gained back out again in latent space, each segment, and
+never sharpens.
+**H3 Extend Append** joins each sampled segment onto the clip and drops the carried head, so
+no rendered frame is written twice. Overlaps and lengths snap to the model's frame grid, and
+both nodes carry the audio with the video. A `carry` or `refresh` segment holds the soundtrack
+for the whole audio steps its overlap covers, whatever length that overlap is, and
+`audio_release` opens the mask back up over the last of those steps so the held take meets the
+new frames without a step in level.
+
+**MiniMax H3 Conditioning** writes the whole run on one node. Each row is one segment with its
+own prompt, its own frame count, its own overlap and its own continuity, and a new row appears
+as the last one is filled. A row's `continuity_N` is `as set` until it is changed, leaving H3
+Extend Window's own setting to drive the run, and any other choice overrides it for that
+segment alone. That is how one run holds a continuous scene, a cut that keeps the cast on
+`reference`, and a cut to somewhere new on an overlap of `0`. `t2va` takes no pictures,
+`i2va` opens on a first frame, `fl2va` closes on a last one and `fl2va_batched` runs every
+segment between a neighbouring pair out of one batch, and only the pictures the mode reads
+are drawn. Every prompt is encoded together before any sampling starts, so the text encoder
+is loaded once rather than between segments.
+
+`ref2va` builds every segment on references: up to 9 pictures, 3 clips each with its own
+soundtrack, and 3 sounds, named `<Picture 1>`, `<Video 1>` and `<Audio 1>` in the prompts. Every
+row carries the same references, so a cast, a location or a voice holds across carried shots
+and cuts alike, and the `report` lists each tag with the size it was encoded at. A soundtrack
+takes its `<Audio>` number ahead of the standalone sounds, and any audio needs `audio_vae`.
+`ref_image_size` sets how large every reference picture is encoded: `match` fits it to the
+clip's area, `256` to `2048` cap its longest side, which keeps very large pictures light, and
+`max` takes it up to a 2048 pixel short edge for the closest likeness at several times the
+sampling cost. Every picture lands between 256 and 5760 pixels a side.
+
+`prompt_header` and `prompt_footer` go before and after every segment's prompt, so whatever
+holds across the whole run is written once and each row carries only what that segment does.
+A blank line separates them, and either left blank adds nothing.
+
+`aspect_ratio` picks the canvas shape and `megapixels` its area, so a size is chosen the way
+a resolution picker does. `custom` takes the shape from the pictures the mode reads, and 16:9
+where it reads none. A `width` or `height` above `0` sets that side itself and the other is
+worked out from the area, which makes the shape whatever those give. Sides round to a
+multiple of 32.
+
+The nodes run inside a loop. **While Loop Open** and **While Loop Close** carry the clip from
+one segment to the next, `segments` sets the loop's count, and the clip is decoded once after
+the last segment.
+
+For growing a clip past the length a single sampling pass covers, and for directing it as it
+grows.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Latent/Video** and **WAS Suite/Logic/Loop**. Graphs:
+[`minimax-h3-extend-loop.json`](docs/workflows/minimax-h3-extend-loop.json),
+[`minimax-h3-ref2va-extend-loop.json`](docs/workflows/minimax-h3-ref2va-extend-loop.json),
+[`minimax-h3-flf-pair-loop.json`](docs/workflows/minimax-h3-flf-pair-loop.json).
+
+---
+
 ## Texture pushed into a generation while it is still forming
 
 **Latent Affine** multiplies a latent and adds an offset to it where a mask says to. The mask is
@@ -368,7 +436,7 @@ For skipping an expensive sampler, or a save, on a condition the graph works out
 
 ## Content Viewer
 
-<img src="docs/images/content-viewer.jpg" width="800">
+<img src="docs/images/content-viewer.jpg" alt="Content Viewer" width="800">
 
 Markdown, HTML, SVG, documents, code, JSON, CSV, logs and an image canvas, rendered in the node
 and passed on unchanged. For inspecting what a graph is carrying without leaving the canvas.

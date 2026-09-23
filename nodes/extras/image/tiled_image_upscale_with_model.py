@@ -15,6 +15,9 @@ logger = log.get_logger("nodes.extras.image")
 #: Smallest tile the out-of-memory retry will fall back to before giving up.
 MINIMUM_TILE = 64
 
+#: What the model may run in, `auto` following what the model declares it supports.
+PRECISIONS = ("auto", "32 bit float", "16 bit float", "bfloat16")
+
 
 class TiledImageUpscaleWithModel(io.ComfyNode):
     """Upscale with a model in overlapping tiles, cross-faded so no seam shows."""
@@ -22,10 +25,10 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASTiledImageUpscaleWithModel",
+            node_id="WASNSTiledImageUpscaleWithModel",
             display_name="Tiled Image Upscale (With Model)",
             search_aliases=[
-                "WASTiledImageUpscaleWithModel", "upscale", "tiled", "esrgan", "seam",
+                "WASNSTiledImageUpscaleWithModel", "upscale", "tiled", "esrgan", "seam",
             ],
             category="WAS Suite/Image/Upscaling",
             description=(
@@ -62,9 +65,10 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
                 io.Int.Input(
                     "tile_size", default=512, min=64, max=4096, step=16,
                     tooltip=(
-                        "Tile edge in input pixels. Larger tiles are faster and need more "
-                        "video memory; if the card runs out, the tile is halved and the run "
-                        "retried automatically. 512 suits most 8 GB cards."
+                        "Tile edge in input pixels. `256` and `512` both suit most cards and "
+                        "run at much the same speed; a larger tile needs more video memory "
+                        "without being faster. If the card runs out, the tile is halved and "
+                        "the run retried."
                     ),
                 ),
                 io.Int.Input(
@@ -92,6 +96,18 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
                         "upscale_factor. `lanczos` keeps the most detail, `area` is the "
                         "gentlest when shrinking, `nearest-exact` keeps hard pixel edges for "
                         "pixel art."
+                    ),
+                ),
+                io.Combo.Input(
+                    "precision",
+                    options=list(PRECISIONS),
+                    default=PRECISIONS[0],
+                    optional=True,
+                    tooltip=(
+                        "What the model runs in. `auto` = half precision where the model "
+                        "declares it safe, which is about twice as fast; `32 bit float` = "
+                        "every model's safest; `16 bit float` and `bfloat16` force one, "
+                        "whatever the model says."
                     ),
                 ),
                 io.Boolean.Input(
@@ -125,6 +141,7 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
         feather,
         resample_method,
         clear_comfy_memory,
+        precision="auto",
     ) -> io.NodeOutput:
         """Upscale the batch tile by tile.
 
@@ -168,6 +185,10 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
         model_management.free_memory(memory_required, device)
 
         upscale_model.to(device)
+        working = cls.pick_dtype(precision, upscale_model, device)
+        if working is not torch.float32:
+            upscale_model.model.to(working)
+            logger.info("running the upscale model in %s", working)
 
         _batch, in_height, in_width, _channels = image.shape
         upscale_factor = max(float(upscale_factor), 1.0)
@@ -186,7 +207,9 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
                 )
                 result = tiled_upscale(
                     samples=source,
-                    function=lambda tile: upscale_model(tile),
+                    function=lambda tile: upscale_model(
+                        tile.to(working).contiguous(memory_format=torch.channels_last)
+                    ).float(),
                     tile_size=current_tile,
                     overlap=overlap,
                     output_device="cpu",
@@ -206,6 +229,7 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
                     "the upscale ran out of memory; retrying with %d pixel tiles", current_tile
                 )
 
+        upscale_model.model.to(torch.float32)
         upscale_model.to("cpu")
         upscaled = torch.clamp(result, min=0.0, max=1.0).movedim(-3, -1)
         size_report.publish(
@@ -213,6 +237,37 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
             upscaled,
             action="upscaled",
             requested=(target_width, target_height),
-            facts={"tile": f"{current_tile} px"},
+            facts={"tile": f"{current_tile} px", "precision": str(working).replace("torch.", "")},
         )
         return io.NodeOutput(upscaled)
+
+    @staticmethod
+    def pick_dtype(precision: str, upscale_model, device):
+        """What the model runs in.
+
+        Args:
+            precision: An entry from :data:`PRECISIONS`.
+            upscale_model: The loaded upscale model, read for the dtypes it declares.
+            device: The device the model runs on.
+
+        Returns:
+            A ``torch.dtype``.
+        """
+        import torch
+
+        from comfy import model_management
+
+        named = {
+            "32 bit float": torch.float32,
+            "16 bit float": torch.float16,
+            "bfloat16": torch.bfloat16,
+        }
+        if precision in named:
+            return named[precision]
+        if not model_management.should_use_fp16(device):
+            return torch.float32
+        if getattr(upscale_model, "supports_half", False):
+            return torch.float16
+        if getattr(upscale_model, "supports_bfloat16", False):
+            return torch.bfloat16
+        return torch.float32

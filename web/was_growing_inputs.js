@@ -32,6 +32,19 @@ const POWER_LORA_ROWS = {
   header: { name: "was_row_header", title: "Selected LoRA's", before: "lora_1_enabled" },
 };
 
+// A prompt, a frame count, an overlap and a continuity to a row on MiniMax H3 Conditioning.
+// `decidesAt` names the prompt as the widget that says whether a row is in use.
+const H3_PROMPT_ROWS = {
+  groups: Array.from({ length: 24 }, (unused, index) => [
+    `prompt_${index + 1}`,
+    `duration_${index + 1}`,
+    `overlap_${index + 1}`,
+    `continuity_${index + 1}`,
+  ]),
+  minVisible: 2,
+  decidesAt: 0,
+};
+
 // How many slots a lettered series declares.
 const LETTERED_SLOTS = 24;
 
@@ -47,11 +60,6 @@ function lettered(stem) {
     (unused, index) => `${stem}_${String.fromCharCode(97 + index)}`,
   );
 }
-
-// The bare letters `a` to `x`, which is what Number Expression names its slots.
-const BARE_LETTERS = Array.from({ length: LETTERED_SLOTS }, (unused, index) =>
-  String.fromCharCode(97 + index),
-);
 
 const GROWING = {
   "Text List": lettered("text"),
@@ -70,9 +78,6 @@ const GROWING = {
     names: Array.from({ length: LETTERED_SLOTS }, (unused, index) => `style${index + 1}`),
     empty: ["None"],
   },
-  // A float widget always holds a number, so `empty` names the value that reads as unused;
-  // without it every slot looks filled the moment the node is dropped and none ever folds.
-  WASNumberExpression: { names: BARE_LETTERS, minVisible: 2, empty: [0, "0"] },
   // The condition slots on the two reducers, revealed as each one is wired. `empty` names the
   // unticked box: a boolean widget always holds something, so without it every slot reads as
   // filled from the moment the node is dropped and none of them ever folds away.
@@ -83,7 +88,9 @@ const GROWING = {
   // would never fold away if they had a vote. These also grow the per-row name outputs, in
   // `was_growing_sockets.js`, which counts a row used the same way.
   WASPowerLoraLoader: POWER_LORA_ROWS,
-  WASPowerLoraMerger: POWER_LORA_ROWS,
+  WASNSPowerLoraMerger: POWER_LORA_ROWS,
+  // Row 1 is the clip and every row after it is one extension pass.
+  WASMiniMaxH3Conditioning: H3_PROMPT_ROWS,
 };
 
 // Nodes whose repeated inputs come in pairs rather than singly, as the pair names in the

@@ -1,8 +1,8 @@
 /**
  * Which nodes draw their repeated sockets only as they are wired.
  *
- * Each entry starts at two slots and gains one each time the last is wired, or takes its count
- * from a `count` function.
+ * An entry grows as its slots are wired, or takes its count from `count` or `exactCount`,
+ * or its visible set from `select`.
  */
 
 import { app } from "../../scripts/app.js";
@@ -33,6 +33,11 @@ function lettered(stem, count = LETTERED_SLOTS) {
     `${stem}_${String.fromCharCode(97 + index)}`,
   ]);
 }
+
+// One group per bare-letter slot, `a` to `x`, which is how Number Expression names its inputs.
+const BARE_LETTER_SLOTS = Array.from({ length: LETTERED_SLOTS }, (unused, index) => [
+  String.fromCharCode(97 + index),
+]);
 
 /**
  * Read a widget's number off a node.
@@ -139,6 +144,78 @@ function enabledLoraRows(node) {
   return count;
 }
 
+// The references `ref2va` reads. A reference video and its soundtrack are drawn as one pair.
+const H3_REF_IMAGES = Array.from({ length: 9 }, (unused, index) => [`ref_image_${index + 1}`]);
+const H3_REF_VIDEOS = Array.from({ length: 3 }, (unused, index) => [
+  `ref_video_${index + 1}`,
+  `ref_video_audio_${index + 1}`,
+]);
+const H3_REF_AUDIOS = Array.from({ length: 3 }, (unused, index) => [`ref_audio_${index + 1}`]);
+
+// The pictures and sounds MiniMax H3 Conditioning reads, and which of them each mode draws. A
+// mode that reads none draws no socket for them at all.
+const H3_FRAME_SLOTS = [
+  ["first_frame"],
+  ["last_frame"],
+  ["images"],
+  ["audio_vae"],
+  ...H3_REF_IMAGES,
+  ...H3_REF_VIDEOS,
+  ...H3_REF_AUDIOS,
+];
+// Which of those the chosen mode reads. `fl2va_batched` takes a whole batch and draws that
+// instead of the two single frames.
+const H3_MODE_SLOTS = {
+  t2va: [],
+  i2va: [0],
+  fl2va: [0, 1],
+  fl2va_batched: [2],
+  ref2va: [3],
+};
+// Where each reference series starts in H3_FRAME_SLOTS.
+const H3_REF_SERIES = [
+  [4, H3_REF_IMAGES],
+  [4 + H3_REF_IMAGES.length, H3_REF_VIDEOS],
+  [4 + H3_REF_IMAGES.length + H3_REF_VIDEOS.length, H3_REF_AUDIOS],
+];
+
+/**
+ * The slots of one reference series in use, plus one spare below the last of them.
+ *
+ * @param {object} node - The MiniMax H3 Conditioning node.
+ * @param {number} start - Where the series starts in H3_FRAME_SLOTS.
+ * @param {string[][]} series - Its groups, in order.
+ * @returns {number[]} Indexes into H3_FRAME_SLOTS.
+ */
+function h3RefSlots(node, start, series) {
+  const linked = new Set(
+    (node?.inputs ?? [])
+      .filter((socket) => socket.link !== null && socket.link !== undefined)
+      .map((socket) => socket.name),
+  );
+  let lastUsed = -1;
+  series.forEach((names, index) => {
+    if (names.some((name) => linked.has(name))) lastUsed = index;
+  });
+  const count = Math.min(lastUsed + 2, series.length);
+  return Array.from({ length: count }, (unused, index) => start + index);
+}
+
+/**
+ * Which inputs the chosen mode reads.
+ *
+ * @param {object} node - The MiniMax H3 Conditioning node.
+ * @returns {number[]} Indexes into H3_FRAME_SLOTS.
+ */
+function h3ModeSlots(node) {
+  const widget = node?.widgets?.find((candidate) => candidate.name === "mode");
+  const slots = [...(H3_MODE_SLOTS[widget?.value] ?? [])];
+  if (widget?.value === "ref2va") {
+    for (const [start, series] of H3_REF_SERIES) slots.push(...h3RefSlots(node, start, series));
+  }
+  return slots;
+}
+
 // The index switches' inputs, matching SLOT_NAMES in modules/logic/switch_index.py.
 const INDEX_SWITCH_SLOTS = Array.from({ length: 26 }, (unused, index) => [
   `input_${String.fromCharCode(97 + index)}`,
@@ -149,7 +226,7 @@ const INDEX_SWITCH_SLOTS = Array.from({ length: 26 }, (unused, index) => [
 // widgets that decide the count.
 const GROWING = {
   // Blends any number of conditionings; the slots are sockets, counted from what is wired.
-  ConditioningBlend: CONDITIONING_SLOTS,
+  WASConditioningBlend: CONDITIONING_SLOTS,
   // One name output per switched-on row, counted from the row widgets rather than from wiring,
   // so a name appears as soon as its row names a file. One empty slot rests below that, as
   // everywhere else.
@@ -157,6 +234,14 @@ const GROWING = {
     slots: LORA_NAME_SLOTS,
     watch: LORA_ROW_WIDGETS,
     count: (node) => enabledLoraRows(node),
+  },
+  // Picture inputs drawn by the mode that reads them rather than by wiring, so `t2va` shows
+  // none and `i2va` shows only the frame it opens on. `ref2va` draws each reference series
+  // as it is wired, one spare below the last.
+  WASMiniMaxH3Conditioning: {
+    slots: H3_FRAME_SLOTS,
+    watch: ["mode"],
+    select: (node) => h3ModeSlots(node),
   },
   // The index switches declare 26 link-only slots each, folded to the ones wired plus one.
   WASAnyIndexSwitch: INDEX_SWITCH_SLOTS,
@@ -173,6 +258,9 @@ const GROWING = {
   "Image Batch": lettered("images", 26),
   "Mask Batch": lettered("masks", 26),
   "Latent Batch": lettered("latent", 26),
+  // The expression variables, drawn as they are wired. They are link-only, so the widget
+  // grower never sees them.
+  WASNumberExpression: BARE_LETTER_SLOTS,
   "Masks Combine Regions": lettered("mask"),
   "Text List Concatenate": lettered("list"),
   "Text Dictionary Update": lettered("dictionary"),
@@ -215,7 +303,16 @@ const GROWING = {
  */
 function apply(node, entry) {
   const options = {};
-  if (entry.count) {
+  if (entry.select) {
+    // A node whose visible set changes rather than only its length, as a mode swapping one
+    // picture input for another.
+    options.select = () => entry.select(node);
+  }
+  if (entry.exactCount) {
+    // A count that may be nought, where a widget rather than the wiring says how many sockets
+    // belong on the node at all. A wired socket is still kept.
+    options.exactCount = () => entry.exactCount(node);
+  } else if (entry.count) {
     // Passed as a function, not a number: `growSockets` reads the declaration off the node when
     // it is called, so calling it a second time would capture a node it had already shrunk and
     // lose the sockets past that point for good. A wired socket is never hidden either way, so

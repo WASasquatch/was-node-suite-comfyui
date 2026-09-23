@@ -261,12 +261,10 @@ class ImageAmbientOcclusion(io.ComfyNode):
                     default=0.15,
                     step=0.005,
                     tooltip=(
-                        "How steep a ridge has to be before it shades at all, as a rise over a "
-                        "run. Most height maps arrive with only 256 levels, and every one of "
-                        "those steps is a tiny cliff that shades as concentric rings across "
-                        "ground that should be flat. 0.15 clears that at the default relief; "
-                        "raise it towards 0.3 if rings survive a larger height_scale, and drop "
-                        "it to 0 for a height map that came in as smooth floating point."
+                        "How steep a ridge has to be before it shades, as rise over run. "
+                        "`0.15` = clears the rings an 8 bit height map shades on flat ground; "
+                        "`0.3` = for rings that survive a larger height_scale; `0` = for a "
+                        "smooth floating point height map."
                     ),
                 ),
                 io.Float.Input(
@@ -309,14 +307,11 @@ class ImageAmbientOcclusion(io.ComfyNode):
                     options=list(occlusion.PRECISIONS),
                     default="32 bit float",
                     tooltip=(
-                        "How finely the three outputs are stepped, measured on the 0 to 1 "
-                        "scale. '32 bit float' keeps every value and is what EXR Save and DNG "
-                        "Save want; '16 bit' rounds to steps of 1/65535, still smooth enough "
-                        "for a graded plate; '8 bit' rounds to steps of 1/255, which bands a "
-                        "soft gradient and only matches what a PNG can hold anyway. Nothing is "
-                        "clipped at any setting: linear light above 1.0 keeps its value and "
-                        "lands on the same ladder of steps, so a highlight at 4.0 has four "
-                        "times as many steps under it as one at 1.0."
+                        "How finely the three outputs are stepped. `32 bit float` = every "
+                        "value kept, for EXR Save and DNG Save; `16 bit` = steps of 1/65535, "
+                        "smooth enough to grade; `8 bit` = steps of 1/255, what a PNG holds, "
+                        "and bands a soft gradient. Nothing above 1.0 is clipped at any "
+                        "setting."
                     ),
                 ),
             ],

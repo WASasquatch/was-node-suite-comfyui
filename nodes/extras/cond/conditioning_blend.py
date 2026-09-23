@@ -110,16 +110,16 @@ def pooled_output(conditioning, socket):
 SLOT_NAMES = tuple(f"conditioning_{letter}" for letter in "abcdefghijklmnopqrstuvwxyz")
 
 
-class ConditioningBlend(io.ComfyNode):
+class WASConditioningBlend(io.ComfyNode):
     """Blend any number of conditionings into one by a choice of formulas."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="ConditioningBlend",
+            node_id="WASConditioningBlend",
             display_name="Conditioning (Blend)",
             search_aliases=[
-                "ConditioningBlend",
+                "WASConditioningBlend",
                 "Conditioning (Blend)",
                 "prompt mix",
                 "blend prompts",

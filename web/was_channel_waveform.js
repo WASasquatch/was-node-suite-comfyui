@@ -18,7 +18,7 @@ const EXT_NAME = "WASNodeSuite.ChannelWaveformUI";
 const LOG_NAME = "WASNodeSuite.ChannelWaveform";
 const SETTING_ID = "WAS.Analyze.ShowWaveformStats";
 const PARADE_SETTING_ID = "WAS.Analyze.ShowWaveformParade";
-const NODE_ID = "WASChannelWaveform";
+const NODE_ID = "WASNSChannelWaveform";
 
 const UI_WIDGET_NAME = "was_channel_waveform_ui";
 const UI_WIDGET_TYPE = "was_channel_waveform";

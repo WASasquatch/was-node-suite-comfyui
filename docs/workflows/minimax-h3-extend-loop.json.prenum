@@ -1,0 +1,2585 @@
+{
+  "id": "b89aa734-7c17-40e6-8338-b275746722ff",
+  "revision": 0,
+  "last_node_id": 36,
+  "last_link_id": 50,
+  "nodes": [
+    {
+      "id": 11,
+      "type": "PrimitiveString",
+      "pos": [
+        2110,
+        1012
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "value": ""
+      }
+    },
+    {
+      "id": 15,
+      "type": "WASH3ExtendWindow",
+      "pos": [
+        2030,
+        208
+      ],
+      "size": [
+        300,
+        238
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 19
+        },
+        {
+          "name": "positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 8
+        },
+        {
+          "name": "prompts",
+          "shape": 7,
+          "type": "WAS_H3_PROMPTS",
+          "link": 13
+        },
+        {
+          "name": "pass_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "pass_index"
+          },
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "window",
+          "type": "LATENT",
+          "links": [
+            21
+          ]
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "overlap_frames",
+          "type": "INT",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3ExtendWindow",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "carry",
+        102,
+        22,
+        0,
+        0,
+        1.15
+      ],
+      "widgets_values_named": {
+        "continuity": "carry",
+        "extension_frames": 102,
+        "overlap_frames": 22,
+        "pass_index": 0,
+        "drift_control": 0,
+        "refresh_gain": 1.15
+      }
+    },
+    {
+      "id": 18,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        2370,
+        208
+      ],
+      "size": [
+        300,
+        338
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 26
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 27
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 28
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 29
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            30
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "WASWhileLoopClose",
+      "pos": [
+        3390,
+        208
+      ],
+      "size": [
+        300,
+        538
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "iterator",
+          "type": "WAS_LOOP",
+          "link": 34
+        },
+        {
+          "name": "value_1",
+          "shape": 7,
+          "type": "*",
+          "link": 35
+        },
+        {
+          "name": "value_2",
+          "shape": 7,
+          "type": "*",
+          "link": 36
+        },
+        {
+          "name": "value_3",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "continue_loop",
+          "type": "BOOLEAN,NUMBER,INT,FLOAT",
+          "widget": {
+            "name": "continue_loop"
+          },
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "metadata",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "name": "value_1",
+          "type": "LATENT",
+          "links": [
+            38
+          ]
+        },
+        {
+          "name": "value_2",
+          "type": "STRING",
+          "links": [
+            41
+          ]
+        },
+        {
+          "name": "value_3",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASWhileLoopClose",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        false,
+        false
+      ],
+      "widgets_values_named": {
+        "continue_loop": false,
+        "accumulate": false
+      }
+    },
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        556,
+        205
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 16,
+      "type": "BasicGuider",
+      "pos": [
+        2030,
+        482
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": "WASH3ExtendAppend",
+      "pos": [
+        2710,
+        208
+      ],
+      "size": [
+        300,
+        122
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 20
+        },
+        {
+          "name": "sampled",
+          "type": "LATENT",
+          "link": 30
+        },
+        {
+          "name": "overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "overlap_frames"
+          },
+          "link": 23
+        },
+        {
+          "name": "segment_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "segment_index"
+          },
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            35
+          ]
+        },
+        {
+          "name": "frames",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3ExtendAppend",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        22,
+        0
+      ],
+      "widgets_values_named": {
+        "overlap_frames": 22,
+        "segment_index": 0
+      }
+    },
+    {
+      "id": 21,
+      "type": "StringConcatenate",
+      "pos": [
+        2710,
+        378.7490550323531
+      ],
+      "size": [
+        300,
+        166
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "widget": {
+            "name": "string_a"
+          },
+          "link": 32
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "",
+        "",
+        "\n"
+      ],
+      "widgets_values_named": {
+        "string_a": "",
+        "string_b": "",
+        "delimiter": "\n"
+      }
+    },
+    {
+      "id": 24,
+      "type": "VAEDecode",
+      "pos": [
+        4138.726375808828,
+        197.85989434999632
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 39
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        4135.249360800005,
+        291.44994437940824
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 40
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": "CreateVideo",
+      "pos": [
+        4480.63285167648,
+        204.23521394999406
+      ],
+      "size": [
+        300,
+        126
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 42
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB"
+      }
+    },
+    {
+      "id": 27,
+      "type": "SaveVideo",
+      "pos": [
+        3825.7950250147055,
+        487.93073925881936
+      ],
+      "size": [
+        1034,
+        106
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "video/h3_carry_fixed",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/h3_carry_fixed",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 23,
+      "type": "WASFreeMemory",
+      "pos": [
+        3817.6819899941174,
+        202.204974985294
+      ],
+      "size": [
+        300,
+        210
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "LATENT",
+          "links": [
+            39,
+            40
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASWhileLoopOpen",
+      "pos": [
+        1690.3824716509707,
+        211.3147543084116
+      ],
+      "size": [
+        300,
+        158
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value_1",
+          "shape": 7,
+          "type": "*",
+          "link": 46
+        },
+        {
+          "name": "value_2",
+          "shape": 7,
+          "type": "*",
+          "link": 12
+        },
+        {
+          "name": "value_3",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "iterator",
+          "type": "WAS_LOOP",
+          "links": [
+            34
+          ]
+        },
+        {
+          "name": "index",
+          "type": "INT",
+          "links": [
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "name": "metadata",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "name": "value_1",
+          "type": "LATENT",
+          "links": [
+            19,
+            20
+          ]
+        },
+        {
+          "name": "value_2",
+          "type": "STRING",
+          "links": [
+            32
+          ]
+        },
+        {
+          "name": "value_3",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASWhileLoopOpen",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        12
+      ],
+      "widgets_values_named": {
+        "max_iterations": 12
+      }
+    },
+    {
+      "id": 8,
+      "type": "KSamplerSelect",
+      "pos": [
+        1690,
+        1012
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "res_2s"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "res_2s"
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASMiniMaxH3Conditioning",
+      "pos": [
+        967.1952078928822,
+        206.59760394644113
+      ],
+      "size": [
+        620,
+        1056.0000000000002
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 6
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            45
+          ]
+        },
+        {
+          "name": "prompts",
+          "type": "WAS_H3_PROMPTS",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "segments",
+          "type": "INT",
+          "links": [
+            48
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "latents",
+          "shape": 6,
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASMiniMaxH3Conditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "t2va",
+        "16:9",
+        1,
+        0,
+        0,
+        "",
+        "",
+        "id=\"x001\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: A busy rustic cyberpunk police precinct built inside an aging brick industrial building. Battered steel desks, exposed pipes, hanging cable bundles, old ventilation fans, scratched terminal screens, patched fluorescent fixtures, warm desk lamps, paper folders mixed with crude digital displays, officers and civilians continually moving through narrow aisles. Smoky atmospheric haze, damp coats, chipped paint, heavily used surfaces. Night outside the rain-streaked windows.\n<Prop or VFX>: A thick battered case folder and small rectangular data wafer lying on the police chief's crowded desk, surrounded by handwritten notes, old mugs and flickering evidence screens.\n\nsummary:\nOpening with the woman already seated opposite the police chief in the crowded precinct, the chief begins briefing her on a domestic synth that murdered the family it belonged to. She listens without interrupting until asking only why the job has come to her, closing with the chief leaning forward over the case folder and preparing to explain where the synth disappeared.\n\nretention_analysis:\n<Subject 1>: newly_generated, persistent identity and clothing established for x001 through x004.\n<Subject 2>: newly_generated, persistent identity and clothing established for x001 through x004.\n<Environment>: newly_generated, persistent precinct architecture and lighting established for x001 through x004.\n<Prop or VFX>: newly_generated, persistent case folder and data wafer established for x001 through x004.\n\ndetailed_description:\nA shoulder-height medium-wide handheld shot from slightly behind <Subject 2> frames <Subject 1> across a battered steel desk, using a restrained 40mm documentary-style perspective. The precinct remains visibly active behind him: officers cross between desks, a clerk carries a stack of folders, terminals flicker, someone argues quietly near a booking counter, and an old ceiling fan turns unevenly beneath exposed pipes.\n\n<Subject 1> begins seated heavily in his chair with one forearm resting beside the closed case folder. He studies <Subject 2> for a beat, draws the folder toward himself and opens it with two thick fingers. The camera performs a very slow push-in while preserving both characters in the composition.\n\n(S1) speaks in a low gravelled voice: \"Got a bad one. Domestic synth. Killed the family it was registered to three nights ago.\"\n\nAs he speaks, he turns one evidence page toward her. Cold terminal light catches the worn skin around his eyes while a warm desk lamp gives the case papers an amber edge. <Subject 2> lowers her gaze briefly to the folder, then looks directly back at him. She does not visibly recoil; only her jaw tightens slightly and one thumb slowly rubs the seam of her leather glove.\n\nA uniformed officer crosses close behind her chair and briefly occludes the background. She waits until the movement clears.\n\n(S2) asks simply: \"Why me?\"\n\n<Subject 1> shifts forward, plants both forearms on the desk and looks down at the open folder as if choosing how much to say.\n\nThe shot closes with <Subject 1> leaning forward over the case folder, <Subject 2> sitting motionless opposite him, and the precinct continuing to move around them.\n\noverall_soundscape:\nLayered police-station ambience: overlapping distant conversations, old keyboards, paper handling, chair legs scraping concrete, ventilation fans, intermittent radio chatter, boots passing through the aisle, rain faintly tapping the windows. Dialogue remains dry and close with little room reverb. The chief's voice is low and rough; the woman's voice is controlled and economical.\n\nnon_diegetic_music:\nNone.",
+        10,
+        0,
+        "id=\"x002\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: The same busy rustic cyberpunk police precinct inside the aging brick industrial building, with battered steel desks, exposed pipes, hanging cable bundles, patched fluorescent fixtures, warm desk lamps, paper files, scratched terminal screens and constant background movement.\n<Prop or VFX>: The same open battered case folder. One page displays a crude industrial district map and an old photograph of a sprawling NVIDIA fabrication complex, its exterior stained and partly abandoned.\n\nsummary:\nOpening with the chief already leaning forward over the open case folder, he explains that the synth vanished into the harbor industrial district and is believed to be inside a defunct NVIDIA fabrication plant. The woman asks whether anyone has gone inside. He tells her two reconnaissance drones were sent and neither returned, closing with her gaze fixed on the plant image.\n\nretention_analysis:\n<Subject 1>: fully_preserved from x001.\n<Subject 2>: fully_preserved from x001.\n<Environment>: fully_preserved from x001.\n<Prop or VFX>: partially_preserved, same case folder now opened to the industrial district information.\n\ndetailed_description:\nThe shot opens in the exact conversational state where x001 ended: <Subject 1> leans forward with both forearms on the desk, the open folder between them, while <Subject 2> sits opposite him.\n\nA medium over-the-table composition places the folder in the lower foreground with both faces above it. The camera drifts slowly sideways from <Subject 1>'s side toward <Subject 2>, moving only enough to reveal the industrial map printed across the open page.\n\n<Subject 1> taps one thick finger against the harbor district.\n\n(S1) replies: \"Because patrol lost it in Harbor Nine.\"\n\nHis finger slides several centimeters across the paper and stops on the old factory photograph.\n\n(S1) continues: \"Thermal trail ended here. Old NVIDIA fabrication plant. Place has been dead twenty years.\"\n\n<Subject 2>'s eyes move from the map to the photograph. She leans forward only slightly, elbows remaining off the desk. A strand of her messy bob falls across one eye and she pushes it aside with the back of one finger without breaking attention from the page.\n\n(S2) asks: \"Anyone go in?\"\n\n<Subject 1> looks at her rather than answering immediately. His mouth tightens at one corner.\n\n(S1) says: \"Two drones.\"\n\nA precinct radio crackles somewhere behind him.\n\n(S1) finishes: \"Neither came back.\"\n\nThe camera completes its slow lateral drift and settles closer to <Subject 2>'s side of the desk. Her eyes remain fixed on the faded photograph of the factory while the chief's hand rests beside it.\n\nThe shot closes with the factory image and district map clearly visible beneath her gaze.\n\noverall_soundscape:\nThe same continuous precinct ambience from x001. Chairs scrape, radios murmur, distant voices overlap and ventilation rattles overhead. The dialogue remains restrained. A brief radio burst coincides with the chief mentioning the drones, then disappears back into the room noise.\n\nnon_diegetic_music:\nNone.",
+        12,
+        22,
+        "id=\"x003\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: The same busy rustic cyberpunk police precinct, with damp industrial brick, exposed pipes, patched fluorescent lighting, warm desk lamps, crowded desks, old terminals and constant background activity.\n<Prop or VFX>: The open case folder showing the NVIDIA fabrication plant and harbor map. A scratched metallic payment token and small rectangular data wafer sit beside the folder.\n\nsummary:\nOpening with the woman still studying the factory photograph, the chief explains the terms: enter quietly, confirm the synth, and shut it down. She asks only about payment. He places the payment token beside the data wafer, closing with the offer physically sitting between them.\n\nretention_analysis:\n<Subject 1>: fully_preserved from x002.\n<Subject 2>: fully_preserved from x002.\n<Environment>: fully_preserved from x002.\n<Prop or VFX>: partially_preserved, same folder with payment token and data wafer added.\n\ndetailed_description:\nThe shot opens on the factory photograph exactly where x002 closed. <Subject 2>'s gaze remains lowered toward it.\n\nA shallow-focus close shot begins on the faded NVIDIA plant image, then slowly racks focus upward to <Subject 2>'s face. Her eyes lift toward <Subject 1> without changing her posture.\n\nThe camera gently pulls back into a compact two-shot across the corner of the desk.\n\n<Subject 1> closes one side of the folder over the family evidence but leaves the factory map exposed.\n\n(S1) says: \"Go in quiet. Confirm it's there. Shut it down.\"\n\nHe reaches into the inside pocket of his battered coat. The leather chair creaks beneath his weight. He removes a scratched metallic payment token, places it on the desk and pushes it forward with two fingers.\n\n<Subject 2> looks at the token, then at him.\n\n(S2) asks: \"Pay?\"\n\n<Subject 1> leaves his fingertips resting on the token.\n\n(S1) answers: \"Half now. Half when it's cold.\"\n\nHe slides the small data wafer beside it.\n\n(S1) adds: \"Everything we have is on that.\"\n\n<Subject 2>'s hand moves onto the desk but stops just short of the token. Her fingers remain relaxed rather than reaching immediately. She studies the chief for one silent beat while blurred officers move through the background.\n\nThe camera settles into stillness.\n\nThe shot closes with the payment token and data wafer between them, <Subject 1>'s hand withdrawn, and <Subject 2>'s hand resting several centimeters away.\n\noverall_soundscape:\nContinuous precinct room tone, old electronics humming, paper movement, footsteps and muted voices. A metal click as the payment token contacts the desk, followed by the lighter plastic-metal sound of the data wafer sliding beside it. No dramatic sound accent accompanies the offer.\n\nnon_diegetic_music:\nNone.",
+        11,
+        22,
+        "id=\"x004\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: The same busy rustic cyberpunk police precinct. The chief's desk sits near a narrow aisle leading toward a heavy steel-framed exit door beneath flickering fluorescent fixtures.\n<Prop or VFX>: The same payment token and small rectangular data wafer on the desk.\n\nsummary:\nOpening with the offer resting between them, the woman accepts without negotiation, takes the data wafer and payment token, stands and leaves. The chief warns her not to underestimate the synth. She does not answer, closing as the heavy precinct door swings shut behind her and briefly cuts away the exterior darkness.\n\nretention_analysis:\n<Subject 1>: fully_preserved from x003.\n<Subject 2>: fully_preserved from x003.\n<Environment>: fully_preserved from x003.\n<Prop or VFX>: fully_preserved initially, then transferred into <Subject 2>'s possession.\n\ndetailed_description:\nThe shot opens exactly where x003 ended, with the payment token and data wafer between the two characters and <Subject 2>'s hand resting just short of them.\n\nA medium two-shot holds steady for a beat.\n\n<Subject 2> moves her hand forward, takes the data wafer first, then closes the payment token into the same palm.\n\n(S2) says: \"I'll take it.\"\n\nThere is no smile or handshake. She slips both objects into the inside pocket of her worn leather jacket and rises from the chair in one continuous movement. The chair legs scrape backward across concrete.\n\nThe camera rises with her and transitions into a slow shoulder-height tracking movement as she turns into the aisle. <Subject 1> remains seated in the background.\n\n(S1) calls after her: \"Don't underestimate it.\"\n\n<Subject 2> slows for less than a step but does not turn around. Her jaw shifts subtly as she continues walking.\n\nThe camera follows several paces behind her through the busy precinct. Officers move aside naturally rather than stopping to watch. Overhead fluorescent fixtures pass across her leather jacket in alternating pale bands while warm desk lamps fall away behind her.\n\nShe reaches the heavy steel-framed exit, pushes it open and steps into the dark exterior beyond. Cold blue street light and reflected wet pavement briefly spill through the doorway.\n\nThe camera stops inside the precinct.\n\nThe heavy door swings back toward frame and closes with a dull mechanical slam.\n\nThe shot ends immediately on the closed door.\n\noverall_soundscape:\nBusy precinct ambience remains continuous as she stands and walks. Chair legs scrape the floor, boots cross concrete, nearby conversations pass in and out of clarity. The chief's warning carries across the room without amplification. Opening the exit introduces a brief wash of distant traffic, rain and industrial city noise before the heavy door closes and suppresses it again.\n\nnon_diegetic_music:\nNone.",
+        9,
+        22,
+        "id=\"x005\"\n\nsubject_definitions:\n<Environment 1>: A vast dense cyberpunk city at night, visually aged rather than pristine: layered concrete towers, rust-streaked megastructures, rooftop machinery, old neon signage, elevated rail lines, steam vents, rain haze and countless mismatched windows. Wet streets far below reflect scattered amber, red and cyan industrial light.\n<Environment 2>: The harbor industrial district of the same city, bordering black rain-dimpled water. Container yards, skeletal loading cranes, pipelines, abandoned warehouses, derelict fabrication buildings and disused smokestacks fill the shoreline. The district is substantially darker and less populated than the central city.\n<Prop or VFX>: The defunct NVIDIA fabrication plant within the harbor district, a huge aging industrial complex of interconnected fabrication halls, utility towers, rooftop ducts and stained concrete. Sections of the structure are dark and partially decayed. A large weathered NVIDIA identity remains visible on one exterior facade, faded from years of exposure rather than functioning as modern advertising.\n\nsummary:\nA hard cut away from the closed precinct door reveals a massive aerial night view of the city as harsh distorted dissonant FM-synth music erupts without warning. After holding the city scale, another hard cut moves to the harbor industrial district and advances toward the dark abandoned fabrication complex, closing with the NVIDIA plant isolated among dead factories near the waterfront.\n\nretention_analysis:\n<Environment 1>: newly_generated.\n<Environment 2>: newly_generated but spatially part of the same city as <Environment 1>.\n<Prop or VFX>: newly_generated, persistent location for x005 and x006.\n\ndetailed_description:\n[Shot 1] HARD CUT directly from the closed precinct door in x004 to an extreme-wide high-altitude aerial view over the cyberpunk city at night.\n\nThere is no visual transition, dissolve or establishing bridge.\n\nThe camera glides forward above the enormous city at a steady aircraft-like speed, slightly descending while maintaining a broad view of layered towers stretching into rain haze. Elevated trains move between buildings far below. Steam rises from rooftop exhaust systems and bends with the wind. Scattered signs pulse irregularly through mist. Wet surfaces catch fragmented reflections rather than producing a clean neon glow.\n\nAt the exact first frame of the city reveal, an aggressive non-diegetic FM-synth score begins abruptly.\n\nThe camera continues forward for several seconds, allowing the city's scale and visual density to dominate.\n\n[Shot 2] At 00:04.500, HARD CUT to another aerial view over the harbor district of the same city.\n\nThe camera is now lower, moving diagonally along the waterfront. Black water occupies one side of frame while enormous disused industrial blocks occupy the other. Skeletal cranes, container stacks, rusted pipelines and dead smokestacks pass beneath the camera. Sparse sodium lamps illuminate only fragments of the district.\n\nAs the camera advances, the defunct NVIDIA fabrication plant becomes distinguishable among the surrounding abandoned factories: an unusually broad complex of fabrication halls, rooftop ventilation structures and utility towers.\n\nThe aerial movement subtly alters course toward the plant and descends several meters, gradually making it the center of the composition.\n\nThe shot closes with the abandoned NVIDIA plant clearly isolated ahead near the harbor, most windows dark, rain haze drifting across its upper structures.\n\noverall_soundscape:\nFor the city shot, distant urban machinery, muted aerial traffic and rain are present beneath the score. After the harbor cut, the underlying ambience becomes colder and emptier: coastal wind, distant water against concrete, loose sheet metal rattling, faraway industrial electrical hum and occasional mechanical groans from abandoned infrastructure.\n\nnon_diegetic_music:\nThe score begins abruptly on the first frame after the hard cut from x004: hardcore distorted dissonant FM synthesis, abrasive metallic frequency modulation, unstable industrial harmonics, deep sub-frequency pressure and irregular low percussion. Dense sustained synth tones grind against sharp detuned digital intervals, creating a severe cinematic ambient texture rather than a melodic song. The music continues uninterrupted across the hard cut into the harbor district and grows slightly denser as the camera approaches the abandoned fabrication plant.",
+        10,
+        22,
+        "id=\"x006\"\n\nsubject_definitions:\n<Subject 2>: The same woman from x001 through x004, not physically visible in frame. Her voice is heard remotely over encrypted radio, dry, calm and restrained.\n<Environment>: The defunct NVIDIA fabrication plant in the harbor industrial district at night. Huge stained concrete fabrication halls, rooftop ventilation equipment, rusted service gantries, broken skylights, old ducts, silent utility towers and partially collapsed support structures. Rain moves diagonally through cold harbor wind. Almost the entire complex is unlit.\n<Prop or VFX>: A reconnaissance drone optical interface seen directly from the drone's point of view. Minimal utilitarian HUD graphics are projected over the image: targeting brackets, range ticks, altitude data, building-outline tracing and electronic-signature scan indicators. The HUD should remain readable and mechanically functional rather than decorative.\n<Prop or VFX>: Electronic-signature scanning represented by thin spatial tracing lines and small restrained markers that attach to active electrical sources inside or around the structure. No confirmed humanoid target appears.\n\nsummary:\nOpening on a much closer aerial approach toward the same abandoned fabrication plant shown at the end of x005, the viewpoint is revealed as a reconnaissance drone HUD. The drone descends, circles part of the complex and scans windows, roofs and interior electrical sources without finding the synth. The woman reports over radio that there is no sign of it so far, closing with the drone hovering outside a dark upper section of the factory while the scan continues.\n\nretention_analysis:\n<Subject 2>: fully_preserved identity and voice from x001 through x004, audio-only in this prompt.\n<Environment>: fully_preserved location from the end of x005, now observed at much closer range.\n<Prop or VFX>: newly_generated drone interface and scanning system.\n\ndetailed_description:\nA HARD CUT from the wider harbor aerial at the end of x005 to a much closer forward-moving aerial view of the same NVIDIA fabrication plant, maintaining the same general approach direction.\n\nThe perspective is immediately identifiable as a reconnaissance drone camera. A restrained monochrome HUD overlays the image with altitude, range marks, central tracking brackets and small telemetry indicators around the frame edges.\n\nThe drone advances toward the upper factory structures at moderate speed. Rain streaks diagonally across the optics. Wind produces small controlled stabilization corrections rather than handheld movement.\n\nAs the drone nears the first fabrication hall, thin HUD geometry traces the roofline and exterior walls. Several weak electronic signatures appear as small markers: a failing rooftop transformer, intermittent emergency power inside one lower floor and a cluster of active machinery deeper in the complex. Each source is briefly bracketed and classified before the scan moves onward.\n\nNo humanoid electronic signature is identified.\n\nThe drone banks gradually left around a large ventilation tower, losing several meters of altitude while keeping the main fabrication hall centered. Broken windows and dark maintenance corridors pass beneath the targeting reticle. A faded weather-damaged NVIDIA mark is partially visible across one stained exterior section as the drone passes it.\n\nThe drone slows near a dark upper assembly structure and transitions into a stable hover. The HUD expands a scanning frame across several adjoining windows. Thin lines sweep vertically through the structure, briefly revealing scattered electrical activity but no clear target.\n\nA radio burst breaks through the music.\n\n(S2) speaks over radio: \"No sign of the synth so far.\"\n\nHer delivery is quiet and matter-of-fact, with light radio compression and faint static.\n\nThe drone remains hovering while the electronic scan repeats across the dark interior.\n\nThe shot closes with the scanning frame still moving and no confirmed synth signature displayed.\n\noverall_soundscape:\nClose rotor or ducted-fan drone vibration, wind buffeting the airframe, rain striking the housing, distant harbor water, loose roofing material rattling below and faint electrical transformer hum. Interface tones remain sparse: short low confirmation chirps as ordinary electronic sources are classified, with no target-acquisition alarm. The woman's radio transmission enters with a brief static click and ends with another short carrier break.\n\nnon_diegetic_music:\nThe distorted dissonant FM-synth score from x005 continues seamlessly through the cut. Metallic modulated drones and unstable digital harmonics remain dominant, but the percussion recedes during the reconnaissance pass, leaving tense sub-frequency pressure and irregular high-frequency pulses. The music does not resolve when the scan fails to find the synth.",
+        12,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22,
+        "",
+        4.25,
+        22
+      ],
+      "widgets_values_named": {
+        "mode": "t2va",
+        "aspect_ratio": "16:9",
+        "megapixels": 1,
+        "width": 0,
+        "height": 0,
+        "prompt_header": "",
+        "prompt_footer": "",
+        "prompt_1": "id=\"x001\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: A busy rustic cyberpunk police precinct built inside an aging brick industrial building. Battered steel desks, exposed pipes, hanging cable bundles, old ventilation fans, scratched terminal screens, patched fluorescent fixtures, warm desk lamps, paper folders mixed with crude digital displays, officers and civilians continually moving through narrow aisles. Smoky atmospheric haze, damp coats, chipped paint, heavily used surfaces. Night outside the rain-streaked windows.\n<Prop or VFX>: A thick battered case folder and small rectangular data wafer lying on the police chief's crowded desk, surrounded by handwritten notes, old mugs and flickering evidence screens.\n\nsummary:\nOpening with the woman already seated opposite the police chief in the crowded precinct, the chief begins briefing her on a domestic synth that murdered the family it belonged to. She listens without interrupting until asking only why the job has come to her, closing with the chief leaning forward over the case folder and preparing to explain where the synth disappeared.\n\nretention_analysis:\n<Subject 1>: newly_generated, persistent identity and clothing established for x001 through x004.\n<Subject 2>: newly_generated, persistent identity and clothing established for x001 through x004.\n<Environment>: newly_generated, persistent precinct architecture and lighting established for x001 through x004.\n<Prop or VFX>: newly_generated, persistent case folder and data wafer established for x001 through x004.\n\ndetailed_description:\nA shoulder-height medium-wide handheld shot from slightly behind <Subject 2> frames <Subject 1> across a battered steel desk, using a restrained 40mm documentary-style perspective. The precinct remains visibly active behind him: officers cross between desks, a clerk carries a stack of folders, terminals flicker, someone argues quietly near a booking counter, and an old ceiling fan turns unevenly beneath exposed pipes.\n\n<Subject 1> begins seated heavily in his chair with one forearm resting beside the closed case folder. He studies <Subject 2> for a beat, draws the folder toward himself and opens it with two thick fingers. The camera performs a very slow push-in while preserving both characters in the composition.\n\n(S1) speaks in a low gravelled voice: \"Got a bad one. Domestic synth. Killed the family it was registered to three nights ago.\"\n\nAs he speaks, he turns one evidence page toward her. Cold terminal light catches the worn skin around his eyes while a warm desk lamp gives the case papers an amber edge. <Subject 2> lowers her gaze briefly to the folder, then looks directly back at him. She does not visibly recoil; only her jaw tightens slightly and one thumb slowly rubs the seam of her leather glove.\n\nA uniformed officer crosses close behind her chair and briefly occludes the background. She waits until the movement clears.\n\n(S2) asks simply: \"Why me?\"\n\n<Subject 1> shifts forward, plants both forearms on the desk and looks down at the open folder as if choosing how much to say.\n\nThe shot closes with <Subject 1> leaning forward over the case folder, <Subject 2> sitting motionless opposite him, and the precinct continuing to move around them.\n\noverall_soundscape:\nLayered police-station ambience: overlapping distant conversations, old keyboards, paper handling, chair legs scraping concrete, ventilation fans, intermittent radio chatter, boots passing through the aisle, rain faintly tapping the windows. Dialogue remains dry and close with little room reverb. The chief's voice is low and rough; the woman's voice is controlled and economical.\n\nnon_diegetic_music:\nNone.",
+        "duration_1": 10,
+        "overlap_1": 0,
+        "prompt_2": "id=\"x002\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: The same busy rustic cyberpunk police precinct inside the aging brick industrial building, with battered steel desks, exposed pipes, hanging cable bundles, patched fluorescent fixtures, warm desk lamps, paper files, scratched terminal screens and constant background movement.\n<Prop or VFX>: The same open battered case folder. One page displays a crude industrial district map and an old photograph of a sprawling NVIDIA fabrication complex, its exterior stained and partly abandoned.\n\nsummary:\nOpening with the chief already leaning forward over the open case folder, he explains that the synth vanished into the harbor industrial district and is believed to be inside a defunct NVIDIA fabrication plant. The woman asks whether anyone has gone inside. He tells her two reconnaissance drones were sent and neither returned, closing with her gaze fixed on the plant image.\n\nretention_analysis:\n<Subject 1>: fully_preserved from x001.\n<Subject 2>: fully_preserved from x001.\n<Environment>: fully_preserved from x001.\n<Prop or VFX>: partially_preserved, same case folder now opened to the industrial district information.\n\ndetailed_description:\nThe shot opens in the exact conversational state where x001 ended: <Subject 1> leans forward with both forearms on the desk, the open folder between them, while <Subject 2> sits opposite him.\n\nA medium over-the-table composition places the folder in the lower foreground with both faces above it. The camera drifts slowly sideways from <Subject 1>'s side toward <Subject 2>, moving only enough to reveal the industrial map printed across the open page.\n\n<Subject 1> taps one thick finger against the harbor district.\n\n(S1) replies: \"Because patrol lost it in Harbor Nine.\"\n\nHis finger slides several centimeters across the paper and stops on the old factory photograph.\n\n(S1) continues: \"Thermal trail ended here. Old NVIDIA fabrication plant. Place has been dead twenty years.\"\n\n<Subject 2>'s eyes move from the map to the photograph. She leans forward only slightly, elbows remaining off the desk. A strand of her messy bob falls across one eye and she pushes it aside with the back of one finger without breaking attention from the page.\n\n(S2) asks: \"Anyone go in?\"\n\n<Subject 1> looks at her rather than answering immediately. His mouth tightens at one corner.\n\n(S1) says: \"Two drones.\"\n\nA precinct radio crackles somewhere behind him.\n\n(S1) finishes: \"Neither came back.\"\n\nThe camera completes its slow lateral drift and settles closer to <Subject 2>'s side of the desk. Her eyes remain fixed on the faded photograph of the factory while the chief's hand rests beside it.\n\nThe shot closes with the factory image and district map clearly visible beneath her gaze.\n\noverall_soundscape:\nThe same continuous precinct ambience from x001. Chairs scrape, radios murmur, distant voices overlap and ventilation rattles overhead. The dialogue remains restrained. A brief radio burst coincides with the chief mentioning the drones, then disappears back into the room noise.\n\nnon_diegetic_music:\nNone.",
+        "duration_2": 12,
+        "overlap_2": 22,
+        "prompt_3": "id=\"x003\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: The same busy rustic cyberpunk police precinct, with damp industrial brick, exposed pipes, patched fluorescent lighting, warm desk lamps, crowded desks, old terminals and constant background activity.\n<Prop or VFX>: The open case folder showing the NVIDIA fabrication plant and harbor map. A scratched metallic payment token and small rectangular data wafer sit beside the folder.\n\nsummary:\nOpening with the woman still studying the factory photograph, the chief explains the terms: enter quietly, confirm the synth, and shut it down. She asks only about payment. He places the payment token beside the data wafer, closing with the offer physically sitting between them.\n\nretention_analysis:\n<Subject 1>: fully_preserved from x002.\n<Subject 2>: fully_preserved from x002.\n<Environment>: fully_preserved from x002.\n<Prop or VFX>: partially_preserved, same folder with payment token and data wafer added.\n\ndetailed_description:\nThe shot opens on the factory photograph exactly where x002 closed. <Subject 2>'s gaze remains lowered toward it.\n\nA shallow-focus close shot begins on the faded NVIDIA plant image, then slowly racks focus upward to <Subject 2>'s face. Her eyes lift toward <Subject 1> without changing her posture.\n\nThe camera gently pulls back into a compact two-shot across the corner of the desk.\n\n<Subject 1> closes one side of the folder over the family evidence but leaves the factory map exposed.\n\n(S1) says: \"Go in quiet. Confirm it's there. Shut it down.\"\n\nHe reaches into the inside pocket of his battered coat. The leather chair creaks beneath his weight. He removes a scratched metallic payment token, places it on the desk and pushes it forward with two fingers.\n\n<Subject 2> looks at the token, then at him.\n\n(S2) asks: \"Pay?\"\n\n<Subject 1> leaves his fingertips resting on the token.\n\n(S1) answers: \"Half now. Half when it's cold.\"\n\nHe slides the small data wafer beside it.\n\n(S1) adds: \"Everything we have is on that.\"\n\n<Subject 2>'s hand moves onto the desk but stops just short of the token. Her fingers remain relaxed rather than reaching immediately. She studies the chief for one silent beat while blurred officers move through the background.\n\nThe camera settles into stillness.\n\nThe shot closes with the payment token and data wafer between them, <Subject 1>'s hand withdrawn, and <Subject 2>'s hand resting several centimeters away.\n\noverall_soundscape:\nContinuous precinct room tone, old electronics humming, paper movement, footsteps and muted voices. A metal click as the payment token contacts the desk, followed by the lighter plastic-metal sound of the data wafer sliding beside it. No dramatic sound accent accompanies the offer.\n\nnon_diegetic_music:\nNone.",
+        "duration_3": 11,
+        "overlap_3": 22,
+        "prompt_4": "id=\"x004\"\n\nsubject_definitions:\n<Subject 1>: A heavyset older police chief in his late sixties, broad and thick through the shoulders and waist, weathered face, deep-set tired eyes, heavy grey stubble and short thinning steel-grey hair. He wears a battered charcoal police coat over a rumpled dark shirt, old utility belt, worn trousers and heavy boots. Hardened, unsentimental, physically tired but authoritative.\n<Subject 2>: A woman in her late thirties with a rough messy dark bob cut, loose uneven strands around her face, weathered features and an observant guarded expression. She wears a worn dark brown-black leather jacket over a faded layered shirt, shabby utility trousers, scuffed boots and practical old gear with no polished or futuristic finish. Quiet, economical movements, rarely wastes words.\n<Environment>: The same busy rustic cyberpunk police precinct. The chief's desk sits near a narrow aisle leading toward a heavy steel-framed exit door beneath flickering fluorescent fixtures.\n<Prop or VFX>: The same payment token and small rectangular data wafer on the desk.\n\nsummary:\nOpening with the offer resting between them, the woman accepts without negotiation, takes the data wafer and payment token, stands and leaves. The chief warns her not to underestimate the synth. She does not answer, closing as the heavy precinct door swings shut behind her and briefly cuts away the exterior darkness.\n\nretention_analysis:\n<Subject 1>: fully_preserved from x003.\n<Subject 2>: fully_preserved from x003.\n<Environment>: fully_preserved from x003.\n<Prop or VFX>: fully_preserved initially, then transferred into <Subject 2>'s possession.\n\ndetailed_description:\nThe shot opens exactly where x003 ended, with the payment token and data wafer between the two characters and <Subject 2>'s hand resting just short of them.\n\nA medium two-shot holds steady for a beat.\n\n<Subject 2> moves her hand forward, takes the data wafer first, then closes the payment token into the same palm.\n\n(S2) says: \"I'll take it.\"\n\nThere is no smile or handshake. She slips both objects into the inside pocket of her worn leather jacket and rises from the chair in one continuous movement. The chair legs scrape backward across concrete.\n\nThe camera rises with her and transitions into a slow shoulder-height tracking movement as she turns into the aisle. <Subject 1> remains seated in the background.\n\n(S1) calls after her: \"Don't underestimate it.\"\n\n<Subject 2> slows for less than a step but does not turn around. Her jaw shifts subtly as she continues walking.\n\nThe camera follows several paces behind her through the busy precinct. Officers move aside naturally rather than stopping to watch. Overhead fluorescent fixtures pass across her leather jacket in alternating pale bands while warm desk lamps fall away behind her.\n\nShe reaches the heavy steel-framed exit, pushes it open and steps into the dark exterior beyond. Cold blue street light and reflected wet pavement briefly spill through the doorway.\n\nThe camera stops inside the precinct.\n\nThe heavy door swings back toward frame and closes with a dull mechanical slam.\n\nThe shot ends immediately on the closed door.\n\noverall_soundscape:\nBusy precinct ambience remains continuous as she stands and walks. Chair legs scrape the floor, boots cross concrete, nearby conversations pass in and out of clarity. The chief's warning carries across the room without amplification. Opening the exit introduces a brief wash of distant traffic, rain and industrial city noise before the heavy door closes and suppresses it again.\n\nnon_diegetic_music:\nNone.",
+        "duration_4": 9,
+        "overlap_4": 22,
+        "prompt_5": "id=\"x005\"\n\nsubject_definitions:\n<Environment 1>: A vast dense cyberpunk city at night, visually aged rather than pristine: layered concrete towers, rust-streaked megastructures, rooftop machinery, old neon signage, elevated rail lines, steam vents, rain haze and countless mismatched windows. Wet streets far below reflect scattered amber, red and cyan industrial light.\n<Environment 2>: The harbor industrial district of the same city, bordering black rain-dimpled water. Container yards, skeletal loading cranes, pipelines, abandoned warehouses, derelict fabrication buildings and disused smokestacks fill the shoreline. The district is substantially darker and less populated than the central city.\n<Prop or VFX>: The defunct NVIDIA fabrication plant within the harbor district, a huge aging industrial complex of interconnected fabrication halls, utility towers, rooftop ducts and stained concrete. Sections of the structure are dark and partially decayed. A large weathered NVIDIA identity remains visible on one exterior facade, faded from years of exposure rather than functioning as modern advertising.\n\nsummary:\nA hard cut away from the closed precinct door reveals a massive aerial night view of the city as harsh distorted dissonant FM-synth music erupts without warning. After holding the city scale, another hard cut moves to the harbor industrial district and advances toward the dark abandoned fabrication complex, closing with the NVIDIA plant isolated among dead factories near the waterfront.\n\nretention_analysis:\n<Environment 1>: newly_generated.\n<Environment 2>: newly_generated but spatially part of the same city as <Environment 1>.\n<Prop or VFX>: newly_generated, persistent location for x005 and x006.\n\ndetailed_description:\n[Shot 1] HARD CUT directly from the closed precinct door in x004 to an extreme-wide high-altitude aerial view over the cyberpunk city at night.\n\nThere is no visual transition, dissolve or establishing bridge.\n\nThe camera glides forward above the enormous city at a steady aircraft-like speed, slightly descending while maintaining a broad view of layered towers stretching into rain haze. Elevated trains move between buildings far below. Steam rises from rooftop exhaust systems and bends with the wind. Scattered signs pulse irregularly through mist. Wet surfaces catch fragmented reflections rather than producing a clean neon glow.\n\nAt the exact first frame of the city reveal, an aggressive non-diegetic FM-synth score begins abruptly.\n\nThe camera continues forward for several seconds, allowing the city's scale and visual density to dominate.\n\n[Shot 2] At 00:04.500, HARD CUT to another aerial view over the harbor district of the same city.\n\nThe camera is now lower, moving diagonally along the waterfront. Black water occupies one side of frame while enormous disused industrial blocks occupy the other. Skeletal cranes, container stacks, rusted pipelines and dead smokestacks pass beneath the camera. Sparse sodium lamps illuminate only fragments of the district.\n\nAs the camera advances, the defunct NVIDIA fabrication plant becomes distinguishable among the surrounding abandoned factories: an unusually broad complex of fabrication halls, rooftop ventilation structures and utility towers.\n\nThe aerial movement subtly alters course toward the plant and descends several meters, gradually making it the center of the composition.\n\nThe shot closes with the abandoned NVIDIA plant clearly isolated ahead near the harbor, most windows dark, rain haze drifting across its upper structures.\n\noverall_soundscape:\nFor the city shot, distant urban machinery, muted aerial traffic and rain are present beneath the score. After the harbor cut, the underlying ambience becomes colder and emptier: coastal wind, distant water against concrete, loose sheet metal rattling, faraway industrial electrical hum and occasional mechanical groans from abandoned infrastructure.\n\nnon_diegetic_music:\nThe score begins abruptly on the first frame after the hard cut from x004: hardcore distorted dissonant FM synthesis, abrasive metallic frequency modulation, unstable industrial harmonics, deep sub-frequency pressure and irregular low percussion. Dense sustained synth tones grind against sharp detuned digital intervals, creating a severe cinematic ambient texture rather than a melodic song. The music continues uninterrupted across the hard cut into the harbor district and grows slightly denser as the camera approaches the abandoned fabrication plant.",
+        "duration_5": 10,
+        "overlap_5": 22,
+        "prompt_6": "id=\"x006\"\n\nsubject_definitions:\n<Subject 2>: The same woman from x001 through x004, not physically visible in frame. Her voice is heard remotely over encrypted radio, dry, calm and restrained.\n<Environment>: The defunct NVIDIA fabrication plant in the harbor industrial district at night. Huge stained concrete fabrication halls, rooftop ventilation equipment, rusted service gantries, broken skylights, old ducts, silent utility towers and partially collapsed support structures. Rain moves diagonally through cold harbor wind. Almost the entire complex is unlit.\n<Prop or VFX>: A reconnaissance drone optical interface seen directly from the drone's point of view. Minimal utilitarian HUD graphics are projected over the image: targeting brackets, range ticks, altitude data, building-outline tracing and electronic-signature scan indicators. The HUD should remain readable and mechanically functional rather than decorative.\n<Prop or VFX>: Electronic-signature scanning represented by thin spatial tracing lines and small restrained markers that attach to active electrical sources inside or around the structure. No confirmed humanoid target appears.\n\nsummary:\nOpening on a much closer aerial approach toward the same abandoned fabrication plant shown at the end of x005, the viewpoint is revealed as a reconnaissance drone HUD. The drone descends, circles part of the complex and scans windows, roofs and interior electrical sources without finding the synth. The woman reports over radio that there is no sign of it so far, closing with the drone hovering outside a dark upper section of the factory while the scan continues.\n\nretention_analysis:\n<Subject 2>: fully_preserved identity and voice from x001 through x004, audio-only in this prompt.\n<Environment>: fully_preserved location from the end of x005, now observed at much closer range.\n<Prop or VFX>: newly_generated drone interface and scanning system.\n\ndetailed_description:\nA HARD CUT from the wider harbor aerial at the end of x005 to a much closer forward-moving aerial view of the same NVIDIA fabrication plant, maintaining the same general approach direction.\n\nThe perspective is immediately identifiable as a reconnaissance drone camera. A restrained monochrome HUD overlays the image with altitude, range marks, central tracking brackets and small telemetry indicators around the frame edges.\n\nThe drone advances toward the upper factory structures at moderate speed. Rain streaks diagonally across the optics. Wind produces small controlled stabilization corrections rather than handheld movement.\n\nAs the drone nears the first fabrication hall, thin HUD geometry traces the roofline and exterior walls. Several weak electronic signatures appear as small markers: a failing rooftop transformer, intermittent emergency power inside one lower floor and a cluster of active machinery deeper in the complex. Each source is briefly bracketed and classified before the scan moves onward.\n\nNo humanoid electronic signature is identified.\n\nThe drone banks gradually left around a large ventilation tower, losing several meters of altitude while keeping the main fabrication hall centered. Broken windows and dark maintenance corridors pass beneath the targeting reticle. A faded weather-damaged NVIDIA mark is partially visible across one stained exterior section as the drone passes it.\n\nThe drone slows near a dark upper assembly structure and transitions into a stable hover. The HUD expands a scanning frame across several adjoining windows. Thin lines sweep vertically through the structure, briefly revealing scattered electrical activity but no clear target.\n\nA radio burst breaks through the music.\n\n(S2) speaks over radio: \"No sign of the synth so far.\"\n\nHer delivery is quiet and matter-of-fact, with light radio compression and faint static.\n\nThe drone remains hovering while the electronic scan repeats across the dark interior.\n\nThe shot closes with the scanning frame still moving and no confirmed synth signature displayed.\n\noverall_soundscape:\nClose rotor or ducted-fan drone vibration, wind buffeting the airframe, rain striking the housing, distant harbor water, loose roofing material rattling below and faint electrical transformer hum. Interface tones remain sparse: short low confirmation chirps as ordinary electronic sources are classified, with no target-acquisition alarm. The woman's radio transmission enters with a brief static click and ends with another short carrier break.\n\nnon_diegetic_music:\nThe distorted dissonant FM-synth score from x005 continues seamlessly through the cut. Metallic modulated drones and unstable digital harmonics remain dominant, but the percussion recedes during the reconnaissance pass, leaving tense sub-frequency pressure and irregular high-frequency pulses. The music does not resolve when the scan fails to find the synth.",
+        "duration_6": 12,
+        "overlap_6": 22,
+        "prompt_7": "",
+        "duration_7": 4.25,
+        "overlap_7": 22,
+        "prompt_8": "",
+        "duration_8": 4.25,
+        "overlap_8": 22,
+        "prompt_9": "",
+        "duration_9": 4.25,
+        "overlap_9": 22,
+        "prompt_10": "",
+        "duration_10": 4.25,
+        "overlap_10": 22,
+        "prompt_11": "",
+        "duration_11": 4.25,
+        "overlap_11": 22,
+        "prompt_12": "",
+        "duration_12": 4.25,
+        "overlap_12": 22,
+        "prompt_13": "",
+        "duration_13": 4.25,
+        "overlap_13": 22,
+        "prompt_14": "",
+        "duration_14": 4.25,
+        "overlap_14": 22,
+        "prompt_15": "",
+        "duration_15": 4.25,
+        "overlap_15": 22,
+        "prompt_16": "",
+        "duration_16": 4.25,
+        "overlap_16": 22,
+        "prompt_17": "",
+        "duration_17": 4.25,
+        "overlap_17": 22,
+        "prompt_18": "",
+        "duration_18": 4.25,
+        "overlap_18": 22,
+        "prompt_19": "",
+        "duration_19": 4.25,
+        "overlap_19": 22,
+        "prompt_20": "",
+        "duration_20": 4.25,
+        "overlap_20": 22,
+        "prompt_21": "",
+        "duration_21": 4.25,
+        "overlap_21": 22,
+        "prompt_22": "",
+        "duration_22": 4.25,
+        "overlap_22": 22,
+        "prompt_23": "",
+        "duration_23": 4.25,
+        "overlap_23": 22,
+        "prompt_24": "",
+        "duration_24": 4.25,
+        "overlap_24": 22
+      }
+    },
+    {
+      "id": 34,
+      "type": "WASFreeMemory",
+      "pos": [
+        1421.700294701774,
+        1350.9118521365874
+      ],
+      "size": [
+        270,
+        210
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 45
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "LATENT",
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0
+      }
+    },
+    {
+      "id": 7,
+      "type": "VAELoader",
+      "pos": [
+        556,
+        1048.3335186470613
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      }
+    },
+    {
+      "id": 6,
+      "type": "VAELoader",
+      "pos": [
+        556,
+        918.5097276470607
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            7,
+            8,
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_int8_convrot.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+      }
+    },
+    {
+      "id": 5,
+      "type": "CLIPLoader",
+      "pos": [
+        556,
+        740.6859366470602
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MiniMaxLowVRAMAttention",
+      "pos": [
+        556,
+        615.0767092941187
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            4,
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxLowVRAMAttention",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "head_chunks": 4
+      }
+    },
+    {
+      "id": 3,
+      "type": "ModelAttentionBackend",
+      "pos": [
+        556,
+        493.682045588236
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelAttentionBackend",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "comfy kitchen attention"
+      ],
+      "widgets_values_named": {
+        "attention": "comfy kitchen attention"
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        556,
+        352.5019455294122
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "H3\\taomate_h3_3step_comfy.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "H3\\taomate_h3_3step_comfy.safetensors",
+        "strength_model": 1
+      }
+    },
+    {
+      "id": 9,
+      "type": "BasicScheduler",
+      "pos": [
+        1687.8927181764707,
+        1129.1801000588237
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "beta57",
+        3,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "beta57",
+        "steps": 3,
+        "denoise": 1
+      }
+    },
+    {
+      "id": 28,
+      "type": "WASDisplayAny",
+      "pos": [
+        3832.847239540229,
+        1244.9606642491167
+      ],
+      "size": [
+        1018.0267794221272,
+        384.56659619450284
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "*",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASDisplayAny",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 20,
+      "type": "StringConcatenate",
+      "pos": [
+        2110,
+        1128.2280963100513
+      ],
+      "size": [
+        300,
+        166
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "widget": {
+            "name": "string_a"
+          },
+          "link": 24
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "",
+        "",
+        "  ->  "
+      ],
+      "widgets_values_named": {
+        "string_a": "",
+        "string_b": "",
+        "delimiter": "  ->  "
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASNumberExpression",
+      "pos": [
+        3048.2157415210127,
+        585.7376413164636
+      ],
+      "size": [
+        300,
+        288
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "a"
+          },
+          "link": 18
+        },
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "b"
+          },
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": [
+            37
+          ]
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNumberExpression",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "a + 1 < b",
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "a + 1 < b",
+        "a": 0,
+        "b": 0,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0,
+        "h": 0,
+        "i": 0,
+        "j": 0,
+        "k": 0,
+        "l": 0,
+        "m": 0,
+        "n": 0,
+        "o": 0,
+        "p": 0,
+        "q": 0,
+        "r": 0,
+        "s": 0,
+        "t": 0,
+        "u": 0,
+        "v": 0,
+        "w": 0,
+        "x": 0,
+        "decimals": 6,
+        "on_error": "error"
+      }
+    },
+    {
+      "id": 36,
+      "type": "INTConstant",
+      "pos": [
+        593.6466325571713,
+        1231.0838949702131
+      ],
+      "size": [
+        200,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "INT",
+          "links": [
+            49
+          ]
+        }
+      ],
+      "title": "SEED",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "INTConstant"
+      },
+      "widgets_values": [
+        4242
+      ],
+      "widgets_values_named": {
+        "value": 4242
+      },
+      "color": "#1b4669",
+      "bgcolor": "#29699c"
+    },
+    {
+      "id": 17,
+      "type": "RandomNoise",
+      "pos": [
+        1694.636020011765,
+        1428.2779600029435
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise_seed",
+          "type": "INT",
+          "widget": {
+            "name": "noise_seed"
+          },
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        777,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 777,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASNumberExpression",
+      "pos": [
+        3050,
+        208
+      ],
+      "size": [
+        300,
+        312
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "b"
+          },
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": [
+            25,
+            50
+          ]
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNumberExpression",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "a + b",
+        1000,
+        0,
+        -3.22,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "a + b",
+        "a": 1000,
+        "b": 0,
+        "c": -3.22,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0,
+        "h": 0,
+        "i": 0,
+        "j": 0,
+        "k": 0,
+        "l": 0,
+        "m": 0,
+        "n": 0,
+        "o": 0,
+        "p": 0,
+        "q": 0,
+        "r": 0,
+        "s": 0,
+        "t": 0,
+        "u": 0,
+        "v": 0,
+        "w": 0,
+        "x": 0,
+        "decimals": 6,
+        "on_error": "error"
+      }
+    },
+    {
+      "id": 35,
+      "type": "WASNumberExpression",
+      "pos": [
+        1756.021147119573,
+        1329.0081250004182
+      ],
+      "size": [
+        301.54263565891483,
+        288
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "a"
+          },
+          "link": 49
+        },
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "b"
+          },
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": []
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        },
+        "Node name for S&R": "WASNumberExpression"
+      },
+      "widgets_values": [
+        "a + b",
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "a + b",
+        "a": 0,
+        "b": 0,
+        "c": 0,
+        "d": 0,
+        "e": 0,
+        "f": 0,
+        "g": 0,
+        "h": 0,
+        "i": 0,
+        "j": 0,
+        "k": 0,
+        "l": 0,
+        "m": 0,
+        "n": 0,
+        "o": 0,
+        "p": 0,
+        "q": 0,
+        "r": 0,
+        "s": 0,
+        "t": 0,
+        "u": 0,
+        "v": 0,
+        "w": 0,
+        "x": 0,
+        "decimals": 6,
+        "on_error": "error"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "MODEL"
+    ],
+    [
+      4,
+      4,
+      0,
+      9,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      4,
+      0,
+      16,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      5,
+      0,
+      10,
+      0,
+      "CLIP"
+    ],
+    [
+      7,
+      6,
+      0,
+      10,
+      1,
+      "VAE"
+    ],
+    [
+      8,
+      6,
+      0,
+      15,
+      2,
+      "VAE"
+    ],
+    [
+      9,
+      6,
+      0,
+      24,
+      1,
+      "VAE"
+    ],
+    [
+      10,
+      7,
+      0,
+      25,
+      1,
+      "VAE"
+    ],
+    [
+      12,
+      11,
+      0,
+      12,
+      1,
+      "STRING"
+    ],
+    [
+      13,
+      10,
+      1,
+      15,
+      3,
+      "WAS_H3_PROMPTS"
+    ],
+    [
+      15,
+      12,
+      1,
+      15,
+      4,
+      "INT"
+    ],
+    [
+      16,
+      12,
+      1,
+      19,
+      3,
+      "INT"
+    ],
+    [
+      17,
+      12,
+      1,
+      13,
+      0,
+      "INT"
+    ],
+    [
+      18,
+      12,
+      1,
+      14,
+      0,
+      "INT"
+    ],
+    [
+      19,
+      12,
+      3,
+      15,
+      0,
+      "LATENT"
+    ],
+    [
+      20,
+      12,
+      3,
+      19,
+      0,
+      "LATENT"
+    ],
+    [
+      21,
+      15,
+      0,
+      18,
+      4,
+      "LATENT"
+    ],
+    [
+      22,
+      15,
+      1,
+      16,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      23,
+      15,
+      2,
+      19,
+      2,
+      "INT"
+    ],
+    [
+      24,
+      15,
+      3,
+      20,
+      0,
+      "STRING"
+    ],
+    [
+      25,
+      13,
+      2,
+      17,
+      0,
+      "INT"
+    ],
+    [
+      26,
+      17,
+      0,
+      18,
+      0,
+      "NOISE"
+    ],
+    [
+      27,
+      16,
+      0,
+      18,
+      1,
+      "GUIDER"
+    ],
+    [
+      28,
+      8,
+      0,
+      18,
+      2,
+      "SAMPLER"
+    ],
+    [
+      29,
+      9,
+      0,
+      18,
+      3,
+      "SIGMAS"
+    ],
+    [
+      30,
+      18,
+      0,
+      19,
+      1,
+      "LATENT"
+    ],
+    [
+      31,
+      19,
+      2,
+      20,
+      1,
+      "STRING"
+    ],
+    [
+      32,
+      12,
+      4,
+      21,
+      0,
+      "STRING"
+    ],
+    [
+      33,
+      20,
+      0,
+      21,
+      1,
+      "STRING"
+    ],
+    [
+      34,
+      12,
+      0,
+      22,
+      0,
+      "WAS_LOOP"
+    ],
+    [
+      35,
+      19,
+      0,
+      22,
+      1,
+      "LATENT"
+    ],
+    [
+      36,
+      21,
+      0,
+      22,
+      2,
+      "STRING"
+    ],
+    [
+      37,
+      14,
+      3,
+      22,
+      4,
+      "BOOLEAN"
+    ],
+    [
+      38,
+      22,
+      1,
+      23,
+      0,
+      "LATENT"
+    ],
+    [
+      39,
+      23,
+      0,
+      24,
+      0,
+      "LATENT"
+    ],
+    [
+      40,
+      23,
+      0,
+      25,
+      0,
+      "LATENT"
+    ],
+    [
+      41,
+      22,
+      2,
+      28,
+      0,
+      "STRING"
+    ],
+    [
+      42,
+      24,
+      0,
+      26,
+      0,
+      "IMAGE"
+    ],
+    [
+      43,
+      25,
+      0,
+      26,
+      1,
+      "AUDIO"
+    ],
+    [
+      44,
+      26,
+      0,
+      27,
+      0,
+      "VIDEO"
+    ],
+    [
+      45,
+      10,
+      0,
+      34,
+      0,
+      "LATENT"
+    ],
+    [
+      46,
+      34,
+      0,
+      12,
+      0,
+      "LATENT"
+    ],
+    [
+      48,
+      10,
+      2,
+      14,
+      1,
+      "INT"
+    ],
+    [
+      49,
+      36,
+      0,
+      35,
+      0,
+      "INT"
+    ],
+    [
+      50,
+      13,
+      2,
+      35,
+      1,
+      "INT"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [
+        526,
+        117,
+        350,
+        1040
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Segments and prompts",
+      "bounding": [
+        940,
+        120,
+        680,
+        1280
+      ],
+      "color": "#4a3f59",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Inference Loop",
+      "bounding": [
+        1660,
+        120,
+        2054.45868791709,
+        791.9975685685248
+      ],
+      "color": "#3f593f",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Sampling Settings",
+      "bounding": [
+        1660,
+        924,
+        360,
+        680
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Segment reports",
+      "bounding": [
+        2080,
+        924,
+        360,
+        500
+      ],
+      "color": "#593f3f",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Assemble",
+      "bounding": [
+        3790,
+        120,
+        1100,
+        1560
+      ],
+      "color": "#59563f",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.6482412060301519,
+      "offset": [
+        106.01200377734342,
+        -18.84011311941777
+      ]
+    },
+    "frontendVersion": "1.51.9",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

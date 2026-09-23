@@ -214,6 +214,12 @@ def register_interface_routes() -> None:
         logger.debug("the Three.js render channel is unavailable (%s)", error)
     else:
         register_three_render()
+    try:
+        from .modules.interface.three_module import register_routes as register_three_module
+    except Exception as error:
+        logger.debug("the Three.js module channel is unavailable (%s)", error)
+    else:
+        register_three_module()
 
 
 def register_viewer_nodes(config: Mapping, reserved: set[str]) -> None:

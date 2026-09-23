@@ -9,15 +9,15 @@ from ....modules.convert.tensors import filtered_planes
 REQUIRES = "extras"
 
 
-class VividSharpen(io.ComfyNode):
+class WASVividSharpen(io.ComfyNode):
     """Sharpen through an inverted, blurred copy blended back in vivid light."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="VividSharpen",
+            node_id="WASVividSharpen",
             display_name="Vivid Sharpen",
-            search_aliases=["VividSharpen", "sharpen", "high pass", "clarity", "detail"],
+            search_aliases=["WASVividSharpen", "sharpen", "high pass", "clarity", "detail"],
             category="WAS Suite/Image/Filter",
             description=(
                 "Sharpen images by blending an inverted, blurred copy back over them in "

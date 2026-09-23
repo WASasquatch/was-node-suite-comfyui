@@ -251,6 +251,33 @@ class LoadImageSequence(io.ComfyNode):
         )
 
     @classmethod
+    def fingerprint_inputs(cls, folder="", pattern="*", **unused):
+        """A digest of the matching files as they stand, compared against the last run's.
+
+        Args:
+            folder: Folder the images are read from.
+            pattern: Glob matched inside it.
+            **unused: Every other input, which does not change what is on disk.
+
+        Returns:
+            The digest, or ``NaN`` where the folder is not there.
+        """
+        import hashlib
+
+        found = picker.resolve_folder(folder)
+        directory = str(found) if found else ""
+        if not directory or not os.path.isdir(directory):
+            return float("NaN")
+        rows = []
+        for name in sorted(os.listdir(directory)):
+            try:
+                stat = os.stat(os.path.join(directory, name))
+            except OSError:
+                continue
+            rows.append(f"{name}|{stat.st_mtime_ns}|{stat.st_size}")
+        return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
+
+    @classmethod
     def execute(
         cls, folder="", pattern="*", num_frames=16, strategy="head", nth=1, seed=0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, max_size=1024,

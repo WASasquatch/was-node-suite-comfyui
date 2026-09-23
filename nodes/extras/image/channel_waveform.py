@@ -167,10 +167,10 @@ class ChannelWaveform(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASChannelWaveform",
+            node_id="WASNSChannelWaveform",
             display_name="Image Waveform",
             search_aliases=[
-                "WASChannelWaveform", "WAS Channel Waveform (Parade)",
+                "WASNSChannelWaveform", "WAS Channel Waveform (Parade)",
                 "Channel Waveform (Parade)", "Image Waveform", "waveform", "parade",
                 "rgb parade", "scope", "histogram", "levels",
             ],

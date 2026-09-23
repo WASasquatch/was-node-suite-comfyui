@@ -77,10 +77,10 @@ class PowerLoraMerger(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASPowerLoraMerger",
+            node_id="WASNSPowerLoraMerger",
             display_name="Power LoRA Merger",
             search_aliases=[
-                "WASPowerLoraMerger",
+                "WASNSPowerLoraMerger",
                 "WAS Power LoRA Merger",
                 "WAS Extras",
                 "lora merge",
@@ -139,7 +139,8 @@ class PowerLoraMerger(io.ComfyNode):
                     tooltip=(
                         "The same for the clip output: how strongly the merged LoRA is "
                         "applied to the connected clip. Lower it when a LoRA's trigger "
-                        "words are overwhelming the rest of the prompt."
+                        "words are overwhelming the rest of the prompt. Ignored where no "
+                        "clip is connected, as with a diffusion transformer."
                     ),
                 ),
                 io.Combo.Input(
@@ -512,7 +513,7 @@ class PowerLoraMerger(io.ComfyNode):
                     display_name="clip",
                     tooltip=(
                         "The connected clip with the merged LoRA applied, or nothing when no "
-                        "model and clip were connected."
+                        "clip was connected. A model on its own is still patched."
                     ),
                 ),
                 io.String.Output(
@@ -583,6 +584,29 @@ class PowerLoraMerger(io.ComfyNode):
         out_dtype = merge_loras_z.get_dtype(settings.dtype)
         compute_dtype = merge_loras_z.get_compute_dtype(settings.compute_dtype)
 
+        directory = output.lora_directory()
+        target, relative = output.resolve_output(directory, output_filename)
+        identity = cls._metadata(
+            mode, sources, settings, out_dtype, compute_dtype, block_mix_recipe
+        )
+        if output.built_from(target, identity):
+            logger.info("%s already holds this merge, so it is served as it stands", target)
+            return cls._from_file(
+                model, clip, relative, output_model_strength, output_clip_strength
+            )
+
+        # Checked before the merge runs.
+        held = output.claimed(target)
+        if held is not None:
+            raise ValueError(
+                f"`{relative}` cannot be written: {held}\n"
+                f"  That file is loaded in this ComfyUI session, and a file a loaded model "
+                f"reads from cannot be overwritten while it is held.\n"
+                f"  Give output_filename a name that is not in use, or restart ComfyUI to "
+                f"let go of it. Rows or settings left unchanged would have served the file "
+                f"as it stands instead."
+            )
+
         progress = MergeProgress(1, desc="WAS LoRA Merger")
         try:
             loaded, reference_metadata = cls._load(
@@ -611,30 +635,64 @@ class PowerLoraMerger(io.ComfyNode):
             cls._report("merged", merged, 1.0, compute_dtype, settings)
             progress.update_absolute((modules * 2) + 1)
 
-            metadata.update(
-                cls._metadata(mode, sources, settings, out_dtype, compute_dtype)
-            )
+            metadata.update(identity)
             if mode == "obfuscate":
                 for key in ("mode", "merged_from", "include_patterns", "exclude_patterns"):
                     metadata.pop(key, None)
 
-            directory = output.lora_directory()
-            target, relative = output.resolve_output(directory, output_filename)
             target.parent.mkdir(parents=True, exist_ok=True)
-            save_file(state, str(target), metadata=metadata)
+            try:
+                save_file(state, str(target), metadata=metadata)
+            except (PermissionError, OSError) as refused:
+                raise RuntimeError(
+                    f"The merged LoRA could not be written to `{relative}`: {refused}\n"
+                    f"  Something took hold of that file while the merge ran, which on "
+                    f"Windows is usually a loader reading it.\n"
+                    f"  Give output_filename a name that is not in use, or restart ComfyUI "
+                    f"to let go of it. The merge itself finished, so only the save was lost."
+                ) from refused
             logger.info("saved the merged LoRA to %s", target)
 
             progress.update_absolute(progress.total)
         finally:
             progress.close()
 
-        if model is not None and clip is not None:
-            from nodes import LoraLoader
+        if model is not None:
+            import comfy.sd
 
-            model, clip = LoraLoader().load_lora(
-                model, clip, relative, output_model_strength, output_clip_strength
+            # Applied from the tensors in hand rather than from the saved file.
+            model, patched = comfy.sd.load_lora_for_models(
+                model, clip, state, output_model_strength,
+                output_clip_strength if clip is not None else 0.0,
             )
+            if clip is not None:
+                clip = patched
         return io.NodeOutput(model, clip, relative)
+
+    @classmethod
+    def _from_file(cls, model, clip, relative, model_strength, clip_strength):
+        """Answer with a merged LoRA that is already on disk.
+
+        Args:
+            model: The model to apply it to, or ``None``.
+            clip: The clip to apply it to, or ``None``.
+            relative: The file's name inside the LoRA directory.
+            model_strength: How strongly it is applied to the model.
+            clip_strength: How strongly it is applied to the clip.
+
+        Returns:
+            The node's three outputs.
+        """
+        if model is None:
+            return io.NodeOutput(model, clip, relative)
+
+        from nodes import LoraLoader
+
+        model, patched = LoraLoader().load_lora(
+            model, clip, relative, model_strength,
+            clip_strength if clip is not None else 0.0,
+        )
+        return io.NodeOutput(model, patched if clip is not None else clip, relative)
 
     @classmethod
     def _load(cls, sources, device, compute_dtype, settings, mode, progress):
@@ -806,7 +864,7 @@ class PowerLoraMerger(io.ComfyNode):
         logger.info("%s report:\n%s", stage, json.dumps(report, indent=2))
 
     @classmethod
-    def _metadata(cls, mode, sources, settings, out_dtype, compute_dtype):
+    def _metadata(cls, mode, sources, settings, out_dtype, compute_dtype, block_mix_recipe=""):
         """Build the metadata block saved inside the merged file.
 
         Args:
@@ -815,6 +873,7 @@ class PowerLoraMerger(io.ComfyNode):
             settings: The merge settings.
             out_dtype: Precision the tensors were saved in.
             compute_dtype: Precision the arithmetic ran in, or ``None`` for automatic.
+            block_mix_recipe: Which modules block-mix took from which LoRA.
 
         Returns:
             Metadata keys to add to the ones the merge produced. Every value is a string,
@@ -824,6 +883,7 @@ class PowerLoraMerger(io.ComfyNode):
         return {
             "merged_from": str([(path, weight) for path, weight in sources] if mode != "obfuscate" else None),
             "mode": mode,
+            "block_mix_recipe": str(block_mix_recipe) if mode == "block-mix" else "None",
             "rank": str(settings.rank),
             "dtype": str(out_dtype).replace("torch.", ""),
             "compute_dtype": (

@@ -8,7 +8,7 @@ import { addButton } from "./interface/decoration.js";
 const EXT_NAME = "WASNodeSuite.PowerLoraRows";
 
 // The nodes this attaches to.
-const NODES = ["WASPowerLoraLoader", "WASPowerLoraMerger"];
+const NODES = ["WASPowerLoraLoader", "WASNSPowerLoraMerger"];
 
 // Rows either node declares, matching MAX_ROWS in nodes/extras/lora/power_lora_loader.py.
 const MAX_ROWS = 26;

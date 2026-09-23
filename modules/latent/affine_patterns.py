@@ -7,6 +7,8 @@ for the caller to move onto the latent.
 from __future__ import annotations
 
 import math
+from collections import OrderedDict
+from threading import Lock
 
 import torch
 import torch.nn.functional as F
@@ -15,8 +17,11 @@ from .filters import gaussian_blur_depthwise, sobel_grad_mag
 
 __all__ = [
     "CONTENT_PATTERNS",
+    "MAX_CACHED_FIELDS",
     "MIN_CONTENT_EXTENT",
     "PATTERNS",
+    "cached_fields",
+    "clear_fields",
     "bayer_matrix",
     "black_noise",
     "checker",
@@ -80,6 +85,13 @@ _BUILD_DEVICE = torch.device("cpu")
 
 #: Field dtype. Half precision loses the FFT shaping the spectral patterns rely on.
 _BUILD_DTYPE = torch.float32
+
+#: Fields kept between calls, oldest dropped first. A field is keyed on its pattern, its
+#: size, its seed and its parameters.
+MAX_CACHED_FIELDS = 32
+
+_cache: "OrderedDict[tuple, torch.Tensor]" = OrderedDict()
+_cache_lock = Lock()
 
 
 def _generator(seed: int) -> torch.Generator:
@@ -810,7 +822,60 @@ def content_field(x: torch.Tensor, pattern: str, window: int) -> torch.Tensor:
     raise ValueError(f"'{pattern}' is not read off the latent")
 
 
+def _field_key(pattern: str, height: int, width: int, seed: int, params: dict):
+    """A hashable key for one field, or None where the parameters cannot make one."""
+    try:
+        return (pattern, int(height), int(width), int(seed), tuple(sorted(params.items())))
+    except TypeError:
+        return None
+
+
+def clear_fields() -> None:
+    """Drop every kept field."""
+    with _cache_lock:
+        _cache.clear()
+
+
+def cached_fields() -> int:
+    """How many fields are being kept."""
+    with _cache_lock:
+        return len(_cache)
+
+
 def field(pattern: str, height: int, width: int, seed: int, params: dict) -> torch.Tensor:
+    """One procedural field, built or handed back from the kept ones.
+
+    Args:
+        pattern: A name from :data:`PATTERNS` that is not content-aware or external.
+        height: Field height.
+        width: Field width.
+        seed: Seeds whatever the pattern draws at random.
+        params: Resolved pattern parameters.
+
+    Returns:
+        A ``(height, width)`` field on the CPU, scaled to 0.0 to 1.0. The caller owns it.
+
+    Raises:
+        ValueError: The pattern is not generated here.
+    """
+    key = _field_key(pattern, height, width, seed, params)
+    if key is not None:
+        with _cache_lock:
+            held = _cache.get(key)
+            if held is not None:
+                _cache.move_to_end(key)
+                return held.clone()
+    built = _build_field(pattern, height, width, seed, params)
+    if key is None:
+        return built
+    with _cache_lock:
+        _cache[key] = built
+        while len(_cache) > MAX_CACHED_FIELDS:
+            _cache.popitem(last=False)
+    return built.clone()
+
+
+def _build_field(pattern: str, height: int, width: int, seed: int, params: dict) -> torch.Tensor:
     """Build one procedural field.
 
     Args:

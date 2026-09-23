@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e2ebdf"/>
+      <stop offset="1" stop-color="#cdd9c9"/>
+    </linearGradient>
+    <radialGradient id="warm" cx="16%" cy="20%" r="72%">
+      <stop offset="0" stop-color="#b9d3af" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#b9d3af" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cool" cx="86%" cy="82%" r="66%">
+      <stop offset="0" stop-color="#a9c9bd" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#a9c9bd" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sweep" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1600" y2="0">
+      <stop offset="0" stop-color="#2f4a2a" stop-opacity="0"/>
+      <stop offset="0.34" stop-color="#2f4a2a" stop-opacity="0.05"/>
+      <stop offset="0.62" stop-color="#2a4526" stop-opacity="0.16"/>
+      <stop offset="0.84" stop-color="#22391f" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#1b2e19" stop-opacity="0.5"/>
+    </linearGradient>
+    <filter id="bloom" x="-6%" y="-30%" width="112%" height="160%">
+      <feGaussianBlur stdDeviation="13"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#base)"/>
+  <rect width="1600" height="900" fill="url(#warm)"/>
+  <rect width="1600" height="900" fill="url(#cool)"/>
+  <g fill="none" stroke="url(#sweep)" stroke-linecap="round">
+    <g filter="url(#bloom)" stroke-width="11" stroke-opacity="0.55">
+      <path d="M-160 620 C 240 430 460 700 860 520 S 1420 240 1860 400"/>
+      <path d="M-160 700 C 240 505 460 780 860 596 S 1420 312 1860 470"/>
+      <path d="M-160 782 C 240 584 460 862 860 676 S 1420 388 1860 544"/>
+      <path d="M-160 864 C 240 664 460 944 860 758 S 1420 466 1860 620"/>
+    </g>
+    <g stroke-width="1.6">
+      <path d="M-160 620 C 240 430 460 700 860 520 S 1420 240 1860 400"/>
+      <path d="M-160 700 C 240 505 460 780 860 596 S 1420 312 1860 470"/>
+      <path d="M-160 782 C 240 584 460 862 860 676 S 1420 388 1860 544"/>
+      <path d="M-160 864 C 240 664 460 944 860 758 S 1420 466 1860 620"/>
+    </g>
+  </g>
+</svg>

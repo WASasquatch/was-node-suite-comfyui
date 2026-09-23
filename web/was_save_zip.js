@@ -9,6 +9,7 @@ import { api } from "../../scripts/api.js";
 import { createListing } from "./interface/listing.js";
 import { fetchWithin } from "./interface/request.js";
 import { fetchRunResultPage } from "./interface/run_result.js";
+import { placed } from "./interface/preview.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
 const EXT_NAME = "WASNodeSuite.SaveZip";
@@ -31,6 +32,7 @@ const IDLE_LABEL = "Run the node to see what it wrote.";
  * @returns {Promise<object|null>} The stored result, or null.
  */
 async function published(nodeId) {
+  if (!placed(nodeId)) return null;
   try {
     const response = await fetchWithin(`${ROUTE}?node_id=${encodeURIComponent(nodeId)}`);
     if (!response.ok) return null;

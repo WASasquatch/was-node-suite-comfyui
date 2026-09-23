@@ -81,10 +81,10 @@ class CameraMotionTrajectory(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASCameraMotionTrajectory",
+            node_id="WASNSCameraMotionTrajectory",
             display_name="Camera Motion Trajectory from Images",
             search_aliases=[
-                "WASCameraMotionTrajectory", "camera", "ken burns", "pan", "zoom", "parallax",
+                "WASNSCameraMotionTrajectory", "camera", "ken burns", "pan", "zoom", "parallax",
             ],
             category="WAS Suite/Animation",
             description=(

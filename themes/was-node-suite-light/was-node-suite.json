@@ -1,0 +1,1640 @@
+{
+  "id": "was_node_suite_light",
+  "name": "WAS Node Suite Light",
+  "version": 1.3,
+  "light_theme": true,
+  "colors": {
+    "node_slot": {
+      "IMAGE": "#225f16",
+      "MASK": "#165d47",
+      "LATENT": "#135d4f",
+      "MODEL": "#1c5299",
+      "CLIP": "#455806",
+      "CLIP_VISION": "#295b54",
+      "CLIP_VISION_OUTPUT": "#405b2a",
+      "CONDITIONING": "#4e5809",
+      "CONTROL_NET": "#195f3a",
+      "STYLE_MODEL": "#2a5f0f",
+      "VAE": "#1a5d45",
+      "TAESD": "#375d1a",
+      "AUDIO": "#64510a",
+      "STRING": "#4e5809",
+      "INT": "#1a5d45",
+      "FLOAT": "#1a5d45",
+      "BOOLEAN": "#5532d0",
+      "ARRAY": "#3a5a2f",
+      "BLIP_MODEL": "#195876",
+      "BUS": "#5532d0",
+      "CLIPSEG_MODEL": "#195876",
+      "CONDITIONING_SEQ": "#455806",
+      "CROP_DATA": "#1c5c4b",
+      "DICT": "#3a5a2f",
+      "DOC": "#565622",
+      "EMA_VFI_MODEL": "#195876",
+      "IMAGE_BOUNDS": "#1c5c4b",
+      "LUT": "#445919",
+      "MIDAS_MODEL": "#195876",
+      "NUMBER": "#1a5d45",
+      "REMBG_MODEL": "#195876",
+      "SAM_MODEL": "#195876",
+      "SAM_PARAMETERS": "#1b5876",
+      "SEED": "#2e5e24",
+      "THREE_APP": "#145f31",
+      "THREE_CAMERA": "#135d44",
+      "THREE_EFFECT": "#125c56",
+      "THREE_ENVIRONMENT": "#105d44",
+      "THREE_GEOMETRY": "#0f5f30",
+      "THREE_MATERIAL": "#135d40",
+      "THREE_MODULE": "#1c5c55",
+      "THREE_OBJECT": "#16602f",
+      "THREE_SCENE": "#0a5f33",
+      "THREE_TEXTURE": "#165f38",
+      "THREE_TRACK": "#165f44",
+      "WAS_COLOUR_PROFILE": "#445919",
+      "WAS_LOOP": "#5532d0",
+      "WAS_LORA_MERGE_OPTIONS": "#225779",
+      "WAS_VIDEO_METADATA": "#64510a",
+      "YUNET_MODEL": "#195876",
+      "ZIP": "#435938",
+      "NOISE": "#455742",
+      "GUIDER": "#215b62",
+      "SAMPLER": "#245391",
+      "SIGMAS": "#1b5d45"
+    },
+    "litegraph_base": {
+      "BACKGROUND_IMAGE": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc1MCcgaGVpZ2h0PSc1MCc+PGcgZmlsbD0ncmdiYSgzOCw1Miw0MCwwLjA4KSc+PHJlY3QgeD0nMCcgeT0nMjQnIHdpZHRoPSc1MCcgaGVpZ2h0PScxJy8+PHJlY3QgeD0nMjQnIHk9JzAnIHdpZHRoPScxJyBoZWlnaHQ9JzUwJy8+PC9nPjxnIGZpbGw9J3JnYmEoMzgsNTIsNDAsMC4yNCknPjxyZWN0IHg9JzAnIHk9JzAnIHdpZHRoPSc3JyBoZWlnaHQ9JzEnLz48cmVjdCB4PSc0MycgeT0nMCcgd2lkdGg9JzcnIGhlaWdodD0nMScvPjxyZWN0IHg9JzAnIHk9JzAnIHdpZHRoPScxJyBoZWlnaHQ9JzcnLz48cmVjdCB4PScwJyB5PSc0Mycgd2lkdGg9JzEnIGhlaWdodD0nNycvPjwvZz48L3N2Zz4=",
+      "CLEAR_BACKGROUND_COLOR": "#9dac9a",
+      "NODE_TITLE_COLOR": "#141418",
+      "NODE_SELECTED_TITLE_COLOR": "#000000",
+      "NODE_TEXT_SIZE": 14,
+      "NODE_TEXT_COLOR": "#182518",
+      "NODE_TEXT_HIGHLIGHT_COLOR": "#215873",
+      "NODE_SUBTEXT_SIZE": 12,
+      "NODE_DEFAULT_COLOR": "#0a1607",
+      "NODE_DEFAULT_BGCOLOR": "#567149",
+      "NODE_DEFAULT_BOXCOLOR": "#103f11",
+      "NODE_DEFAULT_SHAPE": 2,
+      "NODE_BOX_OUTLINE_COLOR": "#124e14",
+      "NODE_BYPASS_BGCOLOR": "#502358",
+      "NODE_ERROR_COLOUR": "#741913",
+      "DEFAULT_SHADOW_COLOR": "rgba(30,42,32,0.22)",
+      "DEFAULT_GROUP_FONT": 24,
+      "WIDGET_BGCOLOR": "#bdcdb9",
+      "WIDGET_OUTLINE_COLOR": "#617f5c",
+      "WIDGET_TEXT_COLOR": "#182518",
+      "WIDGET_SECONDARY_TEXT_COLOR": "#3d5a3c",
+      "WIDGET_DISABLED_TEXT_COLOR": "#465744",
+      "LINK_COLOR": "#255f1c",
+      "EVENT_LINK_COLOR": "#4c5714",
+      "CONNECTING_LINK_COLOR": "#165b62",
+      "BADGE_FG_COLOR": "#182518",
+      "BADGE_BG_COLOR": "#d2dece"
+    },
+    "comfy_base": {
+      "fg-color": "#182518",
+      "bg-color": "#9dac9a",
+      "comfy-menu-bg": "#d2dece",
+      "comfy-menu-secondary-bg": "#c5d2c1",
+      "comfy-input-bg": "#bdcdb9",
+      "input-text": "#182518",
+      "descrip-text": "#3d5a3c",
+      "drag-text": "#2a4229",
+      "error-text": "#741913",
+      "border-color": "#617f5c",
+      "tr-even-bg-color": "#d2dece",
+      "tr-odd-bg-color": "#c5d2c1",
+      "content-bg": "#d2dece",
+      "content-fg": "#182518",
+      "content-hover-bg": "#acbca9",
+      "content-hover-fg": "#182518",
+      "bar-shadow": "rgba(30,42,32,0.22) 0 0 0.5rem",
+      "contrast-mix-color": "#000000"
+    }
+  },
+  "extras": {
+    "shape": {
+      "radius": 6,
+      "titleHeight": 30,
+      "slotHeight": 20
+    },
+    "links": {
+      "mode": "spline",
+      "border": true
+    },
+    "categories": {
+      "was suite": {
+        "color": "#0a1607",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#7ccc6d"
+            ],
+            [
+              0.55,
+              "#68c557"
+            ],
+            [
+              1.0,
+              "#54bb41"
+            ]
+          ]
+        }
+      },
+      "was suite/image": {
+        "color": "#081106",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#7ccd67"
+            ],
+            [
+              0.55,
+              "#68c650"
+            ],
+            [
+              1.0,
+              "#56bb3d"
+            ]
+          ]
+        }
+      },
+      "was suite/image/adjustment": {
+        "color": "#0c1406",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#93d265"
+            ],
+            [
+              0.55,
+              "#83cb4e"
+            ],
+            [
+              1.0,
+              "#72c139"
+            ]
+          ]
+        }
+      },
+      "was suite/image/ai": {
+        "color": "#071115",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6bafcf"
+            ],
+            [
+              0.55,
+              "#54a2c7"
+            ],
+            [
+              1.0,
+              "#3e95be"
+            ]
+          ]
+        }
+      },
+      "was suite/image/analyze": {
+        "color": "#051012",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#64c2d0"
+            ],
+            [
+              0.55,
+              "#4db9c9"
+            ],
+            [
+              1.0,
+              "#39acbe"
+            ]
+          ]
+        }
+      },
+      "was suite/image/bound": {
+        "color": "#07100e",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#70c4ae"
+            ],
+            [
+              0.55,
+              "#5bbba1"
+            ],
+            [
+              1.0,
+              "#48af94"
+            ]
+          ]
+        }
+      },
+      "was suite/image/filter": {
+        "color": "#061008",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6cc97d"
+            ],
+            [
+              0.55,
+              "#55c06a"
+            ],
+            [
+              1.0,
+              "#43b558"
+            ]
+          ]
+        }
+      },
+      "was suite/image/generate": {
+        "color": "#091507",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#77ce6c"
+            ],
+            [
+              0.55,
+              "#62c655"
+            ],
+            [
+              1.0,
+              "#4dbd40"
+            ]
+          ]
+        }
+      },
+      "was suite/image/hdr": {
+        "color": "#111405",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#c0d95e"
+            ],
+            [
+              0.55,
+              "#b7d345"
+            ],
+            [
+              1.0,
+              "#abca2f"
+            ]
+          ]
+        }
+      },
+      "was suite/image/layers": {
+        "color": "#06110e",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6cc8b5"
+            ],
+            [
+              0.55,
+              "#56c0a9"
+            ],
+            [
+              1.0,
+              "#43b49c"
+            ]
+          ]
+        }
+      },
+      "was suite/image/lut": {
+        "color": "#0d1106",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#a9c66e"
+            ],
+            [
+              0.55,
+              "#9cbe58"
+            ],
+            [
+              1.0,
+              "#8eb246"
+            ]
+          ]
+        }
+      },
+      "was suite/image/masking": {
+        "color": "#06110e",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6acbac"
+            ],
+            [
+              0.55,
+              "#53c3a0"
+            ],
+            [
+              1.0,
+              "#40b792"
+            ]
+          ]
+        }
+      },
+      "was suite/image/preprocess": {
+        "color": "#061110",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6ec7be"
+            ],
+            [
+              0.55,
+              "#58beb4"
+            ],
+            [
+              1.0,
+              "#45b2a7"
+            ]
+          ]
+        }
+      },
+      "was suite/image/process": {
+        "color": "#06110b",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6cc992"
+            ],
+            [
+              0.55,
+              "#56c082"
+            ],
+            [
+              1.0,
+              "#43b572"
+            ]
+          ]
+        }
+      },
+      "was suite/image/transform": {
+        "color": "#071209",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6ccb80"
+            ],
+            [
+              0.55,
+              "#55c36d"
+            ],
+            [
+              1.0,
+              "#41b95b"
+            ]
+          ]
+        }
+      },
+      "was suite/image/upscaling": {
+        "color": "#06110d",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6acaa7"
+            ],
+            [
+              0.55,
+              "#53c399"
+            ],
+            [
+              1.0,
+              "#40b78b"
+            ]
+          ]
+        }
+      },
+      "was suite/latent": {
+        "color": "#061411",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#69cebc"
+            ],
+            [
+              0.55,
+              "#52c7b1"
+            ],
+            [
+              1.0,
+              "#3dbda5"
+            ]
+          ]
+        }
+      },
+      "was suite/latent/generate": {
+        "color": "#071512",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6bcebc"
+            ],
+            [
+              0.55,
+              "#54c7b1"
+            ],
+            [
+              1.0,
+              "#3ebea6"
+            ]
+          ]
+        }
+      },
+      "was suite/latent/transform": {
+        "color": "#061110",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6bcac1"
+            ],
+            [
+              0.55,
+              "#54c2b7"
+            ],
+            [
+              1.0,
+              "#41b6ab"
+            ]
+          ]
+        }
+      },
+      "was suite/sampling": {
+        "color": "#050f12",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#5fb5d5"
+            ],
+            [
+              0.55,
+              "#47aacf"
+            ],
+            [
+              1.0,
+              "#339dc4"
+            ]
+          ]
+        }
+      },
+      "was suite/conditioning": {
+        "color": "#0f1304",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bcd95c"
+            ],
+            [
+              0.55,
+              "#b2d343"
+            ],
+            [
+              1.0,
+              "#a5c82f"
+            ]
+          ]
+        }
+      },
+      "was suite/lora": {
+        "color": "#091116",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#74a7c9"
+            ],
+            [
+              0.55,
+              "#5e9ac0"
+            ],
+            [
+              1.0,
+              "#488cb7"
+            ]
+          ]
+        }
+      },
+      "was suite/loaders": {
+        "color": "#0c1827",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#79a2d7"
+            ],
+            [
+              0.55,
+              "#6291d0"
+            ],
+            [
+              1.0,
+              "#4a81c9"
+            ]
+          ]
+        }
+      },
+      "was suite/text": {
+        "color": "#121405",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#cad95e"
+            ],
+            [
+              0.55,
+              "#c1d345"
+            ],
+            [
+              1.0,
+              "#b7ca2f"
+            ]
+          ]
+        }
+      },
+      "was suite/text/dictionary": {
+        "color": "#111406",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bccd6a"
+            ],
+            [
+              0.55,
+              "#b2c653"
+            ],
+            [
+              1.0,
+              "#a6bb3e"
+            ]
+          ]
+        }
+      },
+      "was suite/text/list": {
+        "color": "#121304",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d5d95c"
+            ],
+            [
+              0.55,
+              "#ced343"
+            ],
+            [
+              1.0,
+              "#c3c82f"
+            ]
+          ]
+        }
+      },
+      "was suite/text/operations": {
+        "color": "#111405",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bed95e"
+            ],
+            [
+              0.55,
+              "#b4d345"
+            ],
+            [
+              1.0,
+              "#a9ca30"
+            ]
+          ]
+        }
+      },
+      "was suite/text/parse": {
+        "color": "#0f1205",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bdd461"
+            ],
+            [
+              0.55,
+              "#b3cd49"
+            ],
+            [
+              1.0,
+              "#a6c235"
+            ]
+          ]
+        }
+      },
+      "was suite/text/search": {
+        "color": "#151507",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d1d168"
+            ],
+            [
+              0.55,
+              "#caca51"
+            ],
+            [
+              1.0,
+              "#c2c23b"
+            ]
+          ]
+        }
+      },
+      "was suite/text/styles": {
+        "color": "#131104",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d9cb5c"
+            ],
+            [
+              0.55,
+              "#d3c343"
+            ],
+            [
+              1.0,
+              "#c8b82f"
+            ]
+          ]
+        }
+      },
+      "was suite/text/terminology": {
+        "color": "#101106",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bfc66e"
+            ],
+            [
+              0.55,
+              "#b5be58"
+            ],
+            [
+              1.0,
+              "#a8b246"
+            ]
+          ]
+        }
+      },
+      "was suite/text/tokens": {
+        "color": "#121105",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d4cb61"
+            ],
+            [
+              0.55,
+              "#cdc449"
+            ],
+            [
+              1.0,
+              "#c2b835"
+            ]
+          ]
+        }
+      },
+      "was suite/number": {
+        "color": "#06110d",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6ec6a6"
+            ],
+            [
+              0.55,
+              "#58be99"
+            ],
+            [
+              1.0,
+              "#46b28b"
+            ]
+          ]
+        }
+      },
+      "was suite/number/operations": {
+        "color": "#081410",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#73c6a9"
+            ],
+            [
+              0.55,
+              "#5ebd9c"
+            ],
+            [
+              1.0,
+              "#49b48e"
+            ]
+          ]
+        }
+      },
+      "was suite/logic": {
+        "color": "#221846",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#ac9ede"
+            ],
+            [
+              0.55,
+              "#9987d6"
+            ],
+            [
+              1.0,
+              "#8671ce"
+            ]
+          ]
+        }
+      },
+      "was suite/logic/boolean": {
+        "color": "#251744",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#b09cdd"
+            ],
+            [
+              0.55,
+              "#9d85d5"
+            ],
+            [
+              1.0,
+              "#8b6fce"
+            ]
+          ]
+        }
+      },
+      "was suite/logic/loop": {
+        "color": "#241945",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#af9fdd"
+            ],
+            [
+              0.55,
+              "#9c88d5"
+            ],
+            [
+              1.0,
+              "#8972cd"
+            ]
+          ]
+        }
+      },
+      "was suite/logic/switch": {
+        "color": "#27164b",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#b29ce2"
+            ],
+            [
+              0.55,
+              "#a085db"
+            ],
+            [
+              1.0,
+              "#8d6dd4"
+            ]
+          ]
+        }
+      },
+      "was suite/animation": {
+        "color": "#141105",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d9c05e"
+            ],
+            [
+              0.55,
+              "#d3b745"
+            ],
+            [
+              1.0,
+              "#caab2f"
+            ]
+          ]
+        }
+      },
+      "was suite/three": {
+        "color": "#06140b",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#69ce90"
+            ],
+            [
+              0.55,
+              "#52c77f"
+            ],
+            [
+              1.0,
+              "#3dbd6e"
+            ]
+          ]
+        }
+      },
+      "was suite/io": {
+        "color": "#0b1009",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#90b483"
+            ],
+            [
+              0.55,
+              "#7fa870"
+            ],
+            [
+              1.0,
+              "#6e9b5e"
+            ]
+          ]
+        }
+      },
+      "was suite/archive": {
+        "color": "#0b0e09",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#94ac88"
+            ],
+            [
+              0.55,
+              "#84a076"
+            ],
+            [
+              1.0,
+              "#749265"
+            ]
+          ]
+        }
+      },
+      "was suite/document": {
+        "color": "#111109",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bebe79"
+            ],
+            [
+              0.55,
+              "#b4b465"
+            ],
+            [
+              1.0,
+              "#a8a852"
+            ]
+          ]
+        }
+      },
+      "was suite/debug": {
+        "color": "#1b0c06",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#db8564"
+            ],
+            [
+              0.55,
+              "#d5724b"
+            ],
+            [
+              1.0,
+              "#cf5e33"
+            ]
+          ]
+        }
+      },
+      "was suite/history": {
+        "color": "#161c31",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#96a2cf"
+            ],
+            [
+              0.55,
+              "#808fc6"
+            ],
+            [
+              1.0,
+              "#6b7dbc"
+            ]
+          ]
+        }
+      },
+      "was suite/utilities": {
+        "color": "#0c0d0c",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#96a296"
+            ],
+            [
+              0.55,
+              "#859385"
+            ],
+            [
+              1.0,
+              "#758475"
+            ]
+          ]
+        }
+      },
+      "was suite/view": {
+        "color": "#081110",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#78bfb7"
+            ],
+            [
+              0.55,
+              "#63b5ac"
+            ],
+            [
+              1.0,
+              "#50a99f"
+            ]
+          ]
+        }
+      },
+      "was suite/workflow": {
+        "color": "#0e120a",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#9cba80"
+            ],
+            [
+              0.55,
+              "#8daf6c"
+            ],
+            [
+              1.0,
+              "#7da359"
+            ]
+          ]
+        }
+      },
+      "loaders": {
+        "color": "#0c1827",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#79a2d7"
+            ],
+            [
+              0.55,
+              "#6291d0"
+            ],
+            [
+              1.0,
+              "#4a81c9"
+            ]
+          ]
+        }
+      },
+      "conditioning": {
+        "color": "#0f1304",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#bcd95c"
+            ],
+            [
+              0.55,
+              "#b2d343"
+            ],
+            [
+              1.0,
+              "#a5c82f"
+            ]
+          ]
+        }
+      },
+      "sampling": {
+        "color": "#050f12",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#5fb5d5"
+            ],
+            [
+              0.55,
+              "#47aacf"
+            ],
+            [
+              1.0,
+              "#339dc4"
+            ]
+          ]
+        }
+      },
+      "latent": {
+        "color": "#061411",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#69cebc"
+            ],
+            [
+              0.55,
+              "#52c7b1"
+            ],
+            [
+              1.0,
+              "#3dbda5"
+            ]
+          ]
+        }
+      },
+      "image": {
+        "color": "#081106",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#7ccd67"
+            ],
+            [
+              0.55,
+              "#68c650"
+            ],
+            [
+              1.0,
+              "#56bb3d"
+            ]
+          ]
+        }
+      },
+      "mask": {
+        "color": "#06110e",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6acbac"
+            ],
+            [
+              0.55,
+              "#53c3a0"
+            ],
+            [
+              1.0,
+              "#40b792"
+            ]
+          ]
+        }
+      },
+      "audio": {
+        "color": "#141105",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d9c05e"
+            ],
+            [
+              0.55,
+              "#d3b745"
+            ],
+            [
+              1.0,
+              "#caab2f"
+            ]
+          ]
+        }
+      },
+      "video": {
+        "color": "#141105",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#d9c05e"
+            ],
+            [
+              0.55,
+              "#d3b745"
+            ],
+            [
+              1.0,
+              "#caab2f"
+            ]
+          ]
+        }
+      },
+      "utils": {
+        "color": "#0c0d0c",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#96a296"
+            ],
+            [
+              0.55,
+              "#859385"
+            ],
+            [
+              1.0,
+              "#758475"
+            ]
+          ]
+        }
+      },
+      "utilities": {
+        "color": "#0c0d0c",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#96a296"
+            ],
+            [
+              0.55,
+              "#859385"
+            ],
+            [
+              1.0,
+              "#758475"
+            ]
+          ]
+        }
+      },
+      "advanced": {
+        "color": "#221846",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#ac9ede"
+            ],
+            [
+              0.55,
+              "#9987d6"
+            ],
+            [
+              1.0,
+              "#8671ce"
+            ]
+          ]
+        }
+      },
+      "model": {
+        "color": "#0c1827",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#79a2d7"
+            ],
+            [
+              0.55,
+              "#6291d0"
+            ],
+            [
+              1.0,
+              "#4a81c9"
+            ]
+          ]
+        }
+      },
+      "api": {
+        "color": "#081217",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6fafce"
+            ],
+            [
+              0.55,
+              "#58a2c6"
+            ],
+            [
+              1.0,
+              "#4195be"
+            ]
+          ]
+        }
+      }
+    },
+    "nodes": {
+      "Bus Node": {
+        "color": "#241847",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#ae9ede"
+            ],
+            [
+              0.55,
+              "#9b87d7"
+            ],
+            [
+              1.0,
+              "#8870cf"
+            ]
+          ]
+        },
+        "title": "Bus"
+      },
+      "WASBusNodeDynamic": {
+        "color": "#241847",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#ae9ede"
+            ],
+            [
+              0.55,
+              "#9b87d7"
+            ],
+            [
+              1.0,
+              "#8870cf"
+            ]
+          ]
+        },
+        "title": "Bus (Dynamic)"
+      },
+      "Cache Node": {
+        "color": "#0f1929",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#84a2d2"
+            ],
+            [
+              0.55,
+              "#6e92c9"
+            ],
+            [
+              1.0,
+              "#5781c1"
+            ]
+          ]
+        }
+      },
+      "Load Cache": {
+        "color": "#0f1929",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#84a2d2"
+            ],
+            [
+              0.55,
+              "#6e92c9"
+            ],
+            [
+              1.0,
+              "#5781c1"
+            ]
+          ]
+        }
+      },
+      "Number Counter": {
+        "color": "#06110d",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6acbaa"
+            ],
+            [
+              0.55,
+              "#53c39d"
+            ],
+            [
+              1.0,
+              "#40b78f"
+            ]
+          ]
+        }
+      },
+      "Constant Number": {
+        "color": "#06110d",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#6acbaa"
+            ],
+            [
+              0.55,
+              "#53c39d"
+            ],
+            [
+              1.0,
+              "#40b78f"
+            ]
+          ]
+        }
+      },
+      "Debug Number to Console": {
+        "color": "#1b0c06",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#db8564"
+            ],
+            [
+              0.55,
+              "#d5724b"
+            ],
+            [
+              1.0,
+              "#cf5e33"
+            ]
+          ]
+        }
+      },
+      "DebugInput": {
+        "color": "#1b0c06",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#db8564"
+            ],
+            [
+              0.55,
+              "#d5724b"
+            ],
+            [
+              1.0,
+              "#cf5e33"
+            ]
+          ]
+        }
+      },
+      "Image Save": {
+        "color": "#2c0f0a",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#de8575"
+            ],
+            [
+              0.55,
+              "#d96f5c"
+            ],
+            [
+              1.0,
+              "#d35943"
+            ]
+          ]
+        }
+      },
+      "WASImagePreview": {
+        "color": "#051211",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#66cfc6"
+            ],
+            [
+              0.55,
+              "#4ec8be"
+            ],
+            [
+              1.0,
+              "#3bbcb2"
+            ]
+          ]
+        }
+      },
+      "Write to Video": {
+        "color": "#2c0f0a",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#de8575"
+            ],
+            [
+              0.55,
+              "#d96f5c"
+            ],
+            [
+              1.0,
+              "#d35943"
+            ]
+          ]
+        }
+      },
+      "Write to GIF": {
+        "color": "#2c0f0a",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#de8575"
+            ],
+            [
+              0.55,
+              "#d96f5c"
+            ],
+            [
+              1.0,
+              "#d35943"
+            ]
+          ]
+        }
+      },
+      "Save Text File": {
+        "color": "#2c0f0a",
+        "gradient": {
+          "angle": 12,
+          "stops": [
+            [
+              0.0,
+              "#de8575"
+            ],
+            [
+              0.55,
+              "#d96f5c"
+            ],
+            [
+              1.0,
+              "#d35943"
+            ]
+          ]
+        }
+      }
+    },
+    "glow": {
+      "selected": "#165f19",
+      "blur": 14,
+      "replaceShadow": true
+    },
+    "body": {
+      "image": "pack:themes/was-node-suite-light/was-node-bg.png",
+      "fit": "tile",
+      "opacity": 1
+    },
+    "icon": {
+      "image": "pack:themes/was-node-suite-light/was-node-suite.svg",
+      "size": 16,
+      "node_class_prefix": [
+        "WAS",
+        "Image ",
+        "Text ",
+        "Number ",
+        "Bus ",
+        "Cache "
+      ]
+    },
+    "nodeOpacity": 0.95,
+    "canvas": {
+      "image": "pack:themes/was-node-suite-light/backdrop.svg",
+      "fit": "cover",
+      "position": "center",
+      "opacity": 0.9
+    }
+  }
+}

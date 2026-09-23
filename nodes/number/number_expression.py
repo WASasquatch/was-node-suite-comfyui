@@ -41,14 +41,16 @@ class NumberExpression(io.ComfyNode):
             category="WAS Suite/Number/Operations",
             description=(
                 "Work out a whole formula over up to 24 numbers in one node, such as "
-                "`(a * b) / 2 + c`, `clamp(a, 0, 1)` or `round(a / b, 2)`. The functions are "
-                "min, max, abs, round, floor, ceil, sqrt, clamp(v, lo, hi), lerp(a, b, t), "
-                "sign, log, log2, log10, exp, sin, cos, tan, atan2, hypot, degrees and "
-                "radians, with pi, e and tau as constants. Comparisons and `and`, `or` work "
-                "too, so `a if a > b else b` picks the larger and the boolean output carries "
-                "the answer. Only arithmetic is read: a name, an attribute or a call that is "
-                "not on the list is refused by name before anything runs. The box takes "
-                "several lines, joined into one, and `#` starts a comment."
+                "`(a * b) / 2 + c`, `clamp(a, 0, 1)` or `round(a / b, 2)`. Rounding, "
+                "clamping, interpolation, roots, logarithms and trigonometry are all there, "
+                "with pi, e and tau as constants, and the expression box lists them. "
+                "Comparisons and `and`, `or` work too, so `a if a > b else b` picks the "
+                "larger and the boolean output carries the answer. Only arithmetic is read: "
+                "a name, an attribute or a call that is not on the list is refused by name "
+                "before anything runs. The box takes several lines, joined into one, and "
+                "`#` starts a comment. Slots a to x are sockets taking a whole number, a "
+                "decimal, a NUMBER or a true or false as 1 or 0; unwired counts as 0, so a "
+                "fixed number goes in the formula."
             ),
             inputs=[
                 io.String.Input(
@@ -64,408 +66,263 @@ class NumberExpression(io.ComfyNode):
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "a",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("a", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `a` stands for. Type it here or wire one in. Unconnected "
-                        "slots use the widget, and a slot the expression never names is "
-                        "ignored."
+                        "Wire the number `a` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An "
+                        "unwired slot counts as `0`, `true` counts as `1`, and a slot the "
+                        "expression never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "b",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("b", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `b` stands for. Type it here or wire one in. `a / b` with "
-                        "b at 0 stops the run unless on_error is set to zero."
+                        "Wire the number `b` stands for. `a / b` with nothing wired to `b` divides "
+                        "by `0` and stops the run unless on_error is set to zero."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "c",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("c", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `c` stands for. Type it here or wire one in. Handy as the "
-                        "offset in `(a * b) / 2 + c`."
+                        "Wire the number `c` stands for. Handy as the offset in `(a * b) / 2 + c`."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "d",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("d", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `d` stands for. Type it here or wire one in. The fourth "
-                        "value, free for a limit such as `clamp(a, c, d)`."
+                        "Wire the number `d` stands for. The fourth value, free for a limit such "
+                        "as `clamp(a, c, d)`."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "e",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("e", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `e` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `e` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "f",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("f", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `f` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `f` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "g",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("g", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `g` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `g` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "h",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("h", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `h` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `h` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "i",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("i", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `i` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `i` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "j",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("j", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `j` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `j` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "k",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("k", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `k` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `k` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "l",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("l", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `l` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `l` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "m",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("m", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `m` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `m` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "n",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("n", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `n` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `n` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "o",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("o", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `o` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `o` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "p",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("p", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `p` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `p` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "q",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("q", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `q` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `q` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "r",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("r", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `r` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `r` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "s",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("s", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `s` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `s` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "t",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("t", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `t` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `t` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "u",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("u", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `u` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `u` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "v",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("v", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `v` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `v` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "w",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("w", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `w` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `w` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(
-                    io.Float.Input(
-                        "x",
-                        default=0.0,
-                        min=-18446744073709551615,
-                        max=18446744073709551615,
-                        step=0.01,
-                        optional=True,
-                    ),
-                    [io.Float, NUMBER, io.Int],
+                    io.Float.Input("x", optional=True,
+                                   force_input=True),
+                    [io.Float, NUMBER, io.Int, io.Boolean],
                     optional=True,
                     tooltip=(
-                        "The number `x` stands for. Type it here or wire one in. An "
-                        "unconnected slot uses its widget, and a slot the expression never "
-                        "names is ignored."
+                        "Wire the number `x` stands for, as `INT`, `FLOAT`, `NUMBER` or "
+                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
+                        "never names is ignored."
                     ),
                 ),
                 io.Int.Input(
@@ -553,8 +410,13 @@ class NumberExpression(io.ComfyNode):
             ExpressionError: The expression was refused or could not be worked out, and
                 on_error is ``error``.
         """
+        slots = {}
+        for name in SLOTS:
+            given = extra.get(name, 0.0)
+            slots[name] = int(given) if isinstance(given, bool) else given
+
         try:
-            value = evaluate(expression, {name: extra.get(name, 0.0) for name in SLOTS})
+            value = evaluate(expression, slots)
         except ExpressionError as refused:
             if on_error != "zero":
                 raise

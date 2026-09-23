@@ -25,16 +25,16 @@ DEFAULT_SCHEDULE = """0:A portrait of a rosebud
 15:A portrait of a rose"""
 
 
-class CLIPTextEncodeList(io.ComfyNode):
+class WASCLIPTextEncodeList(io.ComfyNode):
     """Turn numbered prompt lines into a conditioning schedule."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="CLIPTextEncodeList",
+            node_id="WASCLIPTextEncodeList",
             display_name="CLIP Text Encode Sequence (Advanced)",
             search_aliases=[
-                "CLIPTextEncodeList",
+                "WASCLIPTextEncodeList",
                 "CLIP Text Encode Sequence (Advanced)",
                 "prompt schedule",
                 "prompt travel",
@@ -43,7 +43,7 @@ class CLIPTextEncodeList(io.ComfyNode):
             category="WAS Suite/Conditioning",
             description=(
                 "Encode one prompt per line, each tagged with the frame it takes effect "
-                "on, into a schedule for KSamplerSeq. Write '0:a rosebud' and "
+                "on, into a schedule for KSampler Sequence. Write '0:a rosebud' and "
                 "'10:a rose' and the run opens on the first prompt and switches to the "
                 "second at frame 10."
             ),
@@ -93,8 +93,8 @@ class CLIPTextEncodeList(io.ComfyNode):
                     display_name="conditioning_sequence",
                     tooltip=(
                         "The frame-tagged prompts, for the positive_seq or negative_seq "
-                        "input of KSamplerSeq. It is not an ordinary conditioning and does "
-                        "not fit a plain sampler."
+                        "input of KSampler Sequence. It is not an ordinary conditioning and "
+                        "does not fit a plain sampler."
                     ),
                 ),
             ],

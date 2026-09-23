@@ -1,0 +1,2817 @@
+{
+  "id": "f402acdf-b806-4acc-8815-a680680d054c",
+  "revision": 0,
+  "last_node_id": 42,
+  "last_link_id": 66,
+  "nodes": [
+    {
+      "id": 11,
+      "type": "PrimitiveString",
+      "pos": [
+        2621.265127906968,
+        1224.1111953488403
+      ],
+      "size": [
+        300,
+        270
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "value": ""
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        556,
+        205
+      ],
+      "size": [
+        300,
+        294
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "weight_dtype": "default"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 21,
+      "type": "StringConcatenate",
+      "pos": [
+        2860,
+        380
+      ],
+      "size": [
+        300,
+        166
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "widget": {
+            "name": "string_a"
+          },
+          "link": 32
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "",
+        "",
+        "\n"
+      ],
+      "widgets_values_named": {
+        "string_a": "",
+        "string_b": "",
+        "delimiter": "\n"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 24,
+      "type": "VAEDecode",
+      "pos": [
+        4270.997437263099,
+        200.86605483759323
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 39
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 25,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        4267.520422254275,
+        294.4561048670051
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 40
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 26,
+      "type": "CreateVideo",
+      "pos": [
+        4612.90391313075,
+        207.24137443759096
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 42
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB",
+        "none"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB",
+        "codec": "none"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 23,
+      "type": "WASFreeMemory",
+      "pos": [
+        3949.9530514483786,
+        205.2111354728909
+      ],
+      "size": [
+        300,
+        210
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "LATENT",
+          "links": [
+            39,
+            40
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 7,
+      "type": "VAELoader",
+      "pos": [
+        556,
+        1048.3335186470613
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 6,
+      "type": "VAELoader",
+      "pos": [
+        556,
+        918.5097276470607
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            7,
+            8,
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_int8_convrot.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "CLIPLoader",
+      "pos": [
+        556,
+        740.6859366470602
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "MiniMaxLowVRAMAttention",
+      "pos": [
+        556,
+        615.0767092941187
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            4,
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxLowVRAMAttention",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "head_chunks": 4
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "ModelAttentionBackend",
+      "pos": [
+        556,
+        493.682045588236
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelAttentionBackend",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "comfy kitchen attention"
+      ],
+      "widgets_values_named": {
+        "attention": "comfy kitchen attention"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        556,
+        352.5019455294122
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "H3\\taomate_h3_3step_comfy.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "H3\\taomate_h3_3step_comfy.safetensors",
+        "strength_model": 1
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 28,
+      "type": "WASDisplayAny",
+      "pos": [
+        3965.1183009944903,
+        1247.9668247367135
+      ],
+      "size": [
+        1018.0267794221272,
+        384.56659619450284
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "*",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASDisplayAny",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 20,
+      "type": "StringConcatenate",
+      "pos": [
+        2621.265127906968,
+        1344.1111953488403
+      ],
+      "size": [
+        300,
+        166
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "widget": {
+            "name": "string_a"
+          },
+          "link": 24
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "",
+        "",
+        "  ->  "
+      ],
+      "widgets_values_named": {
+        "string_a": "",
+        "string_b": "",
+        "delimiter": "  ->  "
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 16,
+      "type": "BasicGuider",
+      "pos": [
+        2030,
+        482
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            53
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 8,
+      "type": "KSamplerSelect",
+      "pos": [
+        2201.2651279069673,
+        1224.1111953488403
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            54
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "euler"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "euler"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 9,
+      "type": "BasicScheduler",
+      "pos": [
+        2201.2651279069673,
+        1344.1111953488403
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            55
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "simple",
+        6,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "simple",
+        "steps": 6,
+        "denoise": 1
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 15,
+      "type": "WASH3ExtendWindow",
+      "pos": [
+        2030,
+        208
+      ],
+      "size": [
+        300,
+        262
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 19
+        },
+        {
+          "name": "positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 8
+        },
+        {
+          "name": "prompts",
+          "shape": 7,
+          "type": "WAS_H3_PROMPTS",
+          "link": 13
+        },
+        {
+          "name": "pass_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "pass_index"
+          },
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "window",
+          "type": "LATENT",
+          "links": [
+            56
+          ]
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "overlap_frames",
+          "type": "INT",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3ExtendWindow",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "carry",
+        102,
+        22,
+        0,
+        0,
+        1.15,
+        8
+      ],
+      "widgets_values_named": {
+        "continuity": "carry",
+        "extension_frames": 102,
+        "overlap_frames": 22,
+        "pass_index": 0,
+        "drift_control": 0,
+        "refresh_gain": 1.15,
+        "audio_release": 8
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 36,
+      "type": "WASAffineOptions",
+      "pos": [
+        1702.0969350450055,
+        1740.854136246814
+      ],
+      "size": [
+        360,
+        394
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "affine_options",
+          "type": "DICT",
+          "links": [
+            58
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASAffineOptions",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "white_noise",
+        0.35,
+        0.15,
+        512,
+        0.45,
+        0,
+        90,
+        false,
+        0,
+        1,
+        0.7,
+        2,
+        0.9,
+        0.05,
+        8,
+        6,
+        2,
+        "L2",
+        1,
+        32,
+        0.4,
+        0.25,
+        12,
+        1.5,
+        0.3,
+        10,
+        64,
+        3,
+        0.5,
+        2,
+        8,
+        8,
+        1,
+        7,
+        1,
+        0,
+        false,
+        0,
+        0.4,
+        0.8,
+        0,
+        false,
+        -10,
+        10,
+        1,
+        0.35,
+        20,
+        0.15,
+        "gaussian",
+        "off"
+      ],
+      "widgets_values_named": {
+        "pattern": "white_noise",
+        "green_center_frac": 0.35,
+        "green_bandwidth_frac": 0.15,
+        "black_bins_per_kpx": 512,
+        "hatch_freq_cyc_px": 0.45,
+        "hatch_angle1_deg": 0,
+        "hatch_angle2_deg": 90,
+        "hatch_square": false,
+        "hatch_phase_jitter": 0,
+        "hatch_supersample": 1,
+        "highpass_cutoff_frac": 0.7,
+        "highpass_order": 2,
+        "ring_center_frac": 0.9,
+        "ring_bandwidth_frac": 0.05,
+        "poisson_radius_px": 8,
+        "poisson_softness": 6,
+        "worley_points_per_kpx": 2,
+        "worley_metric": "L2",
+        "worley_edge_sharpness": 1,
+        "tile_line_tile_size": 32,
+        "tile_line_freq_cyc_px": 0.4,
+        "tile_line_jitter": 0.25,
+        "dot_cell_size": 12,
+        "dot_jitter_px": 1.5,
+        "dot_fill_ratio": 0.3,
+        "velvet_taps_per_kpx": 10,
+        "perlin_scale": 64,
+        "perlin_octaves": 3,
+        "perlin_persistence": 0.5,
+        "perlin_lacunarity": 2,
+        "checker_size": 8,
+        "bayer_size": 8,
+        "solid_alpha": 1,
+        "content_window": 7,
+        "mask_strength": 1,
+        "threshold": 0,
+        "invert_mask": false,
+        "mask_blur": 0,
+        "mask_sharpen": 0.4,
+        "sharpen_radius": 0.8,
+        "sharpen_threshold": 0,
+        "clamp": false,
+        "clamp_min": -10,
+        "clamp_max": 10,
+        "frame_seed_stride": 1,
+        "drift_speed": 0.35,
+        "drift_angle_deg": 20,
+        "drift_renew": 0.15,
+        "bias_field": "gaussian",
+        "content_gate": "off"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 19,
+      "type": "WASH3ExtendAppend",
+      "pos": [
+        2860,
+        210
+      ],
+      "size": [
+        300,
+        122
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 20
+        },
+        {
+          "name": "sampled",
+          "type": "LATENT",
+          "link": 59
+        },
+        {
+          "name": "overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "overlap_frames"
+          },
+          "link": 23
+        },
+        {
+          "name": "segment_index",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "segment_index"
+          },
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            35
+          ]
+        },
+        {
+          "name": "frames",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3ExtendAppend",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        22,
+        0
+      ],
+      "widgets_values_named": {
+        "overlap_frames": 22,
+        "segment_index": 0
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 35,
+      "type": "WASAffineSchedule",
+      "pos": [
+        1702.0969350450055,
+        1230.8541362468134
+      ],
+      "size": [
+        364,
+        450
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "affine_schedule",
+          "type": "DICT",
+          "links": [
+            57
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASAffineSchedule",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        0.1,
+        1,
+        0.75,
+        1,
+        0,
+        0,
+        "ease_in_out_sine",
+        8
+      ],
+      "widgets_values_named": {
+        "start": 0.1,
+        "end": 1,
+        "bias": 0.75,
+        "exponent": 1,
+        "start_offset": 0,
+        "end_offset": 0,
+        "curve": "ease_in_out_sine",
+        "preview_steps": 8
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 12,
+      "type": "WASWhileLoopOpen",
+      "pos": [
+        1687.898041495932,
+        313.17639066499953
+      ],
+      "size": [
+        300,
+        158
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value_1",
+          "shape": 7,
+          "type": "*",
+          "link": 46
+        },
+        {
+          "name": "value_2",
+          "shape": 7,
+          "type": "*",
+          "link": 12
+        },
+        {
+          "name": "value_3",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "max_iterations",
+          "type": "INT",
+          "widget": {
+            "name": "max_iterations"
+          },
+          "link": 61
+        }
+      ],
+      "outputs": [
+        {
+          "name": "iterator",
+          "type": "WAS_LOOP",
+          "links": [
+            34
+          ]
+        },
+        {
+          "name": "index",
+          "type": "INT",
+          "links": [
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "name": "metadata",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "name": "value_1",
+          "type": "LATENT",
+          "links": [
+            19,
+            20
+          ]
+        },
+        {
+          "name": "value_2",
+          "type": "STRING",
+          "links": [
+            32
+          ]
+        },
+        {
+          "name": "value_3",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASWhileLoopOpen",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        1
+      ],
+      "widgets_values_named": {
+        "max_iterations": 1
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 22,
+      "type": "WASWhileLoopClose",
+      "pos": [
+        3540,
+        210
+      ],
+      "size": [
+        300,
+        538
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "iterator",
+          "type": "WAS_LOOP",
+          "link": 34
+        },
+        {
+          "name": "value_1",
+          "shape": 7,
+          "type": "*",
+          "link": 35
+        },
+        {
+          "name": "value_2",
+          "shape": 7,
+          "type": "*",
+          "link": 36
+        },
+        {
+          "name": "value_3",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "metadata",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "name": "value_1",
+          "type": "LATENT",
+          "links": [
+            38
+          ]
+        },
+        {
+          "name": "value_2",
+          "type": "STRING",
+          "links": [
+            41
+          ]
+        },
+        {
+          "name": "value_3",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASWhileLoopClose",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        false
+      ],
+      "widgets_values_named": {
+        "continue_loop": true,
+        "accumulate": false
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 38,
+      "type": "WASCustomSamplerAffineAdvanced",
+      "pos": [
+        2374.911563390946,
+        213.68818127069028
+      ],
+      "size": [
+        438.61908273676136,
+        836
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 63
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 53
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 54
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 55
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 56
+        },
+        {
+          "name": "affine_schedule",
+          "shape": 7,
+          "type": "DICT",
+          "link": 57
+        },
+        {
+          "name": "external_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "affine_options",
+          "shape": 7,
+          "type": "DICT",
+          "link": 58
+        },
+        {
+          "name": "affine_seed",
+          "type": "INT",
+          "widget": {
+            "name": "affine_seed"
+          },
+          "link": 60
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            59
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASCustomSamplerAffineAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        1,
+        0.985,
+        0,
+        "pink_noise",
+        0,
+        false,
+        "drift",
+        "video",
+        "latent",
+        true,
+        "content"
+      ],
+      "widgets_values_named": {
+        "affine_interval": 1,
+        "max_scale": 0.985,
+        "max_bias": 0,
+        "pattern": "pink_noise",
+        "affine_seed": 0,
+        "affine_seed_increment": false,
+        "temporal_mode": "drift",
+        "affine_streams": "video",
+        "affine_space": "latent",
+        "debug": true,
+        "affine_acts_on": "content"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 34,
+      "type": "WASFreeMemory",
+      "pos": [
+        1708.5330745611184,
+        235.59316456095917
+      ],
+      "size": [
+        270,
+        210
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 45
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "LATENT",
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0
+      }
+    },
+    {
+      "id": 27,
+      "type": "SaveVideo",
+      "pos": [
+        3958.0660864689667,
+        490.9368997464162
+      ],
+      "size": [
+        1031.1313104679164,
+        718.148888787804
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "video/h3_carry_fixed",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/h3_carry_fixed",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 10,
+      "type": "WASMiniMaxH3Conditioning",
+      "pos": [
+        972.16406820296,
+        211.34060696969698
+      ],
+      "size": [
+        620,
+        1098
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 6
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            45
+          ]
+        },
+        {
+          "name": "prompts",
+          "type": "WAS_H3_PROMPTS",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "segments",
+          "type": "INT",
+          "links": [
+            48,
+            61
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "latents",
+          "shape": 6,
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASMiniMaxH3Conditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "t2va",
+        "16:9",
+        0.8,
+        0,
+        0,
+        "visual_style:\nLate-1980s to early-1990s theatrical Japanese mecha OVA animation. Hand-drawn 2D cel animation with crisp inked outlines, carefully painted cel shadows and highlights, richly painted backgrounds, dense hand-drawn mechanical detail, strong graphic silhouettes, period-authentic anime color design, analog optical effects, and subtle film grain.\n\nHigh-budget theatrical OVA production quality with mature anime character drawing, intricate mechanical draftsmanship, expressive traditional key animation, strong perspective drawing, dramatic composition, controlled cel-animation timing, and hand-crafted effects animation.\n\nMechanical surfaces use precise inked panel lines, layered armor construction, restrained cel highlights, mechanical joints, vents, warning markings, and detailed industrial design consistent with premium Japanese science-fiction animation from the era.\n\nEffects use traditional hand-drawn animation language: cel-animated sparks, painted energy light, atmospheric vapor, speed smears, impact frames, mechanical vibration, hand-drawn motion streaks, painted smoke and clouds, and analog optical glow.",
+        "overall_audio_style:\nAudio has the character of a high-budget late-1980s to early-1990s Japanese science-fiction OVA. Mechanical effects are weighty, layered and tactile: switches, relays, servos, hydraulic movement, metal impacts, cockpit vibration, engines, launch mechanisms, armor resonance and thrusters have distinct physical sound.\n\nDialogue remains clean and intelligible over action. Japanese speech uses natural dramatic anime performance rather than exaggerated caricature. Radio or cockpit communications use restrained electronic compression only when the speaker is actually transmitted through communications equipment.\n\nnon_diegetic_music:\nPersistent retro OVA mecha score built from analog synthesizers, orchestral strings, brass-synth layers, tom-heavy percussion, low electronic bass and occasional atmospheric pads. Fast action uses driving rhythmic synth and percussion; large-scale or quiet orbital moments reduce into broad sustained orchestral-synth textures. Musical transitions follow the pacing of the sequence without changing the established musical palette.",
+        "id=\"x401\"\nduration_seconds: 11\n\nA Japanese male combat pilot in his late twenties has a lean athletic build, short messy black hair and sharp dark eyes. He wears a fitted dark navy pressure suit with muted red shoulder markings, reinforced black boots, black gloves, compact grey chest life-support hardware, and a white flight helmet clipped securely at his right hip.\n\nHe is already sprinting at full speed down a long straight military spacecraft corridor. The corridor has dark steel wall panels, ribbed structural supports, exposed overhead conduits, repeating cool-white ceiling strip lights, small red warning lamps and yellow deck-edge markings. Approximately twelve meters ahead, the corridor physically bends ninety degrees LEFT around a broad permanent steel corner.\n\nA medium rear three-quarter tracking camera travels forward approximately 1.5 meters behind the pilot and slightly to his right at waist-to-chest height, matching his running speed.\n\nHis torso leans forward, his arms pump naturally and his boots strike the metal deck rapidly. The white helmet clipped to his hip bounces with every stride.\n\nAs the left-hand bend approaches, the pilot keeps his head, shoulders and gaze aligned with his direction of travel.\n\nHe reaches the corner, plants his right boot near the outside edge, lowers his center of gravity and leans his entire body left. He runs continuously through the ninety-degree corner without stopping or looking around.\n\nThe tracking camera follows the exact same curved route. It physically arcs left around the steel corner while continuing forward, preserving approximately the same rear-right distance from the pilot.\n\nDirectly around the bend is a large rectangular mecha loading bay with a high industrial ceiling, overhead gantries, fixed service equipment, yellow-black hazard markings and a broad unobstructed floor.\n\nAt the far end of this loading bay, a colossal humanoid combat mecha already stands secured upright in a mechanical launch cradle. The mecha has white and pale-grey armor, a dark navy torso, muted red warning accents, heavy angular shoulders and a compact armored head.\n\nA circular armored cockpit hatch is already OPEN in the center-front of its torso. The circular hatch door is hinged along its upper edge and raised above the opening. Two fixed handholds flank the opening and one fixed foothold sits immediately below it.\n\nThe pilot straightens from the turn and continues sprinting directly toward the waiting mecha.\n\nHe reaches the torso, grabs both existing handholds, plants one boot on the fixed foothold and pulls himself upward to the open circular cockpit.\n\nImmediately inside the opening is a fixed forward-facing contoured pilot seat. The seat back faces toward the rear interior of the mecha, so the pilot must sit with his back entering first in order to face forward.\n\nStill holding the handholds, the pilot physically rotates his entire body through 180 degrees. His feet and hips turn first, followed by his torso, shoulders and head, until his face points outward toward the loading bay and his back points into the cockpit.\n\nHe bends his knees and lowers himself BACKWARD into the opening.\n\nHis hips contact the seat cushion first. His back and shoulders then settle firmly against the backrest. He is now correctly seated facing the mecha's forward direction.\n\nTwo heavy restraint straps already hang beside the seat.\n\nHe grabs both restraints, pulls them diagonally across his torso and locks them into the central buckle with a hard mechanical CLACK.\n\nStill seated in exactly the same orientation, he reaches upward with both hands to the existing inner handle of the raised circular hatch.\n\nHe pulls the armored hatch downward.\n\nThe hatch rotates down on its upper hinge, progressively covering the cockpit opening until the circular door meets the armored rim.\n\nMultiple mechanical locking dogs engage around the circumference.\n\nThe cockpit hatch finishes completely CLOSED and SEALED.\n\noverall_soundscape:\nRapid boot impacts, heavy breathing, spacecraft ventilation, distant warning electronics, brief boot friction during the running turn, large loading-bay machinery, metal handhold impacts, the pilot dropping into the seat, restraint hardware locking, the heavy hatch rotating shut, and multiple mechanical locks engaging.\n\nnon_diegetic_music:\nFast analog synthesizer bass pulses, aggressive tom percussion and short brass-synth accents intensify through the run and loading-bay approach, ending with a heavy musical accent as the hatch seals.",
+        9,
+        12,
+        "carry",
+        "id=\"x402\"\nduration_seconds: 8\n\nThe shot cuts abruptly to the interior of the already-sealed humanoid-mecha cockpit.\n\nThe same Japanese male pilot is already seated correctly in the fixed forward-facing pilot seat. His dark navy pressure suit, red shoulder markings, black gloves and grey chest life-support hardware remain unchanged. The heavy restraint harness is already locked firmly across his torso.\n\nThe circular armored exterior hatch remains completely closed and sealed behind the pilot seat.\n\nThe compact cockpit contains dense dark-grey mechanical instrumentation. Existing physical toggle switches, guarded power switches, rotary controls, analog gauges and indicator lamps are built into fixed control banks to the pilot's left and right. Two heavy flight throttles are mounted beside his thighs. A wide curved forward display assembly is already installed ahead of him but begins mostly dark.\n\nA low front-left three-quarter camera is positioned ahead and slightly left of the pilot near knee height, looking slightly upward. His face, upper torso, restraint harness and both control banks are visible.\n\nThe pilot immediately reaches to the existing left switch bank.\n\nHis gloved fingers throw four adjacent metal toggle switches upward in rapid succession.\n\nCLICK. CLICK. CLICK. CLICK.\n\nSmall amber indicators beside those switches illuminate in sequence.\n\nHis right hand moves directly to the opposite control bank.\n\nHe flips open two existing red safety covers and firmly depresses the guarded switches beneath them.\n\nElectrical relays activate throughout the cockpit.\n\nAnalog gauge needles sweep rapidly upward.\n\nRows of existing amber and green indicators illuminate in cascading sequences.\n\nThe camera makes a small slow push toward the pilot.\n\nHe reaches forward with both hands and grips two existing heavy main activation levers.\n\nHe braces his shoulders against the restraint harness and pulls both levers decisively into their powered positions.\n\nThe forward panoramic display illuminates from darkness with cool green-blue system graphics.\n\nCold display light washes across his face, gloves and pressure suit.\n\nA deep mechanical power vibration builds through the seat and surrounding instrument panels.\n\nStatus lights stabilize.\n\nThe pilot releases the activation levers.\n\nHis left hand lowers onto the existing left flight throttle.\n\nHis right hand lowers onto the existing right flight throttle.\n\nBoth hands close firmly around the throttles while he continues looking directly forward.\n\noverall_soundscape:\nMetal toggle clicks, safety-cover snaps, guarded switch impacts, relay chatter, moving gauge mechanisms, electrical startup tones, rising turbine-like machinery, hydraulic pressure and steady cockpit vibration.\n\nnon_diegetic_music:\nRapid analog arpeggios and tightly spaced tom hits build through the startup sequence. Sustained brass-synth tones rise during the main power activation.",
+        8,
+        0,
+        "cut",
+        "id=\"x403\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a mechanically fixed camera mounted immediately BEHIND the pilot seat inside the same sealed and fully powered cockpit.\n\nThe same Japanese male pilot remains correctly seated and tightly restrained.\n\nHis spine is pressed against the seat back. His chest, face, knees and toes all point FORWARD in the same direction.\n\nThe camera is centered immediately behind and slightly above his shoulders.\n\nThe visible physical order from nearest to farthest is:\n\ncamera → seat back → back of pilot's head and shoulders → his forward-facing body → his hands and knees → panoramic HUD → launch tube.\n\nOnly the BACK of his short messy black hair, neck, shoulders, upper restraint straps, forearms and gloved hands are visible.\n\nHis face points away from the camera for the entire scene.\n\nDirectly ahead of him is an existing 180-degree wrap-around panoramic tactical HUD. The HUD is positioned on the same side of the pilot that his face, chest, knees and toes point toward.\n\nIt is a forward display rather than a reflective surface.\n\nBeyond the HUD is the mecha's forward-camera view down a perfectly straight enclosed spacecraft launch tube.\n\nThe launch tube contains repeating dark structural ribs, bright white guidance lamps, parallel acceleration rails, yellow-black service markings and a distant central vanishing point directly ahead of the pilot.\n\nTwo existing flight throttles sit beside the pilot's thighs beneath his hands.\n\nOne existing illuminated red launch button is mounted forward and slightly to his right, between his seated position and the panoramic HUD.\n\nFor approximately one second, the powered cockpit vibrates gently while the pilot remains still.\n\nBoth hands hold the throttles.\n\nHe stares straight forward toward the distant vanishing point.\n\n(S1) says: <d>[Japanese] システム、オールグリーン。発進！</d>\n\nAs the final word ends, his right hand releases the right throttle.\n\nHis right arm reaches FORWARD toward the existing red launch button.\n\nHe strikes the button once.\n\nThe button visibly depresses.\n\nThe mecha immediately accelerates FORWARD in exactly the same direction the pilot is facing.\n\nThe massive acceleration force pushes the pilot BACKWARD against his seat, opposite the direction of travel.\n\nHis spine and shoulders compress firmly against the seat back nearest the camera.\n\nThe restraint harness pulls tight across his shoulders.\n\nHis head moves slightly backward under the force but continues facing forward toward the HUD.\n\nHis right hand immediately returns to the right throttle.\n\nBoth hands grip the throttles tightly.\n\nThe cockpit enters intense high-frequency vibration.\n\nBecause the camera is mechanically mounted behind the pilot seat, the camera vibrates with the cockpit while preserving exactly the same rear-facing composition.\n\nOn the panoramic HUD, the distant launch-tube vanishing point remains centered.\n\nGuidance lights and structural ribs rush from the distant CENTER of the forward view toward the pilot and sweep outward past the left and right edges of the display at rapidly increasing speed.\n\nThe velocity indicator climbs rapidly.\n\nThe central alignment reticle remains fixed directly ahead.\n\nThe camera stays behind the pilot.\n\nThe pilot continues facing forward.\n\nThe HUD remains ahead of him.\n\nThe launch tube remains beyond the HUD.\n\nThe machine continues accelerating in the exact direction the pilot is looking.\n\nThe scene ends with the pilot pinned firmly into the seat, both hands gripping the throttles, while the launch tube streams past ahead at extreme speed.\n\noverall_soundscape:\nLow powered-cockpit vibration, launch-button impact, a heavy initial acceleration shock, rapidly intensifying propulsion noise, structural rattling, restraint tension, panel vibration and increasingly powerful launch-tube resonance.\n\nnon_diegetic_music:\nThe action score briefly pulls back beneath the Japanese line, then surges immediately after launch with pounding percussion, rapid analog bass pulses and sustained high strings.",
+        9,
+        0,
+        "cut",
+        "id=\"x404\"\nduration_seconds: 10\n\nThe shot cuts completely away from the cockpit to a very wide exterior orbital view.\n\nA colossal dark-grey military capital spacecraft several kilometers long hangs in low orbit above a vast blue-white planet.\n\nThe ship is covered in layered armored hull plating, recessed launch bays, antenna structures, radiator surfaces, engine sections and thousands of tiny illuminated windows.\n\nThe blue-white planet curves across the lower portion of the composition. A thin luminous blue atmosphere follows its limb and enormous white cloud systems spread across the visible surface.\n\nBlack star-filled space surrounds both ship and planet.\n\nThe immense capital spacecraft stretches across the upper-middle frame.\n\nThe camera remains almost completely still for approximately three seconds.\n\nThe ship drifts only subtly relative to the distant stars.\n\nIts tiny illuminated windows and recessed hull lights emphasize its enormous physical scale.\n\nA single brilliant point suddenly emerges from a launch opening on the underside of the capital ship.\n\nThe launched object is so distant that its humanoid form cannot be resolved.\n\nIt appears only as a tiny brilliant moving point.\n\nThe object rapidly travels downward away from the vessel toward the planet.\n\nThe camera begins a slow large-amplitude TILT DOWN, following the descending point without rapidly zooming toward it.\n\nThe enormous capital ship gradually moves toward the upper edge of frame.\n\nThe planet occupies progressively more of the composition as the camera continues its slow downward tilt.\n\nThe tiny bright object approaches the planet's thin atmospheric limb.\n\nAs it reaches the atmosphere, a compact orange glow forms tightly around it.\n\nThe atmospheric glow becomes slightly brighter as the object continues downward while remaining extremely small compared with the planet.\n\nThe scene ends with the vast planet dominating the image and the tiny orange-glowing object descending deeper into its atmosphere.\n\noverall_soundscape:\nNo diegetic exterior sound in the vacuum of space.\n\nnon_diegetic_music:\nA broad sustained analog-orchestral chord replaces the rapid action rhythm. Deep synthesizer pads and sparse low percussion create a deliberate sense of orbital scale.",
+        11,
+        0,
+        "cut",
+        "id=\"x405\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a completely new exterior camera already descending at extreme speed through dense planetary clouds.\n\nThe first frame contains only layered grey-white cloud formations and cold blue daylight filtering through openings above.\n\nNearby vapor streams rapidly UPWARD across the image because the camera is plunging downward.\n\nAfter approximately one second, a huge dark mechanical silhouette begins forming inside the dense cloud behind and above the camera's direction of travel.\n\nThe silhouette rapidly becomes clearer.\n\nThe same colossal humanoid combat mecha breaks through the cloud layer.\n\nIts complete form becomes readable: compact helmet-like head with narrow luminous green visor, broad white and pale-grey armored shoulders, dark navy armored torso, muted red warning markings, two articulated arms, two articulated legs, heavy mechanical joints, vents and stabilization-thruster assemblies.\n\nWhite atmospheric vapor peels away from its head, shoulders and forearms.\n\nThe camera continues descending ahead of the machine and performs a small-amplitude arc toward the mecha's front-left side.\n\nIt settles into a low front three-quarter tracking view several body lengths ahead of the descending mecha.\n\nThe camera matches most of its downward velocity, keeping the machine large and stable in frame while cloud formations continue streaming rapidly upward around it.\n\nThe mecha holds both arms slightly away from its torso for stability.\n\nIts legs extend beneath and slightly behind its body.\n\nDense airflow strikes the armor.\n\nShoulder plates and exposed mechanical components visibly vibrate under atmospheric turbulence.\n\nWhite condensation forms around the leading edges of the shoulders and forearms, stretches backward in the airflow and collapses.\n\nBrief orange-red atmospheric heating flickers intermittently along the forward shoulder, forearm and lower-leg armor.\n\nA powerful lateral turbulence pulse strikes one side of the mecha.\n\nIts torso and shoulders yaw several degrees away from alignment while its articulated limbs respond physically to the force.\n\nCompact stabilization thrusters on the opposite side fire short bright exhaust bursts.\n\nThe thrust corrects the machine back toward its previous descending orientation.\n\nThe Japanese pilot remains physically inside the sealed torso cockpit and is not visible from this exterior camera.\n\n(S1) says: <d>[Japanese] 大気圏内。目標に接近中。</d>\n\nAs the radio line finishes, the mecha punches through another thinner cloud layer.\n\nVapor bursts outward around the shoulders and streams rapidly upward behind the descending machine.\n\nThe luminous green visor remains pointed along the direction of travel.\n\nThe camera maintains the same low front three-quarter tracking relationship while the mecha continues its hypersonic descent.\n\noverall_soundscape:\nContinuous atmospheric roar, severe wind shear, armor vibration, structural groans, turbulent buffeting, pressure changes while crossing cloud layers and short stabilization-thruster bursts.\n\nnon_diegetic_music:\nRapid tom percussion, low analog bass pulses, urgent high strings and sustained brass-synth layers drive the descent.",
+        10,
+        0,
+        "as set",
+        "",
+        10,
+        22,
+        "as set",
+        "",
+        10,
+        22,
+        "as set",
+        "",
+        9,
+        22,
+        "as set",
+        "",
+        11,
+        22,
+        "as set",
+        "",
+        10,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set",
+        "",
+        4.25,
+        22,
+        "as set"
+      ],
+      "widgets_values_named": {
+        "mode": "t2va",
+        "aspect_ratio": "16:9",
+        "megapixels": 0.8,
+        "width": 0,
+        "height": 0,
+        "prompt_header": "visual_style:\nLate-1980s to early-1990s theatrical Japanese mecha OVA animation. Hand-drawn 2D cel animation with crisp inked outlines, carefully painted cel shadows and highlights, richly painted backgrounds, dense hand-drawn mechanical detail, strong graphic silhouettes, period-authentic anime color design, analog optical effects, and subtle film grain.\n\nHigh-budget theatrical OVA production quality with mature anime character drawing, intricate mechanical draftsmanship, expressive traditional key animation, strong perspective drawing, dramatic composition, controlled cel-animation timing, and hand-crafted effects animation.\n\nMechanical surfaces use precise inked panel lines, layered armor construction, restrained cel highlights, mechanical joints, vents, warning markings, and detailed industrial design consistent with premium Japanese science-fiction animation from the era.\n\nEffects use traditional hand-drawn animation language: cel-animated sparks, painted energy light, atmospheric vapor, speed smears, impact frames, mechanical vibration, hand-drawn motion streaks, painted smoke and clouds, and analog optical glow.",
+        "prompt_footer": "overall_audio_style:\nAudio has the character of a high-budget late-1980s to early-1990s Japanese science-fiction OVA. Mechanical effects are weighty, layered and tactile: switches, relays, servos, hydraulic movement, metal impacts, cockpit vibration, engines, launch mechanisms, armor resonance and thrusters have distinct physical sound.\n\nDialogue remains clean and intelligible over action. Japanese speech uses natural dramatic anime performance rather than exaggerated caricature. Radio or cockpit communications use restrained electronic compression only when the speaker is actually transmitted through communications equipment.\n\nnon_diegetic_music:\nPersistent retro OVA mecha score built from analog synthesizers, orchestral strings, brass-synth layers, tom-heavy percussion, low electronic bass and occasional atmospheric pads. Fast action uses driving rhythmic synth and percussion; large-scale or quiet orbital moments reduce into broad sustained orchestral-synth textures. Musical transitions follow the pacing of the sequence without changing the established musical palette.",
+        "prompt_1": "id=\"x401\"\nduration_seconds: 11\n\nA Japanese male combat pilot in his late twenties has a lean athletic build, short messy black hair and sharp dark eyes. He wears a fitted dark navy pressure suit with muted red shoulder markings, reinforced black boots, black gloves, compact grey chest life-support hardware, and a white flight helmet clipped securely at his right hip.\n\nHe is already sprinting at full speed down a long straight military spacecraft corridor. The corridor has dark steel wall panels, ribbed structural supports, exposed overhead conduits, repeating cool-white ceiling strip lights, small red warning lamps and yellow deck-edge markings. Approximately twelve meters ahead, the corridor physically bends ninety degrees LEFT around a broad permanent steel corner.\n\nA medium rear three-quarter tracking camera travels forward approximately 1.5 meters behind the pilot and slightly to his right at waist-to-chest height, matching his running speed.\n\nHis torso leans forward, his arms pump naturally and his boots strike the metal deck rapidly. The white helmet clipped to his hip bounces with every stride.\n\nAs the left-hand bend approaches, the pilot keeps his head, shoulders and gaze aligned with his direction of travel.\n\nHe reaches the corner, plants his right boot near the outside edge, lowers his center of gravity and leans his entire body left. He runs continuously through the ninety-degree corner without stopping or looking around.\n\nThe tracking camera follows the exact same curved route. It physically arcs left around the steel corner while continuing forward, preserving approximately the same rear-right distance from the pilot.\n\nDirectly around the bend is a large rectangular mecha loading bay with a high industrial ceiling, overhead gantries, fixed service equipment, yellow-black hazard markings and a broad unobstructed floor.\n\nAt the far end of this loading bay, a colossal humanoid combat mecha already stands secured upright in a mechanical launch cradle. The mecha has white and pale-grey armor, a dark navy torso, muted red warning accents, heavy angular shoulders and a compact armored head.\n\nA circular armored cockpit hatch is already OPEN in the center-front of its torso. The circular hatch door is hinged along its upper edge and raised above the opening. Two fixed handholds flank the opening and one fixed foothold sits immediately below it.\n\nThe pilot straightens from the turn and continues sprinting directly toward the waiting mecha.\n\nHe reaches the torso, grabs both existing handholds, plants one boot on the fixed foothold and pulls himself upward to the open circular cockpit.\n\nImmediately inside the opening is a fixed forward-facing contoured pilot seat. The seat back faces toward the rear interior of the mecha, so the pilot must sit with his back entering first in order to face forward.\n\nStill holding the handholds, the pilot physically rotates his entire body through 180 degrees. His feet and hips turn first, followed by his torso, shoulders and head, until his face points outward toward the loading bay and his back points into the cockpit.\n\nHe bends his knees and lowers himself BACKWARD into the opening.\n\nHis hips contact the seat cushion first. His back and shoulders then settle firmly against the backrest. He is now correctly seated facing the mecha's forward direction.\n\nTwo heavy restraint straps already hang beside the seat.\n\nHe grabs both restraints, pulls them diagonally across his torso and locks them into the central buckle with a hard mechanical CLACK.\n\nStill seated in exactly the same orientation, he reaches upward with both hands to the existing inner handle of the raised circular hatch.\n\nHe pulls the armored hatch downward.\n\nThe hatch rotates down on its upper hinge, progressively covering the cockpit opening until the circular door meets the armored rim.\n\nMultiple mechanical locking dogs engage around the circumference.\n\nThe cockpit hatch finishes completely CLOSED and SEALED.\n\noverall_soundscape:\nRapid boot impacts, heavy breathing, spacecraft ventilation, distant warning electronics, brief boot friction during the running turn, large loading-bay machinery, metal handhold impacts, the pilot dropping into the seat, restraint hardware locking, the heavy hatch rotating shut, and multiple mechanical locks engaging.\n\nnon_diegetic_music:\nFast analog synthesizer bass pulses, aggressive tom percussion and short brass-synth accents intensify through the run and loading-bay approach, ending with a heavy musical accent as the hatch seals.",
+        "duration_1": 9,
+        "overlap_1": 12,
+        "continuity_1": "carry",
+        "prompt_2": "id=\"x402\"\nduration_seconds: 8\n\nThe shot cuts abruptly to the interior of the already-sealed humanoid-mecha cockpit.\n\nThe same Japanese male pilot is already seated correctly in the fixed forward-facing pilot seat. His dark navy pressure suit, red shoulder markings, black gloves and grey chest life-support hardware remain unchanged. The heavy restraint harness is already locked firmly across his torso.\n\nThe circular armored exterior hatch remains completely closed and sealed behind the pilot seat.\n\nThe compact cockpit contains dense dark-grey mechanical instrumentation. Existing physical toggle switches, guarded power switches, rotary controls, analog gauges and indicator lamps are built into fixed control banks to the pilot's left and right. Two heavy flight throttles are mounted beside his thighs. A wide curved forward display assembly is already installed ahead of him but begins mostly dark.\n\nA low front-left three-quarter camera is positioned ahead and slightly left of the pilot near knee height, looking slightly upward. His face, upper torso, restraint harness and both control banks are visible.\n\nThe pilot immediately reaches to the existing left switch bank.\n\nHis gloved fingers throw four adjacent metal toggle switches upward in rapid succession.\n\nCLICK. CLICK. CLICK. CLICK.\n\nSmall amber indicators beside those switches illuminate in sequence.\n\nHis right hand moves directly to the opposite control bank.\n\nHe flips open two existing red safety covers and firmly depresses the guarded switches beneath them.\n\nElectrical relays activate throughout the cockpit.\n\nAnalog gauge needles sweep rapidly upward.\n\nRows of existing amber and green indicators illuminate in cascading sequences.\n\nThe camera makes a small slow push toward the pilot.\n\nHe reaches forward with both hands and grips two existing heavy main activation levers.\n\nHe braces his shoulders against the restraint harness and pulls both levers decisively into their powered positions.\n\nThe forward panoramic display illuminates from darkness with cool green-blue system graphics.\n\nCold display light washes across his face, gloves and pressure suit.\n\nA deep mechanical power vibration builds through the seat and surrounding instrument panels.\n\nStatus lights stabilize.\n\nThe pilot releases the activation levers.\n\nHis left hand lowers onto the existing left flight throttle.\n\nHis right hand lowers onto the existing right flight throttle.\n\nBoth hands close firmly around the throttles while he continues looking directly forward.\n\noverall_soundscape:\nMetal toggle clicks, safety-cover snaps, guarded switch impacts, relay chatter, moving gauge mechanisms, electrical startup tones, rising turbine-like machinery, hydraulic pressure and steady cockpit vibration.\n\nnon_diegetic_music:\nRapid analog arpeggios and tightly spaced tom hits build through the startup sequence. Sustained brass-synth tones rise during the main power activation.",
+        "duration_2": 8,
+        "overlap_2": 0,
+        "continuity_2": "cut",
+        "prompt_3": "id=\"x403\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a mechanically fixed camera mounted immediately BEHIND the pilot seat inside the same sealed and fully powered cockpit.\n\nThe same Japanese male pilot remains correctly seated and tightly restrained.\n\nHis spine is pressed against the seat back. His chest, face, knees and toes all point FORWARD in the same direction.\n\nThe camera is centered immediately behind and slightly above his shoulders.\n\nThe visible physical order from nearest to farthest is:\n\ncamera → seat back → back of pilot's head and shoulders → his forward-facing body → his hands and knees → panoramic HUD → launch tube.\n\nOnly the BACK of his short messy black hair, neck, shoulders, upper restraint straps, forearms and gloved hands are visible.\n\nHis face points away from the camera for the entire scene.\n\nDirectly ahead of him is an existing 180-degree wrap-around panoramic tactical HUD. The HUD is positioned on the same side of the pilot that his face, chest, knees and toes point toward.\n\nIt is a forward display rather than a reflective surface.\n\nBeyond the HUD is the mecha's forward-camera view down a perfectly straight enclosed spacecraft launch tube.\n\nThe launch tube contains repeating dark structural ribs, bright white guidance lamps, parallel acceleration rails, yellow-black service markings and a distant central vanishing point directly ahead of the pilot.\n\nTwo existing flight throttles sit beside the pilot's thighs beneath his hands.\n\nOne existing illuminated red launch button is mounted forward and slightly to his right, between his seated position and the panoramic HUD.\n\nFor approximately one second, the powered cockpit vibrates gently while the pilot remains still.\n\nBoth hands hold the throttles.\n\nHe stares straight forward toward the distant vanishing point.\n\n(S1) says: <d>[Japanese] システム、オールグリーン。発進！</d>\n\nAs the final word ends, his right hand releases the right throttle.\n\nHis right arm reaches FORWARD toward the existing red launch button.\n\nHe strikes the button once.\n\nThe button visibly depresses.\n\nThe mecha immediately accelerates FORWARD in exactly the same direction the pilot is facing.\n\nThe massive acceleration force pushes the pilot BACKWARD against his seat, opposite the direction of travel.\n\nHis spine and shoulders compress firmly against the seat back nearest the camera.\n\nThe restraint harness pulls tight across his shoulders.\n\nHis head moves slightly backward under the force but continues facing forward toward the HUD.\n\nHis right hand immediately returns to the right throttle.\n\nBoth hands grip the throttles tightly.\n\nThe cockpit enters intense high-frequency vibration.\n\nBecause the camera is mechanically mounted behind the pilot seat, the camera vibrates with the cockpit while preserving exactly the same rear-facing composition.\n\nOn the panoramic HUD, the distant launch-tube vanishing point remains centered.\n\nGuidance lights and structural ribs rush from the distant CENTER of the forward view toward the pilot and sweep outward past the left and right edges of the display at rapidly increasing speed.\n\nThe velocity indicator climbs rapidly.\n\nThe central alignment reticle remains fixed directly ahead.\n\nThe camera stays behind the pilot.\n\nThe pilot continues facing forward.\n\nThe HUD remains ahead of him.\n\nThe launch tube remains beyond the HUD.\n\nThe machine continues accelerating in the exact direction the pilot is looking.\n\nThe scene ends with the pilot pinned firmly into the seat, both hands gripping the throttles, while the launch tube streams past ahead at extreme speed.\n\noverall_soundscape:\nLow powered-cockpit vibration, launch-button impact, a heavy initial acceleration shock, rapidly intensifying propulsion noise, structural rattling, restraint tension, panel vibration and increasingly powerful launch-tube resonance.\n\nnon_diegetic_music:\nThe action score briefly pulls back beneath the Japanese line, then surges immediately after launch with pounding percussion, rapid analog bass pulses and sustained high strings.",
+        "duration_3": 9,
+        "overlap_3": 0,
+        "continuity_3": "cut",
+        "prompt_4": "id=\"x404\"\nduration_seconds: 10\n\nThe shot cuts completely away from the cockpit to a very wide exterior orbital view.\n\nA colossal dark-grey military capital spacecraft several kilometers long hangs in low orbit above a vast blue-white planet.\n\nThe ship is covered in layered armored hull plating, recessed launch bays, antenna structures, radiator surfaces, engine sections and thousands of tiny illuminated windows.\n\nThe blue-white planet curves across the lower portion of the composition. A thin luminous blue atmosphere follows its limb and enormous white cloud systems spread across the visible surface.\n\nBlack star-filled space surrounds both ship and planet.\n\nThe immense capital spacecraft stretches across the upper-middle frame.\n\nThe camera remains almost completely still for approximately three seconds.\n\nThe ship drifts only subtly relative to the distant stars.\n\nIts tiny illuminated windows and recessed hull lights emphasize its enormous physical scale.\n\nA single brilliant point suddenly emerges from a launch opening on the underside of the capital ship.\n\nThe launched object is so distant that its humanoid form cannot be resolved.\n\nIt appears only as a tiny brilliant moving point.\n\nThe object rapidly travels downward away from the vessel toward the planet.\n\nThe camera begins a slow large-amplitude TILT DOWN, following the descending point without rapidly zooming toward it.\n\nThe enormous capital ship gradually moves toward the upper edge of frame.\n\nThe planet occupies progressively more of the composition as the camera continues its slow downward tilt.\n\nThe tiny bright object approaches the planet's thin atmospheric limb.\n\nAs it reaches the atmosphere, a compact orange glow forms tightly around it.\n\nThe atmospheric glow becomes slightly brighter as the object continues downward while remaining extremely small compared with the planet.\n\nThe scene ends with the vast planet dominating the image and the tiny orange-glowing object descending deeper into its atmosphere.\n\noverall_soundscape:\nNo diegetic exterior sound in the vacuum of space.\n\nnon_diegetic_music:\nA broad sustained analog-orchestral chord replaces the rapid action rhythm. Deep synthesizer pads and sparse low percussion create a deliberate sense of orbital scale.",
+        "duration_4": 11,
+        "overlap_4": 0,
+        "continuity_4": "cut",
+        "prompt_5": "id=\"x405\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a completely new exterior camera already descending at extreme speed through dense planetary clouds.\n\nThe first frame contains only layered grey-white cloud formations and cold blue daylight filtering through openings above.\n\nNearby vapor streams rapidly UPWARD across the image because the camera is plunging downward.\n\nAfter approximately one second, a huge dark mechanical silhouette begins forming inside the dense cloud behind and above the camera's direction of travel.\n\nThe silhouette rapidly becomes clearer.\n\nThe same colossal humanoid combat mecha breaks through the cloud layer.\n\nIts complete form becomes readable: compact helmet-like head with narrow luminous green visor, broad white and pale-grey armored shoulders, dark navy armored torso, muted red warning markings, two articulated arms, two articulated legs, heavy mechanical joints, vents and stabilization-thruster assemblies.\n\nWhite atmospheric vapor peels away from its head, shoulders and forearms.\n\nThe camera continues descending ahead of the machine and performs a small-amplitude arc toward the mecha's front-left side.\n\nIt settles into a low front three-quarter tracking view several body lengths ahead of the descending mecha.\n\nThe camera matches most of its downward velocity, keeping the machine large and stable in frame while cloud formations continue streaming rapidly upward around it.\n\nThe mecha holds both arms slightly away from its torso for stability.\n\nIts legs extend beneath and slightly behind its body.\n\nDense airflow strikes the armor.\n\nShoulder plates and exposed mechanical components visibly vibrate under atmospheric turbulence.\n\nWhite condensation forms around the leading edges of the shoulders and forearms, stretches backward in the airflow and collapses.\n\nBrief orange-red atmospheric heating flickers intermittently along the forward shoulder, forearm and lower-leg armor.\n\nA powerful lateral turbulence pulse strikes one side of the mecha.\n\nIts torso and shoulders yaw several degrees away from alignment while its articulated limbs respond physically to the force.\n\nCompact stabilization thrusters on the opposite side fire short bright exhaust bursts.\n\nThe thrust corrects the machine back toward its previous descending orientation.\n\nThe Japanese pilot remains physically inside the sealed torso cockpit and is not visible from this exterior camera.\n\n(S1) says: <d>[Japanese] 大気圏内。目標に接近中。</d>\n\nAs the radio line finishes, the mecha punches through another thinner cloud layer.\n\nVapor bursts outward around the shoulders and streams rapidly upward behind the descending machine.\n\nThe luminous green visor remains pointed along the direction of travel.\n\nThe camera maintains the same low front three-quarter tracking relationship while the mecha continues its hypersonic descent.\n\noverall_soundscape:\nContinuous atmospheric roar, severe wind shear, armor vibration, structural groans, turbulent buffeting, pressure changes while crossing cloud layers and short stabilization-thruster bursts.\n\nnon_diegetic_music:\nRapid tom percussion, low analog bass pulses, urgent high strings and sustained brass-synth layers drive the descent.",
+        "duration_5": 10,
+        "overlap_5": 0,
+        "continuity_5": "as set",
+        "prompt_6": "",
+        "duration_6": 10,
+        "overlap_6": 22,
+        "continuity_6": "as set",
+        "prompt_7": "",
+        "duration_7": 10,
+        "overlap_7": 22,
+        "continuity_7": "as set",
+        "prompt_8": "",
+        "duration_8": 9,
+        "overlap_8": 22,
+        "continuity_8": "as set",
+        "prompt_9": "",
+        "duration_9": 11,
+        "overlap_9": 22,
+        "continuity_9": "as set",
+        "prompt_10": "",
+        "duration_10": 10,
+        "overlap_10": 22,
+        "continuity_10": "as set",
+        "prompt_11": "",
+        "duration_11": 4.25,
+        "overlap_11": 22,
+        "continuity_11": "as set",
+        "prompt_12": "",
+        "duration_12": 4.25,
+        "overlap_12": 22,
+        "continuity_12": "as set",
+        "prompt_13": "",
+        "duration_13": 4.25,
+        "overlap_13": 22,
+        "continuity_13": "as set",
+        "prompt_14": "",
+        "duration_14": 4.25,
+        "overlap_14": 22,
+        "continuity_14": "as set",
+        "prompt_15": "",
+        "duration_15": 4.25,
+        "overlap_15": 22,
+        "continuity_15": "as set",
+        "prompt_16": "",
+        "duration_16": 4.25,
+        "overlap_16": 22,
+        "continuity_16": "as set",
+        "prompt_17": "",
+        "duration_17": 4.25,
+        "overlap_17": 22,
+        "continuity_17": "as set",
+        "prompt_18": "",
+        "duration_18": 4.25,
+        "overlap_18": 22,
+        "continuity_18": "as set",
+        "prompt_19": "",
+        "duration_19": 4.25,
+        "overlap_19": 22,
+        "continuity_19": "as set",
+        "prompt_20": "",
+        "duration_20": 4.25,
+        "overlap_20": 22,
+        "continuity_20": "as set",
+        "prompt_21": "",
+        "duration_21": 4.25,
+        "overlap_21": 22,
+        "continuity_21": "as set",
+        "prompt_22": "",
+        "duration_22": 4.25,
+        "overlap_22": 22,
+        "continuity_22": "as set",
+        "prompt_23": "",
+        "duration_23": 4.25,
+        "overlap_23": 22,
+        "continuity_23": "as set",
+        "prompt_24": "",
+        "duration_24": 4.25,
+        "overlap_24": 22,
+        "continuity_24": "as set"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 14,
+      "type": "WASNumberExpression",
+      "pos": [
+        3205.2682045588226,
+        591.5900500294119
+      ],
+      "size": [
+        300,
+        216
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": 18
+        },
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": 48
+        },
+        {
+          "name": "c",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": []
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNumberExpression",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "a + 1 < b",
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "a + 1 < b",
+        "decimals": 6,
+        "on_error": "error"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 13,
+      "type": "WASNumberExpression",
+      "pos": [
+        3199.0770400182296,
+        208.15408003645885
+      ],
+      "size": [
+        300,
+        216
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": 17
+        },
+        {
+          "name": "c",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": [
+            60,
+            66
+          ]
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNumberExpression",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "1000 + b",
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "1000 + b",
+        "decimals": 6,
+        "on_error": "error"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 39,
+      "type": "RandomNoise",
+      "pos": [
+        2201.3401199056116,
+        1599.7491885896973
+      ],
+      "size": [
+        290,
+        100
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise_seed",
+          "type": "INT",
+          "widget": {
+            "name": "noise_seed"
+          },
+          "link": 65
+        }
+      ],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        0,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 0,
+        "control_after_generate": "randomize"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 41,
+      "type": "WASNumberExpression",
+      "pos": [
+        2273.162811839343,
+        1519.9622707034412
+      ],
+      "size": [
+        300,
+        114
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": 64
+        },
+        {
+          "name": "b",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": 66
+        },
+        {
+          "name": "c",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "name": "float",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "int",
+          "type": "INT",
+          "links": [
+            65
+          ]
+        },
+        {
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "links": []
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNumberExpression",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "a + b",
+        6,
+        "error"
+      ],
+      "widgets_values_named": {
+        "expression": "a + b",
+        "decimals": 6,
+        "on_error": "error"
+      }
+    },
+    {
+      "id": 40,
+      "type": "INTConstant",
+      "pos": [
+        579.5803752739012,
+        1225.0071901732333
+      ],
+      "size": [
+        210,
+        58
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "INT",
+          "links": [
+            64
+          ]
+        }
+      ],
+      "title": "SEED",
+      "properties": {
+        "Node name for S&R": "INTConstant",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        4242
+      ],
+      "widgets_values_named": {
+        "value": 4242
+      },
+      "color": "#1b4669",
+      "bgcolor": "transparent"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "MODEL"
+    ],
+    [
+      4,
+      4,
+      0,
+      9,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      4,
+      0,
+      16,
+      0,
+      "MODEL"
+    ],
+    [
+      8,
+      6,
+      0,
+      15,
+      2,
+      "VAE"
+    ],
+    [
+      9,
+      6,
+      0,
+      24,
+      1,
+      "VAE"
+    ],
+    [
+      10,
+      7,
+      0,
+      25,
+      1,
+      "VAE"
+    ],
+    [
+      22,
+      15,
+      1,
+      16,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      23,
+      15,
+      2,
+      19,
+      2,
+      "INT"
+    ],
+    [
+      24,
+      15,
+      3,
+      20,
+      0,
+      "STRING"
+    ],
+    [
+      31,
+      19,
+      2,
+      20,
+      1,
+      "STRING"
+    ],
+    [
+      33,
+      20,
+      0,
+      21,
+      1,
+      "STRING"
+    ],
+    [
+      39,
+      23,
+      0,
+      24,
+      0,
+      "LATENT"
+    ],
+    [
+      40,
+      23,
+      0,
+      25,
+      0,
+      "LATENT"
+    ],
+    [
+      42,
+      24,
+      0,
+      26,
+      0,
+      "IMAGE"
+    ],
+    [
+      43,
+      25,
+      0,
+      26,
+      1,
+      "AUDIO"
+    ],
+    [
+      53,
+      16,
+      0,
+      38,
+      1,
+      "GUIDER"
+    ],
+    [
+      54,
+      8,
+      0,
+      38,
+      2,
+      "SAMPLER"
+    ],
+    [
+      55,
+      9,
+      0,
+      38,
+      3,
+      "SIGMAS"
+    ],
+    [
+      56,
+      15,
+      0,
+      38,
+      4,
+      "LATENT"
+    ],
+    [
+      57,
+      35,
+      0,
+      38,
+      5,
+      "DICT"
+    ],
+    [
+      58,
+      36,
+      0,
+      38,
+      7,
+      "DICT"
+    ],
+    [
+      59,
+      38,
+      0,
+      19,
+      1,
+      "LATENT"
+    ],
+    [
+      63,
+      39,
+      0,
+      38,
+      0,
+      "NOISE"
+    ],
+    [
+      44,
+      26,
+      0,
+      27,
+      0,
+      "VIDEO"
+    ],
+    [
+      6,
+      5,
+      0,
+      10,
+      0,
+      "CLIP"
+    ],
+    [
+      7,
+      6,
+      0,
+      10,
+      1,
+      "VAE"
+    ],
+    [
+      45,
+      10,
+      0,
+      34,
+      0,
+      "LATENT"
+    ],
+    [
+      13,
+      10,
+      1,
+      15,
+      3,
+      "WAS_H3_PROMPTS"
+    ],
+    [
+      48,
+      10,
+      2,
+      14,
+      1,
+      "INT"
+    ],
+    [
+      60,
+      13,
+      2,
+      38,
+      8,
+      "INT"
+    ],
+    [
+      64,
+      40,
+      0,
+      41,
+      0,
+      "INT"
+    ],
+    [
+      66,
+      13,
+      2,
+      41,
+      1,
+      "INT"
+    ],
+    [
+      65,
+      41,
+      2,
+      39,
+      0,
+      "INT"
+    ],
+    [
+      35,
+      19,
+      0,
+      22,
+      1,
+      "LATENT"
+    ],
+    [
+      36,
+      21,
+      0,
+      22,
+      2,
+      "STRING"
+    ],
+    [
+      38,
+      22,
+      1,
+      23,
+      0,
+      "LATENT"
+    ],
+    [
+      41,
+      22,
+      2,
+      28,
+      0,
+      "STRING"
+    ],
+    [
+      46,
+      34,
+      0,
+      12,
+      0,
+      "LATENT"
+    ],
+    [
+      12,
+      11,
+      0,
+      12,
+      1,
+      "STRING"
+    ],
+    [
+      61,
+      10,
+      2,
+      12,
+      3,
+      "INT"
+    ],
+    [
+      34,
+      12,
+      0,
+      22,
+      0,
+      "WAS_LOOP"
+    ],
+    [
+      15,
+      12,
+      1,
+      15,
+      4,
+      "INT"
+    ],
+    [
+      16,
+      12,
+      1,
+      19,
+      3,
+      "INT"
+    ],
+    [
+      17,
+      12,
+      1,
+      13,
+      1,
+      "INT"
+    ],
+    [
+      18,
+      12,
+      1,
+      14,
+      0,
+      "INT"
+    ],
+    [
+      19,
+      12,
+      3,
+      15,
+      0,
+      "LATENT"
+    ],
+    [
+      20,
+      12,
+      3,
+      19,
+      0,
+      "LATENT"
+    ],
+    [
+      32,
+      12,
+      4,
+      21,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [
+        526,
+        117,
+        350,
+        1040
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Segments and prompts",
+      "bounding": [
+        940,
+        120,
+        680,
+        1230
+      ],
+      "color": "#4a3f59",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Inference Loop",
+      "bounding": [
+        1660,
+        120,
+        2200,
+        990
+      ],
+      "color": "#3f593f",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Sampling Settings",
+      "bounding": [
+        2171.2651279069673,
+        1144.1111953488403,
+        360,
+        730
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Segment reports",
+      "bounding": [
+        2591.265127906968,
+        1144.1111953488403,
+        360,
+        500
+      ],
+      "color": "#593f3f",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Assemble",
+      "bounding": [
+        3922.271061454261,
+        123.00616048759684,
+        1100,
+        1560
+      ],
+      "color": "#59563f",
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Affine Settings",
+      "bounding": [
+        1668.7553155037315,
+        1144.7074146639968,
+        430,
+        1060
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.5559917313492291,
+      "offset": [
+        -544.2642064100165,
+        170.49681320020926
+      ]
+    },
+    "frontendVersion": "1.53.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

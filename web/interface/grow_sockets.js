@@ -99,21 +99,80 @@ function reorder(node, side, order) {
   const sockets = node[side];
   if (!Array.isArray(sockets)) return;
   const rank = new Map(order.map((name, index) => [name, index]));
-  sockets.sort((a, b) => (rank.get(a.name) ?? 0) - (rank.get(b.name) ?? 0));
+  const place = (socket) => rank.get(socket.name) ?? 0;
+  if (sockets.every((socket, slot) => slot === 0 || place(sockets[slot - 1]) <= place(socket))) {
+    return;
+  }
 
   const graph = node.graph;
-  if (!graph) return;
+  // Tied to their sockets by name before the sort, from the slot number each link records.
+  const held = graph ? linksBySocket(graph, node, side) : new Map();
+  sockets.sort((a, b) => place(a) - place(b));
+  const moves = new Map();
   sockets.forEach((socket, slot) => {
-    if (side === "inputs") {
-      const link = graph.links?.[socket.link];
-      if (link) link.target_slot = slot;
-      return;
-    }
-    for (const id of socket.links ?? []) {
-      const link = graph.links?.[id];
-      if (link) link.origin_slot = slot;
-    }
+    for (const link of held.get(socket.name) ?? []) moves.set(link, slot);
   });
+  if (side === "inputs") moveTargets(moves, sockets.length);
+  else for (const [link, slot] of moves) link.origin_slot = slot;
+}
+
+/**
+ * Point input links at their new slots without two ever landing on one slot at once.
+ *
+ * @param {Map<object, number>} moves - Link to the slot it belongs on.
+ * @param {number} slots - How many input slots the node has.
+ * @returns {void}
+ */
+function moveTargets(moves, slots) {
+  const pending = new Map([...moves].filter(([link, slot]) => link.target_slot !== slot));
+  while (pending.size > 0) {
+    let progressed = false;
+    for (const [link, slot] of pending) {
+      // A move waits until its target slot has been vacated.
+      const taken = [...pending.keys()].some((other) => other !== link && other.target_slot === slot);
+      if (taken) continue;
+      link.target_slot = slot;
+      pending.delete(link);
+      progressed = true;
+    }
+    if (progressed) continue;
+    // A cycle of moves: one link steps aside to a slot nothing targets.
+    const occupied = new Set([...moves.keys()].map((link) => link.target_slot));
+    const free = Array.from({ length: slots }, (unused, slot) => slot).find((slot) => !occupied.has(slot));
+    const [link] = pending.keys();
+    if (free !== undefined) link.target_slot = free;
+    // With nowhere to step aside to, or the step refused, the link takes its slot directly.
+    if (free === undefined || link.target_slot !== free) {
+      link.target_slot = pending.get(link);
+      pending.delete(link);
+    }
+  }
+}
+
+/**
+ * The links on one side of a node, by the name of the socket each lands on.
+ *
+ * @param {object} graph - The graph holding the node.
+ * @param {object} node - The node whose links are read.
+ * @param {"inputs"|"outputs"} side - Which list the sockets are on.
+ * @returns {Map<string, object[]>} Socket name to the link objects on it.
+ */
+function linksBySocket(graph, node, side) {
+  const names = node[side].map((socket) => socket.name);
+  const links = graph.links instanceof Map
+    ? [...graph.links.values()]
+    : Object.values(graph.links ?? {});
+  const held = new Map();
+  for (const link of links) {
+    if (!link) continue;
+    const end = side === "inputs" ? link.target_id : link.origin_id;
+    if (String(end) !== String(node.id)) continue;
+    const name = names[side === "inputs" ? link.target_slot : link.origin_slot];
+    if (name === undefined) continue;
+    if (!held.has(name)) held.set(name, []);
+    held.get(name).push(link);
+  }
+  return held;
 }
 
 /**
@@ -123,9 +182,10 @@ function reorder(node, side, order) {
  * @param {"inputs"|"outputs"} side - Which list to work on.
  * @param {object} plan - The captured declaration for this side.
  * @param {number} wanted - How many growable sockets this side should draw.
+ * @param {Set<number>|null} chosen - The group indices to draw, or null to draw the first `wanted`.
  * @returns {boolean} Whether anything changed.
  */
-function fitSide(node, side, plan, wanted) {
+function fitSide(node, side, plan, wanted, chosen) {
   const sockets = node[side];
   if (!Array.isArray(sockets) || plan.types.size === 0) return false;
 
@@ -136,7 +196,9 @@ function fitSide(node, side, plan, wanted) {
   // socket off the node takes its link with it, which would quietly delete a connection the
   // user made. A group is dropped socket by socket for the same reason, so a wired output keeps
   // its place while an unused socket beside it folds away.
-  for (let index = plan.groups.length - 1; index >= wanted; index -= 1) {
+  const drawn = (index) => (chosen ? chosen.has(index) : index < wanted);
+  for (let index = plan.groups.length - 1; index >= 0; index -= 1) {
+    if (drawn(index)) continue;
     for (const name of plan.groups[index]) {
       if (!present.has(name)) continue;
       const slot = sockets.findIndex((socket) => socket.name === name);
@@ -148,7 +210,8 @@ function fitSide(node, side, plan, wanted) {
     }
   }
 
-  for (let index = 0; index < wanted; index += 1) {
+  for (let index = 0; index < plan.groups.length; index += 1) {
+    if (!drawn(index)) continue;
     for (const name of plan.groups[index]) {
       if (present.has(name)) continue;
       const declared = plan.types.get(name);
@@ -202,6 +265,8 @@ function capture(node, side, groups) {
  *   declaration must not be taken again, so the caller keeps the returned refit and calls it.
  * @param {() => number} [options.exactCount] - How many entries to draw. A wired socket is
  *   kept whatever this answers.
+ * @param {() => number[]} [options.select] - Which entries to draw, by index, for a node whose
+ *   visible set changes rather than only its length. Takes precedence over exactCount.
  * @returns {() => void} A function that re-fits, for a caller with its own reason to.
  */
 export function growSockets(node, growable, options = {}) {
@@ -215,6 +280,7 @@ export function growSockets(node, growable, options = {}) {
     : () => (Number.isFinite(options.minVisible) ? options.minVisible : MIN_VISIBLE);
   // A caller naming the count itself.
   const readExactCount = typeof options.exactCount === "function" ? options.exactCount : null;
+  const readSelect = typeof options.select === "function" ? options.select : null;
   const groups = asGroups(growable);
   const plans = {
     inputs: capture(node, "inputs", groups),
@@ -227,6 +293,8 @@ export function growSockets(node, growable, options = {}) {
       // a carried value arrives as an input and is read as an output, so revealing the input
       // alone would leave the value with nowhere to be read from.
       const minVisible = readMinVisible();
+      const picked = readSelect ? readSelect() : null;
+      const chosen = Array.isArray(picked) ? new Set(picked.map(Number)) : null;
       const asked = readExactCount ? Number(readExactCount()) : null;
       const wanted = Number.isFinite(asked)
         ? Math.max(0, Math.min(asked, groups.length))
@@ -237,8 +305,8 @@ export function growSockets(node, growable, options = {}) {
       // Before anything is counted or moved, since a duplicate makes both meaningless.
       const dedupedIn = dedupe(node, "inputs");
       const dedupedOut = dedupe(node, "outputs");
-      const changedIn = fitSide(node, "inputs", plans.inputs, wanted);
-      const changedOut = fitSide(node, "outputs", plans.outputs, wanted);
+      const changedIn = fitSide(node, "inputs", plans.inputs, wanted, chosen);
+      const changedOut = fitSide(node, "outputs", plans.outputs, wanted, chosen);
       // Ordered every time rather than only after a change made here. Loading a workflow
       // restores its sockets by name onto a node this has already shrunk, and appends any it
       // does not find, so a saved socket can arrive after the widget inputs without this code

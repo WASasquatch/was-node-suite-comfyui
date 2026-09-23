@@ -58,12 +58,10 @@ class ExecutionGate(io.ComfyNode):
                     default=False,
                     optional=True,
                     tooltip=(
-                        "`true` sets every node after the gate to bypass on the canvas "
-                        "while open is off, so they are drawn as bypassed and never reach "
-                        "the run. Read only where open is the gate's own switch: wire "
-                        "anything into open and the value is not known until the run, so "
-                        "the gate stops the nodes from the run instead and ComfyUI draws "
-                        "the first of them as failed."
+                        "`true` = every node after the gate is drawn bypassed while open is "
+                        "off, and never runs; `false` = they stay as they are. Read only "
+                        "when open is set on the gate itself: with open wired, the gate "
+                        "stops them during the run and the first shows as failed."
                     ),
                 ),
                 io.String.Input(

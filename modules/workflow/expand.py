@@ -125,7 +125,8 @@ def build(prompt, outputs, wired=None, swaps=None):
 
     graph = GraphBuilder()
     for node_id in keep:
-        graph.node(prompt[node_id]["class_type"], id=node_id)
+        # Each copy is named and drawn as the node it stands for.
+        graph.node(prompt[node_id]["class_type"], id=node_id).set_override_display_id(node_id)
     for node_id in keep:
         node = graph.lookup_node(node_id)
         for name, value in prompt[node_id].get("inputs", {}).items():

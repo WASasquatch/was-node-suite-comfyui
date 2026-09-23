@@ -157,7 +157,7 @@ def batch_values(values: list):
         values: One socket's collected values, in iteration order.
 
     Returns:
-        One tensor or one latent, or None.
+        One tensor, one latent, one soundtrack, or None.
     """
     if not values:
         return None
@@ -174,6 +174,20 @@ def batch_values(values: list):
         if not _joinable([tuple(v.shape) for v in values], dim):
             return None
         return torch.cat(values, dim=dim)
+
+    # Audio clips are joined along time into one track.
+    if all(isinstance(value, dict) and isinstance(value.get("waveform"), torch.Tensor)
+           for value in values):
+        rates = {value.get("sample_rate") for value in values}
+        if len(rates) != 1:
+            return None
+        waves = [value["waveform"] for value in values]
+        along = waves[0].ndim - 1
+        if not _joinable([tuple(wave.shape) for wave in waves], along):
+            return None
+        joined = dict(values[0])
+        joined["waveform"] = torch.cat(waves, dim=along)
+        return joined
 
     if all(isinstance(value, dict) and isinstance(value.get("samples"), torch.Tensor)
            for value in values):

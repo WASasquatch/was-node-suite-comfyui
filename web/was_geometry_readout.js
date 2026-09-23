@@ -43,12 +43,12 @@ const NODES = [
   "WASImageCropFaceYuNet",
   "WASImageCropRegion",
   "WASImagePadForOutpaint",
-  "WASImageTileExtract",
+  "WASNSImageTileExtract",
   "WASImageTileExtractGrid",
-  "WASImageTileShuffle",
+  "WASNSImageTileShuffle",
   "WASLatentScaleToMaxDimension",
   "WASPSSRSuperResolution",
-  "WASTiledImageUpscaleWithModel",
+  "WASNSTiledImageUpscaleWithModel",
 ];
 
 // The face crops answer a picture whose whole point is what it looks like, so they draw the

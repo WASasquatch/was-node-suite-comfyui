@@ -15,7 +15,7 @@ input that reaches it is fixed fastest.
 | Install a package | Nothing runs `pip`. A feature group that needs a library names it in the log with the command to run |
 | Execute supplied code | No `eval`, no `exec`, no `compile` of runtime input |
 | Load arbitrary pickles | Every `torch.load` passes `weights_only=True` |
-| Require any package | The default node set installs nothing. `requirements.txt` is empty |
+| Require any package | The default node set installs nothing and `requirements.txt` is empty. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group. Nothing installs them: the group prints the command for a person to run |
 
 ## Network
 
@@ -28,7 +28,11 @@ needs a file that is not already on disk. `features.network` is `false` out of t
 while it is off a node that cannot find its weights names the file and the key rather than
 reaching for the network.
 
-There is no HTTP client in this pack: nothing here calls `requests`, `urllib` or a socket.
+There is no HTTP client in this pack: nothing imports `requests`, `httpx`, `urllib.request` or
+`http.client`, and nothing opens a socket. Three related names do appear, and none of them
+reaches the network. `aiohttp.web` registers this pack's own inbound routes in twelve modules,
+and its client half is never imported. `urllib.parse` decodes a `data:` URI in two files, which
+is string work. `socket.gethostname()` fills the `[hostname]` token.
 
 ## Three.js scenes
 
@@ -74,9 +78,8 @@ inside it carries a policy limiting what it may load and connect to.
 
 Three directories under `web/` hold third-party browser libraries, kept as upstream publishes
 them. `web/vendor/MANIFEST.json` records a SHA-256 for all 81 of those files, alongside the npm
-package and version each directory was taken from. The digests are verified on every release,
-and any file that is added, removed or edited without the manifest being rebuilt stops that
-release.
+package and version each directory was taken from. Every digest recomputes from the file beside
+it, and the manifest names no file the tree does not hold.
 
 To verify a copy independently, fetch the package named in `MANIFEST.json` from npm and compare
 digests. `NOTICE.md` in each directory lists the upstream path of every file and marks the ones
@@ -133,8 +136,8 @@ a reviewer can confirm it without reading the whole tree.
 
 | Reported as | Where | What it is |
 |---|---|---|
-| Socket `connect` | `web/was_app_workflow.js` | `graph.getNodeById(id).connect(...)`, a LiteGraph wire between two nodes |
-| Socket `bind` | 7 files under `web/` | `Function.prototype.bind` |
+| Socket `connect` | `web/was_app_workflow.js` | LiteGraph's own method for wiring one node's output slot to another node's input, called on a node the graph looked up by id |
+| Socket `bind` | 7 of this pack's own files under `web/` | `Function.prototype.bind`, the standard way to fix a callback's `this`. Those 7 are every one of the pack's own browser files that calls it; the vendored libraries call it throughout |
 | Socket `connect`, `bind` | `web/vendor/three`, `web/vendor/hugerte` | The same two JavaScript methods, in third-party code for Three.js and HugerTE (Path Tracer) |
 | Socket `bind` | `web/viewer/views/code_scripts/prism.min.txt`, `web/viewer/views/markdown_scripts/mermaid.min.txt` | The same JavaScript method, in Prism and Mermaid. They are syntax highlighting and diagram drawing, read as text and inlined into the sandboxed frame a view builds, which has no access to this page |
 | Network operation, database connection | `modules/state/store.py` | `sqlite3.connect`, opening a local database file. Reported twice, under both rule names |
@@ -146,3 +149,7 @@ a reviewer can confirm it without reading the whole tree.
 
 JavaScript files are reported under Python rule names by some scanners without proper filtering enabled. `connect` and `bind`, etc,
 are ordinary JavaScript methods and carry no network meaning.
+
+This page is itself matched. Naming an API to explain it puts that name in the file, and
+version 3.2.2 was reported for a socket pattern at this document's own table row above. The
+rows describe code held elsewhere in the tree; nothing here executes.

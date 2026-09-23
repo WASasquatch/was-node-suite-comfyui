@@ -48,10 +48,10 @@ class KSamplerSequence(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="KSamplerSeq",
+            node_id="WASKSamplerSeq",
             display_name="KSampler Sequence",
             search_aliases=[
-                "KSamplerSeq",
+                "WASKSamplerSeq",
                 "KSampler Sequence",
                 "prompt travel",
                 "animation sampler",
@@ -60,10 +60,10 @@ class KSamplerSequence(io.ComfyNode):
             category="WAS Suite/Sampling",
             description=(
                 "Run the sampler once per loop and stack the results into one latent "
-                "batch, switching prompt as the frame schedule from CLIPTextEncodeList "
-                "says to. Each loop starts from the previous loop's latent at a lower "
-                "denoise, so the run reads as a moving picture rather than as unrelated "
-                "images. Decode the batch and save it as frames."
+                "batch, switching prompt as the frame schedule from CLIP Text Encode "
+                "Sequence (Advanced) says to. Each loop starts from the previous loop's "
+                "latent at a lower denoise, so the run reads as a moving picture rather "
+                "than as unrelated images. Decode the batch and save it as frames."
             ),
             inputs=[
                 io.Model.Input(
@@ -163,10 +163,10 @@ class KSamplerSequence(io.ComfyNode):
                 CONDITIONING_SEQ.Input(
                     "positive_seq",
                     tooltip=(
-                        "The positive prompt schedule from CLIPTextEncodeList: pairs of "
-                        "frame index and conditioning. A loop with no entry of its own keeps "
-                        "the last one it was given, so a prompt stays in force until the "
-                        "next index in the list."
+                        "The positive prompt schedule from CLIP Text Encode Sequence "
+                        "(Advanced): pairs of frame index and conditioning. A loop with no "
+                        "entry of its own keeps the last one it was given, so a prompt "
+                        "stays in force until the next index in the list."
                     ),
                 ),
                 CONDITIONING_SEQ.Input(

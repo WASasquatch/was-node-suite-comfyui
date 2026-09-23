@@ -9,7 +9,27 @@ import { app } from "../../../scripts/app.js";
 import { nodeLocator, watchPreviews } from "./preview.js";
 
 /**
- * Hold the host element's box to the node's, for a node the frontend has stopped laying out.
+ * The top of the first widget laid out below this one, in node units.
+ *
+ * @param {object} node - The node the interface belongs to.
+ * @param {object} widget - The DOM widget the panel was added as.
+ * @returns {number|null} The widget's `y`, or null when nothing is drawn below it.
+ */
+function nextWidgetTop(node, widget) {
+  const widgets = node.widgets ?? [];
+  const index = widgets.indexOf(widget);
+  if (index < 0 || !(typeof widget.y === "number")) return null;
+  // The first visible widget after this one, such as the frontend's picture preview.
+  for (const later of widgets.slice(index + 1)) {
+    if (later?.hidden || later?.options?.hidden) continue;
+    if (typeof later?.y === "number" && later.y > widget.y) return later.y;
+  }
+  return null;
+}
+
+/**
+ * Hold the host element's box to its slot in the node, for a node the frontend has stopped
+ * laying out.
  *
  * @param {object} node - The node the interface belongs to.
  * @param {object} widget - The DOM widget the panel was added as.
@@ -45,8 +65,10 @@ function reconcile(node, widget, element) {
   const above = (box.y - (surface.y + (node.pos[1] + origin[1]) * scale)) / scale;
   if (!(inset >= 0) || !(above >= 0)) return;
 
+  // The panel runs down to the next widget, or to the node's bottom edge when it is the last.
+  const floor = Math.min(node.size[1], nextWidgetTop(node, widget) ?? node.size[1]);
   const width = Math.max(0, node.size[0] - inset * 2);
-  const height = Math.max(0, node.size[1] - above - inset);
+  const height = Math.max(0, floor - above - inset);
   // Only when they actually disagree, so a node the frontend is still laying out is left
   // alone and no write happens on a frame where nothing moved.
   if (Math.abs(box.width / scale - width) > 0.5) host.style.width = `${width}px`;

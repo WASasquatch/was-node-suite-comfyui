@@ -17,6 +17,7 @@ __all__ = [
     "DICT",
     "DOC",
     "EMA_VFI_MODEL",
+    "H3_PROMPTS",
     "IMAGE_BOUNDS",
     "LIST",
     "LUT",
@@ -65,13 +66,17 @@ BUS = io.Custom("BUS")
 #: `CLIPSeg Model Loader` -> `CLIPSeg Masking`, `CLIPSEG2`.
 CLIPSEG_MODEL = io.Custom("CLIPSEG_MODEL")
 
-#: `(frame index, [tensor, dict])` pairs, from `CLIPTextEncodeList` to `KSamplerSeq`. A
+#: `(frame index, [tensor, dict])` pairs, from `WASCLIPTextEncodeList` to `WASKSamplerSeq`. A
 #: schedule of conditionings rather than one conditioning, so it is kept off the
 #: CONDITIONING wire that carries the single form.
 CONDITIONING_SEQ = io.Custom("CONDITIONING_SEQ")
 
 #: `(size, (left, top, right, bottom))`, from the four crop nodes to the three paste nodes.
 CROP_DATA = io.Custom("CROP_DATA")
+
+#: `MiniMax H3 Conditioning` -> `H3 Extend Window`. One encoded conditioning and one frame
+#: count per extension pass, in pass order.
+H3_PROMPTS = io.Custom("WAS_H3_PROMPTS")
 
 #: `EMA-VFI Model Loader` -> `EMA-VFI Frame Interpolation`. Carries a
 #: `modules.model.Backend` holding the interpolation network and the checkpoint it was
@@ -98,8 +103,8 @@ IMAGE_BOUNDS = io.Custom("IMAGE_BOUNDS")
 #: plain list; declared here so all custom sockets resolve from one module.
 LIST = io.Custom("ARRAY")
 
-#: A colour lookup table, from `WASLoadLUT` and `WASCombineLUT` to `WASApplyLUT` and
-#: `WASSaveLUT`. Carries a `modules.image.lut.LUT`, not a bare array.
+#: A colour lookup table, from `WASNSLoadLUT` and `WASNSCombineLUT` to `WASNSApplyLUT` and
+#: `WASNSSaveLUT`. Carries a `modules.image.lut.LUT`, not a bare array.
 LUT = io.Custom("LUT")
 
 #: `MiDaS Model Loader` -> `MiDaS Depth Approximation`.
@@ -179,7 +184,7 @@ WAS_COLOUR_PROFILE = io.Custom("WAS_COLOUR_PROFILE")
 #: where the loop is up to, and what it has collected; nothing a body node ever needs to read.
 WAS_LOOP = io.Custom("WAS_LOOP")
 
-#: `WASPowerLoraMergerOptions` -> `WASPowerLoraMerger`. The advanced merge settings, as a
+#: `WASNSPowerLoraMergerOptions` -> `WASNSPowerLoraMerger`. The advanced merge settings, as a
 #: plain dictionary. Kept off the DICT wire so the merger's options socket accepts only a
 #: set of merge settings and says so in the Add Node menu's link filter.
 WAS_LORA_MERGE_OPTIONS = io.Custom("WAS_LORA_MERGE_OPTIONS")

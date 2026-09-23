@@ -18,10 +18,10 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASLatentContrastLimitedDetailBoost",
+            node_id="WASNSLatentContrastLimitedDetailBoost",
             display_name="WAS Latent Detail Boost",
             search_aliases=[
-                "WASLatentContrastLimitedDetailBoost",
+                "WASNSLatentContrastLimitedDetailBoost",
                 "WAS Latent Detail Boost",
                 "latent sharpen",
                 "detail boost",

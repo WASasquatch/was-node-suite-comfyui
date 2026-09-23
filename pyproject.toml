@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.2.2"
+version = "3.2.3"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
@@ -19,15 +19,20 @@ all = [
 Repository = "https://github.com/WASasquatch/was-node-suite-comfyui"
 
 [tool.open_manager]
+capabilities = ["filesystem", "network", "environment", "models", "dynamic_code"]
 branch = "main"
 docs = "https://github.com/WASasquatch/was-node-suite-comfyui/blob/main/NODES.md"
 funding = "https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US"
 release_note = """
-Nothing in this pack starts a process or installs a package. A feature group that needs a
-library names it in the log with the pip command to run; install it yourself with
+Nothing here starts a process, installs a package or ships a binary. A feature group that needs
+a library names it in the log with the pip command to run; install it yourself with
 requirements/<group>.txt.
+
+Outbound traffic is huggingface_hub fetching model weights, and only while features.network is
+on. A view extension installed by hand is imported as python, and a Three.js scene may carry
+browser javascript while threejs.allow_scripts is on. Both of those settings are off by default.
 """
-themes = ["themes/was-node-suite.json"]
+themes = ["themes/was-node-suite-dark/was-node-suite.json", "themes/was-node-suite-light/was-node-suite.json"]
 example_workflows = [
     "docs/workflows/*.json",
 ]

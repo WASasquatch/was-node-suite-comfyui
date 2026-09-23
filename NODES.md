@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **464** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **468** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-457 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+461 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 342 |
+| [Always loaded](#always-loaded) | always on | 346 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-342 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+346 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (10)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -63,6 +63,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (4)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (1)
 - [WAS Suite/Logic](#was-suitelogic) (4)
@@ -3283,11 +3284,11 @@ Shade an image as though its height map were real relief standing off the page. 
 | `height_scale` | `FLOAT` | Yes | 64 |  | How far the map is extruded, in pixels, from black to white. This against radius is what sets the depth of the shading: 64 with a radius of 30 gives steep relief and heavy occlusion, 16 gives a gentle emboss. 0 flattens the map and the shading disappears. |
 | `ray_count` | `INT` | Yes | 16 |  | How many directions are traced around the circle. 8 is fast and can band on smooth gradients, 16 is clean for most images, 32 and above for large radii where the banding shows. Cost is directly this times step_count. |
 | `step_count` | `INT` | Yes | 16 |  | How many samples are taken along each ray. Too few for the radius and a narrow ridge is stepped straight over, so raise this when a large radius starts missing thin occluders. 16 suits a radius up to about 64; use 32 beyond that. |
-| `angle_bias` | `FLOAT` | Yes | 0.15 |  | How steep a ridge has to be before it shades at all, as a rise over a run. Most height maps arrive with only 256 levels, and every one of those steps is a tiny cliff that shades as concentric rings across ground that should be flat. 0.15 clears that at the default relief; raise it towards 0.3 if rings survive a larger height_scale, and drop it to 0 for a height map that came in as smooth floating point. |
+| `angle_bias` | `FLOAT` | Yes | 0.15 |  | How steep a ridge has to be before it shades, as rise over run. `0.15` = clears the rings an 8 bit height map shades on flat ground; `0.3` = for rings that survive a larger height_scale; `0` = for a smooth floating point height map. |
 | `ao_blur` | `FLOAT` | Yes | 2.5 |  | How much the shading is softened before it is applied, in pixels. 2.5 smooths away the sampling noise; 20 turns the shading into a broad gradient. 0 applies it exactly as traced. |
 | `specular_threshold` | `INT` | Yes | 200 |  | How bright a pixel has to be, on a 0-255 scale, to count as a highlight that should not be shaded. 200 protects only genuine highlights; 25 protects everything that is not nearly black and leaves the shading doing nothing. Only read when enable_specular_masking is on, but it always decides the third output. |
 | `enable_specular_masking` | `BOOLEAN` | Yes | False |  | Keep the bright areas picked out by specular_threshold free of shading. On protects highlights and light sources from being darkened; off shades the whole image from its relief alone. |
-| `precision` | `COMBO` | Yes | 32 bit float | `8 bit`, `16 bit`, `32 bit float` | How finely the three outputs are stepped, measured on the 0 to 1 scale. '32 bit float' keeps every value and is what EXR Save and DNG Save want; '16 bit' rounds to steps of 1/65535, still smooth enough for a graded plate; '8 bit' rounds to steps of 1/255, which bands a soft gradient and only matches what a PNG can hold anyway. Nothing is clipped at any setting: linear light above 1.0 keeps its value and lands on the same ladder of steps, so a highlight at 4.0 has four times as many steps under it as one at 1.0. |
+| `precision` | `COMBO` | Yes | 32 bit float | `8 bit`, `16 bit`, `32 bit float` | How finely the three outputs are stepped. `32 bit float` = every value kept, for EXR Save and DNG Save; `16 bit` = steps of 1/65535, smooth enough to grade; `8 bit` = steps of 1/255, what a PNG holds, and bands a soft gradient. Nothing above 1.0 is clipped at any setting. |
 
 **Outputs**
 
@@ -6647,6 +6648,257 @@ A latent resized by a multiplier, with a choice of how the values in between are
 
 </details>
 
+### WAS Suite/Latent/Video
+
+<a id="node-wash3extendappend"></a>
+<details>
+<summary><b>H3 Extend Append</b></summary>
+
+Join a sampled segment onto the clip so far. The opening segment becomes the clip; a continued segment arrives with the clip's own last frames at its head, so only the frames past them are added and every earlier frame is carried through untouched. A cut adds the whole new scene after the clip's last full 17 frame block, trimming the 5 frames past it. Decode once, after the last segment.
+
+| | |
+|---|---|
+| Node id | `WASH3ExtendAppend` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The clip so far, from the loop's carried value. |
+| `sampled` | `LATENT` | Yes |  |  | What the sampler returned for the segment H3 Extend Window opened. |
+| `overlap_frames` | `INT` | Yes | 22 |  | The overlap H3 Extend Window reported, `0` for a cut. |
+| `segment_index` | `INT` | No | 0 |  | Which segment this is, from `0`. Wire the same While Loop Open index that drives H3 Extend Window. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The longer clip, for the next pass or for a decode. |
+| `frames` | `INT` | Frames the joined clip now holds. |
+| `report` | `STRING` | What was carried and what was added. |
+
+</details>
+
+<a id="node-wash3extendwindow"></a>
+<details>
+<summary><b>H3 Extend Window</b></summary>
+
+Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empty latent it is handed. Every segment after it picks up from the clip so far: `carry` copies its last frames and the soundtrack under them into the window and masks them, so the sampler holds them and generates only what follows, `refresh` softens the detail those frames gained before carrying them, `handoff` starts the next segment on their last frame alone, and `reference` hands them over as a video reference. `cut`, or an overlap of `0`, samples a new scene from an empty latent of its own length with nothing carried. Send the latent to a sampler and its result to H3 Extend Append.
+
+| | |
+|---|---|
+| Node id | `WASH3ExtendWindow` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The finished H3 video and audio latent this pass continues. |
+| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference`, `cut` | How this segment picks up from the one before it. `carry` = one unbroken shot, soundtrack held; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene from an empty latent, nothing carried. `refresh`, `handoff` and `reference` need vae. |
+| `extension_frames` | `INT` | Yes | 102 |  | New frames this pass adds, as `17` for about 0.7s or `102` for about 4.2s at 24 fps. Snapped down to a multiple of 17. |
+| `overlap_frames` | `INT` | Yes | 22 |  | Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. Snapped down to the model's 17k+5 grid. Longer gives the new frames more of the scene to continue from. `reference` reads at least `56`. |
+| `positive` | `CONDITIONING` | No |  |  | Prompt for the new frames. A different prompt per pass moves the scene on. |
+| `vae` | `VAE` | No |  |  | The H3 video VAE. Needed by every mode but `carry`, which uses none. |
+| `prompts` | `WAS_H3_PROMPTS` | No |  |  | Every pass's prompt from MiniMax H3 Conditioning. Wired in, it supplies this pass's prompt and its frame count, and extension_frames is not read. |
+| `pass_index` | `INT` | No | 0 |  | Which segment this is, from `0`. Wire a While Loop Open's index in to step through them one per iteration. |
+| `drift_control` | `FLOAT` | No | 0.0 |  | How much of the contrast and fine detail the carried frames have gained is taken back out, as `0.0` to carry them exactly as sampled, `0.5` for half or `1.0` for all of it. Measured against the clip's opening frames, and it only ever softens. |
+| `refresh_gain` | `FLOAT` | No | 1.15 |  | Fine detail a segment adds, which `refresh` softens the carried frames below so the pass lands back on the opening's reading. `1.15` suits most scenes, `1.0` softens to match the opening exactly. Read by `refresh` and `handoff`. |
+| `audio_release` | `INT` | No | 8 |  | Audio latent steps the held soundtrack opens back up over where it meets the new frames, as `8` for 0.2 seconds at 40 steps a second, `0` for a hard edge or `20` for half a second. Read by `carry` and `refresh`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `window` | `LATENT` | The empty window to sample, for the sampler's latent input. |
+| `positive` | `CONDITIONING` | The prompt for this pass, for the guider that samples the window. |
+| `overlap_frames` | `INT` | The snapped overlap, for the same input on H3 Extend Append. |
+| `report` | `STRING` | What the pass will sample and what it snapped to. |
+
+</details>
+
+<a id="node-wasminimaxh3clipselect"></a>
+<details>
+<summary><b>MiniMax H3 Clip Select</b></summary>
+
+Take one clip out of a MiniMax H3 run: its prompt, and the empty latent it samples into. Every clip has a latent of its own, so a loop wrapped round this samples each one from fresh and nothing passes between them. Send the latent to a sampler and the sampled result to a decode inside the loop, so each clip arrives as its own frames.
+
+| | |
+|---|---|
+| Node id | `WASMiniMaxH3ClipSelect` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `prompts` | `WAS_H3_PROMPTS` | Yes |  |  | Every clip's prompt and length, from MiniMax H3 Conditioning. |
+| `index` | `INT` | Yes | 0 |  | Which clip to take, from `0`. Wire a While Loop Open's index in to step through them one per iteration. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | That clip's prompt, for the guider that samples it. |
+| `latent` | `LATENT` | That clip's own empty latent, for the sampler's latent input. |
+| `frames` | `INT` | Frames that clip runs for, as `124`. |
+| `report` | `STRING` | Which clip was taken and how long it is. |
+
+</details>
+
+<a id="node-wasminimaxh3conditioning"></a>
+<details>
+<summary><b>MiniMax H3 Conditioning</b></summary>
+
+Prompt every segment of a MiniMax H3 video on one node. Each row is one segment with its own prompt and its own frame count, and a new row appears as the last one is filled. Each row also says how much of the segment before it to continue from and how, so a scene can carry on, cut somewhere new, or cut and still keep the cast it had. `ref2va` builds every segment on reference pictures, clips and audio, so the whole run keeps the same people, places and voices. A loop sampling one row per iteration builds the whole video. Every prompt is encoded together before any sampling starts, so the text encoder is loaded once. Send segments to a While Loop's count and prompts to H3 Extend Window.
+
+| | |
+|---|---|
+| Node id | `WASMiniMaxH3Conditioning` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | A minimax CLIP, from Load CLIP with type `minimax`. |
+| `vae` | `VAE` | Yes |  |  | The H3 video VAE, which encodes first_frame, last_frame, images and the reference pictures and clips. |
+| `mode` | `COMBO` | Yes | t2va | `t2va`, `i2va`, `fl2va`, `fl2va_batched`, `ref2va` | The task to condition for. `t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = every segment between a neighbouring pair of images; `ref2va` = every segment built on the ref inputs, named `<Picture 1>`, `<Video 1>`, `<Audio 1>` in the prompt. |
+| `aspect_ratio` | `COMBO` | Yes | custom | `custom`, `1:1`, `5:4`, `4:3`, `3:2`, `16:10`, `16:9`, `2:1`, `21:9`, `4:5`, `3:4`, `2:3` and 4 more | Canvas shape, as `16:9` or `9:16`. `custom` takes it from the first picture the mode reads, and 16:9 where it reads none. A width or height above `0` sets that side itself, so the shape is whatever those give. |
+| `megapixels` | `FLOAT` | Yes | 0.4 |  | Canvas area in millions of pixels, as `0.4` for 832x480 or `1.0` for 1344x736. Worked against aspect_ratio. Ignored when both width and height are set. |
+| `width` | `INT` | Yes | 0 |  | Canvas width in pixels, as `1024`. `0` works it out from megapixels. Rounded to a multiple of 32. |
+| `height` | `INT` | Yes | 0 |  | Canvas height in pixels, as `576`. `0` works it out from megapixels. Rounded to a multiple of 32. |
+| `prompt_header` | `STRING` | Yes |  |  | Text put before every segment's prompt, as `subject_definitions:` and the wardrobe lines that hold for the whole run. Blank adds nothing, and a blank line separates it from the row's own prompt. |
+| `prompt_footer` | `STRING` | Yes |  |  | Text put after every segment's prompt, as `camera: slow dolly in` or `audio: wind and breath`. Blank adds nothing. |
+| `prompt_1` | `STRING` | Yes |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_1` | `FLOAT` | Yes | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_1` | `INT` | Yes | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_1` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_2` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_2` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_2` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_2` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_3` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_3` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_3` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_3` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_4` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_4` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_4` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_4` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_5` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_5` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_5` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_5` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_6` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_6` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_6` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_6` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_7` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_7` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_7` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_7` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_8` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_8` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_8` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_8` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_9` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_9` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_9` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_9` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_10` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_10` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_10` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_10` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_11` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_11` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_11` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_11` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_12` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_12` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_12` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_12` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_13` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_13` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_13` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_13` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_14` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_14` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_14` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_14` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_15` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_15` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_15` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_15` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_16` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_16` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_16` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_16` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_17` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_17` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_17` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_17` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_18` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_18` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_18` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_18` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_19` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_19` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_19` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_19` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_20` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_20` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_20` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_20` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_21` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_21` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_21` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_21` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_22` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_22` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_22` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_22` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_23` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_23` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_23` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_23` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `prompt_24` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. Blank ends the run. |
+| `duration_24` | `FLOAT` | No | 5.2 |  | How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's frame grid, and the report states the frames each segment came to. |
+| `overlap_24` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on the first segment. |
+| `continuity_24` | `COMBO` | No | as set | `as set`, `carry`, `refresh`, `handoff`, `reference`, `cut` | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, like an overlap of `0`. Ignored on segment 1. |
+| `first_frame` | `IMAGE` | No |  |  | The frame the clip opens on, stretched to the canvas. |
+| `last_frame` | `IMAGE` | No |  |  | The frame the clip closes on, cropped to cover the canvas. |
+| `images` | `IMAGE` | No |  |  | The pictures `fl2va_batched` runs between, in order. Segment 1 runs from picture 1 to picture 2, segment 2 from 2 to 3, and so on, so 5 pictures cover 4 segments. Read by `fl2va_batched` only. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, which encodes the reference soundtracks and audio. Needed by `ref2va` when any audio is wired. |
+| `ref_image_size` | `COMBO` | No | match | `match`, `256`, `512`, `768`, `1024`, `1536`, `2048`, `max` | How large each reference picture is encoded, for every row. `match` = scaled down to the clip's area; `256` to `2048` = longest side at most that; `max` = up to a 2048 pixel short edge, the closest likeness and the heaviest. Always 256 to 5760 pixels a side. Read by `ref2va` only. |
+| `ref_image_1` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_2` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_3` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_4` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_5` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_6` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_7` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_8` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_image_9` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
+| `ref_video_1` | `IMAGE` | No |  |  | A reference clip for `ref2va` at 24 fps, named `<Video 1>` and on in the prompt. Cut to the longest segment and down to the 17k+5 frame grid; at least 5 frames. |
+| `ref_video_audio_1` | `AUDIO` | No |  |  | The soundtrack of the ref_video in the same slot, named `<Audio 1>` and on in the prompt, ahead of any ref_audio. Needs audio_vae. |
+| `ref_video_2` | `IMAGE` | No |  |  | A reference clip for `ref2va` at 24 fps, named `<Video 1>` and on in the prompt. Cut to the longest segment and down to the 17k+5 frame grid; at least 5 frames. |
+| `ref_video_audio_2` | `AUDIO` | No |  |  | The soundtrack of the ref_video in the same slot, named `<Audio 1>` and on in the prompt, ahead of any ref_audio. Needs audio_vae. |
+| `ref_video_3` | `IMAGE` | No |  |  | A reference clip for `ref2va` at 24 fps, named `<Video 1>` and on in the prompt. Cut to the longest segment and down to the 17k+5 frame grid; at least 5 frames. |
+| `ref_video_audio_3` | `AUDIO` | No |  |  | The soundtrack of the ref_video in the same slot, named `<Audio 1>` and on in the prompt, ahead of any ref_audio. Needs audio_vae. |
+| `ref_audio_1` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
+| `ref_audio_2` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
+| `ref_audio_3` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The empty latent the first segment samples into, for a loop's value slot. |
+| `prompts` | `WAS_H3_PROMPTS` | Every segment's prompt and frame count, for H3 Extend Window. |
+| `segments` | `INT` | Rows carrying a prompt, for a While Loop's count. |
+| `report` | `STRING` | What each segment snapped to and the frames they come to. |
+| `latents` | `LATENT` | One empty latent per segment, at that segment's own length, so a loop samples every clip from fresh. Wire to MiniMax H3 Clip Select, or take one with an index node. |
+
+</details>
+
 ### WAS Suite/LoRA
 
 <a id="node-waspowerloraloader"></a>
@@ -6852,7 +7104,7 @@ Pass a value on only while a switch is on. Switched off, the branch feeding the 
 |---|---|---|---|---|---|
 | `open` | `BOOLEAN` | Yes | True |  | Whether the branch runs. `true` passes value on. `false` skips everything wired into value and stops every node after the gate. |
 | `value` | `COMFY_MATCHTYPE_V3` | No |  |  | What to pass on, of any type. The first connection fixes the type. Nothing wired here is evaluated while the gate is closed. |
-| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` sets every node after the gate to bypass on the canvas while open is off, so they are drawn as bypassed and never reach the run. Read only where open is the gate's own switch: wire anything into open and the value is not known until the run, so the gate stops the nodes from the run instead and ComfyUI draws the first of them as failed. |
+| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` = every node after the gate is drawn bypassed while open is off, and never runs; `false` = they stay as they are. Read only when open is set on the gate itself: with open wired, the gate stops them during the run and the first shows as failed. |
 | `closed_message` | `STRING` | No |  |  | Empty stops the run quietly. Any text, such as `no face found, nothing to upscale`, is drawn on the first blocked node as an error and raised as a notification. |
 
 **Outputs**
@@ -8322,7 +8574,7 @@ Convert numbers from one range to another through an easing curve. One number or
 <details>
 <summary><b>Number Expression</b></summary>
 
-Work out a whole formula over up to 24 numbers in one node, such as `(a * b) / 2 + c`, `clamp(a, 0, 1)` or `round(a / b, 2)`. The functions are min, max, abs, round, floor, ceil, sqrt, clamp(v, lo, hi), lerp(a, b, t), sign, log, log2, log10, exp, sin, cos, tan, atan2, hypot, degrees and radians, with pi, e and tau as constants. Comparisons and `and`, `or` work too, so `a if a > b else b` picks the larger and the boolean output carries the answer. Only arithmetic is read: a name, an attribute or a call that is not on the list is refused by name before anything runs. The box takes several lines, joined into one, and `#` starts a comment.
+Work out a whole formula over up to 24 numbers in one node, such as `(a * b) / 2 + c`, `clamp(a, 0, 1)` or `round(a / b, 2)`. Rounding, clamping, interpolation, roots, logarithms and trigonometry are all there, with pi, e and tau as constants, and the expression box lists them. Comparisons and `and`, `or` work too, so `a if a > b else b` picks the larger and the boolean output carries the answer. Only arithmetic is read: a name, an attribute or a call that is not on the list is refused by name before anything runs. The box takes several lines, joined into one, and `#` starts a comment. Slots a to x are sockets taking a whole number, a decimal, a NUMBER or a true or false as 1 or 0; unwired counts as 0, so a fixed number goes in the formula.
 
 | | |
 |---|---|
@@ -8333,30 +8585,30 @@ Work out a whole formula over up to 24 numbers in one node, such as `(a * b) / 2
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `expression` | `STRING` | Yes | a + b |  | The formula, over `a` to `x`. Eg: `(a * b) / 2 + c`. Functions: min max abs round floor ceil sqrt clamp lerp sign log log2 log10 exp sin cos tan atan2 hypot degrees radians, plus pi, e and tau. `a > b` comes out as 1 or 0; `#` starts a comment. |
-| `a` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `a` stands for. Type it here or wire one in. Unconnected slots use the widget, and a slot the expression never names is ignored. |
-| `b` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `b` stands for. Type it here or wire one in. `a / b` with b at 0 stops the run unless on_error is set to zero. |
-| `c` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `c` stands for. Type it here or wire one in. Handy as the offset in `(a * b) / 2 + c`. |
-| `d` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `d` stands for. Type it here or wire one in. The fourth value, free for a limit such as `clamp(a, c, d)`. |
-| `e` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `e` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `f` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `f` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `g` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `g` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `h` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `h` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `i` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `i` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `j` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `j` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `k` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `k` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `l` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `l` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `m` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `m` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `n` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `n` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `o` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `o` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `p` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `p` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `q` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `q` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `r` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `r` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `s` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `s` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `t` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `t` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `u` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `u` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `v` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `v` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `w` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `w` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
-| `x` | `FLOAT,NUMBER,INT` | No | 0.0 |  | The number `x` stands for. Type it here or wire one in. An unconnected slot uses its widget, and a slot the expression never names is ignored. |
+| `a` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `a` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, `true` counts as `1`, and a slot the expression never names is ignored. |
+| `b` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `b` stands for. `a / b` with nothing wired to `b` divides by `0` and stops the run unless on_error is set to zero. |
+| `c` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `c` stands for. Handy as the offset in `(a * b) / 2 + c`. |
+| `d` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `d` stands for. The fourth value, free for a limit such as `clamp(a, c, d)`. |
+| `e` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `e` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `f` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `f` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `g` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `g` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `h` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `h` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `i` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `i` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `j` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `j` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `k` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `k` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `l` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `l` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `m` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `m` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `n` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `n` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `o` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `o` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `p` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `p` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `q` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `q` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `r` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `r` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `s` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `s` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `t` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `t` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `u` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `u` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `v` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `v` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `w` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `w` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `x` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `x` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
 | `decimals` | `INT` | No | 6 |  | Decimal places a fractional answer is rounded to. 6 = 0.333333, 2 = 0.33, 0 = whole, so 3.7 comes out 4.0. It also clears the trailing 0.0000000001 that decimal arithmetic leaves behind. A whole answer is untouched. |
 | `on_error` | `COMBO` | No | error | `error`, `zero` | What a refused or impossible expression does. `error` = stop the run and name the cause, `zero` = log it and answer 0. Pick `zero` where a division by zero is expected on some frames of a batch. |
 
@@ -10655,6 +10907,7 @@ Hand memory back to the graphics card partway through a run. ComfyUI can only be
 | `empty_cache` | `BOOLEAN` | Yes | True |  | true gives the driver back the blocks torch has reserved and is not using. Torch reuses those blocks itself, so this seldom changes what the next sampler can fit; reach for it when another program, or a library such as OpenCV, needs room on the card. |
 | `collect_garbage` | `BOOLEAN` | Yes | True |  | true runs Python's collector before the cache is emptied, so anything the graph has finished with is actually handed back rather than only marked unused. It costs a few milliseconds and makes unload_models worth more. |
 | `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything at all: an image, a model, a latent, text. It comes back out unchanged once the freeing is done, which is what pins the free to a point in the chain instead of leaving it to happen whenever. Leave it unwired to free on its own. |
+| `release_fraction` | `FLOAT` | No | 0.0 |  | Move weights to system memory when less than this share of the card is free, as `0.5` before a VAE decode. `0` does nothing, and so does any share already free. The weights come back from memory rather than from disk, unlike unload_models. |
 
 **Outputs**
 
@@ -11378,7 +11631,7 @@ Load a diffusers-format model directory from models/diffusers and emit its name 
 
 ### WAS Suite/Animation
 
-<a id="node-wascameramotiontrajectory"></a>
+<a id="node-wasnscameramotiontrajectory"></a>
 <details>
 <summary><b>Camera Motion Trajectory from Images</b></summary>
 
@@ -11386,7 +11639,7 @@ Move a virtual camera over a still picture and emit the result as a frame sequen
 
 | | |
 |---|---|
-| Node id | `WASCameraMotionTrajectory` |
+| Node id | `WASNSCameraMotionTrajectory` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11414,15 +11667,15 @@ Move a virtual camera over a still picture and emit the result as a frame sequen
 
 ### WAS Suite/Conditioning
 
-<a id="node-cliptextencodelist"></a>
+<a id="node-wascliptextencodelist"></a>
 <details>
 <summary><b>CLIP Text Encode Sequence (Advanced)</b></summary>
 
-Encode one prompt per line, each tagged with the frame it takes effect on, into a schedule for KSamplerSeq. Write '0:a rosebud' and '10:a rose' and the run opens on the first prompt and switches to the second at frame 10.
+Encode one prompt per line, each tagged with the frame it takes effect on, into a schedule for KSampler Sequence. Write '0:a rosebud' and '10:a rose' and the run opens on the first prompt and switches to the second at frame 10.
 
 | | |
 |---|---|
-| Node id | `CLIPTextEncodeList` |
+| Node id | `WASCLIPTextEncodeList` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11438,19 +11691,19 @@ Encode one prompt per line, each tagged with the frame it takes effect on, into 
 
 | Name | Type | What it is |
 |---|---|---|
-| `conditioning_sequence` | `CONDITIONING_SEQ` | The frame-tagged prompts, for the positive_seq or negative_seq input of KSamplerSeq. It is not an ordinary conditioning and does not fit a plain sampler. |
+| `conditioning_sequence` | `CONDITIONING_SEQ` | The frame-tagged prompts, for the positive_seq or negative_seq input of KSampler Sequence. It is not an ordinary conditioning and does not fit a plain sampler. |
 
 </details>
 
-<a id="node-cliptextencodesequence2"></a>
+<a id="node-wascliptextencodesequence2"></a>
 <details>
 <summary><b>CLIP Text Encode Sequence (v2)</b></summary>
 
-Encode one prompt per line and work out the frame each one takes over on, spread across the length of the run. The three outputs plug straight into KSamplerSeq2's positive_seq or negative_seq, cond_keyframes and frame_count, so a prompt list becomes an animation schedule with no numbers typed by hand.
+Encode one prompt per line and work out the frame each one takes over on, spread across the length of the run. The three outputs plug straight into KSampler Sequence (v2)'s positive_seq or negative_seq, cond_keyframes and frame_count, so a prompt list becomes an animation schedule with no numbers typed by hand.
 
 | | |
 |---|---|
-| Node id | `CLIPTextEncodeSequence2` |
+| Node id | `WASCLIPTextEncodeSequence2` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11468,13 +11721,13 @@ Encode one prompt per line and work out the frame each one takes over on, spread
 
 | Name | Type | What it is |
 |---|---|---|
-| `conditioning_sequence` | `CONDITIONING` | Every prompt, encoded, in the order they were written. Wire it into KSamplerSeq2's positive_seq or negative_seq. |
-| `cond_keyframes` | `INT` | The frames at which the run steps to the next prompt. Wire it into KSamplerSeq2's cond_keyframes. |
-| `frame_count` | `INT` | The frame count as it was given, passed straight through so one wire carries it to KSamplerSeq2 rather than the number being typed twice. |
+| `conditioning_sequence` | `CONDITIONING` | Every prompt, encoded, in the order they were written. Wire it into KSampler Sequence (v2)'s positive_seq or negative_seq. |
+| `cond_keyframes` | `INT` | The frames at which the run steps to the next prompt. Wire it into KSampler Sequence (v2)'s cond_keyframes. |
+| `frame_count` | `INT` | The frame count as it was given, passed straight through so one wire carries it to KSampler Sequence (v2) rather than the number being typed twice. |
 
 </details>
 
-<a id="node-conditioningblend"></a>
+<a id="node-wasconditioningblend"></a>
 <details>
 <summary><b>Conditioning (Blend)</b></summary>
 
@@ -11482,7 +11735,7 @@ Mix encoded prompts into one, by a choice of twelve formulas rather than a singl
 
 | | |
 |---|---|
-| Node id | `ConditioningBlend` |
+| Node id | `WASConditioningBlend` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11529,7 +11782,7 @@ Mix encoded prompts into one, by a choice of twelve formulas rather than a singl
 
 ### WAS Suite/Debug
 
-<a id="node-debuginput"></a>
+<a id="node-wasdebuginput"></a>
 <details>
 <summary><b>Debug Input</b></summary>
 
@@ -11537,7 +11790,7 @@ Print whatever is connected to it to the console, and for anything that is not a
 
 | | |
 |---|---|
-| Node id | `DebugInput` |
+| Node id | `WASDebugInput` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 | Output node | Yes, it runs even with nothing wired after it |
 
@@ -11551,7 +11804,7 @@ Print whatever is connected to it to the console, and for anything that is not a
 
 ### WAS Suite/Image/Analyze
 
-<a id="node-waschannelwaveform"></a>
+<a id="node-wasnschannelwaveform"></a>
 <details>
 <summary><b>Image Waveform</b></summary>
 
@@ -11559,7 +11812,7 @@ Plot the red, green and blue channels of each picture as broadcast waveform scop
 
 | | |
 |---|---|
-| Node id | `WASChannelWaveform` |
+| Node id | `WASNSChannelWaveform` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 | Output node | Yes, it runs even with nothing wired after it |
 
@@ -11583,7 +11836,7 @@ Plot the red, green and blue channels of each picture as broadcast waveform scop
 
 ### WAS Suite/Image/Filter
 
-<a id="node-vividsharpen"></a>
+<a id="node-wasvividsharpen"></a>
 <details>
 <summary><b>Vivid Sharpen</b></summary>
 
@@ -11591,7 +11844,7 @@ Sharpen images by blending an inverted, blurred copy back over them in vivid lig
 
 | | |
 |---|---|
-| Node id | `VividSharpen` |
+| Node id | `WASVividSharpen` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11610,7 +11863,7 @@ Sharpen images by blending an inverted, blurred copy back over them in vivid lig
 
 </details>
 
-<a id="node-vividsharpenv2"></a>
+<a id="node-wasvividsharpenv2"></a>
 <details>
 <summary><b>Vivid Sharpen (V2)</b></summary>
 
@@ -11618,7 +11871,7 @@ Sharpen images by blending an inverted, blurred copy back over them in vivid lig
 
 | | |
 |---|---|
-| Node id | `VividSharpenV2` |
+| Node id | `WASVividSharpenV2` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11645,7 +11898,7 @@ Sharpen images by blending an inverted, blurred copy back over them in vivid lig
 
 ### WAS Suite/Image/LUT
 
-<a id="node-wasapplylut"></a>
+<a id="node-wasnsapplylut"></a>
 <details>
 <summary><b>Apply LUT</b></summary>
 
@@ -11653,7 +11906,7 @@ Grade pictures through a colour lookup table from Load LUT or LUT Blender. Each 
 
 | | |
 |---|---|
-| Node id | `WASApplyLUT` |
+| Node id | `WASNSApplyLUT` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11674,7 +11927,7 @@ Grade pictures through a colour lookup table from Load LUT or LUT Blender. Each 
 
 </details>
 
-<a id="node-wasloadlut"></a>
+<a id="node-wasnsloadlut"></a>
 <details>
 <summary><b>Load LUT</b></summary>
 
@@ -11682,7 +11935,7 @@ Produce a colour lookup table to grade images with. Pick a .cube file from a mod
 
 | | |
 |---|---|
-| Node id | `WASLoadLUT` |
+| Node id | `WASNSLoadLUT` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11710,7 +11963,7 @@ Produce a colour lookup table to grade images with. Pick a .cube file from a mod
 
 </details>
 
-<a id="node-wascombinelut"></a>
+<a id="node-wasnscombinelut"></a>
 <details>
 <summary><b>LUT Blender</b></summary>
 
@@ -11718,7 +11971,7 @@ Mix two colour lookup tables into one, in whichever colour space suits the pair.
 
 | | |
 |---|---|
-| Node id | `WASCombineLUT` |
+| Node id | `WASNSCombineLUT` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11739,7 +11992,7 @@ Mix two colour lookup tables into one, in whichever colour space suits the pair.
 
 </details>
 
-<a id="node-wassavelut"></a>
+<a id="node-wasnssavelut"></a>
 <details>
 <summary><b>Save LUT (.cube)</b></summary>
 
@@ -11747,7 +12000,7 @@ Write a colour lookup table to a .cube file, the format DaVinci Resolve, Premier
 
 | | |
 |---|---|
-| Node id | `WASSaveLUT` |
+| Node id | `WASNSSaveLUT` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 | Output node | Yes, it runs even with nothing wired after it |
 
@@ -11814,7 +12067,7 @@ Cut each picture into a grid of tiles and send each tile to its own output, read
 
 </details>
 
-<a id="node-wasimagetileextract"></a>
+<a id="node-wasnsimagetileextract"></a>
 <details>
 <summary><b>Image Tile Extract (Quadrants)</b></summary>
 
@@ -11822,7 +12075,7 @@ Split each picture into its four quadrants and send each one to its own output. 
 
 | | |
 |---|---|
-| Node id | `WASImageTileExtract` |
+| Node id | `WASNSImageTileExtract` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11844,7 +12097,7 @@ Split each picture into its four quadrants and send each one to its own output. 
 
 </details>
 
-<a id="node-wasimagetileshuffle"></a>
+<a id="node-wasnsimagetileshuffle"></a>
 <details>
 <summary><b>Image Tile Shuffle</b></summary>
 
@@ -11852,7 +12105,7 @@ Cut each picture into a grid of equal tiles and lay them back down in a shuffled
 
 | | |
 |---|---|
-| Node id | `WASImageTileShuffle` |
+| Node id | `WASNSImageTileShuffle` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11875,7 +12128,7 @@ Cut each picture into a grid of equal tiles and lay them back down in a shuffled
 
 ### WAS Suite/Image/Upscaling
 
-<a id="node-wastiledimageupscalewithmodel"></a>
+<a id="node-wasnstiledimageupscalewithmodel"></a>
 <details>
 <summary><b>Tiled Image Upscale (With Model)</b></summary>
 
@@ -11883,7 +12136,7 @@ Upscale pictures with a loaded upscale model, one overlapping tile at a time, so
 
 | | |
 |---|---|
-| Node id | `WASTiledImageUpscaleWithModel` |
+| Node id | `WASNSTiledImageUpscaleWithModel` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11893,11 +12146,12 @@ Upscale pictures with a loaded upscale model, one overlapping tile at a time, so
 | `upscale_model` | `UPSCALE_MODEL` | Yes |  |  | The upscale model to run, from a Load Upscale Model node. Its own scale does not have to match upscale_factor: a 4x model can produce a 2x result. |
 | `image` | `IMAGE` | Yes |  |  | The pictures to enlarge. Each frame of a batch is upscaled in turn, so memory use is set by the tile size rather than by the batch. |
 | `upscale_factor` | `FLOAT` | Yes | 4.0 |  | Final size relative to the input. 2.0 doubles both sides, 4.0 quadruples them, 1.0 keeps the original size while still passing the picture through the model. |
-| `tile_size` | `INT` | Yes | 512 |  | Tile edge in input pixels. Larger tiles are faster and need more video memory; if the card runs out, the tile is halved and the run retried automatically. 512 suits most 8 GB cards. |
+| `tile_size` | `INT` | Yes | 512 |  | Tile edge in input pixels. `256` and `512` both suit most cards and run at much the same speed; a larger tile needs more video memory without being faster. If the card runs out, the tile is halved and the run retried. |
 | `overlap` | `INT` | Yes | 32 |  | How far neighbouring tiles overlap, in input pixels. This is the material the cross-fade is made from, so 0 puts a hard join between tiles; 32 to 64 hides it on most models. |
 | `feather` | `INT` | Yes | 0 |  | Width of the cross-fade in output pixels. 0 works it out from the overlap, which is the right answer almost always; raise it only when a faint grid still shows on flat areas such as sky. |
 | `resample_method` | `COMBO` | Yes | lanczos | `nearest-exact`, `bilinear`, `area`, `bicubic`, `lanczos` | How a tile is resized when the model's own scale does not match upscale_factor. `lanczos` keeps the most detail, `area` is the gentlest when shrinking, `nearest-exact` keeps hard pixel edges for pixel art. |
 | `clear_comfy_memory` | `BOOLEAN` | Yes | False |  | Whether to unload every other model and empty the caches before upscaling. Turn this on when a large upscale runs out of memory next to a checkpoint that is still resident; it costs the time to reload those models afterwards. |
+| `precision` | `COMBO` | No | auto | `auto`, `32 bit float`, `16 bit float`, `bfloat16` | What the model runs in. `auto` = half precision where the model declares it safe, which is about twice as fast; `32 bit float` = every model's safest; `16 bit float` and `bfloat16` force one, whatever the model says. |
 
 **Outputs**
 
@@ -11909,7 +12163,7 @@ Upscale pictures with a loaded upscale model, one overlapping tile at a time, so
 
 ### WAS Suite/Latent
 
-<a id="node-vaeencodeforinpaint-was"></a>
+<a id="node-wasvaeencodeforinpaint"></a>
 <details>
 <summary><b>Inpainting VAE Encode</b></summary>
 
@@ -11917,7 +12171,7 @@ Encode an image into a latent for inpainting, with control over how far the mask
 
 | | |
 |---|---|
-| Node id | `VAEEncodeForInpaint (WAS)` |
+| Node id | `WASVAEEncodeForInpaint` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11937,7 +12191,7 @@ Encode an image into a latent for inpainting, with control over how far the mask
 
 </details>
 
-<a id="node-blvaeencode"></a>
+<a id="node-wasblvaeencode"></a>
 <details>
 <summary><b>VAEEncode (Bundle Latent)</b></summary>
 
@@ -11945,7 +12199,7 @@ Encode an image to a latent and, if asked, keep a copy of that latent inside the
 
 | | |
 |---|---|
-| Node id | `BLVAEEncode` |
+| Node id | `WASBLVAEEncode` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -11968,7 +12222,7 @@ Encode an image to a latent and, if asked, keep a copy of that latent inside the
 
 </details>
 
-<a id="node-waslatentcontrastlimiteddetailboost"></a>
+<a id="node-wasnslatentcontrastlimiteddetailboost"></a>
 <details>
 <summary><b>WAS Latent Detail Boost</b></summary>
 
@@ -11976,7 +12230,7 @@ Bring out fine detail in a latent by isolating one band of detail, levelling it 
 
 | | |
 |---|---|
-| Node id | `WASLatentContrastLimitedDetailBoost` |
+| Node id | `WASNSLatentContrastLimitedDetailBoost` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12009,7 +12263,7 @@ Bring out fine detail in a latent by isolating one band of detail, levelling it 
 
 ### WAS Suite/Latent/Transform
 
-<a id="node-waslatentupscalehybrid"></a>
+<a id="node-wasnslatentupscalehybrid"></a>
 <details>
 <summary><b>Latent Hybrid Upscale</b></summary>
 
@@ -12017,7 +12271,7 @@ Enlarge a latent and decide where to be smooth by looking at the picture it deco
 
 | | |
 |---|---|
-| Node id | `WASLatentUpscaleHybrid` |
+| Node id | `WASNSLatentUpscaleHybrid` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12085,7 +12339,7 @@ Resize a latent so that the picture it decodes to has its longest side at a chos
 
 </details>
 
-<a id="node-was_adaptivedifferencelatentupscale"></a>
+<a id="node-wasnsadaptivedifferencelatentupscale"></a>
 <details>
 <summary><b>WAS Adaptive Difference Latent Upscale (Damped)</b></summary>
 
@@ -12093,7 +12347,7 @@ Enlarge a latent twice, once by copying the nearest block, once by interpolating
 
 | | |
 |---|---|
-| Node id | `WAS_AdaptiveDifferenceLatentUpscale` |
+| Node id | `WASNSAdaptiveDifferenceLatentUpscale` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12134,7 +12388,7 @@ Enlarge a latent twice, once by copying the nearest block, once by interpolating
 
 ### WAS Suite/LoRA
 
-<a id="node-wasapplyreweightedlora"></a>
+<a id="node-wasnsapplyreweightedlora"></a>
 <details>
 <summary><b>Apply Reweighted LoRA</b></summary>
 
@@ -12142,7 +12396,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 
 | | |
 |---|---|
-| Node id | `WASApplyReweightedLoRA` |
+| Node id | `WASNSApplyReweightedLoRA` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12176,7 +12430,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 
 </details>
 
-<a id="node-waspowerloramerger"></a>
+<a id="node-wasnspowerloramerger"></a>
 <details>
 <summary><b>Power LoRA Merger</b></summary>
 
@@ -12184,7 +12438,7 @@ Merge any number of LoRAs into one new LoRA file, saved into your LoRA folder so
 
 | | |
 |---|---|
-| Node id | `WASPowerLoraMerger` |
+| Node id | `WASNSPowerLoraMerger` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12193,7 +12447,7 @@ Merge any number of LoRAs into one new LoRA file, saved into your LoRA folder so
 |---|---|---|---|---|---|
 | `output_filename` | `STRING` | Yes | merged_lora.safetensors |  | Name to save the merged LoRA under, inside your LoRA folder. Sub-folders are allowed, for example 'styles/mixed.safetensors'. '.safetensors' is added when it is missing, and the name cannot step outside the LoRA folder. |
 | `output_model_strength` | `FLOAT` | Yes | 1.0 |  | How strongly the merged LoRA is applied to the model output, if a model is connected. 1.0 is full strength, 0.5 is half. This does not change the saved file, only what comes out of the model socket. |
-| `output_clip_strength` | `FLOAT` | Yes | 1.0 |  | The same for the clip output: how strongly the merged LoRA is applied to the connected clip. Lower it when a LoRA's trigger words are overwhelming the rest of the prompt. |
+| `output_clip_strength` | `FLOAT` | Yes | 1.0 |  | The same for the clip output: how strongly the merged LoRA is applied to the connected clip. Lower it when a LoRA's trigger words are overwhelming the rest of the prompt. Ignored where no clip is connected, as with a diffusion transformer. |
 | `mode` | `COMBO` | Yes | svd | `svd`, `rebase`, `add`, `add-diff`, `add-orth`, `diff-export`, `moe`, `obfuscate`, `block-mix` | How the LoRAs are combined. `svd` recompresses the combined result back to one rank, which keeps the file small and is the usual choice. |
 | `block_mix_recipe` | `COMBO` | Yes | concept_a_style_b | `all_a`, `all_b`, `concept_a_style_b`, `concept_b_style_a`, `attn_a_ffn_b`, `attn_b_ffn_a`, `img_a_txt_b`, `img_b_txt_a` | Only read in `block-mix` mode: which of the two LoRAs each part of the model comes from. `all_a` and `all_b` route everything one way. |
 | `model` | `MODEL` | No |  |  | Optional. A model to apply the merged LoRA to once it is saved, so the merge can be tested in the same run. Leave it unconnected to only write the file. |
@@ -12283,12 +12537,12 @@ Merge any number of LoRAs into one new LoRA file, saved into your LoRA folder so
 | Name | Type | What it is |
 |---|---|---|
 | `model` | `MODEL` | The connected model with the merged LoRA applied, or nothing when no model was connected. |
-| `clip` | `CLIP` | The connected clip with the merged LoRA applied, or nothing when no model and clip were connected. |
+| `clip` | `CLIP` | The connected clip with the merged LoRA applied, or nothing when no clip was connected. A model on its own is still patched. |
 | `lora_path` | `STRING` | The saved file's name relative to your LoRA folder, such as 'styles/mixed.safetensors'. Feed it to a loader, or to a text node to record what a run produced. |
 
 </details>
 
-<a id="node-waspowerloramergeroptions"></a>
+<a id="node-wasnspowerloramergeroptions"></a>
 <details>
 <summary><b>Power LoRA Merger Options</b></summary>
 
@@ -12296,7 +12550,7 @@ Advanced settings for the Power LoRA Merger: how far the merged LoRA is compress
 
 | | |
 |---|---|
-| Node id | `WASPowerLoraMergerOptions` |
+| Node id | `WASNSPowerLoraMergerOptions` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12331,15 +12585,15 @@ Advanced settings for the Power LoRA Merger: how far the merged LoRA is compress
 
 ### WAS Suite/Sampling
 
-<a id="node-ksamplerseq"></a>
+<a id="node-wasksamplerseq"></a>
 <details>
 <summary><b>KSampler Sequence</b></summary>
 
-Run the sampler once per loop and stack the results into one latent batch, switching prompt as the frame schedule from CLIPTextEncodeList says to. Each loop starts from the previous loop's latent at a lower denoise, so the run reads as a moving picture rather than as unrelated images. Decode the batch and save it as frames.
+Run the sampler once per loop and stack the results into one latent batch, switching prompt as the frame schedule from CLIP Text Encode Sequence (Advanced) says to. Each loop starts from the previous loop's latent at a lower denoise, so the run reads as a moving picture rather than as unrelated images. Decode the batch and save it as frames.
 
 | | |
 |---|---|
-| Node id | `KSamplerSeq` |
+| Node id | `WASKSamplerSeq` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12355,7 +12609,7 @@ Run the sampler once per loop and stack the results into one latent batch, switc
 | `sampler_name` | `COMBO` | Yes |  |  | The sampling algorithm. 'euler' is the plain, predictable choice and the steadiest across a sequence; the 'ancestral' and 'sde' variants add fresh noise as they go, which adds detail and also adds flicker frame to frame. The list is whatever this ComfyUI offers. |
 | `scheduler` | `COMBO` | Yes |  |  | How the noise level is stepped down within each loop. 'normal' and 'karras' are the usual choices, karras spending more steps at low noise where fine detail is decided. The list is whatever this ComfyUI offers. |
 | `sequence_loop_count` | `INT` | Yes | 20 |  | How many loops to run, which is how many latents come out. At 20 the output is a 20-image batch; the frame indices in the conditioning schedule are counted against this same number. |
-| `positive_seq` | `CONDITIONING_SEQ` | Yes |  |  | The positive prompt schedule from CLIPTextEncodeList: pairs of frame index and conditioning. A loop with no entry of its own keeps the last one it was given, so a prompt stays in force until the next index in the list. |
+| `positive_seq` | `CONDITIONING_SEQ` | Yes |  |  | The positive prompt schedule from CLIP Text Encode Sequence (Advanced): pairs of frame index and conditioning. A loop with no entry of its own keeps the last one it was given, so a prompt stays in force until the next index in the list. |
 | `negative_seq` | `CONDITIONING_SEQ` | Yes |  |  | The negative prompt schedule, read exactly as positive_seq is. It needs at least one entry at frame 0, since a loop with nothing to fall back on has no negative prompt at all. |
 | `use_conditioning_slerp` | `BOOLEAN` | Yes | False |  | Whether the prompt changes gradually instead of switching over on one frame. On, each loop's conditioning is interpolated towards the one before it by cond_slerp_strength, which is what turns a list of prompts into a blend rather than a cut. |
 | `cond_slerp_strength` | `FLOAT` | Yes | 0.5 |  | How far each loop moves towards the new prompt when use_conditioning_slerp is on. 0.0 keeps the previous prompt, 1.0 takes the new one whole, 0.5 sits halfway between them. Ignored while that switch is off. |
@@ -12375,15 +12629,15 @@ Run the sampler once per loop and stack the results into one latent batch, switc
 
 </details>
 
-<a id="node-ksamplerseq2"></a>
+<a id="node-wasksamplerseq2"></a>
 <details>
 <summary><b>KSampler Sequence (v2)</b></summary>
 
-Run the sampler once per frame and stack the results into one latent batch, stepping to the next prompt whenever the frame is one of the keyframes. Built to be driven by CLIPTextEncodeSequence2, which produces the prompt list, the keyframe schedule and the frame count together. Noise injection, a swinging denoise and a keyed seed are all here to keep a long run moving instead of settling on one image.
+Run the sampler once per frame and stack the results into one latent batch, stepping to the next prompt whenever the frame is one of the keyframes. Built to be driven by CLIP Text Encode Sequence (v2), which produces the prompt list, the keyframe schedule and the frame count together. Noise injection, a swinging denoise and a keyed seed are all here to keep a long run moving instead of settling on one image.
 
 | | |
 |---|---|
-| Node id | `KSamplerSeq2` |
+| Node id | `WASKSamplerSeq2` |
 | Turn off with | `features.extras: false` in `config.yaml` |
 
 **Inputs**
@@ -12398,9 +12652,9 @@ Run the sampler once per frame and stack the results into one latent batch, step
 | `cfg` | `FLOAT` | Yes | 8.0 |  | How closely each frame is held to its prompt. Around 7-8 suits most models; lower is looser and softer, much higher burns contrast and makes a sequence flicker. |
 | `sampler_name` | `COMBO` | Yes |  |  | The sampling algorithm. 'euler' is the plain, predictable choice and the steadiest across a sequence; the 'ancestral' and 'sde' variants add fresh noise as they go, which adds detail and also adds flicker. The list is whatever this ComfyUI offers. |
 | `scheduler` | `COMBO` | Yes |  |  | How the noise level is stepped down within each frame. 'normal' and 'karras' are the usual choices. The list is whatever this ComfyUI offers. |
-| `frame_count` | `INT` | Yes | 0 |  | How many frames to render. Wire it from CLIPTextEncodeSequence2's frame_count output. At 0, or with no keyframes connected, the run is one frame per prompt instead. |
-| `cond_keyframes` | `INT` | Yes | 0 |  | The frame numbers at which the run steps to the next prompt. Wire it from CLIPTextEncodeSequence2's cond_keyframes output, which builds the whole schedule; a single number here means one changeover at that frame. |
-| `positive_seq` | `CONDITIONING` | Yes |  |  | The list of positive prompts to work through, from CLIPTextEncodeSequence2. One plain conditioning also works and is then used for every frame. |
+| `frame_count` | `INT` | Yes | 0 |  | How many frames to render. Wire it from CLIP Text Encode Sequence (v2)'s frame_count output. At 0, or with no keyframes connected, the run is one frame per prompt instead. |
+| `cond_keyframes` | `INT` | Yes | 0 |  | The frame numbers at which the run steps to the next prompt. Wire it from CLIP Text Encode Sequence (v2)'s cond_keyframes output, which builds the whole schedule; a single number here means one changeover at that frame. |
+| `positive_seq` | `CONDITIONING` | Yes |  |  | The list of positive prompts to work through, from CLIP Text Encode Sequence (v2). One plain conditioning also works and is then used for every frame. |
 | `negative_seq` | `CONDITIONING` | Yes |  |  | The list of negative prompts, stepped through on the same keyframes as the positive ones. One plain conditioning is used for every frame. |
 | `use_conditioning_slerp` | `BOOLEAN` | Yes | False |  | Whether each frame's conditioning is rebuilt from its embedding and pooled output alone. Anything else the prompt carried, an area, a mask, a control hint, is dropped when this is on, so leave it off unless the prompts are plain text encodes. |
 | `cond_slerp_strength` | `FLOAT` | Yes | 0.5 |  | Interpolation factor for the rebuild above. The two ends of the interpolation are the same prompt here, so the value makes no difference to the result. Ignored while use_conditioning_slerp is off. |
@@ -13102,7 +13356,7 @@ Reach any Three.js geometry class the pack has no node for, by returning one fro
 <details>
 <summary><b>Three Custom Material</b></summary>
 
-Reach any Three.js material class the pack has no node for, by returning one from a short JavaScript body. `THREE` is in scope, and any texture wired in arrives as `texture1` through `texture4`, so a toon, matcap, lambert or depth material is one line away. The code runs in your browser when the viewer loads, with the same reach as any frontend extension, so only run a workflow carrying custom JavaScript if you trust where it came from.
+Reach any Three.js material class the pack has no node for, from a module file you place in ComfyUI's input folder or a folder under paths.allow_read. The module's header names the textures it wants and the node's slots take those names. Code is never typed on the node and never travels inside a workflow, so a graph from someone else cannot bring javascript with it. A module runs in your browser when the viewer loads, with the same reach as any frontend extension, and only while threejs.allow_scripts is on.
 
 | | |
 |---|---|
@@ -13113,17 +13367,17 @@ Reach any Three.js material class the pack has no node for, by returning one fro
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `javascript` | `STRING` | Yes | return new THREE.MeshStandardMaterial({color: "#ffffff", roughness: 0.35, metalness: 0.1}); |  | A body returning a material, as `return new THREE.MeshToonMaterial({map: texture1});`. |
-| `texture1` | `THREE_TEXTURE` | No |  |  | A texture reachable in the body as `texture1` through `texture4`, by the slot it fills. |
-| `texture2` | `THREE_TEXTURE` | No |  |  | A texture reachable in the body as `texture1` through `texture4`, by the slot it fills. |
-| `texture3` | `THREE_TEXTURE` | No |  |  | A texture reachable in the body as `texture1` through `texture4`, by the slot it fills. |
-| `texture4` | `THREE_TEXTURE` | No |  |  | A texture reachable in the body as `texture1` through `texture4`, by the slot it fills. |
+| `module` | `COMBO` | Yes |  |  | Which module builds the material. The menu lists every `.js` and `.txt` file opening with `// was-threejs-module 1` in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. |
+| `texture1` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
+| `texture2` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
+| `texture3` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
+| `texture4` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `material` | `THREE_MATERIAL` | The surface the code returned, for the material socket on Three Mesh. |
+| `material` | `THREE_MATERIAL` | The surface the module returned, for the material socket on Three Mesh. |
 
 </details>
 

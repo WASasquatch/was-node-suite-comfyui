@@ -23,9 +23,9 @@ class ApplyLUT(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="WASApplyLUT",
+            node_id="WASNSApplyLUT",
             display_name="Apply LUT",
-            search_aliases=["WASApplyLUT", "WAS Apply LUT", "lut", "grade", "cube", "color"],
+            search_aliases=["WASNSApplyLUT", "WAS Apply LUT", "lut", "grade", "cube", "color"],
             category="WAS Suite/Image/LUT",
             description=(
                 "Grade pictures through a colour lookup table from Load LUT or LUT Blender. "

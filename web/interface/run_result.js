@@ -7,7 +7,7 @@
 
 import { api } from "../../../scripts/api.js";
 import { fetchWithin } from "./request.js";
-import { LABELS, PREVIEW_STATE, connected, executionId } from "./preview.js";
+import { LABELS, PREVIEW_STATE, connected, executionId, placed } from "./preview.js";
 
 const LOG_PREFIX = "[WASNodeSuite.RunResult]";
 
@@ -89,7 +89,7 @@ export const RUN_LABELS = {
 export async function fetchRunResult(nodeOrId) {
   const node = typeof nodeOrId === "object" && nodeOrId !== null ? nodeOrId : null;
   const id = (node ? executionId(node) : String(nodeOrId ?? "")).trim();
-  if (!id) return answer(PREVIEW_STATE.WAITING);
+  if (!placed(id)) return answer(PREVIEW_STATE.WAITING);
   if (!connected()) return answer(PREVIEW_STATE.CONNECTING);
 
   // A graph id is handed out again after a graph is cleared, so the kind of node asking goes
@@ -128,7 +128,7 @@ export async function fetchRunResult(nodeOrId) {
 export async function fetchRunResultPage(nodeOrId, body = 0, start = 0, count = PAGE_LINES) {
   const node = typeof nodeOrId === "object" && nodeOrId !== null ? nodeOrId : null;
   const id = (node ? executionId(node) : String(nodeOrId ?? "")).trim();
-  if (!id) return paged(PREVIEW_STATE.WAITING);
+  if (!placed(id)) return paged(PREVIEW_STATE.WAITING);
   if (!connected()) return paged(PREVIEW_STATE.CONNECTING);
 
   const kind = String(node?.comfyClass ?? node?.type ?? "").trim();

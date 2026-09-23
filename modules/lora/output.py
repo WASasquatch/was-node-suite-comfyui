@@ -11,7 +11,14 @@ from pathlib import Path, PureWindowsPath
 
 from ..util.sandbox import PathNotAllowed, contains
 
-__all__ = ["DEFAULT_FILENAME", "SUFFIX", "lora_directory", "resolve_output"]
+__all__ = [
+    "DEFAULT_FILENAME",
+    "SUFFIX",
+    "built_from",
+    "claimed",
+    "lora_directory",
+    "resolve_output",
+]
 
 #: Used when the filename widget is left empty, so the node still produces a file.
 DEFAULT_FILENAME = "merged_lora.safetensors"
@@ -82,3 +89,45 @@ def resolve_output(directory: Path, filename: str) -> tuple[Path, str]:
             f"symlink that points out of that directory."
         )
     return target, "/".join(relative.parts)
+
+
+def claimed(target: Path) -> str | None:
+    """Whether something else holds the file open against writing.
+
+    Args:
+        target: The file a merge is about to be written to.
+
+    Returns:
+        What refused the write, or ``None`` where it can be written.
+    """
+    if not target.exists():
+        return None
+    try:
+        with target.open("r+b"):
+            return None
+    except PermissionError as refused:
+        return str(refused)
+    except OSError as refused:
+        return str(refused)
+
+
+def built_from(target: Path, wanted: dict) -> bool:
+    """Whether the file already there carries the metadata a merge would write.
+
+    Args:
+        target: The file a merge is about to be written to.
+        wanted: The metadata this merge would save inside it.
+
+    Returns:
+        True where every key matches, so the merge would only rebuild the same file.
+    """
+    if not target.exists() or not wanted:
+        return False
+    try:
+        from safetensors import safe_open
+
+        with safe_open(str(target), framework="pt") as handle:
+            held = handle.metadata() or {}
+    except Exception:
+        return False
+    return all(held.get(key) == value for key, value in wanted.items())
