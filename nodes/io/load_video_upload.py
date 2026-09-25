@@ -50,14 +50,14 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "num_frames",
-                    default=16,
+                    default=0,
                     min=0,
                     max=reader.MAX_FRAMES,
                     tooltip=(
-                        "How many frames to keep, chosen by the strategy below. 16 by "
-                        "default; a clip can hold thousands and a batch is one "
-                        f"tensor in memory. 0 takes every frame in the range, up to the "
-                        f"{reader.MAX_FRAMES} ceiling."
+                        f"How many frames to keep, chosen by the strategy below. `0` = the "
+                        f"whole clip, up to the {reader.MAX_FRAMES} ceiling; `16` = a short "
+                        f"sample. A batch is one tensor, so a long clip at full size stops "
+                        f"with the count to set rather than running out of memory."
                     ),
                 ),
                 io.Combo.Input(
@@ -87,9 +87,12 @@ class LoadVideoUpload(io.ComfyNode):
                     default=0,
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
+                    control_after_generate=io.ControlAfterGenerate.fixed,
                     tooltip=(
                         "Seed for random, so a re-run keeps the same frames. Ignored by the "
-                        "other strategies. Any whole number; `0` is as good a seed as any."
+                        "other strategies. Any whole number; `0` is as good a seed as any. "
+                        "Left on `fixed`, a re-run is served from the cache instead of the "
+                        "file being read again."
                     ),
                 ),
                 io.Float.Input(
@@ -246,7 +249,7 @@ class LoadVideoUpload(io.ComfyNode):
 
     @classmethod
     def fingerprint_inputs(
-        cls, file, num_frames=16, strategy="uniform", nth=1, seed=0, target_fps=0.0,
+        cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
@@ -279,7 +282,7 @@ class LoadVideoUpload(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, file, num_frames=16, strategy="uniform", nth=1, seed=0, target_fps=0.0,
+        cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",

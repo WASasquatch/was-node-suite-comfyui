@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **468** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **470** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-461 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+463 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 346 |
+| [Always loaded](#always-loaded) | always on | 348 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-346 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+348 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (10)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -66,14 +66,14 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent/Video](#was-suitelatentvideo) (4)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (1)
-- [WAS Suite/Logic](#was-suitelogic) (4)
+- [WAS Suite/Logic](#was-suitelogic) (5)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
 - [WAS Suite/Sampling](#was-suitesampling) (8)
-- [WAS Suite/Text](#was-suitetext) (7)
+- [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (6)
@@ -1269,10 +1269,10 @@ Load a numbered sequence from a folder as one batch, in filename order, with the
 |---|---|---|---|---|---|
 | `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
 | `pattern` | `STRING` | Yes | * |  | Which files to take, as a glob. `*` takes every image in the folder, `frame_*.png` takes one numbered run out of a folder holding several. Matching is inside the folder only. |
-| `num_frames` | `INT` | Yes | 16 |  | How many frames to keep, chosen by the strategy below. 16 by default, because a folder can hold thousands and a batch is one tensor in memory. 0 takes every frame in the range, up to the 4096 ceiling. |
+| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by the strategy below. `0` = every file in the range, up to the 4096 ceiling; `16` = a short sample. A batch is one tensor, so a long run at full size stops with the count to set rather than running out of memory. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. Only the chosen files are opened, so sampling a long capture costs the frames you keep rather than all of them. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
-| `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. |
+| `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. Left on `fixed`, a re-run is served from the cache instead of the file being read again. |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How each frame meets the size below, so a folder of mixed sizes still stacks. `fit and pad` keeps the whole frame and pads the rest, `fill and crop` fills the size and trims the overhang, `stretch` distorts to fit, `crop or pad` never resamples. |
 | `width` | `INT` | Yes | 0 |  | Width every frame is brought to. 0 takes the width of the first frame kept, which is what loads a sequence at its own size. |
 | `height` | `INT` | Yes | 0 |  | Height every frame is brought to. 0 takes the height of the first frame kept. |
@@ -1370,10 +1370,10 @@ Load a video from ComfyUI's input folder and hand on everything in it at once: t
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which video to read. Each entry carries the folder it sits in: `clip.mp4 [input]`, `render.mp4 [output]`, `scratch.mp4 [temp]`. The button below uploads one into input and selects it, and the player shows what is selected. |
-| `num_frames` | `INT` | Yes | 16 |  | How many frames to keep, chosen by the strategy below. 16 by default, because a clip can hold thousands and a batch is one tensor in memory. 0 takes every frame in the range, up to the 4096 ceiling. |
+| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by the strategy below. `0` = the whole clip, up to the 4096 ceiling; `16` = a short sample. A batch is one tensor, so a long clip at full size stops with the count to set rather than running out of memory. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. uniform gives a contact sheet of a whole clip, head gives a run that plays. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
-| `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. |
+| `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. Left on `fixed`, a re-run is served from the cache instead of the file being read again. |
 | `target_fps` | `FLOAT` | Yes | 0.0 |  | Rate the frames come out at. 0 keeps the file's own. A lower rate drops frames and a higher one repeats them, so the clip runs for the same time either way. Set it to match a model that wants 8 or 16 fps. |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How each frame meets the size below. `fit and pad` keeps the whole frame and pads the rest, `fill and crop` fills the size and trims the overhang, `stretch` distorts to fit, `crop or pad` never resamples. |
 | `width` | `INT` | Yes | 0 |  | Width every frame is brought to. 0 takes the width the file was encoded at, which is what loads a clip at its own size. |
@@ -1412,10 +1412,10 @@ Load a video and hand on everything in it at once: the video itself, its frames 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which video to read, from ComfyUI's input folder. The button below uploads one and selects it, and the player shows what is selected. |
-| `num_frames` | `INT` | Yes | 16 |  | How many frames to keep, chosen by the strategy below. 16 by default; a clip can hold thousands and a batch is one tensor in memory. 0 takes every frame in the range, up to the 4096 ceiling. |
+| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by the strategy below. `0` = the whole clip, up to the 4096 ceiling; `16` = a short sample. A batch is one tensor, so a long clip at full size stops with the count to set rather than running out of memory. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. uniform gives a contact sheet of a whole clip, head gives a run that plays. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
-| `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. |
+| `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. Left on `fixed`, a re-run is served from the cache instead of the file being read again. |
 | `target_fps` | `FLOAT` | Yes | 0.0 |  | Rate the frames come out at. 0 keeps the file's own. A lower rate drops frames and a higher one repeats them, so the clip runs for the same time either way. Set it to match a model that wants 8 or 16 fps. |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How each frame meets the size below. `fit and pad` keeps the whole frame and pads the rest, `fill and crop` fills the size and trims the overhang, `stretch` distorts to fit, `crop or pad` never resamples. |
 | `width` | `INT` | Yes | 0 |  | Width every frame is brought to. 0 takes the width the file was encoded at, which is what loads a clip at its own size. |
@@ -7115,6 +7115,18 @@ Pass a value on only while a switch is on. Switched off, the branch feeding the 
 
 </details>
 
+<a id="node-wasexecutiongatecontrolboard"></a>
+<details>
+<summary><b>Execution Gate Controlboard</b></summary>
+
+List every Execution Gate and Any Gate in the graph, subgraphs included, each with a switch that opens or closes it. One place to turn whole branches of a workflow on and off. The switches are the gates' own open widgets, so they survive a save, an undo and a copy. The node reads nothing and answers nothing.
+
+| | |
+|---|---|
+| Node id | `WASExecutionGateControlboard` |
+
+</details>
+
 <a id="node-waspause"></a>
 <details>
 <summary><b>Pause</b></summary>
@@ -9186,6 +9198,40 @@ Starting noise whose pattern carries over from one video frame to the next inste
 
 ### WAS Suite/Text
 
+<a id="node-wasfastgeneratetext"></a>
+<details>
+<summary><b>Fast Generate Text</b></summary>
+
+Write text with the language model inside a loaded CLIP, as core Generate Text does, several times faster on the models core leaves on its slow decode. It switches the model onto ComfyUI's own fixed cache and graph captured decode for the run and back afterwards. The panel shows tokens per second and which decode ran.
+
+| | |
+|---|---|
+| Node id | `WASFastGenerateText` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | A CLIP holding a language model, such as Qwen3 4B from Load CLIP with type `lumina2`, or Gemma 3 with type `ltxv`. |
+| `prompt` | `STRING` | Yes |  |  | What to ask the model, such as `Describe a lighthouse on a stormy night.` |
+| `max_length` | `INT` | Yes | 512 |  | The most tokens to write. A token is about three quarters of a word, so `512` is about 380 words. |
+| `sampling_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `on` draws each token at random within the limits below. `off` always takes the likeliest token and writes the same text every time. |
+| `image` | `IMAGE` | No |  |  | A picture to ask about, for a model that reads images such as Qwen 2.5 VL or Gemma 3. |
+| `video` | `IMAGE` | No |  |  | Video frames as an image batch, read as 24 fps and sampled at 1 fps. |
+| `audio` | `AUDIO` | No |  |  | Sound to ask about, for a model that hears it. |
+| `thinking` | `BOOLEAN` | No | False |  | `true` lets a model that reasons, such as Qwen3, think before answering. |
+| `use_default_template` | `BOOLEAN` | No | True |  | `true` wraps the prompt in the model's own chat template and system prompt. |
+| `mtp` | `COMBO` | No | auto | `auto`, `off`, `2`, `3`, `4`, `5` | Multi-token prediction for a checkpoint carrying those heads. `auto` picks the draft depth, `2` to `5` fixes it, `off` turns it off. |
+| `fast_decode` | `BOOLEAN` | No | True |  | `true` decodes on the fixed cache graph path where the model allows it; `false` runs exactly as core Generate Text. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `generated_text` | `STRING` | What the model wrote, special tokens removed. |
+
+</details>
+
 <a id="node-wasrichtexteditor"></a>
 <details>
 <summary><b>Rich Text Editor</b></summary>
@@ -10892,7 +10938,7 @@ List every group in the graph, each with a switch that mutes or bypasses every n
 <details>
 <summary><b>Free Memory</b></summary>
 
-Hand memory back to the graphics card partway through a run. ComfyUI can only be asked to free memory from its own menu, which a running graph cannot reach, so a chain that loads, upscales and then encodes video can run out on the last stage while the first two are still resident. Wire the stage that has finished into passthrough and the stage that needs the room after it, and the freeing happens between the two. Reports what the device held before and after, so the effect is a number rather than a guess. It runs on every queue rather than being cached, so everything below it runs again as well. Harmless on a machine with no graphics card.
+Hand memory back to the graphics card partway through a run. ComfyUI can only be asked to free memory from its own menu, which a running graph cannot reach, so a chain that loads, upscales and then encodes video can run out on the last stage while the first two are still resident. Wire the stage that has finished into passthrough and the stage that needs the room after it, and the freeing happens between the two. Reports what the device held before and after, so the effect is a number rather than a guess. It frees where something upstream ran, leaving a graph that has not changed on the cache; always_run frees on every queue instead. Harmless on a machine with no graphics card.
 
 | | |
 |---|---|
@@ -10906,8 +10952,9 @@ Hand memory back to the graphics card partway through a run. ComfyUI can only be
 | `unload_models` | `BOOLEAN` | Yes | True |  | true hands every loaded checkpoint, VAE, CLIP and ControlNet back; false leaves them where they are. This is what frees the most. They load again by themselves when a node next asks for one, which costs the seconds that load took. |
 | `empty_cache` | `BOOLEAN` | Yes | True |  | true gives the driver back the blocks torch has reserved and is not using. Torch reuses those blocks itself, so this seldom changes what the next sampler can fit; reach for it when another program, or a library such as OpenCV, needs room on the card. |
 | `collect_garbage` | `BOOLEAN` | Yes | True |  | true runs Python's collector before the cache is emptied, so anything the graph has finished with is actually handed back rather than only marked unused. It costs a few milliseconds and makes unload_models worth more. |
-| `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything at all: an image, a model, a latent, text. It comes back out unchanged once the freeing is done, which is what pins the free to a point in the chain instead of leaving it to happen whenever. Leave it unwired to free on its own. |
+| `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything at all: an image, a model, a latent, text. It comes back out unchanged once the freeing is done, which is what pins the free to a point in the chain instead of leaving it to happen whenever. Unwired, the node frees on its own and wants always_run. |
 | `release_fraction` | `FLOAT` | No | 0.0 |  | Move weights to system memory when less than this share of the card is free, as `0.5` before a VAE decode. `0` does nothing, and so does any share already free. The weights come back from memory rather than from disk, unlike unload_models. |
+| `always_run` | `BOOLEAN` | No | False |  | `false` = free only where something upstream ran, leaving an unchanged graph served from cache; `true` = free on every prompt, which also runs everything wired after passthrough again. A node with nothing wired into passthrough needs `true`, or it frees once and is served from cache from then on. |
 
 **Outputs**
 

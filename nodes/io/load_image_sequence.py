@@ -75,14 +75,14 @@ class LoadImageSequence(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "num_frames",
-                    default=16,
+                    default=0,
                     min=0,
                     max=MAX_FRAMES,
                     tooltip=(
-                        "How many frames to keep, chosen by the strategy below. 16 by "
-                        "default, because a folder can hold thousands and a batch is one "
-                        f"tensor in memory. 0 takes every frame in the range, up to the "
-                        f"{MAX_FRAMES} ceiling."
+                        f"How many frames to keep, chosen by the strategy below. `0` = every "
+                        f"file in the range, up to the {MAX_FRAMES} ceiling; `16` = a short "
+                        f"sample. A batch is one tensor, so a long run at full size stops "
+                        f"with the count to set rather than running out of memory."
                     ),
                 ),
                 io.Combo.Input(
@@ -112,9 +112,12 @@ class LoadImageSequence(io.ComfyNode):
                     default=0,
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
+                    control_after_generate=io.ControlAfterGenerate.fixed,
                     tooltip=(
                         "Seed for random, so a re-run keeps the same frames. Ignored by the "
-                        "other strategies. Any whole number; `0` is as good a seed as any."
+                        "other strategies. Any whole number; `0` is as good a seed as any. "
+                        "Left on `fixed`, a re-run is served from the cache instead of the "
+                        "file being read again."
                     ),
                 ),
                 io.Int.Input(
@@ -279,7 +282,7 @@ class LoadImageSequence(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, folder="", pattern="*", num_frames=16, strategy="head", nth=1, seed=0,
+        cls, folder="", pattern="*", num_frames=0, strategy="head", nth=1, seed=0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, max_size=1024,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB", start=0, end=-1,

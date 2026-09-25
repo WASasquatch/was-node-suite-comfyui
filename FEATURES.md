@@ -226,18 +226,21 @@ For driving a setting from something the graph worked out rather than a typed co
 
 ## Text, lists and dictionaries
 
-41 nodes. **Text Multiline**, **Text Multiline (Code Compatible)** and **Rich Text Editor**
+42 nodes. **Text Multiline**, **Text Multiline (Code Compatible)** and **Rich Text Editor**
 author text. **Text List**, **Text Split to List**, **Text List Slice**, **Text List Get** and
 **Text List to Numbers** work on lists. **Text Dictionary New**, **Text Dictionary Get**, **Text
 Dictionary Keys**, **Text Dictionary Items** and **Text Dictionary Update** work on key and
 value pairs. **Prompt Parse**, **Prompt Tag Cleanup**, **Text Parse A1111 Embeddings**, **Text
 Add Tokens** and **Text Parse Tokens** handle prompt syntax. **Text Load Line From File**,
-**Text Random Line** and **Load Text File** read from disk.
+**Text Random Line** and **Load Text File** read from disk. **Fast Generate Text** writes text
+with the language model in a loaded CLIP, as core Generate Text does, on ComfyUI's graph captured
+decode, and shows tokens per second on the node.
 
 For prompt sets, per-run variation, and carrying structured values between nodes as text.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Text** and its groups. Graph:
-[`prompt-lists.json`](docs/workflows/prompt-lists.json).
+[`NODES.md`](NODES.md) under **WAS Suite/Text** and its groups. Graphs:
+[`prompt-lists.json`](docs/workflows/prompt-lists.json),
+[`fast-generate-text.json`](docs/workflows/fast-generate-text.json).
 
 ---
 
@@ -426,11 +429,16 @@ For settling whether a change to a graph improved anything.
 
 **Execution Gate** passes a value on while its switch is on. Switched off, the branch feeding it
 is never evaluated and every node after it stops. `bypass_downstream` draws those nodes as
-bypassed on the canvas instead.
+bypassed on the canvas instead. **Execution Gate Controlboard** lists every Execution Gate and
+Any Gate in the workflow, subgraphs included, with a switch on each and **All open** and **All
+closed** beside them. A gate whose `open` is wired is listed as `wired` and left to the graph.
 
-For skipping an expensive sampler, or a save, on a condition the graph works out.
+For skipping an expensive sampler, or a save, on a condition the graph works out, and for turning
+a large workflow's branches on and off from one node.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Logic**.
+[`NODES.md`](NODES.md) under **WAS Suite/Logic**. Graphs:
+[`execution-gate.json`](docs/workflows/execution-gate.json),
+[`execution-gate-controlboard.json`](docs/workflows/execution-gate-controlboard.json).
 
 ---
 

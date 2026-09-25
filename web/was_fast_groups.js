@@ -8,6 +8,7 @@
 import { app } from "../../scripts/app.js";
 import { captureWheel, wheelPixels } from "./interface/pointer.js";
 import { withGraphChange } from "./interface/region.js";
+import { createChip, createPip, joinTicking } from "./interface/switch_board.js";
 import { themeVar } from "./interface/theme.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
@@ -25,10 +26,6 @@ const UI_WIDGET_TYPE = "was_fast_groups";
 const NODE_SIZE = [284, 240];
 const PANEL_HEIGHT = 176;
 const PANEL_MIN_WIDTH = 208;
-
-// How often the panel looks at the graph, in milliseconds. Groups are renamed, moved, added and
-// muted from the canvas, and none of those raise an event a panel can listen for.
-const REFRESH_MS = 250;
 
 // LiteGraph's execution modes. `MODE_MUTE` is `LiteGraph.NEVER`; the global carries no name for
 // bypass, which the frontend's own enum numbers 4.
@@ -53,8 +50,6 @@ const ORDER_KEY = "was_groups_order";
 // Row geometry, in CSS pixels.
 const ROW_HEIGHT = 20;
 const SWATCH_WIDTH = 3;
-const PIP_WIDTH = 22;
-const PIP_HEIGHT = 11;
 
 // What a row spends on everything but its title, in CSS pixels: the colour band, the three
 // gaps, the node count, the switch, the padding and the border.
@@ -75,67 +70,6 @@ function enabled() {
     console.error(`[${EXT_NAME}] Failed to read ${SETTING_ID}:`, error);
   }
   return true;
-}
-
-// Every open panel, as `{node, refresh}`, and the one timer that calls them. A panel joins when
-// its node joins a graph and leaves when the node does, so a node built for the clipboard and
-// then thrown away never holds the timer open.
-const ticking = new Set();
-let tickHandle = 0;
-
-/**
- * Stop the timer once no panel is left to call.
- *
- * @returns {void}
- */
-function stopTicking() {
-  if (ticking.size || !tickHandle) return;
-  clearInterval(tickHandle);
-  tickHandle = 0;
-}
-
-/**
- * Call every open panel's refresh once, and drop the ones whose node has left the graph.
- *
- * @returns {void}
- */
-function tick() {
-  // A hidden tab draws nothing, so there is nothing for a refresh to correct until it is shown.
-  if (document.hidden) return;
-  for (const entry of [...ticking]) {
-    // A graph cleared rather than emptied node by node takes its nodes away without telling
-    // each one, which would otherwise leave an entry reading a graph nobody can see.
-    if (!entry.node?.graph) {
-      ticking.delete(entry);
-      continue;
-    }
-    try {
-      entry.refresh();
-    } catch (error) {
-      console.error(`[${EXT_NAME}] Failed to read the graph's groups:`, error);
-    }
-  }
-  stopTicking();
-}
-
-/**
- * Put one panel in the timer, starting the timer when it was stopped.
- *
- * @param {object} node - The node the panel is drawn on.
- * @param {() => void} refresh - What to call on every pass.
- * @returns {() => void} Release, which does nothing the second time it is called.
- */
-function joinTicking(node, refresh) {
-  const entry = { node, refresh };
-  ticking.add(entry);
-  if (!tickHandle) tickHandle = setInterval(tick, REFRESH_MS);
-  let live = true;
-  return () => {
-    if (!live) return;
-    live = false;
-    ticking.delete(entry);
-    stopTicking();
-  };
 }
 
 /**
@@ -267,36 +201,6 @@ function toggleNodes(nodes, mode) {
     for (const node of nodes) node.mode = wanted;
   });
   app?.canvas?.setDirty?.(true, true);
-}
-
-/**
- * A small pressable label, drawn the same wherever the panel uses one.
- *
- * @param {string} hint - What the hover says, five words at most.
- * @param {() => void} onPress - What a left click or a keyboard press does.
- * @returns {HTMLButtonElement} The chip, for the caller to append and to paint.
- */
-function createChip(hint, onPress) {
-  const chip = document.createElement("button");
-  chip.type = "button";
-  chip.title = hint;
-  chip.style.cssText = [
-    "flex:0 0 auto",
-    "padding:1px 6px",
-    "border-radius:3px",
-    "font:inherit",
-    "line-height:15px",
-    "cursor:pointer",
-    "white-space:nowrap",
-    `background:${themeVar("bgLight")}`,
-    `border:1px solid ${themeVar("border")}`,
-    `color:${themeVar("fg")}`,
-  ].join(";");
-  chip.addEventListener("click", (event) => {
-    event.stopPropagation();
-    onPress();
-  });
-  return chip;
 }
 
 /**
@@ -440,29 +344,7 @@ function createFastGroupsPanel(node) {
     count.style.cssText = `flex:0 0 auto;color:${themeVar("fgMuted")}`;
     count.textContent = String(entry.nodes.length);
 
-    const pip = document.createElement("span");
-    pip.style.cssText = [
-      "flex:0 0 auto",
-      "box-sizing:border-box",
-      `width:${PIP_WIDTH}px`,
-      `height:${PIP_HEIGHT}px`,
-      `border-radius:${PIP_HEIGHT}px`,
-      "position:relative",
-      `background:${themeVar(on ? "accent" : "inputBg")}`,
-      `border:1px solid ${themeVar(on ? "accent" : "inputBorder")}`,
-    ].join(";");
-    const knob = document.createElement("span");
-    const travel = PIP_WIDTH - PIP_HEIGHT;
-    knob.style.cssText = [
-      "position:absolute",
-      "top:0",
-      `left:${on ? travel - 1 : 0}px`,
-      `width:${PIP_HEIGHT - 2}px`,
-      `height:${PIP_HEIGHT - 2}px`,
-      "border-radius:50%",
-      `background:${themeVar(on ? "selectionText" : "fgMuted")}`,
-    ].join(";");
-    pip.appendChild(knob);
+    const pip = createPip(on);
 
     row.append(swatch, title, count, pip);
     row.addEventListener("click", (event) => {
@@ -615,7 +497,7 @@ function createFastGroupsPanel(node) {
       releaseWheel ??= captureWheel(root, onWheel);
       invalidate();
       leaveTicking?.();
-      leaveTicking = joinTicking(node, refresh);
+      leaveTicking = joinTicking(node, refresh, EXT_NAME);
       refresh();
     } catch (error) {
       console.error(`[${EXT_NAME}] Failed to start reading the graph's groups:`, error);

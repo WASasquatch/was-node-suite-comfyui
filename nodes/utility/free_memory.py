@@ -120,8 +120,9 @@ class FreeMemory(io.ComfyNode):
                 "the stage that has finished into passthrough and the stage that needs the "
                 "room after it, and the freeing happens between the two. Reports what the "
                 "device held before and after, so the effect is a number rather than a "
-                "guess. It runs on every queue rather than being cached, so everything "
-                "below it runs again as well. Harmless on a machine with no graphics card."
+                "guess. It frees where something upstream ran, leaving a graph that has "
+                "not changed on the cache; always_run frees on every queue instead. "
+                "Harmless on a machine with no graphics card."
             ),
             inputs=[
                 io.MatchType.Input(
@@ -132,7 +133,7 @@ class FreeMemory(io.ComfyNode):
                         "Anything at all: an image, a model, a latent, text. It comes back "
                         "out unchanged once the freeing is done, which is what pins the "
                         "free to a point in the chain instead of leaving it to happen "
-                        "whenever. Leave it unwired to free on its own."
+                        "whenever. Unwired, the node frees on its own and wants always_run."
                     ),
                 ),
                 io.Boolean.Input(
@@ -177,6 +178,18 @@ class FreeMemory(io.ComfyNode):
                         "card is free, as `0.5` before a VAE decode. `0` does nothing, and "
                         "so does any share already free. The weights come back from memory "
                         "rather than from disk, unlike unload_models."
+                    ),
+                ),
+                io.Boolean.Input(
+                    "always_run",
+                    default=False,
+                    optional=True,
+                    tooltip=(
+                        "`false` = free only where something upstream ran, leaving an "
+                        "unchanged graph served from cache; `true` = free on every prompt, "
+                        "which also runs everything wired after passthrough again. A node "
+                        "with nothing wired into passthrough needs `true`, or it frees once "
+                        "and is served from cache from then on."
                     ),
                 ),
             ],
@@ -227,9 +240,17 @@ class FreeMemory(io.ComfyNode):
         )
 
     @classmethod
-    def fingerprint_inputs(cls, **kwargs) -> float:
-        """NaN never equals itself, so the memory is freed again on every prompt."""
-        return float("NaN")
+    def fingerprint_inputs(cls, always_run=False, **kwargs) -> float | bool:
+        """Whether the freeing is held out of the cache.
+
+        Args:
+            always_run: Whether every prompt frees again.
+            **kwargs: Every other input, none of which decides this.
+
+        Returns:
+            ``NaN``, which never equals itself, or ``False`` to follow what is upstream.
+        """
+        return float("NaN") if always_run else False
 
     @classmethod
     def execute(
@@ -239,6 +260,7 @@ class FreeMemory(io.ComfyNode):
         empty_cache=True,
         collect_garbage=True,
         release_fraction=0.0,
+        always_run=False,
     ) -> io.NodeOutput:
         """Free what was asked for and answer the figures either side of it.
 
@@ -249,6 +271,7 @@ class FreeMemory(io.ComfyNode):
             collect_garbage: Whether Python's collector runs first.
             release_fraction: Share of the device to make free by moving weights to
                 system memory.
+            always_run: Read by :meth:`fingerprint_inputs`, not by the freeing.
 
         Returns:
             The value that came in, the gigabytes in use before and after, the gigabytes

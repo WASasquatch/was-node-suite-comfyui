@@ -133,9 +133,10 @@ export function createVideoComparePanel(node) {
 
   let split = START_SPLIT;
   let hovering = false;
+  let paired = false;
   const dragging = { on: false };
   const paint = () => {
-    right.style.clipPath = `inset(0 0 0 ${split}%)`;
+    right.style.clipPath = paired ? `inset(0 0 0 ${split}%)` : "none";
     const line = hovering ? LINE_HOVER : LINE_WIDTH;
     divider.style.width = `${line}px`;
     // Placed against the same percentage the clip-path uses, so the canvas zoom cannot put
@@ -177,9 +178,11 @@ export function createVideoComparePanel(node) {
   });
 
   const both = () => [left, right].filter((el) => el.style.display !== "none");
+  const clock = () => (left.currentSrc ? left : right);
   toggle.addEventListener("click", (event) => {
     event.stopPropagation();
-    const playing = !left.paused && left.currentSrc;
+    const lead = clock();
+    const playing = !lead.paused && lead.currentSrc;
     for (const el of both()) {
       if (playing) el.pause();
       else el.play().catch(() => {});
@@ -188,22 +191,26 @@ export function createVideoComparePanel(node) {
   });
   scrub.addEventListener("input", (event) => {
     event.stopPropagation();
-    const span = left.duration || right.duration || 0;
+    const span = clock().duration || 0;
     if (!(span > 0)) return;
     const at = (Number(scrub.value) / 1000) * span;
     for (const el of both()) el.currentTime = at;
   });
 
-  left.addEventListener("timeupdate", () => {
-    const span = left.duration || 0;
+  const followed = () => {
+    const lead = clock();
+    const span = lead.duration || 0;
     if (span > 0) {
-      scrub.value = String(Math.round((left.currentTime / span) * 1000));
-      readout.textContent = `${left.currentTime.toFixed(2)} / ${span.toFixed(2)} s`;
+      scrub.value = String(Math.round((lead.currentTime / span) * 1000));
+      readout.textContent = `${lead.currentTime.toFixed(2)} / ${span.toFixed(2)} s`;
     }
-    if (right.currentSrc && Math.abs(right.currentTime - left.currentTime) > DRIFT_SECONDS) {
-      right.currentTime = left.currentTime;
+    const other = lead === left ? right : left;
+    if (other.currentSrc && Math.abs(other.currentTime - lead.currentTime) > DRIFT_SECONDS) {
+      other.currentTime = lead.currentTime;
     }
-  });
+  };
+  left.addEventListener("timeupdate", followed);
+  right.addEventListener("timeupdate", followed);
 
   /**
    * Point both players at whatever the last run wrote.
@@ -225,10 +232,12 @@ export function createVideoComparePanel(node) {
           el.style.display = "none";
         }
       }
-      const any = Boolean(a || b);
-      empty.style.display = any ? "none" : "flex";
-      divider.style.display = a && b ? "block" : "none";
-      grip.style.display = a && b ? "block" : "none";
+      paired = Boolean(a && b);
+      empty.style.display = a || b ? "none" : "flex";
+      divider.style.display = paired ? "block" : "none";
+      grip.style.display = paired ? "block" : "none";
+      readout.textContent = "0.00 / 0.00 s";
+      scrub.value = "0";
       paint();
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to read the written sides:`, error);

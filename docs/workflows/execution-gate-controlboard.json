@@ -1,0 +1,567 @@
+{
+  "id": "d4bbe855-188c-46da-add7-dcadefdbdae1",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 7,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        80
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "001ebc54-b882-4410-ae8b-54f14f1a217a.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "001ebc54-b882-4410-ae8b-54f14f1a217a.png",
+        "upload": "image"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "WASExecutionGate",
+      "pos": [
+        400,
+        40
+      ],
+      "size": [
+        280.37890625,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 7,
+          "type": "*",
+          "link": 1
+        },
+        {
+          "localized_name": "open",
+          "name": "open",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "open"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bypass_downstream",
+          "name": "bypass_downstream",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "bypass_downstream"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "closed_message",
+          "name": "closed_message",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "closed_message"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "output",
+          "name": "output",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASExecutionGate"
+      },
+      "widgets_values": [
+        false,
+        false,
+        ""
+      ],
+      "widgets_values_named": {
+        "open": false,
+        "bypass_downstream": false,
+        "closed_message": ""
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "WASExecutionGate",
+      "pos": [
+        400,
+        260
+      ],
+      "size": [
+        280.37890625,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 7,
+          "type": "*",
+          "link": 2
+        },
+        {
+          "localized_name": "open",
+          "name": "open",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "open"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bypass_downstream",
+          "name": "bypass_downstream",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "bypass_downstream"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "closed_message",
+          "name": "closed_message",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "closed_message"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "output",
+          "name": "output",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASExecutionGate"
+      },
+      "widgets_values": [
+        true,
+        true,
+        ""
+      ],
+      "widgets_values_named": {
+        "open": true,
+        "bypass_downstream": true,
+        "closed_message": ""
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "WASAnyGate",
+      "pos": [
+        400,
+        480
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 3
+        },
+        {
+          "localized_name": "open",
+          "name": "open",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "open"
+          },
+          "link": 7
+        },
+        {
+          "localized_name": "message",
+          "name": "message",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "message"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASAnyGate"
+      },
+      "widgets_values": [
+        true,
+        ""
+      ],
+      "widgets_values_named": {
+        "open": true,
+        "message": ""
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        760,
+        40
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 6,
+      "type": "PreviewImage",
+      "pos": [
+        760,
+        300
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 7,
+      "type": "PreviewImage",
+      "pos": [
+        760,
+        560
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 8,
+      "type": "PrimitiveBoolean",
+      "pos": [
+        40,
+        520
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "BOOLEAN",
+          "name": "BOOLEAN",
+          "type": "BOOLEAN",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PrimitiveBoolean"
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "value": true
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 9,
+      "type": "WASExecutionGateControlboard",
+      "pos": [
+        40,
+        700
+      ],
+      "size": [
+        284,
+        240
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASExecutionGateControlboard"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      3,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      8,
+      0,
+      4,
+      1,
+      "BOOLEAN"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1.501310311769694,
+      "offset": [
+        840.4851121669269,
+        -3.735695005026372
+      ]
+    }
+  },
+  "version": 0.4
+}
