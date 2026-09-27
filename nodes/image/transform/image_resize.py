@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
-from ....modules.convert.tensors import pil2tensor, tensor2pil
 from ....modules.image import sizing
 from ....modules.image.draw import parse_color
 from ....modules.interface import size_report
@@ -63,77 +61,26 @@ def resize_target(size, mode="rescale", factor=2, width=1024, height=1024):
     return requested, (max(1, new_width), max(1, new_height))
 
 
-def apply_resize_image(image, mode="rescale", supersample=True, factor=2,
-                       width=1024, height=1024, resample="bicubic"):
-    """Resize one image, optionally through an oversampled intermediate.
+def resized_frames(frames, target, resampling, supersample=False, resize_mode=None,
+                   align=sizing.DEFAULT_ALIGNMENT, pad=FALLBACK_PAD):
+    """A batch at exactly the target size, through :data:`SUPERSAMPLE_SCALE` when asked.
 
     Args:
-        image: Source PIL image.
-        mode: ``'rescale'`` to multiply the current size by ``factor``, anything else to
-            take ``width`` and ``height``, each rounded up to the next multiple of 8.
-        supersample: Resize to eight times the target first and then down to
-            it, which softens aliasing at the cost of an intermediate 64 times the area.
-        factor: Scale multiplier, used only in ``'rescale'`` mode. The longer side takes it
-            and the shorter side follows the source's proportions.
-        width: Target width in pixels, used only outside ``'rescale'`` mode.
-        height: Target height in pixels, used only outside ``'rescale'`` mode.
-        resample: ``'nearest'``, ``'bilinear'``, ``'bicubic'`` or ``'lanczos'``.
-
-    Returns:
-        The resized image, never smaller than one pixel on either side.
-
-    Raises:
-        KeyError: ``resample`` is not one of the four filter names.
-    """
-    from PIL import Image
-
-    _, (new_width, new_height) = resize_target(image.size, mode, factor, width, height)
-
-    resample_filters = {
-        "nearest": Image.Resampling.NEAREST,
-        "bilinear": Image.Resampling.BILINEAR,
-        "bicubic": Image.Resampling.BICUBIC,
-        "lanczos": Image.Resampling.LANCZOS,
-    }
-
-    if supersample:
-        image = image.resize(
-            (new_width * SUPERSAMPLE_SCALE, new_height * SUPERSAMPLE_SCALE),
-            resample=resample_filters[resample],
-        )
-
-    return image.resize((new_width, new_height), resample=resample_filters[resample])
-
-
-def fitted(image, target, resize_mode, resampling, align, pad, supersample=False):
-    """One image at exactly the target size, in the mode it arrived in.
-
-    Args:
-        image: Source PIL image.
+        frames: ``(batch, height, width, channels)`` images.
         target: ``(width, height)`` the answer comes out at.
-        resize_mode: One of :data:`modules.image.sizing.MODES`.
-        resampling: A key of :data:`modules.image.sizing.FILTERS`.
+        resampling: ``nearest``, ``bilinear``, ``bicubic`` or ``lanczos``.
+        supersample: Resample through :data:`SUPERSAMPLE_SCALE` times the target.
+        resize_mode: One of :data:`modules.image.sizing.MODES`, or None to stretch.
         align: A key of :data:`modules.image.sizing.ALIGNMENTS`.
-        pad: ``(red, green, blue, alpha)`` filling whatever the image does not cover.
-        supersample: Fit to :data:`SUPERSAMPLE_SCALE` times the target first and resample
-            down to it, which softens aliasing at the cost of a far larger intermediate. Not
-            applied under :data:`modules.image.sizing.CROP_OR_PAD`, which resamples nothing.
+        pad: ``(red, green, blue, alpha)`` in 0 to 255 filling what the image does not cover.
 
     Returns:
-        The image at the target size, back in the mode it was given in, so a batch of RGB
-        images stays RGB and one carrying transparency keeps it.
+        The resized batch on the frames' own device.
     """
-    width, height = target
-    if supersample and resize_mode != sizing.CROP_OR_PAD:
-        oversized = sizing.fit(
-            image, width * SUPERSAMPLE_SCALE, height * SUPERSAMPLE_SCALE,
-            resize_mode, resampling, align, pad,
-        )
-        chosen = sizing.FILTERS.get(resampling, sizing.FILTERS[sizing.DEFAULT_FILTER])
-        sized = oversized.resize((width, height), chosen)
-    else:
-        sized = sizing.fit(image, width, height, resize_mode, resampling, align, pad)
-    return sized if sized.mode == image.mode else sized.convert(image.mode)
+    return sizing.fit_frames(
+        frames, target, resize_mode or sizing.STRETCH, resampling, align, pad,
+        supersample=SUPERSAMPLE_SCALE if supersample else 1,
+    )
 
 
 def rounded(width: int, height: int, multiple_of: int) -> tuple[int, int]:
@@ -169,7 +116,8 @@ class ImageResize(io.ComfyNode):
                 "goes to the two sides given, each rounded up to the next multiple of 8, so "
                 "a requested 1001 is delivered as 1008, and resize_mode decides how the "
                 "picture meets them: padded, cropped, stretched, or left unresampled. "
-                "Neither mode goes below one pixel on a side."
+                "Neither mode goes below one pixel on a side. The whole batch is resampled "
+                "on the GPU at full precision, so values above 1.0 survive."
             ),
             inputs=[
                 io.Image.Input(
@@ -189,11 +137,10 @@ class ImageResize(io.ComfyNode):
                     "supersample",
                     default=True,
                     tooltip=(
-                        "On scales to eight times the target size first and then down "
-                        "to it, which smooths jagged edges when enlarging. It builds an "
-                        "intermediate image 64 times the target area, so a large target "
-                        "needs a great deal of memory; off resizes in one step. Ignored "
-                        "under `crop or pad`, which resamples nothing."
+                        "`true` resamples through eight times the target size and back down, "
+                        "which smooths jagged edges when enlarging; `false` resizes in one "
+                        "step. Both take the same memory. Ignored under `crop or pad`, "
+                        "which resamples nothing."
                     ),
                 ),
                 io.Combo.Input(
@@ -329,37 +276,12 @@ class ImageResize(io.ComfyNode):
 
         if mode == "resize":
             target = rounded(delivered[0], delivered[1], multiple_of)
-            pad = parse_color(pad_color, FALLBACK_PAD)
-            planes = [
-                pil2tensor(
-                    fitted(
-                        tensor2pil(img),
-                        target,
-                        resize_mode,
-                        resampling,
-                        align,
-                        pad,
-                        supersample,
-                    )
-                )
-                for img in image
-            ]
+            scaled = resized_frames(
+                image, target, resampling, supersample, resize_mode, align,
+                parse_color(pad_color, FALLBACK_PAD),
+            )
         else:
-            planes = [
-                pil2tensor(
-                    apply_resize_image(
-                        tensor2pil(img),
-                        mode,
-                        supersample,
-                        rescale_factor,
-                        resize_width,
-                        resize_height,
-                        resampling,
-                    )
-                )
-                for img in image
-            ]
-        scaled = torch.cat(planes, dim=0)
+            scaled = resized_frames(image, delivered, resampling, supersample)
 
         size_report.publish(
             image,

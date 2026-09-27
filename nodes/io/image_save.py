@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from comfy_api.latest import io, ui
 
@@ -22,6 +23,9 @@ PROFILE_FORMATS = frozenset({"png", "jpg", "jpeg", "webp", "tiff"})
 
 #: History key holding every path this node has written.
 HISTORY_KEY = "Output_Images"
+
+#: The most files encoded at once.
+MAX_WRITERS = 8
 
 #: Stand-in name used to resolve the output directory when the prefix widget is empty.
 PLACEHOLDER_PREFIX = "_"
@@ -341,9 +345,7 @@ class ImageSave(io.ComfyNode):
 
         text = cls.text_chunks(metadata_source)
 
-        results = []
-        output_files = []
-        for image, file in zip(images, names):
+        def encode(image, file):
             output_file = str(sandbox.resolve_write_file(destination, file))
             try:
                 if extension == "exr":
@@ -377,25 +379,39 @@ class ImageSave(io.ComfyNode):
                         img.save(output_file, quality=quality, optimize=optimize_image, **tag)
                     else:
                         img.save(output_file, optimize=optimize_image, **tag)
-
-                logger.info("image file saved to: %s", output_file)
-                output_files.append(output_file)
-
-                # No browser draws an EXR, so one is reported in the panel and nowhere else.
-                if (
-                    extension != "exr"
-                    and not show_history
-                    and show_previews
-                    and subfolder is not None
-                ):
-                    results.append(ui.SavedResult(file, subfolder, io.FolderType.output))
-
-                history.update_history_output_images(output_file)
-
+                return output_file
             except OSError as error:
                 logger.error("unable to save file to: %s\n%s", output_file, error)
             except Exception as error:
                 logger.error("unable to save file due to the following error:\n%s", error)
+            return None
+
+        # Encoders release the interpreter lock while compressing, so frames encode in parallel.
+        workers = max(1, min(len(images), os.cpu_count() or 1, MAX_WRITERS))
+        if workers > 1:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                written = list(pool.map(encode, images, names))
+        else:
+            written = [encode(image, file) for image, file in zip(images, names)]
+
+        results = []
+        output_files = []
+        for output_file, file in zip(written, names):
+            if output_file is None:
+                continue
+            logger.info("image file saved to: %s", output_file)
+            output_files.append(output_file)
+
+            # No browser draws an EXR, so one is reported in the panel and nowhere else.
+            if (
+                extension != "exr"
+                and not show_history
+                and show_previews
+                and subfolder is not None
+            ):
+                results.append(ui.SavedResult(file, subfolder, io.FolderType.output))
+
+            history.update_history_output_images(output_file)
 
         if show_history and show_previews:
             results += cls.history_previews(

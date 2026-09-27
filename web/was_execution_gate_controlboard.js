@@ -1,8 +1,8 @@
 /**
  * Every execution gate in the graph, listed on one node with a switch each.
  *
- * A switch reads and writes the gate's own `open` widget and holds nothing itself. Gates
- * inside subgraphs are listed under the subgraph's title.
+ * A switch writes the widget deciding the gate: its own `open`, a subgraph input or a Boolean
+ * node. Subgraph gates are listed once per placement.
  */
 
 import { app } from "../../scripts/app.js";
@@ -26,7 +26,7 @@ const GATE_KINDS = { WASExecutionGate: "gate", WASAnyGate: "any" };
 const OPEN_NAME = "open";
 
 // The size a fresh node is placed at, and what the panel inside it asks for.
-const NODE_SIZE = [284, 240];
+const NODE_SIZE = [270, 240];
 const PANEL_HEIGHT = 176;
 const PANEL_MIN_WIDTH = 208;
 
@@ -58,63 +58,95 @@ function orderOf(node) {
   return ORDERS.includes(held) ? held : ORDERS[0];
 }
 
+// The id litegraph gives the node a subgraph's own inputs arrive from.
+const SUBGRAPH_INPUT_ID = -10;
+
+// How many subgraphs deep the walk goes.
+const MAX_DEPTH = 16;
+
 /**
- * The widget a gate is switched through.
+ * One link of a graph by its id.
  *
- * @param {object} gate - A listed gate.
- * @returns {object|null} The `open` widget, or null where the gate has none.
+ * @param {object} graph - The graph holding the link.
+ * @param {number} id - The link id.
+ * @returns {object|null} The link, or null where the graph holds none by that id.
  */
-function openWidget(gate) {
-  return (gate?.widgets || []).find((widget) => widget.name === OPEN_NAME) || null;
+function linkOf(graph, id) {
+  const links = graph?.links;
+  if (!links) return null;
+  return (typeof links.get === "function" ? links.get(id) : links[id]) || null;
 }
 
 /**
- * Whether something wired into the gate decides it rather than its own widget.
+ * The widget that decides one input, followed out through subgraph inputs and to a lone
+ * Boolean source node.
  *
- * @param {object} gate - A listed gate.
- * @returns {boolean} True while `open` has a link in.
+ * @param {object} node - The node the input belongs to.
+ * @param {string} name - The input's name.
+ * @param {object[]} hosts - The subgraph nodes enclosing `node`, outermost first.
+ * @returns {{widget: object, owner: object, via: string}|null} The widget, the node it sits
+ *   on and what it was reached through, or null where a computed value decides the input.
  */
-function isWired(gate) {
-  const input = (gate?.inputs || []).find((slot) => slot.name === OPEN_NAME);
-  return Boolean(input && input.link != null);
+function controlOf(node, name, hosts) {
+  const input = (node?.inputs || []).find((slot) => slot.name === name);
+  if (!input || input.link == null) {
+    const widgetName = input?.widget?.name ?? name;
+    const widget = (node?.widgets || []).find((candidate) => candidate.name === widgetName);
+    return widget ? { widget, owner: node, via: "" } : null;
+  }
+  const graph = node.graph;
+  const link = linkOf(graph, input.link);
+  if (!link) return null;
+  if (Number(link.origin_id) === SUBGRAPH_INPUT_ID) {
+    const host = hosts[hosts.length - 1];
+    const outer = graph?.inputs?.[link.origin_slot]?.name;
+    if (!host || !outer) return null;
+    const found = controlOf(host, outer, hosts.slice(0, -1));
+    return found && { ...found, via: found.via || `the ${host.title ?? "subgraph"} input` };
+  }
+  const source = graph?.getNodeById?.(link.origin_id);
+  if (!source || (source.inputs || []).some((slot) => slot.link != null)) return null;
+  const toggles = (source.widgets || []).filter((widget) => typeof widget.value === "boolean");
+  if (toggles.length !== 1) return null;
+  return { widget: toggles[0], owner: source, via: String(source.title ?? source.type) };
 }
 
 /**
- * Read every gate in the workflow, the root graph and every subgraph under it.
+ * Read every gate in the workflow, one entry per subgraph placement.
  *
  * @param {object} graph - The graph the panel's node sits in, read when no root is known.
  * @param {string} order - Which of `ORDERS` the rows are drawn in.
- * @returns {Array<{gate: object, kind: string, label: string, depth: number,
- *   wired: boolean, open: boolean}>} One entry per gate, already sorted.
+ * @returns {Array<{gate: object, kind: string, label: string, depth: number, key: string,
+ *   control: object|null, wired: boolean, open: boolean}>} One entry per gate, sorted.
  */
 function readGates(graph, order) {
   const root = app?.rootGraph ?? graph;
   const entries = [];
-  const seen = new Set();
 
-  const walk = (current, path) => {
-    if (!current || seen.has(current)) return;
-    seen.add(current);
+  const walk = (current, path, hosts) => {
+    if (!current || hosts.length > MAX_DEPTH) return;
     for (const node of current.nodes ?? []) {
       const kind = GATE_KINDS[node?.type];
       if (kind) {
-        const widget = openWidget(node);
+        const control = controlOf(node, OPEN_NAME, hosts);
         const title = String(node.title ?? node.type);
         entries.push({
           gate: node,
           kind,
           label: [...path, title].join(PATH_JOIN),
           depth: path.length,
-          wired: isWired(node),
-          open: widget ? widget.value !== false : true,
+          key: [...hosts.map((host) => host.id), node.id].join(":"),
+          control,
+          wired: !control,
+          open: control ? control.widget.value !== false : true,
         });
       }
       if (node?.isSubgraphNode?.() && node.subgraph) {
-        walk(node.subgraph, [...path, String(node.title ?? "Subgraph")]);
+        walk(node.subgraph, [...path, String(node.title ?? "Subgraph")], [...hosts, node]);
       }
     }
   };
-  walk(root, []);
+  walk(root, [], []);
 
   if (order === "name") {
     entries.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
@@ -129,20 +161,20 @@ function readGates(graph, order) {
 }
 
 /**
- * Open or close one gate through its own widget.
+ * Open or close one gate through whichever widget decides it.
  *
- * @param {object} gate - A listed gate.
- * @param {boolean} open - The value `open` is set to.
+ * @param {object} entry - One entry from `readGates`.
+ * @param {boolean} open - The value the deciding widget is set to.
  * @returns {boolean} True when the widget changed.
  */
-function setGate(gate, open) {
-  if (isWired(gate)) return false;
-  const widget = openWidget(gate);
-  if (!widget || widget.value === open) return false;
-  widget.value = open;
-  // The gate's own callback applies bypass_downstream, as a click on the widget would.
-  widget.callback?.call(widget, open, app?.canvas, gate);
-  gate.setDirtyCanvas?.(true, true);
+function setGate(entry, open) {
+  const control = entry.control;
+  if (!control || control.widget.value === open) return false;
+  control.widget.value = open;
+  // The owner's callback runs as a click on the widget would, which is where a gate applies
+  // bypass_downstream.
+  control.widget.callback?.call(control.widget, open, app?.canvas, control.owner);
+  control.owner.setDirtyCanvas?.(true, true);
   return true;
 }
 
@@ -216,7 +248,7 @@ function createGateBoard(node) {
    */
   function setEvery(open) {
     withGraphChange(() => {
-      for (const entry of entries) setGate(entry.gate, open);
+      for (const entry of entries) setGate(entry, open);
     });
     app?.canvas?.setDirty?.(true, true);
     refresh();
@@ -232,9 +264,10 @@ function createGateBoard(node) {
     const { open, wired } = entry;
     const row = document.createElement("button");
     row.type = "button";
+    const via = entry.control?.via ? `, switched through ${entry.control.via}` : "";
     row.title = wired
-      ? `${entry.label}: open is wired, so the graph decides this gate`
-      : `${entry.label}: ${open ? "open" : "closed"}`;
+      ? `${entry.label}: open is computed by the graph, so the graph decides this gate`
+      : `${entry.label}: ${open ? "open" : "closed"}${via}`;
     row.disabled = wired;
     row.style.cssText = [
       "box-sizing:border-box",
@@ -270,12 +303,12 @@ function createGateBoard(node) {
       event.stopPropagation();
       if (wired) return;
       // The gate can be replaced by a reload between the row being drawn and pressed.
-      if (!entry.gate.graph) {
+      if (!entry.gate.graph || !entry.control?.owner?.graph) {
         signature = "";
         refresh();
         return;
       }
-      withGraphChange(() => setGate(entry.gate, !open));
+      withGraphChange(() => setGate(entry, !open));
       app?.canvas?.setDirty?.(true, true);
       refresh();
     });
@@ -321,7 +354,7 @@ function createGateBoard(node) {
     const next = readGates(node.graph, order);
     const marks = [order];
     for (const entry of next) {
-      marks.push(entry.gate.id, entry.label, entry.wired ? 1 : 0, entry.open ? 1 : 0);
+      marks.push(entry.key, entry.label, entry.wired ? 1 : 0, entry.open ? 1 : 0);
     }
     entries = next;
     const drawn = marks.join(" | ");

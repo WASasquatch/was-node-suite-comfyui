@@ -23,7 +23,7 @@ const UI_WIDGET_TYPE = "was_fast_groups";
 
 // The size a fresh node is placed at, and what the panel inside it asks for. The panel grows
 // with the node, so a graph with many groups is read by dragging the node taller.
-const NODE_SIZE = [284, 240];
+const NODE_SIZE = [270, 240];
 const PANEL_HEIGHT = 176;
 const PANEL_MIN_WIDTH = 208;
 

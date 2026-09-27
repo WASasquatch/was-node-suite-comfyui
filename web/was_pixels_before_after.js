@@ -105,6 +105,8 @@ const NODES = [
   "WASImageFrequencyBlend",
   "WASImageGuidedFilter",
   "WASImageLensDistortion",
+  "WASImageMorphology",
+  "WASImageQuantize",
   "WASImageTemporalEqualize",
   "WASImageToneMap",
   "WASImageVignette",

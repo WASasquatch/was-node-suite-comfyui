@@ -153,6 +153,41 @@ def interpret(image, space: str, mode: str, name: str = ""):
         return moved, Carried(name=tagged.name, data=tagged.data, converted=True)
     return moved, target
 
+def interpret_deep(tagged, space: str, mode: str, name: str = ""):
+    """The profile a 16-bit picture is read as, its numbers left as they are.
+
+    Args:
+        tagged: The profile the file carries, as :func:`carried` answers it, or None.
+        space: :data:`KEEP`, or a key of :data:`modules.image.icc.SPACES`.
+        mode: :data:`CONVERT` or :data:`ASSIGN`.
+        name: The file it came from, named in the log line.
+
+    Returns:
+        The profile the pixels are in. A conversion is declined rather than run at 8 bits.
+    """
+    if tagged is not None:
+        tagged = Carried(name=tagged.name, data=tagged.data, converted=False)
+    if space == KEEP or mode not in MODES:
+        return tagged
+    target = profile_for(space)
+    if target is None:
+        return tagged
+    if mode == ASSIGN:
+        logger.info("%s is read as %s, with its numbers left alone.", name or "an image", space)
+        return target
+    # An untagged file is read as sRGB, so bringing either to sRGB changes nothing.
+    already_srgb = tagged is None or tagged.name.lower().startswith(SRGB_PREFIX)
+    if already_srgb and space == "sRGB":
+        return None
+    logger.warning(
+        "%s is 16 bits a channel and a colour transform runs at 8, so its numbers are kept in "
+        "%s rather than converted to %s. Set the mode to assign to relabel it without a "
+        "transform.",
+        name or "an image", tagged.name if tagged is not None else "sRGB", space,
+    )
+    return tagged
+
+
 def _through(image, source, target, name: str):
     """One image sent from one profile into another, or None where it cannot be."""
     if image.mode not in COLOUR_MODES:

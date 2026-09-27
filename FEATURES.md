@@ -88,12 +88,15 @@ For measuring a region once, then cropping to it, working on it and pasting the 
 
 ## Filters, optics and processing
 
-49 nodes. **Image Style Filter** carries 37 looks. **Image Bloom Filter**, **Image Chromatic
+51 nodes. **Image Style Filter** carries 37 looks. **Image Bloom Filter**, **Image Chromatic
 Aberration**, **Image Lens Distortion**, **Image Vignette**, **Image fDOF Filter**, **Image Film
 Grain** and **Image Monitor Effects Filter** are optical. **Image SSAO (Ambient Occlusion)**
 shades from a height map in 8, 16 or 32 bit and **Image SSDO (Direct Occlusion)** from depth.
 **Vivid Sharpen**, **Image Lucy Sharpen**, **Image High Pass Filter**, **Image Median Filter**
-and **Image Guided Filter** work on detail.
+and **Image Guided Filter** work on detail. **Image Morphology** erodes, dilates, opens and
+closes with a square kernel, matching core Apply Morphology on any kernel size or batch length.
+**Image Quantize** reduces each frame to a palette of its own, matching core Quantize Image with
+the frames of a batch worked on at once.
 
 **Image Crop Face (YuNet)**, **Image Paste Face**, **Image Crop Region**, **Image Paste Crop**,
 **Image Seamless Texture**, **Image Tiled**, **Image Draw Text**, **Image Pixelate**, **Image
@@ -103,7 +106,8 @@ For grading and finishing a render inside the graph.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Filter** and **WAS Suite/Image/Process**. Graphs:
 [`image-style-filter.json`](docs/workflows/image-style-filter.json),
-[`ssao-height-map.json`](docs/workflows/ssao-height-map.json).
+[`ssao-height-map.json`](docs/workflows/ssao-height-map.json),
+[`image-morphology-and-resize.json`](docs/workflows/image-morphology-and-resize.json).
 
 ---
 
@@ -262,10 +266,14 @@ Graphs: [`noodle-soup-pick.json`](docs/workflows/noodle-soup-pick.json),
 
 ## Files, folders and archives
 
-32 nodes. **Load Image Batch** and **Load Image Sequence** answer a paired `image_list` and
+33 nodes. **Load Image Batch** and **Load Image Sequence** answer a paired `image_list` and
 `filename_list`, so wiring the second into **Image Save**'s `filename_prefix` writes every
-result under the name it came in with. **Directory Listing**, **Path Exists** and **Download
-Image** reach the filesystem and the network.
+result under the name it came in with. **Image Load**, **Load Image Batch** and **Load Image
+Sequence** read a 16-bit PNG at full precision, and a file marked linear with no curve applied.
+**Image Save** encodes the files of a batch in parallel.
+**Fast Save Animated WEBP** writes a batch as one animated WebP with its frames encoded in
+parallel, lossless frames pixel for pixel. **Directory Listing** and **Path Exists** reach the
+filesystem.
 
 **Open ZIP**, **ZIP Add**, **Save ZIP**, **Zip Extract**, **ZIP Manage** and the three
 `Load ... from ZIP` nodes put an archive on the wire. **Load Document**, **Save DOC**, **Text
@@ -302,10 +310,12 @@ For getting frames in and out of a graph, and for finishing a clip after samplin
 **H3 Extend Window** opens one segment of a MiniMax H3 clip for a sampler. The first segment
 samples an empty latent. Every segment after it picks up from the clip so far: `carry` copies
 the clip's last frames into the window and masks them, so the sampler holds those frames and
-generates only what follows, and `reference` decodes them and encodes them again as a video
-reference. `refresh` decodes the carried frames, softens the fine detail they gained and
-encodes them again, metered against the clip's opening frames rather than against a fixed
-amount, and `handoff` starts the next segment on the last frame alone. `cut`, or an overlap
+generates only what follows, and `reference (video)` decodes them and encodes them again as a
+video reference. `reference (sample)` cuts to a new scene that references stills taken evenly
+across the whole clip so far, `reference_samples` of them, so a cast seen before a cutaway to
+another room comes back looking as it did. `refresh` carries the same frames with fresh noise in them, as much as `renewal`
+sets, so a scene that sticks on one picture evolves while the shot stays unbroken, and
+`handoff` starts the next segment on the last frame alone. `cut`, or an overlap
 of `0`, samples a new scene from an empty latent with nothing carried, and H3 Extend Append
 joins it after the clip's last full 17 frame block. `drift_control` takes the contrast and
 fine detail the carried frames have gained back out again in latent space, each segment, and
@@ -319,10 +329,21 @@ new frames without a step in level.
 
 **MiniMax H3 Conditioning** writes the whole run on one node. Each row is one segment with its
 own prompt, its own frame count, its own overlap and its own continuity, and a new row appears
-as the last one is filled. A row's `continuity_N` is `as set` until it is changed, leaving H3
+as the last one is filled. A bar above each row names the segment with its length and
+continuity, and right clicking it or clicking it picks a colour for that segment, saved with
+the workflow, to sort prompts by kind at a glance. `prompt_header` and `prompt_footer`
+surround every row, and a section a row writes itself, as `overall_soundscape:`, replaces the
+one they carry for that row alone, so a silent reveal can drop the run's dialogue voice while
+keeping its music. A row's `continuity_N` is `as set` until it is changed, leaving H3
 Extend Window's own setting to drive the run, and any other choice overrides it for that
-segment alone. That is how one run holds a continuous scene, a cut that keeps the cast on
-`reference`, and a cut to somewhere new on an overlap of `0`. `t2va` takes no pictures,
+segment alone. A row's `source_N` names the segment it continues from, `-1` for the one before
+it or a segment number, and every continuity reads from the end of that segment while the new
+frames still join the end of the clip. A `cut` to another room followed by a `carry` from the
+segment before it picks the scene back up exactly where it was left, so fresh cutaways mix
+into one carried scene. A row's `header_footer_N` picks which of `prompt_header` and
+`prompt_footer` wrap its prompt, so a cutaway on `footer only` keeps the run's sound and none of
+the cast the header defines. That is how one run holds a continuous scene, cutaways and returns,
+and a cut to somewhere new on an overlap of `0`. `t2va` takes no pictures,
 `i2va` opens on a first frame, `fl2va` closes on a last one and `fl2va_batched` runs every
 segment between a neighbouring pair out of one batch, and only the pictures the mode reads
 are drawn. Every prompt is encoded together before any sampling starts, so the text encoder
@@ -389,11 +410,24 @@ noise into the next rather than drawing every frame fresh, which returns a dense
 scene the further it carries. Both replace **RandomNoise** on any custom sampler.
 
 **WAS Latent Detail Boost**, **Blend Latents** and **Latent Batch (Advanced)** work on a latent
-directly, and **SPEED Sampler** and **KSampler Cycle** are samplers of their own.
+directly, and **SPEED Sampler** and **KSampler Cycle** are samplers of their own. **Fast
+KSampler** samples exactly as KSampler does with a cheaper live preview: the preview decoder
+stays loaded, the preview is decoded at the size it is shown, and `preview_every` skips steps.
+
+**CNS Model Patch** is colored noise sampling on any model: every sampler that adds noise each
+step, such as `euler_ancestral`, `dpmpp_2m_sde`, `er_sde`, RES4LYF's samplers or RES4SHO's
+`hfx_stochastic`, moves that noise toward the frequency bands the image has not finished yet
+instead of spreading it evenly. Each run measures how far every band had come at each step and
+the next run of that model at that size uses the measurement, so it needs no setup for any
+model. `auto` uses the published settings, one set for runs with CFG above 1 and one without;
+`manual` sets the divider, power, tilt and energy by hand. Graphs:
+[`cns-klein9b.json`](docs/workflows/cns-klein9b.json) and
+[`cns-krea2.json`](docs/workflows/cns-krea2.json).
 
 For steering a generation from its initialisation rather than correcting it later.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Latent**.
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Latent**. Graph:
+[`fast-samplers-and-savers.json`](docs/workflows/fast-samplers-and-savers.json).
 
 ---
 
@@ -431,7 +465,8 @@ For settling whether a change to a graph improved anything.
 is never evaluated and every node after it stops. `bypass_downstream` draws those nodes as
 bypassed on the canvas instead. **Execution Gate Controlboard** lists every Execution Gate and
 Any Gate in the workflow, subgraphs included, with a switch on each and **All open** and **All
-closed** beside them. A gate whose `open` is wired is listed as `wired` and left to the graph.
+closed** beside them. A gate whose `open` comes from a subgraph input or a Boolean node is
+switched there; one whose `open` the graph computes is listed as `wired` and left to it.
 
 For skipping an expensive sampler, or a save, on a condition the graph works out, and for turning
 a large workflow's branches on and off from one node.

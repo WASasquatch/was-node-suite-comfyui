@@ -20,14 +20,17 @@ PASS_INDEX_HINT = (
 OVERLAP_HINT = (
     "Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. "
     "Snapped down to the model's 17k+5 grid. Longer gives the new frames more of the "
-    "scene to continue from. `reference` reads at least `56`."
+    "scene to continue from. `reference (video)` reads at least `56`."
 )
 
 CONTINUITY_HINT = (
     "How this segment picks up from the one before it. `carry` = one unbroken shot, "
-    "soundtrack held; `refresh` = the same, detail softened; `handoff` = a cut opening "
-    "on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene from "
-    "an empty latent, nothing carried. `refresh`, `handoff` and `reference` need vae."
+    "soundtrack held; `refresh` = the same shot with fresh noise in the carried frames, "
+    "set by renewal, so a scene that sticks moves on; `handoff` = a cut opening on the "
+    "last frame; `reference (video)` = a cut referencing the clip's last frames as a "
+    "video; `reference (sample)` = a cut referencing stills sampled across the whole clip, "
+    "so a cast seen before a cutaway comes back as it was; `cut` = a new scene from an "
+    "empty latent, nothing carried. `handoff` and both references need vae."
 )
 
 DRIFT_HINT = (
@@ -42,10 +45,29 @@ RELEASE_HINT = (
     "for half a second. Read by `carry` and `refresh`."
 )
 
+SOURCE_HINT = (
+    "Which segment this pass continues from, as `-1` for the one before it, `-2` for the "
+    "one before that, or `2` for segment 2. Every continuity reads from that segment's "
+    "end, and the new frames still join the end of the clip. A row's own source replaces "
+    "this where prompts is wired."
+)
+
+SAMPLES_HINT = (
+    "Stills `reference (sample)` takes from the clip so far, spread evenly from its first "
+    "frame to its last, as `4`, or `6` for a long clip with many scenes. Read by "
+    "`reference (sample)`."
+)
+
+RENEWAL_HINT = (
+    "Fresh noise `refresh` puts into the carried frames, as `0.0` to hold them as "
+    "`carry` does, `0.35` to loosen them so the scene can evolve, or `1.0` to resample "
+    "them with only the carried picture to start from. Read by `refresh`."
+)
+
 REFRESH_HINT = (
-    "Fine detail a segment adds, which `refresh` softens the carried frames below so "
+    "Fine detail a segment adds, which `handoff` softens the frame it opens on below so "
     "the pass lands back on the opening's reading. `1.15` suits most scenes, `1.0` "
-    "softens to match the opening exactly. Read by `refresh` and `handoff`."
+    "softens to match the opening exactly. Read by `handoff`."
 )
 
 EXTENSION_HINT = (
@@ -76,9 +98,11 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                 "clip so far: `carry` copies its last frames and the soundtrack under "
                 "them into the window and masks them, so the sampler holds them and "
                 "generates only what follows, "
-                "`refresh` softens the detail those frames gained before carrying them, "
+                "`refresh` carries them with fresh noise so a scene that sticks moves on, "
                 "`handoff` starts the next segment on their last frame alone, and "
-                "`reference` hands them over as a video reference. `cut`, or an overlap "
+                "`reference (video)` hands them over as a video reference, and "
+                "`reference (sample)` cuts to a new scene referencing stills from across "
+                "the whole clip. `cut`, or an overlap "
                 "of `0`, samples a new scene from an empty latent of its own length with "
                 "nothing carried. Send the latent to a sampler and its result to H3 "
                 "Extend Append."
@@ -102,7 +126,7 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                 io.Vae.Input(
                     "vae",
                     optional=True,
-                    tooltip="The H3 video VAE. Needed by every mode but `carry`, which uses none.",
+                    tooltip="The H3 video VAE. Needed by `handoff` and both references.",
                 ),
                 io.Int.Input(
                     "extension_frames",
@@ -159,6 +183,31 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                     optional=True,
                     tooltip=RELEASE_HINT,
                 ),
+                io.Float.Input(
+                    "renewal",
+                    default=h3_extend.RENEWAL,
+                    min=0.0,
+                    max=1.0,
+                    step=0.05,
+                    optional=True,
+                    tooltip=RENEWAL_HINT,
+                ),
+                io.Int.Input(
+                    "reference_samples",
+                    default=h3_extend.REFERENCE_SAMPLES,
+                    min=1,
+                    max=8,
+                    optional=True,
+                    tooltip=SAMPLES_HINT,
+                ),
+                io.Int.Input(
+                    "source",
+                    default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS,
+                    max=h3_conditioning.MAX_ROWS,
+                    optional=True,
+                    tooltip=SOURCE_HINT,
+                ),
             ],
             outputs=[
                 io.Latent.Output(
@@ -181,11 +230,65 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         )
 
     @classmethod
+    def sampled(cls, latent, positive, vae, extension_frames, count, named) -> io.NodeOutput:
+        """A fresh scene referencing stills sampled across the whole clip.
+
+        Args:
+            latent: The finished H3 joint latent.
+            positive: This segment's prompt.
+            vae: The H3 video VAE.
+            extension_frames: Frames the new scene runs for.
+            count: Stills to sample.
+            named: The segment's name in the report.
+
+        Returns:
+            The empty scene, its prompt carrying the stills, overlap 0 and the report.
+
+        Raises:
+            ValueError: No vae is wired.
+        """
+        if vae is None:
+            raise ValueError(
+                "H3 Extend Window is set to `reference (sample)`, which decodes stills "
+                "from the finished clip and encodes them again as pictures. Wire the H3 "
+                "video VAE into vae, or set continuity to `cut`"
+            )
+        import node_helpers
+
+        video, audio = h3_extend.split(latent)
+        blocks, taken, size = [], [], None
+        for row in h3_extend.sampled_rows(video.shape[2], count):
+            start = max(0, row - h3_extend.SAMPLE_CONTEXT_ROWS)
+            frames = vae.decode(video[:, :, start:row + 1])
+            if frames.ndim == 5:
+                frames = frames[0]
+            still = frames[-1:]
+            wide, high = h3_extend.reference_canvas(still.shape[2], still.shape[1])
+            blocks.append(h3_extend.picture_reference(
+                vae.encode(h3_conditioning.fitted_batch(still, wide, high))
+            ))
+            taken.append(f"{h3_extend.last_frame_of(row) / h3_extend.FPS:.1f}s")
+            size = f"{wide}x{high}"
+        # Joins any references the prompt already carries, as from `ref2va`.
+        referenced = node_helpers.conditioning_set_values(
+            positive, {"minimax_refs": blocks}, append=True
+        )
+        length = h3_extend.snap_clip(extension_frames)
+        return io.NodeOutput(
+            h3_extend.empty_like(video, audio, length), referenced, 0,
+            f"{named}: referencing {len(blocks)} stills at {size} sampled at "
+            f"{', '.join(taken)}; sampling {length} fresh frames",
+        )
+
+    @classmethod
     def execute(cls, latent, continuity, extension_frames, overlap_frames,
                 vae=None, positive=None, prompts=None, pass_index=0,
                 drift_control=0.0,
                 refresh_gain=h3_extend.SEGMENT_GAIN,
-                audio_release=h3_extend.AUDIO_RELEASE) -> io.NodeOutput:
+                audio_release=h3_extend.AUDIO_RELEASE,
+                renewal=h3_extend.RENEWAL,
+                reference_samples=h3_extend.REFERENCE_SAMPLES,
+                source=h3_conditioning.PREVIOUS_SOURCE) -> io.NodeOutput:
         """Attach the tail as per-token rows and answer the window to sample.
 
         Raises:
@@ -205,7 +308,20 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                 "Conditioning into prompts"
             )
 
+        continuity = h3_extend.CONTINUITY_RENAMED.get(continuity, continuity)
         named = f"segment {int(pass_index) + 1}"
+        earlier = False
+        if int(pass_index) > 0:
+            if prompts is not None:
+                source = h3_conditioning.source_of(prompts, pass_index)
+            picked = h3_conditioning.resolved_source(source, pass_index)
+            if picked != int(pass_index) - 1:
+                latent = h3_extend.until_segment(latent, picked)
+                named += f" from segment {picked + 1}"
+                earlier = True
+        if continuity == h3_extend.REFERENCE_SAMPLE and int(pass_index) > 0:
+            return cls.sampled(latent, positive, vae, extension_frames, reference_samples,
+                               named)
         if int(pass_index) <= 0 or int(overlap_frames) <= 0 or continuity == "cut":
             # Either nothing has been rendered yet, or this segment cuts somewhere new.
             video, audio = h3_extend.split(latent)
@@ -267,12 +383,12 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                 h3_extend.empty_like(video, audio, length), handed, 0, report,
             )
 
-        if continuity == "reference":
+        if continuity == h3_extend.REFERENCE_VIDEO:
             if vae is None:
                 raise ValueError(
-                    "H3 Extend Window is set to `reference`, which decodes the finished "
-                    "frames and encodes them again. Wire the H3 video VAE into vae, or set "
-                    "continuity to `carry`"
+                    "H3 Extend Window is set to `reference (video)`, which decodes the "
+                    "finished frames and encodes them again. Wire the H3 video VAE into vae, "
+                    "or set continuity to `carry`"
                 )
             import node_helpers
 
@@ -303,44 +419,23 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         wanted_audio = h3_extend.audio_carry(overlap)
         rows = video_tail.shape[2]
 
+        held_rows, scale, gain = h3_extend.settled(video, rows, drift_control)
+        detail = f"settled at scale {scale:.4f} and detail gain {gain:.4f}"
+        renewed = 0.0
         if continuity == "refresh":
-            if vae is None:
-                raise ValueError(
-                    "H3 Extend Window is set to `refresh`, which decodes the carried "
-                    "frames, softens them and encodes them again. Wire the H3 video VAE "
-                    "into vae, or set continuity to `carry`"
-                )
-            # The clip's first segment is the reading every later segment is brought back to.
-            opening = video.shape[2]
-            if prompts is not None:
-                opening = h3_extend.tokens_for(h3_conditioning.pick(prompts, 0)[1])
-            start = max(rows, min(opening, video.shape[2]))
-            anchor = vae.decode(video[:, :, start - rows:start])
-            current = vae.decode(video_tail)
-            if anchor.ndim == 5:
-                anchor = anchor[0]
-            if current.ndim == 5:
-                current = current[0]
-            # Softened below the anchor by the detail a segment adds.
-            target = h3_refresh.texture(anchor) / max(1.0, float(refresh_gain))
-            was = h3_refresh.texture(current)
-            # Only the pixels carrying more detail than the opening are touched.
-            eased, sigma, covered = h3_refresh.softened(current, anchor, target)
-            held_rows = vae.encode(eased)
-            detail = (
-                f"refreshed {rows} rows at blur {sigma:.2f} over {covered * 100:.1f}% of "
-                f"the picture, texture {was:.4f} towards {target:.4f}"
+            renewed = max(0.0, min(1.0, float(renewal)))
+            detail += (
+                f"; renewing the {rows} carried rows at {renewed:.2f} of each step's noise"
             )
-        else:
-            held_rows, scale, gain = h3_extend.settled(video, rows, drift_control)
-            detail = f"settled at scale {scale:.4f} and detail gain {gain:.4f}"
 
         release = max(0, min(int(audio_release), wanted_audio))
         carried, mask, held_audio = h3_extend.masked_window(
             held_rows, audio_tail, tokens, h3_extend.audio_span(window), wanted_audio,
-            release,
+            release, renewed,
         )
         carried["noise_mask"] = mask["samples"]
+        if earlier:
+            carried[h3_extend.REJOIN_KEY] = True
 
         held = h3_extend.frames_for(video.shape[2])
         lead = h3_extend.audio_lead(overlap)
@@ -351,7 +446,7 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         report = (
             f"{named}: "
             f"holding {overlap} frames ({video_tail.shape[2]} tokens, {sound}) of a {held} "
-            f"frame clip at sigma 0 inside a {window} frame "
+            f"frame clip {'renewed' if renewed else 'at sigma 0'} inside a {window} frame "
             f"window ({tokens} tokens); "
             f"generating {extension} new frames for a {held + extension} frame clip; "
             f"{detail}"

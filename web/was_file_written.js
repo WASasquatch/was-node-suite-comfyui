@@ -13,9 +13,8 @@ const EXT_NAME = "WASNodeSuite.FileWritten";
 const SETTING_ID = "WAS.Files.ShowWritten";
 const LOG_NAME = "WASNodeSuite.FileWritten";
 
-// Every node in the pack that writes a file. Image Save is the one of the seven the core
-// frontend draws anything for, and what it draws is the pictures, not where they landed; the
-// other six draw nothing at all.
+// Every node in the pack that writes a file. Image Save and Fast Save Animated WEBP draw the
+// pictures they wrote, not where they landed; the rest draw nothing at all.
 const NODES = [
   "Image Save",
   "WASDNGSave",
@@ -23,6 +22,7 @@ const NODES = [
   "WASLayersSave",
   "Write to GIF",
   "Write to Video",
+  "WASFastSaveAnimatedWEBP",
   "Create Morph Image",
 ];
 
@@ -64,8 +64,9 @@ app.registerExtension({
       name: "Draw the file report",
       tooltip:
         "Draw the number of files, the number of writes, the folder, the format, the first and "
-        + "last names and the bytes on Image Save, EXR Save, Write to GIF, Write to Video and "
-        + "Create Morph Image. A naming scheme that replaces its own output on every frame, and a "
+        + "last names and the bytes on Image Save, EXR Save, Write to GIF, Write to Video, "
+        + "Fast Save Animated WEBP and Create Morph Image. A naming scheme that replaces its own "
+        + "output on every frame, and a "
         + "write that failed, are drawn in the warning colour. The nodes run the same either "
         + "way. This applies to nodes added after the setting changes, so a reload shows it "
         + "everywhere.",

@@ -1,0 +1,1338 @@
+{
+ "last_node_id": 25,
+ "last_link_id": 38,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "UNETLoader",
+   "pos": [
+    20,
+    40
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      3,
+      4
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader"
+   },
+   "widgets_values": [
+    "flux-2-klein-9b-fp8.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 2,
+   "type": "CLIPLoader",
+   "pos": [
+    20,
+    200
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP",
+     "type": "CLIP",
+     "links": [
+      1
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader"
+   },
+   "widgets_values": [
+    "qwen_3_8b_fp8mixed.safetensors",
+    "flux2",
+    "default"
+   ]
+  },
+  {
+   "id": 3,
+   "type": "VAELoader",
+   "pos": [
+    20,
+    380
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      13,
+      24,
+      35
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader"
+   },
+   "widgets_values": [
+    "flux2-vae.safetensors"
+   ]
+  },
+  {
+   "id": 4,
+   "type": "CLIPTextEncode",
+   "pos": [
+    380,
+    40
+   ],
+   "size": [
+    400,
+    160
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      2,
+      5,
+      16,
+      27
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPTextEncode"
+   },
+   "widgets_values": [
+    "a weathered brass astrolabe on a linen cloth beside an open leather notebook, window light, fine engraving, dust in the air, close up, studio photograph"
+   ]
+  },
+  {
+   "id": 5,
+   "type": "ConditioningZeroOut",
+   "pos": [
+    380,
+    240
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "conditioning",
+     "type": "CONDITIONING",
+     "link": 2
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      6,
+      17,
+      28
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "ConditioningZeroOut"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 6,
+   "type": "EmptyFlux2LatentImage",
+   "pos": [
+    20,
+    560
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      11,
+      22,
+      33
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "EmptyFlux2LatentImage"
+   },
+   "widgets_values": [
+    1024,
+    1024,
+    1
+   ]
+  },
+  {
+   "id": 7,
+   "type": "Flux2Scheduler",
+   "pos": [
+    20,
+    740
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "SIGMAS",
+     "type": "SIGMAS",
+     "links": [
+      10,
+      21,
+      32
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "Flux2Scheduler"
+   },
+   "widgets_values": [
+    24,
+    1024,
+    1024
+   ]
+  },
+  {
+   "id": 8,
+   "type": "WASCNSModelPatch",
+   "pos": [
+    380,
+    560
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 3
+    }
+   ],
+   "outputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "links": [
+      15,
+      26
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "WASCNSModelPatch"
+   },
+   "widgets_values": [
+    "auto",
+    32,
+    1.73,
+    0.75,
+    0.15,
+    -0.5,
+    0.75,
+    0.98
+   ]
+  },
+  {
+   "id": 9,
+   "type": "RandomNoise",
+   "pos": [
+    380,
+    800
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "NOISE",
+     "type": "NOISE",
+     "links": [
+      7,
+      18,
+      29
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "RandomNoise"
+   },
+   "widgets_values": [
+    4242,
+    "fixed"
+   ]
+  },
+  {
+   "id": 10,
+   "type": "CFGGuider",
+   "pos": [
+    820,
+    40
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 4
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 5
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 6
+    }
+   ],
+   "outputs": [
+    {
+     "name": "GUIDER",
+     "type": "GUIDER",
+     "links": [
+      8
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CFGGuider"
+   },
+   "widgets_values": [
+    1.0
+   ]
+  },
+  {
+   "id": 11,
+   "type": "KSamplerSelect",
+   "pos": [
+    820,
+    190
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "SAMPLER",
+     "type": "SAMPLER",
+     "links": [
+      9
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSamplerSelect"
+   },
+   "widgets_values": [
+    "euler_ancestral"
+   ]
+  },
+  {
+   "id": 12,
+   "type": "SamplerCustomAdvanced",
+   "pos": [
+    1180,
+    40
+   ],
+   "size": [
+    300,
+    330
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "noise",
+     "type": "NOISE",
+     "link": 7
+    },
+    {
+     "name": "guider",
+     "type": "GUIDER",
+     "link": 8
+    },
+    {
+     "name": "sampler",
+     "type": "SAMPLER",
+     "link": 9
+    },
+    {
+     "name": "sigmas",
+     "type": "SIGMAS",
+     "link": 10
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 11
+    }
+   ],
+   "outputs": [
+    {
+     "name": "output",
+     "type": "LATENT",
+     "links": [
+      12
+     ]
+    },
+    {
+     "name": "denoised_output",
+     "type": "LATENT",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SamplerCustomAdvanced"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 13,
+   "type": "VAEDecode",
+   "pos": [
+    1520,
+    40
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 12
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 13
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      14,
+      37
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 14,
+   "type": "SaveImage",
+   "pos": [
+    1860,
+    40
+   ],
+   "size": [
+    380,
+    420
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 14
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "cns/klein9b_white"
+   ]
+  },
+  {
+   "id": 15,
+   "type": "CFGGuider",
+   "pos": [
+    820,
+    520
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 15
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 16
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 17
+    }
+   ],
+   "outputs": [
+    {
+     "name": "GUIDER",
+     "type": "GUIDER",
+     "links": [
+      19
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CFGGuider"
+   },
+   "widgets_values": [
+    1.0
+   ]
+  },
+  {
+   "id": 16,
+   "type": "KSamplerSelect",
+   "pos": [
+    820,
+    670
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "SAMPLER",
+     "type": "SAMPLER",
+     "links": [
+      20
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSamplerSelect"
+   },
+   "widgets_values": [
+    "euler_ancestral"
+   ]
+  },
+  {
+   "id": 17,
+   "type": "SamplerCustomAdvanced",
+   "pos": [
+    1180,
+    520
+   ],
+   "size": [
+    300,
+    330
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "noise",
+     "type": "NOISE",
+     "link": 18
+    },
+    {
+     "name": "guider",
+     "type": "GUIDER",
+     "link": 19
+    },
+    {
+     "name": "sampler",
+     "type": "SAMPLER",
+     "link": 20
+    },
+    {
+     "name": "sigmas",
+     "type": "SIGMAS",
+     "link": 21
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 22
+    }
+   ],
+   "outputs": [
+    {
+     "name": "output",
+     "type": "LATENT",
+     "links": [
+      23
+     ]
+    },
+    {
+     "name": "denoised_output",
+     "type": "LATENT",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SamplerCustomAdvanced"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 18,
+   "type": "VAEDecode",
+   "pos": [
+    1520,
+    520
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 17,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 23
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 24
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      25,
+      38
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 19,
+   "type": "SaveImage",
+   "pos": [
+    1860,
+    520
+   ],
+   "size": [
+    380,
+    420
+   ],
+   "flags": {},
+   "order": 18,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 25
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "cns/klein9b_cns"
+   ]
+  },
+  {
+   "id": 20,
+   "type": "CFGGuider",
+   "pos": [
+    820,
+    1000
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 19,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 26
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 27
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 28
+    }
+   ],
+   "outputs": [
+    {
+     "name": "GUIDER",
+     "type": "GUIDER",
+     "links": [
+      30
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CFGGuider"
+   },
+   "widgets_values": [
+    1.0
+   ]
+  },
+  {
+   "id": 21,
+   "type": "KSamplerSelect",
+   "pos": [
+    820,
+    1150
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 20,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "SAMPLER",
+     "type": "SAMPLER",
+     "links": [
+      31
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSamplerSelect"
+   },
+   "widgets_values": [
+    "euler"
+   ]
+  },
+  {
+   "id": 22,
+   "type": "SamplerCustomAdvanced",
+   "pos": [
+    1180,
+    1000
+   ],
+   "size": [
+    300,
+    330
+   ],
+   "flags": {},
+   "order": 21,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "noise",
+     "type": "NOISE",
+     "link": 29
+    },
+    {
+     "name": "guider",
+     "type": "GUIDER",
+     "link": 30
+    },
+    {
+     "name": "sampler",
+     "type": "SAMPLER",
+     "link": 31
+    },
+    {
+     "name": "sigmas",
+     "type": "SIGMAS",
+     "link": 32
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 33
+    }
+   ],
+   "outputs": [
+    {
+     "name": "output",
+     "type": "LATENT",
+     "links": [
+      34
+     ]
+    },
+    {
+     "name": "denoised_output",
+     "type": "LATENT",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SamplerCustomAdvanced"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 23,
+   "type": "VAEDecode",
+   "pos": [
+    1520,
+    1000
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 22,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 34
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 35
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      36
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 24,
+   "type": "SaveImage",
+   "pos": [
+    1860,
+    1000
+   ],
+   "size": [
+    380,
+    420
+   ],
+   "flags": {},
+   "order": 23,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 36
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "cns/klein9b_euler_check"
+   ]
+  },
+  {
+   "id": 25,
+   "type": "WASImageCompare",
+   "pos": [
+    2280,
+    40
+   ],
+   "size": [
+    700,
+    760
+   ],
+   "flags": {},
+   "order": 24,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image_a",
+     "type": "IMAGE",
+     "link": 37
+    },
+    {
+     "name": "image_b",
+     "type": "IMAGE",
+     "link": 38
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image_a",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "image_b",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "pairs",
+     "type": "INT",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "WASImageCompare"
+   },
+   "widgets_values": []
+  }
+ ],
+ "links": [
+  [
+   1,
+   2,
+   0,
+   4,
+   0,
+   "CLIP"
+  ],
+  [
+   2,
+   4,
+   0,
+   5,
+   0,
+   "CONDITIONING"
+  ],
+  [
+   3,
+   1,
+   0,
+   8,
+   0,
+   "MODEL"
+  ],
+  [
+   4,
+   1,
+   0,
+   10,
+   0,
+   "MODEL"
+  ],
+  [
+   5,
+   4,
+   0,
+   10,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   6,
+   5,
+   0,
+   10,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   7,
+   9,
+   0,
+   12,
+   0,
+   "NOISE"
+  ],
+  [
+   8,
+   10,
+   0,
+   12,
+   1,
+   "GUIDER"
+  ],
+  [
+   9,
+   11,
+   0,
+   12,
+   2,
+   "SAMPLER"
+  ],
+  [
+   10,
+   7,
+   0,
+   12,
+   3,
+   "SIGMAS"
+  ],
+  [
+   11,
+   6,
+   0,
+   12,
+   4,
+   "LATENT"
+  ],
+  [
+   12,
+   12,
+   0,
+   13,
+   0,
+   "LATENT"
+  ],
+  [
+   13,
+   3,
+   0,
+   13,
+   1,
+   "VAE"
+  ],
+  [
+   14,
+   13,
+   0,
+   14,
+   0,
+   "IMAGE"
+  ],
+  [
+   15,
+   8,
+   0,
+   15,
+   0,
+   "MODEL"
+  ],
+  [
+   16,
+   4,
+   0,
+   15,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   17,
+   5,
+   0,
+   15,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   18,
+   9,
+   0,
+   17,
+   0,
+   "NOISE"
+  ],
+  [
+   19,
+   15,
+   0,
+   17,
+   1,
+   "GUIDER"
+  ],
+  [
+   20,
+   16,
+   0,
+   17,
+   2,
+   "SAMPLER"
+  ],
+  [
+   21,
+   7,
+   0,
+   17,
+   3,
+   "SIGMAS"
+  ],
+  [
+   22,
+   6,
+   0,
+   17,
+   4,
+   "LATENT"
+  ],
+  [
+   23,
+   17,
+   0,
+   18,
+   0,
+   "LATENT"
+  ],
+  [
+   24,
+   3,
+   0,
+   18,
+   1,
+   "VAE"
+  ],
+  [
+   25,
+   18,
+   0,
+   19,
+   0,
+   "IMAGE"
+  ],
+  [
+   26,
+   8,
+   0,
+   20,
+   0,
+   "MODEL"
+  ],
+  [
+   27,
+   4,
+   0,
+   20,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   28,
+   5,
+   0,
+   20,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   29,
+   9,
+   0,
+   22,
+   0,
+   "NOISE"
+  ],
+  [
+   30,
+   20,
+   0,
+   22,
+   1,
+   "GUIDER"
+  ],
+  [
+   31,
+   21,
+   0,
+   22,
+   2,
+   "SAMPLER"
+  ],
+  [
+   32,
+   7,
+   0,
+   22,
+   3,
+   "SIGMAS"
+  ],
+  [
+   33,
+   6,
+   0,
+   22,
+   4,
+   "LATENT"
+  ],
+  [
+   34,
+   22,
+   0,
+   23,
+   0,
+   "LATENT"
+  ],
+  [
+   35,
+   3,
+   0,
+   23,
+   1,
+   "VAE"
+  ],
+  [
+   36,
+   23,
+   0,
+   24,
+   0,
+   "IMAGE"
+  ],
+  [
+   37,
+   13,
+   0,
+   25,
+   0,
+   "IMAGE"
+  ],
+  [
+   38,
+   18,
+   0,
+   25,
+   1,
+   "IMAGE"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.7,
+   "offset": [
+    40,
+    40
+   ]
+  }
+ },
+ "version": 0.4
+}

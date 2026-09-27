@@ -1,0 +1,962 @@
+{
+  "id": "0ffd859a-0162-4402-8312-b1246372ed24",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 11,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        20,
+        40
+      ],
+      "size": [
+        270,
+        98
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "ckpt_name",
+          "name": "ckpt_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "ckpt_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2,
+            3
+          ]
+        },
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "autismmixSDXL_autismmixConfetti.safetensors"
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "autismmixSDXL_autismmixConfetti.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "CLIPTextEncode",
+      "pos": [
+        20,
+        220
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "a lighthouse on a cliff at dusk, dramatic sky, waves"
+      ],
+      "widgets_values_named": {
+        "text": "a lighthouse on a cliff at dusk, dramatic sky, waves"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "CLIPTextEncode",
+      "pos": [
+        20,
+        440
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 3
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "blurry"
+      ],
+      "widgets_values_named": {
+        "text": "blurry"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "EmptyLatentImage",
+      "pos": [
+        20,
+        660
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "widgets_values": [
+        832,
+        832,
+        4
+      ],
+      "widgets_values_named": {
+        "width": 832,
+        "height": 832,
+        "batch_size": 4
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "WASFastKSampler",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        270,
+        498
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 4
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 5
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 6
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "preview_every",
+          "name": "preview_every",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "preview_every"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASFastKSampler"
+      },
+      "widgets_values": [
+        974691017372841,
+        "randomize",
+        16,
+        7,
+        "euler",
+        "simple",
+        1,
+        2
+      ],
+      "widgets_values_named": {
+        "seed": 974691017372841,
+        "control_after_generate": "randomize",
+        "steps": 16,
+        "cfg": 7,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "preview_every": 2
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 6,
+      "type": "VAEDecode",
+      "pos": [
+        800,
+        40
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 7
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAEDecode"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 7,
+      "type": "WASImageQuantize",
+      "pos": [
+        800,
+        160
+      ],
+      "size": [
+        270,
+        274
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 9
+        },
+        {
+          "localized_name": "colors",
+          "name": "colors",
+          "type": "INT",
+          "widget": {
+            "name": "colors"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dither",
+          "name": "dither",
+          "type": "COMBO",
+          "widget": {
+            "name": "dither"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            10,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageQuantize"
+      },
+      "widgets_values": [
+        24,
+        "floyd-steinberg"
+      ],
+      "widgets_values_named": {
+        "colors": 24,
+        "dither": "floyd-steinberg"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 8,
+      "type": "Image Save",
+      "pos": [
+        1180,
+        40
+      ],
+      "size": [
+        314.15234375,
+        878
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "localized_name": "profile",
+          "name": "profile",
+          "shape": 7,
+          "type": "WAS_COLOUR_PROFILE",
+          "link": null
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_start",
+          "name": "filename_number_start",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "filename_number_start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extension",
+          "name": "extension",
+          "type": "COMBO",
+          "widget": {
+            "name": "extension"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dpi",
+          "name": "dpi",
+          "type": "INT",
+          "widget": {
+            "name": "dpi"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quality",
+          "name": "quality",
+          "type": "INT",
+          "widget": {
+            "name": "quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "optimize_image",
+          "name": "optimize_image",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "optimize_image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lossless_webp",
+          "name": "lossless_webp",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lossless_webp"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite_mode",
+          "name": "overwrite_mode",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "show_history",
+          "name": "show_history",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "show_history"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "show_history_by_prefix",
+          "name": "show_history_by_prefix",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "show_history_by_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_workflow",
+          "name": "embed_workflow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_workflow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "show_previews",
+          "name": "show_previews",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "show_previews"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bit_depth",
+          "name": "bit_depth",
+          "type": "COMBO",
+          "widget": {
+            "name": "bit_depth"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "files",
+          "name": "files",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Image Save"
+      },
+      "widgets_values": [
+        "output",
+        "was_demo/fast_batch",
+        "_",
+        4,
+        false,
+        "png",
+        300,
+        100,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        "8-bit"
+      ],
+      "widgets_values_named": {
+        "root": "output",
+        "filename_prefix": "was_demo/fast_batch",
+        "filename_delimiter": "_",
+        "filename_number_padding": 4,
+        "filename_number_start": false,
+        "extension": "png",
+        "dpi": 300,
+        "quality": 100,
+        "optimize_image": true,
+        "lossless_webp": false,
+        "overwrite_mode": false,
+        "show_history": false,
+        "show_history_by_prefix": true,
+        "embed_workflow": true,
+        "show_previews": true,
+        "bit_depth": "8-bit"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 9,
+      "type": "WASFastSaveAnimatedWEBP",
+      "pos": [
+        1534.15234375,
+        40
+      ],
+      "size": [
+        320,
+        720
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lossless",
+          "name": "lossless",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lossless"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quality",
+          "name": "quality",
+          "type": "INT",
+          "widget": {
+            "name": "quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "method",
+          "name": "method",
+          "type": "COMBO",
+          "widget": {
+            "name": "method"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASFastSaveAnimatedWEBP"
+      },
+      "widgets_values": [
+        "output",
+        "was_demo/fast_batch",
+        2,
+        true,
+        80,
+        "default"
+      ],
+      "widgets_values_named": {
+        "root": "output",
+        "filename_prefix": "was_demo/fast_batch",
+        "fps": 2,
+        "lossless": true,
+        "quality": 80,
+        "method": "default"
+      },
+      "bgcolor": "transparent"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      5,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      1,
+      1,
+      2,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      1,
+      1,
+      3,
+      0,
+      "CLIP"
+    ],
+    [
+      4,
+      2,
+      0,
+      5,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      5,
+      3,
+      0,
+      5,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      3,
+      "LATENT"
+    ],
+    [
+      7,
+      5,
+      0,
+      6,
+      0,
+      "LATENT"
+    ],
+    [
+      8,
+      1,
+      2,
+      6,
+      1,
+      "VAE"
+    ],
+    [
+      9,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      7,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      7,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.8921905697445971,
+      "offset": [
+        910.7630794324596,
+        169.66666666666674
+      ]
+    }
+  },
+  "version": 0.4
+}

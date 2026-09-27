@@ -76,6 +76,19 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             ],
         )
 
+    @staticmethod
+    def ends_before(latent, video) -> list[int]:
+        """Where each segment of the clip so far ends, the whole clip as one where unrecorded.
+
+        Args:
+            latent: The clip so far.
+            video: Its video half.
+
+        Returns:
+            Frame counts at the end of each segment.
+        """
+        return h3_extend.segment_ends(latent) or [h3_extend.frames_for(video.shape[2])]
+
     @classmethod
     def execute(cls, latent, sampled, overlap_frames, segment_index=0) -> io.NodeOutput:
         """Drop the carried head off the window and append what the pass added.
@@ -89,7 +102,7 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             opened, _ = h3_extend.split(sampled)
             frames = h3_extend.frames_for(opened.shape[2])
             return io.NodeOutput(
-                sampled, frames,
+                h3_extend.with_ends(sampled, [frames]), frames,
                 f"opened the clip at {frames} frames ({opened.shape[2]} tokens)",
             )
 
@@ -102,11 +115,28 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             whole, _ = h3_extend.split(joined)
             added, _ = h3_extend.split(sampled)
             frames = h3_extend.frames_for(whole.shape[2])
+            ends = cls.ends_before(latent, done_video)
+            ends[-1] = min(ends[-1], kept)
             return io.NodeOutput(
-                joined, frames,
+                h3_extend.with_ends(joined, ends + [frames]), frames,
                 f"cut in {h3_extend.frames_for(added.shape[2])} fresh frames after frame "
                 f"{kept}, trimming the clip's last {trimmed}; {whole.shape[2]} tokens "
                 f"and {frames} frames now",
+            )
+
+        if sampled.get(h3_extend.REJOIN_KEY):
+            # Carried from an earlier segment: a cut back to that scene.
+            done_video, _ = h3_extend.split(latent)
+            joined, kept, shown = h3_extend.rejoin(latent, sampled, overlap_frames)
+            whole, _ = h3_extend.split(joined)
+            frames = h3_extend.frames_for(whole.shape[2])
+            ends = cls.ends_before(latent, done_video)
+            ends[-1] = min(ends[-1], kept)
+            return io.NodeOutput(
+                h3_extend.with_ends(joined, ends + [frames]), frames,
+                f"cut back after frame {kept} to the earlier scene, showing its last "
+                f"{shown} carried frames again before the new ones; {whole.shape[2]} "
+                f"tokens and {frames} frames now",
             )
 
         overlap = h3_extend.snap_overlap(overlap_frames)
@@ -129,6 +159,7 @@ class ThreeH3ExtendAppend(io.ComfyNode):
         joined = h3_extend.append(latent, sampled, overlap)
         joined_video, joined_audio = h3_extend.split(joined)
         frames = h3_extend.frames_for(joined_video.shape[2])
+        joined = h3_extend.with_ends(joined, cls.ends_before(latent, done_video) + [frames])
         report = (
             f"carried {done_video.shape[2]} tokens untouched, added "
             f"{new_video.shape[2] - overlap_tokens}; {joined_video.shape[2]} tokens and "

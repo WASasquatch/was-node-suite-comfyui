@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from comfy_api.latest import io
 
 from ...modules.compat.types import H3_PROMPTS
@@ -82,12 +84,15 @@ REFERENCE_INPUTS = [
 PROMPT_HEADER_HINT = (
     "Text put before every segment's prompt, as `subject_definitions:` and the wardrobe "
     "lines that hold for the whole run. Blank adds nothing, and a blank line separates it "
-    "from the row's own prompt."
+    "from the row's own prompt. A section a row writes itself, as `visual_style:`, "
+    "replaces the one here for that row. A `<d>` line here is spoken in every segment."
 )
 
 PROMPT_FOOTER_HINT = (
-    "Text put after every segment's prompt, as `camera: slow dolly in` or "
-    "`audio: wind and breath`. Blank adds nothing."
+    "Text put after every segment's prompt, as `overall_soundscape:` and "
+    "`non_diegetic_music:` for the whole run. Blank adds nothing. A section a row writes "
+    "itself, as `overall_soundscape: Server hum.`, replaces the one here for that row. "
+    "A `<d>` line here is spoken in every segment."
 )
 
 ASPECT_HINT = (
@@ -118,11 +123,28 @@ SEGMENT_DURATION_HINT = (
     "frame grid, and the report states the frames each segment came to."
 )
 
+SEGMENT_SOURCE_HINT = (
+    "Which segment this one continues from, as `-1` for the one before it, `-2` for the "
+    "one before that, or `2` for Segment 2. Every continuity reads from that segment's "
+    "end, so after a cutaway `carry` picks the scene back up where it was left, and the "
+    "new frames still join the end of the clip. `0` is the same as `-1`. Ignored on "
+    "segment 1."
+)
+
+SEGMENT_WRAP_HINT = (
+    "Which shared text this segment's prompt is wrapped in. `both` = prompt_header and "
+    "prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's "
+    "sound but none of the cast the header defines; `neither` = the row's prompt alone."
+)
+
 SEGMENT_CONTINUITY_HINT = (
     "Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; "
-    "`carry` = one unbroken shot; `refresh` = the same, detail softened; `handoff` = a cut "
-    "opening on the last frame; `reference` = a cut keeping the cast; `cut` = a new scene, "
-    "like an overlap of `0`. Ignored on segment 1."
+    "`carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the "
+    "carried frames, for a scene that sticks; `handoff` = a cut opening on the last "
+    "frame; `reference (video)` = a cut referencing the last frames as a video; "
+    "`reference (sample)` = a cut referencing stills from across the whole clip, so a "
+    "cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`. "
+    "Ignored on segment 1."
 )
 
 SEGMENT_OVERLAP_HINT = (
@@ -245,6 +267,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_1", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_1", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_2", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -261,6 +293,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_2", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_2", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_2", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_3", multiline=True, dynamic_prompts=True,
@@ -279,6 +321,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_3", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_3", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_4", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -295,6 +347,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_4", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_4", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_4", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_5", multiline=True, dynamic_prompts=True,
@@ -313,6 +375,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_5", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_5", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_6", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -329,6 +401,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_6", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_6", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_6", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_7", multiline=True, dynamic_prompts=True,
@@ -347,6 +429,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_7", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_7", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_8", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -363,6 +455,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_8", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_8", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_8", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_9", multiline=True, dynamic_prompts=True,
@@ -381,6 +483,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_9", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_9", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_10", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -397,6 +509,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_10", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_10", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_10", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_11", multiline=True, dynamic_prompts=True,
@@ -415,6 +537,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_11", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_11", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_12", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -431,6 +563,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_12", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_12", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_12", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_13", multiline=True, dynamic_prompts=True,
@@ -449,6 +591,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_13", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_13", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_14", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -465,6 +617,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_14", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_14", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_14", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_15", multiline=True, dynamic_prompts=True,
@@ -483,6 +645,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_15", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_15", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_16", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -499,6 +671,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_16", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_16", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_16", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_17", multiline=True, dynamic_prompts=True,
@@ -517,6 +699,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_17", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_17", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_18", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -533,6 +725,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_18", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_18", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_18", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_19", multiline=True, dynamic_prompts=True,
@@ -551,6 +753,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_19", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_19", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_20", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -567,6 +779,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_20", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_20", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_20", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_21", multiline=True, dynamic_prompts=True,
@@ -585,6 +807,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_21", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_21", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_22", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -601,6 +833,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_22", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_22", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_22", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.String.Input(
                     "prompt_23", multiline=True, dynamic_prompts=True,
@@ -619,6 +861,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
                 ),
+                io.Int.Input(
+                    "source_23", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_23", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
+                ),
                 io.String.Input(
                     "prompt_24", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -635,6 +887,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "continuity_24", options=list(h3_conditioning.ROW_CONTINUITY),
                     default=h3_conditioning.AS_SET,
                     optional=True, tooltip=SEGMENT_CONTINUITY_HINT,
+                ),
+                io.Int.Input(
+                    "source_24", default=h3_conditioning.PREVIOUS_SOURCE,
+                    min=-h3_conditioning.MAX_ROWS, max=h3_conditioning.MAX_ROWS,
+                    optional=True, tooltip=SEGMENT_SOURCE_HINT,
+                ),
+                io.Combo.Input(
+                    "header_footer_24", options=list(h3_conditioning.WRAPS),
+                    default=h3_conditioning.WRAPS[0],
+                    optional=True, tooltip=SEGMENT_WRAP_HINT,
                 ),
                 io.Image.Input(
                     "first_frame",
@@ -702,10 +964,14 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 "MiniMax H3 Conditioning has no prompt. Write what the first segment shows "
                 "in the first box"
             )
+        wraps = h3_conditioning.wraps_of(rows)
         filled = [
-            (h3_conditioning.composed(prompt_header, text, prompt_footer), count, overlap,
-             choice)
-            for text, count, overlap, choice in filled
+            (h3_conditioning.composed(
+                prompt_header if h3_conditioning.takes_header(wrap) else "",
+                text,
+                prompt_footer if h3_conditioning.takes_footer(wrap) else "",
+            ), count, overlap, choice)
+            for (text, count, overlap, choice), wrap in zip(filled, wraps)
         ]
 
         pictures = (images, first_frame, last_frame)
@@ -769,6 +1035,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 ))
         images_drawn = drawn
         prompts = h3_conditioning.bundle(segments)
+        for entry, source in zip(prompts, h3_conditioning.sources_of(rows)):
+            entry["source"] = source
 
         total = sum(segment[1] for segment in segments)
         shape = ", ".join(
@@ -784,6 +1052,21 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             + (f"; every segment references {', '.join(references.tags)}"
                if references else "")
         )
+        shared = {
+            name: h3_conditioning.dialogue_blocks(text)
+            for name, text in (("prompt_header", prompt_header), ("prompt_footer", prompt_footer))
+        }
+        for name, count in shared.items():
+            if not count:
+                continue
+            warning = (
+                f"{name} holds {count} `<d>` dialogue tag(s), and {name} is added to every "
+                f"segment, so every segment is given that line to speak. A segment with no "
+                f"dialogue of its own fills it with speech. Describe dialogue without `<d>` "
+                f"in {name}, and write each `<d>` line in the row that speaks it"
+            )
+            logging.warning("MiniMax H3 Conditioning: %s.", warning)
+            report += f"; WARNING: {warning}"
         return io.NodeOutput(
             latent, prompts, len(segments), report,
             h3_conditioning.latents_of(prompts),

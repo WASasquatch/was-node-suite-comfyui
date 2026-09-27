@@ -66,7 +66,7 @@ def _spell(codes: float) -> str:
     return f"{codes:+.2f}" if abs(codes) < 10 else f"{codes:+.1f}"
 
 
-def publish(image, facts=None, moved=None, summary="", node_id=None) -> bool:
+def publish(image, facts=None, moved=None, summary="", node_id=None, depth=8) -> bool:
     """Store what one picture holds, for the publishing node's own interface to fetch.
 
     Never raises, and never touches the values it is given.
@@ -78,6 +78,7 @@ def publish(image, facts=None, moved=None, summary="", node_id=None) -> bool:
             that moved for no stated reason draws the panel in the warning colour.
         summary: One line saying what the node did. Left out, the size and the range.
         node_id: The publishing node's graph id.
+        depth: Bits a sample the picture was stored at, which the entropy is counted in.
 
     Returns:
         Whatever :func:`run_result.publish` answered, which is False when no browser is
@@ -91,7 +92,7 @@ def publish(image, facts=None, moved=None, summary="", node_id=None) -> bool:
         frame = image[0] if getattr(image, "ndim", 0) == 4 else image
         height, width = (int(size) for size in frame.shape[:2])
         channels = int(frame.shape[2]) if frame.ndim > 2 else 1
-        measured = statistics.measure(frame.float().clamp(0.0, 1.0))
+        measured = statistics.measure(frame.float().clamp(0.0, 1.0), bins=1 << int(depth))
         low, high = float(frame.min()), float(frame.max())
 
         counts = {
@@ -108,7 +109,7 @@ def publish(image, facts=None, moved=None, summary="", node_id=None) -> bool:
                 f"{width} x {height} "
                 f"{ {1: 'grey', 3: 'RGB', 4: 'RGBA'}.get(channels, str(channels) + ' channels') }"
             ),
-            "range": f"{low:.4g} to {high:.4g}, {measured['entropy']:.2f} bits of 8",
+            "range": f"{low:.4g} to {high:.4g}, {measured['entropy']:.2f} bits of {int(depth)}",
         }
         if moved:
             rows["drift"] = f"worst {_spell(moved['worst'])}, mean {moved['mean']:.2f}"

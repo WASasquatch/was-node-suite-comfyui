@@ -138,7 +138,7 @@ a reviewer can confirm it without reading the whole tree.
 |---|---|---|
 | Socket `connect` | `web/was_app_workflow.js` | LiteGraph's own method for wiring one node's output slot to another node's input, called on a node the graph looked up by id |
 | Socket `bind` | 7 of this pack's own files under `web/` | `Function.prototype.bind`, the standard way to fix a callback's `this`. Those 7 are every one of the pack's own browser files that calls it; the vendored libraries call it throughout |
-| Socket `connect`, `bind` | `web/vendor/three`, `web/vendor/hugerte` | The same two JavaScript methods, in third-party code for Three.js and HugerTE (Path Tracer) |
+| Socket `connect`, `bind` | `web/vendor/three`, `web/vendor/hugerte` | The same two JavaScript methods, in third-party code for Three.js and HugerTE |
 | Socket `bind` | `web/viewer/views/code_scripts/prism.min.txt`, `web/viewer/views/markdown_scripts/mermaid.min.txt` | The same JavaScript method, in Prism and Mermaid. They are syntax highlighting and diagram drawing, read as text and inlined into the sandboxed frame a view builds, which has no access to this page |
 | Network operation, database connection | `modules/state/store.py` | `sqlite3.connect`, opening a local database file. Reported twice, under both rule names |
 | Dynamic import | `__init__.py` | Walking this pack's own `nodes/` package and importing each valid module it finds |

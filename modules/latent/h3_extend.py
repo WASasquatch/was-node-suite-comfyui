@@ -95,11 +95,35 @@ def audio_lead(frames: int) -> float:
     return (max(0, int(frames)) * AUDIO_LATENT_FPS / FPS - whole) / AUDIO_LATENT_FPS
 
 
-#: How a segment continues from the one before it.
-CONTINUITY = ("carry", "refresh", "handoff", "reference", "cut")
+#: A cut referencing the clip's last frames as a video.
+REFERENCE_VIDEO = "reference (video)"
 
-#: Fine detail a segment is expected to add, which a refreshed carry is softened below.
+#: A cut referencing stills sampled across the whole clip as pictures.
+REFERENCE_SAMPLE = "reference (sample)"
+
+#: How a segment continues from the one before it.
+CONTINUITY = ("carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut")
+
+#: Continuity names a saved workflow may still hold, and what each is now.
+CONTINUITY_RENAMED = {"reference": REFERENCE_VIDEO}
+
+#: Latent key holding the clip's frame count at the end of each segment.
+SEGMENT_ENDS_KEY = "h3_segment_frames"
+
+#: Window key marking a pass carried from an earlier segment than the last.
+REJOIN_KEY = "h3_rejoin"
+
+#: Stills `reference (sample)` takes from the clip by default.
+REFERENCE_SAMPLES = 4
+
+#: Latent rows decoded ahead of a sampled row, for the video decoder's context.
+SAMPLE_CONTEXT_ROWS = 2
+
+#: Fine detail a segment is expected to add, which a handoff frame is softened below.
 SEGMENT_GAIN = 1.15
+
+#: Mask value `refresh` gives the carried video rows.
+RENEWAL = 0.35
 
 #: Fewest frames a continuation reference holds, 2.33 seconds on the grid.
 REFERENCE_FRAMES = 56
@@ -131,6 +155,48 @@ def reference_canvas(width: int, height: int, edge: int = REFERENCE_EDGE):
     sides = [max(CANVAS_MULTIPLE, round(side * scale / CANVAS_MULTIPLE) * CANVAS_MULTIPLE)
              for side in (width, height)]
     return sides[0], sides[1]
+
+
+def sampled_rows(rows: int, count: int) -> list[int]:
+    """Latent rows spread evenly across a clip, first and last included.
+
+    Args:
+        rows: Latent rows the clip holds.
+        count: Rows wanted.
+
+    Returns:
+        Distinct row indices in order, at most ``rows`` of them.
+    """
+    rows, count = max(1, int(rows)), max(1, int(count))
+    if count == 1:
+        return [rows - 1]
+    picked = [round(index * (rows - 1) / (count - 1)) for index in range(count)]
+    return sorted(set(picked))
+
+
+def last_frame_of(row: int) -> int:
+    """The index of the last video frame a latent row decodes to.
+
+    Args:
+        row: A latent row, from 0.
+
+    Returns:
+        A frame index, from 0.
+    """
+    return frames_for(int(row) + 1) - 1
+
+
+def picture_reference(latent) -> dict:
+    """One ``minimax_refs`` block carrying a still the new segment references.
+
+    Args:
+        latent: A ``[B, 24, 1, H, W]`` picture latent.
+
+    Returns:
+        The reference block.
+    """
+    return {"kind": "image", "latent_h": latent.shape[-2], "latent_w": latent.shape[-1],
+            "latent": latent}
 
 
 def video_reference(latent, audio_latent=None) -> dict:
@@ -233,7 +299,7 @@ def settled(video, rows: int, strength: float):
 
 
 def masked_window(video_tail, audio_tail, video_tokens: int, audio_length: int,
-                  audio_steps: int, release: int = AUDIO_RELEASE):
+                  audio_steps: int, release: int = AUDIO_RELEASE, renewal: float = 0.0):
     """A window holding the finished tail, masked so the sampler leaves it alone.
 
     Args:
@@ -243,10 +309,12 @@ def masked_window(video_tail, audio_tail, video_tokens: int, audio_length: int,
         audio_length: Audio latent frames the whole window holds.
         audio_steps: Audio latent steps of the tail to hold, 0 to hold none.
         release: Steps at the end of the carry the mask opens over.
+        renewal: Mask value over the carried video rows, ``0.0`` to hold them exactly and
+            ``1.0`` to sample them freely. A row at ``m`` runs at ``m`` times each step's noise.
 
     Returns:
         ``(latent, mask, held)``, a joint latent, a joint mask and the audio steps held.
-        The mask is 1 where the pass generates and 0 over the carried rows.
+        The mask is 1 where the pass generates and ``renewal`` over the carried rows.
     """
     import math
 
@@ -272,7 +340,7 @@ def masked_window(video_tail, audio_tail, video_tokens: int, audio_length: int,
 
     rows = min(video_tail.shape[2], video_tokens)
     video[:, :, :rows] = video_tail[:, :, -rows:]
-    video_mask[:, :, :rows] = 0.0
+    video_mask[:, :, :rows] = max(0.0, min(1.0, float(renewal)))
 
     held = max(0, min(int(audio_steps), audio_tail.shape[-1], audio_length))
     audio[..., :held] = audio_tail[..., -held:] if held else audio_tail[..., :0]
@@ -407,6 +475,115 @@ def audio_span(frames: int) -> int:
         The audio latent length, rounded as the empty latent rounds it.
     """
     return round(int(frames) / FPS * AUDIO_LATENT_FPS)
+
+
+def segment_ends(latent: dict) -> list[int] | None:
+    """Where each segment of a joined clip ends, as H3 Extend Append recorded it.
+
+    Args:
+        latent: A joined clip.
+
+    Returns:
+        The clip's frame count at the end of each segment in order, or ``None`` where
+        nothing was recorded.
+    """
+    ends = latent.get(SEGMENT_ENDS_KEY) if isinstance(latent, dict) else None
+    return [int(end) for end in ends] if ends else None
+
+
+def with_ends(latent: dict, ends: list[int]) -> dict:
+    """A joined clip carrying where each of its segments ends.
+
+    Args:
+        latent: A joined clip.
+        ends: Frame counts at the end of each segment.
+
+    Returns:
+        A shallow copy of the latent holding the record.
+    """
+    out = dict(latent)
+    out[SEGMENT_ENDS_KEY] = [int(end) for end in ends]
+    return out
+
+
+def until_segment(latent: dict, index: int) -> dict:
+    """A joined clip cut back to the end of one of its segments.
+
+    Args:
+        latent: A joined clip that carries its segment ends.
+        index: Segment number, from 0.
+
+    Returns:
+        The clip as it stood when that segment ended, or the whole clip where that segment
+        is its last.
+
+    Raises:
+        ValueError: The clip carries no segment ends, or fewer segments than ``index``.
+    """
+    ends = segment_ends(latent)
+    if not ends:
+        raise ValueError(
+            "this clip carries no record of where its segments end, so it cannot continue "
+            "from an earlier one. Build it with H3 Extend Append, or set the source to -1"
+        )
+    if int(index) >= len(ends):
+        raise ValueError(
+            f"segment {int(index) + 1} was asked for and the clip holds {len(ends)}. Set "
+            f"the source to a finished segment"
+        )
+    if int(index) == len(ends) - 1:
+        return latent
+    video, audio = split(latent)
+    tokens = clip_end(tokens_for(ends[int(index)]))
+    frames = frames_for(tokens)
+    cut = join(video[:, :, :tokens], audio[..., :audio_span(frames)])
+    return with_ends(cut, ends[:int(index)] + [frames])
+
+
+def clip_end(tokens: int) -> int:
+    """The last point at or before a token count where a sampled clip can end.
+
+    Args:
+        tokens: Latent rows.
+
+    Returns:
+        The largest count of the form ``5k + 2`` not above ``tokens``, or ``tokens`` where
+        it is shorter than one lead.
+    """
+    tokens = int(tokens)
+    if tokens < TOKEN_LEAD:
+        return tokens
+    return tokens - (tokens - TOKEN_LEAD) % CLIP_TOKENS
+
+
+def rejoin(done: dict, sampled: dict, overlap: int) -> tuple[dict, int, int]:
+    """Join a window carried from an earlier segment, as a cut back to that scene.
+
+    Args:
+        done: The clip so far.
+        sampled: The window, whose opening rows are the earlier segment's tail.
+        overlap: The overlap in frames.
+
+    Returns:
+        ``(joined, kept, shown)``: the joined clip, the frames of the clip kept ahead of
+        the cut, and the carried frames shown again after it. The clip ends at
+        :func:`cut_point` and the window follows from its last clip boundary inside the
+        carried rows.
+    """
+    import torch
+
+    done_video, done_audio = split(done)
+    new_video, new_audio = split(sampled)
+    rows, kept = cut_point(done_video.shape[2])
+    head = min(tokens_for(snap_overlap(overlap)), new_video.shape[2])
+    start = max(0, head - TOKEN_LEAD)
+    dropped = frames_for(head) - frames_for(TOKEN_LEAD) if start else 0
+    joined = join(
+        torch.cat([done_video[:, :, :rows], new_video[:, :, start:]], dim=2),
+        torch.cat([done_audio[..., :min(done_audio.shape[-1], audio_span(kept))],
+                   new_audio[..., min(new_audio.shape[-1], audio_span(dropped)):]], dim=-1),
+    )
+    return joined, kept, frames_for(head) - dropped
 
 
 def split(latent: dict):

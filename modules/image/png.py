@@ -120,43 +120,44 @@ def _filtered(raw, width_bytes: int, bpp: int) -> bytes:
     """
     import numpy as np
 
-    out = bytearray()
-    prior = np.zeros(width_bytes, dtype=np.uint8)
-    shifted = np.zeros(width_bytes, dtype=np.uint8)
-    for line in raw:
-        shifted[:bpp] = 0
-        shifted[bpp:] = line[:-bpp] if bpp < width_bytes else 0
+    height = raw.shape[0]
+    line = np.ascontiguousarray(raw)
+    prior = np.zeros_like(line)
+    prior[1:] = line[:-1]
+    shifted = np.zeros_like(line)
+    if bpp < width_bytes:
+        shifted[:, bpp:] = line[:, :-bpp]
 
-        left = shifted.astype(np.int16)
-        up = prior.astype(np.int16)
-        upper_left = np.zeros(width_bytes, dtype=np.int16)
-        upper_left[bpp:] = up[:-bpp] if bpp < width_bytes else 0
+    left = shifted.astype(np.int16)
+    up = prior.astype(np.int16)
+    upper_left = np.zeros_like(up)
+    if bpp < width_bytes:
+        upper_left[:, bpp:] = up[:, :-bpp]
 
-        estimate = left + up - upper_left
-        paeth = np.where(
-            (np.abs(estimate - left) <= np.abs(estimate - up))
-            & (np.abs(estimate - left) <= np.abs(estimate - upper_left)),
-            left,
-            np.where(np.abs(estimate - up) <= np.abs(estimate - upper_left), up, upper_left),
-        )
+    estimate = left + up - upper_left
+    to_left, to_up, to_corner = np.abs(estimate - left), np.abs(estimate - up), np.abs(estimate - upper_left)
+    paeth = np.where(
+        (to_left <= to_up) & (to_left <= to_corner),
+        left,
+        np.where(to_up <= to_corner, up, upper_left),
+    )
 
-        candidates = (
-            (0, line),
-            (1, (line - shifted).astype(np.uint8)),
-            (2, (line - prior).astype(np.uint8)),
-            (3, (line.astype(np.int16) - ((left + up) >> 1)).astype(np.uint8)),
-            (4, (line.astype(np.int16) - paeth).astype(np.uint8)),
-        )
-        # The filter is picked by the smallest sum of the scanline read as signed bytes,
-        # which is the heuristic the format's own specification gives.
-        best = min(
-            candidates,
-            key=lambda pair: int(np.abs(pair[1].astype(np.int8).astype(np.int32)).sum()),
-        )
-        out.append(best[0])
-        out += best[1].tobytes()
-        prior = line
-    return bytes(out)
+    wide = line.astype(np.int16)
+    candidates = np.stack((
+        line,
+        (line - shifted).astype(np.uint8),
+        (line - prior).astype(np.uint8),
+        (wide - ((left + up) >> 1)).astype(np.uint8),
+        (wide - paeth).astype(np.uint8),
+    ))
+    # The filter is picked by the smallest sum of the scanline read as signed bytes, the
+    # heuristic the format's own specification gives; a tie goes to the lower filter.
+    scores = np.abs(candidates.view(np.int8).astype(np.int32)).sum(axis=2)
+    choice = scores.argmin(axis=0)
+    out = np.empty((height, width_bytes + 1), dtype=np.uint8)
+    out[:, 0] = choice
+    out[:, 1:] = candidates[choice, np.arange(height)]
+    return out.tobytes()
 
 
 def encode(image, *, depth: int = 8, dpi=None, icc: bytes | None = None,

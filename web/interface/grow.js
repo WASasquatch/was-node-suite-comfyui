@@ -131,6 +131,8 @@ export function growWidgets(node, groups, options = {}) {
   node.onConfigure = function (...args) {
     const result = originalConfigure?.apply(this, args);
     refold();
+    // Again once configure returns, when decorations are back in the widget list.
+    setTimeout(refold, 0);
     return result;
   };
 

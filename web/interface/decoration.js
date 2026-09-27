@@ -146,21 +146,37 @@ export function addDecoration(node, widget, before) {
   return widget;
 }
 
+// Bar and text colours of a header with no colour of its own.
+const HEADER_FILL = "rgba(120, 170, 255, 0.15)";
+const HEADER_TEXT = "rgba(210, 230, 255, 0.95)";
+
+// Width of the solid edge down the left of a coloured header.
+const HEADER_STRIPE = 4;
+
 /**
  * Draw a titled bar immediately above one of a node's widgets.
  *
  * @param {object} node - The node to draw it on.
  * @param {object} header - Settings.
  * @param {string} header.name - Widget name, unique on the node.
- * @param {string} header.title - Text drawn in the bar.
+ * @param {string|Function} header.title - Text drawn in the bar, or a function of the node
+ *   answering it on every draw.
  * @param {string} header.before - Name of the widget the bar sits above.
+ * @param {Function} [header.colour] - Called with the node on every draw; answers
+ *   `{fill, stripe, text}` CSS colours, or null for the plain bar.
+ * @param {Function} [header.onClick] - Called with the node and the pointer event when the bar
+ *   is pressed.
  * @returns {object|null} The widget added, or null when there was nowhere to put it.
  */
-export function addSectionHeader(node, { name, title, before }) {
-  return addDecoration(node, {
+export function addSectionHeader(node, { name, title, before, colour, onClick }) {
+  const text = () => {
+    const value = typeof title === "function" ? title(node) : title;
+    return String(value ?? "");
+  };
+  const widget = {
     name,
     type: "custom",
-    value: title,
+    value: text(),
     computeSize(width) {
       return [width ?? 0, HEADER_HEIGHT];
     },
@@ -171,20 +187,41 @@ export function addSectionHeader(node, { name, title, before }) {
         const room = Math.max(0, Math.min(width ?? 0, host?.size?.[0] ?? width ?? 0));
         const inset = Math.min(HEADER_INSET, room / 2);
         const bar = Math.max(0, room - inset * 2);
+        const tint = typeof colour === "function" ? colour(node) : null;
+        const label = text();
+        widget.value = label;
         ctx.save();
         ctx.globalAlpha = 1.0;
-        ctx.fillStyle = "rgba(120, 170, 255, 0.15)";
+        ctx.fillStyle = tint?.fill ?? HEADER_FILL;
         ctx.fillRect(inset, y, bar, h);
-        ctx.fillStyle = "rgba(210, 230, 255, 0.95)";
+        let at = inset + 6;
+        if (tint?.stripe) {
+          ctx.fillStyle = tint.stripe;
+          ctx.fillRect(inset, y, Math.min(HEADER_STRIPE, bar), h);
+          at += HEADER_STRIPE;
+        }
+        ctx.fillStyle = tint?.text ?? HEADER_TEXT;
         ctx.font = "12px sans-serif";
         ctx.textBaseline = "middle";
-        ctx.fillText(title, inset + 6, y + h / 2);
+        ctx.fillText(label, at, y + h / 2, Math.max(0, bar - (at - inset) - 6));
         ctx.restore();
       } catch (error) {
         console.error(`[${LOG_NAME}] Failed to draw ${name}:`, error);
       }
     },
-  }, before);
+  };
+  if (typeof onClick === "function") {
+    widget.mouse = (event, pos, host) => {
+      if (event?.type !== "pointerdown" && event?.type !== "mousedown") return false;
+      try {
+        onClick(host ?? node, event);
+      } catch (error) {
+        console.error(`[${LOG_NAME}] ${name} failed:`, error);
+      }
+      return true;
+    };
+  }
+  return addDecoration(node, widget, before);
 }
 
 /**

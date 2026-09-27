@@ -8,6 +8,39 @@
 import { app } from "../../../scripts/app.js";
 import { nodeLocator, watchPreviews } from "./preview.js";
 
+// The width a core node with widgets opens at on the canvas. No interface widens a node past it.
+const NODE_WIDTH_CAP = 270;
+
+// The room the frontend adds to a widget's own minimum width for a label and its arrows, in node
+// units, when it cannot be measured. Measured on frontend 1.53.
+const FALLBACK_CHROME = 104;
+
+// The room measured on this page, once.
+let measuredChrome = null;
+
+/**
+ * The room the frontend adds to a widget's minimum width when it sizes a node.
+ *
+ * @param {object} node - A node carrying the widget.
+ * @param {object} widget - A widget answering `computeLayoutSize`.
+ * @returns {number} The room in node units.
+ */
+function widgetChrome(node, widget) {
+  if (measuredChrome != null) return measuredChrome;
+  const probe = 100000;
+  const saved = widget.computeLayoutSize;
+  try {
+    widget.computeLayoutSize = () => ({ minHeight: 0, maxHeight: 0, minWidth: probe });
+    const measured = node?.computeSize?.()?.[0];
+    if (Number.isFinite(measured) && measured >= probe) measuredChrome = measured - probe;
+  } catch (error) {
+    console.error("[WASNodeSuite.Interface] Failed to measure the widget width room:", error);
+  } finally {
+    widget.computeLayoutSize = saved;
+  }
+  return measuredChrome ?? FALLBACK_CHROME;
+}
+
 /**
  * The top of the first widget laid out below this one, in node units.
  *
@@ -176,6 +209,7 @@ export function appendInterfaceWidget(node, panel, names) {
   // Appended after every schema widget and never inserted: `serialize` writes `widgets_values`
   // by absolute index while `configure` reads it with a compacted counter, so a widget placed
   // before a serialising one loads every later value into the wrong widget.
+  const widthBefore = Number(node.size?.[0]) || 0;
   const widget = node.addDOMWidget(names.name, names.type, panel.element, {
     hideOnZoom: true,
     getValue: () => "",
@@ -187,14 +221,29 @@ export function appendInterfaceWidget(node, panel, names) {
 
   // The frontend reads the range off `computeLayoutSize` when a widget defines one, and off the
   // getters when it does not, so a panel that grows has to answer the same range both ways or
-  // the layout it gets depends on which path the release takes.
-  widget.computeLayoutSize = () => ({ minHeight: height, maxHeight, minWidth });
+  // the layout it gets depends on which path the release takes. The width asked for is the
+  // node's, held to what a core node opens at, less the room the frontend adds for a label.
+  const layoutWidth = () => (minWidth > 0
+    ? Math.max(1, Math.min(minWidth, NODE_WIDTH_CAP) - widgetChrome(node, widget))
+    : 0);
+  widget.computeLayoutSize = () => ({ minHeight: height, maxHeight, minWidth: layoutWidth() });
 
   // Both flags are set here, since neither implies the other and passing one into
   // `addDOMWidget` sets only `options.serialize`. `widget.serialize` keeps the interface out of
   // the saved workflow and `widget.options.serialize` keeps it out of the API prompt.
   widget.serialize = false;
   widget.options.serialize = false;
+
+  // Adding the widget sized the node to the frontend's own minimum for it, before the one above
+  // replaced it, so the node is brought back to the wider of where it stood and what it needs.
+  try {
+    const needed = node.computeSize?.()?.[0];
+    if (widthBefore > 0 && Number.isFinite(needed) && node.size[0] > Math.max(widthBefore, needed)) {
+      node.size[0] = Math.max(widthBefore, needed);
+    }
+  } catch (error) {
+    console.error("[WASNodeSuite.Interface] Failed to settle the node's width:", error);
+  }
 
   // Installed once the widget exists, since the box is derived from it. `onDrawForeground` is
   // the one callback that still runs for every node the canvas draws, so it is where a panel

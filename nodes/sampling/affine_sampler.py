@@ -604,7 +604,7 @@ class KSamplerAffineAdvanced(io.ComfyNode):
         import comfy.sample
         import comfy.samplers
         import comfy.utils
-        import latent_preview
+        from ...modules.sampling import preview as sampling_preview
 
         if not hasattr(model, "get_model_object"):
             raise ValueError(
@@ -654,7 +654,7 @@ class KSamplerAffineAdvanced(io.ComfyNode):
         patched, holder = patch_sampler(comfy.samplers.sampler_object(sampler_name), spec)
         warn_unsupported(holder, sampler_name)
 
-        callback = latent_preview.prepare_callback(model, int(sigmas.shape[-1]) - 1)
+        callback = sampling_preview.prepare_callback(model, int(sigmas.shape[-1]) - 1)
         result = comfy.samplers.sample(
             model,
             noise,
@@ -770,7 +770,7 @@ class CustomSamplerAffineAdvanced(io.ComfyNode):
         import comfy.nested_tensor
         import comfy.sample
         import comfy.utils
-        import latent_preview
+        from ...modules.sampling import preview as sampling_preview
 
         if not hasattr(guider, "model_patcher") or not hasattr(guider, "sample"):
             raise ValueError(
@@ -794,7 +794,7 @@ class CustomSamplerAffineAdvanced(io.ComfyNode):
         warn_unsupported(holder, name)
 
         x0_output = {}
-        callback = latent_preview.prepare_callback(
+        callback = sampling_preview.prepare_callback(
             guider.model_patcher, int(sigmas.shape[-1]) - 1, x0_output
         )
         result = guider.sample(

@@ -6,6 +6,8 @@ count, and the loop runs once per row.
 
 from __future__ import annotations
 
+import re
+
 import torch
 
 from ..image import resolution
@@ -16,6 +18,18 @@ MODES = ("t2va", "i2va", "fl2va", "fl2va_batched", "ref2va")
 
 #: Prompt rows a node offers, row 1 being the clip.
 MAX_ROWS = 24
+
+#: A row's source that continues from the segment before it.
+PREVIOUS_SOURCE = -1
+
+#: Which of `prompt_header` and `prompt_footer` a row takes, the first being the default.
+WRAPS = ("both", "header only", "footer only", "neither")
+
+#: A line opening a named prompt section, as ``overall_soundscape:``.
+SECTION_LINE = re.compile(r"^([a-z][a-z0-9_]*):(?:\s|$)")
+
+#: The tag opening a spoken line, which the text encoder reads as one token.
+DIALOGUE_OPEN = "<d>"
 
 #: Latent channels in the video and audio halves.
 VIDEO_CHANNELS = 24
@@ -113,6 +127,132 @@ def continuity_name(row: int) -> str:
     return f"continuity_{row}"
 
 
+def source_name(row: int) -> str:
+    """The widget name of the segment a row continues from.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"source_{row}"
+
+
+def sources_of(widgets: dict) -> list[int]:
+    """The segment each row carrying a prompt continues from, in row order.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One source per row whose prompt is not blank, as the row holds it.
+    """
+    sources = []
+    for row in range(1, MAX_ROWS + 1):
+        text = widgets.get(prompt_name(row))
+        if not isinstance(text, str) or not text.strip():
+            continue
+        value = widgets.get(source_name(row))
+        sources.append(PREVIOUS_SOURCE if value is None else int(value))
+    return sources
+
+
+def wrap_name(row: int) -> str:
+    """The widget name of which shared text a row takes.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"header_footer_{row}"
+
+
+def wraps_of(widgets: dict) -> list[str]:
+    """The shared text each row carrying a prompt takes, in row order.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One entry of :data:`WRAPS` per row whose prompt is not blank.
+    """
+    wraps = []
+    for row in range(1, MAX_ROWS + 1):
+        text = widgets.get(prompt_name(row))
+        if not isinstance(text, str) or not text.strip():
+            continue
+        value = widgets.get(wrap_name(row))
+        wraps.append(value if value in WRAPS else WRAPS[0])
+    return wraps
+
+
+def takes_header(wrap: str) -> bool:
+    """Whether a row set to ``wrap`` takes the header.
+
+    Args:
+        wrap: An entry of :data:`WRAPS`.
+
+    Returns:
+        True for ``both`` and ``header only``.
+    """
+    return wrap in (WRAPS[0], WRAPS[1])
+
+
+def takes_footer(wrap: str) -> bool:
+    """Whether a row set to ``wrap`` takes the footer.
+
+    Args:
+        wrap: An entry of :data:`WRAPS`.
+
+    Returns:
+        True for ``both`` and ``footer only``.
+    """
+    return wrap in (WRAPS[0], WRAPS[2])
+
+
+def source_of(prompts, index: int) -> int:
+    """The source a bundled segment was given.
+
+    Args:
+        prompts: A bundle from :func:`bundle`.
+        index: Segment number, from 0.
+
+    Returns:
+        The source as the row held it, ``-1`` where none was given.
+    """
+    if not prompts or not 0 <= int(index) < len(prompts):
+        return PREVIOUS_SOURCE
+    return int(prompts[int(index)].get("source", PREVIOUS_SOURCE))
+
+
+def resolved_source(source: int, index: int) -> int:
+    """The finished segment a segment continues from.
+
+    Args:
+        source: Negative counts back from this segment, positive names a segment from 1,
+            and ``0`` means the one before.
+        index: This segment's number, from 0.
+
+    Returns:
+        A segment number from 0, earlier than ``index``.
+
+    Raises:
+        ValueError: The source names this segment, a later one, or one before the first.
+    """
+    source, index = int(source), int(index)
+    picked = index - 1 if source == 0 else (index + source if source < 0 else source - 1)
+    if not 0 <= picked < index:
+        raise ValueError(
+            f"segment {index + 1} is set to continue from source {source}, which names "
+            f"segment {picked + 1}, and only segments 1 to {index} are finished before it. "
+            f"Set its source to -1 for the segment before, or to a number from 1 to {index}"
+        )
+    return picked
+
+
 def frames_of(seconds: float) -> int:
     """Frames a length in seconds covers, before snapping.
 
@@ -174,8 +314,53 @@ def filled_rows(widgets: dict) -> list[tuple[str, int, int]]:
     return rows
 
 
+def sections(text: str) -> list[tuple[str | None, str]]:
+    """Text split at every line opening a named section, as ``overall_soundscape:``.
+
+    Args:
+        text: A prompt, or a header or footer.
+
+    Returns:
+        ``(name, block)`` pairs in order. Text ahead of the first section is named ``None``.
+    """
+    found: list[tuple[str | None, list[str]]] = [(None, [])]
+    for line in str(text or "").splitlines():
+        match = SECTION_LINE.match(line)
+        if match:
+            found.append((match.group(1), [line]))
+        else:
+            found[-1][1].append(line)
+    return [(name, "\n".join(lines)) for name, lines in found if name or "".join(lines).strip()]
+
+
+def dialogue_blocks(text: str) -> int:
+    """How many ``<d>`` dialogue tags a text holds.
+
+    Args:
+        text: A prompt, or a header or footer.
+
+    Returns:
+        The count of opening ``<d>`` tags.
+    """
+    return str(text or "").count(DIALOGUE_OPEN)
+
+
+def without_sections(text: str, names: set[str]) -> str:
+    """Text with the named sections taken out.
+
+    Args:
+        text: A header or footer.
+        names: Section names to take out.
+
+    Returns:
+        The rest of the text, trimmed.
+    """
+    kept = [block for name, block in sections(text) if name not in names]
+    return "\n".join(kept).strip()
+
+
 def composed(header: str, prompt: str, footer: str) -> str:
-    """One row's prompt with the text that surrounds every row.
+    """One row's prompt inside the header and footer, less any section the row names itself.
 
     Args:
         header: Text placed before the row's prompt, or blank for none.
@@ -185,6 +370,10 @@ def composed(header: str, prompt: str, footer: str) -> str:
     Returns:
         Whichever of the three carry text, in that order, joined by a blank line.
     """
+    own = {name for name, unused in sections(prompt) if name}
+    if own:
+        header = without_sections(header, own)
+        footer = without_sections(footer, own)
     parts = [str(part or "").strip() for part in (header, prompt, footer)]
     return "\n\n".join(part for part in parts if part)
 

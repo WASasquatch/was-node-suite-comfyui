@@ -2,7 +2,7 @@
  * Saved v2 widget values, put back on the widget they were written for.
  *
  * `V2_WIDGET_ORDER` holds each node's earlier widget order. `V2_BOOLEAN_WIDGETS` names widgets that
- * took the strings "false" and "true" before becoming a checkbox.
+ * took "false" and "true" before becoming a checkbox. `RENAMED_OPTIONS` maps renamed options.
  */
 
 import { app } from "../../scripts/app.js";
@@ -58,14 +58,37 @@ const V2_WIDGET_ORDER = {
   "Text Shuffle": ["separator", "seed"],
   "Text Sort": ["separator"],
   "Text String Truncate": ["truncate_by", "truncate_from", "truncate_to"],
+  // CNS Model Patch replaced its manual widgets with the published allocation's own knobs.
+  WASCNSModelPatch: ["mode", "strength", "bands", "slope", "start", "end"],
   "Text to Console": ["label"],
-  // MiniMax H3 Conditioning gained a continuity menu on each row, after that row's overlap.
+  // MiniMax H3 Conditioning gained a continuity menu on each row, after that row's overlap,
+  // then a source, then a header and footer menu. One earlier order per layout a save may hold.
   "WASMiniMaxH3Conditioning": [
-    "mode", "aspect_ratio", "megapixels", "width", "height",
-    "prompt_header", "prompt_footer",
-    ...Array.from({ length: 24 }, (unused, index) => [
-      `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
-    ]).flat(),
+    [
+      "mode", "aspect_ratio", "megapixels", "width", "height",
+      "prompt_header", "prompt_footer",
+      ...Array.from({ length: 24 }, (unused, index) => [
+        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
+      ]).flat(),
+    ],
+    [
+      "mode", "aspect_ratio", "megapixels", "width", "height",
+      "prompt_header", "prompt_footer",
+      ...Array.from({ length: 24 }, (unused, index) => [
+        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
+        `continuity_${index + 1}`,
+      ]).flat(),
+      "ref_image_size",
+    ],
+    [
+      "mode", "aspect_ratio", "megapixels", "width", "height",
+      "prompt_header", "prompt_footer",
+      ...Array.from({ length: 24 }, (unused, index) => [
+        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
+        `continuity_${index + 1}`, `source_${index + 1}`,
+      ]).flat(),
+      "ref_image_size",
+    ],
   ],
 };
 
@@ -110,6 +133,32 @@ const V2_BOOLEAN_WIDGETS = {
   "Text Concatenate": ["clean_whitespace"],
 };
 
+// Continuity menus on the H3 nodes, and the options each once offered under another name.
+const H3_CONTINUITY_RENAMED = { reference: "reference (video)" };
+
+// Node id -> `[widget names, {saved option: current option}]` for combos whose options were renamed.
+const RENAMED_OPTIONS = {
+  WASH3ExtendWindow: [["continuity"], H3_CONTINUITY_RENAMED],
+  WASMiniMaxH3Conditioning: [
+    Array.from({ length: 24 }, (unused, index) => `continuity_${index + 1}`),
+    H3_CONTINUITY_RENAMED,
+  ],
+};
+
+/**
+ * Put a renamed option's current name on each combo still holding the old one.
+ *
+ * @param {object} node - The node being configured.
+ * @param {[string[], Object<string, string>]} entry - Widget names and the renames.
+ * @returns {void}
+ */
+function renameOptions(node, [names, renamed]) {
+  for (const widget of node.widgets ?? []) {
+    if (!names.includes(widget?.name)) continue;
+    if (Object.hasOwn(renamed, widget.value)) widget.value = renamed[widget.value];
+  }
+}
+
 /**
  * Read the saved strings of a node's former combo widgets back as booleans.
  *
@@ -133,7 +182,8 @@ app.registerExtension({
   async beforeRegisterNodeDef(nodeType, nodeData) {
     const order = V2_WIDGET_ORDER[nodeData?.name];
     const booleans = V2_BOOLEAN_WIDGETS[nodeData?.name];
-    if (!order && !booleans) return;
+    const renamed = RENAMED_OPTIONS[nodeData?.name];
+    if (!order && !booleans && !renamed) return;
 
     const proto = nodeType.prototype;
     // Definitions are registered again on a refresh, which would otherwise wrap `onConfigure`
@@ -146,11 +196,12 @@ app.registerExtension({
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
         if (order) migrateWidgetValues(this, order);
-        if (booleans) {
+        if (booleans || renamed) {
           const originalOnConfigure = this.onConfigure;
           this.onConfigure = function (...args) {
             const configured = originalOnConfigure?.apply(this, args);
-            coerceBooleans(this, booleans);
+            if (booleans) coerceBooleans(this, booleans);
+            if (renamed) renameOptions(this, renamed);
             return configured;
           };
         }

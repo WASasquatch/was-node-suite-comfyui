@@ -40,10 +40,12 @@ function withLinked(widgets, order) {
  * Restore a v2 workflow's widget values onto a node that has since gained widgets.
  *
  * @param {object} node - The node being created.
- * @param {string[]} order - The widgets a v2 save's array holds, in the order it holds them.
+ * @param {string[]|string[][]} order - The widgets an earlier save's array holds, in the order
+ *   it holds them, or one such order per earlier layout.
  * @returns {void}
  */
 export function migrateWidgetValues(node, order) {
+  const orders = Array.isArray(order[0]) ? order : [order];
   const defaults = new Map((node.widgets ?? []).map((widget) => [widget.name, widget.value]));
 
   const originalOnConfigure = node.onConfigure;
@@ -51,7 +53,7 @@ export function migrateWidgetValues(node, order) {
     try {
       const saved = info?.widgets_values;
       const current = (this.widgets ?? []).filter(serialised);
-      const candidates = [withLinked(current, order), order];
+      const candidates = orders.flatMap((each) => [withLinked(current, each), each]);
       const matched = Array.isArray(saved)
         ? candidates.find((names) => names.length === saved.length && current.length > names.length)
         : null;

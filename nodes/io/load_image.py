@@ -9,7 +9,7 @@ from comfy_api.latest import io
 from ...modules import log
 from ...modules.compat.types import WAS_COLOUR_PROFILE
 from ...modules.constants import ALLOWED_EXT
-from ...modules.image import colour_profile
+from ...modules.image import colour_profile, deep_png
 from ...modules.interface import image_report, run_result
 from ...modules.state import history
 from ...modules.util import file_listing, sandbox
@@ -30,7 +30,7 @@ INPUT_TAG = f" [{file_listing.INPUT}]"
 
 
 def _publish_report(
-    answered, decoded, kind, tagged, colour_space, icc_mode, recorded
+    answered, decoded, kind, tagged, colour_space, icc_mode, recorded, depth=8
 ) -> None:
     """Report what came off disk and what changed on the way to the tensor.
 
@@ -44,6 +44,7 @@ def _publish_report(
         colour_space: The space widget's value.
         icc_mode: The mode widget's value.
         recorded: The path or address the picture came from.
+        depth: Bits a sample the file stored.
     """
     try:
         moved = image_report.drift(decoded, answered[0]) if decoded is not None else {}
@@ -61,7 +62,9 @@ def _publish_report(
             else f"{tagged.name}, {icc_mode}ed to {colour_space}" if tagged is not None
             else ""
         )
-        image_report.publish(answered, facts=facts, moved=moved or None, summary=summary)
+        image_report.publish(
+            answered, facts=facts, moved=moved or None, summary=summary, depth=depth
+        )
     except Exception as error:
         logger.debug("no load report was published (%s)", error)
 
@@ -123,6 +126,44 @@ def decode(opened, kind, recorded, RGBA, filename_text_extension, colour_space, 
         picture, decoded, kind, tagged, colour_space, icc_mode, str(recorded)
     )
     return io.NodeOutput(picture, mask, filename, tagged)
+
+
+def decode_deep(path, RGBA, filename_text_extension, colour_space, icc_mode, name=None):
+    """Read a 16-bit PNG at full precision into the four outputs the loaders answer with.
+
+    Args:
+        path: The file, already contained.
+        RGBA: Keep transparency in the image itself.
+        filename_text_extension: Keep the extension on the name.
+        colour_space: A value of :func:`modules.image.colour_profile.spaces`.
+        icc_mode: :data:`~modules.image.colour_profile.CONVERT` or ``ASSIGN``.
+        name: What to call it, or None to take the file's own name.
+
+    Returns:
+        The image, the mask, the name and the profile, as a node output.
+
+    Raises:
+        ValueError: The file could not be decoded.
+    """
+    from PIL import Image
+
+    picture = deep_png.read(path)
+    tagged = None
+    if picture.header.profile:
+        with Image.open(path) as opened:
+            tagged = colour_profile.carried(opened, converted=False)
+    called = name or os.path.basename(str(path))
+    tagged = colour_profile.interpret_deep(tagged, colour_space, icc_mode, called)
+    image, mask = deep_png.tensors(picture, RGBA)
+    history.update_history_images(str(path))
+    if picture.header.linear:
+        logger.info("%s is marked as linear light, and is loaded with no curve applied.", called)
+    _publish_report(
+        image, None, f"png, 16-bit{', linear' if picture.header.linear else ''}", tagged,
+        colour_space, icc_mode, str(path), depth=16,
+    )
+    filename = called if filename_text_extension else os.path.splitext(called)[0]
+    return io.NodeOutput(image, mask, filename, tagged)
 
 
 def chosen_path(label: str):
@@ -197,7 +238,8 @@ class ImageLoad(io.ComfyNode):
                 "with a colour profile is converted to sRGB as it is read, or kept in "
                 "its own space, and either way the profile comes out on its own socket. Anything "
                 "that cannot be read gives a black 512x512 image so the rest of the "
-                "workflow still runs."
+                "workflow still runs. A 16-bit PNG loads at full precision, and one marked "
+                "linear is loaded with no curve applied."
             ),
             inputs=[
                 io.Combo.Input(
@@ -323,7 +365,12 @@ class ImageLoad(io.ComfyNode):
                 "under a folder listed in paths.allow_read. Pick another from the menu, or "
                 "upload one with the button.", image,
             )
-        else:
+        elif deep_png.is_deep(found):
+            try:
+                return decode_deep(found, RGBA, filename_text_extension, colour_space, icc_mode)
+            except ValueError as error:
+                logger.error("%s, so it is read at 8 bits instead", error)
+        if found is not None:
             try:
                 opened = node_helpers.pillow(Image.open, found)
                 kind = (opened.format or "").lower()

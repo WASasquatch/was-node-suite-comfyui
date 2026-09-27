@@ -12,7 +12,7 @@ from ...modules import log
 from ...modules.constants import ALLOWED_EXT, MAX_SEQUENCE_FRAMES
 from ...modules.compat.lists import require_values
 from ...modules.convert.tensors import pil2tensor
-from ...modules.image import colour_profile
+from ...modules.image import colour_profile, deep_png
 from ...modules.interface import image_report
 from ...modules.io import picker
 from ...modules.state import history
@@ -105,9 +105,21 @@ class BatchImageLoader:
 
         import node_helpers
 
+        name = os.path.basename(str(path))
+        if deep_png.is_deep(path):
+            try:
+                picture = deep_png.read(path)
+                tagged = None
+                if picture.header.profile:
+                    with Image.open(path) as opened:
+                        tagged = colour_profile.carried(opened, converted=False)
+                colour_profile.interpret_deep(tagged, "sRGB", colour_profile.CONVERT, name)
+                return picture
+            except ValueError as error:
+                logger.error("%s, so it is read at 8 bits instead", error)
         image = node_helpers.pillow(Image.open, path)
         image = node_helpers.pillow(ImageOps.exif_transpose, image)
-        return colour_profile.to_srgb(image, os.path.basename(str(path)))
+        return colour_profile.to_srgb(image, name)
 
     def image_by_id(self, image_id: int):
         """``(image, file name)`` for one index, or ``(None, None)`` when out of range."""
@@ -135,6 +147,21 @@ class BatchImageLoader:
         return (self.read(image_path), os.path.basename(image_path), position)
 
 
+def as_tensor(image, rgba: bool):
+    """One loaded picture as a ``(1, height, width, channels)`` tensor.
+
+    Args:
+        image: A PIL image, or a 16-bit :class:`modules.image.deep_png.Picture`.
+        rgba: Keep transparency as a fourth channel.
+
+    Returns:
+        The tensor, at the precision the file was stored in.
+    """
+    if isinstance(image, deep_png.Picture):
+        return deep_png.tensors(image, rgba)[0]
+    return pil2tensor(image if rgba else image.convert("RGB"))
+
+
 class LoadImageBatch(io.ComfyNode):
     """Load one image from a directory by index, in sequence, or at random."""
 
@@ -153,7 +180,8 @@ class LoadImageBatch(io.ComfyNode):
                 "get every match in one run, as image_list and filename_list. The folder is "
                 "picked as a root and a path below it, so it always lands inside ComfyUI's "
                 "input, output or temp folder or one listed under paths.allow_read in "
-                "config.yaml. A folder that is not there fails the prompt."
+                "config.yaml. A folder that is not there fails the prompt. A 16-bit PNG loads "
+                "at full precision."
             ),
             inputs=[
                 io.Combo.Input(
@@ -352,13 +380,14 @@ class LoadImageBatch(io.ComfyNode):
 
         history.update_history_images(loader.image_paths)
 
-        if not allow_RGBA_output:
-            image = image.convert("RGB")
         if not filename_text_extension:
             filename = os.path.splitext(filename)[0]
 
-        answered = pil2tensor(image)
-        cls._publish_report(answered, position, len(loader.image_paths), filename, mode, folder)
+        answered = as_tensor(image, allow_RGBA_output)
+        cls._publish_report(
+            answered, position, len(loader.image_paths), filename, mode, folder,
+            depth=16 if isinstance(image, deep_png.Picture) else 8,
+        )
         stem = os.path.splitext(filename)[0]
         return io.NodeOutput(answered, filename, [answered], [stem])
 
@@ -392,17 +421,17 @@ class LoadImageBatch(io.ComfyNode):
                 len(paths), len(loader.image_paths), folder, MAX_SEQUENCE_FRAMES,
             )
 
-        images, names = [], []
+        images, names, depth = [], [], 8
         for path in paths:
             picture = loader.read(path)
-            if not allow_RGBA_output:
-                picture = picture.convert("RGB")
-            images.append(pil2tensor(picture))
+            if not images and isinstance(picture, deep_png.Picture):
+                depth = 16
+            images.append(as_tensor(picture, allow_RGBA_output))
             names.append(os.path.basename(path))
 
         history.update_history_images(loader.image_paths)
         first = names[0] if filename_text_extension else os.path.splitext(names[0])[0]
-        cls._publish_report(images[0], 0, len(paths), first, "all_images", folder)
+        cls._publish_report(images[0], 0, len(paths), first, "all_images", folder, depth=depth)
         logger.info("Load Image Batch read %d image(s) from `%s`", len(images), folder)
         return io.NodeOutput(
             images[0],
@@ -412,7 +441,7 @@ class LoadImageBatch(io.ComfyNode):
         )
 
     @staticmethod
-    def _publish_report(images, position, total, filename, mode, folder) -> None:
+    def _publish_report(images, position, total, filename, mode, folder, depth=8) -> None:
         """Report which image of the folder was read, for the panel on this node.
 
         Never raises, and never changes what the node returns.
@@ -424,6 +453,7 @@ class LoadImageBatch(io.ComfyNode):
             filename: Name of the image that was read.
             mode: Which of the three ways it was chosen.
             folder: The menu label the folder was picked from.
+            depth: Bits a sample the image was stored at.
         """
         try:
             # Counted from 0, the way the index widget counts, so the two never disagree.
@@ -442,6 +472,7 @@ class LoadImageBatch(io.ComfyNode):
                     ),
                 },
                 summary=f"{filename}, index {position} of 0 to {last}",
+                depth=depth,
             )
         except Exception as error:
             logger.debug("the batch reading was not reported (%s)", error)

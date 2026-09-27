@@ -27,9 +27,9 @@ class ExecutionGateControlboard(io.ComfyNode):
             description=(
                 "List every Execution Gate and Any Gate in the graph, subgraphs included, "
                 "each with a switch that opens or closes it. One place to turn whole branches "
-                "of a workflow on and off. The switches are the gates' own open widgets, so "
-                "they survive a save, an undo and a copy. The node reads nothing and answers "
-                "nothing."
+                "of a workflow on and off. A switch sets whatever decides the gate: its own "
+                "open, the subgraph input open is wired to, or a Boolean node feeding it, so "
+                "it survives a save, an undo and a copy."
             ),
             inputs=[],
             outputs=[],

@@ -87,6 +87,8 @@ FAMILY = frozenset({
     "WASImageFrequencyBlend",
     "WASImageGuidedFilter",
     "WASImageLensDistortion",
+    "WASImageMorphology",
+    "WASImageQuantize",
     "WASImageTemporalEqualize",
     "WASImageToneMap",
     "WASImageVignette",

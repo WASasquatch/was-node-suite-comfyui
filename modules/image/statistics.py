@@ -99,17 +99,18 @@ def _sharpness(luma: torch.Tensor) -> float:
     return float(response.var(unbiased=False))
 
 
-def _entropy(luma: torch.Tensor) -> float:
+def _entropy(luma: torch.Tensor, bins: int = _BINS) -> float:
     """Shannon entropy of the luminance histogram, in bits.
 
     Args:
         luma: A ``(height, width)`` luminance plane.
+        bins: Histogram bins, 256 for 8 bits and 65536 for 16.
 
     Returns:
-        Between 0.0 for a single-valued image and 8.0 for one spread evenly across all
-        256 bins. A low value on a photograph means most of the tonal range is unused.
+        Between 0.0 for a single-valued image and ``log2(bins)`` for one spread evenly
+        across every bin.
     """
-    counts = torch.histc(luma.flatten().float().clamp(0.0, 1.0), bins=_BINS, min=0.0, max=1.0)
+    counts = torch.histc(luma.flatten().float().clamp(0.0, 1.0), bins=bins, min=0.0, max=1.0)
     total = counts.sum()
     if total <= 0:
         return 0.0
@@ -118,12 +119,13 @@ def _entropy(luma: torch.Tensor) -> float:
     return float(-(occupied * occupied.log2()).sum())
 
 
-def measure(image: torch.Tensor) -> dict[str, float]:
+def measure(image: torch.Tensor, bins: int = _BINS) -> dict[str, float]:
     """Measure one image.
 
     Args:
         image: One image shaped ``(height, width, channels)``, float in ``[0, 1]``. A
             ``(height, width)`` plane is read as greyscale.
+        bins: Histogram bins the entropy is counted over.
 
     Returns:
         A mapping with one entry per name in :data:`FIELDS`:
@@ -134,7 +136,7 @@ def measure(image: torch.Tensor) -> dict[str, float]:
         - ``saturation``: mean HSV saturation, 0.0 to 1.0.
         - ``clipped_shadows``, ``clipped_highlights``: fraction of pixels at the bottom
           or top of the range, 0.0 to 1.0.
-        - ``entropy``: bits, 0.0 to 8.0.
+        - ``entropy``: bits, 0.0 to ``log2(bins)``.
     """
     plane = image.detach()
     if plane.ndim == 4:
@@ -152,5 +154,5 @@ def measure(image: torch.Tensor) -> dict[str, float]:
         "saturation": float(_saturation(plane).mean()),
         "clipped_shadows": float((flat <= _CLIP_EPSILON).float().mean()),
         "clipped_highlights": float((flat >= 1.0 - _CLIP_EPSILON).float().mean()),
-        "entropy": _entropy(luma),
+        "entropy": _entropy(luma, bins),
     }

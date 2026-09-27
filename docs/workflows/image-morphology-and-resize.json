@@ -1,0 +1,716 @@
+{
+  "id": "e59fbe28-181b-454a-8de5-feb458fa5ad0",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "h3_keys/key_01.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "h3_keys/key_01.png",
+        "upload": "image"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "Morphology",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "operation",
+          "name": "operation",
+          "type": "COMBO",
+          "widget": {
+            "name": "operation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "kernel_size",
+          "name": "kernel_size",
+          "type": "INT",
+          "widget": {
+            "name": "kernel_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Morphology"
+      },
+      "widgets_values": [
+        "top_hat",
+        15
+      ],
+      "widgets_values_named": {
+        "operation": "top_hat",
+        "kernel_size": 15
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "WASImageMorphology",
+      "pos": [
+        420,
+        300
+      ],
+      "size": [
+        360,
+        420
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "operation",
+          "name": "operation",
+          "type": "COMBO",
+          "widget": {
+            "name": "operation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "kernel_size",
+          "name": "kernel_size",
+          "type": "INT",
+          "widget": {
+            "name": "kernel_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageMorphology"
+      },
+      "widgets_values": [
+        "top_hat",
+        15
+      ],
+      "widgets_values_named": {
+        "operation": "top_hat",
+        "kernel_size": 15
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "ImageScale",
+      "pos": [
+        420,
+        760
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "upscale_method",
+          "name": "upscale_method",
+          "type": "COMBO",
+          "widget": {
+            "name": "upscale_method"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "crop",
+          "name": "crop",
+          "type": "COMBO",
+          "widget": {
+            "name": "crop"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "lanczos",
+        1664,
+        960,
+        "disabled"
+      ],
+      "widgets_values_named": {
+        "upscale_method": "lanczos",
+        "width": 1664,
+        "height": 960,
+        "crop": "disabled"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "Image Resize",
+      "pos": [
+        420,
+        980
+      ],
+      "size": [
+        270,
+        514
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "supersample",
+          "name": "supersample",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "supersample"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resampling",
+          "name": "resampling",
+          "type": "COMBO",
+          "widget": {
+            "name": "resampling"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rescale_factor",
+          "name": "rescale_factor",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rescale_factor"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resize_width",
+          "name": "resize_width",
+          "type": "INT",
+          "widget": {
+            "name": "resize_width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resize_height",
+          "name": "resize_height",
+          "type": "INT",
+          "widget": {
+            "name": "resize_height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resize_mode",
+          "name": "resize_mode",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "resize_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "align",
+          "name": "align",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "align"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pad_color",
+          "name": "pad_color",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "pad_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "multiple_of",
+          "name": "multiple_of",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "multiple_of"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Image Resize"
+      },
+      "widgets_values": [
+        "resize",
+        false,
+        "lanczos",
+        2,
+        1664,
+        960,
+        "stretch",
+        "middle center",
+        "#000000",
+        0
+      ],
+      "widgets_values_named": {
+        "mode": "resize",
+        "supersample": false,
+        "resampling": "lanczos",
+        "rescale_factor": 2,
+        "resize_width": 1664,
+        "resize_height": 960,
+        "resize_mode": "stretch",
+        "align": "middle center",
+        "pad_color": "#000000",
+        "multiple_of": 0
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 6,
+      "type": "PreviewImage",
+      "pos": [
+        1000,
+        40
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 7,
+      "type": "PreviewImage",
+      "pos": [
+        1000,
+        760
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 8,
+      "type": "PreviewImage",
+      "pos": [
+        1000,
+        1100
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 9,
+      "type": "PreviewImage",
+      "pos": [
+        820,
+        300
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      1,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      2,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      5,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      3,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1,
+      "offset": [
+        -300,
+        -10
+      ]
+    }
+  },
+  "version": 0.4
+}

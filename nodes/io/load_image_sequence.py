@@ -13,7 +13,7 @@ from ...modules import constants
 from ...modules.compat import limits
 from ...modules.compat.lists import require_values
 from ...modules.convert.tensors import stack_images
-from ...modules.image import colour_profile, sizing
+from ...modules.image import colour_profile, deep_png, sizing
 from ...modules.image.draw import parse_color
 from ...modules.interface import batch_report
 from ...modules.media import sampling
@@ -26,6 +26,37 @@ MAX_FRAMES = constants.MAX_SEQUENCE_FRAMES
 
 #: Fill for space a frame does not cover, when one cannot be read from the widget.
 FALLBACK_PAD = (0, 0, 0, 255)
+
+
+def deep_rgba(path):
+    """One file as a ``(height, width, 4)`` float32 array in sRGB order, 16-bit PNG at full precision.
+
+    Args:
+        path: The file, already contained.
+
+    Returns:
+        The array, alpha 1 where the file carries none.
+    """
+    import numpy as np
+    from PIL import Image, ImageOps
+
+    name = os.path.basename(str(path))
+    if deep_png.is_deep(path):
+        try:
+            picture = deep_png.read(path)
+            tagged = None
+            if picture.header.profile:
+                with Image.open(path) as opened:
+                    tagged = colour_profile.carried(opened, converted=False)
+            colour_profile.interpret_deep(tagged, "sRGB", colour_profile.CONVERT, name)
+            pixels = picture.pixels
+            colour = np.repeat(pixels[..., :1], 3, axis=2) if pixels.shape[2] in (1, 2) else pixels[..., :3]
+            alpha = pixels[..., -1:] if picture.header.alpha else np.ones_like(colour[..., :1])
+            return np.ascontiguousarray(np.concatenate([colour, alpha], axis=2))
+        except ValueError as error:
+            logger.error("%s, so it is read at 8 bits instead", error)
+    opened = colour_profile.to_srgb(ImageOps.exif_transpose(Image.open(path)), name)
+    return np.asarray(opened.convert("RGBA")).astype(np.float32) / 255.0
 
 
 class LoadImageSequence(io.ComfyNode):
@@ -49,9 +80,10 @@ class LoadImageSequence(io.ComfyNode):
             description=(
                 "Load a numbered sequence from a folder as one batch, in filename order, "
                 "with the same range and strategy controls the frame samplers use. It takes "
-                "16 frames unless told otherwise, since a folder can hold thousands. Load "
-                "Image Batch beside it serves one frame per run; this serves the run of "
-                "frames a video pipeline takes, opening only the files it keeps."
+                "every frame unless num_frames says otherwise. Load Image Batch beside it "
+                "serves one frame per run; this serves the run of frames a video pipeline "
+                "takes, opening only the files it keeps. 16-bit PNGs load and resize at "
+                "full precision."
             ),
             inputs=[
                 io.Combo.Input(
@@ -323,23 +355,39 @@ class LoadImageSequence(io.ComfyNode):
             f"everything from start onwards.",
         )
 
-        images = [
-            colour_profile.to_srgb(
-                ImageOps.exif_transpose(Image.open(name)), os.path.basename(str(name))
-            ).convert("RGBA")
-            for name in chosen
-        ]
-        target = cls.target_size(images[0].size, width, height, max_size)
         pad = parse_color(pad_color, FALLBACK_PAD)
-        try:
-            sized = [
-                sizing.as_channels(
-                    sizing.fit(image, target[0], target[1], resize_mode, interpolation, align, pad),
-                    channels,
-                )
-                for image in images
+        deep = any(deep_png.is_deep(name) for name in chosen)
+        if deep:
+            images = [deep_rgba(name) for name in chosen]
+            first_size = (int(images[0].shape[1]), int(images[0].shape[0]))
+        else:
+            images = [
+                colour_profile.to_srgb(
+                    ImageOps.exif_transpose(Image.open(name)), os.path.basename(str(name))
+                ).convert("RGBA")
+                for name in chosen
             ]
-            batched = stack_images(sized)
+            first_size = images[0].size
+        target = cls.target_size(first_size, width, height, max_size)
+        try:
+            if deep:
+                keep = 4 if channels == "RGBA" else 3
+                batched = torch.cat([
+                    sizing.fit_frames(
+                        torch.from_numpy(frame)[None], target, resize_mode, interpolation,
+                        align, pad,
+                    )[..., :keep]
+                    for frame in images
+                ])
+            else:
+                sized = [
+                    sizing.as_channels(
+                        sizing.fit(image, target[0], target[1], resize_mode, interpolation, align, pad),
+                        channels,
+                    )
+                    for image in images
+                ]
+                batched = stack_images(sized)
         except (MemoryError, ArithmeticError, RuntimeError) as short:
             need = len(images) * target[0] * target[1] * 4 * 4 / (1024 ** 3)
             raise ValueError(

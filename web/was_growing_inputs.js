@@ -8,6 +8,7 @@
 import { app } from "../../scripts/app.js";
 import { growWidgets } from "./interface/grow.js";
 import { addSectionHeader } from "./interface/decoration.js";
+import { addRowHeaders, rowColourMenu } from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.GrowingInputs";
 
@@ -32,7 +33,42 @@ const POWER_LORA_ROWS = {
   header: { name: "was_row_header", title: "Selected LoRA's", before: "lora_1_enabled" },
 };
 
-// A prompt, a frame count, an overlap and a continuity to a row on MiniMax H3 Conditioning.
+/**
+ * The value one of a node's widgets holds.
+ *
+ * @param {object} node - The node to read.
+ * @param {string} name - The widget's name.
+ * @returns {*} Its value, or undefined when the node has no such widget.
+ */
+function widgetValue(node, name) {
+  return node?.widgets?.find((widget) => widget?.name === name)?.value;
+}
+
+/**
+ * Text of one segment's header on MiniMax H3 Conditioning.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} row - Segment number, from 1.
+ * @returns {string} As `Segment 2 · 7.0 s · carry` or `Segment 3 · 8.0 s · cut · footer only`.
+ */
+function h3SegmentTitle(node, row) {
+  const parts = [`Segment ${row}`];
+  const seconds = Number(widgetValue(node, `duration_${row}`));
+  if (Number.isFinite(seconds)) parts.push(`${seconds.toFixed(1)} s`);
+  const continuity = widgetValue(node, `continuity_${row}`);
+  if (row === 1) parts.push("opening");
+  else if (continuity) parts.push(String(continuity));
+  const source = Number(widgetValue(node, `source_${row}`));
+  if (row > 1 && Number.isFinite(source) && source !== -1 && source !== 0) {
+    parts.push(`from ${source > 0 ? source : row + source}`);
+  }
+  const wrap = widgetValue(node, `header_footer_${row}`);
+  if (wrap && wrap !== "both") parts.push(String(wrap));
+  return parts.join(" · ");
+}
+
+// A prompt, a frame count, an overlap, a continuity, a source and the shared text it takes to a
+// row on MiniMax H3 Conditioning.
 // `decidesAt` names the prompt as the widget that says whether a row is in use.
 const H3_PROMPT_ROWS = {
   groups: Array.from({ length: 24 }, (unused, index) => [
@@ -40,9 +76,17 @@ const H3_PROMPT_ROWS = {
     `duration_${index + 1}`,
     `overlap_${index + 1}`,
     `continuity_${index + 1}`,
+    `source_${index + 1}`,
+    `header_footer_${index + 1}`,
   ]),
   minVisible: 2,
   decidesAt: 0,
+  // A coloured bar above each segment, folded away with it.
+  rowHeaders: {
+    name: (row) => `was_segment_header_${row}`,
+    title: h3SegmentTitle,
+    noun: "Segment",
+  },
 };
 
 // How many slots a lettered series declares.
@@ -106,6 +150,12 @@ const GROWING_PAIRS = {
 app.registerExtension({
   name: EXT_NAME,
 
+  getNodeMenuItems(node) {
+    const rowHeaders = GROWING[node?.comfyClass]?.rowHeaders;
+    if (!rowHeaders) return [];
+    return rowColourMenu(node, rowHeaders.noun);
+  },
+
   async beforeRegisterNodeDef(nodeType, nodeData) {
     const entry = GROWING[nodeData?.name];
     const listed = Array.isArray(entry) ? entry : entry?.names;
@@ -118,6 +168,7 @@ app.registerExtension({
       if (Number.isFinite(entry.decidesAt)) options.decidesAt = entry.decidesAt;
     }
     const header = Array.isArray(entry) ? null : entry?.header;
+    const rowHeaders = Array.isArray(entry) ? null : entry?.rowHeaders;
 
     const proto = nodeType.prototype;
     // Definitions are registered again on a refresh, which would otherwise wrap the prototype a
@@ -130,7 +181,13 @@ app.registerExtension({
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
         if (header) addSectionHeader(this, header);
-        this.__was_refold = growWidgets(this, groups, options);
+        let grown = groups;
+        if (rowHeaders) {
+          // Each header joins its row's group, after the widget that decides it, to fold with it.
+          const names = addRowHeaders(this, { groups, ...rowHeaders });
+          grown = groups.map((group, index) => [...group, names[index]]);
+        }
+        this.__was_refold = growWidgets(this, grown, options);
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to grow ${nodeData.name}:`, error);
       }

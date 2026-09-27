@@ -36,6 +36,7 @@ __all__ = [
     "batch_limit",
     "cover_box",
     "fit",
+    "fit_frames",
     "open_bytes",
     "scaled_size",
 ]
@@ -396,3 +397,77 @@ def _is_text(prefix: bytes) -> bool:
     except UnicodeDecodeError:
         return False
     return all(character >= " " or character in "\t\r\n" for character in text)
+
+
+def _frame_plans(source, target, mode, resampling, align):
+    """Axis plans bringing frames of one size to a target in one of :data:`MODES`.
+
+    Args:
+        source: ``(width, height)`` of the frames.
+        target: ``(width, height)`` asked for.
+        mode: One of :data:`MODES`.
+        resampling: A key of :data:`FILTERS`.
+        align: A key of :data:`ALIGNMENTS`.
+
+    Returns:
+        ``(across, down)`` plans for :func:`modules.image.resample.apply`.
+    """
+    from . import resample
+
+    (width, height), (wide, high) = source, target
+    scaled = scaled_size(source, target, mode)
+    if mode == FILL_AND_CROP and scaled[0] * scaled[1] > MAX_RESAMPLE_PIXELS:
+        left, upper, right, lower = cover_box(source, target, align)
+        if (right - left, lower - upper) == (wide, high):
+            left, upper = float(int(left)), float(int(upper))
+            right, lower = left + wide, upper + high
+        return (
+            resample.axis(width, wide, wide, 0, resampling, (left, right)),
+            resample.axis(height, high, high, 0, resampling, (upper, lower)),
+        )
+    across, down = draw.anchor_origin(align, target, scaled)
+    return (
+        resample.axis(width, scaled[0], wide, across, resampling),
+        resample.axis(height, scaled[1], high, down, resampling),
+    )
+
+
+def fit_frames(frames, target, mode=FIT_AND_PAD, resample_name=DEFAULT_FILTER,
+               align=DEFAULT_ALIGNMENT, pad=draw.TRANSPARENT, supersample: int = 1):
+    """A batch of float frames at exactly the target size, as :func:`fit` places one image.
+
+    Args:
+        frames: ``(batch, height, width, channels)`` float tensor, any precision.
+        target: ``(width, height)`` asked for.
+        mode: One of :data:`MODES`.
+        resample_name: A key of :data:`FILTERS`.
+        align: A key of :data:`ALIGNMENTS`.
+        pad: ``(red, green, blue, alpha)`` in 0 to 255 filling what the frames do not cover.
+        supersample: Resample through this many times the target, folded into one pass. Not
+            applied under :data:`CROP_OR_PAD`.
+
+    Returns:
+        The batch on the frames' own device, resampled on the GPU where there is one.
+    """
+    import comfy.model_management
+
+    from . import resample
+
+    name = resample_name if resample_name in FILTERS else DEFAULT_FILTER
+    target = (max(1, int(target[0])), max(1, int(target[1])))
+    source = (int(frames.shape[2]), int(frames.shape[1]))
+    if supersample > 1 and mode != CROP_OR_PAD:
+        large = (target[0] * supersample, target[1] * supersample)
+        across, down = _frame_plans(source, large, mode, name, align)
+        across = resample.supersampled(across, target[0], name)
+        down = resample.supersampled(down, target[1], name)
+    else:
+        across, down = _frame_plans(source, target, mode, name, align)
+    return resample.apply(
+        frames,
+        across,
+        down,
+        pad=[value / 255.0 for value in pad],
+        device=comfy.model_management.get_torch_device(),
+        premultiply=name != "nearest",
+    )
