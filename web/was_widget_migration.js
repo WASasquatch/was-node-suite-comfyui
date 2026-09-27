@@ -78,6 +78,14 @@ const V2_WIDGET_ORDER = {
         `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
         `continuity_${index + 1}`,
       ]).flat(),
+    ],
+    [
+      "mode", "aspect_ratio", "megapixels", "width", "height",
+      "prompt_header", "prompt_footer",
+      ...Array.from({ length: 24 }, (unused, index) => [
+        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
+        `continuity_${index + 1}`,
+      ]).flat(),
       "ref_image_size",
     ],
     [
