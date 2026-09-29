@@ -195,8 +195,8 @@ The checkout's own requirements file names the rest.
 | | | `DPT_Hybrid` | [Intel/dpt-hybrid-midas](https://huggingface.co/Intel/dpt-hybrid-midas) |
 | | | `DPT_Small` | [Intel/dpt-swinv2-tiny-256](https://huggingface.co/Intel/dpt-swinv2-tiny-256) |
 | `diffusers` | `models/diffusers` | any | any diffusers-format repository, kept as `<owner>/<name>` |
-| `birefnet` | `models/birefnet` | any | one `.safetensors` per variant, named as the widget lists it |
-| `ben2` | `models/ben2` | 1 | `ben2-base.safetensors` |
+| `birefnet` | `models/birefnet` | any | any full size BiRefNet `.safetensors`, published as [WAS/was-node-suite-weights](https://huggingface.co/WAS/was-node-suite-weights/tree/main/birefnet) |
+| `ben2` | `models/ben2` | any | any BEN2 base `.safetensors`, published as `ben2-base.safetensors` |
 
 Each is searched under its folder in these layouts, and Hugging Face's own cache after that.
 
@@ -212,6 +212,8 @@ Each is searched under its folder in these layouts, and Hugging Face's own cache
 |---|---|
 | The menu reads `put a checkpoint in models/EMA-VFI` | Nothing on disk and `features.network` off. Turn it on, or place a file and restart |
 | The file is on disk but not in the menu | Press **R** on the canvas |
+| A BiRefNet file is on disk but not in the cutout menu | It is a Lite file or another architecture. The menu lists full size BiRefNet and BEN2 base files only |
+| `is a link to ..., which ComfyUI cannot open` | The model folder or file is a link that does not resolve from ComfyUI. Recreate it with `mklink` on Windows, or point `extra_model_paths.yaml` at the real folder |
 | `was not found ... Setting features.network: true` | The run wanted a file you have not got, with fetching off |
 | `could not be fetched` | Fetching is on and the download failed. The message carries the reason and the directory to place it in |
 | `only trained to land halfway between two frames` | The multiplier is above 2 and this is not a `_t` file |

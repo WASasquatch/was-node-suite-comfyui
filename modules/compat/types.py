@@ -9,6 +9,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 __all__ = [
+    "BEATS",
     "BLIP_MODEL",
     "BUS",
     "CLIPSEG_MODEL",
@@ -77,6 +78,10 @@ CROP_DATA = io.Custom("CROP_DATA")
 #: `MiniMax H3 Conditioning` -> `H3 Extend Window`. One encoded conditioning and one frame
 #: count per extension pass, in pass order.
 H3_PROMPTS = io.Custom("WAS_H3_PROMPTS")
+
+#: `Audio Beats` output. A track's beat times, downbeats, tempo and per-frame loudness, as a
+#: `modules.media.beats.Beats`.
+BEATS = io.Custom("WAS_BEATS")
 
 #: `EMA-VFI Model Loader` -> `EMA-VFI Frame Interpolation`. Carries a
 #: `modules.model.Backend` holding the interpolation network and the checkpoint it was

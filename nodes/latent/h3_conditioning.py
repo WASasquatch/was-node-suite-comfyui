@@ -119,16 +119,18 @@ SEGMENT_PROMPT_HINT = (
 )
 
 SEGMENT_DURATION_HINT = (
-    "How long this segment runs, as `5.2` or `8.5` seconds. Snapped onto the model's "
-    "frame grid, and the report states the frames each segment came to."
+    "How long this segment runs, carried frames included, matching its "
+    "`duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, "
+    "`7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states "
+    "the frames each segment came to."
 )
 
 SEGMENT_SOURCE_HINT = (
     "Which segment this one continues from, as `-1` for the one before it, `-2` for the "
     "one before that, or `2` for Segment 2. Every continuity reads from that segment's "
-    "end, so after a cutaway `carry` picks the scene back up where it was left, and the "
-    "new frames still join the end of the clip. `0` is the same as `-1`. Ignored on "
-    "segment 1."
+    "end, so after a cutaway `carry` picks the scene back up where it was left, with its "
+    "sound starting fresh, and the new frames still join the end of the clip. `0` is the "
+    "same as `-1`. Ignored on segment 1."
 )
 
 SEGMENT_WRAP_HINT = (
@@ -965,6 +967,18 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 "in the first box"
             )
         wraps = h3_conditioning.wraps_of(rows)
+        mismatched = [
+            f"row {index + 1} states {stated:g}s and its duration is "
+            f"{h3_conditioning.duration_of(count):g}s"
+            for index, (text, count, _, _) in enumerate(filled)
+            if (stated := h3_conditioning.stated_seconds(text)) is not None
+            and abs(stated - h3_conditioning.duration_of(count)) > 0.05
+        ]
+        filled = [
+            (h3_conditioning.carried_timeline(text, count, overlap, choice, index == 0),
+             count, overlap, choice)
+            for index, (text, count, overlap, choice) in enumerate(filled)
+        ]
         filled = [
             (h3_conditioning.composed(
                 prompt_header if h3_conditioning.takes_header(wrap) else "",
@@ -1024,7 +1038,7 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             # Every clip gets an empty latent of its own.
             segments = [(opening, frames, 0, latent, h3_conditioning.AS_SET)]
             for text, count, overlap, choice in filled[1:]:
-                length = h3_conditioning.snap_segment(count)
+                length = h3_conditioning.snap_segment(count, overlap, choice)
                 own, _ = h3_conditioning.empty_latent(width, height, length)
                 segments.append((
                     h3_conditioning.encode(clip, text, [], references),
@@ -1064,6 +1078,14 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 f"segment, so every segment is given that line to speak. A segment with no "
                 f"dialogue of its own fills it with speech. Describe dialogue without `<d>` "
                 f"in {name}, and write each `<d>` line in the row that speaks it"
+            )
+            logging.warning("MiniMax H3 Conditioning: %s.", warning)
+            report += f"; WARNING: {warning}"
+        if mismatched:
+            warning = (
+                f"{'; '.join(mismatched)}. The model paces a segment by its duration, so a "
+                f"timeline written for another length runs short or long. Set the duration "
+                f"to the length the prompt describes"
             )
             logging.warning("MiniMax H3 Conditioning: %s.", warning)
             report += f"; WARNING: {warning}"

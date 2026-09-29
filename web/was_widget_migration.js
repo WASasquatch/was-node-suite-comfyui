@@ -151,6 +151,22 @@ const RENAMED_OPTIONS = {
     Array.from({ length: 24 }, (unused, index) => `continuity_${index + 1}`),
     H3_CONTINUITY_RENAMED,
   ],
+  WASRembgModelLoader: [
+    ["model"],
+    {
+      "BiRefNet General": "birefnet/General.safetensors",
+      "BiRefNet General HR": "birefnet/General-HR.safetensors",
+      "BiRefNet General Dynamic": "birefnet/General-dynamic.safetensors",
+      "BiRefNet General 512": "birefnet/General-reso_512.safetensors",
+      "BiRefNet Portrait": "birefnet/Portrait.safetensors",
+      "BiRefNet Matting HR": "birefnet/Matting-HR.safetensors",
+      "BiRefNet Fine Detail": "birefnet/DIS.safetensors",
+      "BiRefNet Fine Detail Extended": "birefnet/DIS-TR_TEs.safetensors",
+      "BiRefNet Camouflage": "birefnet/COD.safetensors",
+      "BiRefNet Salient Object": "birefnet/HRSOD.safetensors",
+      BEN2: "ben2/ben2-base.safetensors",
+    },
+  ],
 };
 
 /**

@@ -19,7 +19,8 @@ PASS_INDEX_HINT = (
 
 OVERLAP_HINT = (
     "Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. "
-    "Snapped down to the model's 17k+5 grid. Longer gives the new frames more of the "
+    "Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. "
+    "Longer gives the new frames more of the "
     "scene to continue from. `reference (video)` reads at least `56`."
 )
 
@@ -48,8 +49,9 @@ RELEASE_HINT = (
 SOURCE_HINT = (
     "Which segment this pass continues from, as `-1` for the one before it, `-2` for the "
     "one before that, or `2` for segment 2. Every continuity reads from that segment's "
-    "end, and the new frames still join the end of the clip. A row's own source replaces "
-    "this where prompts is wired."
+    "end, and the new frames still join the end of the clip; from an earlier segment the "
+    "picture carries and the sound starts fresh. A row's own source replaces this where "
+    "prompts is wired."
 )
 
 SAMPLES_HINT = (
@@ -72,7 +74,7 @@ REFRESH_HINT = (
 
 EXTENSION_HINT = (
     "New frames this pass adds, as `17` for about 0.7s or `102` for about 4.2s at 24 fps. "
-    "Snapped down to a multiple of 17."
+    "Snapped to the nearest multiple of 17."
 )
 
 
@@ -311,11 +313,14 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         continuity = h3_extend.CONTINUITY_RENAMED.get(continuity, continuity)
         named = f"segment {int(pass_index) + 1}"
         earlier = False
+        seen = 0
         if int(pass_index) > 0:
             if prompts is not None:
                 source = h3_conditioning.source_of(prompts, pass_index)
             picked = h3_conditioning.resolved_source(source, pass_index)
             if picked != int(pass_index) - 1:
+                ends = h3_extend.segment_ends(latent) or []
+                seen = h3_extend.seen_rows(ends[picked]) if picked < len(ends) else 0
                 latent = h3_extend.until_segment(latent, picked)
                 named += f" from segment {picked + 1}"
                 earlier = True
@@ -413,10 +418,14 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                 f"sampling {length} fresh frames",
             )
 
+        skip = 0
+        if earlier:
+            skip = h3_extend.rejoin_skip(seen, video.shape[2], video_tail.shape[2])
         window = h3_extend.window_frames(overlap, extension)
         tokens = h3_extend.tokens_for(window)
-        # The soundtrack is held for the whole latent steps that fit inside the overlap.
-        wanted_audio = h3_extend.audio_carry(overlap)
+        # The soundtrack is held for the whole latent steps that fit inside the overlap; a
+        # return to an earlier segment starts its audio fresh.
+        wanted_audio = 0 if earlier else h3_extend.audio_carry(overlap)
         rows = video_tail.shape[2]
 
         held_rows, scale, gain = h3_extend.settled(video, rows, drift_control)
@@ -435,7 +444,7 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         )
         carried["noise_mask"] = mask["samples"]
         if earlier:
-            carried[h3_extend.REJOIN_KEY] = True
+            carried[h3_extend.REJOIN_KEY] = int(skip)
 
         held = h3_extend.frames_for(video.shape[2])
         lead = h3_extend.audio_lead(overlap)

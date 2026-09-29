@@ -9,8 +9,9 @@ from ...modules.model import cutout
 
 REQUIRES = "preprocessors"
 
-#: The cutout models the ``model`` widget offers, in the order they are listed.
-MODELS = tuple(cutout.MODELS)
+#: Shown in the model list when neither folder holds a usable checkpoint, so the widget has
+#: something to draw.
+NO_CHECKPOINT = "put a checkpoint in models/birefnet or models/ben2"
 
 
 class RembgModelLoader(io.ComfyNode):
@@ -18,6 +19,7 @@ class RembgModelLoader(io.ComfyNode):
 
     @classmethod
     def define_schema(cls) -> io.Schema:
+        found = cutout.offered()
         return io.Schema(
             node_id="WASRembgModelLoader",
             display_name="Image Remove Background Model Loader",
@@ -34,22 +36,23 @@ class RembgModelLoader(io.ComfyNode):
             ],
             category="WAS Suite/Loaders",
             description=(
-                "Build a cutout network for Image Remove Background. Building one takes a "
-                "moment and holds a few hundred megabytes, so it is kept for the life of "
-                "the process and one loader can feed several nodes. Weights go in "
-                "ComfyUI/models/birefnet and ComfyUI/models/ben2, and are downloaded there "
-                "on first use when features.network is on."
+                "Build a cutout network for Image Remove Background from a checkpoint in "
+                "ComfyUI/models/birefnet or ComfyUI/models/ben2. The network is kept for the "
+                "life of the process, so one loader can feed several nodes. With "
+                "features.network on, the published checkpoints are listed before they are "
+                "downloaded and fetched on first use."
             ),
             inputs=[
                 io.Combo.Input(
                     "model",
-                    options=list(MODELS),
+                    options=found or [NO_CHECKPOINT],
+                    default=cutout.DEFAULT if cutout.DEFAULT in found else None,
                     tooltip=(
-                        "Which cutout network to build. `BiRefNet General` suits most "
-                        "pictures. `BiRefNet Portrait` is trained on people and `BiRefNet "
-                        "Matting HR` on fine edges like hair, both read at 2048 across. "
-                        "`BEN2` is a second opinion from another family. docs/MODELS.md "
-                        "lists what each one suits and what it weighs."
+                        "Checkpoint to build, as folder/file. `birefnet/General.safetensors` "
+                        "suits most pictures, `Portrait` people, `Matting-HR` hair and fine "
+                        "edges; `ben2/ben2-base.safetensors` is a second opinion. Lists every "
+                        "full size BiRefNet or BEN2 .safetensors in those folders; Lite files "
+                        "are left out."
                     ),
                 ),
             ],
@@ -62,6 +65,29 @@ class RembgModelLoader(io.ComfyNode):
                     ),
                 ),
             ],
+        )
+
+    @classmethod
+    def validate_inputs(cls, model) -> bool | str:
+        """Accept a listed checkpoint or a name an earlier menu offered.
+
+        Args:
+            model: The stored combo value.
+
+        Returns:
+            True, or the message naming what to pick.
+        """
+        if model in cutout.LEGACY or model in cutout.offered():
+            return True
+        if model == NO_CHECKPOINT:
+            return (
+                "no cutout checkpoint was found. Put a BiRefNet or BEN2 .safetensors in "
+                "ComfyUI/models/birefnet or ComfyUI/models/ben2, or set features.network: "
+                "true in config.yaml, then press R to refresh the list"
+            )
+        return (
+            f"{model} is not in models/birefnet or models/ben2 any more, or is not a full "
+            "size BiRefNet or BEN2 checkpoint. Pick one from the model list"
         )
 
     @classmethod

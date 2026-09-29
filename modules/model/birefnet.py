@@ -1,17 +1,27 @@
 """Foreground segmentation, on the BiRefNet network.
 
 :func:`load` answers a network taking ``(batch, 3, height, width)`` RGB on a 0 to 1 scale,
-each side a multiple of :data:`MULTIPLE`. :data:`MODELS` names what each file suits.
+each side a multiple of :data:`MULTIPLE`. :data:`MODELS` names each published file.
 """
 
 from __future__ import annotations
+
+import os
 
 import torch
 from torch import nn
 from torch.nn import functional
 from torchvision.ops import deform_conv2d
 
-from . import managed_module, published_checkpoint
+from . import (
+    ModelUnavailable,
+    checkpoint_shapes,
+    managed_module,
+    model_file_path,
+    model_directories,
+    published_checkpoint,
+    unresolved_links,
+)
 from .swin import (
     DEPTHS,
     EMBED_DIM_LARGE,
@@ -22,15 +32,20 @@ from .swin import (
 )
 
 __all__ = [
+    "DEFAULT_SIDE",
     "FEATURE",
     "FILENAME",
     "FOLDER",
+    "fits",
     "load",
+    "locate",
     "MODELS",
     "MULTIPLE",
     "Network",
     "REPO_ID",
     "RESOLUTIONS",
+    "SIGNATURE",
+    "side",
     "SUBFOLDER",
 ]
 
@@ -45,8 +60,7 @@ REPO_ID = "WAS/was-node-suite-weights"
 SUBFOLDER = "birefnet"
 FILENAME = "General.safetensors"
 
-#: The file holding each subject's weights, by the widget option naming it. The two Lite
-#: releases are left out, carrying a smaller backbone than the one built here.
+#: Each published file, by the name the model menu gave it before it listed files.
 MODELS = {
     "BiRefNet General": FILENAME,
     "BiRefNet General HR": "General-HR.safetensors",
@@ -89,19 +103,19 @@ SPLIT_GRIDS = (32, 16, 8, 4, 1)
 MEAN = (0.485, 0.456, 0.406)
 STD = (0.229, 0.224, 0.225)
 
-#: Side each file is read at, by the widget option naming it.
+#: Side a published file is read at, by filename. Any other file is read at
+#: :data:`DEFAULT_SIDE`.
 RESOLUTIONS = {
-    "BiRefNet General": 1024,
-    "BiRefNet General HR": 2048,
-    "BiRefNet General Dynamic": 1024,
-    "BiRefNet General 512": 512,
-    "BiRefNet Portrait": 1024,
-    "BiRefNet Matting HR": 2048,
-    "BiRefNet Fine Detail": 1024,
-    "BiRefNet Fine Detail Extended": 1024,
-    "BiRefNet Camouflage": 1024,
-    "BiRefNet Salient Object": 1024,
+    "General-HR.safetensors": 2048,
+    "General-reso_512.safetensors": 512,
+    "Matting-HR.safetensors": 2048,
 }
+
+#: Side a file absent from :data:`RESOLUTIONS` is read at.
+DEFAULT_SIDE = 1024
+
+#: A tensor every checkpoint this network loads carries, and its shape.
+SIGNATURE = ("bb.patch_embed.proj.weight", [192, 3, 4, 4])
 
 #: Multiple both sides of a frame must be.
 MULTIPLE = PATCH_SIZE * 2 ** (len(DEPTHS) - 1)
@@ -455,37 +469,94 @@ class Network(nn.Module):
         return maps
 
 
-def load(name: str = "BiRefNet General", device: str | None = None):
-    """Build the network and read one subject's published weights into it.
+def side(name: str) -> int:
+    """The square side a checkpoint is read at.
 
     Args:
-        name: A key of :data:`MODELS`, naming the file to read.
+        name: A checkpoint name, with or without a subdirectory.
+
+    Returns:
+        Pixels per side.
+    """
+    return RESOLUTIONS.get(os.path.basename(name), DEFAULT_SIDE)
+
+
+def fits(path: str | os.PathLike) -> bool:
+    """Whether a safetensors file holds weights this network loads.
+
+    Args:
+        path: A ``.safetensors`` file.
+
+    Returns:
+        True when its header carries :data:`SIGNATURE`.
+    """
+    key, shape = SIGNATURE
+    return checkpoint_shapes(path).get(key) == shape
+
+
+def locate(name: str = FILENAME) -> str:
+    """The path of one checkpoint, fetching a published file when that is allowed.
+
+    Args:
+        name: A file in the ``birefnet`` model folder, relative to it, or a key of
+            :data:`MODELS`.
+
+    Returns:
+        An absolute path.
+
+    Raises:
+        ModelUnavailable: The file is not on disk, and is not published or
+            ``features.network`` is off.
+    """
+    name = MODELS.get(name, name)
+    found = model_file_path(FOLDER, name)
+    if found is not None:
+        return str(found)
+    if os.path.basename(name) in MODELS.values():
+        return published_checkpoint(
+            FOLDER, REPO_ID, os.path.basename(name), subfolder=SUBFOLDER, feature=FEATURE,
+            what="The segmentation network",
+        )
+    roots = model_directories(FOLDER)
+    searched = "\n".join(f"    {root}" for root in roots) or "    nowhere, ComfyUI is not running"
+    raise ModelUnavailable(
+        "\n".join([f"The segmentation network needs {name}, which is not in:", searched,
+                   *unresolved_links(roots, name)])
+    )
+
+
+def load(name: str = FILENAME, device: str | None = None):
+    """Build the network and read one checkpoint into it.
+
+    Args:
+        name: A file in the ``birefnet`` model folder, relative to it, or a key of
+            :data:`MODELS`.
         device: Device name, or ``None`` for ComfyUI's compute device.
 
     Returns:
         A :class:`~modules.model.Backend` whose ``model`` is the network in eval mode, at
-        the dtype the file was published in, built once per file and kept for the process.
+        the dtype the file holds, built once per file and kept for the process.
 
     Raises:
-        ValueError: ``name`` is not a key of :data:`MODELS`.
-        ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
+        ValueError: The file does not hold BiRefNet weights of the size built here.
+        ModelUnavailable: The file is not on disk, and is not published or
+            ``features.network`` is off.
     """
-    if name not in MODELS:
-        raise ValueError(f"BiRefNet model must be one of {', '.join(MODELS)}, not {name!r}")
-    filename = MODELS[name]
-    return managed_module(
-        ("birefnet", REPO_ID, filename), lambda: _build(filename), device=device
-    )
+    path = locate(name)
+    return managed_module(("birefnet", path), lambda: _build(path), device=device)
 
 
-def _build(filename: str) -> Network:
+def _build(path: str) -> Network:
     """Read the checkpoint and load it into a freshly built network."""
     from safetensors.torch import load_file
 
-    path = published_checkpoint(
-        FOLDER, REPO_ID, filename, subfolder=SUBFOLDER, feature=FEATURE,
-        what="The segmentation network",
-    )
+    if not fits(path):
+        key, shape = SIGNATURE
+        raise ValueError(
+            f"{path} is not a BiRefNet checkpoint this node can build: it has no {key} "
+            f"shaped {shape}. BiRefNet Lite files and other architectures are not supported; "
+            "pick a full size BiRefNet file."
+        )
     weights = load_file(path)
     network = Network()
     network.to(next(one.dtype for one in weights.values() if one.is_floating_point()))

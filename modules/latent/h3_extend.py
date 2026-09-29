@@ -25,7 +25,9 @@ __all__ = [
     "cut_point",
     "empty_like",
     "extension_tokens",
+    "floor_overlap",
     "frames_for",
+    "nearest_clips",
     "join",
     "masked_window",
     "reference_canvas",
@@ -110,8 +112,12 @@ CONTINUITY_RENAMED = {"reference": REFERENCE_VIDEO}
 #: Latent key holding the clip's frame count at the end of each segment.
 SEGMENT_ENDS_KEY = "h3_segment_frames"
 
-#: Window key marking a pass carried from an earlier segment than the last.
+#: Window key marking a pass carried from an earlier segment than the last, holding the
+#: window rows to skip at the join.
 REJOIN_KEY = "h3_rejoin"
+
+#: Latent key holding the rows and audio a cut trimmed off each segment's end, by segment.
+TAILS_KEY = "h3_segment_tails"
 
 #: Stills `reference (sample)` takes from the clip by default.
 REFERENCE_SAMPLES = 4
@@ -397,8 +403,33 @@ def cut_point(tokens: int) -> tuple:
     return whole, whole // CLIP_TOKENS * CLIP_FRAMES
 
 
+def nearest_clips(frames: int, least: int = 0) -> int:
+    """The whole number of clips closest to a frame count, halves rounding up.
+
+    Args:
+        frames: Frames asked for.
+        least: Fewest clips answered.
+
+    Returns:
+        A clip count.
+    """
+    return max(int(least), (2 * int(frames) + CLIP_FRAMES) // (2 * CLIP_FRAMES))
+
+
+def floor_overlap(frames: int) -> int:
+    """The longest guide length at or below a frame count, never under the lead.
+
+    Args:
+        frames: Frames available.
+
+    Returns:
+        A count on the ``17k + 5`` grid, at least :data:`CLIP_LEAD`.
+    """
+    return CLIP_LEAD + max(0, int(frames) - CLIP_LEAD) // CLIP_FRAMES * CLIP_FRAMES
+
+
 def snap_overlap(frames: int) -> int:
-    """The nearest guide length at or below a frame count, never under the lead.
+    """The guide length closest to a frame count, never under the lead.
 
     Args:
         frames: Frames asked for.
@@ -406,14 +437,11 @@ def snap_overlap(frames: int) -> int:
     Returns:
         A count on the ``17k + 5`` grid, at least :data:`CLIP_LEAD`.
     """
-    wanted = max(CLIP_LEAD, int(frames))
-    while wanted % CLIP_FRAMES != CLIP_LEAD % CLIP_FRAMES:
-        wanted -= 1
-    return max(CLIP_LEAD, wanted)
+    return CLIP_LEAD + nearest_clips(max(0, int(frames) - CLIP_LEAD)) * CLIP_FRAMES
 
 
 def snap_clip(frames: int) -> int:
-    """The nearest clip length at or above a frame count.
+    """The clip length closest to a frame count.
 
     Args:
         frames: Frames asked for.
@@ -421,14 +449,11 @@ def snap_clip(frames: int) -> int:
     Returns:
         A count on the ``17k + 5`` grid, at least :data:`CLIP_LEAD`.
     """
-    wanted = max(CLIP_LEAD, int(frames))
-    while wanted % CLIP_FRAMES != CLIP_LEAD % CLIP_FRAMES:
-        wanted += 1
-    return wanted
+    return snap_overlap(frames)
 
 
 def snap_extension(frames: int) -> int:
-    """The nearest extension at or below a frame count, never under one clip.
+    """The extension closest to a frame count, never under one clip.
 
     Args:
         frames: Frames asked for.
@@ -436,8 +461,7 @@ def snap_extension(frames: int) -> int:
     Returns:
         A positive multiple of :data:`CLIP_FRAMES`.
     """
-    clips = max(1, int(frames) // CLIP_FRAMES)
-    return clips * CLIP_FRAMES
+    return nearest_clips(frames, 1) * CLIP_FRAMES
 
 
 def window_frames(overlap: int, extension: int) -> int:
@@ -533,11 +557,73 @@ def until_segment(latent: dict, index: int) -> dict:
         )
     if int(index) == len(ends) - 1:
         return latent
+    import torch
+
     video, audio = split(latent)
-    tokens = clip_end(tokens_for(ends[int(index)]))
+    end = ends[int(index)]
+    tail = (latent.get(TAILS_KEY) or {}).get(int(index))
+    if tail is not None and end % CLIP_FRAMES == 0:
+        # The rows a cut trimmed go back on, so the segment ends where it was sampled.
+        rows = end // CLIP_FRAMES * CLIP_TOKENS
+        restored = join(
+            torch.cat([video[:, :, :rows], tail[0].to(video)], dim=2),
+            torch.cat([audio[..., :audio_span(end)], tail[1].to(audio)], dim=-1),
+        )
+        return with_ends(restored, ends[:int(index)] + [frames_for(rows + tail[0].shape[2])])
+    tokens = clip_end(tokens_for(end))
     frames = frames_for(tokens)
     cut = join(video[:, :, :tokens], audio[..., :audio_span(frames)])
     return with_ends(cut, ends[:int(index)] + [frames])
+
+
+def seen_rows(frames: int) -> int:
+    """Latent rows a segment end covers, on either the clip or the cut grid.
+
+    Args:
+        frames: A frame count from :func:`segment_ends`.
+
+    Returns:
+        The rows those frames decode from.
+    """
+    frames = int(frames)
+    if frames % CLIP_FRAMES == 0:
+        return frames // CLIP_FRAMES * CLIP_TOKENS
+    return tokens_for(frames)
+
+
+def rejoin_skip(seen: int, rows: int, head: int) -> int:
+    """Window rows a return drops so it opens on the first frame not yet shown.
+
+    Args:
+        seen: Rows of the earlier segment shown before the cut away.
+        rows: Rows of the clip the window carries from.
+        head: Rows the window carries.
+
+    Returns:
+        A multiple of :data:`CLIP_TOKENS`, so the join lands on a decoder clip.
+    """
+    ahead = max(0, int(seen) - (int(rows) - int(head)))
+    return (2 * ahead + CLIP_TOKENS) // (2 * CLIP_TOKENS) * CLIP_TOKENS
+
+
+def with_tail(latent: dict, index: int, video, audio) -> dict:
+    """A joined clip recording the rows and audio a cut trimmed off one segment.
+
+    Args:
+        latent: A joined clip.
+        index: The trimmed segment, from 0.
+        video: The trimmed video rows.
+        audio: The trimmed audio.
+
+    Returns:
+        A shallow copy of the latent holding the record.
+    """
+    out = dict(latent)
+    tails = dict(latent.get(TAILS_KEY) or {})
+    if video.shape[2]:
+        tails[int(index)] = (video.clone(), audio.clone())
+    out[TAILS_KEY] = tails
+    return out
 
 
 def clip_end(tokens: int) -> int:
@@ -565,25 +651,43 @@ def rejoin(done: dict, sampled: dict, overlap: int) -> tuple[dict, int, int]:
         overlap: The overlap in frames.
 
     Returns:
-        ``(joined, kept, shown)``: the joined clip, the frames of the clip kept ahead of
-        the cut, and the carried frames shown again after it. The clip ends at
-        :func:`cut_point` and the window follows from its last clip boundary inside the
-        carried rows.
+        ``(joined, kept, dropped)``: the joined clip, the frames of the clip kept ahead of
+        the cut, and the window frames left out ahead of the join. The clip ends at
+        :func:`cut_point` and the window follows from the rows its ``REJOIN_KEY`` names.
     """
     import torch
 
     done_video, done_audio = split(done)
     new_video, new_audio = split(sampled)
     rows, kept = cut_point(done_video.shape[2])
-    head = min(tokens_for(snap_overlap(overlap)), new_video.shape[2])
-    start = max(0, head - TOKEN_LEAD)
-    dropped = frames_for(head) - frames_for(TOKEN_LEAD) if start else 0
+    start = rejoin_start(sampled, overlap, new_video.shape[2])
+    dropped = start // CLIP_TOKENS * CLIP_FRAMES
     joined = join(
         torch.cat([done_video[:, :, :rows], new_video[:, :, start:]], dim=2),
         torch.cat([done_audio[..., :min(done_audio.shape[-1], audio_span(kept))],
                    new_audio[..., min(new_audio.shape[-1], audio_span(dropped)):]], dim=-1),
     )
-    return joined, kept, frames_for(head) - dropped
+    return joined, kept, dropped
+
+
+def rejoin_start(window: dict, overlap: int, rows: int) -> int:
+    """The window row a return's join opens on.
+
+    Args:
+        window: A window marked with ``REJOIN_KEY``.
+        overlap: The overlap in frames.
+        rows: Rows the window holds.
+
+    Returns:
+        A multiple of :data:`CLIP_TOKENS` below ``rows``.
+    """
+    marked = window.get(REJOIN_KEY) if isinstance(window, dict) else None
+    if isinstance(marked, bool) or marked is None:
+        head = min(tokens_for(snap_overlap(overlap)), rows)
+        start = max(0, head - TOKEN_LEAD)
+    else:
+        start = int(marked)
+    return max(0, min(start, (int(rows) - 1) // CLIP_TOKENS * CLIP_TOKENS))
 
 
 def split(latent: dict):

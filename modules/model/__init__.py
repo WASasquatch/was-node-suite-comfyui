@@ -8,8 +8,10 @@
 from __future__ import annotations
 
 import gc
+import json
 import os
 import re
+import struct
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -20,6 +22,7 @@ __all__ = [
     "ModelUnavailable",
     "NETWORK_FEATURE",
     "cached",
+    "checkpoint_shapes",
     "compute_device",
     "managed",
     "managed_module",
@@ -34,6 +37,7 @@ __all__ = [
     "shared_file",
     "shared_roots",
     "unpin_staged",
+    "unresolved_links",
 ]
 
 logger = log.get_logger("model")
@@ -188,11 +192,14 @@ def shared_roots() -> list[Path]:
 
         packs = Path(folder_paths.base_path) / "custom_nodes"
         # One convention covers every pack that follows it, rather than naming one of them.
-        candidates.extend(sorted(packs.glob("*/ckpts")))
+        if os.path.isdir(packs):
+            candidates.extend(
+                packs / name / "ckpts" for name in sorted(os.listdir(packs))
+            )
     except Exception as error:
         logger.debug("the custom_nodes directory is unreadable (%s)", error)
     for candidate in candidates:
-        if candidate.is_dir() and candidate not in roots:
+        if os.path.isdir(candidate) and candidate not in roots:
             roots.append(candidate)
     return roots
 
@@ -224,10 +231,10 @@ def published_checkpoint(
             is off.
     """
     roots = model_directories(folder)
-    for root in roots:
-        for candidate in (root / filename, root / subfolder / filename):
-            if candidate.is_file():
-                return str(candidate)
+    for name in (filename, f"{subfolder}/{filename}" if subfolder else filename):
+        found = model_file_path(folder, name)
+        if found is not None:
+            return str(found)
     borrowed = shared_file(repo_id, filename)
     if borrowed is not None:
         logger.debug("%s was read from %s", filename, borrowed)
@@ -308,13 +315,13 @@ def _published_file(
         for repo_id in repositories:
             for relative in _layouts(repo_id):
                 candidate = root / relative / filename
-                if candidate.is_file():
+                if os.path.isfile(candidate):
                     return candidate
                 snapshot = _newest_snapshot(root / relative / "snapshots", filename)
                 if snapshot is not None:
                     return snapshot / filename
         loose = root / filename
-        if loose.is_file():
+        if os.path.isfile(loose):
             return loose
     return None
 
@@ -331,7 +338,76 @@ def _missing_file(what, filename, repo_id, roots, feature) -> str:
     ]
     if feature:
         lines.append(f"This node was loaded because {feature} is enabled in config.yaml.")
+    lines.extend(unresolved_links(roots, filename))
     return "\n".join(lines)
+
+
+def unresolved_links(roots: Sequence[Path], filename: str = "") -> list[str]:
+    """Lines naming each link among ``roots`` or ``root/filename`` that does not resolve.
+
+    Args:
+        roots: Search directories.
+        filename: A file name looked for in each of them, or empty to test the roots alone.
+
+    Returns:
+        One line per link that exists but points at nothing this process can open, with
+        its target where it can be read. Empty when every link resolves.
+    """
+    lines = []
+    for root in roots:
+        for candidate in (root, root / filename) if filename else (root,):
+            if not os.path.lexists(candidate) or os.path.exists(candidate):
+                continue
+            try:
+                target = os.readlink(candidate).removeprefix("\\\\?\\")
+            except OSError:
+                target = "a target this process cannot read"
+            lines.append(
+                f"{candidate} is a link to {target}, which ComfyUI cannot open. Recreate the "
+                "link from Windows with mklink, or point extra_model_paths.yaml at the real folder."
+                if os.name == "nt"
+                else f"{candidate} is a link to {target}, which ComfyUI cannot open."
+            )
+    return lines
+
+
+_header_cache: dict[str, tuple[tuple[int, int], dict[str, list[int]]]] = {}
+
+
+def checkpoint_shapes(path: str | os.PathLike) -> dict[str, list[int]]:
+    """Every tensor name in a safetensors file mapped to its shape, read from the header.
+
+    Args:
+        path: A ``.safetensors`` file.
+
+    Returns:
+        Tensor shapes by name, cached against the file's size and modification time. Empty
+        when the file cannot be read or is not safetensors.
+    """
+    key = os.fspath(path)
+    try:
+        info = os.stat(key)
+    except OSError:
+        return {}
+    stamp = (info.st_size, info.st_mtime_ns)
+    cached_entry = _header_cache.get(key)
+    if cached_entry is not None and cached_entry[0] == stamp:
+        return cached_entry[1]
+    shapes: dict[str, list[int]] = {}
+    try:
+        with open(key, "rb") as handle:
+            (size,) = struct.unpack("<Q", handle.read(8))
+            if 0 < size <= 100_000_000:
+                header = json.loads(handle.read(size))
+                shapes = {
+                    name: list(entry.get("shape", []))
+                    for name, entry in header.items()
+                    if name != "__metadata__" and isinstance(entry, dict)
+                }
+    except (OSError, ValueError, struct.error):
+        shapes = {}
+    _header_cache[key] = (stamp, shapes)
+    return shapes
 
 
 def shared_file(repo_id: str, filename: str) -> Path | None:
@@ -349,10 +425,10 @@ def shared_file(repo_id: str, filename: str) -> Path | None:
     for root in shared_roots():
         for relative in _layouts(repo_id):
             candidate = root / relative / filename
-            if candidate.is_file():
+            if os.path.isfile(candidate):
                 return candidate
         loose = root / filename
-        if loose.is_file():
+        if os.path.isfile(loose):
             return loose
     return None
 
@@ -415,7 +491,7 @@ def model_file_path(folder: str, name: str, location: str | None = None) -> Path
     # Reached when folder_paths is absent, which is every run outside a ComfyUI process.
     for directory in directories:
         candidate = directory / name
-        if candidate.is_file():
+        if os.path.isfile(candidate):
             return candidate
     return None
 
@@ -762,7 +838,7 @@ def _checkpoint(root: Path, repo_id: str, marker: str = CHECKPOINT_MARKER) -> Pa
     # serve one checkpoint for every model_size a node asks for.
     for relative in _layouts(repo_id):
         candidate = root / relative
-        if (candidate / marker).is_file():
+        if os.path.isfile(candidate / marker):
             return candidate
         snapshot = _newest_snapshot(candidate / "snapshots", marker)
         if snapshot is not None:
@@ -772,12 +848,15 @@ def _checkpoint(root: Path, repo_id: str, marker: str = CHECKPOINT_MARKER) -> Pa
 
 def _newest_snapshot(snapshots: Path, marker: str = CHECKPOINT_MARKER) -> Path | None:
     """The most recently written revision in a Hugging Face cache ``snapshots`` tree."""
-    if not snapshots.is_dir():
+    if not os.path.isdir(snapshots):
         return None
-    revisions = [path for path in snapshots.iterdir() if (path / marker).is_file()]
+    revisions = [
+        snapshots / name for name in os.listdir(snapshots)
+        if os.path.isfile(snapshots / name / marker)
+    ]
     if not revisions:
         return None
-    return max(revisions, key=lambda path: path.stat().st_mtime)
+    return max(revisions, key=os.path.getmtime)
 
 
 def _legacy_file(roots: Sequence[Path], legacy: Sequence[str]) -> Path | None:
@@ -785,7 +864,7 @@ def _legacy_file(roots: Sequence[Path], legacy: Sequence[str]) -> Path | None:
     for root in roots:
         for name in legacy:
             candidate = root / name
-            if candidate.is_file():
+            if os.path.isfile(candidate):
                 return candidate
     return None
 

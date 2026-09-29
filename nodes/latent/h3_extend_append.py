@@ -89,6 +89,41 @@ class ThreeH3ExtendAppend(io.ComfyNode):
         """
         return h3_extend.segment_ends(latent) or [h3_extend.frames_for(video.shape[2])]
 
+    @staticmethod
+    def recorded(latent, joined, ends, trimmed=None) -> dict:
+        """The joined clip carrying its segment ends and every trimmed tail.
+
+        Args:
+            latent: The clip so far.
+            joined: The joined clip.
+            ends: Frame counts at the end of each segment.
+            trimmed: ``(index, video, audio)`` a cut took off the clip's last segment.
+
+        Returns:
+            The joined clip holding both records.
+        """
+        out = h3_extend.with_ends(joined, ends)
+        out[h3_extend.TAILS_KEY] = dict(latent.get(h3_extend.TAILS_KEY) or {})
+        if trimmed is not None:
+            out = h3_extend.with_tail(out, *trimmed)
+        return out
+
+    @staticmethod
+    def trimmed_tail(latent, index: int):
+        """The rows and audio a cut takes off the clip's last segment.
+
+        Args:
+            latent: The clip so far.
+            index: That segment, from 0.
+
+        Returns:
+            ``(index, video, audio)``.
+        """
+        video, audio = h3_extend.split(latent)
+        rows, kept = h3_extend.cut_point(video.shape[2])
+        return (index, video[:, :, rows:],
+                audio[..., min(audio.shape[-1], h3_extend.audio_span(kept)):])
+
     @classmethod
     def execute(cls, latent, sampled, overlap_frames, segment_index=0) -> io.NodeOutput:
         """Drop the carried head off the window and append what the pass added.
@@ -116,27 +151,29 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             added, _ = h3_extend.split(sampled)
             frames = h3_extend.frames_for(whole.shape[2])
             ends = cls.ends_before(latent, done_video)
+            tail = cls.trimmed_tail(latent, len(ends) - 1)
             ends[-1] = min(ends[-1], kept)
             return io.NodeOutput(
-                h3_extend.with_ends(joined, ends + [frames]), frames,
+                cls.recorded(latent, joined, ends + [frames], tail), frames,
                 f"cut in {h3_extend.frames_for(added.shape[2])} fresh frames after frame "
                 f"{kept}, trimming the clip's last {trimmed}; {whole.shape[2]} tokens "
                 f"and {frames} frames now",
             )
 
-        if sampled.get(h3_extend.REJOIN_KEY):
+        if h3_extend.REJOIN_KEY in sampled:
             # Carried from an earlier segment: a cut back to that scene.
             done_video, _ = h3_extend.split(latent)
-            joined, kept, shown = h3_extend.rejoin(latent, sampled, overlap_frames)
+            joined, kept, dropped = h3_extend.rejoin(latent, sampled, overlap_frames)
             whole, _ = h3_extend.split(joined)
             frames = h3_extend.frames_for(whole.shape[2])
             ends = cls.ends_before(latent, done_video)
+            tail = cls.trimmed_tail(latent, len(ends) - 1)
             ends[-1] = min(ends[-1], kept)
             return io.NodeOutput(
-                h3_extend.with_ends(joined, ends + [frames]), frames,
-                f"cut back after frame {kept} to the earlier scene, showing its last "
-                f"{shown} carried frames again before the new ones; {whole.shape[2]} "
-                f"tokens and {frames} frames now",
+                cls.recorded(latent, joined, ends + [frames], tail), frames,
+                f"cut back after frame {kept} to the earlier scene, opening {dropped} "
+                f"frames into the window on the first frame not shown before; "
+                f"{whole.shape[2]} tokens and {frames} frames now",
             )
 
         overlap = h3_extend.snap_overlap(overlap_frames)
@@ -159,7 +196,7 @@ class ThreeH3ExtendAppend(io.ComfyNode):
         joined = h3_extend.append(latent, sampled, overlap)
         joined_video, joined_audio = h3_extend.split(joined)
         frames = h3_extend.frames_for(joined_video.shape[2])
-        joined = h3_extend.with_ends(joined, cls.ends_before(latent, done_video) + [frames])
+        joined = cls.recorded(latent, joined, cls.ends_before(latent, done_video) + [frames])
         report = (
             f"carried {done_video.shape[2]} tokens untouched, added "
             f"{new_video.shape[2] - overlap_tokens}; {joined_video.shape[2]} tokens and "

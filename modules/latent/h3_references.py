@@ -256,7 +256,7 @@ def build(vae, audio_vae, images: list, videos: list, audios: list, canvas_width
                 f"{h3_extend.FPS} fps. Wire a longer clip, or wire the picture to a "
                 f"ref_image input"
             )
-        count = h3_extend.snap_overlap(count)
+        count = h3_extend.floor_overlap(count)
         wide, high = h3_extend.reference_canvas(frames.shape[2], frames.shape[1])
         clip = fitted_batch(frames[:count], wide, high)
         audio_latent, steps = None, 0

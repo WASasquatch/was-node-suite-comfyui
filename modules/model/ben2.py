@@ -8,22 +8,34 @@ alpha channel.
 from __future__ import annotations
 
 import math
+import os
 
 import torch
 from torch import nn
 from torch.nn import functional
 
-from . import managed_module, published_checkpoint
+from . import (
+    ModelUnavailable,
+    checkpoint_shapes,
+    managed_module,
+    model_directories,
+    model_file_path,
+    published_checkpoint,
+    unresolved_links,
+)
 from .swin import DEPTHS, EMBED_DIM_BASE, HEADS_BASE, WINDOW_SIZE, SwinTransformer
 
 __all__ = [
     "FEATURE",
     "FILENAME",
     "FOLDER",
+    "fits",
     "load",
+    "locate",
     "MULTIPLE",
     "Network",
     "REPO_ID",
+    "SIGNATURE",
     "SMALLEST_SIDE",
     "SUBFOLDER",
     "TRAINED_SIDE",
@@ -39,6 +51,9 @@ FOLDER = "ben2"
 REPO_ID = "WAS/was-node-suite-weights"
 SUBFOLDER = "ben2"
 FILENAME = "ben2-base.safetensors"
+
+#: A tensor every checkpoint this network loads carries, and its shape.
+SIGNATURE = ("backbone.patch_embed.proj.weight", [128, 3, 4, 4])
 
 #: Channels every decoder stage and every head works at.
 EMBED_DIM = EMBED_DIM_BASE
@@ -409,30 +424,79 @@ class Network(nn.Module):
         return torch.cat(masks, dim=0)
 
 
-def load(device: str | None = None) -> Network:
-    """Build the network and read the published weights into it.
+def fits(path: str | os.PathLike) -> bool:
+    """Whether a safetensors file holds weights this network loads.
 
     Args:
+        path: A ``.safetensors`` file.
+
+    Returns:
+        True when its header carries :data:`SIGNATURE`.
+    """
+    key, shape = SIGNATURE
+    return checkpoint_shapes(path).get(key) == shape
+
+
+def locate(name: str = FILENAME) -> str:
+    """The path of one checkpoint, fetching the published file when that is allowed.
+
+    Args:
+        name: A file in the ``ben2`` model folder, relative to it.
+
+    Returns:
+        An absolute path.
+
+    Raises:
+        ModelUnavailable: The file is not on disk, and is not published or
+            ``features.network`` is off.
+    """
+    found = model_file_path(FOLDER, name)
+    if found is not None:
+        return str(found)
+    if os.path.basename(name) == FILENAME:
+        return published_checkpoint(
+            FOLDER, REPO_ID, FILENAME, subfolder=SUBFOLDER, feature=FEATURE,
+            what="The background removal network",
+        )
+    roots = model_directories(FOLDER)
+    searched = "\n".join(f"    {root}" for root in roots) or "    nowhere, ComfyUI is not running"
+    raise ModelUnavailable(
+        "\n".join([f"The background removal network needs {name}, which is not in:",
+                   searched, *unresolved_links(roots, name)])
+    )
+
+
+def load(name: str = FILENAME, device: str | None = None):
+    """Build the network and read one checkpoint into it.
+
+    Args:
+        name: A file in the ``ben2`` model folder, relative to it.
         device: Ignored. The caller moves the network to where it runs.
 
     Returns:
-        The network in eval mode, answering one alpha mask per frame it is given, built
-        once and kept for the process.
+        A :class:`~modules.model.Backend` whose ``model`` is the network in eval mode,
+        answering one alpha mask per frame it is given, built once per file and kept for
+        the process.
 
     Raises:
-        ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
+        ValueError: The file does not hold BEN2 weights.
+        ModelUnavailable: The file is not on disk, and is not published or
+            ``features.network`` is off.
     """
-    return managed_module(("ben2", REPO_ID, FILENAME), _build)
+    path = locate(name)
+    return managed_module(("ben2", path), lambda: _build(path))
 
 
-def _build() -> Network:
+def _build(path: str) -> Network:
     """Read the checkpoint and load it into a freshly built network."""
     from safetensors.torch import load_file
 
-    path = published_checkpoint(
-        FOLDER, REPO_ID, FILENAME, subfolder=SUBFOLDER, feature=FEATURE,
-        what="The background removal network",
-    )
+    if not fits(path):
+        key, shape = SIGNATURE
+        raise ValueError(
+            f"{path} is not a BEN2 checkpoint this node can build: it has no {key} "
+            f"shaped {shape}. Pick the BEN2 base file."
+        )
     network = Network()
     network.load_state_dict(load_file(path), strict=True)
     return network.float().eval()

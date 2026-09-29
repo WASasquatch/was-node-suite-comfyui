@@ -293,13 +293,15 @@ an archive or a document directly.
 
 ## Animation and video
 
-11 nodes. **Load Video (Advanced)**, **Video Dump Frames** and **Video Frame Sample
+12 nodes. **Load Video (Advanced)**, **Video Dump Frames** and **Video Frame Sample
 (Advanced)** read a clip. **Create Video from Path**, **Write to Video**, **Write to GIF** and
 **Save Video (Advanced)** write one. **EMA-VFI Frame Interpolation** adds frames, **Video Super
 Resolution (PS-SR)** enlarges them, **Camera Motion Trajectory from Images** measures the move,
-and **Create Morph Image** blends between stills.
+and **Create Morph Image** blends between stills. **Audio Beats** finds a song's beats, bar
+lines, tempo and per-frame loudness.
 
-For getting frames in and out of a graph, and for finishing a clip after sampling.
+For getting frames in and out of a graph, for finishing a clip after sampling, and for timing
+one to music.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Animation** and **WAS Suite/IO**.
 

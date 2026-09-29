@@ -19,6 +19,9 @@ MODES = ("t2va", "i2va", "fl2va", "fl2va_batched", "ref2va")
 #: Prompt rows a node offers, row 1 being the clip.
 MAX_ROWS = 24
 
+#: Continuities that open a fresh scene and carry no frames.
+CUT_LIKE = ("cut", "handoff", h3_extend.REFERENCE_VIDEO, h3_extend.REFERENCE_SAMPLE)
+
 #: A row's source that continues from the segment before it.
 PREVIOUS_SOURCE = -1
 
@@ -378,16 +381,23 @@ def composed(header: str, prompt: str, footer: str) -> str:
     return "\n\n".join(part for part in parts if part)
 
 
-def snap_segment(frames: int) -> int:
-    """The nearest length a continuing segment may run for.
+def snap_segment(frames: int, overlap: int = 0, continuity: str = AS_SET) -> int:
+    """New frames a segment adds so its window runs the clip length closest to ``frames``.
 
     Args:
-        frames: Frames asked for.
+        frames: Frames the segment's window is asked to run, carried frames included.
+        overlap: Frames asked to carry, ``0`` for a cut.
+        continuity: The row's continuity; a cut carries nothing.
 
     Returns:
-        A positive multiple of the model's clip length.
+        A positive multiple of the model's clip length. The window is this plus the
+        carried frames, or plus :data:`h3_extend.CLIP_LEAD` for a fresh scene.
     """
-    return h3_extend.snap_extension(frames)
+    if continuity in CUT_LIKE or int(overlap) <= 0:
+        carried = h3_extend.CLIP_LEAD
+    else:
+        carried = snap_overlap_for(frames, overlap)
+    return max(h3_extend.CLIP_FRAMES, h3_extend.snap_clip(frames) - carried)
 
 
 def snap_overlap_for(frames: int, overlap: int) -> int:
@@ -402,7 +412,91 @@ def snap_overlap_for(frames: int, overlap: int) -> int:
     """
     if int(overlap) <= 0:
         return 0
-    return min(h3_extend.snap_overlap(overlap), h3_extend.snap_overlap(frames))
+    return min(h3_extend.snap_overlap(overlap), h3_extend.floor_overlap(frames))
+
+
+#: A timeline line in a row's prompt, as ``0.8–2.2 seconds:``.
+TIMELINE_LINE = re.compile(
+    r"^([ \t]*)(\d+(?:\.\d+)?)([ \t]*[–-][ \t]*)(\d+(?:\.\d+)?)([ \t]*seconds?\b.*)$",
+    re.MULTILINE)
+
+#: The length line of a row's prompt, as ``duration_seconds: 8``.
+DURATION_LINE = re.compile(r"^([ \t]*duration_seconds:[ \t]*)(\d+(?:\.\d+)?)[ \t]*$",
+                           re.MULTILINE)
+
+
+def stamp(seconds: float) -> str:
+    """A time written as a prompt timeline writes it.
+
+    Args:
+        seconds: A time in seconds.
+
+    Returns:
+        The time to two decimals at most and one at least, as ``0.8`` or ``1.72``.
+    """
+    text = f"{float(seconds):.2f}".rstrip("0")
+    return text + "0" if text.endswith(".") else text
+
+
+def shifted(text: str, lead: float, total: float) -> str:
+    """A row's prompt timed to the window it is sampled in.
+
+    Args:
+        text: The row's own prompt.
+        lead: Seconds the carried frames run at the window's start, ``0`` for none.
+        total: Seconds the whole window runs.
+
+    Returns:
+        The prompt with every ``a–b seconds`` line moved on by ``lead``, the last one
+        ending at ``total``, and its ``duration_seconds`` set to ``total``.
+    """
+    lines = list(TIMELINE_LINE.finditer(text))
+    last = lines[-1].start() if lines else -1
+
+    def moved(match):
+        start = float(match.group(2)) + lead
+        # The last beat runs to the window's end, so no stretch of the window goes unwritten.
+        end = total if match.start() == last else float(match.group(4)) + lead
+        return f"{match.group(1)}{stamp(start)}{match.group(3)}{stamp(end)}{match.group(5)}"
+
+    text = TIMELINE_LINE.sub(moved, text)
+    return DURATION_LINE.sub(lambda m: f"{m.group(1)}{stamp(total)}", text)
+
+
+def carried_timeline(text: str, frames: int, overlap: int, continuity: str,
+                     opening: bool = False) -> str:
+    """A row's prompt timed to the window it is sampled in.
+
+    Args:
+        text: The row's own prompt.
+        frames: Frames the row's window is asked to run.
+        overlap: Frames asked to carry, ``0`` for a cut.
+        continuity: The row's continuity.
+        opening: True for the row that opens the clip.
+
+    Returns:
+        The prompt, its last beat and ``duration_seconds`` ending where its window ends.
+    """
+    if opening:
+        window = h3_extend.snap_clip(frames)
+    elif continuity in CUT_LIKE or int(overlap) <= 0:
+        window = snap_segment(frames, overlap, continuity) + h3_extend.CLIP_LEAD
+    else:
+        window = snap_overlap_for(frames, overlap) + snap_segment(frames, overlap, continuity)
+    return shifted(text, 0.0, window / h3_extend.FPS)
+
+
+def stated_seconds(text: str) -> float | None:
+    """The length a row's prompt states on its ``duration_seconds`` line.
+
+    Args:
+        text: The row's own prompt.
+
+    Returns:
+        The seconds, or None where the prompt states none.
+    """
+    match = DURATION_LINE.search(str(text or ""))
+    return float(match.group(2)) if match else None
 
 
 def snapped(value: float) -> int:
