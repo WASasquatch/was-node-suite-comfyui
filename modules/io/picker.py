@@ -98,7 +98,7 @@ def folders(extra=()) -> list[str]:
                 logger.debug("the folders under %s stopped at %d entries", tag, MAX_FOLDERS)
 
         offered = _offered(held, MAX_FOLDERS)
-        _cache = (now, key, tuple(offered))
+        _cache = (time.monotonic(), key, tuple(offered))
         return offered
 
 

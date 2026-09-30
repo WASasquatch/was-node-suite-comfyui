@@ -140,7 +140,7 @@ def input_videos() -> list[str]:
         if stamp and now - stamp < LISTING_TTL:
             return list(names)
         names = tuple(_scan_input())
-        _listing = (now, names)
+        _listing = (time.monotonic(), names)
         return list(names)
 
 
