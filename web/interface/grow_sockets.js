@@ -323,10 +323,20 @@ export function growSockets(node, growable, options = {}) {
     }
   };
 
+  // Every link a workflow restores lands here, so they share one fit.
+  let refitQueued = false;
+  const queueRefit = () => {
+    if (refitQueued) return;
+    refitQueued = true;
+    queueMicrotask(() => {
+      refitQueued = false;
+      refit();
+    });
+  };
   const originalConnections = node.onConnectionsChange;
   node.onConnectionsChange = function (...args) {
     const result = originalConnections?.apply(this, args);
-    refit();
+    queueRefit();
     return result;
   };
 

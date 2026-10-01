@@ -31,7 +31,8 @@ class VideoCompare(io.ComfyNode):
             description=(
                 "Play two videos on the node under a divider that drags left and right, so "
                 "one run can be judged against another at the same frame. Both play from "
-                "one clock. Wire a render into each socket; nothing is passed on."
+                "one clock, and a shorter video holds its last frame until the longer one "
+                "loops. Wire a render into each socket; nothing is passed on."
             ),
             is_output_node=True,
             inputs=[

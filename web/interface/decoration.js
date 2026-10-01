@@ -29,22 +29,25 @@ function armed(node) {
   const decorations = new Set();
   DECORATIONS.set(node, decorations);
 
-  // Lift the decorations out while anything walks the widget list.
+  // Lift the decorations out while anything walks the widget list, one splice each way.
   const without = (run) => {
+    const widgets = node.widgets;
+    if (!Array.isArray(widgets)) return run();
     const lifted = [];
-    for (const widget of decorations) {
-      const index = node.widgets?.indexOf(widget) ?? -1;
-      if (index >= 0) lifted.push([index, widget]);
-    }
-    // Back to front.
-    lifted.sort((left, right) => right[0] - left[0]);
-    for (const [index] of lifted) node.widgets.splice(index, 1);
+    const kept = [];
+    widgets.forEach((widget, index) => {
+      if (decorations.has(widget)) lifted.push([index, widget]);
+      else kept.push(widget);
+    });
+    if (lifted.length === 0) return run();
+    widgets.splice(0, widgets.length, ...kept);
     try {
       return run();
     } finally {
-      // Front to back.
-      lifted.sort((left, right) => left[0] - right[0]);
-      for (const [index, widget] of lifted) node.widgets.splice(index, 0, widget);
+      // Front to back, each at the place it was lifted from.
+      const restored = node.widgets.slice();
+      for (const [index, widget] of lifted) restored.splice(Math.min(index, restored.length), 0, widget);
+      node.widgets.splice(0, node.widgets.length, ...restored);
     }
   };
 
@@ -181,6 +184,7 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
       return [width ?? 0, HEADER_HEIGHT];
     },
     draw(ctx, host, width, y, height) {
+      let saved = false;
       try {
         const h = height ?? HEADER_HEIGHT;
         // Clamped to the node's own width.
@@ -191,6 +195,7 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
         const label = text();
         widget.value = label;
         ctx.save();
+        saved = true;
         ctx.globalAlpha = 1.0;
         ctx.fillStyle = tint?.fill ?? HEADER_FILL;
         ctx.fillRect(inset, y, bar, h);
@@ -204,9 +209,14 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
         ctx.font = "12px sans-serif";
         ctx.textBaseline = "middle";
         ctx.fillText(label, at, y + h / 2, Math.max(0, bar - (at - inset) - 6));
-        ctx.restore();
       } catch (error) {
-        console.error(`[${LOG_NAME}] Failed to draw ${name}:`, error);
+        // Once, not per frame.
+        if (!widget.drawFailed) {
+          widget.drawFailed = true;
+          console.error(`[${LOG_NAME}] Failed to draw ${name}:`, error);
+        }
+      } finally {
+        if (saved) ctx.restore();
       }
     },
   };

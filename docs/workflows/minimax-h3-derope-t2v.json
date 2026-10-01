@@ -1,0 +1,2121 @@
+{
+  "id": "b077f992-5019-4739-b02f-643c83ffee7a",
+  "revision": 0,
+  "last_node_id": 42,
+  "last_link_id": 102,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        -33.809389899339756,
+        33.627198410638755
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            73
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "BlockSparseAttention",
+      "pos": [
+        -35.04061312946867,
+        445.35628005108043
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 67
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            4,
+            5,
+            97
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BlockSparseAttention",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "sol-attn",
+        1.3,
+        0.2,
+        1,
+        "",
+        12288,
+        256,
+        "exact_kv_and_rows",
+        false
+      ],
+      "widgets_values_named": {
+        "selection": "sol-attn",
+        "selection.tau": 1.3,
+        "start_percent": 0.2,
+        "end_percent": 1,
+        "dense_blocks": "",
+        "min_tokens": 12288,
+        "extra_tokens": 256,
+        "sink_conditioning": "exact_kv_and_rows",
+        "verbose": false
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "CLIPLoader",
+      "pos": [
+        -36.27183635959757,
+        739.5005922183734
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            85
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "VAELoader",
+      "pos": [
+        -41.19672928011321,
+        889.644904385666
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            3,
+            27,
+            36,
+            94
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "VAELoader",
+      "pos": [
+        -38.734282819855395,
+        993.020439783088
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            38,
+            95
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 6,
+      "type": "MiniMaxH3ImageToVideo",
+      "pos": [
+        330,
+        60
+      ],
+      "size": [
+        420,
+        360
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 85
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 3
+        },
+        {
+          "name": "first_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 90
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 91
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageToVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "id=\"x1101\"\nduration_seconds: 9\n\nvisual_style:\nNaturalistic live-action cinematic realism. Real outdoor urban lighting, believable human motion, grounded athletic movement, soft natural contrast, realistic cloth motion, and physically plausible parkour action. The sequence should feel like one continuous professionally shot action beat rather than a montage.\n\nintegrated_multimodal_description:\n\n<Runner>: A fit young woman jogging at a steady pace. She wears dark yoga shorts, a fitted athletic tank top, lightweight running shoes, and her hair is tied back in a practical ponytail. She moves like an experienced runner with light parkour ability: agile, balanced, and efficient rather than exaggerated.\n\n<Street>: A city sidewalk or pedestrian path in daylight with enough room for foot traffic, street clutter, and moving people.\n\n<Movers>: Two movers carrying a long couch sideways across the sidewalk, temporarily blocking most of the path.\n\n<Couch>: A long couch being carried by <Movers>. It is held at about waist-to-chest height and moves slowly across the sidewalk, creating a moving obstacle.\n\n<TrashCan>: A freestanding sidewalk trash can farther ahead after the couch obstacle.\n\n<Pedestrian 1>: A person walking toward the runner from the left side of the path.\n\n<Pedestrian 2>: A second person crossing slightly rightward into her path.\n\n<Pedestrian 3>: A third person farther ahead creating the final dodge.\n\n[Shot 1]\n\nOne continuous moving shot. A medium-wide tracking camera follows <Runner> from the front-left three-quarter angle at jogging speed, keeping her full body visible while also showing the obstacles ahead in the same frame. The camera remains smooth and continuous for the whole action beat.\n\n0.0–2.0 seconds:\n<Runner> jogs at a steady pace down <Street>. Her arms swing naturally, her breathing is controlled, and her stride is even and athletic. The camera tracks with her at matching speed. Ahead, <Movers> carrying <Couch> begin to come into view as a developing obstacle.\n\n2.0–3.4 seconds:\n<Runner> sees <Couch> blocking the path. She does not stop. Instead, she shortens her next few strides slightly and lowers her center of gravity in preparation. Her focus locks on the top edge of <Couch>. <Movers> continue walking slowly, carrying the couch sideways across the path.\n\n3.4–5.0 seconds:\n<Runner> performs a fast parkour-style vault over <Couch>. She plants one foot decisively on the ground just before the obstacle, places one hand briefly on the top back edge of <Couch> for balance, and lifts her hips upward. Her lead leg swings cleanly over the couch first, followed by the trailing leg. She clears the top of the couch and the movers without colliding with them. The motion is one smooth continuous vault, not a jump straight upward. She lands lightly on the far side and immediately regains her running stride.\n\n5.0–6.2 seconds:\nAfter landing, <Runner> takes two quick recovery steps and spots <TrashCan> directly ahead. Without breaking rhythm, she lines up slightly to one side and prepares for a second vaulting motion.\n\n6.2–7.0 seconds:\n<Runner> clears <TrashCan> in one fluid athletic movement. She places one hand lightly on the top edge of the can, tucks her knees just enough to avoid clipping it, and swings her legs across in a compact speed-vault style motion. She lands cleanly and keeps moving forward.\n\n7.0–9.0 seconds:\nNow entering a denser pedestrian area, <Runner> must avoid three people in quick succession. She sidesteps smoothly around <Pedestrian 1> to her right, immediately shifts back left to slip past <Pedestrian 2>, then makes one final subtle evasive move around <Pedestrian 3>. Each dodge is compact and believable, preserving her forward momentum. She finishes the sequence still jogging forward, balanced and in control, as the camera continues tracking with her.\n\noverall_soundscape:\nLight footfalls on pavement, subtle fabric movement, controlled breathing, distant city ambience, muffled conversation from pedestrians, movers shuffling with the couch, and a brief hand-contact thump on the couch and trash can during each vault.\n\nnon_diegetic_music:\nOptional light energetic rhythmic action underscore, kept subtle beneath the movement and environmental sound.",
+        720,
+        400,
+        124
+      ],
+      "widgets_values_named": {
+        "prompt": "id=\"x1101\"\nduration_seconds: 9\n\nvisual_style:\nNaturalistic live-action cinematic realism. Real outdoor urban lighting, believable human motion, grounded athletic movement, soft natural contrast, realistic cloth motion, and physically plausible parkour action. The sequence should feel like one continuous professionally shot action beat rather than a montage.\n\nintegrated_multimodal_description:\n\n<Runner>: A fit young woman jogging at a steady pace. She wears dark yoga shorts, a fitted athletic tank top, lightweight running shoes, and her hair is tied back in a practical ponytail. She moves like an experienced runner with light parkour ability: agile, balanced, and efficient rather than exaggerated.\n\n<Street>: A city sidewalk or pedestrian path in daylight with enough room for foot traffic, street clutter, and moving people.\n\n<Movers>: Two movers carrying a long couch sideways across the sidewalk, temporarily blocking most of the path.\n\n<Couch>: A long couch being carried by <Movers>. It is held at about waist-to-chest height and moves slowly across the sidewalk, creating a moving obstacle.\n\n<TrashCan>: A freestanding sidewalk trash can farther ahead after the couch obstacle.\n\n<Pedestrian 1>: A person walking toward the runner from the left side of the path.\n\n<Pedestrian 2>: A second person crossing slightly rightward into her path.\n\n<Pedestrian 3>: A third person farther ahead creating the final dodge.\n\n[Shot 1]\n\nOne continuous moving shot. A medium-wide tracking camera follows <Runner> from the front-left three-quarter angle at jogging speed, keeping her full body visible while also showing the obstacles ahead in the same frame. The camera remains smooth and continuous for the whole action beat.\n\n0.0–2.0 seconds:\n<Runner> jogs at a steady pace down <Street>. Her arms swing naturally, her breathing is controlled, and her stride is even and athletic. The camera tracks with her at matching speed. Ahead, <Movers> carrying <Couch> begin to come into view as a developing obstacle.\n\n2.0–3.4 seconds:\n<Runner> sees <Couch> blocking the path. She does not stop. Instead, she shortens her next few strides slightly and lowers her center of gravity in preparation. Her focus locks on the top edge of <Couch>. <Movers> continue walking slowly, carrying the couch sideways across the path.\n\n3.4–5.0 seconds:\n<Runner> performs a fast parkour-style vault over <Couch>. She plants one foot decisively on the ground just before the obstacle, places one hand briefly on the top back edge of <Couch> for balance, and lifts her hips upward. Her lead leg swings cleanly over the couch first, followed by the trailing leg. She clears the top of the couch and the movers without colliding with them. The motion is one smooth continuous vault, not a jump straight upward. She lands lightly on the far side and immediately regains her running stride.\n\n5.0–6.2 seconds:\nAfter landing, <Runner> takes two quick recovery steps and spots <TrashCan> directly ahead. Without breaking rhythm, she lines up slightly to one side and prepares for a second vaulting motion.\n\n6.2–7.0 seconds:\n<Runner> clears <TrashCan> in one fluid athletic movement. She places one hand lightly on the top edge of the can, tucks her knees just enough to avoid clipping it, and swings her legs across in a compact speed-vault style motion. She lands cleanly and keeps moving forward.\n\n7.0–9.0 seconds:\nNow entering a denser pedestrian area, <Runner> must avoid three people in quick succession. She sidesteps smoothly around <Pedestrian 1> to her right, immediately shifts back left to slip past <Pedestrian 2>, then makes one final subtle evasive move around <Pedestrian 3>. Each dodge is compact and believable, preserving her forward momentum. She finishes the sequence still jogging forward, balanced and in control, as the camera continues tracking with her.\n\noverall_soundscape:\nLight footfalls on pavement, subtle fabric movement, controlled breathing, distant city ambience, muffled conversation from pedestrians, movers shuffling with the couch, and a brief hand-contact thump on the couch and trash can during each vault.\n\nnon_diegetic_music:\nOptional light energetic rhythmic action underscore, kept subtle beneath the movement and environmental sound.",
+        "width": 720,
+        "height": 400,
+        "length": 124
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 7,
+      "type": "RandomNoise",
+      "pos": [
+        840.7015943844273,
+        67.12277901727465
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        48152343,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 48152343,
+        "control_after_generate": "fixed"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 8,
+      "type": "KSamplerSelect",
+      "pos": [
+        840.7015943844273,
+        219.12277901727472
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "euler_ancestral"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "euler_ancestral"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 9,
+      "type": "BasicScheduler",
+      "pos": [
+        840.7015943844273,
+        347.12277901727475
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "normal",
+        8,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "normal",
+        "steps": 8,
+        "denoise": 1
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 10,
+      "type": "BasicGuider",
+      "pos": [
+        840.7015943844273,
+        523.1227790172748
+      ],
+      "size": [
+        159.568359375,
+        46
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 13,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1204.2804097515789,
+        66.20699314362507
+      ],
+      "size": [
+        300,
+        326
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 12
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 13
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 14
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 17
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            55,
+            96
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 15,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        2425.4924384761052,
+        71.48414468781215
+      ],
+      "size": [
+        204.134765625,
+        26
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 16,
+      "type": "KSampler",
+      "pos": [
+        2421.0152630938187,
+        161.88767545995324
+      ],
+      "size": [
+        270,
+        474
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 101
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 102
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 23
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 98
+        },
+        {
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": 100
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            83
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        20261003,
+        "fixed",
+        4,
+        1,
+        "res_multistep",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 20261003,
+        "control_after_generate": "fixed",
+        "steps": 4,
+        "cfg": 1,
+        "sampler_name": "res_multistep",
+        "scheduler": "simple",
+        "denoise": 1
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 17,
+      "type": "VAEDecode",
+      "pos": [
+        3065.492438476105,
+        71.48414468781215
+      ],
+      "size": [
+        186.80683354209077,
+        46
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 53
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 19,
+      "type": "WASH3DeRopeRecover",
+      "pos": [
+        3066.5099783357155,
+        167.22515390981016
+      ],
+      "size": [
+        190.3761798461068,
+        66
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 30
+        },
+        {
+          "name": "derope",
+          "type": "WAS_H3_DEROPE",
+          "link": 99
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            33
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            34
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3DeRopeRecover",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 20,
+      "type": "CreateVideo",
+      "pos": [
+        3065.492438476105,
+        518.9436041472716
+      ],
+      "size": [
+        270,
+        150
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 33
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 34
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            41,
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB",
+        "none"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB",
+        "codec": "none"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 21,
+      "type": "VAEDecode",
+      "pos": [
+        1554.2804097515789,
+        65.08769929805334
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 56
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 36
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 22,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        1554.2804097515789,
+        181.08769929805334
+      ],
+      "size": [
+        164.2388671875,
+        46
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 57
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 23,
+      "type": "CreateVideo",
+      "pos": [
+        1554.2804097515789,
+        297.08769929805334
+      ],
+      "size": [
+        270,
+        150
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 39
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            42,
+            62
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB",
+        "none"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB",
+        "codec": "none"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 24,
+      "type": "SaveVideo",
+      "pos": [
+        3414.210389455598,
+        653.9154129941365
+      ],
+      "size": [
+        520,
+        420
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "H3_DeRoPE/t2v_derope",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "H3_DeRoPE/t2v_derope",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 25,
+      "type": "WASVideoCompare",
+      "pos": [
+        3412.991478457769,
+        71.91824086764781
+      ],
+      "size": [
+        520,
+        440
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video_a",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": 42
+        },
+        {
+          "name": "video_b",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": 43
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "WASVideoCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 28,
+      "type": "WASFreeMemory",
+      "pos": [
+        330,
+        490
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            47,
+            48,
+            102
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        true
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": true
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 30,
+      "type": "WASFreeMemory",
+      "pos": [
+        2745.4924384761052,
+        71.48414468781215
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 83
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "LATENT",
+          "links": [
+            53
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 31,
+      "type": "WASFreeMemory",
+      "pos": [
+        1204.2804097515789,
+        462.2069931436251
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 55
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "LATENT",
+          "links": [
+            56,
+            57
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 35,
+      "type": "SaveVideo",
+      "pos": [
+        1554.2804097515789,
+        517.0876992980534
+      ],
+      "size": [
+        270,
+        255.5
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 62
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "H3_DeRoPE/t2v_baseline",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "H3_DeRoPE/t2v_baseline",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 36,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -37.50305958972648,
+        319.2119678837877
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            67
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        "strength_model": 1
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 38,
+      "type": "WASCNSModelPatch",
+      "pos": [
+        -30.97580647537939,
+        178.9480221530832
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 73
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            74
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASCNSModelPatch",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "auto",
+        32,
+        1.73,
+        0.75,
+        0.15,
+        -0.5,
+        0.75,
+        0.98
+      ],
+      "widgets_values_named": {
+        "mode": "auto",
+        "bands": 32,
+        "divider": 1.73,
+        "power": 0.75,
+        "tilt_start": 0.15,
+        "tilt_end": -0.5,
+        "sharpness": 0.75,
+        "energy": 0.98
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 42,
+      "type": "ResolutionSelector",
+      "pos": [
+        5.900549085665911,
+        1144.5641545195263
+      ],
+      "size": [
+        270,
+        150
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            90
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            91
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResolutionSelector",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "16:9 (Widescreen)",
+        0.8,
+        8
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "16:9 (Widescreen)",
+        "megapixels": 0.8,
+        "multiple": 8
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 14,
+      "type": "WASH3DeRopeStretch",
+      "pos": [
+        1915.492438476102,
+        71.48414468781215
+      ],
+      "size": [
+        460,
+        466
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 94
+        },
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "audio_vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 95
+        },
+        {
+          "name": "latent",
+          "shape": 7,
+          "type": "LATENT",
+          "link": 96
+        },
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 97
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            98
+          ]
+        },
+        {
+          "name": "derope",
+          "type": "WAS_H3_DEROPE",
+          "links": [
+            99
+          ]
+        },
+        {
+          "name": "denoise",
+          "type": "FLOAT",
+          "links": [
+            100
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            101
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3DeRopeStretch",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "balanced",
+        0.5,
+        "follow",
+        24,
+        true
+      ],
+      "widgets_values_named": {
+        "mode": "balanced",
+        "strength": 0.5,
+        "audio_mode": "follow",
+        "fps": 24,
+        "low_vram": true
+      },
+      "bgcolor": "transparent"
+    }
+  ],
+  "links": [
+    [
+      3,
+      4,
+      0,
+      6,
+      1,
+      "VAE"
+    ],
+    [
+      4,
+      2,
+      0,
+      9,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      2,
+      0,
+      10,
+      0,
+      "MODEL"
+    ],
+    [
+      12,
+      7,
+      0,
+      13,
+      0,
+      "NOISE"
+    ],
+    [
+      13,
+      10,
+      0,
+      13,
+      1,
+      "GUIDER"
+    ],
+    [
+      14,
+      8,
+      0,
+      13,
+      2,
+      "SAMPLER"
+    ],
+    [
+      15,
+      6,
+      1,
+      13,
+      4,
+      "LATENT"
+    ],
+    [
+      17,
+      9,
+      0,
+      13,
+      3,
+      "SIGMAS"
+    ],
+    [
+      23,
+      15,
+      0,
+      16,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      27,
+      4,
+      0,
+      17,
+      1,
+      "VAE"
+    ],
+    [
+      30,
+      17,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      33,
+      19,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      34,
+      19,
+      1,
+      20,
+      1,
+      "AUDIO"
+    ],
+    [
+      36,
+      4,
+      0,
+      21,
+      1,
+      "VAE"
+    ],
+    [
+      38,
+      5,
+      0,
+      22,
+      1,
+      "VAE"
+    ],
+    [
+      39,
+      21,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      40,
+      22,
+      0,
+      23,
+      1,
+      "AUDIO"
+    ],
+    [
+      42,
+      23,
+      0,
+      25,
+      0,
+      "VIDEO"
+    ],
+    [
+      43,
+      20,
+      0,
+      25,
+      1,
+      "VIDEO"
+    ],
+    [
+      46,
+      6,
+      0,
+      28,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      47,
+      28,
+      0,
+      10,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      48,
+      28,
+      0,
+      15,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      53,
+      30,
+      0,
+      17,
+      0,
+      "LATENT"
+    ],
+    [
+      55,
+      13,
+      0,
+      31,
+      0,
+      "LATENT"
+    ],
+    [
+      56,
+      31,
+      0,
+      21,
+      0,
+      "LATENT"
+    ],
+    [
+      57,
+      31,
+      0,
+      22,
+      0,
+      "LATENT"
+    ],
+    [
+      73,
+      1,
+      0,
+      38,
+      0,
+      "MODEL"
+    ],
+    [
+      74,
+      38,
+      0,
+      36,
+      0,
+      "MODEL"
+    ],
+    [
+      83,
+      16,
+      0,
+      30,
+      0,
+      "LATENT"
+    ],
+    [
+      85,
+      3,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      90,
+      42,
+      0,
+      6,
+      4,
+      "INT"
+    ],
+    [
+      91,
+      42,
+      1,
+      6,
+      5,
+      "INT"
+    ],
+    [
+      98,
+      14,
+      0,
+      16,
+      3,
+      "LATENT"
+    ],
+    [
+      99,
+      14,
+      1,
+      19,
+      1,
+      "WAS_H3_DEROPE"
+    ],
+    [
+      100,
+      14,
+      2,
+      16,
+      4,
+      "FLOAT"
+    ],
+    [
+      101,
+      14,
+      4,
+      16,
+      0,
+      "MODEL"
+    ],
+    [
+      102,
+      28,
+      0,
+      16,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      67,
+      36,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      41,
+      20,
+      0,
+      24,
+      0,
+      "VIDEO"
+    ],
+    [
+      62,
+      23,
+      0,
+      35,
+      0,
+      "VIDEO"
+    ],
+    [
+      94,
+      4,
+      0,
+      14,
+      0,
+      "VAE"
+    ],
+    [
+      95,
+      5,
+      0,
+      14,
+      3,
+      "VAE"
+    ],
+    [
+      96,
+      13,
+      0,
+      14,
+      4,
+      "LATENT"
+    ],
+    [
+      97,
+      2,
+      0,
+      14,
+      5,
+      "MODEL"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 9,
+      "title": "Models",
+      "bounding": [
+        -68.73428281985538,
+        -42.97956021691195,
+        330,
+        1124
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "Prompt",
+      "bounding": [
+        300,
+        -40,
+        480,
+        794
+      ],
+      "color": "#385d80",
+      "flags": {}
+    },
+    {
+      "id": 11,
+      "title": "Sampling setup",
+      "bounding": [
+        810.7015943844273,
+        -32.87722098272535,
+        330,
+        632
+      ],
+      "color": "#3f5159",
+      "flags": {}
+    },
+    {
+      "id": 12,
+      "title": "Baseline: full render",
+      "bounding": [
+        1174.2804097515789,
+        -34.91230070194667,
+        680,
+        837.5
+      ],
+      "color": "#4a4a6a",
+      "flags": {}
+    },
+    {
+      "id": 13,
+      "title": "De-RoPE",
+      "bounding": [
+        1885.492438476102,
+        -28.515855312188,
+        1480,
+        727.4594594594596
+      ],
+      "color": "#8a6d3b",
+      "flags": {}
+    },
+    {
+      "id": 14,
+      "title": "Output",
+      "bounding": [
+        3384.210389455598,
+        553.9154129941367,
+        580,
+        550
+      ],
+      "color": "#3f7a4a",
+      "flags": {}
+    },
+    {
+      "id": 15,
+      "title": "Compare",
+      "bounding": [
+        3382.991478457769,
+        -28.08175913235214,
+        580,
+        570
+      ],
+      "color": "#3f7a4a",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.7383640000000113,
+      "offset": [
+        745.0332606428019,
+        332.3247882320168
+      ]
+    },
+    "frontendVersion": "1.53.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "extensions": {
+    "seed_widgets": {
+      "39": 0
+    }
+  },
+  "version": 0.4
+}

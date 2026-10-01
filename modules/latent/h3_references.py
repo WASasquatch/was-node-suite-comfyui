@@ -19,6 +19,7 @@ __all__ = [
     "REF_IMAGES",
     "REF_VIDEOS",
     "References",
+    "audio_latent",
     "audio_name",
     "build",
     "collect",
@@ -183,7 +184,7 @@ def image_canvas(width: int, height: int, canvas_width: int, canvas_height: int,
     return _snapped(width * scale), _snapped(height * scale)
 
 
-def _audio_latent(audio_vae, audio: dict):
+def audio_latent(audio_vae, audio: dict):
     """One soundtrack encoded by the H3 audio VAE.
 
     Args:
@@ -259,22 +260,22 @@ def build(vae, audio_vae, images: list, videos: list, audios: list, canvas_width
         count = h3_extend.floor_overlap(count)
         wide, high = h3_extend.reference_canvas(frames.shape[2], frames.shape[1])
         clip = fitted_batch(frames[:count], wide, high)
-        audio_latent, steps = None, 0
+        heard_latent, steps = None, 0
         label = ""
         if soundtrack is not None:
             heard += 1
             items.append({"type": "audio"})
-            audio_latent, steps = _audio_latent(audio_vae, soundtrack)
+            heard_latent, steps = audio_latent(audio_vae, soundtrack)
             label = f" with <Audio {heard}> {_seconds(soundtrack):.1f}s"
         shown = list(range(0, count, QWEN_STRIDE))
         items.append({"type": "video", "data": clip[shown],
                       "timestamps": [index / 2.0 for index in range(len(shown))]})
-        blocks.append(h3_extend.video_reference(vae.encode(clip), audio_latent))
+        blocks.append(h3_extend.video_reference(vae.encode(clip), heard_latent))
         tags.append(f"<Video {number}> {count} frames at {wide}x{high}{label}")
 
     for audio in audios:
         heard += 1
-        latent, steps = _audio_latent(audio_vae, audio)
+        latent, steps = audio_latent(audio_vae, audio)
         items.append({"type": "audio"})
         blocks.append({"kind": "audio", "ref_audio_t": steps, "audio_latent": latent})
         tags.append(f"<Audio {heard}> {_seconds(audio):.1f}s")

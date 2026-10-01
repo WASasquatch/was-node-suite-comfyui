@@ -26,7 +26,8 @@ class ImageBlank(io.ComfyNode):
                 "or 64 for a model that asks for a coarser step, and 1 for a matte that has "
                 "to line up with something else exactly. A side shorter than divisible_by is "
                 "taken up to one whole step rather than down to nothing. batch_size repeats "
-                "the fill, for matching a batch of frames."
+                "the fill, for matching a batch of frames. alpha_channel adds a fourth "
+                "channel at the level alpha, for an RGBA fill."
             ),
             inputs=[
                 io.Int.Input(
@@ -101,6 +102,25 @@ class ImageBlank(io.ComfyNode):
                         "video node is working on."
                     ),
                 ),
+                io.Boolean.Input(
+                    "alpha_channel",
+                    default=False,
+                    tooltip=(
+                        "`true` gives RGBA, with a fourth channel at the level alpha; "
+                        "`false` gives RGB."
+                    ),
+                ),
+                io.Float.Input(
+                    "alpha",
+                    default=1.0,
+                    min=0.0,
+                    max=1.0,
+                    step=0.01,
+                    tooltip=(
+                        "Level of the alpha channel when alpha_channel is on: `1.0` opaque, "
+                        "`0.5` half, `0.0` clear."
+                    ),
+                ),
             ],
             outputs=[
                 io.Image.Output(
@@ -108,7 +128,7 @@ class ImageBlank(io.ComfyNode):
                         "A batch of batch_size images, each filled edge to edge with the "
                         "chosen colour, at the requested size rounded down to a multiple of "
                         "divisible_by, with a side shorter than that taken up to one whole "
-                        "step instead."
+                        "step instead. RGBA when alpha_channel is on, RGB otherwise."
                     ),
                 ),
             ],
@@ -116,8 +136,10 @@ class ImageBlank(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, width, height, red, green, blue, divisible_by=8, batch_size=1
+        cls, width, height, red, green, blue, divisible_by=8, batch_size=1,
+        alpha_channel=False, alpha=1.0,
     ) -> io.NodeOutput:
+        import torch
         from PIL import Image
 
         # Floored at one whole step, since a side of zero pixels is not an image.
@@ -127,5 +149,8 @@ class ImageBlank(io.ComfyNode):
         blank = Image.new(mode="RGB", size=(width, height), color=(red, green, blue))
 
         frames = pil2tensor(blank)
+        if alpha_channel:
+            level = min(1.0, max(0.0, float(alpha)))
+            frames = torch.cat([frames, torch.full_like(frames[..., :1], level)], dim=-1)
         count = max(1, int(batch_size))
         return io.NodeOutput(frames if count == 1 else frames.repeat(count, 1, 1, 1))

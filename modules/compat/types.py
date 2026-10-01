@@ -18,6 +18,7 @@ __all__ = [
     "DICT",
     "DOC",
     "EMA_VFI_MODEL",
+    "H3_DEROPE",
     "H3_PROMPTS",
     "IMAGE_BOUNDS",
     "LIST",
@@ -82,6 +83,10 @@ H3_PROMPTS = io.Custom("WAS_H3_PROMPTS")
 #: `Audio Beats` output. A track's beat times, downbeats, tempo and per-frame loudness, as a
 #: `modules.media.beats.Beats`.
 BEATS = io.Custom("WAS_BEATS")
+
+#: `H3 De-RoPE Stretch` -> `H3 De-RoPE Recover`. The hold per source frame and the fitted
+#: audio, as a `modules.latent.h3_derope.Plan`.
+H3_DEROPE = io.Custom("WAS_H3_DEROPE")
 
 #: `EMA-VFI Model Loader` -> `EMA-VFI Frame Interpolation`. Carries a
 #: `modules.model.Backend` holding the interpolation network and the checkpoint it was

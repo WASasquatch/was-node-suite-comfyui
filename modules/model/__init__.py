@@ -33,6 +33,7 @@ __all__ = [
     "offload_device",
     "published_checkpoint",
     "published_files",
+    "release_models",
     "resolve",
     "shared_file",
     "shared_roots",
@@ -593,6 +594,29 @@ def unpin_staged() -> bool:
     comfy.model_prefetch.cleanup_prefetch_queues()
     comfy.model_management.reset_cast_buffers()
     comfy_aimdo.model_vbar.vbars_reset_watermark_limits()
+    return True
+
+
+def release_models() -> bool:
+    """Unload every model ComfyUI holds and hand the cached device memory back.
+
+    Returns:
+        True where the models were released, False outside ComfyUI or when releasing failed.
+    """
+    import gc
+
+    try:
+        import comfy.model_management as management
+    except ImportError:
+        return False
+    try:
+        unpin_staged()
+        management.unload_all_models()
+        gc.collect()
+        management.soft_empty_cache(force=True)
+    except Exception as error:
+        logger.warning("the loaded models could not be released: %s", error)
+        return False
     return True
 
 

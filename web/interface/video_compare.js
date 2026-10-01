@@ -23,6 +23,9 @@ const START_SPLIT = 50;
 // How far the two clocks may drift before the right-hand clip is pulled back into step.
 const DRIFT_SECONDS = 0.06;
 
+// How far before its end a shorter clip is parked, so its last frame stays on screen.
+const HOLD_SECONDS = 0.01;
+
 // Width of the divider, at rest and under the pointer.
 const LINE_WIDTH = 2;
 const LINE_HOVER = 3;
@@ -178,36 +181,51 @@ export function createVideoComparePanel(node) {
   });
 
   const both = () => [left, right].filter((el) => el.style.display !== "none");
-  const clock = () => (left.currentSrc ? left : right);
+  const length = (el) => (el.currentSrc && el.duration > 0 ? el.duration : 0);
+  // The longer clip keeps the time and loops; the shorter one holds its last frame until the
+  // longer one wraps round.
+  const clock = () => (length(right) > length(left) ? right : left);
+  const lastFrame = (el) => Math.max(0, length(el) - HOLD_SECONDS);
   toggle.addEventListener("click", (event) => {
     event.stopPropagation();
     const lead = clock();
     const playing = !lead.paused && lead.currentSrc;
     for (const el of both()) {
       if (playing) el.pause();
-      else el.play().catch(() => {});
+      else if (el === lead || el.currentTime < lastFrame(el)) el.play().catch(() => {});
     }
     toggle.textContent = playing ? "play" : "pause";
   });
   scrub.addEventListener("input", (event) => {
     event.stopPropagation();
-    const span = clock().duration || 0;
+    const span = length(clock());
     if (!(span > 0)) return;
     const at = (Number(scrub.value) / 1000) * span;
-    for (const el of both()) el.currentTime = at;
+    for (const el of both()) el.currentTime = Math.min(at, lastFrame(el));
   });
 
   const followed = () => {
     const lead = clock();
-    const span = lead.duration || 0;
+    const span = length(lead);
     if (span > 0) {
       scrub.value = String(Math.round((lead.currentTime / span) * 1000));
       readout.textContent = `${lead.currentTime.toFixed(2)} / ${span.toFixed(2)} s`;
     }
     const other = lead === left ? right : left;
-    if (other.currentSrc && Math.abs(other.currentTime - lead.currentTime) > DRIFT_SECONDS) {
+    lead.loop = true;
+    other.loop = false;
+    if (!other.currentSrc || !(length(other) > 0)) return;
+    if (lead.currentTime >= lastFrame(other)) {
+      if (!other.paused) other.pause();
+      if (Math.abs(other.currentTime - lastFrame(other)) > DRIFT_SECONDS) {
+        other.currentTime = lastFrame(other);
+      }
+      return;
+    }
+    if (Math.abs(other.currentTime - lead.currentTime) > DRIFT_SECONDS) {
       other.currentTime = lead.currentTime;
     }
+    if (other.paused && !lead.paused) other.play().catch(() => {});
   };
   left.addEventListener("timeupdate", followed);
   right.addEventListener("timeupdate", followed);

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **476** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **481** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-469 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+474 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 354 |
+| [Always loaded](#always-loaded) | always on | 359 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-354 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+359 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (11)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -63,7 +63,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (4)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (6)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (1)
 - [WAS Suite/Logic](#was-suitelogic) (5)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (10)
+- [WAS Suite/Sampling](#was-suitesampling) (13)
 - [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -125,7 +125,7 @@ Find a song's beats, the first beat of each bar, its tempo and how loud it is at
 <details>
 <summary><b>Compare Video</b></summary>
 
-Play two videos on the node under a divider that drags left and right, so one run can be judged against another at the same frame. Both play from one clock. Wire a render into each socket; nothing is passed on.
+Play two videos on the node under a divider that drags left and right, so one run can be judged against another at the same frame. Both play from one clock, and a shorter video holds its last frame until the longer one loops. Wire a render into each socket; nothing is passed on.
 
 | | |
 |---|---|
@@ -3543,7 +3543,7 @@ Fall the frame off towards its corners, the way a wide lens does, or the other w
 <details>
 <summary><b>Image Blank</b></summary>
 
-Make a new image filled with a single colour, for use as a background, a matte, or a base to composite onto. The colour is set from the wheel on the node or by typing the three levels. Both sides are rounded down to a multiple of divisible_by, which saves a sampler rounding the size itself, so 513 becomes 512 at the default of 8. Use 16, 32 or 64 for a model that asks for a coarser step, and 1 for a matte that has to line up with something else exactly. A side shorter than divisible_by is taken up to one whole step rather than down to nothing. batch_size repeats the fill, for matching a batch of frames.
+Make a new image filled with a single colour, for use as a background, a matte, or a base to composite onto. The colour is set from the wheel on the node or by typing the three levels. Both sides are rounded down to a multiple of divisible_by, which saves a sampler rounding the size itself, so 513 becomes 512 at the default of 8. Use 16, 32 or 64 for a model that asks for a coarser step, and 1 for a matte that has to line up with something else exactly. A side shorter than divisible_by is taken up to one whole step rather than down to nothing. batch_size repeats the fill, for matching a batch of frames. alpha_channel adds a fourth channel at the level alpha, for an RGBA fill.
 
 | | |
 |---|---|
@@ -3560,12 +3560,14 @@ Make a new image filled with a single colour, for use as a background, a matte, 
 | `blue` | `INT` | Yes | 255 |  | Blue level of the fill colour. 0 is none, 255 is full. All three at 255 gives white, all three at 0 gives black. |
 | `divisible_by` | `INT` | Yes | 8 |  | Rounds width and height down to a multiple of this. 8 suits most latent models; set it to 1 to get the exact canvas asked for. |
 | `batch_size` | `INT` | Yes | 1 |  | How many copies the batch holds. 1 = a single image; 16 = sixteen identical fills, for matching a batch of frames a sampler or a video node is working on. |
+| `alpha_channel` | `BOOLEAN` | Yes | False |  | `true` gives RGBA, with a fourth channel at the level alpha; `false` gives RGB. |
+| `alpha` | `FLOAT` | Yes | 1.0 |  | Level of the alpha channel when alpha_channel is on: `1.0` opaque, `0.5` half, `0.0` clear. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `IMAGE` | A batch of batch_size images, each filled edge to edge with the chosen colour, at the requested size rounded down to a multiple of divisible_by, with a side shorter than that taken up to one whole step instead. |
+| `<output0>` | `IMAGE` | A batch of batch_size images, each filled edge to edge with the chosen colour, at the requested size rounded down to a multiple of divisible_by, with a side shorter than that taken up to one whole step instead. RGBA when alpha_channel is on, RGB otherwise. |
 
 </details>
 
@@ -6767,6 +6769,72 @@ A latent resized by a multiplier, with a choice of how the values in between are
 
 ### WAS Suite/Latent/Video
 
+<a id="node-wash3deroperecover"></a>
+<details>
+<summary><b>H3 De-RoPE Recover</b></summary>
+
+Take the frames H3 De-RoPE Stretch held back out of the decoded, refined clip, so it plays at its source length and speed, with the source audio beside it for Create Video. Audio decoded from the pass can be wired instead; it is sped back up with its pitch kept and comes back rough.
+
+| | |
+|---|---|
+| Node id | `WASH3DeRopeRecover` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The refined clip, decoded from the sampler's output. |
+| `derope` | `WAS_H3_DEROPE` | Yes |  |  | The derope output of H3 De-RoPE Stretch. |
+| `audio` | `AUDIO` | No |  |  | Leave empty to pass out the source audio, which matches the recovered frames. Wired, audio decoded from the refining pass is sped back up to match and comes back rough. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | One frame per source frame, at the source timing. |
+| `audio` | `AUDIO` | The pass's audio at the source timing, or the source audio when none is wired. Empty when neither exists. |
+| `report` | `STRING` | Frames in and frames out. |
+
+</details>
+
+<a id="node-wash3deropestretch"></a>
+<details>
+<summary><b>H3 De-RoPE Stretch</b></summary>
+
+Find where a MiniMax H3 clip moves too fast, show those frames several times over, and encode the result with its audio as the start latent for any sampler. The clip comes in as frames, as a latent, or both; for a clip generated from text, wire the finished output of its sampler. Sample it at the `denoise` output's strength, decode it, and H3 De-RoPE Recover puts the frames back on the clip's timing. The GPU's models are released before and after its VAE work, so the samplers either side of it get the whole card. The strip shows the motion of each latent row and what was held.
+
+| | |
+|---|---|
+| Node id | `WASH3DeRopeStretch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vae` | `VAE` | Yes |  |  | The H3 video VAE. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much of the clip is held. `balanced` holds the fastest quarter at 4, `wide` the fastest 30% at 4, `economy` the fastest 15% at 3. `manual` shows every setting. |
+| `strength` | `FLOAT` | Yes | 0.5 |  | Denoise for the sampler, passed out as `denoise`: `0.5` keeps the clip's motion and redraws the smear, `0.7` redraws more and re-times the action. Set the sampler's steps to the first pass's times this, as `4` after an 8-step pass or `13` after 25. |
+| `audio_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much of the audio the pass re-renders: `follow` 0.5, `loose` 0.7, `pin` keeps it, `fresh` replaces it. Needs audio and audio_vae. |
+| `images` | `IMAGE` | No |  |  | The clip's frames at 24 fps. Leave empty to decode them from latent. |
+| `audio` | `AUDIO` | No |  |  | The clip's soundtrack, from Get Video Components. Left empty, a joint H3 latent's own audio is used. Without either, held spans come back rushed. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, for encoding the audio and decoding a latent's. |
+| `fps` | `FLOAT` | No | 24.0 |  | Frame rate of the clip, as `24`, for timing its audio. |
+| `latent` | `LATENT` | No |  |  | The clip's finished H3 latent, such as a sampler's output. Motion and audio are read from it instead of encoding the frames. An early, unfinished estimate carries no motion to keep, and comes back fast-forwarded. |
+| `model` | `MODEL` | No |  |  | The H3 model the sampler uses. Passed out for the sampler's model. |
+| `low_vram` | `BOOLEAN` | No | True |  | `true` runs each model block over the stretched clip in slices of 8192 tokens and keeps only the weights that fit beside it on the card, streaming the rest, for the same output at a lower memory peak. Needs model. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The stretched clip and its audio, for the sampler's latent_image. |
+| `derope` | `WAS_H3_DEROPE` | What was held, for H3 De-RoPE Recover. |
+| `denoise` | `FLOAT` | The strength, for the sampler's denoise. |
+| `report` | `STRING` | Frames in and out, frames held and the peak hold. |
+| `model` | `MODEL` | The model for the sampler, run in slices when low_vram is on. |
+
+</details>
+
 <a id="node-wash3extendappend"></a>
 <details>
 <summary><b>H3 Extend Append</b></summary>
@@ -9257,6 +9325,90 @@ Denoise a latent exactly as core KSampler does, with the live preview made cheap
 | Name | Type | What it is |
 |---|---|---|
 | `LATENT` | `LATENT` | The denoised latent. |
+
+</details>
+
+<a id="node-wash3lowvram"></a>
+<details>
+<summary><b>H3 Low VRAM</b></summary>
+
+Set a MiniMax H3 model up to sample long clips in less VRAM, with the same result. Each block runs over the clip in slices of 8192 tokens, and only the weights that fit beside the clip stay on the card while the rest stream in as each block runs. Place it after the model loaders and any LoRA so every H3 sampler in the graph uses it.
+
+| | |
+|---|---|
+| Node id | `WASH3LowVRAM` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model for every H3 sampler in the graph. |
+
+</details>
+
+<a id="node-wash3tiledsampler"></a>
+<details>
+<summary><b>H3 Tiled Sampler</b></summary>
+
+Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. The panel shows where the tiles sit.
+
+| | |
+|---|---|
+| Node id | `WASH3TiledSampler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+| `seed` | `INT` | Yes | 0 |  | The noise seed, `0` as good as any. |
+| `steps` | `INT` | Yes | 8 |  | Denoising steps over the whole schedule, as `8` for a turbo LoRA or `25` for the base model. |
+| `cfg` | `FLOAT` | Yes | 1.0 |  | Guidance, `1` for turbo LoRAs and distilled models. |
+| `sampler_name` | `COMBO` | Yes |  |  | The solver each step runs, such as `euler` or `res_multistep`. |
+| `scheduler` | `COMBO` | Yes |  |  | How the noise level falls from step to step, such as `simple`. |
+| `positive` | `CONDITIONING` | Yes |  |  | The clip's positive conditioning. |
+| `negative` | `CONDITIONING` | Yes |  |  | The clip's negative conditioning. |
+| `latent_image` | `LATENT` | Yes |  |  | The H3 latent to refine, such as an upscaled clip encoded again. |
+| `denoise` | `FLOAT` | Yes | 0.4 |  | Share of the schedule run, `0.3` to `0.5` to refine, `1.0` from noise. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` splits the clip into windows along time under a token budget, and across the frame only where a window will not fit; `manual` sets tile and window sizes. |
+| `audio` | `LATENT` | No |  |  | The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, held as it is beside a video-only latent_image. Left empty, silence is held. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `LATENT` | `LATENT` | The refined latent, video only when latent_image was video only. |
+
+</details>
+
+<a id="node-wash3tiles"></a>
+<details>
+<summary><b>H3 Tiles</b></summary>
+
+Run every MiniMax H3 model call in overlapping tiles across the frame and overlapping windows along the clip, blended where they meet at each step so the tiles stay one clip. Any sampler then refines a long or upscaled H3 latent in tiles that each fit the card, run as H3 Low VRAM runs them. Upscale the latent first, or decode, upscale and encode, and sample it at a partial denoise.
+
+| | |
+|---|---|
+| Node id | `WASH3Tiles` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` splits the clip into windows along time under a token budget, and across the frame only where a window will not fit; `manual` sets tile and window sizes. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model for the sampler that refines the latent. |
 
 </details>
 

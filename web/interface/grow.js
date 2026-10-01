@@ -119,11 +119,20 @@ export function growWidgets(node, groups, options = {}) {
   }
 
   // A link arriving at or leaving a hidden input changes what has to be drawn, and neither one
-  // touches a widget value.
+  // touches a widget value. Every link a workflow restores lands here, so they share one fold.
+  let refoldQueued = false;
+  const queueRefold = () => {
+    if (refoldQueued) return;
+    refoldQueued = true;
+    queueMicrotask(() => {
+      refoldQueued = false;
+      refold();
+    });
+  };
   const originalConnections = node.onConnectionsChange;
   node.onConnectionsChange = function (...args) {
     const result = originalConnections?.apply(this, args);
-    refold();
+    queueRefold();
     return result;
   };
 

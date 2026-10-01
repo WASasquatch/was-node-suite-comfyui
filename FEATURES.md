@@ -385,6 +385,33 @@ grows.
 
 ---
 
+## Fast motion held for a refining pass
+
+**H3 De-RoPE Stretch** finds where a MiniMax H3 clip moves fastest from its own latent, shows
+those frames several times over, and encodes the stretched clip with its audio slowed to
+match, pitch kept, as the start latent for any sampler. `mode` picks how much is held:
+`balanced`, `wide`, `economy`, or `manual` with the threshold, peak hold, bridge and ramp.
+`audio_mode` picks how much of the audio the pass re-renders the same way, and `denoise` carries
+the strength to the sampler. With the sampler's model wired through it, `low_vram` runs each
+model block over the stretched clip in slices and keeps only the weights that fit beside it on the
+card, streaming the rest, for the same output at a lower memory peak.
+
+**H3 De-RoPE Recover** takes the held frames back out of the decoded result and passes the source
+audio out beside them, in time with the recovered frames.
+
+The clip comes in as frames, as a latent, or both. For a clip generated from text, H3 De-RoPE
+Stretch takes the sampler's finished output, reads its motion and its audio from it, and needs no
+decode and encode to measure it.
+
+For re-rendering fast action at a slowed pace and putting it back on the clip's own timing, in a
+finished H3 clip, in the output of an earlier pass, or in a clip generated from text.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Latent/Video**. Graphs:
+[`minimax-h3-derope.json`](docs/workflows/minimax-h3-derope.json) for a finished clip,
+[`minimax-h3-derope-t2v.json`](docs/workflows/minimax-h3-derope-t2v.json) for a clip generated from text.
+
+---
+
 ## Texture pushed into a generation while it is still forming
 
 **Latent Affine** multiplies a latent and adds an offset to it where a mask says to. The mask is

@@ -304,8 +304,10 @@ class FreeMemory(io.ComfyNode):
                 steps.append(f"could not release the models ({error})")
         if unload_models:
             try:
+                unpinned = share <= 0.0 and unpin_staged()
                 management.unload_all_models()
-                steps.append("unloaded every model")
+                steps.append("unpinned the staged pages and unloaded every model" if unpinned
+                             else "unloaded every model")
             except Exception as error:
                 logger.warning("the loaded models could not be unloaded: %s", error)
                 steps.append(f"could not unload the models ({error})")

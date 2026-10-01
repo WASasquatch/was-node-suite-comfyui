@@ -18,6 +18,9 @@ const FALLBACK_CHROME = 104;
 // The room measured on this page, once.
 let measuredChrome = null;
 
+// Widget -> what its node, the zoom and its host's box were when its panel was last fitted.
+const reconciled = new WeakMap();
+
 /**
  * The room the frontend adds to a widget's minimum width when it sizes a node.
  *
@@ -83,6 +86,10 @@ function reconcile(node, widget, element) {
     widget.width = node.size[0];
   }
 
+  // Measured again only when the node, the zoom or the host's own box changed since the last
+  // fit; panning moves none of them.
+  if (reconciled.get(widget) === fitState(node, widget, host, canvas)) return;
+
   const box = host.getBoundingClientRect();
   // Culled, collapsed or hidden: there is no geometry to measure against, and writing one
   // would fight whatever hid it.
@@ -106,6 +113,21 @@ function reconcile(node, widget, element) {
   // alone and no write happens on a frame where nothing moved.
   if (Math.abs(box.width / scale - width) > 0.5) host.style.width = `${width}px`;
   if (Math.abs(box.height / scale - height) > 0.5) host.style.height = `${height}px`;
+  reconciled.set(widget, fitState(node, widget, host, canvas));
+}
+
+/**
+ * What a panel's fit depends on, as one string.
+ *
+ * @param {object} node - The node the interface belongs to.
+ * @param {object} widget - The DOM widget the panel was added as.
+ * @param {HTMLElement} host - The element the frontend positions for the widget.
+ * @param {object} canvas - The graph canvas.
+ * @returns {string} The node's size, the widget's top, the zoom and the host's own box.
+ */
+function fitState(node, widget, host, canvas) {
+  return [node.size[0], node.size[1], widget?.y, canvas.ds?.scale, node.flags?.collapsed,
+    host.style.width, host.style.height, host.isConnected].join("|");
 }
 
 
