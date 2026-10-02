@@ -108,13 +108,14 @@ def install_commands(keys) -> list[str]:
     ]
 
 
-def expand_tokens(node_cls) -> None:
+def expand_tokens(node_cls, schema=None) -> None:
     """Give one node class ``[token]`` expansion on its text inputs.
 
     Never raises. A class left unexpanded keeps its text inputs as they were.
 
     Args:
         node_cls: The node class to patch in place.
+        schema: Its schema, already built. Left out, it is built here.
     """
     try:
         # Imported inside the call and guarded: load_custom_node turns anything escaping
@@ -123,16 +124,16 @@ def expand_tokens(node_cls) -> None:
     except Exception as error:
         logger.debug("token expansion is unavailable (%s)", error)
         return
-    apply(node_cls)
+    apply(node_cls, schema)
 
 
-def publish_pixels(node_cls, node_id: str) -> None:
+def publish_pixels(node_cls, node_id: str, schema=None) -> None:
     """Give one node class the before and after its interface draws, when it is a pixels node.
 
     Args:
         node_cls: The node class to patch in place.
-        node_id: The id already read off its schema, so a class outside the family costs
-            no second schema build.
+        node_id: The id already read off its schema.
+        schema: Its schema, already built. Left out, a member of the family builds it.
     """
     try:
         # Imported inside the call and guarded: load_custom_node turns anything escaping
@@ -141,7 +142,7 @@ def publish_pixels(node_cls, node_id: str) -> None:
     except Exception as error:
         logger.debug("the pixels before and after is unavailable (%s)", error)
         return
-    apply(node_cls, node_id)
+    apply(node_cls, node_id, schema)
 
 
 def register_interface_routes() -> None:
@@ -371,7 +372,8 @@ class NodeLoader:
         kept = []
         for node_cls in declared:
             try:
-                node_id = node_cls.GET_SCHEMA().node_id
+                schema = node_cls.GET_SCHEMA()
+                node_id = schema.node_id
             except Exception as error:
                 # load_custom_node wraps the entrypoint in a single try/except, so a
                 # schema that raises there takes down every node in the pack with it.
@@ -383,8 +385,8 @@ class NodeLoader:
                 self.dropped.append(f"{self.short_name(module.__name__)}.{node_cls.__name__}")
                 continue
             if self.node_enabled(node_id, group_on):
-                expand_tokens(node_cls)
-                publish_pixels(node_cls, node_id)
+                expand_tokens(node_cls, schema)
+                publish_pixels(node_cls, node_id, schema)
                 kept.append(node_cls)
                 self.node_ids.add(node_id)
             elif group_on:

@@ -239,8 +239,8 @@ def font_catalog() -> dict[str, Path]:
         logger.debug("the font directories could not be scanned", exc_info=True)
         signature = None
 
-    _CATALOG["checked"] = now
     if signature is not None and _CATALOG["signature"] == signature and _CATALOG["fonts"]:
+        _CATALOG["checked"] = time.monotonic()
         return _CATALOG["fonts"]
 
     try:
@@ -255,6 +255,7 @@ def font_catalog() -> dict[str, Path]:
             if label != "font.ttf"
         }
     _CATALOG["signature"], _CATALOG["fonts"] = signature, fonts
+    _CATALOG["checked"] = time.monotonic()
     return fonts
 
 

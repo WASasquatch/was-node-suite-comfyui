@@ -35,8 +35,8 @@ MAX_FOLDERS = 2000
 #: an ``/object_info`` request and from the prompt thread when a node builds its schema.
 _lock = threading.RLock()
 
-#: ``(stamp, extra key, labels)`` from the last walk, reused for
-#: :data:`modules.util.file_listing.LISTING_TTL` seconds.
+#: ``(monotonic time it is reused until, extra key, labels)`` from the last walk, from
+#: :func:`modules.util.file_listing.reuse_until`.
 _cache: tuple[float, tuple, tuple[str, ...]] = (0.0, (), ())
 
 
@@ -81,9 +81,9 @@ def folders(extra=()) -> list[str]:
 
     key = tuple((tag, str(directory)) for tag, directory in (extra or ()))
     with _lock:
-        stamp, cached_key, labels = _cache
+        until, cached_key, labels = _cache
         now = time.monotonic()
-        if labels and cached_key == key and now - stamp < file_listing.LISTING_TTL:
+        if labels and cached_key == key and now < until:
             return list(labels)
 
         # The folders under each root, read straight off disk. A directory-only pass costs
@@ -98,7 +98,7 @@ def folders(extra=()) -> list[str]:
                 logger.debug("the folders under %s stopped at %d entries", tag, MAX_FOLDERS)
 
         offered = _offered(held, MAX_FOLDERS)
-        _cache = (time.monotonic(), key, tuple(offered))
+        _cache = (file_listing.reuse_until(now, time.monotonic()), key, tuple(offered))
         return offered
 
 

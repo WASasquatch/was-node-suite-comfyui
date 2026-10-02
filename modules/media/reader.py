@@ -20,7 +20,7 @@ from .. import deps, log
 from ..convert.tensors import stack_images
 from ..image import sizing
 from ..image.draw import parse_color
-from ..util import sandbox
+from ..util import file_listing, sandbox
 from . import sampling
 
 __all__ = [
@@ -68,15 +68,15 @@ MAX_RATE = 240.0
 #: Fill for space a frame does not cover, when one cannot be read from the widget.
 FALLBACK_PAD = (0, 0, 0, 255)
 
-#: Seconds the input directory's video listing is reused for. A burst of ``/object_info``
-#: requests costs one listing, and a freshly uploaded file appears within it.
-LISTING_TTL = 5.0
+#: Seconds the input directory's video listing is reused for at least. A burst of
+#: ``/object_info`` requests costs one listing, and a freshly uploaded file appears within it.
+LISTING_TTL = file_listing.LISTING_TTL
 
 #: Serializes the listing below, which is read from ComfyUI's server thread for a combo and
 #: from the prompt thread for a node.
 _listing_lock = threading.Lock()
 
-#: ``(monotonic stamp, file names)`` of the last input directory listing.
+#: ``(monotonic time it is reused until, file names)`` of the last input directory listing.
 _listing: tuple[float, tuple[str, ...]] = (0.0, ())
 
 
@@ -130,17 +130,17 @@ def input_videos() -> list[str]:
     """The video files sitting in ComfyUI's input directory, in name order.
 
     Returns:
-        File names, memoized for :data:`LISTING_TTL` seconds. Empty outside ComfyUI and
-        where the directory cannot be read.
+        File names, memoized for at least :data:`LISTING_TTL` seconds. Empty outside
+        ComfyUI and where the directory cannot be read.
     """
     global _listing
     with _listing_lock:
-        stamp, names = _listing
+        until, names = _listing
         now = time.monotonic()
-        if stamp and now - stamp < LISTING_TTL:
+        if until and now < until:
             return list(names)
         names = tuple(_scan_input())
-        _listing = (time.monotonic(), names)
+        _listing = (file_listing.reuse_until(now, time.monotonic()), names)
         return list(names)
 
 
@@ -155,7 +155,6 @@ def video_labels() -> list[str]:
         import folder_paths
     except ImportError:
         return []
-    from ..util import file_listing
 
     try:
         # One sample name per suffix the walk holds, so the menu's limit counts videos alone.

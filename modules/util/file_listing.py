@@ -2,7 +2,7 @@
 
 A label is ``<relative path> [tag]``: ``input``, ``output``, ``temp``, or a directory
 ``paths.allow_read`` names. :func:`scan` walks each root on its own budget, memoized for
-:data:`LISTING_TTL` seconds.
+at least :data:`LISTING_TTL` seconds.
 """
 
 from __future__ import annotations
@@ -23,9 +23,11 @@ __all__ = [
     "LISTING_TTL",
     "MAX_DEPTH",
     "MAX_EXAMINED",
+    "MAX_REUSE",
     "OUTPUT",
     "CONFIGURED",
     "ROOTS",
+    "SLOW_WALK_SHARE",
     "TAGS",
     "TEMP",
     "configured",
@@ -33,6 +35,7 @@ __all__ = [
     "labels",
     "listing",
     "resolve",
+    "reuse_until",
     "roots",
     "scan",
     "view",
@@ -76,17 +79,24 @@ MAX_EXAMINED = 20000
 #: How many labels a view offers when it names no limit of its own.
 DEFAULT_LIMIT = 500
 
-#: Seconds a walk is reused for. Long enough that a burst of ``/object_info`` requests costs
-#: one walk, and short enough that a newly saved file is listed before anyone has finished
-#: reaching for it.
+#: Seconds a walk is reused for at least. Long enough that a burst of ``/object_info``
+#: requests costs one walk, and short enough that a newly saved file is listed before anyone
+#: has finished reaching for it.
 LISTING_TTL = 5.0
+
+#: A walk is reused for this many times as long as it took, where that is longer than
+#: :data:`LISTING_TTL`.
+SLOW_WALK_SHARE = 10.0
+
+#: Longest a walk is reused for, in seconds, however long it took.
+MAX_REUSE = 120.0
 
 #: Serializes the walk and the view cache. Both are read from ComfyUI's server thread, for a
 #: browser panel, and from the prompt thread, for a combo and a node.
 _lock = threading.RLock()
 
-#: ``(monotonic stamp, walk id, entries)``. The id is taken from :data:`_walks` and changes
-#: on every rebuild, so a cached view knows whether the walk under it is the one it was built
+#: ``(monotonic time it is reused until, walk id, entries)``. The id is taken from
+#: :data:`_walks` and changes on every rebuild, so a cached view knows whether the walk under it is the one it was built
 #: from.
 _scan_cache: tuple[float, int, tuple["Entry", ...]] = (0.0, 0, ())
 
@@ -198,8 +208,23 @@ def configured(known: Sequence[Path] = ()) -> list[tuple[str, Path]]:
     return found
 
 
+def reuse_until(started: float, finished: float) -> float:
+    """The monotonic time a listing read between ``started`` and ``finished`` expires.
+
+    Args:
+        started: ``time.monotonic()`` before the listing was read.
+        finished: ``time.monotonic()`` after it.
+
+    Returns:
+        ``finished`` plus :data:`LISTING_TTL`, or plus :data:`SLOW_WALK_SHARE` times the
+        read's own length where that is longer, at most :data:`MAX_REUSE` seconds on.
+    """
+    took = max(0.0, finished - started)
+    return finished + min(MAX_REUSE, max(LISTING_TTL, SLOW_WALK_SHARE * took))
+
+
 def scan() -> tuple[Entry, ...]:
-    """Every listable file under every root, memoized for :data:`LISTING_TTL` seconds.
+    """Every listable file under every root, memoized for at least :data:`LISTING_TTL` seconds.
 
     Returns:
         The entries in the order the roots were walked, unsorted, at most
@@ -368,12 +393,12 @@ def _holds(tag: str, tags: set[str]) -> bool:
 
 
 def _scan() -> tuple[float, int, tuple[Entry, ...]]:
-    """The memoized walk, rebuilt when it is older than :data:`LISTING_TTL`."""
+    """The memoized walk, rebuilt once :func:`reuse_until` says it has expired."""
     global _scan_cache, _walks
     with _lock:
-        stamp, _, entries = _scan_cache
+        until, _, entries = _scan_cache
         now = time.monotonic()
-        if entries and now - stamp < LISTING_TTL:
+        if entries and now < until:
             return _scan_cache
         found: list[Entry] = []
         # ComfyUI's own three first, then whatever the config adds, so a menu offers the
@@ -391,7 +416,7 @@ def _scan() -> tuple[float, int, tuple[Entry, ...]]:
                     tag, directory, MAX_EXAMINED, len(rows),
                 )
         _walks += 1
-        _scan_cache = (time.monotonic(), _walks, tuple(found))
+        _scan_cache = (reuse_until(now, time.monotonic()), _walks, tuple(found))
         return _scan_cache
 
 

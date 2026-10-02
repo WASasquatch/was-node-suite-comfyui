@@ -159,23 +159,24 @@ def _unescape(text: str, name: str) -> str:
     return UNESCAPE.sub(r"\1", text)
 
 
-def apply(node_cls) -> None:
+def apply(node_cls, schema=None) -> None:
     """Wrap ``node_cls.execute`` so its string inputs arrive with tokens expanded.
 
     Args:
         node_cls: A node class the loader has collected.
+        schema: Its schema, already built. Left out, it is built here.
     """
     if getattr(node_cls, MARKER, False):
         return
     try:
-        _wrap(node_cls)
+        _wrap(node_cls, schema)
     except Exception as error:
         logger.debug("%s was left unwrapped (%s)", getattr(node_cls, "__name__", node_cls), error)
 
 
-def _wrap(node_cls) -> None:
+def _wrap(node_cls, schema=None) -> None:
     """Do the wrapping. Split out so :func:`apply` owns the one guard around all of it."""
-    names = text_inputs(node_cls.GET_SCHEMA())
+    names = text_inputs(schema if schema is not None else node_cls.GET_SCHEMA())
     setattr(node_cls, MARKER, True)
     if not names:
         return

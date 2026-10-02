@@ -113,31 +113,35 @@ def sides(schema) -> tuple[str, tuple[str, ...]]:
     return names[0], names[1:]
 
 
-def apply(node_cls, node_id=None) -> None:
+def apply(node_cls, node_id=None, schema=None) -> None:
     """Wrap ``node_cls.execute`` so both sides of its picture reach the interface.
 
     Args:
         node_cls: A node class the loader has collected.
-        node_id: The id the loader already read off the schema. Left out, the schema is
-            built to read it, which is the only reason a class outside :data:`FAMILY` costs
-            anything at all.
+        node_id: The id the loader already read off the schema. Left out, it is read from
+            ``schema``, or from a schema built here.
+        schema: The schema the loader already built. Left out, a member of :data:`FAMILY`
+            builds it.
     """
     if getattr(node_cls, MARKER, False):
         return
     try:
-        _wrap(node_cls, node_id)
+        _wrap(node_cls, node_id, schema)
     except Exception as error:
         logger.debug("%s was left unwrapped (%s)", getattr(node_cls, "__name__", node_cls), error)
 
 
-def _wrap(node_cls, node_id) -> None:
+def _wrap(node_cls, node_id, schema=None) -> None:
     """Do the wrapping. Split out so :func:`apply` owns the one guard around all of it."""
     if node_id is None:
-        node_id = node_cls.GET_SCHEMA().node_id
+        if schema is None:
+            schema = node_cls.GET_SCHEMA()
+        node_id = schema.node_id
     if node_id not in FAMILY:
         return
     setattr(node_cls, MARKER, True)
-    schema = node_cls.GET_SCHEMA()
+    if schema is None:
+        schema = node_cls.GET_SCHEMA()
     before, controls = sides(schema)
     if not before:
         logger.debug("%s declares no IMAGE input, so neither side is filed", node_id)

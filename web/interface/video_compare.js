@@ -1,11 +1,12 @@
 /**
  * Two videos under a divider, played from one clock.
  *
- * The panel stacks both clips and clips the right-hand one, so dragging the divider reveals
- * one against the other at the same frame.
+ * Both clips are drawn into one canvas, the right-hand one cut at the divider, so dragging the
+ * divider reveals one against the other at the same frame.
  */
 
 import { app } from "../../../scripts/app.js";
+import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
 import { themeVar } from "./theme.js";
 
@@ -79,13 +80,20 @@ export function createVideoComparePanel(node) {
     el.preload = "auto";
     Object.assign(el.style, {
       position: "absolute", inset: "0", width: "100%", height: "100%",
-      objectFit: "contain", display: "none",
+      objectFit: "contain", display: "none", opacity: "0", pointerEvents: "none",
     });
     return el;
   };
   const left = make();
   const right = make();
-  stage.append(left, right);
+
+  // Both clips are drawn here, the right-hand one cut at the divider.
+  const canvas = document.createElement("canvas");
+  Object.assign(canvas.style, {
+    position: "absolute", inset: "0", width: "100%", height: "100%", display: "block",
+  });
+  const context = canvas.getContext("2d");
+  stage.append(left, right, canvas);
 
   const divider = document.createElement("div");
   Object.assign(divider.style, {
@@ -138,8 +146,55 @@ export function createVideoComparePanel(node) {
   let hovering = false;
   let paired = false;
   const dragging = { on: false };
+
+  const ready = (el) => el.style.display !== "none" && el.readyState >= 2 && el.videoWidth > 0;
+  // The clip's own aspect, centred in the canvas, as `object-fit: contain` places it.
+  const fitted = (el, width, height) => {
+    const scale = Math.min(width / el.videoWidth, height / el.videoHeight);
+    const w = el.videoWidth * scale;
+    const h = el.videoHeight * scale;
+    return [(width - w) / 2, (height - h) / 2, w, h];
+  };
+  const draw = () => {
+    if (!context) return;
+    const ratio = surfaceRatio(canvas);
+    const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
+    const height = Math.max(1, Math.round(canvas.clientHeight * ratio));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    context.clearRect(0, 0, width, height);
+    if (ready(left)) context.drawImage(left, ...fitted(left, width, height));
+    if (!ready(right)) return;
+    context.save();
+    if (paired) {
+      context.beginPath();
+      context.rect((width * split) / 100, 0, width, height);
+      context.clip();
+    }
+    context.drawImage(right, ...fitted(right, width, height));
+    context.restore();
+  };
+  let pending = 0;
+  const playing = () => [left, right].some((el) => !el.paused && !el.ended);
+  // One draw per display frame while either clip plays, and one per event while both rest.
+  const tick = () => {
+    pending = 0;
+    draw();
+    if (playing()) pending = requestAnimationFrame(tick);
+  };
+  const schedule = () => {
+    if (!pending) pending = requestAnimationFrame(tick);
+  };
+  for (const el of [left, right]) {
+    for (const name of ["play", "seeked", "loadeddata", "timeupdate"]) el.addEventListener(name, schedule);
+  }
+  const resized = new ResizeObserver(() => schedule());
+  resized.observe(stage);
+  const stopRatio = watchSurfaceRatio(canvas, schedule);
+
   const paint = () => {
-    right.style.clipPath = paired ? `inset(0 0 0 ${split}%)` : "none";
     const line = hovering ? LINE_HOVER : LINE_WIDTH;
     divider.style.width = `${line}px`;
     // Placed against the same percentage the clip-path uses, so the canvas zoom cannot put
@@ -147,6 +202,7 @@ export function createVideoComparePanel(node) {
     const centre = (span) => `clamp(0px, calc(${split}% - ${span / 2}px), calc(100% - ${span}px))`;
     divider.style.left = centre(line);
     grip.style.left = centre(GRIP_WIDTH);
+    schedule();
   };
 
   grip.addEventListener("pointerenter", () => { hovering = true; paint(); });
@@ -269,6 +325,10 @@ export function createVideoComparePanel(node) {
   const dispose = () => {
     try {
       stop?.();
+      stopRatio();
+      resized.disconnect();
+      if (pending) cancelAnimationFrame(pending);
+      pending = 0;
       for (const el of [left, right]) {
         el.pause();
         el.removeAttribute("src");
