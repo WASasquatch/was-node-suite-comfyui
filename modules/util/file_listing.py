@@ -391,7 +391,7 @@ def _scan() -> tuple[float, int, tuple[Entry, ...]]:
                     tag, directory, MAX_EXAMINED, len(rows),
                 )
         _walks += 1
-        _scan_cache = (now, _walks, tuple(found))
+        _scan_cache = (time.monotonic(), _walks, tuple(found))
         return _scan_cache
 
 
