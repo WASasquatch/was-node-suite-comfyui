@@ -1,8 +1,7 @@
 """Prepares the pack before ComfyUI imports any custom node.
 
-The views manifest is rewritten on every start, the drop directory for ``.zip`` view
-extensions is created whether or not the installer is switched on, and a feature group that
-is on with nothing installed for it has its requirements file installed.
+The views manifest is rewritten on every start, and the drop directory for ``.zip`` view
+extensions is created whether or not the installer is switched on.
 """
 
 from __future__ import annotations
@@ -94,16 +93,23 @@ def find_config_file() -> Path | None:
     return None
 
 
-def read_config(path: Path) -> dict:
-    """One config file as a mapping. A file that will not parse is a warning and ``{}``."""
+def read_config(path: Path | None) -> dict:
+    """One config file as a mapping, or ``{}`` where there is none or it will not parse.
+
+    Args:
+        path: The config file, or None.
+
+    Returns:
+        The settings. A file that will not parse is logged at debug; the pack's own config
+        loader reports it with its line and column.
+    """
+    if path is None:
+        return {}
     try:
         text = path.read_text(encoding="utf-8")
         data = json.loads(text) if path.suffix == ".json" else _yaml(text)
     except Exception as error:
-        logger.warning(
-            "could not read %s (%s), so every viewer key was left at its default",
-            path, error,
-        )
+        logger.debug("could not read %s (%s), so every viewer key is at its default", path, error)
         return {}
     return data if isinstance(data, dict) else {}
 
@@ -114,11 +120,9 @@ def _yaml(text: str) -> object:
     return yaml.safe_load(text)
 
 
-def block_of(path: Path | None, name: str) -> dict:
-    """One top-level block of the config file, or ``{}``."""
-    if path is None:
-        return {}
-    block = read_config(path).get(name)
+def block_of(settings: dict, name: str) -> dict:
+    """One top-level block of the settings, or ``{}``."""
+    block = settings.get(name)
     return block if isinstance(block, dict) else {}
 
 
@@ -178,9 +182,9 @@ def prepare_viewer(features: dict, viewer: dict) -> None:
 def main() -> None:
     """Prepare the viewer."""
     try:
-        path = find_config_file()
-        configure_logging(str(block_of(path, "logging").get("level", "info")))
-        prepare_viewer(block_of(path, "features"), block_of(path, "viewer"))
+        settings = read_config(find_config_file())
+        configure_logging(str(block_of(settings, "logging").get("level", "info")))
+        prepare_viewer(block_of(settings, "features"), block_of(settings, "viewer"))
     except Exception as error:
         logger.warning(
             "the content viewer's extensions could not be prepared (%s: %s). Its built-in "

@@ -1,7 +1,7 @@
 """The pictures a node held, as thumbnails its interface can fetch.
 
 ``GET /was/interface/api/preview?node_id=<id>&slot=<name>&side=<input|output>`` answers PNG
-bytes, or 404. Pictures are held in memory per ``(node, side, slot)``, bounded in bytes
+bytes, or 204. Pictures are held in memory per ``(node, side, slot)``, bounded in bytes
 before the encode and in frames after it.
 """
 
@@ -20,6 +20,7 @@ from .channel import (
     MAX_SUBSCRIPTIONS,
     NO_STORE,
     PROMPT_ID_HEADER,
+    REFUSAL_HEADER,
     clear_subscriptions,
     executing_node_id,
     executing_prompt_id,
@@ -47,6 +48,7 @@ __all__ = [
     "OUTPUT",
     "PROMPT_ID_HEADER",
     "Picture",
+    "REFUSAL_HEADER",
     "DISCARD_ROUTE",
     "ROUTE",
     "SIDES",
@@ -659,7 +661,8 @@ def register_routes() -> bool:
                 # value, so a slot of nothing but spaces, which reads the picture published
                 # under no slot, is not reported as a name the node never published. An
                 # unreadable side answers the same words a missing picture gets, never 400.
-                return web.Response(status=404, text=_refusal(_slot(slot), _side(side)))
+                words = _refusal(_slot(slot), _side(side)).encode("ascii", "replace").decode("ascii")
+                return web.Response(status=204, headers={**NO_STORE, REFUSAL_HEADER: words})
             channel = _channel(request.query.get("channel"))
             # Decided before the headers are built: a channel request is answered with bytes
             # re-encoded here, so the length and the channel mode of the stored picture are
@@ -669,7 +672,7 @@ def register_routes() -> bool:
             )
             headers = {
                 # Built fresh for each answer. A shared dict mutated here would carry one
-                # request's dimensions into every later response, including its 404s.
+                # request's dimensions into every later response, including its refusals.
                 **NO_STORE,
                 SOURCE_WIDTH_HEADER: str(record.width),
                 SOURCE_HEIGHT_HEADER: str(record.height),
@@ -702,7 +705,7 @@ def register_routes() -> bool:
             except Exception as error:
                 logger.debug("a preview subscription could not be recorded (%s)", error)
             # No body: the answer is the registration having been taken, and a panel that
-            # never hears back simply pays one fetch that answers 404.
+            # never hears back simply pays one fetch that answers no picture.
             return web.Response(status=204, headers=NO_STORE)
 
     except Exception as error:
@@ -838,7 +841,7 @@ def _encode_frames(tensor, kind, first_only) -> tuple[list[Picture], int]:
     for plane in planes:
         # Asked before the encode rather than after it, so a frame that would not be kept is
         # never paid for. The first frame of a key is exempt: a slot that stored nothing is
-        # a 404 the interface draws as a node that has not run.
+        # an empty answer the interface draws as a node that has not run.
         if pictures and spent >= MAX_KEY_BYTES:
             logger.info(
                 "a node published %d frames and %d of them fit the preview channel's %d byte "

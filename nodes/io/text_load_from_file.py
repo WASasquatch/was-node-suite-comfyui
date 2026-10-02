@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import os
-from io import StringIO
 
 from comfy_api.latest import io
 
 from ...modules.io import picker
-from ...modules.util import text_files
+from ...modules.util import file_listing, text_files
 from ...modules import log
 from ...modules.compat.types import DICT
 from ...modules.state import history
@@ -33,6 +32,32 @@ def text_path(file: str) -> str:
     return picker.resolve(entry, text_files.TEXT_EXTENSIONS) or ""
 
 
+def missing(entry: str) -> str:
+    """What to log when the chosen entry names no listed file.
+
+    Args:
+        entry: The stored combo value, stripped.
+
+    Returns:
+        A message naming the entry and every folder the menu is built from.
+    """
+    folders = ", ".join(f"{tag} ({path})" for tag, path in file_listing.roots(picker.ROOTS))
+    where = folders or "ComfyUI's input, output and temp folders, which could not be found"
+    elsewhere = (
+        "To list another folder, add it under paths.allow_read in config.yaml, as "
+        "'D:/prompts', then restart ComfyUI and reload the page."
+    )
+    if not entry or entry == NO_FILES:
+        return (
+            f"Load Text File has no file chosen, so it read nothing. Pick one from its menu, "
+            f"which lists the text files in {where}. {elsewhere}"
+        )
+    return (
+        f"Load Text File found no text file named `{entry}`, so it read nothing. It may have "
+        f"been deleted or renamed since the menu was built. Pick it again from the menu, "
+        f"which lists the text files in {where}. {elsewhere}"
+    )
+
 
 #: Widget value that keeps the dictionary keyed on the file's own name.
 FILENAME_KEYWORD = "[filename]"
@@ -49,21 +74,21 @@ class LoadTextFile(io.ComfyNode):
             search_aliases=["Load Text File", "read text", "text file"],
             category="WAS Suite/IO",
             description=(
-                "Read a text file, dropping comment lines, as text and as a dictionary. "
-                "Nowhere but the given path is searched, so a bare file name only works if "
-                "it sits in the folder ComfyUI was started in, and the path has to land "
-                "inside ComfyUI's input, output or temp folder, the pack's own folder, or a "
-                "folder listed under paths.allow_read in config.yaml. A file that cannot be "
-                "read gives empty text rather than failing the prompt."
+                "Read a text file picked from a menu, dropping comment lines, as text and as "
+                "a dictionary. The menu lists the text files, subfolders included, in "
+                "ComfyUI's input, output and temp folders and in every folder under "
+                "paths.allow_read in config.yaml, each tagged with its folder's name. A "
+                "folder added there appears after a ComfyUI restart and a page reload. A "
+                "file that cannot be read gives empty text and a line in the log."
             ),
             inputs=[
                 io.Combo.Input(
                     "file",
                     options=text_options(),
                     tooltip=(
-                        "Which file to read. The menu lists every text file in ComfyUI's "
-                        "input, output and temp folders and in any folder added under "
-                        "paths.allow_read. It has to be UTF-8."
+                        "The UTF-8 text file to read: 'notes.txt' in input, 'notes.txt "
+                        "[output]', 'notes.txt [temp]', or 'notes.txt [prompts]' for a "
+                        "prompts folder under paths.allow_read."
                     ),
                 ),
                 io.String.Input(
@@ -107,10 +132,8 @@ class LoadTextFile(io.ComfyNode):
         if dictionary_name != FILENAME_KEYWORD:
             name = dictionary_name
 
-        # An empty widget names nothing to contain, and reports the same missing file as a
-        # path that does not exist.
         if not file_path.strip():
-            logger.error("the path `%s` specified cannot be found.", file_path)
+            logger.error("%s", missing(str(file or "").strip()))
             return io.NodeOutput("", {name: []})
 
         resolved = sandbox.resolve_read(file_path)
@@ -118,14 +141,20 @@ class LoadTextFile(io.ComfyNode):
             logger.error("the path `%s` specified cannot be found.", resolved)
             return io.NodeOutput("", {name: []})
 
-        with open(resolved, "r", encoding="utf-8", newline="\n") as handle:
-            text = handle.read()
+        try:
+            text = text_files.read_text(resolved)
+        except UnicodeDecodeError:
+            logger.error(
+                "`%s` is not UTF-8, so Load Text File read nothing from it. Save the file as "
+                "UTF-8 and run the prompt again.",
+                resolved,
+            )
+            return io.NodeOutput("", {name: []})
+        except OSError as error:
+            logger.error("`%s` could not be read (%s).", resolved, error)
+            return io.NodeOutput("", {name: []})
 
         history.update_history_text_files(str(resolved))
 
-        lines = [
-            line.replace("\n", "").replace("\r", "")
-            for line in StringIO(text)
-            if not line.strip().startswith("#")
-        ]
+        lines = [line for line in text_files.split_lines(text) if not text_files.is_comment(line)]
         return io.NodeOutput("\n".join(lines), {name: lines})

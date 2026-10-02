@@ -16,6 +16,7 @@ __all__ = [
     "MAX_SUBSCRIPTIONS",
     "NO_STORE",
     "PROMPT_ID_HEADER",
+    "REFUSAL_HEADER",
     "clear_subscriptions",
     "executing_class_type",
     "executing_node_id",
@@ -38,6 +39,10 @@ NO_STORE = {"Cache-Control": "no-store"}
 #: outside a run. A panel drawing two answers together compares these before it pairs them, since
 #: two sides of one node can come from two different runs.
 PROMPT_ID_HEADER = "X-WAS-Prompt"
+
+#: Header carrying the words a request that found nothing published is answered with, beside a
+#: 204 and no body.
+REFUSAL_HEADER = "X-WAS-Refusal"
 
 #: How many nodes may hold a registered panel at once. A page registers one entry per interface
 #: on the canvas and drops it when the node goes away, so the bound is a backstop against a

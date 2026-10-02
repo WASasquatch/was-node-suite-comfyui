@@ -261,11 +261,13 @@ async function fetchPreview(nodeOrId, options = {}) {
       // under a fresh overlay and say something untrue about the graph.
       cache: "no-store",
     });
-    // 404 is the answer for a node that published nothing, so it is a value rather than a
-    // failure and is not logged. A caller never remembers this answer: a node queued before
-    // the socket opened publishes on its next run, and one that recorded the first answer and
-    // stopped asking would stay empty for the life of the page.
-    if (response?.status === 404) return result(PREVIEW_STATE.WAITING, null, side);
+    // 204, or 404, is the answer for a node that published nothing, so it is a value rather
+    // than a failure and is not logged. A caller never remembers this answer: a node queued
+    // before the socket opened publishes on its next run, and one that recorded the first answer
+    // and stopped asking would stay empty for the life of the page.
+    if (response?.status === 204 || response?.status === 404) {
+      return result(PREVIEW_STATE.WAITING, null, side);
+    }
     if (!response?.ok) return result(PREVIEW_STATE.FAILED, null, side);
     source = {
       width: response.headers.get(SOURCE_WIDTH_HEADER),

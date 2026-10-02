@@ -1,7 +1,7 @@
 """Rewriting a config file to match the current schema.
 
-A file whose keys differ, or that holds a superseded default, is rebuilt by substitution
-into ``config.example.yaml``, keeping its values. The previous file is copied to
+An outdated file is rebuilt from ``config.example.yaml`` keeping its values, with
+:data:`USER_NOTE` in place of the template's notice, and the previous file kept as
 ``config.yaml.bak``.
 """
 
@@ -14,12 +14,31 @@ from pathlib import Path
 from .. import log
 from .defaults import DEFAULTS, SUPERSEDED_FEATURE_DEFAULTS, VERSION
 
-__all__ = ["TEMPLATE_NAME", "differences", "reconcile", "render", "schema_paths"]
+__all__ = [
+    "TEMPLATE_NAME",
+    "TEMPLATE_NOTE",
+    "USER_NOTE",
+    "as_user_copy",
+    "differences",
+    "reconcile",
+    "render",
+    "schema_paths",
+]
 
 logger = log.get_logger("config")
 
 #: The commented schema, shipped in the repository root, used as the rewrite template.
 TEMPLATE_NAME = "config.example.yaml"
+
+#: How the template's paragraph saying it is not the file in use begins.
+TEMPLATE_NOTE = "# THIS IS THE TEMPLATE"
+
+#: The paragraph a user's own config file carries in place of the template's.
+USER_NOTE = (
+    "# This is the configuration file the pack reads. A change to it takes effect when",
+    "# ComfyUI is restarted. Each release brings it up to date from config.example.yaml,",
+    "# keeping the values set here.",
+)
 
 #: Where the file being replaced is kept.
 BACKUP_SUFFIX = ".bak"
@@ -147,16 +166,16 @@ def reconcile(path: Path, raw: Mapping, source: Path) -> bool:
         source: The repository root, holding :data:`TEMPLATE_NAME`.
 
     Returns:
-        Whether the file was rewritten. ``False`` covers every reason not to, each of
-        which is logged: nothing to do, no template, a format this cannot template, and a
-        write that failed.
+        Whether the file was rewritten, including a rewrite of the template's own paragraph
+        alone. ``False`` covers every reason not to, each of which is logged: nothing to do,
+        no template, a format this cannot template, and a write that failed.
     """
     added, removed = differences(raw)
     # A version this build supersedes is a reason to rewrite on its own: the defaults it
     # was written against have moved, and the file records which ones they were.
     superseded = raw.get("version") in SUPERSEDED_FEATURE_DEFAULTS
     if not added and not removed and not superseded:
-        return False
+        return _drop_template_note(path, source)
 
     if path.suffix != TEMPLATE_SUFFIX:
         logger.info(
@@ -188,6 +207,8 @@ def reconcile(path: Path, raw: Mapping, source: Path) -> bool:
     adopted, kept = adopt_new_defaults(raw, values)
     stamp_version(values)
     rewritten, filled = render(text, values)
+    if not _is_template(path, source):
+        rewritten = as_user_copy(rewritten)
     missing = sorted(".".join(p) for p in schema_paths() - filled)
     if missing:
         # The template is shipped alongside the schema, so this is a packaging fault
@@ -213,6 +234,71 @@ def reconcile(path: Path, raw: Mapping, source: Path) -> bool:
         return False
 
     _report(path, backup, added, removed, adopted, kept, raw.get("version"))
+    return True
+
+
+def as_user_copy(text: str) -> str:
+    """A config file's text with the template's paragraph replaced by :data:`USER_NOTE`.
+
+    Args:
+        text: The template's text, or a config file copied from it.
+
+    Returns:
+        The text with the comment paragraph opening with :data:`TEMPLATE_NOTE` replaced, up
+        to the next bare ``#``, blank or setting line. Unchanged where there is none.
+    """
+    lines = text.splitlines(keepends=True)
+    start = next(
+        (index for index, line in enumerate(lines) if line.startswith(TEMPLATE_NOTE)), None
+    )
+    if start is None:
+        return text
+    end = start + 1
+    while end < len(lines):
+        stripped = lines[end].strip()
+        if not stripped.startswith("#") or stripped == "#":
+            break
+        end += 1
+    newline = "\r\n" if lines[start].endswith("\r\n") else "\n"
+    note = "".join(line + newline for line in USER_NOTE)
+    return "".join(lines[:start]) + note + "".join(lines[end:])
+
+
+def _is_template(path: Path, source: Path) -> bool:
+    """Whether ``path`` is the template itself."""
+    try:
+        return path.resolve() == (source / TEMPLATE_NAME).resolve()
+    except OSError:
+        return False
+
+
+def _drop_template_note(path: Path, source: Path) -> bool:
+    """Replace the template's paragraph in a user's config file, touching nothing else.
+
+    Args:
+        path: The config file in use.
+        source: The repository root, holding :data:`TEMPLATE_NAME`.
+
+    Returns:
+        Whether the file was rewritten.
+    """
+    if path.suffix != TEMPLATE_SUFFIX or _is_template(path, source):
+        return False
+    try:
+        with open(path, encoding="utf-8", newline="") as handle:
+            text = handle.read()
+    except (OSError, ValueError):
+        return False
+    rewritten = as_user_copy(text)
+    if rewritten == text:
+        return False
+    try:
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            handle.write(rewritten)
+    except OSError as error:
+        logger.debug("%s could not be updated (%s)", path, error)
+        return False
+    logger.info("%s now says it is the file the pack reads, rather than the template", path)
     return True
 
 

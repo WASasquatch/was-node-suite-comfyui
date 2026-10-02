@@ -197,6 +197,7 @@ Thumbs.db
 ehthumbs.db
 desktop.ini
 *.bak
+*.prenum
 *.orig
 *.rej
 *~

@@ -29,6 +29,7 @@ __all__ = [
     "DEFAULTS",
     "FEATURE_GROUPS",
     "LEGACY_GROUPS",
+    "WINDOWS_PATH_FIX",
     "config_directory",
     "group_enabled",
     "load_config",
@@ -59,7 +60,7 @@ def _resolve() -> dict:
             # No ComfyUI, so no install to set up and nowhere a config file belongs.
             # Tooling reads whatever is already there and writes nothing, so nothing that
             # only reads the pack leaves state behind.
-            return _merge(_read(path) if path is not None else {}, path)
+            return _merge((_read(path) if path is not None else None) or {}, path)
         if path is None:
             path = migrate.run(repo_root(), config_directory(), derive_config=True)
         else:
@@ -67,10 +68,13 @@ def _resolve() -> dict:
         if path is None:
             return _merge({}, None)
         raw = _read(path)
+        if raw is None:
+            # A file that will not read is left exactly as it is.
+            return _merge({}, path)
         if reconcile.reconcile(path, raw, repo_root()):
             # Re-read rather than merge what was just parsed: the rewrite is the file the
             # next start will read, so a difference between the two is worth finding now.
-            raw = _read(path)
+            raw = _read(path) or {}
         return _merge(raw, path)
     except Exception as error:
         logger.warning("the configuration could not be read (%s), using built-in defaults", error)
@@ -78,12 +82,26 @@ def _resolve() -> dict:
         return copy.deepcopy(DEFAULTS)
 
 
-def _read(path: Path) -> Mapping:
+def _read(path: Path) -> Mapping | None:
+    """One config file's settings.
+
+    Args:
+        path: The config file, YAML or JSON by its suffix.
+
+    Returns:
+        The settings, ``{}`` for an empty file, or ``None`` when the file cannot be opened,
+        will not parse, or holds something other than a block of settings. Each ``None``
+        is logged as a warning.
+    """
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError as error:
-        logger.warning("%s could not be opened (%s), using built-in defaults", path, error)
-        return {}
+    except (OSError, ValueError) as error:
+        logger.warning(
+            "%s could not be opened (%s). It was left as it is, and this session runs on "
+            "the built-in defaults",
+            path, error,
+        )
+        return None
     try:
         if path.suffix == ".json":
             data = json.loads(text)
@@ -92,18 +110,60 @@ def _read(path: Path) -> Mapping:
 
             data = yaml.safe_load(text)
     except Exception as error:
-        logger.warning("%s is not valid %s, using built-in defaults:\n%s", path, path.suffix.lstrip("."), error)
-        return {}
+        logger.warning("%s", unreadable(path, text, error))
+        return None
     if data is None:
         logger.info("%s is empty, using built-in defaults", path)
         return {}
     if not isinstance(data, Mapping):
         logger.warning(
-            "%s should hold a block of settings but holds a %s, using built-in defaults",
+            "%s should hold a block of settings but holds a %s. It was left as it is, and "
+            "this session runs on the built-in defaults",
             path, type(data).__name__,
         )
-        return {}
+        return None
     return data
+
+
+#: The fix for a Windows path a double-quoted YAML string has read as escapes.
+WINDOWS_PATH_FIX = "Use forward slashes or single quotes for Windows paths, as 'D:/prompts'."
+
+
+def unreadable(path: Path, text: str, error: Exception) -> str:
+    """The warning for a config file that will not parse.
+
+    Args:
+        path: The config file.
+        text: Its contents.
+        error: What the parser raised.
+
+    Returns:
+        One message naming the file, the line and column, the line itself and the fix.
+    """
+    mark = getattr(error, "problem_mark", None)
+    if mark is not None:
+        line, column = mark.line + 1, mark.column + 1
+    else:
+        line, column = getattr(error, "lineno", None), getattr(error, "colno", None)
+    problem = getattr(error, "problem", None) or getattr(error, "msg", None) or str(error)
+    rows = text.splitlines()
+    shown = rows[line - 1].strip() if line and 0 < line <= len(rows) else ""
+
+    where = f"line {line}, column {column}" if line and column else "an unknown line"
+    parts = [f"{path} could not be read: {problem} at {where}"]
+    if shown:
+        parts[0] += f", in `{shown}`"
+    parts[0] += "."
+    if "\\" in shown or "escape" in str(problem):
+        parts.append("Inside double quotes a backslash starts an escape sequence.")
+        parts.append(WINDOWS_PATH_FIX)
+    else:
+        parts.append("Correct that line.")
+    parts.append(
+        "The file was left as it is, and this session runs on the built-in defaults until "
+        "it is corrected and ComfyUI restarted."
+    )
+    return " ".join(parts)
 
 
 def _merge(raw: Mapping, path: Path | None) -> dict:

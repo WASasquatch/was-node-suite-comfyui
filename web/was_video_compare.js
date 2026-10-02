@@ -1,5 +1,5 @@
 /**
- * The two-video player drawn on Compare Video.
+ * The two-video player drawn on Compare Video and Video Motion Blur.
  *
  * Both sides are written to the temp folder by the node and played from one clock, split by
  * a divider that drags across.
@@ -12,7 +12,7 @@ import { appendInterfaceWidget } from "./interface/widget.js";
 const EXT_NAME = "WASNodeSuite.VideoCompare";
 const SETTING_ID = "WAS.Animation.ShowVideoCompare";
 
-const NODES = ["WASVideoCompare"];
+const NODES = ["WASVideoCompare", "WASVideoMotionBlur"];
 
 const UI_WIDGET_NAME = "was_video_compare_ui";
 const UI_WIDGET_TYPE = "was_video_compare";
@@ -42,9 +42,10 @@ app.registerExtension({
       category: ["WAS Node Suite", "Animation", "Show the video comparison"],
       name: "Draw the two-video player",
       tooltip:
-        "Draw both videos on Compare Video, one over the other, split by a divider that drags "
-        + "left and right. Both play from one clock, so the same frame is shown on each side. "
-        + "Off, the node writes both clips and draws nothing. This applies to nodes added after "
+        "Draw both videos on Compare Video, and the clip before and after on Video Motion "
+        + "Blur, one over the other, split by a divider that drags left and right. Both play "
+        + "from one clock, so the same frame is shown on each side. Off, the node writes both "
+        + "clips and draws nothing. This applies to nodes added after "
         + "the setting changes, so a reload shows it everywhere.",
       type: "boolean",
       defaultValue: true,

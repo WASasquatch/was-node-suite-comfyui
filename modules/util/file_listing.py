@@ -10,8 +10,9 @@ from __future__ import annotations
 import os
 import threading
 import time
+from collections import deque
 from pathlib import Path
-from typing import Iterable, NamedTuple, Sequence
+from typing import Iterable, Iterator, NamedTuple, Sequence
 
 from .. import log
 
@@ -21,7 +22,7 @@ __all__ = [
     "INPUT",
     "LISTING_TTL",
     "MAX_DEPTH",
-    "MAX_SCAN",
+    "MAX_EXAMINED",
     "OUTPUT",
     "CONFIGURED",
     "ROOTS",
@@ -63,15 +64,14 @@ _GETTERS = {
     TEMP: "get_temp_directory",
 }
 
-#: How many directories below a root the walk goes. Uploads land flat in ``input/``, but
-#: prompt lists, render sets and wildcard sets are kept in folders, and three levels covers
-#: those without enumerating a dataset tree.
-MAX_DEPTH = 3
+#: Most directories below a root the walk descends. Every subfolder is listed;
+#: :data:`MAX_EXAMINED` bounds the work, read breadth first.
+MAX_DEPTH = 64
 
-#: How many files are examined under one root before that root's walk stops. Each root
-#: carries a budget of its own, so a 50000-file output folder costs its own entries and
-#: leaves every other root's share of the listing whole.
-MAX_SCAN = 5000
+#: How many directory entries are examined under one root, breadth first, before that
+#: root's walk stops. Files, folders and skipped names all count. Each root carries a budget
+#: of its own, and a menu's own limit counts only the files it lists.
+MAX_EXAMINED = 20000
 
 #: How many labels a view offers when it names no limit of its own.
 DEFAULT_LIMIT = 500
@@ -96,6 +96,9 @@ _walks = 0
 
 #: ``{view key: (walk id, entries)}``.
 _view_cache: dict[tuple, tuple[int, tuple["Entry", ...]]] = {}
+
+#: Roots whose walk has been reported as stopping, each logged once per process.
+_stopped: set[str] = set()
 
 
 class Entry(NamedTuple):
@@ -199,8 +202,8 @@ def scan() -> tuple[Entry, ...]:
     """Every listable file under every root, memoized for :data:`LISTING_TTL` seconds.
 
     Returns:
-        The entries in the order the roots were walked, unsorted and uncapped past
-        :data:`MAX_SCAN`. Empty where nothing was found.
+        The entries in the order the roots were walked, unsorted, at most
+        :data:`MAX_EXAMINED` per root. Empty where nothing was found.
     """
     return _scan()[2]
 
@@ -373,19 +376,20 @@ def _scan() -> tuple[float, int, tuple[Entry, ...]]:
         if entries and now - stamp < LISTING_TTL:
             return _scan_cache
         found: list[Entry] = []
-        stopped: list[str] = []
         # ComfyUI's own three first, then whatever the config adds, so a menu offers the
         # familiar folders before the rest. Each root is walked with its own budget.
         for order, (tag, directory) in enumerate(roots((*TAGS, CONFIGURED))):
-            rows, left = _walk(directory, tag, order, MAX_SCAN)
+            rows, stopped = _walk(directory, tag, order, MAX_EXAMINED)
             found += rows
-            if left <= 0:
-                stopped.append(tag)
-        if stopped:
-            logger.debug(
-                "the file listing stopped after examining %d files under %s; a menu offers "
-                "the newest of what was found", MAX_SCAN, ", ".join(stopped),
-            )
+            if stopped and str(directory) not in _stopped:
+                _stopped.add(str(directory))
+                logger.info(
+                    "the file menus stopped reading %s (%s) after examining %d entries, %d of "
+                    "them files: files past that point are not listed and cannot be picked. "
+                    "Files nearer the top of the folder are read first, and moving files out "
+                    "of it brings the rest into the menus.",
+                    tag, directory, MAX_EXAMINED, len(rows),
+                )
         _walks += 1
         _scan_cache = (now, _walks, tuple(found))
         return _scan_cache
@@ -450,59 +454,77 @@ def _shared(kept: list[Entry], limit: int) -> list[Entry]:
     return taken[:limit]
 
 
-def _walk(directory: Path, tag: str, order: int, budget: int) -> tuple[list[Entry], int]:
-    """Every listable file under one root, and what is left of the scan budget.
+def _walk(directory: Path, tag: str, order: int, budget: int) -> tuple[list[Entry], bool]:
+    """Every listable file under one root, breadth first, within a budget of entries.
 
     Args:
         directory: The root, already resolved.
         tag: The tag written into every label from this root.
         order: The root's position in :data:`TAGS`, carried onto every entry.
-        budget: Files that may still be examined.
+        budget: Directory entries that may be examined, whatever they turn out to be.
 
     Returns:
-        ``(entries, remaining budget)``. A directory that cannot be read contributes nothing
-        and stops nothing.
+        ``(entries, stopped)``, ``stopped`` being True where the budget ran out with entries
+        left unread. A directory that cannot be read contributes nothing and stops nothing.
     """
     found: list[Entry] = []
-    stack: list[tuple[str, int, str]] = [(str(directory), 0, "")]
-    while stack and budget > 0:
-        parent, depth, prefix = stack.pop()
+    queue: deque[tuple[str, int, str]] = deque([(str(directory), 0, "")])
+    while queue:
+        parent, depth, prefix = queue.popleft()
         try:
-            entries = list(os.scandir(parent))
+            listing = os.scandir(parent)
         except OSError:
             continue
-        for entry in entries:
-            if budget <= 0:
-                break
-            # A dotted name is editor and tool state, and a symlink is skipped whether it
-            # names a directory or a file: it resolves wherever it likes, and one pointing
-            # out of the root becomes a label the containment layer then refuses.
-            if entry.name.startswith("."):
-                continue
-            try:
-                if entry.is_dir(follow_symlinks=False):
-                    if depth < MAX_DEPTH:
-                        stack.append((entry.path, depth + 1, f"{prefix}{entry.name}/"))
-                    continue
-                if not entry.is_file(follow_symlinks=False):
-                    continue
+        with listing:
+            for entry in _entries(listing):
+                if budget <= 0:
+                    return found, True
                 budget -= 1
-                stat = entry.stat(follow_symlinks=False)
-            except OSError:
-                continue
-            # Built with '/' rather than os.sep or os.path.join: the label is the value
-            # written into a saved workflow, and a backslash in it would stop a workflow
-            # saved on Windows matching the same file listed on Linux.
-            relative = f"{prefix}{entry.name}"
-            found.append(
-                Entry(
-                    tag=tag,
-                    order=order,
-                    relative=relative,
-                    label=f"{relative} [{tag}]",
-                    path=entry.path,
-                    mtime=stat.st_mtime,
-                    size=max(0, int(stat.st_size)),
+                # A dotted name is editor and tool state, and a symlink is skipped whether it
+                # names a directory or a file: it resolves wherever it likes, and one pointing
+                # out of the root becomes a label the containment layer then refuses.
+                if entry.name.startswith("."):
+                    continue
+                try:
+                    if entry.is_dir(follow_symlinks=False):
+                        if depth < MAX_DEPTH:
+                            queue.append((entry.path, depth + 1, f"{prefix}{entry.name}/"))
+                        continue
+                    if not entry.is_file(follow_symlinks=False):
+                        continue
+                    stat = entry.stat(follow_symlinks=False)
+                except OSError:
+                    continue
+                # Built with '/' rather than os.sep or os.path.join: the label is the value
+                # written into a saved workflow, and a backslash in it would stop a workflow
+                # saved on Windows matching the same file listed on Linux.
+                relative = f"{prefix}{entry.name}"
+                found.append(
+                    Entry(
+                        tag=tag,
+                        order=order,
+                        relative=relative,
+                        label=f"{relative} [{tag}]",
+                        path=entry.path,
+                        mtime=stat.st_mtime,
+                        size=max(0, int(stat.st_size)),
+                    )
                 )
-            )
-    return found, budget
+    return found, False
+
+
+def _entries(listing) -> Iterator[os.DirEntry]:
+    """The entries of an open ``os.scandir`` iterator, read one at a time.
+
+    Args:
+        listing: The iterator.
+
+    Yields:
+        Each entry, until the directory is exhausted or reading it fails.
+    """
+    while True:
+        try:
+            entry = next(listing)
+        except (StopIteration, OSError):
+            return
+        yield entry

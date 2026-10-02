@@ -41,8 +41,7 @@
       ],
       "widgets_values_named": {
         "value": ""
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 1,
@@ -83,8 +82,7 @@
       "widgets_values_named": {
         "unet_name": "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
         "weight_dtype": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 21,
@@ -144,8 +142,7 @@
         "string_a": "",
         "string_b": "",
         "delimiter": "\n"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 24,
@@ -189,8 +186,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 25,
@@ -234,8 +230,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 26,
@@ -292,8 +287,7 @@
         "bit_depth": "auto",
         "color_space": "sRGB",
         "codec": "none"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 23,
@@ -366,8 +360,7 @@
         "empty_cache": true,
         "collect_garbage": true,
         "release_fraction": 0
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 7,
@@ -406,8 +399,7 @@
       ],
       "widgets_values_named": {
         "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 6,
@@ -448,8 +440,7 @@
       ],
       "widgets_values_named": {
         "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -492,8 +483,7 @@
         "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "type": "minimax",
         "device": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -539,8 +529,7 @@
       ],
       "widgets_values_named": {
         "head_chunks": 4
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -585,8 +574,7 @@
       ],
       "widgets_values_named": {
         "attention": "comfy kitchen attention"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -633,8 +621,7 @@
       "widgets_values_named": {
         "lora_name": "H3\\taomate_h3_3step_comfy.safetensors",
         "strength_model": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 28,
@@ -674,8 +661,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 20,
@@ -735,8 +721,7 @@
         "string_a": "",
         "string_b": "",
         "delimiter": "  ->  "
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 16,
@@ -780,8 +765,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 8,
@@ -820,8 +804,7 @@
       ],
       "widgets_values_named": {
         "sampler_name": "euler"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 9,
@@ -870,8 +853,7 @@
         "scheduler": "simple",
         "steps": 6,
         "denoise": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 15,
@@ -979,8 +961,7 @@
         "drift_control": 0,
         "refresh_gain": 1.15,
         "audio_release": 8
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 36,
@@ -1117,8 +1098,7 @@
         "drift_renew": 0.15,
         "bias_field": "gaussian",
         "content_gate": "off"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 19,
@@ -1199,8 +1179,7 @@
       "widgets_values_named": {
         "overlap_frames": 22,
         "segment_index": 0
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 35,
@@ -1253,8 +1232,7 @@
         "end_offset": 0,
         "curve": "ease_in_out_sine",
         "preview_steps": 8
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 12,
@@ -1355,8 +1333,7 @@
       ],
       "widgets_values_named": {
         "max_iterations": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 22,
@@ -1438,8 +1415,7 @@
       "widgets_values_named": {
         "continue_loop": true,
         "accumulate": false
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 38,
@@ -1560,8 +1536,7 @@
         "affine_space": "latent",
         "debug": true,
         "affine_acts_on": "content"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 34,
@@ -1684,8 +1659,7 @@
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 10,
@@ -2014,8 +1988,7 @@
         "duration_24": 4.25,
         "overlap_24": 22,
         "continuity_24": "as set"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 14,
@@ -2095,8 +2068,7 @@
         "expression": "a + 1 < b",
         "decimals": 6,
         "on_error": "error"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 13,
@@ -2179,8 +2151,7 @@
         "expression": "1000 + b",
         "decimals": 6,
         "on_error": "error"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 39,
@@ -2230,8 +2201,7 @@
       "widgets_values_named": {
         "noise_seed": 0,
         "control_after_generate": "randomize"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 41,
@@ -2356,8 +2326,7 @@
       "widgets_values_named": {
         "value": 4242
       },
-      "color": "#1b4669",
-      "bgcolor": "transparent"
+      "color": "#1b4669"
     }
   ],
   "links": [

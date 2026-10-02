@@ -14,6 +14,7 @@ logging:
   quotes: false          # accepted and has no effect
 
 paths:
+  # Write a Windows path with forward slashes or in single quotes, as 'D:/prompts'.
   wildcards: null        # directory of wildcard .txt files; null -> <user_dir>/was-node-suite/wildcards
   styles: null           # styles .json, or an A1111 styles .csv; null -> <user_dir>/was-node-suite/styles.json
   luts: null             # directory of .cube LUTs; null -> <user_dir>/was-node-suite/luts

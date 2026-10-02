@@ -65,8 +65,8 @@ class LoadDocument(io.ComfyNode):
                 (
                     "Open one document from disk and put it on a DOC wire, with its markup, "
                     "its metadata and every file embedded in it. The file menu lists every "
-                    "document in ComfyUI's input, output and temp folders, three folders "
-                    "deep, and any folder added under paths.allow_read. A "
+                    "document in ComfyUI's input, output and temp folders and any folder added "
+                    "under paths.allow_read, subfolders included. A "
                     ".wasdoc is the container Save DOC writes and arrives exactly as the file "
                     "holds it. A .docx and an .odt open too, converted rather than copied: "
                     "the writing, tables, links and pictures come across, page geometry, "

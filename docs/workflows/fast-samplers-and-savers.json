@@ -68,8 +68,7 @@
       ],
       "widgets_values_named": {
         "ckpt_name": "autismmixSDXL_autismmixConfetti.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -124,8 +123,7 @@
       ],
       "widgets_values_named": {
         "text": "a lighthouse on a cliff at dusk, dramatic sky, waves"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -180,8 +178,7 @@
       ],
       "widgets_values_named": {
         "text": "blurry"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -252,8 +249,7 @@
         "width": 832,
         "height": 832,
         "batch_size": 4
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -395,8 +391,7 @@
         "scheduler": "simple",
         "denoise": 1,
         "preview_every": 2
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 6,
@@ -442,8 +437,7 @@
           "input_ue_unconnectable": {}
         },
         "Node name for S&R": "VAEDecode"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 7,
@@ -510,8 +504,7 @@
       "widgets_values_named": {
         "colors": 24,
         "dither": "floyd-steinberg"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 8,
@@ -742,8 +735,7 @@
         "embed_workflow": true,
         "show_previews": true,
         "bit_depth": "8-bit"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 9,
@@ -851,8 +843,7 @@
         "lossless": true,
         "quality": 80,
         "method": "default"
-      },
-      "bgcolor": "transparent"
+      }
     }
   ],
   "links": [

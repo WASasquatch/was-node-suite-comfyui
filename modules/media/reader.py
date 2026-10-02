@@ -158,13 +158,19 @@ def video_labels() -> list[str]:
     from ..util import file_listing
 
     try:
-        entries = file_listing.view(tags=file_listing.ROOTS)
+        # One sample name per suffix the walk holds, so the menu's limit counts videos alone.
+        suffixes = {os.path.splitext(entry.relative)[1].lower() for entry in file_listing.scan()}
+        samples = [f"video{suffix}" for suffix in sorted(suffixes) if suffix]
+        videos = folder_paths.filter_files_content_types(samples, ["video"])
+        if not videos:
+            return []
+        entries = file_listing.view(
+            [os.path.splitext(name)[1] for name in videos], tags=file_listing.ROOTS
+        )
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
         return list(input_videos())
-    names = [entry.relative for entry in entries]
-    keep = set(folder_paths.filter_files_content_types(names, ["video"]))
-    return [entry.label for entry in entries if entry.relative in keep]
+    return [entry.label for entry in entries]
 
 
 def input_path(name: str) -> str:

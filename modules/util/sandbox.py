@@ -8,11 +8,12 @@ path inside a permitted root, or raise :class:`PathNotAllowed`. Writes exclude C
 from __future__ import annotations
 
 import os
+import unicodedata
 from pathlib import Path, PureWindowsPath
 from typing import Iterable
 
 from .. import log
-from ..config import load_config, paths
+from ..config import WINDOWS_PATH_FIX, load_config, paths
 
 __all__ = [
     "PathNotAllowed",
@@ -97,19 +98,103 @@ def _configured(key: str) -> list[Path]:
     configured = (load_config().get("paths") or {}).get(key) or []
     if isinstance(configured, (str, os.PathLike)):
         configured = [configured]
+    if not isinstance(configured, (list, tuple)):
+        _warn_once(
+            key, configured,
+            f"paths.{key} should be a list of folders, not {configured!r}, so it is ignored. "
+            f"Write it as ['D:/prompts'].",
+        )
+        return []
     roots = []
     for entry in configured:
-        root = Path(entry).expanduser()
-        try:
-            root = root.resolve()
-        except OSError:
-            logger.warning("paths.%s entry %s cannot be resolved and is ignored", key, entry)
+        if not isinstance(entry, (str, os.PathLike)):
+            _warn_once(
+                key, entry,
+                f"paths.{key} entry {entry!r} is not a path and is ignored. Write it as a "
+                f"quoted path, as 'D:/prompts'.",
+            )
             continue
-        if not root.is_dir():
-            logger.warning("paths.%s entry %s is not a directory and is ignored", key, root)
+        try:
+            root = Path(entry).expanduser().resolve()
+        except (OSError, ValueError, RuntimeError):
+            root = None
+        if root is None or not root.is_dir():
+            _warn_once(key, entry, _unusable(key, entry, root))
             continue
         roots.append(root)
     return roots
+
+
+#: Characters a backslash escape in a double-quoted YAML string turns into, and the escape.
+YAML_ESCAPES = {
+    "\0": "\\0", "\a": "\\a", "\b": "\\b", "\t": "\\t", "\n": "\\n", "\v": "\\v",
+    "\f": "\\f", "\r": "\\r", "\x1b": "\\e", "\x85": "\\N", "\xa0": "\\_",
+    "\u2028": "\\L", "\u2029": "\\P",
+}
+
+#: ``(key, entry)`` pairs already warned about, each logged once per process.
+_warned: set[tuple[str, str]] = set()
+
+
+def _warn_once(key: str, entry, message: str) -> None:
+    """Log one warning about a configured entry, the first time it is seen.
+
+    Args:
+        key: ``"allow_read"`` or ``"allow_write"``.
+        entry: The entry as configured.
+        message: What to log.
+    """
+    seen = (key, repr(entry))
+    if seen in _warned:
+        return
+    _warned.add(seen)
+    logger.warning("%s", message)
+
+
+def _stray(text: str) -> list[str]:
+    """Control and separator characters in a configured path, as ``U+XXXX`` names.
+
+    Args:
+        text: The entry as configured.
+
+    Returns:
+        Each such character once, in order of first appearance. Empty for an ordinary path.
+    """
+    found: list[str] = []
+    for character in text:
+        category = unicodedata.category(character)
+        stray = category.startswith("C") or category in ("Zl", "Zp")
+        if stray or (category == "Zs" and character != " "):
+            name = f"U+{ord(character):04X}"
+            if name not in found:
+                found.append(name)
+    return found
+
+
+def _unusable(key: str, entry, root: Path | None) -> str:
+    """The warning for a configured entry that names no directory.
+
+    Args:
+        key: ``"allow_read"`` or ``"allow_write"``.
+        entry: The entry as configured.
+        root: The entry resolved, or None where it could not be.
+
+    Returns:
+        A message naming the entry and the fix. An entry holding a control or separator
+        character is named as it was most likely typed, with its backslash escapes.
+    """
+    text = os.fspath(entry)
+    stray = _stray(text)
+    if stray:
+        typed = "".join(YAML_ESCAPES.get(character, character) for character in text)
+        return (
+            f"paths.{key} entry \"{typed}\" is ignored: it was read as {text!r}, holding "
+            f"{', '.join(stray)}, because a backslash inside double quotes starts an escape "
+            f"sequence. {WINDOWS_PATH_FIX}"
+        )
+    if root is None:
+        return f"paths.{key} entry {text} cannot be resolved and is ignored."
+    return f"paths.{key} entry {root} is not a directory and is ignored."
 
 
 def _pack_roots() -> list[Path]:

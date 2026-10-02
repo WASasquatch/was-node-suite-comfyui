@@ -102,8 +102,8 @@ export async function fetchRunResult(nodeOrId) {
     const response = await fetchWithin(asks, {
       cache: "no-store",
     });
-    // 404 is the answer for a node that has published nothing.
-    if (response?.status === 404) return answer(PREVIEW_STATE.WAITING);
+    // 204, or 404, is the answer for a node that has published nothing.
+    if (response?.status === 204 || response?.status === 404) return answer(PREVIEW_STATE.WAITING);
     if (!response?.ok) return answer(PREVIEW_STATE.FAILED);
     const report = normalise(await response.json());
     return report ? answer(PREVIEW_STATE.READY, report) : answer(PREVIEW_STATE.FAILED);
@@ -138,8 +138,8 @@ export async function fetchRunResultPage(nodeOrId, body = 0, start = 0, count = 
 
   try {
     const response = await fetchWithin(asks, { cache: "no-store" });
-    // 404 is the answer for a node that has published nothing.
-    if (response?.status === 404) return paged(PREVIEW_STATE.WAITING);
+    // 204, or 404, is the answer for a node that has published nothing.
+    if (response?.status === 204 || response?.status === 404) return paged(PREVIEW_STATE.WAITING);
     if (!response?.ok) return paged(PREVIEW_STATE.FAILED);
     const page = normalisePage(await response.json());
     return page ? paged(PREVIEW_STATE.READY, page) : paged(PREVIEW_STATE.FAILED);

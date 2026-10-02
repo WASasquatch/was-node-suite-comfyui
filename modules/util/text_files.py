@@ -1,8 +1,8 @@
-"""The text files ComfyUI's input and output directories hold, as combo entries.
+"""Text files under ComfyUI's input and output folders and each ``paths.allow_read`` folder,
+as combo entries.
 
-A label is ``<relative path> [input]`` or ``<relative path> [output]``, and
-:func:`listing` answers ``{label: absolute path}`` for the :data:`TEXT_EXTENSIONS`, at
-most :data:`MAX_OPTIONS` of them.
+A label is ``<relative path> [tag]``, the tag being ``input``, ``output`` or the configured
+folder's name, and :func:`listing` maps labels to absolute paths.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from . import file_listing
 __all__ = [
     "ENCODING",
     "MAX_DEPTH",
+    "MAX_EXAMINED",
     "MAX_OPTIONS",
-    "MAX_SCAN",
     "NO_FILES",
     "OPTIONS_TTL",
     "TEXT_EXTENSIONS",
@@ -43,8 +43,8 @@ TEXT_TAGS = (file_listing.INPUT, file_listing.OUTPUT, file_listing.CONFIGURED)
 #: How many directories below a root the walk goes, from the shared walk.
 MAX_DEPTH = file_listing.MAX_DEPTH
 
-#: How many files that walk examines before it stops.
-MAX_SCAN = file_listing.MAX_SCAN
+#: How many directory entries that walk examines under one root before it stops.
+MAX_EXAMINED = file_listing.MAX_EXAMINED
 
 #: How many entries reach the combo. The newest by modification time are the ones kept, so a
 #: file that was just written is always in the menu, and ``/object_info`` carries this list
@@ -54,8 +54,7 @@ MAX_OPTIONS = 500
 #: Seconds a built listing is reused for, from the shared walk.
 OPTIONS_TTL = file_listing.LISTING_TTL
 
-#: Combo entry shown when neither directory holds a text file, and outside ComfyUI, where
-#: neither directory can be found. One empty state rather than two.
+#: Combo entry shown when no listed directory holds a text file, and outside ComfyUI.
 NO_FILES = "No Text Files"
 
 #: First non-space character marking a line as a comment.
@@ -70,8 +69,9 @@ def roots() -> list[tuple[str, Path]]:
     """The directories listed, each with the tag its labels carry.
 
     Returns:
-        ``[("input", path), ("output", path)]`` in that order, dropping either that cannot
-        be reached. Empty outside ComfyUI, where neither directory can be found.
+        ``[(tag, path)]``: ``input``, then ``output``, then each ``paths.allow_read``
+        directory under its folder's name, dropping any that cannot be reached. Empty
+        outside ComfyUI.
     """
     return file_listing.roots(TEXT_TAGS)
 
@@ -104,8 +104,7 @@ def resolve(label: str) -> str | None:
     Returns:
         The absolute path, or ``None`` when no walked text file carries that label, which
         covers one that has been deleted, renamed, or invented. A file the menu's own limit
-        left out still resolves, since that limit bounds the menu and not what a workflow
-        may name.
+        left out still resolves.
     """
     return file_listing.resolve(label, TEXT_EXTENSIONS, TEXT_TAGS)
 

@@ -90,8 +90,8 @@ def lines_payload(label, start=0, limit=MAX_LINES, skip_comments=True, seed=None
     if path is None:
         return None
     try:
-        # A label can only name a file inside the two listed roots, so this refuses nothing
-        # in practice. It is checked anyway: the gate is here, not in the listing.
+        # A label names a file inside a listed root, each a permitted read root; the gate is
+        # here, not in the listing.
         resolved = sandbox.resolve_read(path)
     except sandbox.PathNotAllowed as error:
         logger.debug("%s refused %s (%s)", ROUTE, path, error)

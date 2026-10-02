@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .. import log
 from .defaults import VERSION
+from .reconcile import as_user_copy
 
 logger = log.get_logger("config")
 
@@ -203,7 +204,8 @@ def install_example(source: Path, target: Path) -> Path | None:
 
     Returns:
         The path written, or ``None`` when the example is missing, a config file is already
-        there, or the directory cannot be written to.
+        there, or the directory cannot be written to. The copy carries the user's note in
+        place of the template's.
     """
     # Without the copy, an install with no v2 settings to carry forward runs on built-in
     # defaults with nothing on disk, leaving no file to change a setting in and no sign of
@@ -213,9 +215,12 @@ def install_example(source: Path, target: Path) -> Path | None:
     if path.exists() or not example.is_file():
         return None
     try:
+        with open(example, encoding="utf-8", newline="") as handle:
+            text = as_user_copy(handle.read())
         target.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(example, path)
-    except OSError as error:
+        with open(path, "x", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+    except (OSError, ValueError) as error:
         # A read-only install is a supported way to run, so this is worth saying once and
         # not worth failing over: the built-in defaults are what the copy would have held.
         logger.info(

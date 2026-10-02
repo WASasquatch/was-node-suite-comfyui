@@ -43,8 +43,7 @@
       "widgets_values_named": {
         "unet_name": "minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
         "weight_dtype": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -107,8 +106,7 @@
         "extra_tokens": 256,
         "sink_conditioning": "exact_kv_and_rows",
         "verbose": false
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -151,8 +149,7 @@
         "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "type": "minimax",
         "device": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -194,8 +191,7 @@
       ],
       "widgets_values_named": {
         "vae_name": "minimax_h3_video_vae_fp16.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -235,8 +231,7 @@
       ],
       "widgets_values_named": {
         "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 6,
@@ -327,8 +322,7 @@
         "width": 720,
         "height": 400,
         "length": 124
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 7,
@@ -369,8 +363,7 @@
       "widgets_values_named": {
         "noise_seed": 48152343,
         "control_after_generate": "fixed"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 8,
@@ -409,8 +402,7 @@
       ],
       "widgets_values_named": {
         "sampler_name": "euler_ancestral"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 9,
@@ -459,8 +451,7 @@
         "scheduler": "normal",
         "steps": 8,
         "denoise": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 10,
@@ -504,8 +495,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 13,
@@ -572,8 +562,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 15,
@@ -612,8 +601,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 16,
@@ -693,8 +681,7 @@
         "sampler_name": "res_multistep",
         "scheduler": "simple",
         "denoise": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 17,
@@ -738,8 +725,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 19,
@@ -801,8 +787,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 20,
@@ -860,8 +845,7 @@
         "bit_depth": "auto",
         "color_space": "sRGB",
         "codec": "none"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 21,
@@ -905,8 +889,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 22,
@@ -950,8 +933,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 23,
@@ -1009,8 +991,7 @@
         "bit_depth": "auto",
         "color_space": "sRGB",
         "codec": "none"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 24,
@@ -1059,8 +1040,7 @@
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 25,
@@ -1100,8 +1080,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 28,
@@ -1179,8 +1158,7 @@
         "collect_garbage": true,
         "release_fraction": 0,
         "always_run": true
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 30,
@@ -1254,8 +1232,7 @@
         "collect_garbage": true,
         "release_fraction": 0,
         "always_run": false
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 31,
@@ -1332,8 +1309,7 @@
         "collect_garbage": true,
         "release_fraction": 0,
         "always_run": false
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 35,
@@ -1382,8 +1358,7 @@
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 36,
@@ -1430,8 +1405,7 @@
       "widgets_values_named": {
         "lora_name": "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
         "strength_model": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 38,
@@ -1490,8 +1464,7 @@
         "tilt_end": -0.5,
         "sharpness": 0.75,
         "energy": 0.98
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 42,
@@ -1541,8 +1514,7 @@
         "aspect_ratio": "16:9 (Widescreen)",
         "megapixels": 0.8,
         "multiple": 8
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 14,
@@ -1651,8 +1623,7 @@
         "audio_mode": "follow",
         "fps": 24,
         "low_vram": true
-      },
-      "bgcolor": "transparent"
+      }
     }
   ],
   "links": [

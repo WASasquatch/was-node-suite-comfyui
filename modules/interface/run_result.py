@@ -1,7 +1,7 @@
 """What a node's last run did, as JSON that node's interface can draw.
 
 ``GET /was/interface/api/run_result?node_id=<id>`` answers a status, counts, facts, bodies and
-sampled items, or 404. ``GET /was/interface/api/run_result_page`` answers a range of one body's
+sampled items, or 204. ``GET /was/interface/api/run_result_page`` answers a range of one body's
 lines. :data:`MAX_ENTRIES` nodes hold a result.
 """
 
@@ -19,6 +19,7 @@ from itertools import islice
 from .. import log
 from .channel import (
     NO_STORE,
+    REFUSAL_HEADER,
     executing_class_type,
     executing_node_id,
     node_key,
@@ -549,7 +550,7 @@ def register_routes() -> bool:
             if payload is not None and _mismatched(payload, request.query.get("node_type")):
                 payload = None
             if payload is None:
-                return web.Response(status=404, text=NO_REPORT, headers=NO_STORE)
+                return web.Response(status=204, headers={**NO_STORE, REFUSAL_HEADER: NO_REPORT})
             return web.json_response(payload, headers=NO_STORE)
 
         @PromptServer.instance.routes.get(PAGE_ROUTE)
@@ -562,7 +563,7 @@ def register_routes() -> bool:
                 node_type=request.query.get("node_type"),
             )
             if answer is None:
-                return web.Response(status=404, text=NO_REPORT, headers=NO_STORE)
+                return web.Response(status=204, headers={**NO_STORE, REFUSAL_HEADER: NO_REPORT})
             return web.json_response(answer, headers=NO_STORE)
 
     except Exception as error:

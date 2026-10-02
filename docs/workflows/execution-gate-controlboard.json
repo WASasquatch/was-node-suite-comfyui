@@ -70,8 +70,7 @@
       "widgets_values_named": {
         "image": "001ebc54-b882-4410-ae8b-54f14f1a217a.png",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -151,8 +150,7 @@
         "open": false,
         "bypass_downstream": false,
         "closed_message": ""
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -232,8 +230,7 @@
         "open": true,
         "bypass_downstream": true,
         "closed_message": ""
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -300,8 +297,7 @@
       "widgets_values_named": {
         "open": true,
         "message": ""
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -464,8 +460,7 @@
       ],
       "widgets_values_named": {
         "value": true
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 9,

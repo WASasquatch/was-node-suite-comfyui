@@ -19,7 +19,7 @@ NO_LINE = -1
 
 
 class LoadTextLine(io.ComfyNode):
-    """Read a text file chosen from the input and output directories, by line."""
+    """Read a text file chosen from a menu, by line."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
@@ -36,31 +36,23 @@ class LoadTextLine(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                (
-                    (
-                        "Pick a text file from a menu of ComfyUI's input and output folders "
-                        "and read it: the whole file, the line at an index, or a line drawn "
-                        "from a seed. Every line also comes out as a list. The menu reaches "
-                        "three folders below each, tags entries '[input]' or '[output]' so two "
-                        "files of one name are told apart, and picks up a file dropped in "
-                        "within about five seconds. A file since deleted or renamed gives "
-                        "empty text and says so in the log rather than failing the prompt. To "
-                        "read a file somewhere else entirely, use Load Text File, which takes "
-                        "a typed path. On out_of_range, 'wrap' makes line 5 of a 3-line file "
-                        "line 2, which cycles a file forever from a climbing counter, 'empty' "
-                        "leaves the graph running, and 'error' suits a workflow where running "
-                        "off the end means something is wrong upstream."
-                    )
-                )
+                "Read a text file picked from a menu: the whole file, the line at an index, "
+                "or a line drawn from a seed, with every line also given as a list. The menu "
+                "lists the text files in ComfyUI's input and output folders, subfolders "
+                "included, and in every folder under paths.allow_read in config.yaml, each "
+                "tagged with its folder's name. A folder added there appears after a ComfyUI "
+                "restart and a page reload. A file since deleted or renamed gives empty text "
+                "and a line in the log."
             ),
             inputs=[
                 io.Combo.Input(
                     "file",
                     options=text_files.options(),
                     tooltip=(
-                        "Which text file to read. The menu lists .txt, .csv, .tsv, .json, "
-                        ".jsonl, .md, .yaml and .yml files in ComfyUI's input and output "
-                        "folders."
+                        "The .txt, .csv, .tsv, .json, .jsonl, .md, .yaml or .yml file to "
+                        "read, tagged with its folder: 'notes.txt [input]', 'notes.txt "
+                        "[output]', or 'notes.txt [prompts]' for a prompts folder under "
+                        "paths.allow_read."
                     ),
                 ),
                 io.Combo.Input(
@@ -210,8 +202,7 @@ class LoadTextLine(io.ComfyNode):
             logger.error("%s", cls.missing(entry))
             return io.NodeOutput("", [], "", 0, NO_LINE)
 
-        # The listing is built from ComfyUI's own two directories, so this refuses nothing
-        # in practice. It is the gate a widget value passes through all the same.
+        # Every listed folder is a permitted read root; the widget value passes the gate too.
         resolved = sandbox.resolve_read(path)
         if not resolved.is_file():
             logger.error("the path `%s` specified cannot be found.", resolved)
@@ -249,20 +240,24 @@ class LoadTextLine(io.ComfyNode):
             entry: The stored combo value, stripped.
 
         Returns:
-            A message naming the entry and both folders the menu is built from, since a
-            workflow saved elsewhere is the usual way to arrive here.
+            A message naming the entry and every folder the menu is built from.
         """
         folders = ", ".join(f"{tag} ({path})" for tag, path in text_files.roots())
         where = folders or "ComfyUI's input and output folders, which could not be found"
+        elsewhere = (
+            "To list another folder, add it under paths.allow_read in config.yaml, as "
+            "'D:/prompts', then restart ComfyUI and reload the page."
+        )
         if not entry or entry == text_files.NO_FILES:
             return (
                 f"Load Text Line has no file chosen, so it read nothing. Pick one from its "
-                f"menu, which lists the text files in {where}."
+                f"menu, which lists the text files in {where}. {elsewhere}"
             )
         return (
             f"Load Text Line found no text file named `{entry}`, so it read nothing. It may "
             f"have been deleted, renamed, or moved between folders since the workflow was "
-            f"saved. Pick it again from the menu, which lists the text files in {where}."
+            f"saved. Pick it again from the menu, which lists the text files in {where}. "
+            f"{elsewhere}"
         )
 
     @staticmethod

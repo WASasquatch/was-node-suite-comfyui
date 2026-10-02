@@ -76,8 +76,7 @@
         "clip_name": "qwen_3_4b.safetensors",
         "type": "lumina2",
         "device": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -302,8 +301,7 @@
         "use_default_template": true,
         "mtp": "auto",
         "fast_decode": true
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -516,8 +514,7 @@
         "thinking": false,
         "use_default_template": true,
         "mtp": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -558,8 +555,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 5,
@@ -600,8 +596,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     }
   ],
   "links": [

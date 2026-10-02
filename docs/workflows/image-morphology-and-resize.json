@@ -71,8 +71,7 @@
       "widgets_values_named": {
         "image": "h3_keys/key_01.png",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -138,8 +137,7 @@
       "widgets_values_named": {
         "operation": "top_hat",
         "kernel_size": 15
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -205,8 +203,7 @@
       "widgets_values_named": {
         "operation": "top_hat",
         "kernel_size": 15
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -294,8 +291,7 @@
         "width": 1664,
         "height": 960,
         "crop": "disabled"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -465,8 +461,7 @@
         "align": "middle center",
         "pad_color": "#000000",
         "multiple_of": 0
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 6,
@@ -506,8 +501,7 @@
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 7,
@@ -547,8 +541,7 @@
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 8,
@@ -588,8 +581,7 @@
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 9,
@@ -629,8 +621,7 @@
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     }
   ],
   "links": [

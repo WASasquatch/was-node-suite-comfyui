@@ -41,8 +41,7 @@
       ],
       "widgets_values_named": {
         "value": ""
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 15,
@@ -150,8 +149,7 @@
         "drift_control": 0,
         "refresh_gain": 1.15,
         "audio_release": 8
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 18,
@@ -217,8 +215,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 22,
@@ -308,8 +305,7 @@
       "widgets_values_named": {
         "continue_loop": false,
         "accumulate": false
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 1,
@@ -350,8 +346,7 @@
       "widgets_values_named": {
         "unet_name": "singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
         "weight_dtype": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 16,
@@ -395,8 +390,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 19,
@@ -477,8 +471,7 @@
       "widgets_values_named": {
         "overlap_frames": 22,
         "segment_index": 0
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 21,
@@ -538,8 +531,7 @@
         "string_a": "",
         "string_b": "",
         "delimiter": "\n"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 24,
@@ -583,8 +575,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 25,
@@ -628,8 +619,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 26,
@@ -686,8 +676,7 @@
         "bit_depth": "auto",
         "color_space": "sRGB",
         "codec": "none"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 27,
@@ -736,8 +725,7 @@
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 23,
@@ -810,8 +798,7 @@
         "empty_cache": true,
         "collect_garbage": true,
         "release_fraction": 0
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 12,
@@ -904,8 +891,7 @@
       ],
       "widgets_values_named": {
         "max_iterations": 12
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 8,
@@ -944,8 +930,7 @@
       ],
       "widgets_values_named": {
         "sampler_name": "res_2s"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 10,
@@ -1336,8 +1321,7 @@
         "overlap_24": 22,
         "continuity_24": "as set",
         "ref_image_size": "1024"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 34,
@@ -1451,8 +1435,7 @@
       ],
       "widgets_values_named": {
         "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 6,
@@ -1493,8 +1476,7 @@
       ],
       "widgets_values_named": {
         "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -1537,8 +1519,7 @@
         "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "type": "minimax",
         "device": "default"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -1584,8 +1565,7 @@
       ],
       "widgets_values_named": {
         "head_chunks": 4
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -1630,8 +1610,7 @@
       ],
       "widgets_values_named": {
         "attention": "comfy kitchen attention"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -1678,8 +1657,7 @@
       "widgets_values_named": {
         "lora_name": "H3\\taomate_h3_3step_comfy.safetensors",
         "strength_model": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 9,
@@ -1728,8 +1706,7 @@
         "scheduler": "beta57",
         "steps": 3,
         "denoise": 1
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 28,
@@ -1769,8 +1746,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 20,
@@ -1830,8 +1806,7 @@
         "string_a": "",
         "string_b": "",
         "delimiter": "  ->  "
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 14,
@@ -1913,8 +1888,7 @@
         "expression": "a + 1 < b",
         "decimals": 6,
         "on_error": "error"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 17,
@@ -1964,8 +1938,7 @@
       "widgets_values_named": {
         "noise_seed": 777,
         "control_after_generate": "fixed"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 13,
@@ -2048,8 +2021,7 @@
         "expression": "1000 + b",
         "decimals": 6,
         "on_error": "error"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 35,
@@ -2177,8 +2149,7 @@
       "widgets_values_named": {
         "image": "Alice_Plushie.png",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 38,
@@ -2219,8 +2190,7 @@
       "widgets_values_named": {
         "file": "was_ref2va_clip.mp4",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 39,
@@ -2281,8 +2251,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 40,
@@ -2323,8 +2292,7 @@
       "widgets_values_named": {
         "audio": "was_ref2va_voice.wav",
         "upload": ""
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 41,
@@ -2364,8 +2332,7 @@
         }
       },
       "widgets_values": [],
-      "widgets_values_named": {},
-      "bgcolor": "transparent"
+      "widgets_values_named": {}
     },
     {
       "id": 42,
@@ -2406,8 +2373,7 @@
       "widgets_values_named": {
         "value": 4242,
         "fixed": "fixed"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 43,
@@ -2453,8 +2419,7 @@
       "widgets_values_named": {
         "image": "rx-93-sheet.png",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     }
   ],
   "links": [

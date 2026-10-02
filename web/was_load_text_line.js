@@ -27,7 +27,7 @@ const RANGE_WIDGET = "out_of_range";
 const COMMENTS_WIDGET = "skip_comment_lines";
 const SEED_WIDGET = "seed";
 
-// The combo entry `modules/util/text_files.NO_FILES` offers when neither folder holds a text
+// The combo entry `modules/util/text_files.NO_FILES` offers when no listed folder holds a text
 // file. The node reads nothing for it, so the panel draws nothing for it either.
 const NO_FILES = "No Text Files";
 
