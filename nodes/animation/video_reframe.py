@@ -90,7 +90,7 @@ class VideoReframe(io.ComfyNode):
                     "motion",
                     optional=True,
                     tooltip=(
-                        "Motion from Video Motion, measured from this same clip, whose cuts reset "
+                        "Motion from Video Motion, measured from this same clip at any size, whose cuts reset "
                         "the path. Left empty, cuts are found here."
                     ),
                 ),

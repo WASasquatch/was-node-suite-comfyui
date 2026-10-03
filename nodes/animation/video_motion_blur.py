@@ -103,7 +103,7 @@ class VideoMotionBlur(io.ComfyNode):
                     "motion",
                     optional=True,
                     tooltip=(
-                        "Motion from Video Motion, measured from this same clip, so one "
+                        "Motion from Video Motion, measured from this same clip at any size, so one "
                         "measurement serves several nodes. Left empty, it is measured here at "
                         "768 px on the long side."
                     ),

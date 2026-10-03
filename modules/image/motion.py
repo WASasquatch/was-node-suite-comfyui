@@ -56,6 +56,9 @@ SNAP_EDGE = 3.0
 #: Share of its own match cost a neighbour's motion has to beat to be taken.
 SNAP_BIAS = 0.85
 
+#: Share two aspect ratios may differ by and still be read as one clip at two sizes.
+ASPECT_TOLERANCE = 0.01
+
 #: How much worse, as a share plus a floor in levels of 255, one side's match may be than the
 #: other's and still count as seen from that side.
 SIDE_MATCH = (1.5, 2.0)
@@ -177,7 +180,7 @@ class Motion:
         return f"{self.count} frame(s) of {width}x{height}, measured at {w}x{h} with {self.engine}"
 
     def check(self, count: int, height: int, width: int, name: str) -> None:
-        """Raise unless this motion was measured from a clip of this length and size.
+        """Raise unless this motion was measured from a clip of this length and shape, at any size.
 
         Args:
             count: Frames in the clip it is about to be used with.
@@ -186,13 +189,17 @@ class Motion:
             name: The node using it, for the message.
 
         Raises:
-            ValueError: The clip and the motion do not match.
+            ValueError: The frame counts differ, or the aspect ratios differ by more than
+                :data:`ASPECT_TOLERANCE`.
         """
-        if self.count != int(count) or tuple(self.frame_size) != (int(height), int(width)):
+        measured_height, measured_width = self.frame_size
+        shape = (measured_width / max(measured_height, 1)) / (int(width) / max(int(height), 1))
+        if self.count != int(count) or abs(shape - 1.0) > ASPECT_TOLERANCE:
             raise ValueError(
                 f"{name} was given motion measured from {self.describe()}, and a clip of "
-                f"{int(count)} frame(s) of {int(width)}x{int(height)}. Measure the motion with "
-                f"Video Motion from this same clip, or leave the motion input empty."
+                f"{int(count)} frame(s) of {int(width)}x{int(height)}. Motion fits the same "
+                f"clip at any size, with the same frame count and shape. Measure it with Video "
+                f"Motion from this clip, or leave the motion input empty."
             )
 
     def cuts(self, share: float = CUT_SHARE) -> list[bool]:

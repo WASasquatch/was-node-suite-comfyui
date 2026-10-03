@@ -69,7 +69,7 @@ class VideoSplitScenes(io.ComfyNode):
                     "motion",
                     optional=True,
                     tooltip=(
-                        "Motion from Video Motion, measured from this same clip. Left empty, it "
+                        "Motion from Video Motion, measured from this same clip at any size. Left empty, it "
                         "is measured here at 768 px on the long side."
                     ),
                 ),

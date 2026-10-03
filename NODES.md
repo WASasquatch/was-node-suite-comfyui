@@ -367,7 +367,7 @@ The datamosh glitch of a video with its keyframes removed: the picture already o
 | `keyframe_every` | `INT` | Yes | 0 |  | Frames between clean frames, counted from start_frame: 0 = never; 24 = once a second at 24 fps. |
 | `block_size` | `INT` | Yes | 16 |  | Side of the blocks the picture moves in: 16 = codec-like; 4 = finer; 0 = smooth per pixel. |
 | `at_cuts` | `COMBO` | Yes | carry | `carry`, `reset` | 'carry' pushes the old shot around with the new one's motion; 'reset' starts clean at every cut. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size. Left empty, it is measured here at 768 px on the long side. |
 
 **Outputs**
 
@@ -462,7 +462,7 @@ Measure how every pixel moves from frame to frame of a clip, once, so Video Moti
 
 | Name | Type | What it is |
 |---|---|---|
-| `motion` | `WAS_MOTION` | The measured motion, for any motion node fed this same clip. Holds about 3 MB per frame at 768 px. |
+| `motion` | `WAS_MOTION` | The measured motion, for any motion node fed this same clip, at any size. Holds about 3 MB per frame at 768 px. |
 | `motion_preview` | `IMAGE` | The motion per frame at the measured size: hue is direction, brightness is speed, black is still. |
 | `motion_video` | `VIDEO` | motion_preview as a clip at the clip's frame rate and with its audio, for saving or showing elsewhere. |
 
@@ -489,7 +489,7 @@ Add the motion blur a film camera records, drawn along the motion measured betwe
 | `blur_layers` | `COMBO` | Yes | all | `all`, `background`, `subject` | With a mask wired: 'all' blurs everything; 'background' keeps the subject sharp; 'subject' blurs only the subject. Without a mask everything is blurred. |
 | `mask` | `MASK` | No |  |  | Subject mask per frame, white on the subject, such as from SAM 3. The subject stays in front: background streaks pass behind it and its own blur spreads over the background. |
 | `depth` | `IMAGE` | No |  |  | Depth per frame, white nearest, such as from Depth Anything. Decides which surface passes in front where two motions meet. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip, so one measurement serves several nodes. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size, so one measurement serves several nodes. Left empty, it is measured here at 768 px on the long side. |
 | `shutter_curve` | `ARRAY` | No |  |  | Shutter angles across the clip for a speed ramp, such as the values of Curve to Numbers: [90, 360, 90] opens up mid-clip. Stretched to the clip's length; replaces shutter_angle. |
 
 **Outputs**
@@ -521,7 +521,7 @@ Mask whatever moves in a clip, frame by frame, with the background's own motion 
 | `ignore_camera` | `BOOLEAN` | Yes | True |  | `true` = the background's motion, a pan and its parallax included, is taken away, so a moving shot masks only its subjects; `false` = everything the camera sweeps past counts. |
 | `grow` | `INT` | Yes | 4 |  | Pixels the mask is widened by: 0 = as measured; 4 = default; 16 = generous. |
 | `feather` | `FLOAT` | Yes | 2.0 |  | Softness of the mask's edge in pixels: 0 = hard; 2 = default; 8 = soft. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size. Left empty, it is measured here at 768 px on the long side. |
 
 **Outputs**
 
@@ -554,7 +554,7 @@ Leave a fading trail behind everything that moves: a continuous smear, or echoes
 | `threshold` | `FLOAT` | Yes | 1.0 |  | Speed, in pixels per frame, that leaves a trail: 0.5 = slight motion too; 4 = only fast action. |
 | `blend` | `COMBO` | Yes | normal | `normal`, `lighten`, `add` | How the trail is laid over the frame: 'normal' paints it; 'lighten' keeps only what is brighter, for light trails; 'add' glows. |
 | `ignore_camera` | `BOOLEAN` | Yes | True |  | `true` = a pan, its parallax included, leaves no trail; `false` = everything the camera sweeps past trails. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size. Left empty, it is measured here at 768 px on the long side. |
 
 **Outputs**
 
@@ -585,7 +585,7 @@ Crop a clip to another aspect, such as 9:16 for a phone, with the window followi
 | `zoom` | `FLOAT` | Yes | 1.0 |  | How much tighter than the largest crop that fits: 1.0 = full height; 1.5 = closer. |
 | `follow` | `COMBO` | Yes | largest | `largest`, `everything` | What of the mask the window follows: 'largest' = its biggest region, held from frame to frame, for one subject among several; 'everything' = the centre of all of it. |
 | `mask` | `MASK` | No |  |  | The subject per frame, white on the subject, such as from SAM 3, or one mask for the whole clip. A frame where it is empty keeps the last position. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip, whose cuts reset the path. Left empty, cuts are found here. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size, whose cuts reset the path. Left empty, cuts are found here. |
 
 **Outputs**
 
@@ -617,7 +617,7 @@ Slow a clip down or speed it up, at one speed or along a speed curve, at the cli
 | `audio` | `COMBO` | Yes | keep pitch | `keep pitch`, `drop` | 'keep pitch' stretches the audio along the new timing at its own pitch; 'drop' leaves it out. |
 | `ema_vfi_model` | `EMA_VFI_MODEL` | No |  |  | The interpolation network from EMA-VFI Video Model Loader, for 'interpolate'. Any speed but 0.5 needs an 'ours_t' checkpoint. |
 | `speed_curve` | `ARRAY` | No |  |  | Speed across the source clip for a ramp, such as the values of Curve to Numbers: [1, 0.25, 1] slows to a quarter mid-clip. Stretched over the clip; replaces speed. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip, whose cuts are kept. Left empty, cuts are found here. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size, whose cuts are kept. Left empty, cuts are found here. |
 
 **Outputs**
 
@@ -680,7 +680,7 @@ Find every cut in a clip, where one shot ends and the next begins, and answer ea
 | `video` | `VIDEO` | Yes |  |  | The clip to split, at least two frames. |
 | `cut_threshold` | `FLOAT` | Yes | 0.4 |  | Share of the picture that must still follow from the frame before for the shot to continue: 0.4 = default; 0.6 = finds softer cuts, and can split fast action; 0.2 = only hard cuts. |
 | `min_scene_frames` | `INT` | Yes | 6 |  | Fewest frames a scene holds: 6 = default; 1 = every cut, flashes included; 24 = one second at 24 fps. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size. Left empty, it is measured here at 768 px on the long side. |
 
 **Outputs**
 
@@ -737,7 +737,7 @@ Take the shake out of a clip: the camera's own movement is fitted from the motio
 | `motion_model` | `COMBO` | Yes | similarity | `translation`, `similarity` | 'similarity' steadies sliding, rolling and zooming; 'translation' only sliding, for a clip whose rotation is meant. |
 | `borders` | `COMBO` | Yes | zoom | `zoom`, `edge`, `mirror`, `black` | What fills the edge a moved frame leaves bare: 'zoom' enlarges until none shows, up to max_zoom; 'edge' stretches the last pixels; 'mirror' reflects; 'black' leaves it black. |
 | `max_zoom` | `FLOAT` | Yes | 1.25 |  | Most enlargement 'zoom' may use: 1.0 = none; 1.25 = default; 1.5 = heavy shake. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip at any size. Left empty, it is measured here at 768 px on the long side. |
 | `mask` | `MASK` | No |  |  | Subject mask per frame, white on the subject, such as from SAM 3. The subject is left out when the camera's motion is read, so a large moving subject cannot pull the frame along with it. |
 
 **Outputs**
@@ -765,16 +765,16 @@ Stop an effect applied frame by frame from flickering: a style filter, a grade o
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `source` | `IMAGE,VIDEO` | Yes |  |  | The clip before the effect, as IMAGE frames or a VIDEO, which the motion is read from. A VIDEO also gives the video output its frame rate and audio. |
-| `processed` | `IMAGE` | Yes |  |  | The same frames after the effect, as many as source and at any size, such as an upscaler's output. |
+| `processed` | `IMAGE,VIDEO` | Yes |  |  | The same frames after the effect, as IMAGE frames or a VIDEO, as many as source and at any size, such as an upscaler's output. |
 | `strength` | `FLOAT` | Yes | 0.8 |  | How much of each frame's effect comes from its neighbours: 0 = processed as it is; 0.8 = default; 1.0 = holds the effect until a surface changes. |
-| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from source. Left empty, it is measured here at 768 px on the long side. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from source or processed at any size. Left empty, it is measured here at 768 px on the long side. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `images` | `IMAGE` | The processed frames, held steady: same size and count as processed. |
-| `video` | `VIDEO` | The same frames as a clip, at source's frame rate and with its audio when source is a VIDEO, otherwise at 24 fps with none. |
+| `video` | `VIDEO` | The same frames as a clip, at source's frame rate and with its audio when source is a VIDEO, else processed's when that is a VIDEO, otherwise at 24 fps with none. |
 
 </details>
 

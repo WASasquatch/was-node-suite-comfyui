@@ -93,7 +93,7 @@ class VideoRetime(io.ComfyNode):
                     "motion",
                     optional=True,
                     tooltip=(
-                        "Motion from Video Motion, measured from this same clip, whose cuts are "
+                        "Motion from Video Motion, measured from this same clip at any size, whose cuts are "
                         "kept. Left empty, cuts are found here."
                     ),
                 ),

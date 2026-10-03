@@ -49,11 +49,12 @@ class VideoTemporalConsistency(io.ComfyNode):
                         "rate and audio."
                     ),
                 ),
-                io.Image.Input(
+                io.MultiType.Input(
                     "processed",
+                    [io.Image, io.Video],
                     tooltip=(
-                        "The same frames after the effect, as many as source and at any size, "
-                        "such as an upscaler's output."
+                        "The same frames after the effect, as IMAGE frames or a VIDEO, as many "
+                        "as source and at any size, such as an upscaler's output."
                     ),
                 ),
                 io.Float.Input(
@@ -72,7 +73,7 @@ class VideoTemporalConsistency(io.ComfyNode):
                     "motion",
                     optional=True,
                     tooltip=(
-                        "Motion from Video Motion, measured from source. Left empty, it is "
+                        "Motion from Video Motion, measured from source or processed at any size. Left empty, it is "
                         "measured here at 768 px on the long side."
                     ),
                 ),
@@ -86,7 +87,8 @@ class VideoTemporalConsistency(io.ComfyNode):
                     display_name="video",
                     tooltip=(
                         "The same frames as a clip, at source's frame rate and with its audio "
-                        "when source is a VIDEO, otherwise at 24 fps with none."
+                        "when source is a VIDEO, else processed's when that is a VIDEO, "
+                        "otherwise at 24 fps with none."
                     ),
                 ),
             ],
@@ -106,6 +108,12 @@ class VideoTemporalConsistency(io.ComfyNode):
         from ...modules.media import clip as clips
 
         clip = clips.open_clip(source, NODE_NAME)
+        effect = clips.open_clip(processed, NODE_NAME)
+        # The clip the video output follows: source when it is a VIDEO, else processed when
+        # that is one.
+        follows_effect = not hasattr(source, "get_components") and hasattr(processed, "get_components")
+        carrier = effect if follows_effect else clip
+        processed = effect.frames
         count = int(clip.frames.shape[0])
         if int(processed.shape[0]) != count:
             raise ValueError(
@@ -124,6 +132,7 @@ class VideoTemporalConsistency(io.ComfyNode):
             clip.frames, processed, motion, float(strength), device=device, progress=step
         )
         logger.info("steadied %d frame(s) at strength %g", count, float(strength))
-        answer = clips.rebuild(clip, steadied)
-        ui = clips.compare(clips.rebuild(clip, processed, audio=None), answer, PREFIX)
+        alpha = effect.alpha if effect.alpha is not None and len(effect.alpha) == count else None
+        answer = clips.rebuild(carrier, steadied, alpha=alpha)
+        ui = clips.compare(clips.rebuild(carrier, processed, audio=None), answer, PREFIX)
         return io.NodeOutput(steadied, answer, ui=ui)

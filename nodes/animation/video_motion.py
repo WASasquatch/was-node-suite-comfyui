@@ -69,7 +69,7 @@ class VideoMotion(io.ComfyNode):
                 MOTION.Output(
                     display_name="motion",
                     tooltip=(
-                        "The measured motion, for any motion node fed this same clip. Holds "
+                        "The measured motion, for any motion node fed this same clip, at any size. Holds "
                         "about 3 MB per frame at 768 px."
                     ),
                 ),
