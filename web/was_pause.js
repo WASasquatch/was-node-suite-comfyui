@@ -44,6 +44,15 @@ function updateButtons(node) {
 }
 
 /**
+ * This tab's ComfyUI client id, which its prompts are queued under.
+ *
+ * @returns {string} The client id, or an empty string before the socket has connected.
+ */
+function clientId() {
+  return String(api?.clientId || api?.initialClientId || "");
+}
+
+/**
  * Let a held node carry on.
  *
  * @param {object} node - The node to release.
@@ -52,11 +61,15 @@ function updateButtons(node) {
  */
 async function release(node, action) {
   try {
-    await fetchWithin(ROUTE, {
+    const answer = await fetchWithin(ROUTE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ node_id: String(node.id), action }),
+      body: JSON.stringify({ node_id: String(node.id), action, client_id: clientId() }),
     });
+    if (!answer.ok) {
+      const reply = await answer.json().catch(() => ({}));
+      console.error(`[${EXT_NAME}] ${node?.id} was not released:`, reply?.error ?? answer.status);
+    }
   } catch (error) {
     console.error(`[${EXT_NAME}] Failed to ${action} ${node?.id}:`, error);
   }

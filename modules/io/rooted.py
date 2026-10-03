@@ -178,9 +178,10 @@ def _inside(available, root: str, relative: str, offered, resolve) -> Path:
             f"`{relative}` is a full path, and this is a path inside {name}. Write the part "
             f"below the folder, such as `plates/shot`, and pick the folder above"
         )
-    if ".." in candidate.parts:
+    reason = sandbox.leaves_folder(text)
+    if reason is not None:
         raise ValueError(
-            f"`{relative}` climbs out of {name} with '..', which is not reached. Write a "
+            f"`{relative}` {reason}, so it leaves {name}, which is not reached. Write a "
             f"path that stays inside the folder"
         )
 

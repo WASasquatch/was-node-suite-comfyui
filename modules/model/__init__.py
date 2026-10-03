@@ -34,6 +34,7 @@ __all__ = [
     "published_checkpoint",
     "published_files",
     "release_models",
+    "repository_id",
     "resolve",
     "shared_file",
     "shared_roots",
@@ -487,8 +488,13 @@ def model_file_path(folder: str, name: str, location: str | None = None) -> Path
         location: Where the folder sits under ``models``, as :func:`model_directories` takes it.
 
     Returns:
-        The full path, or None when no search directory holds it.
+        The full path, or None when no search directory holds it, and None for a name that
+        names another machine, carries a drive, starts at a root or climbs out with ``..``.
     """
+    from ..util.sandbox import leaves_folder
+
+    if leaves_folder(name) is not None:
+        return None
     directories = model_directories(folder, location)
     try:
         import folder_paths
@@ -533,7 +539,7 @@ def resolve(
         ModelUnavailable: This repository is not on disk and ``features.network`` is off.
         ValueError: ``repo_id`` is a path rather than a repository id.
     """
-    repo_id = _repository(repo_id)
+    repo_id = repository_id(repo_id)
     names = (folders,) if isinstance(folders, str) else tuple(folders)
     roots = [root for name in names for root in model_directories(name)]
     # This pack's own folders first, then wherever the machine already has a copy, so a
@@ -825,7 +831,7 @@ def _release(dropped) -> None:
 _SEGMENT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9._-]*")
 
 
-def _repository(value: str) -> str:
+def repository_id(value: str) -> str:
     """Confirm a model id widget holds a repository id rather than a path.
 
     ``owner/name`` is joined onto each model directory to look for a checkpoint.

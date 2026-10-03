@@ -367,11 +367,16 @@ function createHoldControls(theme, node, elements) {
     continueBtn.disabled = true;
     try {
       const value = await heldValue(node, elements);
-      await fetch(PAUSE_ROUTE, {
+      const clientId = String(globalThis.app?.api?.clientId || globalThis.app?.api?.initialClientId || "");
+      const answer = await fetch(PAUSE_ROUTE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ node_id: String(node.id), action: "resume", value }),
+        body: JSON.stringify({ node_id: String(node.id), action: "resume", value, client_id: clientId }),
       });
+      if (!answer.ok) {
+        const reply = await answer.json().catch(() => ({}));
+        console.error("[WAS Viewer] The held run was not continued:", reply?.error ?? answer.status);
+      }
     } catch (error) {
       console.error("[WAS Viewer] Failed to continue:", error);
     } finally {

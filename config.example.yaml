@@ -64,7 +64,7 @@ features:                # optional node groups
                          #           whose packages ComfyUI does not already require, so it
                          #           starts off and nothing is installed for a fresh install
                          #           pip install -r requirements/document_export.txt
-  network:     false     #  0 nodes: permits model downloads when a file is not already on disk
+  network:     false     #  0 nodes: permits model downloads when a file is not already on disk, and web addresses in Three Texture URL
                          #           The (ComfyUI Native) node beside each loads either way
   pssr:        false     #  1 node:  PS-SR video super resolution. Needs a 22 GB checkout
                          #           placed by hand, and diffsynth; see docs/MODELS.md

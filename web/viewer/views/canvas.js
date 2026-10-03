@@ -3646,6 +3646,7 @@ class CanvasView extends BaseView {
           body: JSON.stringify({
             node_id: String(node.id), action: "resume",
             value: this.OUTPUT_MARKER + dataUrl,
+            client_id: String(globalThis.app?.api?.clientId || globalThis.app?.api?.initialClientId || ""),
           }),
         }).catch((error) => console.error("[Canvas View] Failed to continue:", error));
       }

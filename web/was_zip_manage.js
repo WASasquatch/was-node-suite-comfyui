@@ -40,11 +40,20 @@ const IDLE_LABEL = "Run the node to list what the archive holds.";
  */
 async function release(nodeId, action, value) {
   try {
-    await fetchWithin(ROUTE, {
+    const answer = await fetchWithin(ROUTE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ node_id: String(nodeId), action, value: value ?? "" }),
+      body: JSON.stringify({
+        node_id: String(nodeId),
+        action,
+        value: value ?? "",
+        client_id: String(api?.clientId || api?.initialClientId || ""),
+      }),
     });
+    if (!answer.ok) {
+      const reply = await answer.json().catch(() => ({}));
+      console.error(`[${EXT_NAME}] ${nodeId} was not released:`, reply?.error ?? answer.status);
+    }
   } catch (error) {
     console.error(`[${EXT_NAME}] Failed to ${action} the held run:`, error);
   }

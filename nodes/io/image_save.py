@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 from comfy_api.latest import io, ui
 
@@ -43,9 +44,9 @@ def subfolder_of(directory: str, root: str) -> str | None:
         inside ``root`` at all, in which case nothing in it can be previewed: a preview is
         addressed as a name and a subfolder of one of ComfyUI's own directories.
     """
-    import folder_paths
-
-    if not folder_paths.is_within_directory(root, directory):
+    if sandbox.names_another_host(directory) or not sandbox.contains(
+        Path(os.path.realpath(root)), Path(os.path.realpath(directory))
+    ):
         return None
     relative = os.path.relpath(os.path.abspath(directory), root)
     return "" if relative == "." else relative
@@ -308,7 +309,7 @@ class ImageSave(io.ComfyNode):
         base = str(rooted.destination(root, below))
         named = leaf or PLACEHOLDER_PREFIX
 
-        full_output_folder, resolved, _, _, _ = folder_paths.get_save_image_path(
+        full_output_folder, resolved, _, _, _ = sandbox.save_image_path(
             named, base, images[0].shape[1], images[0].shape[0]
         )
         destination = sandbox.resolve_write(full_output_folder)

@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import NamedTuple
 
 __all__ = [
-    "COMPRESSIONS", "DEPTHS", "MAX_CHANNELS", "MAX_PIXELS", "MAX_SIDE", "PACKINGS",
-    "Reading", "read", "write",
+    "COMPRESSIONS", "DEPTHS", "MAX_CHANNELS", "MAX_PIXELS", "MAX_SAMPLES", "MAX_SIDE",
+    "PACKINGS", "Reading", "read", "write",
 ]
 
 #: What an OpenEXR file opens with, and the version it declares.
@@ -35,7 +35,6 @@ WIDTHS = {UINT: 4, HALF: 2, FLOAT: 4}
 #: Compression codes this module names in its own right.
 NO_COMPRESSION, RLE, ZIPS, ZIP = 0, 1, 2, 3
 
-#: Every compression the format defines: its name, and the scanlines one block holds.
 #: Longest side a data window may name.
 MAX_SIDE = 30000
 
@@ -45,9 +44,13 @@ MAX_PIXELS = 1 << 28
 #: Most channels a channel list may name.
 MAX_CHANNELS = 1024
 
+#: Most samples a data window may hold across every pixel and every channel.
+MAX_SAMPLES = 1 << 30
+
 #: Bytes of picture one byte of file may describe.
 MAX_RATIO = 2048
 
+#: Every compression the format defines: its name, and the scanlines one block holds.
 COMPRESSIONS = {
     NO_COMPRESSION: ("none", 1),
     RLE: ("rle", 1),
@@ -158,16 +161,18 @@ def _predict(raw: bytes) -> bytes:
 
 def _unpredict(data: bytes) -> bytes:
     """Undo the delta and the byte split a ZIP or RLE block is stored under."""
-    import torch
+    import numpy as np
 
-    values = torch.frombuffer(bytearray(data), dtype=torch.uint8).to(torch.int64)
-    values[1:] -= 128
-    running = (torch.cumsum(values, dim=0) & 0xFF).to(torch.uint8)
-    half = (running.numel() + 1) // 2
-    out = torch.empty_like(running)
+    values = np.frombuffer(data, dtype=np.uint8).copy()
+    values[1:] += 128
+    # The running sum wraps at 256.
+    running = np.cumsum(values, dtype=np.uint8)
+    del values
+    half = (running.size + 1) // 2
+    out = np.empty_like(running)
     out[0::2] = running[:half]
     out[1::2] = running[half:]
-    return out.numpy().tobytes()
+    return out.tobytes()
 
 
 def _unrle(data: bytes, size: int) -> bytes:
@@ -395,6 +400,13 @@ def read(path) -> Reading:
             f"{named} names {len(channels)} channels, more than the {MAX_CHANNELS} this "
             f"reader unpacks, so the file was not read"
         )
+    if width * height * len(channels) > MAX_SAMPLES:
+        raise ValueError(
+            f"{named} declares a {width} by {height} data window of {len(channels)} "
+            f"channels, which is {width * height * len(channels)} samples and more than the "
+            f"{MAX_SAMPLES} this reader unpacks, so the file was not read. Re-export it "
+            f"with fewer channels, such as RGB or RGBA alone"
+        )
 
     packing, per_block = COMPRESSIONS.get(code, (f"code {code}", 1))
     if code not in READABLE:
@@ -451,6 +463,7 @@ def read(path) -> Reading:
         raise ValueError(damaged)
     gathered = {name: torch.zeros(height, width, dtype=torch.float32) for name in wanted}
 
+    taken = 0
     for start in starts:
         try:
             row, size = struct.unpack_from("<ii", body, start)
@@ -458,7 +471,13 @@ def read(path) -> Reading:
             if rows < 1:
                 continue
             expected = rows * per_row
-            payload = body[start + 8:start + 8 + size]
+            if size < 0 or row < top:
+                raise ValueError(damaged)
+            payload = body[start + 8:start + 8 + min(size, expected)]
+            # The blocks together hold no more bytes than the file.
+            taken += len(payload)
+            if taken > len(body):
+                raise ValueError(damaged)
             raw = payload if size >= expected else _decompress(code, payload, expected)
             if len(raw) < expected:
                 raise ValueError(
@@ -475,7 +494,8 @@ def read(path) -> Reading:
         for name, kind, _x, _y in channels:
             span = width * WIDTHS[kind]
             if name in gathered:
-                strip = block[:, column:column + span].contiguous().view(_dtype(kind))
+                part = block[:, column:column + span]
+                strip = part.clone(memory_format=torch.contiguous_format).view(_dtype(kind))
                 if kind == UINT:
                     strip = strip.to(torch.int64) & 0xFFFFFFFF
                 gathered[name][row - top:row - top + rows] = strip.float()

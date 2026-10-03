@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import glob
 import math
 import os
-from pathlib import PureWindowsPath
 
 from comfy_api.latest import io
 
@@ -232,24 +230,11 @@ class CreateGridImage(io.ComfyNode):
             them.
 
         Raises:
-            PathNotAllowed: A match resolved outside every permitted read root.
-            ValueError: The pattern carries a drive, starts at a root or holds a ``..``
-                segment, each of which matches outside the directory the node was pointed
-                at.
+            PathNotAllowed: The pattern names another machine, carries a drive, starts at a
+                root or climbs out with ``..``, or a match resolved outside every permitted
+                read root.
         """
-        # PureWindowsPath rather than os.path.isabs, which is False for the drive-relative
-        # `C:Windows/*.jpg` that a join still resolves to another drive, folder discarded.
-        candidate = PureWindowsPath(pattern)
-        if candidate.drive or candidate.root or ".." in candidate.parts:
-            raise ValueError(
-                f"the pattern `{pattern}` matches outside `{directory}`; patterns match "
-                f"inside the folder they are given"
-            )
-        # The directory is escaped so a `[` or `*` in a real folder name is not read as part
-        # of the glob; the pattern itself is the user's and is not escaped.
-        matches = glob.glob(
-            os.path.join(glob.escape(str(directory)), pattern), recursive=recursive
-        )
+        matches = sandbox.glob_read(directory, pattern, recursive=recursive)
         # A symlink inside a permitted folder can point out of one.
         return [
             str(sandbox.resolve_read(name))

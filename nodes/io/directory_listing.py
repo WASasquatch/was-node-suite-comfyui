@@ -6,11 +6,10 @@ bytes and times are in seconds.
 
 from __future__ import annotations
 
-import glob
 import hashlib
 import os
 import re
-from pathlib import PureWindowsPath
+import stat
 from typing import NamedTuple
 
 from comfy_api.latest import io
@@ -97,8 +96,14 @@ def listing_directory(folder: str) -> str:
         names no root that is there.
 
     Raises:
-        PathNotAllowed: The folder resolved outside every permitted read root.
+        PathNotAllowed: The label names another machine, or the folder resolved outside
+            every permitted read root.
     """
+    if sandbox.names_another_host(folder or ""):
+        raise sandbox.PathNotAllowed(
+            f"`{folder}` names another machine. Pick a folder from the menu; a share added "
+            f"under paths.allow_read in config.yaml is listed there under its own name"
+        )
     found = picker.resolve_folder(folder)
     return str(found) if found else ""
 
@@ -115,8 +120,9 @@ def matching(directory: str, pattern: str, recursive: bool) -> list[str]:
         Paths as glob spelled them, unsorted. Empty where the directory does not exist.
 
     Raises:
-        ValueError: The pattern is empty, starts at a drive or a root, or holds a ``..``
-            segment.
+        ValueError: The pattern is empty.
+        PathNotAllowed: The pattern names another machine, carries a drive, starts at a
+            root or climbs out with ``..``.
     """
     text = str(pattern).strip()
     if not text:
@@ -124,18 +130,9 @@ def matching(directory: str, pattern: str, recursive: bool) -> list[str]:
             "no pattern given to Directory Listing. Use `*` to list everything in the "
             "folder, or `*.png` to list one kind of file"
         )
-    relative = PureWindowsPath(text)
-    if relative.drive or relative.root or ".." in relative.parts:
-        raise ValueError(
-            f"the pattern `{pattern}` names somewhere other than inside `{directory}`; a "
-            f"pattern matches within the folder it is given, so it carries no drive, no "
-            f"leading slash and no '..' segment. Put the outer folder in path instead"
-        )
-    # The directory is escaped; the pattern is the user's and stays unescaped.
-    stem = glob.escape(directory)
     if recursive and "**" not in text:
-        return glob.glob(os.path.join(stem, "**", text), recursive=True)
-    return glob.glob(os.path.join(stem, text), recursive=recursive)
+        return sandbox.glob_read(directory, os.path.join("**", text), recursive=True)
+    return sandbox.glob_read(directory, text, recursive=recursive)
 
 
 def listed(
@@ -159,12 +156,12 @@ def listed(
         limit: How many entries survive, or 0 for every one.
 
     Returns:
-        The entries in the chosen order. Empty where nothing matched.
+        The entries in the chosen order. Empty where nothing matched. An entry resolving
+        outside every permitted read root is left out and logged.
 
     Raises:
-        PathNotAllowed: An entry the listing carries resolved outside every permitted read
-            root, which is what a link pointing out of the folder does.
-        ValueError: The pattern names somewhere other than inside ``directory``.
+        PathNotAllowed: The pattern names somewhere other than inside ``directory``.
+        ValueError: The pattern is empty.
     """
     found: list[Listed] = []
     for name in matching(directory, pattern, recursive):
@@ -172,18 +169,20 @@ def listed(
         relative = os.path.relpath(name, directory).replace("\\", "/")
         if relative in (".", ".."):
             continue
-        # include is applied before containment, so an entry the listing would have dropped
-        # cannot stop it: a folder holding a link to another drive still lists its files.
-        is_directory = os.path.isdir(name)
-        if include == "files" and is_directory:
+        try:
+            resolved = str(sandbox.resolve_read(name))
+        except sandbox.PathNotAllowed as refused:
+            logger.warning("Directory Listing leaves out %s. %s", name, refused)
             continue
-        if include == "directories" and not is_directory:
-            continue
-        resolved = str(sandbox.resolve_read(name))
         try:
             info = os.stat(resolved)
         except OSError:
             logger.debug("%s could not be read and is left out of the listing", resolved)
+            continue
+        is_directory = stat.S_ISDIR(info.st_mode)
+        if include == "files" and is_directory:
+            continue
+        if include == "directories" and not is_directory:
             continue
         found.append(
             Listed(
@@ -352,15 +351,14 @@ class DirectoryListing(io.ComfyNode):
         """A digest of the listing as it stands, compared against the last run's.
 
         Returns:
-            The digest, or ``NaN`` when the folder is not there and when the pattern names
-            somewhere outside it.
+            The digest, or ``NaN`` when the folder is not there or the pattern is empty.
 
         Raises:
-            PathNotAllowed: The chosen root, or an entry found in it, is not one this
-                pack may read.
+            PathNotAllowed: The label names another machine, the chosen folder is not one
+                this pack may read, or the pattern names somewhere outside it.
         """
         directory = listing_directory(folder)
-        if not os.path.isdir(directory):
+        if not directory or not os.path.isdir(directory):
             return float("NaN")
         try:
             found = listed(directory, pattern, recursive, include, sort, reverse, limit)
@@ -385,7 +383,8 @@ class DirectoryListing(io.ComfyNode):
         """List the folder and answer the paths, the names, the lines and the count.
 
         Args:
-            path: Folder to list, or one of ``input``, ``output`` and ``temp``.
+            folder: A label from the folder menu, such as ``input`` or
+                ``plates/shot_01 [input]``.
             pattern: Glob matched inside the folder.
             recursive: Whether the pattern is applied at every depth.
             include: One of :data:`INCLUDE`.
@@ -398,12 +397,12 @@ class DirectoryListing(io.ComfyNode):
             many there are.
 
         Raises:
-            PathNotAllowed: The folder, or an entry in it, resolved outside every
-                permitted read root.
-            ValueError: The folder is not there, or the pattern names somewhere outside it.
+            PathNotAllowed: The label names another machine, the folder resolved outside
+                every permitted read root, or the pattern names somewhere outside it.
+            ValueError: The folder is not there, or the pattern is empty.
         """
         directory = listing_directory(folder)
-        if not os.path.isdir(directory):
+        if not directory or not os.path.isdir(directory):
             raise ValueError(
                 f"`{folder}` names no folder Directory Listing can read. Pick another "
                 f"from the menu, or add its folder to paths.allow_read in config.yaml"

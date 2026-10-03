@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import glob
 import os
 
 from comfy_api.latest import io
@@ -63,11 +62,11 @@ def image_paths(directory, pattern: str) -> list:
         ``ALLOWED_EXT`` is skipped. Nothing is opened.
 
     Raises:
-        PathNotAllowed: A match resolved outside every readable root, which a pattern
-            holding ``..`` can do.
+        PathNotAllowed: The pattern names another machine, carries a drive, starts at a
+            root or climbs out with ``..``, or a match resolved outside every readable root.
     """
     found = []
-    for name in sorted(glob.glob(os.path.join(str(directory), pattern), recursive=False)):
+    for name in sorted(sandbox.glob_read(directory, pattern, recursive=False)):
         if not name.lower().endswith(ALLOWED_EXT):
             continue
         found.append(sandbox.resolve_read(name))
@@ -355,8 +354,8 @@ class CreateMorphImageFromPath(io.ComfyNode):
 
         images = load_images(paths)
         duration_ms = min(max(duration_ms, 0.1), 60000.0)
-        target = sandbox.resolve_write(
-            os.path.join(str(rooted.destination(output_root, output_folder)), filename)
+        target = sandbox.resolve_write_file(
+            rooted.destination(output_root, output_folder), filename
         )
         os.makedirs(target.parent, exist_ok=True)
 

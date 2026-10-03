@@ -265,10 +265,7 @@ def resolve(label: str, extensions, extra=()) -> str | None:
     found = None
     # A bare name is a file in the input folder, which is what an upload leaves behind.
     try:
-        import folder_paths
-
-        if not sandbox.names_another_host(chosen) and folder_paths.exists_annotated_filepath(chosen):
-            found = folder_paths.get_annotated_filepath(chosen)
+        found = sandbox.annotated_path(chosen)
     except Exception as error:
         logger.debug("`%s` could not be resolved through folder_paths: %s", chosen, error)
     if found is None:

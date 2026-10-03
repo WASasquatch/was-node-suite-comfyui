@@ -118,6 +118,11 @@ def load(name: str) -> dict:
         raise FileNotFoundError(
             "no ComfyUI user directory was found, so no saved workflow can be read"
         )
+    from ..util import sandbox
+
+    reason = sandbox.leaves_folder(name)
+    if reason is not None:
+        raise ValueError(f"{name!r} {reason}. Name a workflow inside {root}")
     target = (root / name).resolve()
     if root.resolve() not in (target, *target.parents):
         raise ValueError(

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import glob
 import os
 import random
 
@@ -39,20 +38,13 @@ def scan(directory: str, pattern: str) -> list[str]:
         Absolute paths whose extension is in ``ALLOWED_EXT``, sorted.
 
     Raises:
-        PathNotAllowed: A match resolved outside every permitted read root.
-        ValueError: The pattern holds a ``..`` segment, which would walk out of the
-            directory the node was pointed at.
+        PathNotAllowed: The pattern names another machine, carries a drive, starts at a
+            root or climbs out with ``..``, or a match resolved outside every permitted read
+            root.
     """
-    if ".." in pattern.replace("\\", "/").split("/"):
-        raise ValueError(
-            f"the pattern `{pattern}` walks out of `{directory}`; patterns match inside "
-            f"the directory they are given"
-        )
-    # The directory is escaped so a ``[`` or ``*`` in a real directory name is not read as
-    # part of the glob. The pattern is the user's and is left unescaped.
     found = [
         str(sandbox.resolve_read(name))
-        for name in glob.glob(os.path.join(glob.escape(directory), pattern), recursive=True)
+        for name in sandbox.glob_read(directory, pattern, recursive=True)
         if name.lower().endswith(ALLOWED_EXT)
     ]
     found.sort()

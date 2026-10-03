@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **481** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **495** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-474 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+488 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 359 |
+| [Always loaded](#always-loaded) | always on | 373 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,9 +39,9 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-359 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+373 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
-- [WAS Suite/Animation](#was-suiteanimation) (11)
+- [WAS Suite/Animation](#was-suiteanimation) (23)
 - [WAS Suite/Archive](#was-suitearchive) (9)
 - [WAS Suite/Conditioning](#was-suiteconditioning) (1)
 - [WAS Suite/Debug](#was-suitedebug) (4)
@@ -65,14 +65,14 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
 - [WAS Suite/Latent/Video](#was-suitelatentvideo) (6)
 - [WAS Suite/LoRA](#was-suitelora) (1)
-- [WAS Suite/Loaders](#was-suiteloaders) (1)
+- [WAS Suite/Loaders](#was-suiteloaders) (2)
 - [WAS Suite/Logic](#was-suitelogic) (5)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (13)
+- [WAS Suite/Sampling](#was-suitesampling) (14)
 - [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -257,7 +257,7 @@ Turn a folder of images into a video, holding each image and cross-fading into t
 <details>
 <summary><b>EMA-VFI Frame Interpolation</b></summary>
 
-Raise a sequence's frame rate by inventing frames between the ones it has, using EMA-VFI's motion estimate rather than fading one frame into the next. The weights come from EMA-VFI Model Loader. A multiplier above 2 needs one of the 'ours_t' checkpoints, which were trained to land anywhere between two frames rather than only halfway.
+Raise a sequence's frame rate by inventing frames between the ones it has, using EMA-VFI's motion estimate rather than fading one frame into the next. The weights come from EMA-VFI Video Model Loader. A multiplier above 2 needs one of the 'ours_t' checkpoints, which were trained to land anywhere between two frames rather than only halfway.
 
 | | |
 |---|---|
@@ -268,7 +268,7 @@ Raise a sequence's frame rate by inventing frames between the ones it has, using
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The sequence to interpolate, in order. Needs at least two frames, all the same size. |
-| `ema_vfi_model` | `EMA_VFI_MODEL` | Yes |  |  | The interpolation network, from EMA-VFI Model Loader, which is where the checkpoint is chosen. One loader can feed several nodes so the network is built once. |
+| `ema_vfi_model` | `EMA_VFI_MODEL` | Yes |  |  | The interpolation network, from EMA-VFI Video Model Loader, which is where the checkpoint is chosen. One loader can feed several nodes so the network is built once. |
 | `multiplier` | `INT` | Yes | 2 |  | How many times the frame rate goes up. 2 puts one new frame in each gap, 4 puts three. Above 2 needs an 'ours_t' checkpoint. |
 
 **Outputs**
@@ -307,6 +307,73 @@ Keep a smaller set of frames from an image batch: evenly spaced, the first, midd
 | Name | Type | What it is |
 |---|---|---|
 | `images` | `IMAGE` | The frames that were kept, in order. |
+
+</details>
+
+<a id="node-wasvideocamerashake"></a>
+<details>
+<summary><b>Video Camera Shake</b></summary>
+
+Shake a clip the way a handheld camera does: sway, roll and a little zoom breathing, woven from smooth wobbles that settle into the same shake for the same seed. The shutter angle adds the blur a real shake leaves, and a curve can ramp it up for an impact. Audio and frame rate carry through.
+
+| | |
+|---|---|
+| Node id | `WASVideoCameraShake` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to shake. |
+| `amplitude` | `FLOAT` | Yes | 0.01 |  | Sway as a share of the frame's short side: 0.004 = a steady hand; 0.01 = handheld; 0.03 = running with the camera. |
+| `rotation` | `FLOAT` | Yes | 0.3 |  | Roll in degrees: 0 = level; 0.3 = handheld; 2 = violent. |
+| `zoom` | `FLOAT` | Yes | 0.002 |  | Zoom breathing as a share of the frame: 0 = none; 0.002 = subtle; 0.02 = pumping. |
+| `frequency` | `FLOAT` | Yes | 1.5 |  | Centre of the shake in hertz: 0.5 = slow drift; 1.5 = handheld; 6 = engine or impact rattle. |
+| `seed` | `INT` | Yes | 0 |  | Which shake; the same seed always gives the same one. Any whole number, as `7`. |
+| `shutter_angle` | `FLOAT` | Yes | 180.0 |  | Blur the shake leaves, as a film shutter in degrees: 0 = none; 180 = the film standard; 360 = the whole frame interval. |
+| `borders` | `COMBO` | Yes | zoom | `zoom`, `edge`, `mirror`, `black` | What fills the edge the shaken frame pulls away from: 'zoom' enlarges until none shows, up to max_zoom; 'edge', 'mirror' or 'black' fill it. |
+| `max_zoom` | `FLOAT` | Yes | 1.2 |  | Most enlargement 'zoom' may use: 1.0 = none; 1.2 = default; 1.5 = heavy shake. |
+| `shake_curve` | `ARRAY` | No |  |  | Strength across the clip, such as the values of Curve to Numbers: [0, 0, 3, 0.5, 0] is calm, then an impact that settles. Stretched to the clip's length; multiplies amplitude, rotation and zoom. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The shaken clip: same size, length, frame rate and audio. |
+
+</details>
+
+<a id="node-wasvideodatamosh"></a>
+<details>
+<summary><b>Video Datamosh</b></summary>
+
+The datamosh glitch of a video with its keyframes removed: the picture already on screen is dragged along the clip's motion in blocks instead of being replaced, so across a cut the old shot is pushed around by the new one while its moving parts bloom through. Lower residual melts any shot.
+
+| | |
+|---|---|
+| Node id | `WASVideoDatamosh` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip, at least two frames; one with a cut moshes across it. |
+| `start_frame` | `INT` | Yes | 0 |  | First frame moshed, counting from 0; the frames before it play clean. |
+| `amplify` | `FLOAT` | Yes | 1.0 |  | How far the motion is pushed: 1 = as it moved; 2 = twice as far, for blooms; 0 = frozen. |
+| `residual` | `FLOAT` | Yes | 1.0 |  | Share of each frame's own change carried in with the motion: 1 = a shot holds together and moshes across cuts; 0.5 = smears; 0 = melts. |
+| `refresh` | `FLOAT` | Yes | 0.0 |  | Share of each real frame mixed back in: 0 = full mosh; 0.1 = slowly recovers; 1 = no mosh. |
+| `keyframe_every` | `INT` | Yes | 0 |  | Frames between clean frames, counted from start_frame: 0 = never; 24 = once a second at 24 fps. |
+| `block_size` | `INT` | Yes | 16 |  | Side of the blocks the picture moves in: 16 = codec-like; 4 = finer; 0 = smooth per pixel. |
+| `at_cuts` | `COMBO` | Yes | carry | `carry`, `reset` | 'carry' pushes the old shot around with the new one's motion; 'reset' starts clean at every cut. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The moshed clip: same size, length, frame rate and audio. |
 
 </details>
 
@@ -369,6 +436,345 @@ Keep a smaller set of frames from a video: evenly spaced, the first, middle or l
 | Name | Type | What it is |
 |---|---|---|
 | `video` | `VIDEO` | The frames that were kept, as a video at the source's rate. |
+
+</details>
+
+<a id="node-wasvideomotion"></a>
+<details>
+<summary><b>Video Motion</b></summary>
+
+Measure how every pixel moves from frame to frame of a clip, once, so Video Motion Blur, Video Stabilize, Video Split Scenes and the other motion nodes share one measurement instead of each taking their own. With a SEA-RAFT or FlowSeek network on motion_model, that network measures it. The panel plays the clip beside its motion.
+
+| | |
+|---|---|
+| Node id | `WASVideoMotion` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO,IMAGE` | Yes |  |  | The clip, as a VIDEO or a batch of IMAGE frames, at least two frames. |
+| `motion_resolution` | `INT` | Yes | 768 |  | Long side, in pixels, the motion is measured at: 0 = the clip's own size; 512 = fastest; 768 = default; 1280 = small, fine motion. |
+| `motion_model` | `WAS_MOTION_MODEL` | No |  |  | A SEA-RAFT or FlowSeek network from Video Motion Model Loader to measure the motion with. Empty = the built-in texture flow. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `motion` | `WAS_MOTION` | The measured motion, for any motion node fed this same clip. Holds about 3 MB per frame at 768 px. |
+| `motion_preview` | `IMAGE` | The motion per frame at the measured size: hue is direction, brightness is speed, black is still. |
+| `motion_video` | `VIDEO` | motion_preview as a clip at the clip's frame rate and with its audio, for saving or showing elsewhere. |
+
+</details>
+
+<a id="node-wasvideomotionblur"></a>
+<details>
+<summary><b>Video Motion Blur</b></summary>
+
+Add the motion blur a film camera records, drawn along the motion measured between the video's own frames, so a crisp or strobing clip moves like filmed footage. A subject mask or a depth batch keeps a subject in front of what streaks past behind it. Audio and frame rate carry through.
+
+| | |
+|---|---|
+| Node id | `WASVideoMotionBlur` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to blur, at least two frames. Frame rate and audio pass through unchanged. |
+| `shutter_angle` | `FLOAT` | Yes | 180.0 |  | Exposure per frame in degrees: 0 = no blur; 90 = crisp action; 180 = the film standard; 360 = the whole frame interval; above 360 = exaggerated streaks. |
+| `samples` | `INT` | Yes | 32 |  | Points read along each pixel's path: 16 = quick look; 32 = smooth streaks up to about 30 px; 96 = long streaks without stepping. |
+| `blur_layers` | `COMBO` | Yes | all | `all`, `background`, `subject` | With a mask wired: 'all' blurs everything; 'background' keeps the subject sharp; 'subject' blurs only the subject. Without a mask everything is blurred. |
+| `mask` | `MASK` | No |  |  | Subject mask per frame, white on the subject, such as from SAM 3. The subject stays in front: background streaks pass behind it and its own blur spreads over the background. |
+| `depth` | `IMAGE` | No |  |  | Depth per frame, white nearest, such as from Depth Anything. Decides which surface passes in front where two motions meet. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip, so one measurement serves several nodes. Left empty, it is measured here at 768 px on the long side. |
+| `shutter_curve` | `ARRAY` | No |  |  | Shutter angles across the clip for a speed ramp, such as the values of Curve to Numbers: [90, 360, 90] opens up mid-clip. Stretched to the clip's length; replaces shutter_angle. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The blurred clip: same size, length, frame rate and audio. |
+| `motion_preview` | `IMAGE` | The blur each frame was given, at the size motion was measured: hue is direction, brightness is length, black is none. |
+
+</details>
+
+<a id="node-wasvideomotionmask"></a>
+<details>
+<summary><b>Video Motion Mask</b></summary>
+
+Mask whatever moves in a clip, frame by frame, with the background's own motion taken away first, the camera's pan and the parallax it causes, so only the subjects light up. For feeding SAM, inpainting or any effect that should touch only what moves.
+
+| | |
+|---|---|
+| Node id | `WASVideoMotionMask` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip, at least two frames. |
+| `threshold` | `FLOAT` | Yes | 1.0 |  | Speed, in pixels per frame, that counts as moving: 0.5 = catches slight motion; 1.0 = default; 4.0 = only fast action. |
+| `ignore_camera` | `BOOLEAN` | Yes | True |  | `true` = the background's motion, a pan and its parallax included, is taken away, so a moving shot masks only its subjects; `false` = everything the camera sweeps past counts. |
+| `grow` | `INT` | Yes | 4 |  | Pixels the mask is widened by: 0 = as measured; 4 = default; 16 = generous. |
+| `feather` | `FLOAT` | Yes | 2.0 |  | Softness of the mask's edge in pixels: 0 = hard; 2 = default; 8 = soft. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | White where something moves, one mask per frame at the clip's size. |
+| `video` | `VIDEO` | The clip with what moves tinted red, for saving or showing elsewhere: same size, length, frame rate and audio. |
+
+</details>
+
+<a id="node-wasvideomotiontrails"></a>
+<details>
+<summary><b>Video Motion Trails</b></summary>
+
+Leave a fading trail behind everything that moves: a continuous smear, or echoes spaced a few frames apart. The background's own motion, a pan and its parallax, leaves none, so a moving shot trails only its subjects. Audio and frame rate carry through.
+
+| | |
+|---|---|
+| Node id | `WASVideoMotionTrails` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip, at least two frames. |
+| `length` | `FLOAT` | Yes | 8.0 |  | Frames a trail takes to fade: 3 = a short tail; 8 = default; 30 = long streaks. |
+| `spacing` | `INT` | Yes | 1 |  | Frames between echoes: 1 = a continuous smear; 4 = separate copies. |
+| `opacity` | `FLOAT` | Yes | 0.6 |  | How strongly the trail shows: 0 = none; 0.6 = default; 1 = solid. |
+| `threshold` | `FLOAT` | Yes | 1.0 |  | Speed, in pixels per frame, that leaves a trail: 0.5 = slight motion too; 4 = only fast action. |
+| `blend` | `COMBO` | Yes | normal | `normal`, `lighten`, `add` | How the trail is laid over the frame: 'normal' paints it; 'lighten' keeps only what is brighter, for light trails; 'add' glows. |
+| `ignore_camera` | `BOOLEAN` | Yes | True |  | `true` = a pan, its parallax included, leaves no trail; `false` = everything the camera sweeps past trails. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The clip with its trails: same size, length, frame rate and audio. |
+
+</details>
+
+<a id="node-wasvideoreframe"></a>
+<details>
+<summary><b>Video Reframe</b></summary>
+
+Crop a clip to another aspect, such as 9:16 for a phone, with the window following the subject a mask marks along a smoothed path, each scene on its own. Without a mask the window stays centred. The crop keeps the source's own pixels, so a 9:16 crop of a 1216x688 clip is 386x688.
+
+| | |
+|---|---|
+| Node id | `WASVideoReframe` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to reframe. |
+| `aspect` | `COMBO` | Yes | 9:16 | `9:16`, `4:5`, `1:1`, `4:3`, `16:9`, `21:9` | Width to height of the crop: '9:16' = phone; '4:5' = portrait post; '1:1' = square. |
+| `smoothing` | `FLOAT` | Yes | 0.5 |  | Seconds of movement averaged in the path: 0 = locked to the subject; 0.5 = default; 2 = a slow, steady follow. |
+| `zoom` | `FLOAT` | Yes | 1.0 |  | How much tighter than the largest crop that fits: 1.0 = full height; 1.5 = closer. |
+| `follow` | `COMBO` | Yes | largest | `largest`, `everything` | What of the mask the window follows: 'largest' = its biggest region, held from frame to frame, for one subject among several; 'everything' = the centre of all of it. |
+| `mask` | `MASK` | No |  |  | The subject per frame, white on the subject, such as from SAM 3, or one mask for the whole clip. A frame where it is empty keeps the last position. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip, whose cuts reset the path. Left empty, cuts are found here. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The reframed clip at the crop's size, with the source's frame rate and audio. |
+| `preview` | `VIDEO` | The source at its own size with the window outlined and the rest dimmed, for showing where the frame travels. |
+
+</details>
+
+<a id="node-wasvideoretime"></a>
+<details>
+<summary><b>Video Retime</b></summary>
+
+Slow a clip down or speed it up, at one speed or along a speed curve, at the clip's own frame rate. New frames between the ones it has are drawn by EMA-VFI, mixed, or held, and never across a cut. The audio follows with its pitch kept. Follow with Video Motion Blur for the streaks a sped-up shot has.
+
+| | |
+|---|---|
+| Node id | `WASVideoRetime` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to retime, at least two frames. |
+| `speed` | `FLOAT` | Yes | 0.5 |  | 0.5 = half speed, twice as long; 1 = unchanged; 2 = double speed, half as long. |
+| `new_frames` | `COMBO` | Yes | interpolate | `interpolate`, `blend`, `hold` | How a frame between two is made: 'interpolate' draws it with EMA-VFI, which needs ema_vfi_model; 'blend' mixes the two; 'hold' repeats the nearer one. |
+| `audio` | `COMBO` | Yes | keep pitch | `keep pitch`, `drop` | 'keep pitch' stretches the audio along the new timing at its own pitch; 'drop' leaves it out. |
+| `ema_vfi_model` | `EMA_VFI_MODEL` | No |  |  | The interpolation network from EMA-VFI Video Model Loader, for 'interpolate'. Any speed but 0.5 needs an 'ours_t' checkpoint. |
+| `speed_curve` | `ARRAY` | No |  |  | Speed across the source clip for a ramp, such as the values of Curve to Numbers: [1, 0.25, 1] slows to a quarter mid-clip. Stretched over the clip; replaces speed. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip, whose cuts are kept. Left empty, cuts are found here. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The retimed clip at the source's frame rate and size. |
+| `frames` | `INT` | How many frames the retimed clip holds. |
+
+</details>
+
+<a id="node-wasvideoseamlessloop"></a>
+<details>
+<summary><b>Video Seamless Loop</b></summary>
+
+Find the stretch of a clip whose end runs back into its start most closely, picture and movement both, and blend the join along the motion so it plays as a loop. The report says how close the two ends were: a clip whose ends never come near each other loops with a visible join.
+
+| | |
+|---|---|
+| Node id | `WASVideoSeamlessLoop` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to loop. |
+| `min_seconds` | `FLOAT` | Yes | 2.0 |  | Shortest loop in seconds: 1 = a quick cycle; 2 = default; 5 = a long take. |
+| `max_seconds` | `FLOAT` | Yes | 0.0 |  | Longest loop in seconds: 0 = up to the whole clip; 4 = keeps it under four seconds. |
+| `blend_frames` | `INT` | Yes | 8 |  | Frames blended across the join: 0 = cut straight back; 8 = default; 24 = a long, soft return. |
+| `max_difference` | `FLOAT` | Yes | 0.0 |  | Most the two ends may differ, in levels of 255: 0 = take the closest match; 3 = clean; 6 = slight. Above 0, the longest loop within it is taken, and the run stops if none is. |
+| `blend_mode` | `COMBO` | Yes | auto | `auto`, `motion`, `crossfade` | 'auto' = 'motion' for ends under 8 levels apart, 'crossfade' above; 'motion' carries the frames into each other along their movement where it can be followed; 'crossfade' dissolves, ghosting rather than tearing. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The loop, its join blended, with its audio. |
+| `start` | `INT` | The source frame the loop starts on, counting from 0. |
+| `length` | `INT` | Frames in the loop. |
+| `join_difference` | `FLOAT` | Mean difference between the two ends before blending, in levels of 255: under 3 is clean, over 8 shows. |
+| `report` | `STRING` | The loop and how clean its join is, in words. |
+
+</details>
+
+<a id="node-wasvideosplitscenes"></a>
+<details>
+<summary><b>Video Split Scenes</b></summary>
+
+Find every cut in a clip, where one shot ends and the next begins, and answer each scene as a clip of its own with its stretch of the audio: one per output, all of them as a list, and where each starts. The panel shows the first frame of every scene.
+
+| | |
+|---|---|
+| Node id | `WASVideoSplitScenes` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to split, at least two frames. |
+| `cut_threshold` | `FLOAT` | Yes | 0.4 |  | Share of the picture that must still follow from the frame before for the shot to continue: 0.4 = default; 0.6 = finds softer cuts, and can split fast action; 0.2 = only hard cuts. |
+| `min_scene_frames` | `INT` | Yes | 6 |  | Fewest frames a scene holds: 6 = default; 1 = every cut, flashes included; 24 = one second at 24 fps. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `scene_count` | `INT` | How many scenes were found, 1 or more. |
+| `starts` | `INT` | The first frame of every scene, counting from 0: [0, 48, 96]. |
+| `scenes` | `VIDEO` | Every scene as a list, so the node after runs once per scene. |
+| `scene_1` | `VIDEO` | Scene 1, with its audio; blocked when the clip has fewer scenes. |
+| `scene_2` | `VIDEO` | Scene 2, with its audio; blocked when the clip has fewer scenes. |
+| `scene_3` | `VIDEO` | Scene 3, with its audio; blocked when the clip has fewer scenes. |
+| `scene_4` | `VIDEO` | Scene 4, with its audio; blocked when the clip has fewer scenes. |
+| `scene_5` | `VIDEO` | Scene 5, with its audio; blocked when the clip has fewer scenes. |
+| `scene_6` | `VIDEO` | Scene 6, with its audio; blocked when the clip has fewer scenes. |
+| `scene_7` | `VIDEO` | Scene 7, with its audio; blocked when the clip has fewer scenes. |
+| `scene_8` | `VIDEO` | Scene 8, with its audio; blocked when the clip has fewer scenes. |
+| `scene_9` | `VIDEO` | Scene 9, with its audio; blocked when the clip has fewer scenes. |
+| `scene_10` | `VIDEO` | Scene 10, with its audio; blocked when the clip has fewer scenes. |
+| `scene_11` | `VIDEO` | Scene 11, with its audio; blocked when the clip has fewer scenes. |
+| `scene_12` | `VIDEO` | Scene 12, with its audio; blocked when the clip has fewer scenes. |
+| `scene_13` | `VIDEO` | Scene 13, with its audio; blocked when the clip has fewer scenes. |
+| `scene_14` | `VIDEO` | Scene 14, with its audio; blocked when the clip has fewer scenes. |
+| `scene_15` | `VIDEO` | Scene 15, with its audio; blocked when the clip has fewer scenes. |
+| `scene_16` | `VIDEO` | Scene 16, with its audio; blocked when the clip has fewer scenes. |
+| `scene_17` | `VIDEO` | Scene 17, with its audio; blocked when the clip has fewer scenes. |
+| `scene_18` | `VIDEO` | Scene 18, with its audio; blocked when the clip has fewer scenes. |
+| `scene_19` | `VIDEO` | Scene 19, with its audio; blocked when the clip has fewer scenes. |
+| `scene_20` | `VIDEO` | Scene 20, with its audio; blocked when the clip has fewer scenes. |
+| `scene_21` | `VIDEO` | Scene 21, with its audio; blocked when the clip has fewer scenes. |
+| `scene_22` | `VIDEO` | Scene 22, with its audio; blocked when the clip has fewer scenes. |
+| `scene_23` | `VIDEO` | Scene 23, with its audio; blocked when the clip has fewer scenes. |
+| `scene_24` | `VIDEO` | Scene 24, with its audio; blocked when the clip has fewer scenes. |
+
+</details>
+
+<a id="node-wasvideostabilize"></a>
+<details>
+<summary><b>Video Stabilize</b></summary>
+
+Take the shake out of a clip: the camera's own movement is fitted from the motion between frames and smoothed, or locked as if on a tripod, and every frame is moved to follow the steady path. Each scene is steadied on its own.
+
+| | |
+|---|---|
+| Node id | `WASVideoStabilize` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to steady, at least two frames. |
+| `mode` | `COMBO` | Yes | smooth | `smooth`, `lock` | 'smooth' keeps the camera's intended move and removes the shake; 'lock' holds the first frame's framing for the whole scene. |
+| `smoothing` | `FLOAT` | Yes | 1.0 |  | Seconds of camera movement averaged in 'smooth': 0.25 = removes jitter only; 1.0 = default; 3.0 = a slow, floating move. |
+| `motion_model` | `COMBO` | Yes | similarity | `translation`, `similarity` | 'similarity' steadies sliding, rolling and zooming; 'translation' only sliding, for a clip whose rotation is meant. |
+| `borders` | `COMBO` | Yes | zoom | `zoom`, `edge`, `mirror`, `black` | What fills the edge a moved frame leaves bare: 'zoom' enlarges until none shows, up to max_zoom; 'edge' stretches the last pixels; 'mirror' reflects; 'black' leaves it black. |
+| `max_zoom` | `FLOAT` | Yes | 1.25 |  | Most enlargement 'zoom' may use: 1.0 = none; 1.25 = default; 1.5 = heavy shake. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from this same clip. Left empty, it is measured here at 768 px on the long side. |
+| `mask` | `MASK` | No |  |  | Subject mask per frame, white on the subject, such as from SAM 3. The subject is left out when the camera's motion is read, so a large moving subject cannot pull the frame along with it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The steadied clip: same size, length, frame rate and audio. |
+| `zoom` | `FLOAT` | The enlargement applied to hide the edges, 1.0 for none. |
+
+</details>
+
+<a id="node-wasvideotemporalconsistency"></a>
+<details>
+<summary><b>Video Temporal Consistency</b></summary>
+
+Stop an effect applied frame by frame from flickering: a style filter, a grade or an upscaler run on each frame of a clip. What the effect changed is carried along the clip's own motion from the frames around it, so it sticks to the surfaces it was painted on while the clip itself moves as it did.
+
+| | |
+|---|---|
+| Node id | `WASVideoTemporalConsistency` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `source` | `IMAGE,VIDEO` | Yes |  |  | The clip before the effect, as IMAGE frames or a VIDEO, which the motion is read from. A VIDEO also gives the video output its frame rate and audio. |
+| `processed` | `IMAGE` | Yes |  |  | The same frames after the effect, as many as source and at any size, such as an upscaler's output. |
+| `strength` | `FLOAT` | Yes | 0.8 |  | How much of each frame's effect comes from its neighbours: 0 = processed as it is; 0.8 = default; 1.0 = holds the effect until a surface changes. |
+| `motion` | `WAS_MOTION` | No |  |  | Motion from Video Motion, measured from source. Left empty, it is measured here at 768 px on the long side. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The processed frames, held steady: same size and count as processed. |
+| `video` | `VIDEO` | The same frames as a clip, at source's frame rate and with its audio when source is a VIDEO, otherwise at 24 fps with none. |
 
 </details>
 
@@ -544,7 +950,7 @@ Read the text files inside a zip archive. Every file comes out twice: as one LIS
 <details>
 <summary><b>Open ZIP</b></summary>
 
-Open a zip archive and report what is in it: a line per file with its kind and size, on the node and on the listing output. Nothing is unpacked, so a large archive costs what a small one costs. The zip output feeds ZIP Add, ZIP Manage, Zip Extract and the Load ... from ZIP nodes. The file menu reaches three folders deep and picks up a dropped file within about five seconds. The temp folder is emptied on restart, so a '[temp]' entry will not be there next session. Unsafe entries are named and skipped, the rest still read: one landing outside its folder, a symbolic link, a name holding a null byte, or one claiming to unpack past a quarter of a gigabyte. A file that is not a zip, or is damaged, stops the run saying which.
+Open a zip archive and report what is in it: a line per file with its kind and size, on the node and on the listing output. Nothing is unpacked, so a large archive costs what a small one costs. The zip output feeds ZIP Add, ZIP Manage, Zip Extract and the Load ... from ZIP nodes. The file menu reaches every subfolder and picks up a dropped file within about five seconds. The temp folder is emptied on restart, so a '[temp]' entry will not be there next session. Unsafe entries are named and skipped, the rest still read: one landing outside its folder, a symbolic link, a name holding a null byte, or one claiming to unpack past a quarter of a gigabyte. A file that is not a zip, or is damaged, stops the run saying which.
 
 | | |
 |---|---|
@@ -931,7 +1337,7 @@ Turn a document into plain text, keeping the shape a reader needs: a blank line 
 <details>
 <summary><b>Load Document</b></summary>
 
-Open one document from disk and put it on a DOC wire, with its markup, its metadata and every file embedded in it. The file menu lists every document in ComfyUI's input, output and temp folders, three folders deep, and any folder added under paths.allow_read. A .wasdoc is the container Save DOC writes and arrives exactly as the file holds it. A .docx and an .odt open too, converted rather than copied: the writing, tables, links and pictures come across, page geometry, headers, footnotes, comments and tracked changes do not. Those two read through python-docx and odfdo, named in the error when either is missing, and features.document_export can refuse them. A .pdf is never read. The document is read again whenever the file changes.
+Open one document from disk and put it on a DOC wire, with its markup, its metadata and every file embedded in it. The file menu lists every document in ComfyUI's input, output and temp folders and any folder added under paths.allow_read, subfolders included. A .wasdoc is the container Save DOC writes and arrives exactly as the file holds it. A .docx and an .odt open too, converted rather than copied: the writing, tables, links and pictures come across, page geometry, headers, footnotes, comments and tracked changes do not. Those two read through python-docx and odfdo, named in the error when either is missing, and features.document_export can refuse them. A .pdf is never read. The document is read again whenever the file changes.
 
 | | |
 |---|---|
@@ -1365,7 +1771,7 @@ Load a numbered sequence from a folder as one batch, in filename order, with the
 <details>
 <summary><b>Load Text File</b></summary>
 
-Read a text file, dropping comment lines, as text and as a dictionary. Nowhere but the given path is searched, so a bare file name only works if it sits in the folder ComfyUI was started in, and the path has to land inside ComfyUI's input, output or temp folder, the pack's own folder, or a folder listed under paths.allow_read in config.yaml. A file that cannot be read gives empty text rather than failing the prompt.
+Read a text file picked from a menu, dropping comment lines, as text and as a dictionary. The menu lists the text files, subfolders included, in ComfyUI's input, output and temp folders and in every folder under paths.allow_read in config.yaml, each tagged with its folder's name. A folder added there appears after a ComfyUI restart and a page reload. A file that cannot be read gives empty text and a line in the log.
 
 | | |
 |---|---|
@@ -1375,7 +1781,7 @@ Read a text file, dropping comment lines, as text and as a dictionary. Nowhere b
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which file to read. The menu lists every text file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read. It has to be UTF-8. |
+| `file` | `COMBO` | Yes |  |  | The UTF-8 text file to read: 'notes.txt' in input, 'notes.txt [output]', 'notes.txt [temp]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. |
 | `dictionary_name` | `STRING` | Yes | [filename] |  | The key the lines are stored under in the dictionary output. Left as '[filename]' it is the part of the file's name before the first dot, so 'animals.txt' becomes 'animals'; anything else is used as the key verbatim. |
 
 **Outputs**
@@ -1391,7 +1797,7 @@ Read a text file, dropping comment lines, as text and as a dictionary. Nowhere b
 <details>
 <summary><b>Load Text Line</b></summary>
 
-Pick a text file from a menu of ComfyUI's input and output folders and read it: the whole file, the line at an index, or a line drawn from a seed. Every line also comes out as a list. The menu reaches three folders below each, tags entries '[input]' or '[output]' so two files of one name are told apart, and picks up a file dropped in within about five seconds. A file since deleted or renamed gives empty text and says so in the log rather than failing the prompt. To read a file somewhere else entirely, use Load Text File, which takes a typed path. On out_of_range, 'wrap' makes line 5 of a 3-line file line 2, which cycles a file forever from a climbing counter, 'empty' leaves the graph running, and 'error' suits a workflow where running off the end means something is wrong upstream.
+Read a text file picked from a menu: the whole file, the line at an index, or a line drawn from a seed, with every line also given as a list. The menu lists the text files in ComfyUI's input and output folders, subfolders included, and in every folder under paths.allow_read in config.yaml, each tagged with its folder's name. A folder added there appears after a ComfyUI restart and a page reload. A file since deleted or renamed gives empty text and a line in the log.
 
 | | |
 |---|---|
@@ -1401,7 +1807,7 @@ Pick a text file from a menu of ComfyUI's input and output folders and read it: 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which text file to read. The menu lists .txt, .csv, .tsv, .json, .jsonl, .md, .yaml and .yml files in ComfyUI's input and output folders. |
+| `file` | `COMBO` | Yes |  |  | The .txt, .csv, .tsv, .json, .jsonl, .md, .yaml or .yml file to read, tagged with its folder: 'notes.txt [input]', 'notes.txt [output]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. |
 | `mode` | `COMBO` | Yes |  | `file`, `index`, `random` | What the 'line' output carries. 'file' gives the whole file, every line joined back together, which is what feeds a prompt written across several lines. 'index' gives the single line at 'index', for stepping through a list with a counter. 'random' gives one line drawn by 'seed'. The 'lines' and 'text' outputs are the same in all three. |
 | `index` | `INT` | Yes | 0 |  | Which line 'index' mode takes, counting from 0, so 0 is the first line. -1 is the last line, -2 the one before it. Read only in 'index' mode. What happens past either end is 'out_of_range'. |
 | `out_of_range` | `COMBO` | Yes |  | `wrap`, `clamp`, `empty`, `error` | What an index past either end does: 'wrap' starts from the other end, 'clamp' sticks at the first or last line, 'empty' gives nothing, 'error' stops the prompt. |
@@ -7274,7 +7680,7 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 
 <a id="node-wasemavfimodelloader"></a>
 <details>
-<summary><b>EMA-VFI Model Loader</b></summary>
+<summary><b>EMA-VFI Video Model Loader</b></summary>
 
 Build an EMA-VFI network for EMA-VFI Frame Interpolation. The network is kept for the life of the process, so one loader can feed several nodes without building it again. The weights are not bundled: with features.network on the checkpoint is fetched on first use, and with it off put one in ComfyUI/models/EMA-VFI and restart so it appears in the list.
 
@@ -7293,6 +7699,31 @@ Build an EMA-VFI network for EMA-VFI Frame Interpolation. The network is kept fo
 | Name | Type | What it is |
 |---|---|---|
 | `ema_vfi_model` | `EMA_VFI_MODEL` | The built network, for the ema_vfi_model input of EMA-VFI Frame Interpolation. |
+
+</details>
+
+<a id="node-wasvideomotionmodelloader"></a>
+<details>
+<summary><b>Video Motion Model Loader</b></summary>
+
+Build a SEA-RAFT or FlowSeek optical flow network for the motion_model input of Video Motion, which then measures the clip's motion with it. Checkpoints are read from ComfyUI/models/optical_flow; with features.network on, a listed checkpoint not yet there is fetched on first use.
+
+| | |
+|---|---|
+| Node id | `WASVideoMotionModelLoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `checkpoint` | `COMBO` | Yes |  |  | Which weights to build: 'sea_raft_m_spring' = default; 'sea_raft_s_spring' = about 1.3x faster; 'sea_raft_m_ct' = general purpose; 'flowseek_t_ct' = reads depth too, about 1.5x slower. Files already on disk are listed first. |
+| `iterations` | `INT` | Yes | 4 |  | Refinement passes per frame pair: 4 = default, the published fast setting; 12 = the published accurate setting, 1.5 to 2x slower. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `motion_model` | `WAS_MOTION_MODEL` | The built network, for the motion_model input of Video Motion. |
 
 </details>
 
@@ -9377,6 +9808,42 @@ Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across
 | `latent_image` | `LATENT` | Yes |  |  | The H3 latent to refine, such as an upscaled clip encoded again. |
 | `denoise` | `FLOAT` | Yes | 0.4 |  | Share of the schedule run, `0.3` to `0.5` to refine, `1.0` from noise. |
 | `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` splits the clip into windows along time under a token budget, and across the frame only where a window will not fit; `manual` sets tile and window sizes. |
+| `audio` | `LATENT` | No |  |  | The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, held as it is beside a video-only latent_image. Left empty, silence is held. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `LATENT` | `LATENT` | The refined latent, video only when latent_image was video only. |
+
+</details>
+
+<a id="node-wash3tiledsamplerwip"></a>
+<details>
+<summary><b>H3 Tiled Sampler [WIP]</b></summary>
+
+Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. The panel shows where the tiles sit and the sigma the run started from.
+
+| | |
+|---|---|
+| Node id | `WASH3TiledSamplerWIP` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+| `seed` | `INT` | Yes | 0 |  | The noise seed, `0` as good as any. |
+| `steps` | `INT` | Yes | 8 |  | Denoising steps over the whole schedule, as `8` for a turbo LoRA or `25` for the base model. |
+| `cfg` | `FLOAT` | Yes | 1.0 |  | Guidance, `1` for turbo LoRAs and distilled models. |
+| `sampler_name` | `COMBO` | Yes |  |  | The solver each step runs, such as `euler` or `res_multistep`. |
+| `scheduler` | `COMBO` | Yes |  |  | How the noise level falls from step to step, such as `simple`. |
+| `positive` | `CONDITIONING` | Yes |  |  | The clip's positive conditioning. |
+| `negative` | `CONDITIONING` | Yes |  |  | The clip's negative conditioning. |
+| `latent_image` | `LATENT` | Yes |  |  | The H3 latent to refine, such as an upscaled clip encoded again. A video-only latent has its audio held; a joined audio and video latent has both refined. |
+| `strength` | `FLOAT` | Yes | 0.45 |  | Noise level the refine starts from, on any scheduler: `0.3` keeps the clip and sharpens it, `0.5` adds detail, `0.8` redraws detail on the clip's own layout, `0.93` redraws nearly all of it, `1.0` from noise. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` keeps the whole clip in one time window and splits the frame into the fewest tiles under the token budget, adding time windows only where no tiling of one window fits or the clip runs past 362 frames; `manual` sets tile and window sizes. |
+| `anchor` | `COMBO` | Yes | auto | `auto`, `on`, `off` | Guides each tile with its own part of latent_image at the first frame of every 17: `auto` when tiles split the frame, `on` always, `off` never. |
 | `audio` | `LATENT` | No |  |  | The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, held as it is beside a video-only latent_image. Left empty, silence is held. |
 
 **Outputs**
@@ -13734,7 +14201,7 @@ A rectangular box, sized in scene units and centred on its own origin. Wire it i
 <details>
 <summary><b>Three Compile</b></summary>
 
-Write the scene out as a zip holding a web page that runs on its own. Unpack it and open index.html: the scene draws, and the camera can be orbited, with no ComfyUI and nothing fetched over the network. Three.js, the scene description and every texture go in the archive, and each texture address is rewritten to point at its copy. A scene using Three Custom Geometry, Custom Material, Custom Object, Custom Update or Script Module carries that JavaScript into the page, so the archive is code as well as data.
+Write the scene out as a zip holding a web page that runs on its own. Unpack it and open index.html: the scene draws, and the camera can be orbited, with no ComfyUI and nothing fetched over the network. Three.js, the scene description and every texture go in the archive, and each texture address is rewritten to point at its copy. A scene using Three Custom Geometry, Custom Material, Custom Object, Custom Update or Script Module carries that JavaScript into the page, so the archive is code as well as data, and is refused unless threejs.allow_scripts is on in config.yaml.
 
 | | |
 |---|---|
@@ -14729,7 +15196,7 @@ Carry an image into any of a material's map sockets. Only the first frame of a b
 <details>
 <summary><b>Three Texture URL</b></summary>
 
-A texture the browser fetches for itself, from a web address or from a data URL already holding the bytes. The fetch happens in the browser, not on the server, so a remote address has to allow cross-origin reads or the texture arrives blank. To use a picture from the graph, reach for Three Texture From Image instead.
+A texture the browser reads for itself, from a data URL already holding the bytes, or from a web address when features.network is on in config.yaml. A remote address has to allow cross-origin reads or the texture arrives blank. To use a picture from the graph, reach for Three Texture From Image instead.
 
 | | |
 |---|---|
@@ -14740,7 +15207,7 @@ A texture the browser fetches for itself, from a web address or from a data URL 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `url` | `STRING` | Yes |  |  | Where to fetch from, as `https://example.com/wood.jpg` or a `data:image/png;base64,` string. |
+| `url` | `STRING` | Yes |  |  | Where to read from, as a `data:image/png;base64,` string, or `https://example.com/wood.jpg` with features.network on. |
 | `color_space` | `COMBO` | Yes | srgb | `srgb`, `linear-srgb`, `none` | 'srgb' for a colour map such as albedo; 'linear-srgb' for normal, roughness, metalness or alpha. |
 | `wrap_s` | `COMBO` | Yes | clamp | `clamp`, `repeat`, `mirrored-repeat` | What happens past the horizontal edge. 'clamp' stretches the edge pixel, 'repeat' tiles. |
 | `wrap_t` | `COMBO` | Yes | clamp | `clamp`, `repeat`, `mirrored-repeat` | What happens past the vertical edge. 'clamp' stretches the edge pixel, 'repeat' tiles. |

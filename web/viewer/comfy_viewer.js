@@ -892,73 +892,72 @@ function handleViewChange(node, elements, viewName) {
   updateIframeContent(node, elements);
 }
 
+/**
+ * Find the viewer surface whose own frame is a given window.
+ *
+ * @param {MessageEventSource|null} source - The window a message came from.
+ * @returns {{nodeId: string, elements: object}|null} The node id and surface that frame
+ *   belongs to, or null where the window is no viewer's frame.
+ */
+function findSurfaceByFrame(source) {
+  if (!source) return null;
+  for (const [nodeId, elements] of STATE.nodeIdToElements.entries()) {
+    if (elements?.iframe && elements.iframe.contentWindow === source) {
+      return { nodeId, elements };
+    }
+  }
+  return null;
+}
+
 window.addEventListener("message", (event) => {
-  if (event.data?.type === "was-viewer-toggle") {
-    const { idx, checked, nodeId } = event.data;
-    
-    if (!nodeId) {
-      return;
-    }
-    
-    const node = app.graph?.getNodeById(parseInt(nodeId));
-    if (node) {
-      const metaWidget = node.widgets?.find(w => w.name === "viewer_meta");
-      if (metaWidget) {
-        let meta = { lastInputHash: "", excluded: [] };
-        try {
-          meta = JSON.parse(metaWidget.value || "{}");
-          if (!Array.isArray(meta.excluded)) meta.excluded = [];
-        } catch {}
-        if (checked) {
-          meta.excluded = meta.excluded.filter(i => i !== idx);
-        } else {
-          if (!meta.excluded.includes(idx)) meta.excluded.push(idx);
-        }
-        metaWidget.value = JSON.stringify(meta);
-        node.setDirtyCanvas?.(true, true);
+  const messageType = event.data?.type;
+  if (!messageType) return;
+
+  // A message is acted on only for the node whose own frame posted it.
+  const sender = findSurfaceByFrame(event.source);
+  if (!sender) return;
+  const claimedId = event.data.nodeId;
+  if (claimedId != null && claimedId !== "" && String(claimedId) !== sender.nodeId) return;
+
+  const { elements } = sender;
+  const node = app.graph?.getNodeById(parseInt(sender.nodeId));
+  if (!node) return;
+
+  if (messageType === "was-viewer-toggle") {
+    const { idx, checked } = event.data;
+    const metaWidget = node.widgets?.find(w => w.name === "viewer_meta");
+    if (metaWidget) {
+      let meta = { lastInputHash: "", excluded: [] };
+      try {
+        const parsed = JSON.parse(metaWidget.value || "{}");
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) meta = parsed;
+      } catch {}
+      if (!Array.isArray(meta.excluded)) meta.excluded = [];
+      if (checked) {
+        meta.excluded = meta.excluded.filter(i => i !== idx);
+      } else {
+        if (!meta.excluded.includes(idx)) meta.excluded.push(idx);
       }
+      metaWidget.value = JSON.stringify(meta);
+      node.setDirtyCanvas?.(true, true);
     }
-  } else if (event.data?.type === "openreel-ready") {
+  } else if (messageType === "openreel-ready") {
     // The OpenReel app inside the iframe is ready to receive content.
     // Re-send the current content so video gets imported even if the
     // earlier postMessage arrived before the React listener was active.
-    for (const [nId, elements] of STATE.nodeIdToElements.entries()) {
-      if (elements.iframe && elements.iframe.contentWindow === event.source) {
-        const node = app.graph?.getNodeById(parseInt(nId));
-        if (node && elements.contentType) {
-          const content = getNodeContent(node, elements);
-          if (content) {
-            const contentMsg = getViewContentMessage(elements.contentType, content);
-            if (contentMsg) {
-              try {
-                elements.iframe.contentWindow.postMessage(contentMsg, '*');
-              } catch (e) {}
-            }
-          }
+    if (elements.contentType) {
+      const content = getNodeContent(node, elements);
+      if (content) {
+        const contentMsg = getViewContentMessage(elements.contentType, content);
+        if (contentMsg) {
+          try {
+            elements.iframe.contentWindow.postMessage(contentMsg, '*');
+          } catch (e) {}
         }
-        break;
       }
     }
   } else {
-    const messageType = event.data?.type;
-    const nodeId = event.data?.nodeId;
-    
-    if (messageType && !nodeId) {
-      for (const [nId, elements] of STATE.nodeIdToElements.entries()) {
-        if (elements.iframe && elements.iframe.contentWindow === event.source) {
-          const node = app.graph?.getNodeById(parseInt(nId));
-          if (node) {
-            handleViewMessage(messageType, event.data, node, app, event.source);
-          }
-          break;
-        }
-      }
-    } else if (messageType && nodeId) {
-      const node = app.graph?.getNodeById(parseInt(nodeId));
-      if (node) {
-        handleViewMessage(messageType, event.data, node, app, event.source);
-      }
-    }
+    handleViewMessage(messageType, event.data, node, app, event.source);
   }
 });
 

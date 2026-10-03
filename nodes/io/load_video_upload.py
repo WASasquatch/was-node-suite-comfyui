@@ -1,4 +1,4 @@
-"""Load a video from ComfyUI's input folder or from a web address."""
+"""Load a video picked from ComfyUI's input, output or temp folder."""
 
 from __future__ import annotations
 
@@ -254,26 +254,22 @@ class LoadVideoUpload(io.ComfyNode):
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
     ):
-        """The address, or when the chosen file was last written, so an edit is read again."""
-        import folder_paths
-
+        """When the chosen file was last written, so an edit is read again."""
         # An empty name resolves to the input folder itself, which exists, so it is refused
         # before the folder is asked about it.
         chosen = (file or "").strip()
-        if not chosen or not folder_paths.exists_annotated_filepath(chosen):
+        if not chosen or sandbox.annotated_path(chosen) is None:
             return float("NaN")
         return os.path.getmtime(reader.input_path(file))
 
     @classmethod
     def validate_inputs(cls, file):
-        """Whether there is something to read: an address, or a file still in the folder."""
-        import folder_paths
-
+        """Whether the chosen file is still in ComfyUI's input, output or temp folder."""
         if not (file or "").strip():
             return "nothing to load. Pick a video from the list, or upload one"
         if sandbox.names_another_host(file):
             return "a path naming another machine is not read"
-        if not folder_paths.exists_annotated_filepath(file):
+        if sandbox.annotated_path(file) is None:
             return (
                 f"`{file}` is not in ComfyUI's input, output or temp folder. Pick "
                 f"another, or upload it again"

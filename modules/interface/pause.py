@@ -1,8 +1,7 @@
-"""Holding a run still until someone resumes it.
+"""Holding a run still until the browser that queued it resumes it.
 
-``POST /was/interface/api/pause`` carries ``{"node_id", "action", "value"}``, where ``action``
-is ``resume`` or ``cancel`` and ``value`` is whatever the node asked the user to edit.
-``GET /was/interface/api/pause`` answers which nodes are waiting.
+``POST /was/interface/api/pause`` takes ``node_id``, ``action`` (``resume`` or ``cancel``),
+``value`` and the ``client_id`` the run was queued under. ``GET`` lists the waiting nodes.
 """
 
 from __future__ import annotations
@@ -36,8 +35,7 @@ RESUMED = "resumed"
 CANCELLED = "cancelled"
 TIMED_OUT = "timed out"
 
-#: Node id -> what it is waiting for, while it waits. Read on the server's thread and
-#: written on the worker's, so every touch takes the lock beside it.
+#: Node id -> what it is waiting for, while it waits. Guarded by ``_lock``.
 _holds: dict[str, dict] = {}
 _lock = threading.Lock()
 
@@ -62,25 +60,54 @@ def waiting() -> list[dict]:
     ]
 
 
-def _announce(node_id: str, message: str, timeout: float, kind: str = "none") -> None:
-    """Tell the browser a node is waiting."""
+def _queued_client() -> str:
+    """The client id the running prompt was queued under, or ``""`` where it had none."""
+    try:
+        from server import PromptServer
+
+        return str(getattr(PromptServer.instance, "client_id", "") or "")
+    except Exception:
+        return ""
+
+
+def _announce(
+    node_id: str, message: str, timeout: float, kind: str = "none", client: str = ""
+) -> None:
+    """Tell the browser a node is waiting.
+
+    Args:
+        node_id: The node holding the run.
+        message: Text drawn beside the resume control.
+        timeout: Seconds the hold lasts, or 0 for no limit.
+        kind: What is on offer to edit.
+        client: The client id to tell, or ``""`` to tell every open tab.
+    """
     try:
         from server import PromptServer
 
         PromptServer.instance.send_sync(
             "was-pause",
             {"node_id": node_id, "message": message, "timeout": timeout, "kind": kind},
+            client or None,
         )
     except Exception as error:
         logger.debug("a paused node could not be announced (%s)", error)
 
 
-def _released(node_id: str, action: str) -> None:
-    """Tell the browser a node is no longer waiting."""
+def _released(node_id: str, action: str, client: str = "") -> None:
+    """Tell the browser a node is no longer waiting.
+
+    Args:
+        node_id: The node that held the run.
+        action: How the hold ended.
+        client: The client id to tell, or ``""`` to tell every open tab.
+    """
     try:
         from server import PromptServer
 
-        PromptServer.instance.send_sync("was-pause-done", {"node_id": node_id, "action": action})
+        PromptServer.instance.send_sync(
+            "was-pause-done", {"node_id": node_id, "action": action}, client or None
+        )
     except Exception as error:
         logger.debug("a resumed node could not be announced (%s)", error)
 
@@ -104,21 +131,33 @@ def wait_for_resume(
     Raises:
         InterruptProcessingException: The run was cancelled, from the browser or from
             ComfyUI's own cancel.
+        ValueError: The run was queued without a client id and ``timeout`` is 0.
     """
     import comfy.model_management
 
     key = str(node_id)
+    client = _queued_client()
+    if not client:
+        if not timeout:
+            raise ValueError(
+                f"Node {key} would hold this run with no time limit, but the run was queued "
+                f"without a client id, so no browser tab can resume it. Queue it from the "
+                f"ComfyUI page, send the prompt with the client_id of an open tab, or give "
+                f"the hold a timeout."
+            )
+        logger.warning(
+            "%s is holding a run queued without a client id, so no browser tab can resume "
+            "it; it carries on after %gs", key, timeout,
+        )
     with _lock:
         _holds[key] = {"started": time.monotonic(), "message": message,
                        "kind": kind, "content": content, "timeout": timeout,
-                       "action": None, "value": ""}
-    _announce(key, message, timeout, kind)
+                       "client": client, "action": None, "value": ""}
+    _announce(key, message, timeout, kind, client)
     told = False
     try:
         while True:
-            # This clears ComfyUI's interrupt flag as it raises, which is what stops the flag
-            # carrying into the next node. Testing the flag and raising by hand would leave it
-            # set and cancel whatever ran next.
+            # Raises on a cancelled run and clears ComfyUI's interrupt flag as it does.
             comfy.model_management.throw_exception_if_processing_interrupted()
             with _lock:
                 hold = dict(_holds.get(key) or {}) or None
@@ -126,16 +165,16 @@ def wait_for_resume(
                 return RESUMED, ""
             action = hold.get("action")
             if action == CANCELLED:
-                _released(key, CANCELLED)
+                _released(key, CANCELLED, client)
                 told = True
                 raise comfy.model_management.InterruptProcessingException()
             if action == RESUMED:
-                _released(key, RESUMED)
+                _released(key, RESUMED, client)
                 told = True
                 return RESUMED, hold.get("value") or ""
             if timeout and (time.monotonic() - hold["started"]) >= timeout:
                 logger.info("%s waited %.0fs and carried on", key, timeout)
-                _released(key, TIMED_OUT)
+                _released(key, TIMED_OUT, client)
                 told = True
                 return TIMED_OUT, ""
             time.sleep(TICK)
@@ -145,27 +184,45 @@ def wait_for_resume(
     finally:
         with _lock:
             _holds.pop(key, None)
-        # Whatever ended the hold, the browser hears about it once. A panel left holding its
-        # controls is the one failure the person watching cannot tell from a working one.
+        # Tells the browser the hold ended, where nothing above already has.
         if not told:
-            _released(key, CANCELLED)
+            _released(key, CANCELLED, client)
 
 
-def release(node_id: str, action: str, value: str = "") -> bool:
+def release(node_id: str, action: str, value: str = "", client: str = "") -> bool:
     """Let a held node carry on.
 
     Args:
         node_id: The node to release.
         action: ``"resumed"`` or ``"cancelled"``.
         value: What the user edited, for a node that asked for one.
+        client: The ComfyUI client id of the browser asking.
 
     Returns:
         True when a node was waiting under that id.
+
+    Raises:
+        PermissionError: ``client`` is not the client id the held run was queued under.
     """
+    asking = str(client or "").strip()
     with _lock:
         hold = _holds.get(str(node_id))
         if hold is None:
             return False
+        owner = hold.get("client") or ""
+        if not owner:
+            raise PermissionError(
+                f"Node {node_id} is holding a run that was queued without a client id, so no "
+                f"browser tab can resume it. It carries on when its timeout runs out, or "
+                f"stops with ComfyUI's own Cancel."
+            )
+        if asking != owner:
+            sender = "carried no client_id" if not asking else "came from another tab"
+            raise PermissionError(
+                f"Node {node_id} is holding a run queued from one ComfyUI tab, and this "
+                f"request {sender}. Resume or cancel it from the tab that queued it, or "
+                f"with ComfyUI's own Cancel."
+            )
         hold["value"] = value
         hold["action"] = action
     return True
@@ -196,10 +253,21 @@ def register_routes() -> bool:
             try:
                 body = await request.json()
             except Exception:
+                body = None
+            if not isinstance(body, dict):
                 return web.json_response({"released": False, "error": "unreadable body"},
                                          status=400, headers=NO_STORE)
             action = CANCELLED if body.get("action") == "cancel" else RESUMED
-            released = release(body.get("node_id", ""), action, str(body.get("value") or ""))
+            client = str(body.get("client_id") or request.query.get("client_id") or "")
+            try:
+                released = release(
+                    body.get("node_id", ""), action, str(body.get("value") or ""), client
+                )
+            except PermissionError as error:
+                return web.json_response(
+                    {"released": False, "action": action, "error": str(error)},
+                    status=403, headers=NO_STORE,
+                )
             return web.json_response({"released": released, "action": action},
                                      headers=NO_STORE)
 

@@ -11,6 +11,9 @@ __all__ = [
     "DEPTHS",
     "EXTENSIONS",
     "FORMATS",
+    "MAX_CHANNELS",
+    "MAX_PIXELS",
+    "MAX_RATIO",
     "MAX_SAMPLES",
     "MAX_SIDE",
     "PACKINGS",
@@ -46,10 +49,18 @@ EXTENSIONS = {"psd": "psd", "tiff": "tif"}
 #: Longest side a PSD may name.
 MAX_SIDE = 30000
 
-#: How many float samples one document's layers may unpack to in total. A layer pads a
-#: short channel out to its whole box, so a small file can name a very large plane, and a
-#: document names as many layers as it likes.
+#: Most pixels the canvas may cover, whatever the length of its sides.
+MAX_PIXELS = 1 << 28
+
+#: Most float samples, four bytes each, one document's layers may unpack to in total. A
+#: layer pixel holds four: three colour and one coverage.
 MAX_SAMPLES = 1 << 28
+
+#: Most channels a document may name, the range the format allows.
+MAX_CHANNELS = 56
+
+#: Bytes of picture one byte of file may describe.
+MAX_RATIO = 2048
 
 #: The compositor's blend mode names against the four letter keys a document stores.
 BLEND_KEYS = {
@@ -91,6 +102,15 @@ _FLAG_HIDDEN = 2
 
 #: The channel identifier a layer's coverage carries.
 _ALPHA = -1
+
+#: Channel identifiers a layer is drawn from: coverage, red, green and blue.
+_DRAWN = frozenset((_ALPHA, 0, 1, 2))
+
+#: What a channel or a section shorter than its header names is refused with.
+_TRUNCATED = (
+    "this document holds less data than its header names, so it is truncated or damaged. "
+    "Save it again from the editor"
+)
 
 #: What the image source data tag of a layered TIFF opens with.
 _TIFF_PREAMBLE = b"Adobe Photoshop Document Data Block\0"
@@ -194,6 +214,8 @@ def _unpackbits(data: bytes, wanted: int) -> bytes:
             out += data[at : at + header + 1]
             at += header + 1
         elif header > 128:
+            if at >= len(data):
+                break
             out += bytes((data[at],)) * (257 - header)
             at += 1
     return bytes(out)
@@ -212,12 +234,14 @@ def _samples(values, bits: int) -> "np.ndarray":
 def _floats(raw: bytes, bits: int, height: int, width: int) -> "torch.Tensor":
     """Stored samples back as a ``(height, width)`` float plane on a 0 to 1 scale."""
     if bits == 8:
-        held = np.frombuffer(raw, dtype=">u1").astype(np.float32) / 255.0
+        held = np.frombuffer(raw, dtype=">u1").astype(np.float32)
+        held /= 255.0
     elif bits == 16:
-        held = np.frombuffer(raw, dtype=">u2").astype(np.float32) / 65535.0
+        held = np.frombuffer(raw, dtype=">u2").astype(np.float32)
+        held /= 65535.0
     else:
         held = np.frombuffer(raw, dtype=">f4").astype(np.float32)
-    return torch.from_numpy(held.reshape(height, width).copy())
+    return torch.from_numpy(held.reshape(height, width))
 
 
 def _rle_fits(width: int, bits: int) -> bool:
@@ -504,38 +528,64 @@ def _named(extra: bytes) -> str:
 
 
 def _unpacked(blob: bytes, bits: int, height: int, width: int) -> "torch.Tensor":
-    """One stored channel back as a ``(height, width)`` float plane."""
+    """One stored channel back as a ``(height, width)`` float plane.
+
+    Raises:
+        ValueError: The channel holds fewer samples than its box, or names more than
+            :data:`MAX_RATIO` bytes of picture for each byte it carries.
+    """
     if height < 1 or width < 1:
         return torch.zeros((max(height, 0), max(width, 0)), dtype=torch.float32)
+    stride = width * (bits // 8)
+    size = height * stride
+    if len(blob) < 2:
+        raise ValueError(_TRUNCATED)
+    if size // MAX_RATIO > len(blob):
+        raise ValueError(
+            f"a layer names a {width}x{height} plane of {size} bytes and carries "
+            f"{len(blob)} bytes to unpack it from, so its header does not describe the "
+            f"file. Save it again from the editor"
+        )
     packing = struct.unpack_from(">H", blob, 0)[0]
     body = blob[2:]
-    stride = width * (bits // 8)
 
     if packing == _RLE:
+        if len(body) < 2 * height:
+            raise ValueError(_TRUNCATED)
         counts = struct.unpack_from(f">{height}H", body, 0)
         at = 2 * height
         rows = []
         for length in counts:
-            rows.append(_unpackbits(body[at : at + length], stride))
+            row = _unpackbits(body[at : at + length], stride)
+            if len(row) < stride:
+                raise ValueError(_TRUNCATED)
+            rows.append(row[:stride])
             at += length
-        raw = b"".join(row.ljust(stride, b"\0")[:stride] for row in rows)
+        raw = b"".join(rows)
     elif packing in (_ZIP, _ZIP_PREDICTED):
-        raw = zlib.decompressobj().decompress(body, height * stride)
+        try:
+            raw = zlib.decompressobj().decompress(body, size)
+        except zlib.error as error:
+            raise ValueError(_TRUNCATED) from error
+        if len(raw) < size:
+            raise ValueError(_TRUNCATED)
         if packing == _ZIP_PREDICTED:
             raw = _unpredicted(raw, bits, height, width)
     else:
-        raw = body
-    return _floats(raw.ljust(height * stride, b"\0")[: height * stride], bits, height, width)
+        raw = body[:size]
+        if len(raw) < size:
+            raise ValueError(_TRUNCATED)
+    return _floats(raw, bits, height, width)
 
 
 def _unpredicted(raw: bytes, bits: int, height: int, width: int) -> bytes:
     """A zipped channel with the difference the packer took out put back in."""
     if bits == 8:
         held = np.frombuffer(raw, dtype=np.uint8).reshape(height, width)
-        return np.cumsum(held, axis=1, dtype=np.uint64).astype(">u1").tobytes()
+        return np.cumsum(held, axis=1, dtype=np.uint8).tobytes()
     if bits == 16:
         held = np.frombuffer(raw, dtype=">u2").reshape(height, width)
-        return np.cumsum(held, axis=1, dtype=np.uint64).astype(">u2").tobytes()
+        return np.cumsum(held, axis=1, dtype=np.uint16).astype(">u2").tobytes()
     raise ValueError(
         "this document stores its 32 bit channels with a predictor, which is not read "
         "here. Re-save it from the editor without prediction, or at 16 bit"
@@ -577,7 +627,6 @@ def _plates(info: bytes, bits: int) -> list[Plate]:
             }
         )
 
-    found = []
     spent = 0
     for head in heads:
         left, top, right, bottom = head["box"]
@@ -587,24 +636,35 @@ def _plates(info: bytes, bits: int) -> list[Plate]:
                 f"a layer of {width}x{height} is larger than the {MAX_SIDE} pixel limit of "
                 f"this reader, so the file was not read"
             )
+        head["drawn"] = bool(width and height) and any(
+            ident == 0 for ident, _l in head["channels"]
+        )
+        if head["drawn"]:
+            spent += 4 * width * height
+    if spent > MAX_SAMPLES:
+        raise ValueError(
+            f"the layers unpack to {spent} float samples, more than the {MAX_SAMPLES} this "
+            f"reader holds, so the file was not read"
+        )
+
+    found = []
+    for head in heads:
+        left, top, right, bottom = head["box"]
+        width, height = max(0, right - left), max(0, bottom - top)
+        drawn = head["drawn"]
         planes = {}
         for ident, length in head["channels"]:
-            blob = info[at : at + length]
+            if at + length > len(info):
+                raise ValueError(_TRUNCATED)
+            if drawn and ident in _DRAWN:
+                planes[ident] = _unpacked(info[at : at + length], bits, height, width)
             at += length
-            if width and height and ident >= _ALPHA:
-                spent += width * height
-                if spent > MAX_SAMPLES:
-                    raise ValueError(
-                        f"the layers unpack to more than {MAX_SAMPLES} samples, which is "
-                        f"more than this reader holds, so the file was not read"
-                    )
-                planes[ident] = _unpacked(blob, bits, height, width)
-        if not width or not height or 0 not in planes:
+        if not drawn:
             continue
 
         colour = torch.stack([planes.get(index, planes[0]) for index in (0, 1, 2)], dim=-1)
         if bits != 32:
-            colour = colour.clamp(0.0, 1.0)
+            colour.clamp_(0.0, 1.0)
         alpha = planes.get(_ALPHA)
         if alpha is None:
             alpha = torch.ones((height, width), dtype=torch.float32)
@@ -614,7 +674,7 @@ def _plates(info: bytes, bits: int) -> list[Plate]:
                 x=int(left),
                 y=int(top),
                 image=colour,
-                alpha=alpha.clamp(0.0, 1.0),
+                alpha=alpha.clamp_(0.0, 1.0),
                 opacity=head["opacity"],
                 blend_mode=head["blend_mode"],
                 visible=head["visible"],
@@ -653,16 +713,29 @@ def _read_psd(data: bytes) -> tuple[tuple[int, int], list[Plate], "torch.Tensor 
         )
     if bits not in _LAYER_KEYS:
         raise ValueError(f"this document is {bits} bits per channel, which is not read here")
+    if width < 1 or height < 1:
+        raise ValueError(f"this document is {width}x{height}, which holds no pixels")
     if max(width, height) > MAX_SIDE:
         raise ValueError(
             f"this document is {width}x{height}, longer than the {MAX_SIDE} pixel limit of "
             f"this reader, so the file was not read"
         )
-    if width * height > MAX_SAMPLES:
+    if width * height > MAX_PIXELS:
         raise ValueError(
-            f"this document is {width}x{height}, which is {width * height} samples per "
-            f"channel and more than the {MAX_SAMPLES} this reader unpacks, so the file "
-            f"was not read"
+            f"this document is {width}x{height}, which is {width * height} pixels and "
+            f"more than the {MAX_PIXELS} this reader unpacks, so the file was not read"
+        )
+    if channels > MAX_CHANNELS:
+        raise ValueError(
+            f"this document names {channels} channels, more than the {MAX_CHANNELS} the "
+            f"format allows, so the file was not read"
+        )
+    described = width * height * channels * (bits // 8)
+    if described // MAX_RATIO > len(data):
+        raise ValueError(
+            f"this document names {described} bytes of flattened picture and the file "
+            f"holds {len(data)}, so its header does not describe the file. Save it again "
+            f"from the editor"
         )
 
     at = 26
@@ -671,9 +744,13 @@ def _read_psd(data: bytes) -> tuple[tuple[int, int], list[Plate], "torch.Tensor 
 
     section = struct.unpack_from(">I", data, at)[0]
     stop = at + 4 + section
+    if stop > len(data):
+        raise ValueError(_TRUNCATED)
     at += 4
-    info_length = struct.unpack_from(">I", data, at)[0]
+    info_length = struct.unpack_from(">I", data, at)[0] if at + 4 <= stop else 0
     at += 4
+    if info_length and at + info_length > stop:
+        raise ValueError(_TRUNCATED)
 
     if info_length:
         plates = _plates(data[at : at + info_length], bits)
@@ -689,45 +766,62 @@ def _read_psd(data: bytes) -> tuple[tuple[int, int], list[Plate], "torch.Tensor 
             plates = _plates(block, bits)
 
     merged = _merged_picture(data, stop, channels, height, width, bits)
+    if merged is None and not plates:
+        raise ValueError(
+            "this document holds no layer and no flattened picture this reader unpacks, so "
+            "it is truncated or stored in a way not read here. Save it again from the "
+            "editor as an RGB PSD"
+        )
     return (width, height), plates, merged
 
 
 def _merged_picture(data, at, channels, height, width, bits):
-    """A document's flattened picture as ``(height, width, 3)``, or None where unreadable."""
-    try:
-        packing = struct.unpack_from(">H", data, at)[0]
-        body = data[at + 2 :]
-        stride = width * (bits // 8)
-        planes = []
-        if packing == _RLE:
-            counts = struct.unpack_from(f">{channels * height}H", body, 0)
-            cursor = 2 * channels * height
-            for index in range(min(3, channels)):
-                rows = []
-                for row in range(height):
-                    length = counts[index * height + row]
-                    rows.append(_unpackbits(body[cursor : cursor + length], stride))
-                    cursor += length
-                planes.append(
-                    _floats(b"".join(rows).ljust(height * stride, b"\0")[: height * stride],
-                            bits, height, width)
-                )
-                if index == 2:
-                    break
-        elif packing == _RAW:
-            for index in range(min(3, channels)):
-                start = index * height * stride
-                planes.append(_floats(body[start : start + height * stride], bits, height, width))
-        else:
-            return None
-        if len(planes) < 3:
-            planes = [planes[0]] * 3 if planes else None
-        if not planes:
-            return None
-        found = torch.stack(planes, dim=-1)
-        return found if bits == 32 else found.clamp(0.0, 1.0)
-    except (struct.error, ValueError, IndexError):
+    """A document's flattened picture as ``(height, width, 3)``.
+
+    Returns:
+        The picture, or None where it is packed in a way not read here or holds fewer
+        samples than the canvas.
+    """
+    drawn = 3 if channels >= 3 else min(channels, 1)
+    if not drawn or at + 2 > len(data):
         return None
+    packing = struct.unpack_from(">H", data, at)[0]
+    body = memoryview(data)[at + 2 :]
+    stride = width * (bits // 8)
+    size = height * stride
+    planes = []
+    if packing == _RLE:
+        table = 2 * channels * height
+        if len(body) < table:
+            return None
+        counts = struct.unpack_from(f">{drawn * height}H", body, 0)
+        held = sum(counts)
+        # A packed byte pair expands to at most 128 bytes.
+        if len(body) < table + held or held * 64 < drawn * size:
+            return None
+        cursor = table
+        for index in range(drawn):
+            rows = []
+            for row in range(height):
+                length = counts[index * height + row]
+                unpacked = _unpackbits(body[cursor : cursor + length], stride)
+                if len(unpacked) < stride:
+                    return None
+                rows.append(unpacked[:stride])
+                cursor += length
+            planes.append(b"".join(rows))
+    elif packing == _RAW:
+        if len(body) < drawn * size:
+            return None
+        planes = [body[index * size : (index + 1) * size] for index in range(drawn)]
+    if not planes:
+        return None
+    found = torch.empty((height, width, 3), dtype=torch.float32)
+    for index, raw in enumerate(planes):
+        found[..., index] = _floats(raw, bits, height, width)
+    if drawn < 3:
+        found[..., 1:] = found[..., :1]
+    return found if bits == 32 else found.clamp_(0.0, 1.0)
 
 
 def _read_tiff(data: bytes) -> tuple[tuple[int, int], list[Plate], "torch.Tensor | None"]:
@@ -783,15 +877,21 @@ def read(path) -> tuple[tuple[int, int], list[Plate], "torch.Tensor | None"]:
         the file stored, or None where it holds none this reads.
 
     Raises:
-        ValueError: The file is neither a PSD nor a TIFF, or it is stored in a way this
-            does not read.
+        ValueError: The file is neither a PSD nor a TIFF, is stored in a way this does not
+            read, or is truncated or damaged.
         OSError: The file could not be read.
     """
     data = Path(path).read_bytes()
-    if data[:4] == b"8BPS":
-        return _read_psd(data)
-    if data[:2] in (b"II", b"MM"):
-        return _read_tiff(data)
+    try:
+        if data[:4] == b"8BPS":
+            return _read_psd(data)
+        if data[:2] in (b"II", b"MM"):
+            return _read_tiff(data)
+    except struct.error as error:
+        raise ValueError(
+            f"{Path(path).name} ends inside a header it names, so the file is truncated or "
+            f"damaged. Save it again from the editor"
+        ) from error
     raise ValueError(
         f"{Path(path).name} is neither a Photoshop document nor a TIFF: it begins with "
         f"{data[:4]!r} rather than 8BPS, II or MM"

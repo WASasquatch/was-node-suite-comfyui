@@ -3,14 +3,35 @@
 from __future__ import annotations
 
 import math
+from urllib.parse import urlsplit
 
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_TEXTURE
+from ...modules.interface import three_asset
+from ...modules.model import NETWORK_FEATURE, network_enabled
 from ...modules.threejs.spec import create_spec
 from ...modules.threejs.textures import COLOR_SPACES, WRAP_MODES
 
 REQUIRES = "threejs"
+
+#: Schemes a web address may use once the network is allowed.
+WEB_SCHEMES = ("http", "https")
+
+
+def held_address(address: str) -> bool:
+    """Whether an address carries its own bytes or names an asset this server holds.
+
+    Args:
+        address: The address typed into the node, already stripped.
+
+    Returns:
+        True for a ``data:`` URL or the pack's asset route, False for anything else.
+    """
+    parts = urlsplit(address)
+    if parts.scheme.lower() == "data":
+        return True
+    return not parts.scheme and not parts.netloc and parts.path == three_asset.ROUTE
 
 
 class ThreeTextureURL(io.ComfyNode):
@@ -30,11 +51,10 @@ class ThreeTextureURL(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A texture the browser fetches for itself, from a web address or from a data "
-                "URL already holding the bytes. The fetch happens in the browser, not on the "
-                "server, so a remote address has to allow cross-origin reads or the texture "
-                "arrives blank. To use a picture from the graph, reach for Three Texture From "
-                "Image instead."
+                "A texture the browser reads for itself, from a data URL already holding the "
+                "bytes, or from a web address when features.network is on in config.yaml. A "
+                "remote address has to allow cross-origin reads or the texture arrives blank. "
+                "To use a picture from the graph, reach for Three Texture From Image instead."
             ),
             inputs=[
                 io.String.Input(
@@ -42,8 +62,8 @@ class ThreeTextureURL(io.ComfyNode):
                     default="",
                     multiline=False,
                     tooltip=(
-                        "Where to fetch from, as `https://example.com/wood.jpg` or a "
-                        "`data:image/png;base64,` string."
+                        "Where to read from, as a `data:image/png;base64,` string, or "
+                        "`https://example.com/wood.jpg` with features.network on."
                     ),
                 ),
                 io.Combo.Input(
@@ -155,14 +175,28 @@ class ThreeTextureURL(io.ComfyNode):
         """Describe the texture.
 
         Raises:
-            ValueError: No address was given.
+            ValueError: No address was given, a web address was given with
+                ``features.network`` off, or the address is not ``http`` or ``https``.
         """
         address = str(url).strip()
         if not address:
             raise ValueError(
-                "Three Texture URL has no address to fetch. Type a URL such as "
-                "https://example.com/wood.jpg, or use Three Texture From Image to take a "
-                "picture from the graph instead."
+                "Three Texture URL has no address to fetch. Paste a data:image/png;base64, "
+                "string, or use Three Texture From Image to take a picture from the graph "
+                "instead."
+            )
+        remote = not held_address(address)
+        if remote and not network_enabled():
+            raise ValueError(
+                f"Three Texture URL will not fetch {address[:80]} while {NETWORK_FEATURE} is "
+                f"off. Turn {NETWORK_FEATURE} on in config.yaml to let the browser fetch web "
+                "addresses, paste a data:image/png;base64, string instead, or use Three "
+                "Texture From Image to take a picture from the graph."
+            )
+        if remote and urlsplit(address).scheme.lower() not in WEB_SCHEMES:
+            raise ValueError(
+                f"Three Texture URL cannot fetch {address[:80]}. Give an http:// or https:// "
+                "address, or a data:image/png;base64, string."
             )
         return io.NodeOutput(
             create_spec(
@@ -170,6 +204,7 @@ class ThreeTextureURL(io.ComfyNode):
                 "TextureURL",
                 params={
                     "url": address,
+                    "network": remote,
                     "colorSpace": color_space,
                     "wrapS": wrap_s,
                     "wrapT": wrap_t,

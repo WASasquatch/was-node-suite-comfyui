@@ -52,6 +52,9 @@ READABLE_BITS = (8, 16, 32)
 #: Bytes of picture one byte of file may describe.
 MAX_RATIO = 2048
 
+#: Bytes the fields of one directory may hold together, as a multiple of the file's size.
+MAX_FIELD_SHARE = 2
+
 #: TIFF field types, by the code written into an entry.
 BYTE = 1
 ASCII = 2
@@ -210,7 +213,8 @@ def directory(data: bytes) -> tuple[str, dict]:
         its tag and holds ``(kind, count, raw bytes)``.
 
     Raises:
-        ValueError: The bytes carry no TIFF header.
+        ValueError: The bytes carry no TIFF header, the directory runs past the end of the
+            file, or its fields hold more than :data:`MAX_FIELD_SHARE` times the file.
     """
     if len(data) < 8 or data[:2] not in (b"II", b"MM"):
         raise ValueError("this is not a TIFF: the file does not begin with II or MM")
@@ -218,61 +222,86 @@ def directory(data: bytes) -> tuple[str, dict]:
     version, first = struct.unpack_from(f"{order}HI", data, 2)
     if version != 42:
         raise ValueError(f"this is not a TIFF: its version marker is {version}, not 42")
+    if first + 2 > len(data):
+        raise ValueError(
+            f"this TIFF places its directory at byte {first} and the file holds "
+            f"{len(data)}, so it is truncated or damaged"
+        )
 
-    found = {}
     total = struct.unpack_from(f"{order}H", data, first)[0]
+    if first + 2 + 12 * total > len(data):
+        raise ValueError(
+            f"this TIFF names {total} fields and the file ends before the last of them, so "
+            f"it is truncated or damaged"
+        )
+    found = {}
+    held, ceiling = 0, MAX_FIELD_SHARE * len(data)
     for index in range(total):
         at = first + 2 + index * 12
         tag, kind, size = struct.unpack_from(f"{order}HHI", data, at)
         length = WIDTHS.get(kind, 1) * size
         start = struct.unpack_from(f"{order}I", data, at + 8)[0] if length > 4 else at + 8
+        held += max(0, min(start + length, len(data)) - start)
+        if held > ceiling:
+            raise ValueError(
+                f"the fields of this TIFF hold more than {ceiling} bytes, over "
+                f"{MAX_FIELD_SHARE} times the {len(data)} bytes of the file, so the file was "
+                f"not read"
+            )
         found[tag] = (kind, size, data[start : start + length])
     return order, found
 
 
-def numbers(order: str, entry, fallback=()) -> tuple[int, ...]:
+def numbers(order: str, entry, fallback=(), limit: int | None = None) -> tuple[int, ...]:
     """One field's values as whole numbers.
 
     Args:
         order: The file's byte order.
         entry: A ``(kind, count, raw bytes)`` field, or None.
         fallback: What to answer where the field is absent or holds no numbers.
+        limit: Most values to read, or None for every value the field names.
 
     Returns:
         The values, or ``fallback``.
+
+    Raises:
+        ValueError: The field names more values than the file holds.
     """
     if entry is None:
         return tuple(fallback)
     kind, size, blob = entry
+    if limit is not None:
+        size = min(size, limit)
+    if kind in (SHORT, LONG, BYTE, UNDEFINED) and size * WIDTHS[kind] > len(blob):
+        raise ValueError(
+            f"a field of this TIFF names {size} values and the file holds "
+            f"{len(blob) // WIDTHS[kind]} of them, so it is truncated or damaged"
+        )
     if kind == SHORT:
-        return struct.unpack_from(f"{order}{size}H", blob, 0)
-    if kind == LONG:
-        return struct.unpack_from(f"{order}{size}I", blob, 0)
-    if kind in (BYTE, UNDEFINED):
-        return tuple(blob[:size])
-    return tuple(fallback)
+        values = struct.unpack_from(f"{order}{size}H", blob, 0)
+    elif kind == LONG:
+        values = struct.unpack_from(f"{order}{size}I", blob, 0)
+    elif kind in (BYTE, UNDEFINED):
+        values = tuple(blob[:size])
+    else:
+        values = ()
+    return values or tuple(fallback)
 
 
 def _undone(body: bytes, width: int, samples: int, bits: int, order: str) -> bytes:
     """A strip with the horizontal predictor taken back out of it."""
-    if bits == 8:
-        rows = bytearray(body)
-        stride = width * samples
-        for row in range(len(rows) // stride):
-            base = row * stride
-            for column in range(samples, stride):
-                rows[base + column] = (rows[base + column] + rows[base + column - samples]) & 0xFF
-        return bytes(rows)
-    if bits == 16:
-        values = list(struct.unpack(f"{order}{len(body) // 2}H", body))
-        stride = width * samples
-        for row in range(len(values) // stride):
-            base = row * stride
-            for column in range(samples, stride):
-                held = values[base + column] + values[base + column - samples]
-                values[base + column] = held & 0xFFFF
-        return struct.pack(f"{order}{len(values)}H", *values)
-    raise ValueError(f"a {bits} bit TIFF with a horizontal predictor is not read here")
+    import numpy as np
+
+    if bits not in (8, 16):
+        raise ValueError(f"a {bits} bit TIFF with a horizontal predictor is not read here")
+    stored = np.dtype(np.uint8) if bits == 8 else np.dtype(f"{order}u2")
+    held = np.frombuffer(body, dtype=stored, count=len(body) // stored.itemsize)
+    rows = held.size // (width * samples)
+    whole = rows * width * samples
+    grid = held[:whole].reshape(rows, width, samples).astype(stored.newbyteorder("="))
+    # Each sample is the running sum of its row, wrapping at the sample's width.
+    summed = np.cumsum(grid, axis=1, dtype=grid.dtype).astype(stored)
+    return summed.tobytes() + bytes(body[whole * stored.itemsize :])
 
 
 def plane(data: bytes) -> tuple[int, int, int, int, int, bytes]:
@@ -286,17 +315,18 @@ def plane(data: bytes) -> tuple[int, int, int, int, int, bytes]:
         after another, with a pixel's samples side by side, in the file's byte order.
 
     Raises:
-        ValueError: The file is not a TIFF, or it is packed in a way this does not read.
+        ValueError: The file is not a TIFF, is packed in a way this does not read, or is
+            truncated or damaged.
     """
     order, fields = directory(data)
-    width = numbers(order, fields.get(WIDTH), (0,))[0]
-    height = numbers(order, fields.get(HEIGHT), (0,))[0]
-    samples = numbers(order, fields.get(SAMPLES_PER_PIXEL), (1,))[0]
-    bits = numbers(order, fields.get(BITS_PER_SAMPLE), (8,))[0]
-    packing = numbers(order, fields.get(COMPRESSION), (NONE,))[0]
-    layout = numbers(order, fields.get(PLANAR), (1,))[0]
-    guess = numbers(order, fields.get(SAMPLE_FORMAT), (UNSIGNED,))[0]
-    predictor = numbers(order, fields.get(PREDICTOR), (1,))[0]
+    width = numbers(order, fields.get(WIDTH), (0,), 1)[0]
+    height = numbers(order, fields.get(HEIGHT), (0,), 1)[0]
+    samples = numbers(order, fields.get(SAMPLES_PER_PIXEL), (1,), 1)[0]
+    bits = numbers(order, fields.get(BITS_PER_SAMPLE), (8,), 1)[0]
+    packing = numbers(order, fields.get(COMPRESSION), (NONE,), 1)[0]
+    layout = numbers(order, fields.get(PLANAR), (1,), 1)[0]
+    guess = numbers(order, fields.get(SAMPLE_FORMAT), (UNSIGNED,), 1)[0]
+    predictor = numbers(order, fields.get(PREDICTOR), (1,), 1)[0]
 
     if not width or not height:
         raise ValueError("this TIFF names no picture size")
@@ -334,9 +364,9 @@ def plane(data: bytes) -> tuple[int, int, int, int, int, bytes]:
             f"deflated one is read here"
         )
 
-    offsets = numbers(order, fields.get(STRIP_OFFSETS))
-    lengths = numbers(order, fields.get(STRIP_BYTE_COUNTS))
-    rows = numbers(order, fields.get(ROWS_PER_STRIP), (height,))[0] or height
+    rows = numbers(order, fields.get(ROWS_PER_STRIP), (height,), 1)[0] or height
+    offsets = numbers(order, fields.get(STRIP_OFFSETS), (), height)
+    lengths = numbers(order, fields.get(STRIP_BYTE_COUNTS), (), height)
 
     wanted = width * height * samples * (bits // 8)
     # One byte of file describes at most MAX_RATIO bytes of picture, so a file this small
@@ -348,14 +378,28 @@ def plane(data: bytes) -> tuple[int, int, int, int, int, bytes]:
             f"them from"
         )
     body = bytearray()
+    taken, budget = 0, len(data) + wanted
     for index, (start, length) in enumerate(zip(offsets, lengths)):
         # The picture is as long as its size names, so a strip beyond that is not unpacked
         # and a packed one yields no more than the bytes still to be filled.
         if len(body) >= wanted:
             break
+        taken += max(0, min(start + length, len(data)) - start)
+        if taken > budget:
+            raise ValueError(
+                f"the strips of this TIFF name more than {budget} bytes to unpack, the "
+                f"{len(data)} of the file and the {wanted} of its picture together, so the "
+                f"file was not read"
+            )
         strip = data[start : start + length]
         if packing in (DEFLATE, ZIP):
-            strip = zlib.decompressobj().decompress(strip, wanted - len(body))
+            try:
+                strip = zlib.decompressobj().decompress(strip, wanted - len(body))
+            except zlib.error as error:
+                raise ValueError(
+                    f"strip {index} of this TIFF could not be unpacked ({error}), so the "
+                    f"file is truncated or damaged"
+                ) from error
         if predictor == 2:
             tall = min(rows, height - index * rows)
             strip = _undone(strip, width, samples, bits, order)[: tall * width * samples * (bits // 8)]

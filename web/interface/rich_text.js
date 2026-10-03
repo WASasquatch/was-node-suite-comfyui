@@ -51,11 +51,23 @@ const TOOLBAR = [
   "code",
 ].join(" | ");
 
-// A frame whose document may hold markup somebody pasted from a web page. Inline handlers,
-// `<script>` and `javascript:` URLs are all script to this rule, and a `srcdoc` frame inherits
-// it, so nothing in the document runs in ComfyUI's own origin. Frames and images are left alone,
-// since the editor has to show the document it was given.
-const CONTENT_SECURITY_POLICY = "script-src 'none'; object-src 'none'";
+// The policy of the frame a document is edited in. No script runs there: inline handlers,
+// `<script>` and `javascript:` URLs included. Pictures and media load from ComfyUI's own origin,
+// `data:` and `blob:`; fonts from that origin and `data:`; stylesheets from that origin and
+// inline. Frames, requests, form posts and `<base>` are refused.
+const CONTENT_SECURITY_POLICY = [
+  "script-src 'none'",
+  "object-src 'none'",
+  "img-src 'self' data: blob:",
+  "media-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "style-src 'self' 'unsafe-inline'",
+  "frame-src 'none'",
+  "child-src 'none'",
+  "connect-src 'none'",
+  "form-action 'none'",
+  "base-uri 'none'",
+].join("; ");
 
 // How long the editor may sit idle before an edit is written to the widget, and before the undo
 // bracket around an editing session is closed. Short enough that a pause hands the work over,

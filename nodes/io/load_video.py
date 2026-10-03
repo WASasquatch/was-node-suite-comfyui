@@ -360,12 +360,10 @@ class LoadVideo(io.ComfyNode):
         pad_color="#000000", channels="RGB",
     ):
         """When the chosen file was last written, so an edited video is read again."""
-        import folder_paths
-
         # An empty name resolves to the input folder itself, which exists, so it is refused
         # before the folder is asked about it.
         chosen = (file or "").strip()
-        if not chosen or not folder_paths.exists_annotated_filepath(chosen):
+        if not chosen or sandbox.annotated_path(chosen) is None:
             return float("NaN")
         # Its modification time rather than its digest: a video is large enough that
         # hashing it would cost more than the read the fingerprint is there to avoid.
@@ -374,13 +372,11 @@ class LoadVideo(io.ComfyNode):
     @classmethod
     def validate_inputs(cls, file):
         """Whether the chosen file is still in one of ComfyUI's own folders."""
-        import folder_paths
-
         if not (file or "").strip():
             return "no video was chosen. Pick one from the list, or upload one with the button"
         if sandbox.names_another_host(file):
             return "a path naming another machine is not read"
-        if not folder_paths.exists_annotated_filepath(file):
+        if sandbox.annotated_path(file) is None:
             return (
                 f"`{file}` is not in ComfyUI's input, output or temp folder. Pick "
                 f"another, or upload it again"

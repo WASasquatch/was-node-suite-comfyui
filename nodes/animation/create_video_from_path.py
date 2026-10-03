@@ -191,8 +191,8 @@ class CreateVideoFromPath(io.ComfyNode):
 
         video.require_codec(codec)
         source = rooted.source(input_root, input_folder)
-        target = sandbox.resolve_write(
-            os.path.join(str(rooted.destination(output_root, output_folder)), filename)
+        target = sandbox.resolve_write_file(
+            rooted.destination(output_root, output_folder), filename
         )
         os.makedirs(target.parent, exist_ok=True)
 

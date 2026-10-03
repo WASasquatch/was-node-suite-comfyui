@@ -103,7 +103,7 @@ class FastSaveAnimatedWEBP(io.ComfyNode):
         wanted = (filename_prefix or "").replace("\\", "/")
         below, _, leaf = wanted.rpartition("/")
         base = str(rooted.destination(root, below))
-        folder, name, counter, _, _ = folder_paths.get_save_image_path(
+        folder, name, counter, _, _ = sandbox.save_image_path(
             leaf or PLACEHOLDER_PREFIX, base, images[0].shape[1], images[0].shape[0]
         )
         destination = sandbox.resolve_write(folder)

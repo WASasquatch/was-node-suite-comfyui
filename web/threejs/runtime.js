@@ -32,6 +32,62 @@ function loadAreaLightTables() {
 const WRAPPER_KEY = "__was_threejs__";
 const SCHEMA_VERSION = 1;
 
+// Where ComfyUI serves an asset a Three node holds.
+const ASSET_ROUTE = "/was/threejs/api/asset";
+
+// Folders an exported page keeps its pictures and models in, beside the page.
+const ARCHIVE_FOLDERS = ["./textures/", "./models/"];
+
+// What an address that may not be fetched is replaced with. It reads as empty bytes.
+const REFUSED_ADDRESS = "data:,";
+
+/**
+ * The address relative ones are read against.
+ *
+ * @returns {string} The document's base, or the location where there is no document.
+ */
+function baseAddress() {
+    return globalThis.document?.baseURI || globalThis.location?.href || "";
+}
+
+/**
+ * Whether an address names an asset held by ComfyUI's asset route.
+ *
+ * @param {string} address - The address a loader asked for.
+ * @returns {boolean} True for the asset route on this page's own origin.
+ */
+function isAssetRoute(address) {
+    try {
+        const base = baseAddress();
+        const resolved = new URL(String(address || ""), base);
+        return resolved.origin !== "null"
+            && resolved.origin === new URL(base).origin
+            && resolved.pathname === ASSET_ROUTE;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Whether an address may be read without the network.
+ *
+ * @param {string} address - The address a loader asked for.
+ * @returns {boolean} True for a `data:` or `blob:` URL, the asset route, or a file inside an
+ *     exported page's own folders.
+ */
+function isHeldAddress(address) {
+    const text = String(address || "").trim();
+    if (/^(data|blob):/i.test(text)) return true;
+    if (isAssetRoute(text)) return true;
+    try {
+        const base = baseAddress();
+        const resolved = new URL(text, base).href;
+        return ARCHIVE_FOLDERS.some((folder) => resolved.startsWith(new URL(folder, base).href));
+    } catch (error) {
+        return false;
+    }
+}
+
 function sideConstant(side) {
     if (side === "back") return THREE.BackSide;
     if (side === "double") return THREE.DoubleSide;
@@ -274,15 +330,8 @@ export function createOrbitControls(camera, canvas) {
 }
 
 /**
- * Read one model file into an Object3D.
- *
- * @param {object} params - `{url, format}` from a Three Load Model descriptor.
- * @returns {Promise<object>} The loaded object.
- */
-/**
- * A loading manager that answers a model's relative references from the held files.
- *
- * Each request is matched on its file name alone.
+ * A loading manager answering a model's references from its held files, by file name, and
+ * anything not held with empty bytes.
  *
  * @param {object} resources - `{name: url}` for the files held beside the model.
  * @returns {THREE.LoadingManager} The manager, to hand to a loader.
@@ -308,18 +357,31 @@ function sidecarManager(resources) {
         ? Promise.resolve()
         : Promise.race([idle, new Promise((resolve) => setTimeout(resolve, patience))]));
 
-    if (byName.size) {
-        manager.setURLModifier((url) => {
-            const asked = String(url || "");
-            // An address already pointing at the asset route is the model itself.
-            if (asked.includes("key=")) return asked;
-            const name = decodeURIComponent(asked.split(/[?#]/)[0].split("/").pop() || "").toLowerCase();
-            return byName.get(name) ?? asked;
-        });
-    }
+    manager.setURLModifier((url) => {
+        const asked = String(url || "");
+        // An address already pointing at the asset route is the model itself.
+        if (isAssetRoute(asked)) return asked;
+        // Bytes embedded in the model are read where they are.
+        if (/^(data|blob):/i.test(asked.trim())) return asked;
+        let name = "";
+        try {
+            name = decodeURIComponent(asked.split(/[?#]/)[0].split("/").pop() || "").toLowerCase();
+        } catch (error) {
+            name = "";
+        }
+        const held = byName.get(name);
+        if (held !== undefined) return isHeldAddress(held) ? held : REFUSED_ADDRESS;
+        return isHeldAddress(asked) ? asked : REFUSED_ADDRESS;
+    });
     return manager;
 }
 
+/**
+ * Read one model file into an Object3D.
+ *
+ * @param {object} params - `{url, format, resources}` from a Three Load Model descriptor.
+ * @returns {Promise<object>} The loaded object.
+ */
 async function loadModelFile(params) {
     const manager = sidecarManager(params.resources);
     const object = await readModel(params, manager);
@@ -714,9 +776,17 @@ export function createRuntime(canvas, statusElement) {
             }
 
             const params = spec.params || {};
+            const address = String(params.url || "");
+            if (params.network !== true && !isHeldAddress(address)) {
+                throw new Error(
+                    "A texture names an address outside ComfyUI, and its descriptor does not "
+                        + "allow the network, so it was not fetched. Queue the graph again with "
+                        + "features.network on in config.yaml to fetch it."
+                );
+            }
             const loader = new THREE.TextureLoader();
             loader.setCrossOrigin("anonymous");
-            const texture = await loader.loadAsync(params.url);
+            const texture = await loader.loadAsync(address);
             texture.colorSpace = colorSpaceConstant(params.colorSpace);
             texture.wrapS = wrapConstant(params.wrapS);
             texture.wrapT = wrapConstant(params.wrapT);
@@ -1259,6 +1329,12 @@ export function createRuntime(canvas, statusElement) {
         } else {
             const address = String(params.url || "");
             if (!address) throw new Error("Three Environment gave no address to read from.");
+            if (!isHeldAddress(address)) {
+                throw new Error(
+                    "Three Environment names an address outside ComfyUI, so it was not "
+                        + "fetched. Pick the file or wire the image again and queue the graph."
+                );
+            }
             const format = String(params.format || "png").toLowerCase();
             if (format === "hdr") {
                 const { HDRLoader } = await import("../vendor/three/loaders/HDRLoader.js");

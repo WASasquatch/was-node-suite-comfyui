@@ -186,8 +186,6 @@ def input_path(name: str) -> str:
         PathNotAllowed: It resolved outside every permitted read root.
         ValueError: The widget is empty, or names a file that is not there.
     """
-    import folder_paths
-
     chosen = (name or "").strip()
     if not chosen:
         raise ValueError(
@@ -196,12 +194,13 @@ def input_path(name: str) -> str:
         )
     if sandbox.names_another_host(chosen):
         raise ValueError(f"`{chosen}` names another machine, which a video is not read from")
-    if not folder_paths.exists_annotated_filepath(chosen):
+    found = sandbox.annotated_path(chosen)
+    if found is None:
         raise ValueError(
             f"`{chosen}` is not in ComfyUI's input, output or temp folder any more. Pick "
             f"another from the file list, or upload it again"
         )
-    return str(sandbox.resolve_read(folder_paths.get_annotated_filepath(chosen)))
+    return str(sandbox.resolve_read(found))
 
 
 def probe(path: str) -> Metadata:

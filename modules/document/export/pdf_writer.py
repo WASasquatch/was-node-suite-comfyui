@@ -46,6 +46,13 @@ _SOURCE = re.compile(
     r"""(\bsrc\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)""", re.IGNORECASE | re.VERBOSE
 )
 _ALT = re.compile(r"""\balt\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))""", re.IGNORECASE)
+_LINK = re.compile(r"<link\b[^>]*>", re.IGNORECASE)
+_IMPORT = re.compile(r"@import\b[^;]*;?", re.IGNORECASE)
+_URL = re.compile(r"""url\(\s*(?!["']?\s*data:)[^)]*\)""", re.IGNORECASE)
+_STYLE_ATTRIBUTE = re.compile(r"""(\bstyle\s*=\s*)("[^"]*"|'[^']*')""", re.IGNORECASE)
+
+#: What a request for a file is answered with: an empty inline file, which opens nothing.
+NOTHING = "data:text/plain;base64,"
 
 
 def write(document: "Document", page: Page) -> bytes:
@@ -67,12 +74,14 @@ def write(document: "Document", page: Page) -> bytes:
 
     markup = build_html(document, page)
     buffer = BytesIO()
+    refusing = _refuse_every_fetch()
     try:
         result = pisa.CreatePDF(
             src=markup,
             dest=buffer,
             encoding="utf-8",
             link_callback=_never_fetch,
+            **({"resource_policy": refusing} if refusing is not None else {}),
         )
     except Exception as error:
         raise ValueError(
@@ -98,7 +107,8 @@ def build_html(document: "Document", page: Page) -> str:
     Returns:
         A whole HTML document: a head carrying the metadata, the base stylesheet and the
         document's own style blocks, and a body holding its content with every picture
-        turned into a ``data:`` URL.
+        turned into a ``data:`` URL. No ``<link>``, ``@import`` or ``url()`` other than a
+        ``data:`` one is left in it.
     """
     content, styles = _split(document.content or "")
     metadata = document.metadata
@@ -109,12 +119,13 @@ def build_html(document: "Document", page: Page) -> str:
         _meta("subject", metadata.description),
         _meta("keywords", keywords_text(metadata.keywords)),
         f"<style>{_stylesheet(page)}</style>",
-        *styles,
+        *(_inert_css(style) for style in styles),
     ]
     language = f' lang="{escape(metadata.language, quote=True)}"' if metadata.language else ""
+    body = _inert_markup(_with_data_urls(content, document.assets))
     return (
         f"<!DOCTYPE html><html{language}><head>{''.join(part for part in head if part)}"
-        f"</head><body>{_with_data_urls(content, document.assets)}</body></html>"
+        f"</head><body>{body}</body></html>"
     )
 
 
@@ -229,16 +240,40 @@ def _unquoted(value: str) -> str:
 
 
 def _never_fetch(uri: str, rel: str) -> str:
-    """Answer xhtml2pdf's request for a file with nothing, so nothing is opened.
+    """Answer xhtml2pdf's request for a file with an empty inline file, so nothing is opened.
 
     Args:
         uri: What the markup or the stylesheet named.
         rel: What it was named relative to.
 
     Returns:
-        An empty string. Every picture is already a ``data:`` URL by the time xhtml2pdf
-        reads the page, so a request here is a stylesheet or a font reference, and honouring
-        one would mean reading a path a document chose or fetching from the network.
+        :data:`NOTHING`, which xhtml2pdf reads in place of ``uri``.
     """
     logger.debug("the PDF export did not open %r, which the document referred to", uri)
-    return ""
+    return NOTHING
+
+
+def _refuse_every_fetch():
+    """xhtml2pdf's resource policy refusing every network and local read.
+
+    Returns:
+        The policy, or ``None`` on an xhtml2pdf without resource policies.
+    """
+    try:
+        from xhtml2pdf.config.resources import ResourceAccessPolicy
+    except ImportError:
+        return None
+    return ResourceAccessPolicy(allow_remote=False, base_dir=None)
+
+
+def _inert_css(css: str) -> str:
+    """CSS with every ``@import`` removed and every ``url()`` other than a ``data:`` one emptied."""
+    return _URL.sub("none", _IMPORT.sub("", css))
+
+
+def _inert_markup(markup: str) -> str:
+    """Markup with its ``<link>`` tags removed and its ``style`` attributes made inert."""
+    markup = _LINK.sub("", markup)
+    return _STYLE_ATTRIBUTE.sub(
+        lambda match: match.group(1) + _inert_css(match.group(2)), markup
+    )

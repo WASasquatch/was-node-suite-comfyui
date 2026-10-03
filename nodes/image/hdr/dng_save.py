@@ -169,7 +169,7 @@ class DNGSave(io.ComfyNode):
         # get_save_image_path splits its first argument into a directory and a name, so a
         # cleared prefix widget is resolved with a stand-in that is dropped again below.
         named = filename_prefix or PLACEHOLDER_PREFIX
-        full_output_folder, resolved, _, _, _ = folder_paths.get_save_image_path(
+        full_output_folder, resolved, _, _, _ = sandbox.save_image_path(
             named, folder_paths.get_output_directory(), images[0].shape[1], images[0].shape[0]
         )
         destination = sandbox.resolve_write(full_output_folder)

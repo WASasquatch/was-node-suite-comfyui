@@ -7,6 +7,7 @@ read to say what the numbers mean.
 
 from __future__ import annotations
 
+import os
 import struct
 from dataclasses import dataclass
 
@@ -30,6 +31,12 @@ LINEAR_CICP = frozenset({8})
 
 #: EXIF orientation tag.
 ORIENTATION = 0x0112
+
+#: Longest chunk the format allows.
+MAX_CHUNK = (1 << 31) - 1
+
+#: Leading bytes of a chunk the header reads, the length of an ``IHDR``.
+HEAD_BYTES = 13
 
 
 @dataclass
@@ -81,12 +88,14 @@ def header(path) -> Header | None:
         path: A file path.
 
     Returns:
-        A :class:`Header`, or None when the file is not a PNG.
+        A :class:`Header`, or None when the file is not a PNG. A chunk longer than
+        :data:`MAX_CHUNK` or than the rest of the file ends the walk with what came before it.
     """
     try:
         with open(path, "rb") as handle:
             if handle.read(8) != SIGNATURE:
                 return None
+            end = os.fstat(handle.fileno()).st_size
             found = None
             while True:
                 head = handle.read(8)
@@ -95,8 +104,10 @@ def header(path) -> Header | None:
                 size, kind = struct.unpack(">I4s", head)
                 if kind == b"IDAT" or kind == b"IEND":
                     return found
-                body = handle.read(size)
-                handle.seek(4, 1)
+                if size > MAX_CHUNK or size > end - handle.tell():
+                    return found
+                body = handle.read(min(size, HEAD_BYTES))
+                handle.seek(size - len(body) + 4, 1)
                 if kind == b"IHDR" and len(body) >= 10:
                     width, height, depth, colour = struct.unpack(">IIBB", body[:10])
                     found = Header(width, height, depth, colour, COLOUR_TYPES.get(colour, (3, False))[1])

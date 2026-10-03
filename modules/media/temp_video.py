@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 from .. import log
+from ..util import sandbox
 
 logger = log.get_logger("media.temp_video")
 
@@ -79,7 +80,7 @@ def to_temp(video, prefix: str) -> dict | None:
         # An odd side is refused by the yuv420p encoders every codec here uses.
         video = even_sided(video)
         width, height = video.get_dimensions()
-        folder, name, counter, subfolder, _ = folder_paths.get_save_image_path(
+        folder, name, counter, subfolder, _ = sandbox.save_image_path(
             prefix, folder_paths.get_temp_directory(), width, height
         )
         file = f"{name}_{counter:05}_.{VideoContainer.get_extension(CONTAINER)}"

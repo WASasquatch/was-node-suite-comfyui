@@ -166,13 +166,13 @@ class EXRLoad(io.ComfyNode):
     @classmethod
     def validate_inputs(cls, file):
         """Whether the chosen file is still in one of ComfyUI's own folders."""
-        import folder_paths
-
         if not (file or "").strip():
             return (
                 "no EXR was chosen. Pick one from the file list"
             )
-        if not folder_paths.exists_annotated_filepath(file):
+        if sandbox.names_another_host(file):
+            return f"`{file}` names another machine. Pick an EXR from the file list"
+        if sandbox.annotated_path(file) is None:
             return (
                 f"`{file}` names no .exr that is there any more. Pick another from the "
                 f"file list"

@@ -44,8 +44,7 @@
       "widgets_values_named": {
         "file": "t2v_derope_00042_.mp4",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -85,8 +84,7 @@
       "widgets_values_named": {
         "checkpoint": "sea_raft_m_spring.safetensors",
         "iterations": 4
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -156,8 +154,7 @@
       ],
       "widgets_values_named": {
         "motion_resolution": 768
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -229,8 +226,7 @@
       ],
       "widgets_values_named": {
         "motion_resolution": 768
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -317,8 +313,7 @@
         "shutter_angle": 180,
         "samples": 164,
         "blur_layers": "all"
-      },
-      "bgcolor": "transparent"
+      }
     }
   ],
   "links": [

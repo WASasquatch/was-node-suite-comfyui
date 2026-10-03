@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path, PureWindowsPath
 
-from ..util.sandbox import PathNotAllowed, contains
+from ..util.sandbox import PathNotAllowed, contains, leaves_folder
 
 __all__ = [
     "DEFAULT_FILENAME",
@@ -72,11 +72,12 @@ def resolve_output(directory: Path, filename: str) -> tuple[Path, str]:
         text += SUFFIX
 
     relative = PureWindowsPath(text)
-    if relative.drive or relative.root or ".." in relative.parts:
+    reason = leaves_folder(text)
+    if reason is not None:
         raise PathNotAllowed(
             f"refusing to write `{text}` in {directory}\n"
-            f"  A LoRA file name is a name inside the LoRA directory, and this one carries "
-            f"a drive, starts at a root, or steps out of it with '..'.\n"
+            f"  A LoRA file name is a name inside the LoRA directory, and this one "
+            f"{reason}.\n"
             f"  Joining it onto the directory would discard the directory and write "
             f"somewhere else entirely."
         )

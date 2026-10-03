@@ -17,6 +17,7 @@ from ...modules.image import colour_profile, deep_png, sizing
 from ...modules.image.draw import parse_color
 from ...modules.interface import batch_report
 from ...modules.media import sampling
+from ...modules.util import sandbox
 from .load_image_batch import scan
 
 logger = log.get_logger("nodes.io")
@@ -26,6 +27,29 @@ MAX_FRAMES = constants.MAX_SEQUENCE_FRAMES
 
 #: Fill for space a frame does not cover, when one cannot be read from the widget.
 FALLBACK_PAD = (0, 0, 0, 255)
+
+
+def sequence_directory(folder: str) -> str:
+    """The absolute directory one folder menu label names.
+
+    Args:
+        folder: A label :func:`modules.io.picker.folders` offered.
+
+    Returns:
+        The directory, resolved inside a permitted read root, or ``""`` where the label
+        names no root that is there.
+
+    Raises:
+        PathNotAllowed: The label names another machine, or the folder resolved outside
+            every permitted read root.
+    """
+    if sandbox.names_another_host(folder or ""):
+        raise sandbox.PathNotAllowed(
+            f"`{folder}` names another machine. Pick a folder from the menu; a share added "
+            f"under paths.allow_read in config.yaml is listed there under its own name"
+        )
+    found = picker.resolve_folder(folder)
+    return str(found) if found else ""
 
 
 def deep_rgba(path):
@@ -296,20 +320,24 @@ class LoadImageSequence(io.ComfyNode):
 
         Returns:
             The digest, or ``NaN`` where the folder is not there.
+
+        Raises:
+            PathNotAllowed: The label names another machine, the folder resolved outside
+                every permitted read root, the pattern names somewhere outside it, or a
+                matching file resolved outside every permitted read root.
         """
         import hashlib
 
-        found = picker.resolve_folder(folder)
-        directory = str(found) if found else ""
+        directory = sequence_directory(folder)
         if not directory or not os.path.isdir(directory):
             return float("NaN")
         rows = []
-        for name in sorted(os.listdir(directory)):
+        for path in scan(directory, pattern):
             try:
-                stat = os.stat(os.path.join(directory, name))
+                stat = os.stat(path)
             except OSError:
                 continue
-            rows.append(f"{name}|{stat.st_mtime_ns}|{stat.st_size}")
+            rows.append(f"{path}|{stat.st_mtime_ns}|{stat.st_size}")
         return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
 
     @classmethod
@@ -322,6 +350,8 @@ class LoadImageSequence(io.ComfyNode):
         """Load the chosen files as one batch, every frame at one size.
 
         Raises:
+            PathNotAllowed: The label names another machine, or the folder or a matching
+                file resolved outside every permitted read root.
             ValueError: The folder holds no matching image, or the batch does not fit in
                 memory at the size asked for.
         """
@@ -329,8 +359,7 @@ class LoadImageSequence(io.ComfyNode):
 
         from PIL import Image, ImageOps
 
-        found = picker.resolve_folder(folder)
-        directory = str(found) if found else ""
+        directory = sequence_directory(folder)
         if not directory or not os.path.isdir(directory):
             raise ValueError(
                 f"`{folder}` names no folder that is there. Pick another from the menu, or "

@@ -1,8 +1,7 @@
 """Parser discovery for the content viewer.
 
-Every ``*_parser.py`` in this directory, and in any ``ComfyUI_Viewer_*`` directory beside
-this pack, is imported and each :class:`BaseParser` subclass in it is registered, highest
-priority first.
+Every ``*_parser.py`` in this directory is imported and each :class:`BaseParser` subclass
+in it is registered, highest priority first.
 """
 
 import os
@@ -15,81 +14,12 @@ from .base_parser import BaseParser
 
 logger = log.get_logger("viewer.parsers")
 
-#: Directory-name prefix marking a sibling pack as a view extension.
-EXTENSION_PREFIX = "ComfyUI_Viewer_"
-
-#: How far ``custom_nodes`` sits above this directory: parsers -> viewer -> modules ->
-#: the pack root -> custom_nodes.
-CUSTOM_NODES_DEPTH = 4
-
 _parsers = []
 _loaded = False
 
 
-def _load_parser_from_file(filepath: str, source_name: str = "local"):
-    """Load parser classes from a file outside this directory.
-
-    Args:
-        filepath: The parser file.
-        source_name: Where it came from, for the log line.
-
-    Returns:
-        One record per :class:`BaseParser` subclass the file defines.
-    """
-    import importlib.util
-    import sys
-
-    loaded = []
-    filename = os.path.basename(filepath)
-    module_name = f"{__name__}.{filename[:-3]}"
-
-    try:
-        spec = importlib.util.spec_from_file_location(module_name, filepath)
-        if spec is None or spec.loader is None:
-            return loaded
-
-        module = importlib.util.module_from_spec(spec)
-        # Registered before execution: the import machinery resolves a relative import
-        # against the parent package of the module being executed, and looks it up by name.
-        # Under a bare name the relative import raises, and the extension falls back to
-        # hunting for a directory called ComfyUI_Viewer, which does not exist in this pack.
-        sys.modules[module_name] = module
-        try:
-            spec.loader.exec_module(module)
-        except Exception:
-            sys.modules.pop(module_name, None)
-            raise
-
-        for name, obj in inspect.getmembers(module, inspect.isclass):
-            if obj is BaseParser:
-                continue
-            if not issubclass(obj, BaseParser):
-                continue
-
-            parser_info = {
-                "name": obj.PARSER_NAME,
-                "view": getattr(obj, "PARSER_VIEW", None) or obj.PARSER_NAME,
-                "priority": obj.PARSER_PRIORITY,
-                "class": obj,
-                "detect_input": obj.detect_input,
-                "handle_input": obj.handle_input,
-                "detect_output": obj.detect_output,
-                "parse_output": obj.parse_output,
-            }
-
-            loaded.append(parser_info)
-            logger.info(
-                f"[Parsers] Loaded parser: {obj.PARSER_NAME} (priority {obj.PARSER_PRIORITY}) from {source_name}"
-            )
-
-    except Exception as e:
-        logger.error(f"[Parsers] Failed to load {filename} from {source_name}: {e}")
-
-    return loaded
-
-
 def load_parsers():
-    """Load all parser classes from this directory and development extensions."""
+    """Load every parser class in this directory."""
     global _parsers, _loaded
 
     if _loaded:
@@ -134,54 +64,10 @@ def load_parsers():
         except Exception as e:
             logger.error(f"[Parsers] Failed to load {filename}: {e}")
 
-    for parser_info in _extension_parsers(parsers_dir, {p["name"] for p in _parsers}):
-        _parsers.append(parser_info)
-
     _parsers.sort(key=lambda p: p["priority"], reverse=True)
     _loaded = True
 
     return _parsers
-
-
-def _extension_parsers(parsers_dir: str, taken: set) -> list:
-    """Parsers belonging to view extensions installed beside this pack.
-
-    Args:
-        parsers_dir: This directory, used to locate ``custom_nodes`` above it.
-        taken: Parser names already registered. A sibling cannot displace one of them.
-
-    Returns:
-        One record per parser found, in directory order. Empty when ``custom_nodes``
-        cannot be read, which is every context other than a ComfyUI install.
-    """
-    root = parsers_dir
-    for _ in range(CUSTOM_NODES_DEPTH):
-        root = os.path.dirname(root)
-    if not os.path.isdir(root):
-        return []
-
-    found = []
-    for entry in sorted(os.listdir(root)):
-        if not entry.startswith(EXTENSION_PREFIX):
-            continue
-        directory = os.path.join(root, entry, "modules", "parsers")
-        if not os.path.isdir(directory):
-            continue
-        for filename in sorted(os.listdir(directory)):
-            if not filename.endswith("_parser.py") or filename == "base_parser.py":
-                continue
-            for parser_info in _load_parser_from_file(
-                os.path.join(directory, filename), entry
-            ):
-                if parser_info["name"] in taken:
-                    logger.debug(
-                        "%s already provides the %s parser, so the copy in %s was skipped",
-                        __name__, parser_info["name"], entry,
-                    )
-                    continue
-                taken.add(parser_info["name"])
-                found.append(parser_info)
-    return found
 
 
 def get_parsers():

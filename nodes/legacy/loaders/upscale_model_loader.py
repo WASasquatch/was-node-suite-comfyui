@@ -62,5 +62,5 @@ class UpscaleModelLoader(io.ComfyNode):
         from spandrel import ModelLoader
 
         model_path = folder_paths.get_full_path_or_raise("upscale_models", model_name)
-        state_dict = comfy.utils.load_torch_file(model_path)
+        state_dict = comfy.utils.load_torch_file(model_path, safe_load=True)
         return io.NodeOutput(ModelLoader().load_from_state_dict(state_dict).eval(), model_name)

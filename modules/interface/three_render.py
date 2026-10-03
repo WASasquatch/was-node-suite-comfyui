@@ -8,6 +8,7 @@ from __future__ import annotations
 __all__ = [
     "DELIVERED",
     "FAILED",
+    "MAX_BODY_BYTES",
     "MAX_FRAMES",
     "MAX_FRAME_BYTES",
     "ROUTE",
@@ -40,7 +41,7 @@ TIMED_OUT = "timed_out"
 #: Seconds between checks while a node is waiting.
 TICK = 0.05
 
-#: Most jobs held at once. A job is small; this only stops an unattended queue growing.
+#: Most jobs held at once. Filing one past it drops the oldest.
 MAX_JOBS = 16
 
 #: Most frames one job may ask for.
@@ -56,6 +57,13 @@ _lock = Lock()
 #: The pictures a browser draws per frame. ``png`` is the scene as it looks; the other two
 #: are the same frame drawn with one override material over everything.
 PASSES = ("png", "depth", "normal")
+
+#: Largest one pass may be as posted, in base64 characters.
+MAX_ENCODED_BYTES = 4 * -(-MAX_FRAME_BYTES // 3)
+
+#: Largest body a frame post may declare, in bytes: every pass at :data:`MAX_ENCODED_BYTES`,
+#: plus room for the data URL prefixes, the field names and the progress note.
+MAX_BODY_BYTES = len(PASSES) * MAX_ENCODED_BYTES + 64 * 1024
 
 
 def file_job(
@@ -83,13 +91,20 @@ def file_job(
         The token the job is claimed and answered by.
 
     Raises:
-        ValueError: The scene carries browser code and ``threejs.allow_scripts`` is off.
+        ValueError: The scene carries browser code and ``threejs.allow_scripts`` is off, or
+            the prompt was queued without a client id.
     """
     from ..threejs.spec import refuse_script
 
     refuse_script(app, "This render")
-    token = uuid.uuid4().hex
     client = _asking_client()
+    if not client:
+        raise ValueError(
+            "This render was queued without a client id, so no ComfyUI tab can claim its "
+            "frames. Queue it from the ComfyUI page in a browser, or send the prompt with "
+            "the client_id of a ComfyUI tab that stays open on this server while it runs."
+        )
+    token = uuid.uuid4().hex
     with _lock:
         while len(_jobs) >= MAX_JOBS:
             oldest = min(_jobs, key=lambda key: _jobs[key]["filed"])
@@ -130,19 +145,21 @@ def pending(client: str = "") -> list[dict]:
     """The jobs this browser has not claimed yet, and claim them.
 
     Args:
-        client: The asking browser's ComfyUI client id. A job filed for another client is
-            not offered, so a token never reaches a caller the prompt did not come from.
+        client: The asking browser's ComfyUI client id. Only jobs whose prompt was queued
+            under that id are offered; an empty id is offered nothing.
 
     Returns:
         One entry per job, each with its token, descriptor, frame size and moments.
     """
     taken = []
     asking = str(client or "").strip()
+    if not asking:
+        return taken
     with _lock:
         for token, job in _jobs.items():
             if job["claimed"] or any(job["frames"].values()):
                 continue
-            if job["client"] and job["client"] != asking:
+            if job["client"] != asking:
                 continue
             job["claimed"] = True
             taken.append({
@@ -275,8 +292,7 @@ def wait_for_frames(
     started = time.monotonic()
     try:
         while True:
-            # Raising through ComfyUI clears its interrupt flag, which is what stops the flag
-            # carrying into whatever runs next.
+            # Raises on a cancelled run and clears ComfyUI's interrupt flag as it does.
             comfy.model_management.throw_exception_if_processing_interrupted()
             with _lock:
                 job = _jobs.get(token)
@@ -326,10 +342,24 @@ def register_routes() -> bool:
 
         @PromptServer.instance.routes.post(ROUTE)
         async def post_render_frame(request):
+            # The declared length is checked before any of the body is read.
+            length = request.content_length
+            if length is None:
+                return web.Response(status=411, text="The body has to state its length.")
+            if length > MAX_BODY_BYTES:
+                return web.Response(
+                    status=413,
+                    text=(
+                        f"The body is {length} bytes and a frame post may be at most "
+                        f"{MAX_BODY_BYTES} bytes, {MAX_FRAME_BYTES // 1048576} MB per pass."
+                    ),
+                )
             try:
                 sent = await request.json()
             except Exception:
                 return web.Response(status=400, text="The body has to be JSON.")
+            if not isinstance(sent, dict):
+                return web.Response(status=400, text="The body has to be a JSON object.")
             token = str(sent.get("token", "")).strip()
             if not token:
                 return web.Response(status=400, text="The body has to name a token.")
@@ -358,6 +388,14 @@ def register_routes() -> bool:
                     marker = "base64,"
                     if marker in encoded:
                         encoded = encoded.split(marker, 1)[1]
+                    if len(encoded) > MAX_ENCODED_BYTES:
+                        return web.Response(
+                            status=413,
+                            text=(
+                                f"The {kind} frame is larger than "
+                                f"{MAX_FRAME_BYTES // 1048576} MB."
+                            ),
+                        )
                     try:
                         bodies[kind] = base64.b64decode(encoded, validate=True)
                     except Exception:

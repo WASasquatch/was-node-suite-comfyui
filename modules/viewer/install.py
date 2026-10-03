@@ -1,8 +1,9 @@
 """Installing content-viewer view extensions.
 
-:func:`write_manifest` lists the views into ``extension_views.json``, and
-:func:`install_all` unpacks ``.zip`` packages, copies from sibling ``ComfyUI_Viewer_*``
-directories, and pip-installs declared requirements.
+:func:`write_manifest` lists the views into ``extension_views.json``, :func:`install_all`
+unpacks ``.zip`` packages and logs the requirements each declares, and
+:func:`sync_siblings` copies from sibling ``ComfyUI_Viewer_*`` directories. Nothing is
+pip-installed.
 """
 
 from __future__ import annotations
@@ -83,7 +84,7 @@ Content Viewer, view extensions
 
 A view extension teaches the Content Viewer a content type it does not already know: a
 .js view for the browser, and usually a Python parser that decides which content the view
-claims. WAS Node Suite ships twelve views built in; this directory is for adding more.
+claims. WAS Node Suite ships its own views built in; this directory is for adding more.
 
 Extensions live at https://github.com/WASasquatch?tab=repositories, the ones whose names
 begin ComfyUI_Viewer_ are view extensions.
@@ -114,6 +115,11 @@ Restart ComfyUI. The view registers itself; there is no list to edit.
 If the extension ships a requirements.txt, install it yourself with the Python that runs
 ComfyUI. For the Windows portable build, from the ComfyUI_windows_portable directory:
 
+    python_embeded\\python.exe -m pip install -r <extension>\\requirements.txt
+
+Anywhere else, with the Python that starts ComfyUI:
+
+    python -m pip install -r <extension>/requirements.txt
 
 
 Installing one automatically, opt in first
@@ -125,12 +131,17 @@ Put this in your config.yaml:
       install_extensions: true
 
 Then drop the extension's .zip in THIS directory and restart ComfyUI. It is unpacked to
-the right places, its requirements are installed with the Python that runs ComfyUI, and a
-record is written to logs/ so it is not installed twice. Delete a record to reinstall.
+the right places, and a record is written to logs/ so it is not unpacked twice. Delete a
+record to reinstall. An extension cloned into custom_nodes as ComfyUI_Viewer_<name> is
+copied in on the same start.
 
-It is off by default. With it on, a file you downloaded decides what gets pip-installed
-into your ComfyUI. Nothing else in WAS Node Suite installs anything without being asked. Everything the installer does is written to the ComfyUI log, including the
-pip command.
+Nothing is pip-installed, by either route. When a package ships a requirements.txt, each
+requirement is named in the ComfyUI log; install those yourself as shown above.
+
+It is off by default. With it on, a .zip dropped here, or a ComfyUI_Viewer_ clone in
+custom_nodes, puts Python code into WAS Node Suite that runs every time ComfyUI starts.
+Each package unpacked, and every requirement a package names, is written to the ComfyUI
+log.
 
 
 A note on extension nodes
@@ -155,11 +166,6 @@ either way.
 A node id that something else already provides, ComfyUI itself or another pack, is left
 with its current owner. The extension's node is skipped and the clash is written to the
 ComfyUI log, naming the id and the extension.
-
-
-Full documentation
-------------------
-
 """
 
 DROP_LOGS_README = "delete_a_record_here_to_reinstall_that_extension.txt"
@@ -412,7 +418,7 @@ def _is_installed(record: Path, pack_root: Path) -> bool:
 
 
 def _install(package: Path, pack_root: Path, record: Path) -> bool:
-    """Unpack one package, install its requirements, and write its record."""
+    """Unpack one package, log the requirements it declares, and write its record."""
     written: list[str] = []
     requirements = ""
     try:

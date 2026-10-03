@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import re
-from pathlib import Path
 
 from comfy_api.latest import io, ui
 
@@ -143,9 +142,7 @@ class ExportAPI(io.ComfyNode):
         counter = max(existing_counters) + 1 if existing_counters else 1
 
         file = f"{filename_prefix}{filename_delimiter}{counter:0{number_padding}}.json"
-        # filename_prefix and filename_delimiter are workflow values, so the assembled
-        # name can hold separators and `..` segments and is contained in its own right.
-        output_file = sandbox.resolve_write(Path(directory, file))
+        output_file = sandbox.resolve_write_file(directory, file)
 
         prompt = cls.hidden.prompt
         prompt_json = ""

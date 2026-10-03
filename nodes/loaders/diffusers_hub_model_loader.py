@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from comfy_api.latest import io
 
 from ...modules import deps, log
+from ...modules.util import sandbox
 
 REQUIRES = "diffusers"
 
@@ -34,11 +36,14 @@ def download_directory(repo_id: str) -> str:
         ``<models/diffusers>/<repo_id>``.
 
     Raises:
-        ValueError: No diffusers model directory is configured, or the repository id
-            resolves outside it.
+        ValueError: The repository id is not ``owner/name``, no diffusers model directory is
+            configured, or the id resolves outside it.
     """
     import folder_paths
 
+    from ...modules.model import repository_id
+
+    repo_id = repository_id(repo_id)
     roots = folder_paths.get_folder_paths("diffusers")
     if not roots:
         raise ValueError(
@@ -46,7 +51,7 @@ def download_directory(repo_id: str) -> str:
         )
     root = os.path.abspath(roots[0])
     target = os.path.abspath(os.path.join(root, repo_id))
-    if not folder_paths.is_within_directory(root, target):
+    if not sandbox.contains(Path(root).resolve(), Path(target).resolve()):
         raise ValueError(
             f"refusing to download {repo_id!r}, which resolves to {target}, outside the "
             f"diffusers model directory {root}"
@@ -138,7 +143,9 @@ class DiffusersHubModelLoader(io.ComfyNode):
             revision = None
 
         target = download_directory(repo_id)
-        if network_enabled():
+        if revision is None and os.path.isfile(os.path.join(target, "model_index.json")):
+            logger.info("%s is on disk at %s, so the hub is not contacted", repo_id, target)
+        elif network_enabled():
             hub = deps.require("huggingface_hub", feature=FEATURE)
             logger.info("downloading %s into %s", repo_id, target)
             hub.snapshot_download(

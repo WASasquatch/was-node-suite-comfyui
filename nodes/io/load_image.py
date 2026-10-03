@@ -1,4 +1,4 @@
-"""Load an image from a path or a URL."""
+"""Load one image picked from ComfyUI's folders or a ``paths.allow_read`` folder."""
 
 from __future__ import annotations
 
@@ -16,10 +16,6 @@ from ...modules.util import file_listing, sandbox
 from ...modules.util.hashing import get_sha256
 
 logger = log.get_logger("nodes.io")
-
-#: Config key of the group that permits this node to reach the network. The node itself is
-#: default tier and normally given a path; the URL branch is not.
-FEATURE = "features.network"
 
 #: Widget value that leaves a tagged file in its own colour space.
 KEEP_PROFILE = colour_profile.KEEP
@@ -43,7 +39,7 @@ def _publish_report(
         tagged: The profile the file carried, or None.
         colour_space: The space widget's value.
         icc_mode: The mode widget's value.
-        recorded: The path or address the picture came from.
+        recorded: The path the picture came from.
         depth: Bits a sample the file stored.
     """
     try:
@@ -71,12 +67,12 @@ def _publish_report(
 
 def decode(opened, kind, recorded, RGBA, filename_text_extension, colour_space, name=None,
            icc_mode=colour_profile.CONVERT):
-    """Turn one decoded picture into the four outputs both loaders answer with.
+    """Turn one decoded picture into the four outputs the node answers with.
 
     Args:
         opened: The PIL image, or None to substitute a black 512x512 one.
         kind: The format it was stored in, as PIL named it.
-        recorded: The path or address it came from, for the history and the report.
+        recorded: The path it came from, for the history and the report.
         name: What to call it, or None to take the last part of ``recorded``.
         RGBA: Keep transparency in the image itself.
         filename_text_extension: Keep the extension on the name.
@@ -181,13 +177,14 @@ def chosen_path(label: str):
     chosen = (label or "").strip()
     if not chosen:
         return None
+    if sandbox.names_another_host(chosen):
+        raise sandbox.PathNotAllowed(
+            f"`{chosen}` names another machine. Pick an image from the file list"
+        )
     found = None
     # A bare name is an input file, which is what the upload button leaves behind.
     try:
-        import folder_paths
-
-        if folder_paths.exists_annotated_filepath(chosen):
-            found = folder_paths.get_annotated_filepath(chosen)
+        found = sandbox.annotated_path(chosen)
     except Exception as error:
         logger.debug("`%s` could not be resolved through folder_paths: %s", chosen, error)
     if found is None:
@@ -222,7 +219,7 @@ def image_labels() -> list[str]:
 
 
 class ImageLoad(io.ComfyNode):
-    """Load one image from a filesystem path or an ``http``/``https`` URL."""
+    """Load one image picked from a menu of the folders this pack may read."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:

@@ -170,7 +170,7 @@ Content Viewer, Three.js scenes and graph plumbing.
 ---
 # Model weights
 
-Nothing is downloaded unless you ask for it. `features.network` is `false` out of the box, so a node needing weights it cannot find says so and names the key rather than reaching for the network.
+Nothing is downloaded unless you ask for it. `features.network` is `false` out of the box, so a node needing weights it cannot find says so and names the key rather than reaching for the network, and **Three Texture URL** takes only `data:` addresses and the pack's own assets.
 
 **Let it download.** Set `network: true` under `features:` in `config.yaml`.
 

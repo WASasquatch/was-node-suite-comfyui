@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import random
-from pathlib import Path
 
 from comfy_api.latest import io
 
@@ -195,7 +194,7 @@ class CacheNode(io.ComfyNode):
             if payload is None:
                 continue
             name = cache_name(suffix, f".{kind}")
-            out_file = sandbox.resolve_write(Path(directory, name))
+            out_file = sandbox.resolve_write_file(directory, name)
             torch.save(payload, out_file)
             written[kind] = name
             logger.info("%s saved to: %s", kind, out_file)

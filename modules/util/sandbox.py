@@ -7,6 +7,7 @@ path inside a permitted root, or raise :class:`PathNotAllowed`. Writes exclude C
 
 from __future__ import annotations
 
+import glob
 import os
 import unicodedata
 from pathlib import Path, PureWindowsPath
@@ -17,14 +18,18 @@ from ..config import WINDOWS_PATH_FIX, load_config, paths
 
 __all__ = [
     "PathNotAllowed",
+    "annotated_path",
     "contains",
     "names_another_host",
     "configured_read_roots",
     "configured_write_roots",
+    "glob_read",
+    "leaves_folder",
     "read_roots",
     "resolve_read",
     "resolve_write",
     "resolve_write_file",
+    "save_image_path",
     "write_roots",
 ]
 
@@ -36,6 +41,13 @@ COMFY_DIRECTORY = "ComfyUI"
 #: Verbs the resolution errors are phrased with, and the only two values ``purpose`` takes.
 READ = "read"
 WRITE = "write"
+
+#: Entries of the pack's state directory no node writes: its settings, and the folder view
+#: extensions are installed from.
+PROTECTED = ("config.yaml", "config.json", "viewer-extensions")
+
+#: Links followed through one another before a path is refused.
+MAX_LINKS = 16
 
 
 class PathNotAllowed(ValueError):
@@ -249,8 +261,8 @@ def contains(root: Path, target: Path) -> bool:
         True when target is inside root. Comparison is case-insensitive on Windows.
     """
     if os.name == "nt":
-        root = Path(str(root).casefold())
-        target = Path(str(target).casefold())
+        root = Path(os.path.normcase(str(root)))
+        target = Path(os.path.normcase(str(target)))
     return root == target or root in target.parents
 
 
@@ -261,11 +273,118 @@ def names_another_host(value: str | os.PathLike) -> bool:
         value: The raw path, as written.
 
     Returns:
-        True for a UNC path such as ``\\server\share\file``. Reading one reaches that host
-        over the network, which resolving the path is enough to do.
+        True for a UNC path such as ``\\server\share\file`` and for any path under the NT
+        object prefix ``\??\``. Reading one reaches that host over the network, which
+        resolving the path is enough to do.
     """
-    drive = PureWindowsPath(str(value).strip()).drive
+    text = str(value).strip()
+    # The NT object prefix reaches a share without a UNC drive: \??\UNC\server\share.
+    if text.replace("/", "\\").startswith("\\??\\"):
+        return True
+    drive = PureWindowsPath(text).drive
     return drive.startswith("\\\\") or drive.startswith("//")
+
+
+def leaves_folder(text: str | os.PathLike) -> str | None:
+    r"""Why a relative path or glob pattern would name somewhere other than inside its folder.
+
+    Args:
+        text: The path or pattern as written, to be joined onto a folder.
+
+    Returns:
+        ``None`` when it stays inside, otherwise what it does, in words: it names another
+        machine (``\\server\share`` or ``//server/share``), carries a drive, starts at a
+        root, or holds a segment of dots and spaces alone such as ``..`` or ``.. ``.
+    """
+    value = str(text).strip()
+    if names_another_host(value):
+        return "names another machine"
+    relative = PureWindowsPath(value)
+    if relative.drive:
+        return "carries a drive"
+    if relative.root:
+        return "starts at a filesystem root"
+    if any(not part.strip(" .") for part in relative.parts):
+        return "climbs out with '..'"
+    return None
+
+
+def glob_read(directory: str | os.PathLike, pattern: str, recursive: bool = False) -> list[str]:
+    """Every path inside a folder that a glob pattern matches.
+
+    Args:
+        directory: The folder, already resolved inside a permitted read root.
+        pattern: Glob pattern, matched under ``directory``.
+        recursive: Let ``**`` in the pattern cross folders.
+
+    Returns:
+        Matches as glob spelled them, unsorted, every one of them beneath ``directory``.
+
+    Raises:
+        PathNotAllowed: The pattern is empty, or :func:`leaves_folder` gives a reason. The
+            pattern is refused before anything is read.
+    """
+    text = str(pattern).strip()
+    if not text:
+        raise PathNotAllowed(f"no pattern given to match in `{directory}`")
+    reason = leaves_folder(text)
+    if reason is not None:
+        raise PathNotAllowed(
+            f"the pattern `{text}` {reason}, so it would match outside `{directory}`. A "
+            f"pattern matches inside the folder it is given, such as `*.png` or "
+            f"`shots/*.png`; pick the outer folder as the folder instead."
+        )
+    base = os.path.normpath(str(directory))
+    found = glob.glob(os.path.join(glob.escape(base), text), recursive=recursive)
+    return [name for name in found if contains(Path(base), Path(os.path.normpath(name)))]
+
+
+def annotated_path(name: str) -> str | None:
+    """The file one of ComfyUI's annotated names, such as ``plate.png [output]``, refers to.
+
+    Args:
+        name: The name as a menu or a workflow holds it.
+
+    Returns:
+        The absolute path, or ``None`` when the name is empty, names nothing that is there,
+        or would leave ComfyUI's folder as :func:`leaves_folder` reads it. That last test
+        runs before ComfyUI resolves anything.
+    """
+    text = str(name or "").strip()
+    if not text or leaves_folder(text) is not None:
+        return None
+    import folder_paths
+
+    if not folder_paths.exists_annotated_filepath(text):
+        return None
+    return folder_paths.get_annotated_filepath(text)
+
+
+def save_image_path(prefix: str, directory: str | os.PathLike, width: int = 0, height: int = 0):
+    """ComfyUI's numbered save location for a prefix, the prefix refused first if it leaves.
+
+    Args:
+        prefix: The file name prefix, which may carry folders below ``directory``.
+        directory: The folder the files are written in.
+        width: Image width, for the ``%width%`` token.
+        height: Image height, for the ``%height%`` token.
+
+    Returns:
+        ``(folder, name, counter, subfolder, prefix)`` as ComfyUI's ``get_save_image_path``.
+
+    Raises:
+        PathNotAllowed: :func:`leaves_folder` gives a reason for ``prefix``. Nothing is
+            resolved before this.
+    """
+    reason = leaves_folder(prefix)
+    if reason is not None:
+        raise PathNotAllowed(
+            f"the filename prefix `{prefix}` {reason}, so it would be written outside "
+            f"`{directory}`. Use a prefix such as `renders/shot`"
+        )
+    import folder_paths
+
+    return folder_paths.get_save_image_path(prefix, str(directory), width, height)
 
 
 def _host_permitted(text: str, roots: list[Path]) -> bool:
@@ -279,9 +398,9 @@ def _host_permitted(text: str, roots: list[Path]) -> bool:
         True when a root names the same ``\\server\share``. Compared as written, so no path
         is resolved to answer this.
     """
-    drive = PureWindowsPath(text).drive.replace("/", "\\").casefold()
+    drive = PureWindowsPath(text).drive.replace("/", "\\").lower()
     return any(
-        PureWindowsPath(str(root)).drive.replace("/", "\\").casefold() == drive
+        PureWindowsPath(str(root)).drive.replace("/", "\\").lower() == drive
         for root in roots
     )
 
@@ -311,6 +430,7 @@ def _rebased(text: str) -> Path | None:
         return None
     # '..' segments in the remainder survive the join and are collapsed by resolve, so a
     # rebased value can still land above ComfyUI's root, where the root check refuses it.
+    _refuse_linked_host(Path(os.path.abspath(root.joinpath(*parts[1:]))))
     return root.joinpath(*parts[1:]).resolve(strict=False)
 
 
@@ -327,6 +447,7 @@ def _candidates(text: str) -> list[Path]:
     """
     # strict=False so a write target that does not exist yet still resolves; parents and
     # symlinks along the existing prefix are resolved either way.
+    _refuse_linked_host(Path(os.path.abspath(os.path.expanduser(text))))
     found = [Path(text).expanduser().resolve(strict=False)]
     rebased = _rebased(text)
     if rebased is not None and rebased != found[0]:
@@ -389,7 +510,8 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
     if not text:
         raise PathNotAllowed(f"no path given to {purpose}")
     roots = list(roots)
-    if names_another_host(text) and not _host_permitted(text, roots):
+    reached = os.path.expanduser(text)
+    if names_another_host(reached) and not _host_permitted(reached, roots):
         raise PathNotAllowed(
             f"`{text}` names another machine. A path is {purpose} from this computer only. "
             f"Add the share to {key} in config.yaml to reach it."
@@ -398,6 +520,8 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
     for target in candidates:
         for root in roots:
             if contains(root, target):
+                if purpose == WRITE:
+                    _refuse_protected(target)
                 return target
     if purpose == WRITE:
         for target in candidates:
@@ -431,23 +555,87 @@ def _join(parent: Path, name: str | os.PathLike, purpose: str) -> Path:
     text = str(name).strip()
     if not text:
         raise PathNotAllowed(f"no file name given to {purpose} in {parent}")
-    relative = PureWindowsPath(text)
-    if relative.drive or relative.root or ".." in relative.parts:
+    reason = leaves_folder(text)
+    if reason is not None:
         raise PathNotAllowed(
             f"refusing to {purpose} `{text}` in {parent}\n"
-            f"  A file name is a name inside that directory, and this one carries a drive, "
-            f"starts at a root, or steps out of it with '..'.\n"
+            f"  A file name is a name inside that directory, and this one {reason}.\n"
             f"  Joining it onto the directory would discard the directory and "
             f"{purpose} somewhere else entirely."
         )
-    target = parent.joinpath(*relative.parts).resolve(strict=False)
+    _refuse_linked_host(Path(os.path.abspath(parent.joinpath(*PureWindowsPath(text).parts))))
+    target = parent.joinpath(*PureWindowsPath(text).parts).resolve(strict=False)
     if not contains(parent, target):
         raise PathNotAllowed(
             f"refusing to {purpose} {target}\n"
             f"  `{text}` leaves {parent}, which it was to be placed inside, through a "
             f"symlink that points out of that directory."
         )
+    if purpose == WRITE:
+        _refuse_protected(target)
     return target
+
+
+def _refuse_linked_host(path: Path, depth: int = 0) -> None:
+    """Refuse a path whose links lead to another machine, reading each link without following it.
+
+    Args:
+        path: An absolute path, as written; nothing along it is resolved.
+        depth: Links already followed to reach it.
+
+    Raises:
+        PathNotAllowed: A link along ``path`` points at another machine, or links nest past
+            :data:`MAX_LINKS`.
+    """
+    if depth > MAX_LINKS:
+        raise PathNotAllowed(f"{path} goes through more than {MAX_LINKS} links, so it is not read")
+    junction = getattr(os.path, "isjunction", None)
+    for step in (path, *path.parents):
+        try:
+            linked = os.path.islink(step) or bool(junction and junction(step))
+            target = os.readlink(step) if linked else ""
+        except OSError:
+            continue
+        if not target:
+            continue
+        if names_another_host(target):
+            raise PathNotAllowed(
+                f"{step} is a link to `{target}`, which names another machine, so it is not "
+                f"followed"
+            )
+        nested = Path(target) if os.path.isabs(target) else step.parent / target
+        _refuse_linked_host(Path(os.path.abspath(nested)), depth + 1)
+
+
+def _refuse_protected(target: Path) -> None:
+    """Refuse a write to the pack's settings or to its view extension folder.
+
+    Args:
+        target: The resolved write target.
+
+    Raises:
+        PathNotAllowed: ``target`` is one of :data:`PROTECTED` in the state directory, is
+            inside the extension folder, or is the config file in use.
+    """
+    guarded = []
+    try:
+        state = paths.config_directory().resolve()
+        guarded.extend(state / name for name in PROTECTED)
+    except Exception as error:
+        logger.debug("the state directory could not be resolved (%s)", error)
+    try:
+        found = paths.find_config_file()
+        if found is not None:
+            guarded.append(found.resolve())
+    except Exception as error:
+        logger.debug("the config file could not be located (%s)", error)
+    for entry in guarded:
+        if contains(entry, target):
+            raise PathNotAllowed(
+                f"refusing to write {target}\n"
+                f"  It is this pack's {entry.name}, which holds its settings or its installed "
+                f"view extensions, and no node writes there."
+            )
 
 
 def resolve_read(value: str | os.PathLike) -> Path:

@@ -94,7 +94,13 @@ def next_names(
     Returns:
         ``count`` file names, without a folder, each one free of any file already in
         ``directory``.
+
+    Raises:
+        PathNotAllowed: The prefix and delimiter make a name that names another machine,
+            carries a drive, starts at a root or climbs out with ``..``.
     """
+    from ..util import sandbox
+
     suffix = extension if extension.startswith(".") else f".{extension}"
     if overwrite:
         return [f"{prefix}{suffix}"] * count
@@ -102,12 +108,23 @@ def next_names(
     names = []
     for _ in range(count):
         name = format_name(prefix, delimiter, counter, padding, extension, number_first)
-        while os.path.exists(os.path.join(directory, name)):
+        while _taken(directory, name, sandbox):
             counter += 1
             name = format_name(prefix, delimiter, counter, padding, extension, number_first)
         names.append(name)
         counter += 1
     return names
+
+
+def _taken(directory: str, name: str, sandbox) -> bool:
+    """Whether ``name`` is already a file in ``directory``, refusing a name that leaves it."""
+    reason = sandbox.leaves_folder(name)
+    if reason is not None:
+        raise sandbox.PathNotAllowed(
+            f"the file name `{name}` {reason}, so it would be written outside `{directory}`. "
+            f"Use a prefix and delimiter without slashes, drives or '..'"
+        )
+    return os.path.exists(os.path.join(directory, name))
 
 
 def next_name(

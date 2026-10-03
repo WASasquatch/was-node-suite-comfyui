@@ -11,7 +11,7 @@ from ...modules.compat.types import THREE_APP
 from ...modules.io import rooted
 from ...modules.log import get_logger
 from ...modules.threejs import compile as bundler
-from ...modules.threejs.spec import require_spec
+from ...modules.threejs.spec import refuse_script, require_spec
 from ...modules.util import filenames, sandbox
 
 REQUIRES = "threejs"
@@ -44,7 +44,8 @@ class ThreeCompile(io.ComfyNode):
                 "description and every texture go in the archive, and each texture address is "
                 "rewritten to point at its copy. A scene using Three Custom Geometry, Custom "
                 "Material, Custom Object, Custom Update or Script Module carries that "
-                "JavaScript into the page, so the archive is code as well as data."
+                "JavaScript into the page, so the archive is code as well as data, and is "
+                "refused unless threejs.allow_scripts is on in config.yaml."
             ),
             is_output_node=True,
             inputs=[
@@ -94,12 +95,14 @@ class ThreeCompile(io.ComfyNode):
         """Pack the scene and write it.
 
         Raises:
-            ValueError: ``app`` is not an app descriptor.
+            ValueError: ``app`` is not an app descriptor, or carries javascript while
+                ``threejs.allow_scripts`` is off.
             FileNotFoundError: A file the page needs is missing from the pack.
             PathNotAllowed: The name resolved outside every permitted write root.
             OSError: The archive could not be written.
         """
         require_spec(app, "app")
+        refuse_script(app, "Three Compile")
 
         web_root = Path(__file__).resolve().parents[2] / "web"
         body, names = bundler.bundle(app, str(title), web_root)
