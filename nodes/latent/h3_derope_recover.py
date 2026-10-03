@@ -63,8 +63,13 @@ class H3DeRopeRecover(io.ComfyNode):
         """Keep the first showing of every source frame and retime the pass's audio.
 
         Raises:
-            ValueError: The clip is shorter than the stretch made it.
+            ValueError: derope is not wired, or the clip is shorter than the stretch made it.
         """
+        if getattr(derope, "holds", None) is None:
+            raise ValueError(
+                "H3 De-RoPE Recover needs the plan H3 De-RoPE Stretch answers on its derope "
+                "output. Wire that output into derope."
+            )
         frames = h3_derope.recover(images, derope.holds)[:derope.source]
         sound = derope.audio
         if audio is not None:

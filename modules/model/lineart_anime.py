@@ -181,7 +181,7 @@ def load(device: str | None = None) -> Network:
     Raises:
         ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
     """
-    return managed_module(("lineart_anime", REPO_ID, FILENAME), _build)
+    return managed_module(("lineart_anime", REPO_ID, FILENAME), _build, name="Lineart Anime")
 
 
 def _build() -> Network:

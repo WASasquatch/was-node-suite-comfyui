@@ -40,7 +40,7 @@ class EMAVFIFrameInterpolation(io.ComfyNode):
             description=(
                 "Raise a sequence's frame rate by inventing frames between the ones it has, "
                 "using EMA-VFI's motion estimate rather than fading one frame into the next. "
-                "The weights come from EMA-VFI Model Loader. A multiplier above 2 needs one of "
+                "The weights come from EMA-VFI Video Model Loader. A multiplier above 2 needs one of "
                 "the 'ours_t' checkpoints, which were trained to land anywhere between two "
                 "frames rather than only halfway."
             ),
@@ -55,7 +55,7 @@ class EMAVFIFrameInterpolation(io.ComfyNode):
                 EMA_VFI_MODEL.Input(
                     "ema_vfi_model",
                     tooltip=(
-                        "The interpolation network, from EMA-VFI Model Loader, which is where "
+                        "The interpolation network, from EMA-VFI Video Model Loader, which is where "
                         "the checkpoint is chosen. One loader can feed several nodes so the "
                         "network is built once."
                     ),

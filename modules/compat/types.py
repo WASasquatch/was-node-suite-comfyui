@@ -24,6 +24,8 @@ __all__ = [
     "LIST",
     "LUT",
     "MIDAS_MODEL",
+    "MOTION",
+    "MOTION_MODEL",
     "NUMBER",
     "REMBG_MODEL",
     "SAM_MODEL",
@@ -88,7 +90,17 @@ BEATS = io.Custom("WAS_BEATS")
 #: audio, as a `modules.latent.h3_derope.Plan`.
 H3_DEROPE = io.Custom("WAS_H3_DEROPE")
 
-#: `EMA-VFI Model Loader` -> `EMA-VFI Frame Interpolation`. Carries a
+#: `Video Motion` -> the nodes that move, blur, split or steady a clip along its motion.
+#: Carries a `modules.image.motion.Motion`: the flow between every pair of neighbouring
+#: frames and the luminance it was measured from, at a reduced size.
+MOTION = io.Custom("WAS_MOTION")
+
+#: `Video Motion Model Loader` -> `Video Motion`. Carries a
+#: `modules.model.flow_networks.FlowNetwork`: a SEA-RAFT or FlowSeek network and the refinement
+#: passes it runs.
+MOTION_MODEL = io.Custom("WAS_MOTION_MODEL")
+
+#: `EMA-VFI Video Model Loader` -> `EMA-VFI Frame Interpolation`, `Video Retime`. Carries a
 #: `modules.model.Backend` holding the interpolation network and the checkpoint it was
 #: built from.
 EMA_VFI_MODEL = io.Custom("EMA_VFI_MODEL")

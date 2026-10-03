@@ -246,7 +246,9 @@ def load(name: str = "NAFNet SIDD width64", device: str | None = None) -> Networ
             f"NAFNet model must be one of {', '.join(CHECKPOINTS)}, not {name!r}"
         )
     filename, width = CHECKPOINTS[name]
-    return managed_module(("nafnet", REPO_ID, filename), lambda: _build(filename, width))
+    return managed_module(
+        ("nafnet", REPO_ID, filename), lambda: _build(filename, width), name="NAFNet"
+    )
 
 
 def _build(filename: str, width: int) -> Network:

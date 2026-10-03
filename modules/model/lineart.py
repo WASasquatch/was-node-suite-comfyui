@@ -146,7 +146,7 @@ def load(coarse: bool = False, device: str | None = None) -> Network:
         ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
     """
     filename = COARSE_FILENAME if coarse else FILENAME
-    return managed_module(("lineart", REPO_ID, filename), lambda: _build(filename))
+    return managed_module(("lineart", REPO_ID, filename), lambda: _build(filename), name="Lineart")
 
 
 def _build(filename: str) -> Network:

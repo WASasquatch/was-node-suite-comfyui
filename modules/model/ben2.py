@@ -484,7 +484,7 @@ def load(name: str = FILENAME, device: str | None = None):
             ``features.network`` is off.
     """
     path = locate(name)
-    return managed_module(("ben2", path), lambda: _build(path))
+    return managed_module(("ben2", path), lambda: _build(path), name="BEN2")
 
 
 def _build(path: str) -> Network:

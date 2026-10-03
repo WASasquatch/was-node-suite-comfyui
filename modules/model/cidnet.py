@@ -438,7 +438,9 @@ def load(scenario: str = "generalization", device: str | None = None) -> Network
         ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
     """
     filename = CHECKPOINTS[scenario]
-    return managed_module(("cidnet", REPO_ID, filename), lambda: _build(filename))
+    return managed_module(
+        ("cidnet", REPO_ID, filename), lambda: _build(filename), name="HVI-CIDNet"
+    )
 
 
 def _build(filename: str) -> Network:

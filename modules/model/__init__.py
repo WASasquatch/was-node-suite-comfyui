@@ -81,10 +81,13 @@ class Backend:
             is none.
         key: Cache key identifying the weights, without the device.
         build: The callable that produced ``(processor, model)``.
+        name: What ComfyUI's model management calls the model: the name it was registered
+            under, or its own class name.
     """
 
     def __init__(
         self, processor, model, load_device, offload_device, patcher=None, key=(), build=None,
+        name=None,
     ):
         self.processor = processor
         self.model = model
@@ -94,6 +97,7 @@ class Backend:
         self.patcher = patcher if self.patchers else None
         self.key = key
         self.build = build
+        self.name = name or type(model).__name__
 
     def on(self, device: str | None = None) -> "Backend":
         """The same weights on another device.
@@ -109,10 +113,13 @@ class Backend:
             return self
         # model.to(device) here would strand weights on a device comfy.model_management is
         # not accounting for and cannot reclaim.
-        return managed(self.key, self.build, device=device)
+        return managed(self.key, self.build, device=device, name=self.name)
 
-    def load(self):
+    def load(self, memory_required: int = 0):
         """Make the weights resident on :attr:`load_device` and return that device.
+
+        Args:
+            memory_required: Bytes of working memory to make room for beside the weights.
 
         Returns:
             The ``torch.device`` the inputs must be moved to.
@@ -123,7 +130,9 @@ class Backend:
             return self.load_device
         # A transformers module has no cast-on-use wrappers, so a partial load would leave
         # it with weights on two devices.
-        management.load_models_gpu(list(self.patchers), force_full_load=True)
+        management.load_models_gpu(
+            list(self.patchers), memory_required=int(memory_required), force_full_load=True
+        )
         return self.load_device
 
 
@@ -643,7 +652,7 @@ def offload_device(load_device=None):
     return management.unet_offload_device()
 
 
-def managed(key: tuple, build, *, device: str | None = None) -> Backend:
+def managed(key: tuple, build, *, device: str | None = None, name: str | None = None) -> Backend:
     """Return the memoized :class:`Backend` for ``key``, building it on first use.
 
     Args:
@@ -653,6 +662,8 @@ def managed(key: tuple, build, *, device: str | None = None) -> Backend:
         build: Zero-argument callable returning ``(processor, model)``, the model as
             ``from_pretrained`` returns it.
         device: Device name for inference, or ``None`` for ComfyUI's compute device.
+        name: What ComfyUI's model management calls the model in its log, such as
+            ``"BiRefNet"``. ``None`` uses the model's own class name.
 
     Returns:
         The cached backend.
@@ -667,23 +678,30 @@ def managed(key: tuple, build, *, device: str | None = None) -> Backend:
     model.eval()
     model.to(resting)
     logger.debug("%s built for %s, resting on %s", entry, load_device, resting)
-    patcher = _patcher(model, load_device, resting)
-    backend = Backend(processor, model, load_device, resting, patcher, key=key, build=build)
+    name = name or type(model).__name__
+    patcher = _patcher(model, load_device, resting, name)
+    backend = Backend(
+        processor, model, load_device, resting, patcher, key=key, build=build, name=name
+    )
     return _store(entry, backend)
 
 
-def managed_module(key: tuple, build, *, device: str | None = None) -> Backend:
+def managed_module(
+    key: tuple, build, *, device: str | None = None, name: str | None = None
+) -> Backend:
     """Return the memoized :class:`Backend` for a bare module, building it on first use.
 
     Args:
         key: Hashable identifier for the module and the weights it was built from.
         build: Zero-argument callable returning the module itself.
         device: Device name for inference, or ``None`` for ComfyUI's compute device.
+        name: What ComfyUI's model management calls the module in its log. ``None`` uses
+            its own class name.
 
     Returns:
         The cached backend, whose ``processor`` is ``None``.
     """
-    return managed(key, lambda: (None, build()), device=device)
+    return managed(key, lambda: (None, build()), device=device, name=name)
 
 
 def cached(key: tuple, build):
@@ -722,8 +740,8 @@ def _managed_device():
     return management.get_torch_device()
 
 
-def _patcher(model, load_device, resting):
-    """Register ``model`` with ComfyUI's model management, or return ``None``.
+def _patcher(model, load_device, resting, name: str):
+    """Register ``model`` with ComfyUI's model management under ``name``, or return ``None``.
 
     Returns:
         A ``ModelPatcher`` owning ``model``, or ``None`` when there is no VRAM to manage:
@@ -742,18 +760,20 @@ def _patcher(model, load_device, resting):
         )
         return None
     return comfy.model_patcher.ModelPatcher(
-        _holder(model), load_device=load_device, offload_device=resting
+        _holder(model, name), load_device=load_device, offload_device=resting
     )
 
 
-def _holder(model):
-    """A bare ``nn.Module`` owning ``model``, for a ``ModelPatcher`` to drive.
+def _holder(model, name: str):
+    """An ``nn.Module`` class called ``name``, owning ``model`` as its only submodule.
 
-    The container registers ``model`` as its only submodule, so both hold the same weights.
+    Args:
+        model: The network a ``ModelPatcher`` drives through the container.
+        name: The container's class name, which ComfyUI's model management logs.
     """
     import torch
 
-    holder = torch.nn.Module()
+    holder = type(name, (torch.nn.Module,), {"__module__": __name__})()
     # ModelPatcher assigns model.device as it moves weights between devices, and a
     # transformers model exposes device as a read-only property, so the patcher is handed a
     # container whose attribute is writable.

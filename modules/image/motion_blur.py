@@ -11,16 +11,16 @@ import math
 import torch
 import torch.nn.functional as F
 
+from ..media import clip as clips
+from . import motion as motion_field
 from . import optical_flow
 
 __all__ = [
     "LAYERS",
     "MAX_SAMPLES",
     "MAX_SHUTTER",
-    "MOTION_SIDE",
     "blur_frames",
     "render",
-    "visualise",
 ]
 
 #: Widest shutter accepted, in degrees. 360 exposes the whole frame interval.
@@ -29,20 +29,11 @@ MAX_SHUTTER = 720.0
 #: Most samples taken along a path.
 MAX_SAMPLES = 256
 
-#: Long side, in pixels, motion is measured at by default.
-MOTION_SIDE = 768
-
 #: Longest half-path drawn, in pixels of the frame.
 MAX_REACH = 160
 
 #: Smallest tile the dominant motion is gathered over, in pixels.
 MIN_TILE = 8
-
-#: Frame pairs measured together.
-PAIR_BATCH = 8
-
-#: Share of agreeing pixels below which a frame pair is treated as a cut.
-CUT_SHARE = 0.4
 
 #: Nearness difference over which one surface goes from level with another to wholly in front.
 SOFT_DEPTH = 0.05
@@ -51,41 +42,11 @@ SOFT_DEPTH = 0.05
 #: of the distance it was taken from.
 LANDING = (1.0, 0.2)
 
-#: Distances, in pixels of the measured motion, a pixel looks for a motion that matches better.
-SNAP_REACH = (4, 8, 16, 24)
-
-#: Half the window a motion's match against the neighbouring frame is summed over, in pixels of
-#: the measured motion.
-SNAP_RADIUS = 3
-
-#: Spread of motion, in pixels per frame of the measured motion, within :data:`SNAP_REACH` of a
-#: pixel that marks it as near a motion edge.
-SNAP_EDGE = 3.0
-
-#: Share of its own match cost a neighbour's motion has to beat to be taken.
-SNAP_BIAS = 0.85
-
-#: How much worse, as a share plus a floor in levels of 255, one side's match may be than the
-#: other's and still count as seen from that side.
-SIDE_MATCH = (1.5, 2.0)
-
 #: Width, in pixels of the measured motion, of the band a mask edge refills.
 MASK_BAND = 2
 
-#: Half-path length, in pixels, drawn at half brightness by :func:`visualise`.
-VISUAL_REACH = 8.0
-
 #: Which layers of a masked frame are blurred.
 LAYERS = ("all", "background", "subject")
-
-
-def _working_size(height: int, width: int, side: int) -> tuple[int, int]:
-    """The size motion is measured at: long side ``side``, never above the frame's own, even sides."""
-    longest = max(height, width)
-    if side <= 0 or side >= longest:
-        return height, width
-    scale = side / longest
-    return max(16, 2 * int(round(height * scale / 2))), max(16, 2 * int(round(width * scale / 2)))
 
 
 def _erode(mask, radius: int):
@@ -206,127 +167,6 @@ def render(colour, a, c, near, samples: int):
     return torch.where(reach_wide > 0.5, total / samples, colour)
 
 
-def _pair_flows(frames, size, device, progress):
-    """Forward and backward flow for every neighbouring pair, at ``size``.
-
-    Returns:
-        ``(forward, backward, cut, luma)``: flows ``(frames - 1, 2, h, w)``, a bool per pair that
-        is True where the pair is treated as a cut, and ``(frames, 1, h, w)`` luminance, all on
-        the CPU.
-    """
-    count = int(frames.shape[0])
-    height, width = size
-    forward = torch.zeros(max(count - 1, 0), 2, height, width)
-    backward = torch.zeros_like(forward)
-    cut = torch.zeros(max(count - 1, 0), dtype=torch.bool)
-    luma = torch.zeros(count, 1, height, width)
-    for start in range(0, count - 1, PAIR_BATCH):
-        stop = min(start + PAIR_BATCH, count - 1)
-        chunk = frames[start:stop + 1].to(device)
-        planes = optical_flow.resize(optical_flow.luminance(chunk), height, width)
-        del chunk
-        first, second = planes[:-1], planes[1:]
-        ahead = optical_flow.estimate(first, second)
-        behind = optical_flow.estimate(second, first)
-        share = optical_flow.consistent(ahead, behind).float().mean((1, 2, 3))
-        forward[start:stop] = ahead.cpu()
-        backward[start:stop] = behind.cpu()
-        cut[start:stop] = (share < CUT_SHARE).cpu()
-        luma[start:stop + 1] = planes.cpu()
-        if progress is not None:
-            progress(stop - start)
-    return forward, backward, cut, luma
-
-
-def _shifted(x, dx: int, dy: int):
-    """``x`` read ``(dx, dy)`` pixels away, edges held."""
-    height, width = x.shape[-2:]
-    pad = max(abs(dx), abs(dy))
-    padded = F.pad(x, (pad, pad, pad, pad), mode="replicate")
-    return padded[..., pad + dy:pad + dy + height, pad + dx:pad + dx + width]
-
-
-def _match_cost(here, flow, target):
-    """Windowed mean difference between a frame and its neighbour pulled back along ``flow``.
-
-    Returns:
-        ``(1, 1, h, w)`` in levels of 255, averaged over a ``2 * SNAP_RADIUS + 1`` window.
-    """
-    mismatch = (optical_flow.warp(target, flow) - here).abs()
-    window = 2 * SNAP_RADIUS + 1
-    return F.avg_pool2d(F.pad(mismatch, (SNAP_RADIUS,) * 4, mode="replicate"), window, stride=1)
-
-
-def _snap(here, flow, target):
-    """Give pixels near a motion edge the motion, their own or a neighbour's, that best matches.
-
-    Args:
-        here: Luminance of the frame, ``(1, 1, h, w)``.
-        flow: Flow from the frame onto ``target``, ``(1, 2, h, w)``.
-        target: Luminance of the frame the flow maps onto.
-
-    Returns:
-        ``(flow, cost)``: the flow with its edges moved onto the edges the frames agree on, and
-        its match cost from :func:`_match_cost`.
-    """
-    reach = max(SNAP_REACH)
-    spread = (
-        F.max_pool2d(flow, 2 * reach + 1, stride=1, padding=reach)
-        + F.max_pool2d(-flow, 2 * reach + 1, stride=1, padding=reach)
-    ).amax(1, keepdim=True)
-    edge = spread > SNAP_EDGE
-    own_cost = _match_cost(here, flow, target)
-    if not bool(edge.any()):
-        return flow, own_cost
-    best = flow
-    best_cost = own_cost * SNAP_BIAS
-    for distance in SNAP_REACH:
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
-            candidate = _shifted(flow, dx * distance, dy * distance)
-            candidate_cost = _match_cost(here, candidate, target)
-            take = (candidate_cost < best_cost) & edge
-            best = torch.where(take, candidate, best)
-            best_cost = torch.where(take, candidate_cost, best_cost)
-    return best, torch.minimum(best_cost, own_cost)
-
-
-def _frame_paths(index: int, forward, backward, cut, luma, device):
-    """Path terms and the occlusion band for one frame, at the measured size, in frames.
-
-    Returns:
-        ``(a, c, occluded)``: ``a`` and ``c`` scaled to a whole frame interval either side, and
-        a ``(1, 1, h, w)`` float that is 1 where the pixel is hidden in a neighbour.
-    """
-    count = forward.shape[0] + 1
-    ahead = forward[index:index + 1].to(device) if index < count - 1 and not cut[index] else None
-    behind = backward[index - 1:index].to(device) if index > 0 and not cut[index - 1] else None
-    if ahead is None and behind is None:
-        height, width = forward.shape[-2:]
-        zero = torch.zeros(1, 2, height, width, device=device)
-        return zero, zero, torch.zeros(1, 1, height, width, device=device)
-    here = luma[index:index + 1].to(device)
-    if behind is None:
-        agree = optical_flow.consistent(ahead, backward[index:index + 1].to(device))
-        ahead, _ = _snap(here, ahead, luma[index + 1:index + 2].to(device))
-        return ahead, torch.zeros_like(ahead), (~agree).float()
-    if ahead is None:
-        agree = optical_flow.consistent(behind, forward[index - 1:index].to(device))
-        behind, _ = _snap(here, behind, luma[index - 1:index].to(device))
-        return -behind, torch.zeros_like(behind), (~agree).float()
-    ahead_ok = optical_flow.consistent(ahead, backward[index:index + 1].to(device))
-    behind_ok = optical_flow.consistent(behind, forward[index - 1:index].to(device))
-    ahead, ahead_cost = _snap(here, ahead, luma[index + 1:index + 2].to(device))
-    behind, behind_cost = _snap(here, behind, luma[index - 1:index].to(device))
-    share, floor = SIDE_MATCH
-    ahead_ok = ahead_ok & (ahead_cost <= share * behind_cost + floor)
-    behind_ok = behind_ok & (behind_cost <= share * ahead_cost + floor)
-    both = ahead_ok & behind_ok
-    central = 0.5 * (ahead - behind)
-    a = torch.where(both, central, torch.where(ahead_ok, ahead, torch.where(behind_ok, -behind, central)))
-    c = torch.where(both, 0.5 * (ahead + behind), torch.zeros_like(ahead))
-    return a, c, (~both).float()
-
-
 def _plane(batch, index: int, size, device):
     """One ``(1, 1, height, width)`` plane of a mask or greyscale batch, resized to ``size``."""
     plane = batch[min(index, batch.shape[0] - 1)].to(device=device, dtype=torch.float32)
@@ -349,73 +189,67 @@ def _depth_range(depth) -> tuple[float, float]:
     return low, max(high, low + 1e-6)
 
 
-def visualise(a, c):
-    """A picture of one frame's paths: hue for direction, brightness for length.
-
-    Args:
-        a: Linear path term, ``(1, 2, height, width)`` in pixels of the frame.
-        c: Curved path term, shaped like ``a``.
-
-    Returns:
-        ``(height, width, 3)`` in ``[0, 1]``.
-    """
-    reach = a.norm(dim=1)[0] + c.norm(dim=1)[0]
-    hue = (torch.atan2(a[0, 1], a[0, 0]) / (2.0 * math.pi)) % 1.0
-    value = reach / (reach + VISUAL_REACH)
-    sector = hue * 6.0
-    channels = []
-    for shift in (5.0, 3.0, 1.0):
-        k = (shift + sector) % 6.0
-        channels.append(value * (1.0 - torch.clamp(torch.minimum(k, 4.0 - k), 0.0, 1.0)))
-    return torch.stack(channels, -1)
-
-
 def blur_frames(
     frames,
-    shutter: float = 180.0,
+    shutter=180.0,
     samples: int = 32,
-    motion_side: int = MOTION_SIDE,
+    motion_side: int = motion_field.MOTION_SIDE,
     mask=None,
     depth=None,
     layers: str = "all",
     device=None,
     progress=None,
+    motion=None,
 ):
     """Blur every frame of a sequence along the motion measured between its frames.
 
     Args:
         frames: ``(frames, height, width, channels)`` in ``[0, 1]``.
-        shutter: Shutter angle in degrees; 360 spans one frame interval.
+        shutter: Shutter angle in degrees, or one per frame; 360 spans one frame interval.
         samples: Points taken along each path.
-        motion_side: Long side motion is measured at; 0 measures at the frame's own size.
+        motion_side: Long side motion is measured at when ``motion`` is not given.
         mask: Optional ``(frames, height, width)`` subject mask, 1 on the subject.
         depth: Optional ``(frames, height, width, channels)`` depth, white nearest.
         layers: One of :data:`LAYERS`; which side of ``mask`` is blurred.
         device: Where the work runs. Defaults to the frames' own device.
         progress: Optional callable taking a step count, called as work completes.
+        motion: A :class:`~.motion.Motion` measured from these frames, or ``None`` to
+            measure here.
 
     Returns:
-        ``(blurred, motion)``: the blurred frames on the frames' device, and
+        ``(blurred, pictures)``: the blurred frames on the frames' device, and
         ``(frames, h, w, 3)`` pictures of the paths at the measured size.
     """
     count, height, width, channels = (int(v) for v in frames.shape)
     device = frames.device if device is None else torch.device(device)
-    size = _working_size(height, width, int(motion_side))
-    exposure = max(0.0, float(shutter)) / 360.0
+    angles = clips.stretch(shutter if isinstance(shutter, (list, tuple)) else [shutter], count)
     samples = max(1, min(int(samples), MAX_SAMPLES))
     blurred = torch.empty_like(frames)
-    motion = torch.zeros(count, size[0], size[1], 3)
-    if count < 2 or exposure <= 0.0:
+    if motion is None:
+        if count < 2 or max(angles) <= 0.0:
+            size = motion_field.working_size(height, width, int(motion_side))
+            blurred.copy_(frames)
+            if progress is not None:
+                progress(max(count - 1, 0) + count)
+            return blurred, torch.zeros(count, size[0], size[1], 3)
+        motion = motion_field.measure(frames, int(motion_side), device, progress)
+    size = motion.size
+    pictures = torch.zeros(count, size[0], size[1], 3)
+    if count < 2:
         blurred.copy_(frames)
         if progress is not None:
-            progress(max(count - 1, 0) + count)
-        return blurred, motion
+            progress(count)
+        return blurred, pictures
 
-    forward, backward, cut, luma = _pair_flows(frames, size, device, progress)
     depth_range = _depth_range(depth) if depth is not None else None
-    half = 0.5 * exposure
     for index in range(count):
-        a, c, occluded = _frame_paths(index, forward, backward, cut, luma, device)
+        half = 0.5 * max(0.0, angles[index]) / 360.0
+        if half <= 0.0:
+            blurred[index] = frames[index]
+            if progress is not None:
+                progress(1)
+            continue
+        a, c, occluded = motion.paths(index, device)
         subject = _plane(mask, index, size, device) if mask is not None else None
         if subject is not None:
             inside = _erode((subject > 0.5).float(), MASK_BAND)
@@ -450,7 +284,7 @@ def blur_frames(
         out = render(colour, a, c, near, samples)
         blurred[index] = out[0].permute(1, 2, 0).to(blurred.dtype).to(blurred.device)
         small = F.interpolate(torch.cat([a, c], 1), size=size, mode="bilinear", align_corners=False)
-        motion[index] = visualise(small[:, 0:2], small[:, 2:4]).cpu()
+        pictures[index] = motion_field.visualise(small[:, 0:2], small[:, 2:4]).cpu()
         if progress is not None:
             progress(1)
-    return blurred, motion
+    return blurred, pictures

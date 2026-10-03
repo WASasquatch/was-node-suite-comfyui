@@ -1,0 +1,385 @@
+{
+  "id": "f0589891-972e-4b0f-b2a4-50fca6483cf7",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        20,
+        40
+      ],
+      "size": [
+        282.798828125,
+        234.00460012335526
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1,
+            2,
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "t2v_derope_00042_.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "t2v_derope_00042_.mp4",
+        "upload": "image"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "WASVideoMotionModelLoader",
+      "pos": [
+        20,
+        420
+      ],
+      "size": [
+        283.0484375,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "motion_model",
+          "type": "WAS_MOTION_MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASVideoMotionModelLoader"
+      },
+      "widgets_values": [
+        "sea_raft_m_spring.safetensors",
+        4
+      ],
+      "widgets_values_named": {
+        "checkpoint": "sea_raft_m_spring.safetensors",
+        "iterations": 4
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "WASVideoMotion",
+      "pos": [
+        360,
+        40
+      ],
+      "size": [
+        620,
+        500
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO,IMAGE",
+          "link": 1
+        },
+        {
+          "name": "motion_model",
+          "shape": 7,
+          "type": "WAS_MOTION_MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "motion",
+          "type": "WAS_MOTION",
+          "links": null
+        },
+        {
+          "name": "motion_preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "motion_video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASVideoMotion",
+        "was_compare_sides": {
+          "a": {
+            "filename": "was.motion.before_00002_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          },
+          "b": {
+            "filename": "was.motion.after_00002_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          }
+        }
+      },
+      "widgets_values": [
+        768
+      ],
+      "widgets_values_named": {
+        "motion_resolution": 768
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "WASVideoMotion",
+      "pos": [
+        360,
+        580
+      ],
+      "size": [
+        620,
+        500
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO,IMAGE",
+          "link": 2
+        },
+        {
+          "name": "motion_model",
+          "shape": 7,
+          "type": "WAS_MOTION_MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "motion",
+          "type": "WAS_MOTION",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "motion_preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "motion_video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASVideoMotion",
+        "was_compare_sides": {
+          "a": {
+            "filename": "was.motion.before_00001_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          },
+          "b": {
+            "filename": "was.motion.after_00001_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          }
+        }
+      },
+      "widgets_values": [
+        768
+      ],
+      "widgets_values_named": {
+        "motion_resolution": 768
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "WASVideoMotionBlur",
+      "pos": [
+        1010,
+        580
+      ],
+      "size": [
+        620,
+        560
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 4
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "depth",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "motion",
+          "shape": 7,
+          "type": "WAS_MOTION",
+          "link": 5
+        },
+        {
+          "name": "shutter_curve",
+          "shape": 7,
+          "type": "ARRAY",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "motion_preview",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASVideoMotionBlur",
+        "was_compare_sides": {
+          "a": {
+            "filename": "was.motion_blur.before_00003_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          },
+          "b": {
+            "filename": "was.motion_blur.after_00003_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          }
+        }
+      },
+      "widgets_values": [
+        180,
+        164,
+        "all"
+      ],
+      "widgets_values_named": {
+        "shutter_angle": 180,
+        "samples": 164,
+        "blur_layers": "all"
+      },
+      "bgcolor": "transparent"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      1,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      1,
+      "WAS_MOTION_MODEL"
+    ],
+    [
+      4,
+      1,
+      0,
+      5,
+      0,
+      "VIDEO"
+    ],
+    [
+      5,
+      4,
+      0,
+      5,
+      3,
+      "WAS_MOTION"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.7330553879124537,
+      "offset": [
+        1519.3457745280912,
+        269.90800026155574
+      ]
+    },
+    "frontendVersion": "1.53.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

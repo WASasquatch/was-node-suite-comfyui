@@ -306,7 +306,9 @@ def load_misto(device: str | None = None) -> Network:
     Raises:
         ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
     """
-    return managed_module(("teed_misto", MISTO_REPO_ID, MISTO_FILENAME), _build_misto)
+    return managed_module(
+        ("teed_misto", MISTO_REPO_ID, MISTO_FILENAME), _build_misto, name="AnyLine"
+    )
 
 
 def _build_misto() -> Network:
@@ -332,7 +334,7 @@ def load(device: str | None = None) -> Network:
     Raises:
         ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
     """
-    return managed_module(("teed", REPO_ID, FILENAME), _build)
+    return managed_module(("teed", REPO_ID, FILENAME), _build, name="TEED")
 
 
 def _build() -> Network:

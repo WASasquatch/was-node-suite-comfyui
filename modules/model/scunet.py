@@ -330,7 +330,7 @@ def load(device: str | None = None) -> Network:
     Raises:
         ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
     """
-    return managed_module(("scunet", REPO_ID, FILENAME), _build)
+    return managed_module(("scunet", REPO_ID, FILENAME), _build, name="SCUNet")
 
 
 def _build() -> Network:

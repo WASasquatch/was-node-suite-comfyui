@@ -13,7 +13,7 @@ def apply_film_grain(img, density: float = 0.1, intensity: float = 1.0,
                      highlights: float = 1.0, supersample_factor: int = 4):
     """Blend randomly speckled grain into an image.
 
-    Values come from the global :mod:`random` state.
+    Each call seeds its grain from the global :mod:`random` state.
 
     Args:
         img: Source PIL image.
@@ -27,6 +27,7 @@ def apply_film_grain(img, density: float = 0.1, intensity: float = 1.0,
     Returns:
         A PIL image the same size and mode as the source.
     """
+    import numpy as np
     from PIL import Image, ImageEnhance, ImageFilter
 
     img_gray = img.convert('L')
@@ -37,17 +38,12 @@ def apply_film_grain(img, density: float = 0.1, intensity: float = 1.0,
         ((img.size[0] * supersample_factor), (img.size[1] * supersample_factor)),
         Image.Resampling.BILINEAR,
     )
-    num_pixels = int(density * img_gray.size[0] * img_gray.size[1])
-
-    noise_pixels = []
-    for _ in range(num_pixels):
-        x = random.randint(0, img_gray.size[0] - 1)
-        y = random.randint(0, img_gray.size[1] - 1)
-        noise_pixels.append((x, y))
-
-    for x, y in noise_pixels:
-        value = random.randint(0, 255)
-        img_gray.putpixel((x, y), value)
+    pixels = np.array(img_gray)
+    count = int(density * pixels.size)
+    generator = np.random.default_rng(random.getrandbits(64))
+    flat = pixels.reshape(-1)
+    flat[generator.integers(0, flat.size, count)] = generator.integers(0, 256, count, dtype=np.uint8)
+    img_gray = Image.fromarray(pixels)
 
     img_noise = img_gray.convert('RGB')
     img_noise = img_noise.filter(ImageFilter.GaussianBlur(radius=0.125))

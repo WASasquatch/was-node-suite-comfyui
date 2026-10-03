@@ -97,6 +97,7 @@ class VideoFrameSample(io.ComfyNode):
                     default=0,
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
+                    control_after_generate=io.ControlAfterGenerate.fixed,
                     tooltip=(
                         "Seed for random, so a re-run keeps the same frames. Ignored by the "
                         "other strategies. Any whole number; `0` is as good a seed as any."

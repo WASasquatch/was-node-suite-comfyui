@@ -18,6 +18,8 @@ const VALUE_SLOTS = Array.from({ length: SLOTS }, (unused, index) => `value_${in
 
 const TILE_SLOTS = Array.from({ length: 16 }, (unused, index) => `tile_${index + 1}`);
 
+const SCENE_SLOTS = Array.from({ length: 24 }, (unused, index) => `scene_${index + 1}`);
+
 // How many slots a lettered series declares by default, and the letters it uses.
 const LETTERED_SLOTS = 24;
 
@@ -287,6 +289,8 @@ const GROWING = {
   },
   // One output per tile, so the grid decides how many are drawn rather than the wiring, and
   // the sockets are redrawn whenever either widget named in `watch` changes.
+  // One clip per scene, drawn as they are wired; the scenes list carries any past the last.
+  WASVideoSplitScenes: SCENE_SLOTS,
   WASImageTileExtractGrid: {
     slots: TILE_SLOTS,
     watch: ["columns", "rows"],

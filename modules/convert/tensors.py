@@ -215,6 +215,32 @@ def stack_images(images: list[Image.Image]) -> torch.Tensor:
 
 
 
+def _progress(total: int):
+    """A callable advancing the running node's progress bar by one frame.
+
+    Args:
+        total: Frames in the batch.
+
+    Returns:
+        A callable that also stops a cancelled run; it does nothing outside ComfyUI or for a
+        single frame.
+    """
+    if total < 2:
+        return lambda: None
+    try:
+        import comfy.model_management
+        import comfy.utils
+    except ImportError:
+        return lambda: None
+    bar = comfy.utils.ProgressBar(total)
+
+    def step():
+        comfy.model_management.throw_exception_if_processing_interrupted()
+        bar.update(1)
+
+    return step
+
+
 def filtered_planes(images: torch.Tensor, filter_fn) -> torch.Tensor:
     """Run a PIL filter over every image of a batch, keeping light outside 0 to 1.
 
@@ -230,9 +256,13 @@ def filtered_planes(images: torch.Tensor, filter_fn) -> torch.Tensor:
     from ..image import dynamic
 
     folded = dynamic.fold(images)
-    stacked = stack_images(
-        [filter_fn(tensor2pil(plane)) for plane in image_planes(folded.images)]
-    )
+    planes = image_planes(folded.images)
+    step = _progress(len(planes))
+    filtered = []
+    for plane in planes:
+        filtered.append(filter_fn(tensor2pil(plane)))
+        step()
+    stacked = stack_images(filtered)
     result = dynamic.unfold(stacked, folded)
     if images.is_floating_point():
         return result.to(device=images.device, dtype=images.dtype)

@@ -6,6 +6,8 @@
  */
 
 import { app } from "../../../scripts/app.js";
+import { api } from "../../../scripts/api.js";
+import { executionId } from "./preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
 import { themeVar } from "./theme.js";
@@ -33,6 +35,10 @@ const LINE_HOVER = 3;
 
 // Width of the transparent strip the divider is dragged by.
 const GRIP_WIDTH = 14;
+
+// Where the last pair of written sides is kept. `properties` is serialised with the node and no
+// python reads it.
+const REMEMBERED_KEY = "was_compare_sides";
 
 /**
  * The address a written side is served from.
@@ -285,38 +291,110 @@ export function createVideoComparePanel(node) {
   };
   left.addEventListener("timeupdate", followed);
   right.addEventListener("timeupdate", followed);
+  left.addEventListener("loadedmetadata", followed);
+  right.addEventListener("loadedmetadata", followed);
+
+  let loaded = "";
 
   /**
-   * Point both players at whatever the last run wrote.
+   * Point both players at one pair of written sides.
+   *
+   * @param {object} sides - `a` and `b`, each a written file's entry or nothing.
+   * @returns {boolean} True when the pair named at least one file.
+   */
+  function show(sides) {
+    const a = addressOf(sides?.a);
+    const b = addressOf(sides?.b);
+    if (!a && !b) return false;
+    const pair = `${a}|${b}`;
+    if (pair === loaded) return true;
+    loaded = pair;
+    const stamp = `&rand=${Math.random()}`;
+    for (const [el, address] of [[left, a], [right, b]]) {
+      if (address) {
+        el.src = address + stamp;
+        el.style.display = "block";
+      } else {
+        el.removeAttribute("src");
+        el.style.display = "none";
+      }
+    }
+    paired = Boolean(a && b);
+    empty.style.display = "none";
+    divider.style.display = paired ? "block" : "none";
+    grip.style.display = paired ? "block" : "none";
+    readout.textContent = "0.00 / 0.00 s";
+    scrub.value = "0";
+    paint();
+    return true;
+  }
+
+  /**
+   * Keep a pair on the node, so a reloaded or reopened workflow shows it again.
+   *
+   * @param {object} sides - `a` and `b`.
+   * @returns {void}
+   */
+  function remember(sides) {
+    node.properties ??= {};
+    node.properties[REMEMBERED_KEY] = { a: sides?.a ?? null, b: sides?.b ?? null };
+  }
+
+  const sidesOf = (output) => ({ a: output?.a_video?.[0], b: output?.b_video?.[0] });
+
+  /**
+   * Point both players at whatever the last run wrote, or the pair kept on the node.
    *
    * @returns {void}
    */
   function refresh() {
     try {
-      const output = app?.nodeOutputs?.[node.id] ?? app?.nodeOutputs?.[String(node.id)];
-      const a = addressOf(output?.a_video?.[0]);
-      const b = addressOf(output?.b_video?.[0]);
-      const stamp = `&rand=${Math.random()}`;
-      for (const [el, address] of [[left, a], [right, b]]) {
-        if (address) {
-          el.src = address + stamp;
-          el.style.display = "block";
-        } else {
-          el.removeAttribute("src");
-          el.style.display = "none";
-        }
+      const store = app?.nodeOutputs ?? {};
+      const sides = sidesOf(store[executionId(node)] ?? store[node.id] ?? store[String(node.id)]);
+      if (show(sides)) {
+        remember(sides);
+        return;
       }
-      paired = Boolean(a && b);
-      empty.style.display = a || b ? "none" : "flex";
-      divider.style.display = paired ? "block" : "none";
-      grip.style.display = paired ? "block" : "none";
-      readout.textContent = "0.00 / 0.00 s";
-      scrub.value = "0";
-      paint();
+      show(node.properties?.[REMEMBERED_KEY]);
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to read the written sides:`, error);
     }
   }
+
+  // The node's own report of what it wrote, read as it arrives rather than from the store.
+  const onExecuted = (event) => {
+    try {
+      const detail = event?.detail;
+      const shown = String(detail?.display_node ?? detail?.node ?? "");
+      if (!shown || shown !== executionId(node)) return;
+      const sides = sidesOf(detail?.output);
+      if (show(sides)) remember(sides);
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to read the node's report:`, error);
+    }
+  };
+  api.addEventListener("executed", onExecuted);
+
+  // A side that no longer exists, such as a temp file cleared by a restart, leaves the prompt.
+  for (const el of [left, right]) {
+    el.addEventListener("error", () => {
+      el.style.display = "none";
+      if (left.style.display === "none" && right.style.display === "none") {
+        loaded = "";
+        empty.style.display = "flex";
+        divider.style.display = "none";
+        grip.style.display = "none";
+      }
+      schedule();
+    });
+  }
+
+  const originalOnConfigure = node.onConfigure;
+  node.onConfigure = function (...args) {
+    const configured = originalOnConfigure?.apply(this, args);
+    refresh();
+    return configured;
+  };
 
   const stop = onRunEnded(() => refresh());
   paint();
@@ -325,6 +403,7 @@ export function createVideoComparePanel(node) {
   const dispose = () => {
     try {
       stop?.();
+      api.removeEventListener?.("executed", onExecuted);
       stopRatio();
       resized.disconnect();
       if (pending) cancelAnimationFrame(pending);

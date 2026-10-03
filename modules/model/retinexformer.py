@@ -337,7 +337,9 @@ def load(name: str = "Retinexformer NTIRE", device: str | None = None) -> Networ
             f"Retinexformer model must be one of {', '.join(MODELS)}, not {name!r}"
         )
     filename = MODELS[name]
-    return managed_module(("retinexformer", REPO_ID, filename), lambda: _build(filename))
+    return managed_module(
+        ("retinexformer", REPO_ID, filename), lambda: _build(filename), name="Retinexformer"
+    )
 
 
 def _build(filename: str) -> Network:

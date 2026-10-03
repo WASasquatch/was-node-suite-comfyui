@@ -20,9 +20,10 @@ class EMAVFIModelLoader(io.ComfyNode):
         found = frame_interpolation.offered()
         return io.Schema(
             node_id="WASEMAVFIModelLoader",
-            display_name="EMA-VFI Model Loader",
+            display_name="EMA-VFI Video Model Loader",
             search_aliases=[
                 "WASEMAVFIModelLoader",
+                "EMA-VFI Video Model Loader",
                 "EMA-VFI Model Loader",
                 "EMA-VFI",
                 "frame interpolation",

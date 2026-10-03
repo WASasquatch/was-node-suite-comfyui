@@ -333,7 +333,7 @@ def backend(name: str, device: str | None = None):
     # Modification time is in the key so replacing a checkpoint in place is picked up rather
     # than serving the old weights for the rest of the session.
     key = ("ema_vfi", str(path), path.stat().st_mtime_ns)
-    return managed(key, lambda: _build(path, name), device=device)
+    return managed(key, lambda: _build(path, name), device=device, name="EMA-VFI")
 
 
 def interpolate(net, first, second, timestep: float = 0.5):

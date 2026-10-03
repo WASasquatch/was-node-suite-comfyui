@@ -543,7 +543,7 @@ def load(name: str = FILENAME, device: str | None = None):
             ``features.network`` is off.
     """
     path = locate(name)
-    return managed_module(("birefnet", path), lambda: _build(path), device=device)
+    return managed_module(("birefnet", path), lambda: _build(path), device=device, name="BiRefNet")
 
 
 def _build(path: str) -> Network:

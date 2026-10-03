@@ -5,15 +5,15 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules import log
+from ...modules.compat.types import LIST, MOTION
 from ...modules.image import motion_blur
 
 logger = log.get_logger("nodes.video_motion_blur")
 
 NODE_NAME = "Video Motion Blur"
 
-#: What each side of the comparison on the node is written under in the temp folder.
-PREFIX_BEFORE = "was.motion_blur.before"
-PREFIX_AFTER = "was.motion_blur.after"
+#: What both sides of the comparison on the node are written under in the temp folder.
+PREFIX = "was.motion_blur"
 
 
 class VideoMotionBlur(io.ComfyNode):
@@ -31,9 +31,11 @@ class VideoMotionBlur(io.ComfyNode):
                 "shutter angle",
                 "180 degree shutter",
                 "film blur",
+                "speed ramp",
                 "optical flow",
             ],
             category="WAS Suite/Animation",
+            is_output_node=True,
             description=(
                 "Add the motion blur a film camera records, drawn along the motion measured "
                 "between the video's own frames, so a crisp or strobing clip moves like "
@@ -70,16 +72,6 @@ class VideoMotionBlur(io.ComfyNode):
                         "streaks up to about 30 px; 96 = long streaks without stepping."
                     ),
                 ),
-                io.Int.Input(
-                    "motion_resolution",
-                    default=motion_blur.MOTION_SIDE,
-                    min=0,
-                    max=4096,
-                    tooltip=(
-                        "Long side, in pixels, the motion is measured at: 0 = the video's "
-                        "own size; 512 = fastest; 768 = default; 1280 = small, fine motion."
-                    ),
-                ),
                 io.Combo.Input(
                     "blur_layers",
                     options=list(motion_blur.LAYERS),
@@ -107,6 +99,24 @@ class VideoMotionBlur(io.ComfyNode):
                         "which surface passes in front where two motions meet."
                     ),
                 ),
+                MOTION.Input(
+                    "motion",
+                    optional=True,
+                    tooltip=(
+                        "Motion from Video Motion, measured from this same clip, so one "
+                        "measurement serves several nodes. Left empty, it is measured here at "
+                        "768 px on the long side."
+                    ),
+                ),
+                LIST.Input(
+                    "shutter_curve",
+                    optional=True,
+                    tooltip=(
+                        "Shutter angles across the clip for a speed ramp, such as the values of "
+                        "Curve to Numbers: [90, 360, 90] opens up mid-clip. Stretched to the "
+                        "clip's length; replaces shutter_angle."
+                    ),
+                ),
             ],
             outputs=[
                 io.Video.Output(
@@ -114,10 +124,10 @@ class VideoMotionBlur(io.ComfyNode):
                     tooltip="The blurred clip: same size, length, frame rate and audio.",
                 ),
                 io.Image.Output(
-                    display_name="motion",
+                    display_name="motion_preview",
                     tooltip=(
-                        "The measured motion per frame at motion_resolution: hue is "
-                        "direction, brightness is blur length, black is still."
+                        "The blur each frame was given, at the size motion was measured: hue "
+                        "is direction, brightness is length, black is none."
                     ),
                 ),
             ],
@@ -129,28 +139,27 @@ class VideoMotionBlur(io.ComfyNode):
         video,
         shutter_angle=180.0,
         samples=32,
-        motion_resolution=motion_blur.MOTION_SIDE,
         blur_layers="all",
         mask=None,
         depth=None,
+        motion=None,
+        shutter_curve=None,
     ) -> io.NodeOutput:
         """Blur the clip and write both sides for the comparison on the node.
 
         Raises:
-            ValueError: The clip holds fewer than two frames, or a mask or depth batch holds
-                a different number of frames than the clip.
+            ValueError: The clip holds fewer than two frames, a mask or depth batch holds a
+                different number of frames than the clip, the motion was measured from
+                another clip, or the shutter curve holds something other than numbers.
         """
         import torch
 
         import comfy.model_management
-        import comfy.utils
-        from comfy_api.latest import InputImpl, Types
 
-        from ...modules.media.temp_video import to_temp
+        from ...modules.media import clip as clips
 
-        parts = video.get_components()
-        frames = parts.images
-        count = int(frames.shape[0])
+        source = clips.open_clip(video, NODE_NAME)
+        count = int(source.frames.shape[0])
         if count < 2:
             raise ValueError(
                 f"{NODE_NAME} measures motion between frames and the clip holds {count}. "
@@ -163,52 +172,45 @@ class VideoMotionBlur(io.ComfyNode):
                     f"{count}. Connect one {name} per frame of the clip, or a single one "
                     f"for all of it."
                 )
+        shutter = float(shutter_angle)
+        if shutter_curve is not None:
+            try:
+                shutter = [float(value) for value in shutter_curve]
+            except (TypeError, ValueError):
+                raise ValueError(
+                    f"{NODE_NAME}'s shutter_curve holds something other than numbers. Connect "
+                    f"the values of Curve to Numbers, or a list of angles in degrees."
+                ) from None
+            if not shutter:
+                raise ValueError(
+                    f"{NODE_NAME}'s shutter_curve is empty. Connect at least one angle, or "
+                    f"disconnect it to use shutter_angle."
+                )
 
-        alpha = parts.alpha
-        source = frames
-        if alpha is not None:
-            source = torch.cat([frames, alpha.to(frames.dtype).unsqueeze(-1)], -1)
+        frames = source.frames
+        if source.alpha is not None:
+            frames = torch.cat([frames, source.alpha.to(frames.dtype).unsqueeze(-1)], -1)
 
-        bar = comfy.utils.ProgressBar(2 * count - 1)
-
-        def advance(steps):
-            comfy.model_management.throw_exception_if_processing_interrupted()
-            bar.update(steps)
-
-        blurred, motion = motion_blur.blur_frames(
-            source,
-            shutter=float(shutter_angle),
+        device = comfy.model_management.get_torch_device()
+        step = clips.progress(2 * count - 1)
+        motion = clips.motion_for(source, motion, NODE_NAME, device, step)
+        blurred, pictures = motion_blur.blur_frames(
+            frames,
+            shutter=shutter,
             samples=int(samples),
-            motion_side=int(motion_resolution),
             mask=mask,
             depth=depth,
             layers=str(blur_layers),
-            device=comfy.model_management.get_torch_device(),
-            progress=advance,
+            device=device,
+            progress=step,
+            motion=motion,
         )
-        blurred = blurred.clamp_(0.0, 1.0)
-        if alpha is not None:
+        alpha = None
+        if source.alpha is not None:
             blurred, alpha = blurred[..., :-1].contiguous(), blurred[..., -1].contiguous()
 
-        answer = InputImpl.VideoFromComponents(
-            Types.VideoComponents(
-                images=blurred,
-                frame_rate=parts.frame_rate,
-                audio=parts.audio,
-                metadata=parts.metadata,
-                alpha=alpha,
-            ),
-            bit_depth=video.get_bit_depth(),
-            color_space=video.get_color_space(),
-        )
-        logger.info(
-            "blurred %d frame(s) at a %g degree shutter, motion measured at %s",
-            count, float(shutter_angle), "x".join(str(v) for v in motion.shape[1:3]),
-        )
-
-        sides = {"a_video": [], "b_video": []}
-        for key, clip, prefix in (("a_video", video, PREFIX_BEFORE), ("b_video", answer, PREFIX_AFTER)):
-            written = to_temp(clip, prefix)
-            if written is not None:
-                sides[key].append(written)
-        return io.NodeOutput(answer, motion, ui=sides)
+        answer = clips.rebuild(source, blurred, alpha=alpha)
+        logger.info("blurred %s at %s", motion.describe(), (
+            f"{shutter:g} degrees" if isinstance(shutter, float) else f"{len(shutter)} curve point(s)"
+        ))
+        return io.NodeOutput(answer, pictures, ui=clips.compare(video, answer, PREFIX))
