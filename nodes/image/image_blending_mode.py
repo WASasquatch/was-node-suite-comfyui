@@ -118,11 +118,38 @@ class ImageBlendingMode(io.ComfyNode):
 
     @classmethod
     def execute(cls, image_a, image_b, mode, blend_percentage) -> io.NodeOutput:
+        """Blend every pair of frames.
+
+        Raises:
+            ValueError: An input holds no images.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        from ...modules.image import scratch
+
         scale = dynamic.peak(image_a, image_b)
-        first = dynamic.fold(image_a, scale)
-        frames = broadcast_image_planes(first.images, dynamic.fold(image_b, scale).images)
-        blended = [cls.composite(a, b, mode, blend_percentage) for a, b in frames]
-        return io.NodeOutput(dynamic.unfold(torch.stack(blended, dim=0), first))
+        frames = broadcast_image_planes(image_a, image_b)
+        blended = None
+        for index, (a, b) in enumerate(frames):
+            first = dynamic.fold(a, scale)
+            frame = cls.composite(
+                first.images, dynamic.fold(b, scale).images, mode, blend_percentage
+            )
+            if blended is None:
+                shape = (len(frames),) + tuple(frame.shape)
+                blended = (
+                    scratch.allocate(
+                        shape,
+                        frame.dtype,
+                        node="Image Blending Mode",
+                        advice="Passing fewer frames also fits it.",
+                    )
+                    if frame.device.type == "cpu"
+                    else torch.empty(shape, dtype=frame.dtype, device=frame.device)
+                )
+            blended[index] = frame
+            if first.scale != 1.0:
+                blended[index].mul_(first.scale)
+        return io.NodeOutput(blended)
 
     @staticmethod
     def composite(image_a, image_b, mode: str, blend_percentage: float):

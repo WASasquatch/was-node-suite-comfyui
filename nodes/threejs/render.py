@@ -252,14 +252,19 @@ class ThreeRender(io.ComfyNode):
         return [start + step * index for index in range(num_frames)]
 
     @staticmethod
-    def as_batch(bodies: list[bytes]):
+    def as_batch(bodies: list[bytes], node: str = "Three Render"):
         """Frames as one ``IMAGE`` batch.
 
         Args:
             bodies: The PNG bytes the browser posted back, in time order.
+            node: Display name of the node asking, for the refusal.
 
         Returns:
             A float tensor shaped ``(frames, height, width, channels)`` in ``[0, 1]``.
+
+        Raises:
+            ValueError: ``bodies`` is empty, or its frames differ in size or channel count.
+            MemoryError: Neither free memory nor a scratch drive can hold the batch.
         """
         import io as _io
 
@@ -267,9 +272,28 @@ class ThreeRender(io.ComfyNode):
         import torch
         from PIL import Image
 
-        frames = []
-        for body in bodies:
+        from ...modules.image import scratch
+
+        if not bodies:
+            raise ValueError(
+                f"{node} received no frames from the browser. Queue the graph again from an "
+                f"open ComfyUI tab."
+            )
+        batch = None
+        for index, body in enumerate(bodies):
             picture = Image.open(_io.BytesIO(body))
             picture = picture.convert("RGBA" if "A" in picture.getbands() else "RGB")
-            frames.append(np.asarray(picture).astype(np.float32) / 255.0)
-        return torch.from_numpy(np.stack(frames, axis=0))
+            frame = torch.from_numpy(np.asarray(picture).astype(np.float32) / 255.0)
+            if batch is None:
+                batch = scratch.allocate(
+                    (len(bodies), *frame.shape), node=node,
+                    advice="Lowering width, height or num_frames also fits it.",
+                )
+            elif frame.shape != batch.shape[1:]:
+                raise ValueError(
+                    f"{node} received frame {index} shaped {tuple(frame.shape)} after a first "
+                    f"frame shaped {tuple(batch.shape[1:])}, as height, width and channels, so "
+                    f"the frames cannot form one batch. Queue the graph again."
+                )
+            batch[index].copy_(frame)
+        return batch

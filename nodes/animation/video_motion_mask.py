@@ -109,12 +109,14 @@ class VideoMotionMask(io.ComfyNode):
         Raises:
             ValueError: The clip holds fewer than two frames, or the motion was measured from
                 another clip.
+            MemoryError: Neither free memory nor a scratch drive can hold the mask and the
+                tinted clip.
         """
         import torch
 
         import comfy.model_management
 
-        from ...modules.image import motion_effects
+        from ...modules.image import motion_effects, scratch
         from ...modules.media import clip as clips
 
         source = clips.open_clip(video, NODE_NAME)
@@ -128,8 +130,9 @@ class VideoMotionMask(io.ComfyNode):
         step = clips.progress(2 * count - 1)
         motion = clips.motion_for(source, motion, NODE_NAME, device, step)
 
-        masks = torch.empty(count, height, width)
-        tinted = torch.empty_like(source.frames[..., :3])
+        advice = "A shorter clip also fits it."
+        masks = scratch.allocate((count, height, width), torch.float32, NODE_NAME, advice)
+        tinted = scratch.allocate((count, height, width, 3), source.frames.dtype, NODE_NAME, advice)
         tint = torch.tensor(TINT, device=device).view(1, 3, 1, 1)
         for index in range(count):
             mask = motion_effects.moving_mask(

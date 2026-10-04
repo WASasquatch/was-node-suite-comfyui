@@ -23,8 +23,17 @@ const PANEL_MIN_WIDTH = 300;
 // Where the divider starts, as a percentage across.
 const START_SPLIT = 50;
 
-// How far the two clocks may drift before the right-hand clip is pulled back into step.
-const DRIFT_SECONDS = 0.06;
+// How far the following clip may sit from the leading one before it is seeked rather than steered.
+const SEEK_SECONDS = 0.5;
+
+// How far the following clip may sit from the leading one and still play at the same rate.
+const SETTLE_SECONDS = 0.02;
+
+// Seconds a drift is closed over by changing the following clip's rate.
+const CATCH_UP_SECONDS = 0.5;
+
+// The furthest the following clip's rate is moved from the leading one's, as a share.
+const RATE_REACH = 0.15;
 
 // How far before its end a shorter clip is parked, so its last frame stays on screen.
 const HOLD_SECONDS = 0.01;
@@ -153,7 +162,27 @@ export function createVideoComparePanel(node) {
   let paired = false;
   const dragging = { on: false };
 
-  const ready = (el) => el.style.display !== "none" && el.readyState >= 2 && el.videoWidth > 0;
+  const ready = (el) => el.style.display !== "none" && el.readyState >= 2 && el.videoWidth > 0 && !el.seeking;
+
+  // The last frame each clip presented, kept so a clip that is seeking shows that frame.
+  const held = new Map([[left, null], [right, null]]);
+  const keep = (el, width, height) => {
+    let copy = held.get(el);
+    if (!copy || copy.width !== width || copy.height !== height) {
+      const resized = document.createElement("canvas");
+      resized.width = width;
+      resized.height = height;
+      if (copy) resized.getContext("2d")?.drawImage(copy, 0, 0, width, height);
+      held.set(el, resized);
+      copy = resized;
+    }
+    if (ready(el)) {
+      const pen = copy.getContext("2d");
+      pen?.clearRect(0, 0, width, height);
+      pen?.drawImage(el, ...fitted(el, width, height));
+    }
+    return el.style.display !== "none" && el.videoWidth > 0 ? copy : null;
+  };
   // The clip's own aspect, centred in the canvas, as `object-fit: contain` places it.
   const fitted = (el, width, height) => {
     const scale = Math.min(width / el.videoWidth, height / el.videoHeight);
@@ -170,16 +199,18 @@ export function createVideoComparePanel(node) {
       canvas.width = width;
       canvas.height = height;
     }
+    const leftFrame = keep(left, width, height);
+    const rightFrame = keep(right, width, height);
     context.clearRect(0, 0, width, height);
-    if (ready(left)) context.drawImage(left, ...fitted(left, width, height));
-    if (!ready(right)) return;
+    if (leftFrame) context.drawImage(leftFrame, 0, 0);
+    if (!rightFrame) return;
     context.save();
     if (paired) {
       context.beginPath();
       context.rect((width * split) / 100, 0, width, height);
       context.clip();
     }
-    context.drawImage(right, ...fitted(right, width, height));
+    context.drawImage(rightFrame, 0, 0);
     context.restore();
   };
   let pending = 0;
@@ -187,6 +218,7 @@ export function createVideoComparePanel(node) {
   // One draw per display frame while either clip plays, and one per event while both rest.
   const tick = () => {
     pending = 0;
+    steer();
     draw();
     if (playing()) pending = requestAnimationFrame(tick);
   };
@@ -266,6 +298,34 @@ export function createVideoComparePanel(node) {
     for (const el of both()) el.currentTime = Math.min(at, lastFrame(el));
   });
 
+  // The following clip is held to the leading one by its playback rate, and seeked when far out.
+  function steer() {
+    const lead = clock();
+    const other = lead === left ? right : left;
+    lead.loop = true;
+    other.loop = false;
+    if (!other.currentSrc || !(length(other) > 0) || other.seeking) return;
+    if (lead.currentTime >= lastFrame(other)) {
+      if (!other.paused) other.pause();
+      other.playbackRate = 1;
+      if (Math.abs(other.currentTime - lastFrame(other)) > SEEK_SECONDS) {
+        other.currentTime = lastFrame(other);
+      }
+      return;
+    }
+    const drift = other.currentTime - lead.currentTime;
+    if (lead.paused || Math.abs(drift) > SEEK_SECONDS) {
+      other.playbackRate = 1;
+      if (Math.abs(drift) > SETTLE_SECONDS) other.currentTime = lead.currentTime;
+    } else if (Math.abs(drift) > SETTLE_SECONDS) {
+      const nudge = Math.max(-RATE_REACH, Math.min(RATE_REACH, drift / CATCH_UP_SECONDS));
+      other.playbackRate = lead.playbackRate * (1 - nudge);
+    } else {
+      other.playbackRate = lead.playbackRate;
+    }
+    if (other.paused && !lead.paused) other.play().catch(() => {});
+  }
+
   const followed = () => {
     const lead = clock();
     const span = length(lead);
@@ -273,21 +333,7 @@ export function createVideoComparePanel(node) {
       scrub.value = String(Math.round((lead.currentTime / span) * 1000));
       readout.textContent = `${lead.currentTime.toFixed(2)} / ${span.toFixed(2)} s`;
     }
-    const other = lead === left ? right : left;
-    lead.loop = true;
-    other.loop = false;
-    if (!other.currentSrc || !(length(other) > 0)) return;
-    if (lead.currentTime >= lastFrame(other)) {
-      if (!other.paused) other.pause();
-      if (Math.abs(other.currentTime - lastFrame(other)) > DRIFT_SECONDS) {
-        other.currentTime = lastFrame(other);
-      }
-      return;
-    }
-    if (Math.abs(other.currentTime - lead.currentTime) > DRIFT_SECONDS) {
-      other.currentTime = lead.currentTime;
-    }
-    if (other.paused && !lead.paused) other.play().catch(() => {});
+    steer();
   };
   left.addEventListener("timeupdate", followed);
   right.addEventListener("timeupdate", followed);
@@ -309,6 +355,8 @@ export function createVideoComparePanel(node) {
     const pair = `${a}|${b}`;
     if (pair === loaded) return true;
     loaded = pair;
+    held.set(left, null);
+    held.set(right, null);
     const stamp = `&rand=${Math.random()}`;
     for (const [el, address] of [[left, a], [right, b]]) {
       if (address) {
@@ -412,6 +460,7 @@ export function createVideoComparePanel(node) {
         el.pause();
         el.removeAttribute("src");
       }
+      held.clear();
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to release the players:`, error);
     }

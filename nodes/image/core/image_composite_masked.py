@@ -207,7 +207,35 @@ class ImageCompositeMasked(io.ComfyNode):
     @classmethod
     def execute(cls, destination, source, x=0, y=0, resize_source=False,
                 mask=None) -> io.NodeOutput:
-        destination, source = _matched_channels(destination, source)
-        canvas = destination.clone().movedim(-1, 1)
-        placed = _composite(canvas, source.movedim(-1, 1), x, y, mask, resize_source)
-        return io.NodeOutput(placed.movedim(1, -1))
+        from ....modules.image import scratch
+
+        sources = int(source.shape[0])
+        masks = None if mask is None else mask.reshape((-1, mask.shape[-2], mask.shape[-1]))
+        if not sources:
+            raise ValueError(
+                "Image Composite Masked was given a source holding no frames, so there is "
+                "nothing to paste. Wire a source holding at least one picture."
+            )
+        if masks is not None and not masks.shape[0]:
+            raise ValueError(
+                "Image Composite Masked was given a mask holding no frames. Wire a mask "
+                "holding at least one, or leave mask unconnected to paste the whole source."
+            )
+        if destination.device.type == "cpu":
+            canvas = scratch.allocate(
+                destination.shape, destination.dtype, node="Image Composite Masked",
+                advice="A shorter or smaller destination also fits it.",
+            )
+        else:
+            canvas = torch.empty_like(destination)
+        for index in range(int(destination.shape[0])):
+            pick = index % sources
+            _, placed = _matched_channels(destination, source[pick:pick + 1])
+            held = None
+            if masks is not None:
+                pick = index % int(masks.shape[0])
+                held = masks[pick:pick + 1]
+            frame = canvas[index:index + 1]
+            frame.copy_(destination[index:index + 1])
+            _composite(frame.movedim(-1, 1), placed.movedim(-1, 1), x, y, held, resize_source)
+        return io.NodeOutput(canvas)

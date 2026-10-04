@@ -101,6 +101,7 @@ class VideoTemporalConsistency(io.ComfyNode):
         Raises:
             ValueError: The two batches hold different numbers of frames, or fewer than two,
                 or the motion was measured from another clip.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         import comfy.model_management
 
@@ -129,7 +130,8 @@ class VideoTemporalConsistency(io.ComfyNode):
         step = clips.progress(3 * count - 1)
         motion = clips.motion_for(clip, motion, NODE_NAME, device, step)
         steadied = temporal_consistency.steady(
-            clip.frames, processed, motion, float(strength), device=device, progress=step
+            clip.frames, processed, motion, float(strength), device=device, progress=step,
+            node=NODE_NAME,
         )
         logger.info("steadied %d frame(s) at strength %g", count, float(strength))
         alpha = effect.alpha if effect.alpha is not None and len(effect.alpha) == count else None

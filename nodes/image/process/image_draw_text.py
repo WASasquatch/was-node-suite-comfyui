@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
@@ -258,13 +257,14 @@ class ImageDrawText(io.ComfyNode):
         opacity=1.0,
         font=draw.DEFAULT_FONT,
     ) -> io.NodeOutput:
-        folded = dynamic.fold(image)
-        image = folded.images
         from PIL import ImageOps
 
-        # The text is placed on the image published here and every position, margin and wrap
-        # width is measured in it, which is what an overlay lays the text over. Publishing
-        # changes nothing this returns, and does nothing while no browser is connected.
+        from ....modules.image import scratch
+
+        folded = dynamic.fold(image)
+        image = folded.images
+
+        # The picture the overlay lays the text over is published before anything is drawn.
         preview.publish(image)
 
         resolved_font = None
@@ -273,8 +273,9 @@ class ImageDrawText(io.ComfyNode):
         stroke = draw.parse_color(stroke_color)
         panel = draw.parse_color(background_color, draw.TRANSPARENT)
 
-        drawn, masks = [], []
-        for plane in image_planes(image):
+        planes = image_planes(image)
+        drawn = masks = None
+        for index, plane in enumerate(planes):
             picture = tensor2pil(plane).convert("RGB")
             layer = draw.draw_text_layer(
                 picture.size,
@@ -292,11 +293,22 @@ class ImageDrawText(io.ComfyNode):
                 background=panel,
                 background_padding=background_padding,
             )
-            drawn.append(pil2tensor(draw.composite(picture, layer, opacity)))
-            # pil2mask reports black as 1.0, so the coverage channel is inverted first to
-            # give a mask that is white where the text is rather than around it.
-            masks.append(pil2mask(ImageOps.invert(draw.layer_mask(layer))))
+            frame = pil2tensor(draw.composite(picture, layer, opacity))
+            # The coverage channel is inverted so the mask is white where the text is.
+            coverage = pil2mask(ImageOps.invert(draw.layer_mask(layer)))
+            if drawn is None:
+                advice = "Passing fewer or smaller frames also fits it."
+                drawn = scratch.allocate(
+                    (len(planes),) + tuple(frame.shape[1:]), node="Image Draw Text", advice=advice
+                )
+                masks = scratch.allocate(
+                    (len(planes),) + tuple(coverage.shape), node="Image Draw Text", advice=advice
+                )
+            drawn[index] = dynamic.unfold(frame[0], folded)
+            masks[index] = coverage
 
-        return io.NodeOutput(
-            dynamic.unfold(torch.cat(drawn, dim=0), folded), torch.stack(masks, dim=0)
-        )
+        if drawn is None:
+            raise ValueError(
+                "Image Draw Text was handed an empty image batch. Wire in at least one image."
+            )
+        return io.NodeOutput(drawn, masks)

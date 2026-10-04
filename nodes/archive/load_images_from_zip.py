@@ -10,7 +10,7 @@ from ...modules import log
 from ...modules.archive import kinds, picks
 from ...modules.compat import limits
 from ...modules.compat.types import LIST, ZIP
-from ...modules.convert.tensors import stack_images
+from ...modules.convert.tensors import pil2tensor
 from ...modules.image import sizing
 from ...modules.image.draw import parse_color
 
@@ -265,8 +265,10 @@ class LoadImagesFromZip(io.ComfyNode):
                 that is not a readable zip.
             PathNotAllowed: It resolved outside every permitted read root.
             ValueError: No entry produced an image.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         from ...modules.compat.lists import require_values
+        from ...modules.image import scratch
 
         archive = picks.opened_archive(zip if zip is not None else archive_path(file))
         report = picks.Report()
@@ -277,7 +279,11 @@ class LoadImagesFromZip(io.ComfyNode):
         cls.paging(report, first)
         pad = parse_color(pad_color, FALLBACK_PAD)
 
-        images = []
+        advice = "Lowering limit, width or height also fits it."
+        batch = scratch.allocate(
+            (len(members), max(1, int(height)), max(1, int(width)), 4 if channels == "RGBA" else 3),
+            node="Load Images from ZIP", advice=advice,
+        )
         names: list[str] = []
         for member in members:
             try:
@@ -289,17 +295,19 @@ class LoadImagesFromZip(io.ComfyNode):
                 report.skip(NOT_AN_IMAGE, f"the entry {member.name!r} {error}")
                 continue
             sized = sizing.fit(source, width, height, resize_mode, interpolation, align, pad)
-            images.append(sizing.as_channels(sized, channels))
+            batch[len(names)].copy_(pil2tensor(sizing.as_channels(sized, channels))[0])
             names.append(member.name)
 
         for note in report.notes:
             logger.warning("%s: %s", archive.label, note)
         logger.info(
             "Load Images from ZIP read %s at %dx%d, %s: %s",
-            archive.label, width, height, resize_mode, report.summary(len(images)),
+            archive.label, width, height, resize_mode, report.summary(len(names)),
         )
-        require_values(images, cls.nothing(archive, pattern, report, start))
-        return io.NodeOutput(stack_images(images), names, len(images), report.total)
+        require_values(names, cls.nothing(archive, pattern, report, start))
+        if len(names) < len(members):
+            batch = scratch.join([batch[:len(names)]], node="Load Images from ZIP", advice=advice)
+        return io.NodeOutput(batch, names, len(names), report.total)
 
     @staticmethod
     def window(start, limit, width, height, report) -> tuple[int, int]:

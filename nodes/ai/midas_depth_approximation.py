@@ -78,6 +78,8 @@ class MidasDepthApproximation(io.ComfyNode):
 
         import comfy.utils
 
+        from ...modules.image import scratch
+
         device_name = "cpu" if use_cpu else None
         backend = midas_model.on(device_name)
 
@@ -90,7 +92,7 @@ class MidasDepthApproximation(io.ComfyNode):
 
         estimates = []
         for index, frame in enumerate(image):
-            # The depth map depends on this channel reversal, so it is kept.
+            # The frame is handed to the processor in BGR channel order.
             source = np.ascontiguousarray(np.array(tensor2pil(frame))[:, :, ::-1])
 
             logger.info("Approximating depth for image %s/%s", index + 1, len(image))
@@ -111,8 +113,8 @@ class MidasDepthApproximation(io.ComfyNode):
         floor = torch.stack([found.min() for found in estimates]).min()
         span = (torch.stack([found.max() for found in estimates]).max() - floor).clamp_min(1e-6)
 
-        tensor_images = []
-        for found in estimates:
+        depths = None
+        for index, found in enumerate(estimates):
             scaled = (found - floor) / span
             scaled = (scaled * 255).clamp(0, 255).round().cpu().numpy().astype(np.uint8)
 
@@ -120,6 +122,13 @@ class MidasDepthApproximation(io.ComfyNode):
             if invert_depth:
                 depth = ImageOps.invert(depth)
 
-            tensor_images.append(pil2tensor(depth.convert("RGB")))
+            frame = pil2tensor(depth.convert("RGB"))
+            if depths is None:
+                depths = scratch.allocate(
+                    (len(estimates),) + tuple(frame.shape[1:]),
+                    node="MiDaS Depth Approximation",
+                    advice="Passing fewer or smaller frames also fits it.",
+                )
+            depths[index] = frame[0]
 
-        return io.NodeOutput(torch.cat(tensor_images, dim=0))
+        return io.NodeOutput(depths)

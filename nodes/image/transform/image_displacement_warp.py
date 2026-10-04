@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
@@ -102,23 +101,44 @@ class ImageDisplacementWarp(io.ComfyNode):
 
     @classmethod
     def execute(cls, images, displacement_maps, amplitude) -> io.NodeOutput:
-        folded = dynamic.fold(images)
-        images = folded.images
+        """Warp every image of the batch by its displacement map.
+
+        Raises:
+            ValueError: The batch holds no images.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        scale = dynamic.peak(images) if dynamic.carries(images) else 1.0
         import comfy.utils
 
+        from ....modules.image import scratch
         from ....modules.image.warp import displace_image
 
         progress = comfy.utils.ProgressBar(len(images))
 
-        displaced_images = []
+        displaced = None
         for i in range(len(images)):
-            img = tensor2pil(images[i])
+            folded = dynamic.fold(images[i], scale)
+            img = tensor2pil(folded.images)
             if i < len(displacement_maps):
                 disp = tensor2pil(displacement_maps[i])
             else:
                 disp = tensor2pil(displacement_maps[-1])
             disp = resize_and_crop(disp, img.size)
-            displaced_images.append(pil2tensor(displace_image(img, disp, amplitude)))
+            frame = pil2tensor(displace_image(img, disp, amplitude))
+            if displaced is None:
+                displaced = scratch.allocate(
+                    (len(images),) + tuple(frame.shape[1:]),
+                    node="Image Displacement Warp",
+                    advice="Passing fewer frames also fits it.",
+                )
+            displaced[i] = frame[0]
+            if folded.scale != 1.0:
+                displaced[i].mul_(folded.scale)
             progress.update(1)
 
-        return io.NodeOutput(dynamic.unfold(torch.cat(displaced_images, dim=0), folded))
+        if displaced is None:
+            raise ValueError(
+                "Image Displacement Warp was given no images. Connect an image or a batch of "
+                "them."
+            )
+        return io.NodeOutput(displaced)

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import traceback
 from collections.abc import Mapping
 from pathlib import Path
@@ -34,6 +35,7 @@ __all__ = [
     "group_enabled",
     "load_config",
     "node_enabled",
+    "scratch_directory",
     "state_file",
     "styles_file",
     "user_directory",
@@ -252,3 +254,9 @@ def styles_file() -> Path:
     """The style library: ``paths.styles``, which may be a .json or an A1111 .csv."""
     configured = load_config()["paths"]["styles"]
     return Path(configured).expanduser() if configured else state_file("styles.json")
+
+
+def scratch_directory() -> str | None:
+    """The folder ``paths.scratch`` names for frame batches kept on disk, or None when unset."""
+    configured = load_config()["paths"].get("scratch")
+    return os.path.expanduser(str(configured)) if configured else None

@@ -52,20 +52,23 @@ class Clip:
     color_space: str
 
 
-def open_clip(video, name: str) -> Clip:
+def open_clip(video, name: str, compact: bool = False) -> Clip:
     """A ``VIDEO`` or an ``IMAGE`` batch, taken apart.
 
     Args:
         video: A ``VIDEO`` object, or an ``IMAGE`` tensor.
         name: The node reading it, for the message.
+        compact: Decode an untrimmed 8-bit video file to uint8 codes, a quarter of the memory.
 
     Returns:
         The :class:`Clip`. An ``IMAGE`` batch is given :data:`DEFAULT_RATE` and no audio.
 
     Raises:
         ValueError: The clip holds no frames.
+        MemoryError: A compact clip fits neither in memory nor on a scratch drive.
     """
-    if hasattr(video, "get_components"):
+    clip = _compact(video, name) if compact else None
+    if clip is None and hasattr(video, "get_components"):
         parts = video.get_components()
         clip = Clip(
             frames=parts.images,
@@ -76,11 +79,52 @@ def open_clip(video, name: str) -> Clip:
             bit_depth=int(getattr(video, "get_bit_depth", lambda: 8)()),
             color_space=str(getattr(video, "get_color_space", lambda: "sRGB")()),
         )
-    else:
+    elif clip is None:
         clip = Clip(video, None, None, DEFAULT_RATE, None, 8, "sRGB")
     if getattr(clip.frames, "ndim", 0) != 4 or int(clip.frames.shape[0]) < 1:
         raise ValueError(f"{name} needs a clip with at least one frame.")
     return clip
+
+
+def _compact(video, name: str) -> Clip | None:
+    """An untrimmed 8-bit video file decoded to uint8 frames, or ``None`` for any other video."""
+    source = getattr(video, "get_stream_source", None)
+    window = getattr(video, "get_active_trim_window", None)
+    if source is None or window is None or not isinstance(source(), str):
+        return None
+    if any(window()) or getattr(video, "_VideoFromFile__crop", None) is not None:
+        return None
+    if int(getattr(video, "get_bit_depth", lambda: 8)()) > 8:
+        return None
+    import av
+    import torch
+
+    from ..image import scratch
+    from .reader import audio_span
+
+    path = source()
+    pictures = []
+    with av.open(path) as container:
+        stream = container.streams.video[0]
+        stream.thread_type = "AUTO"
+        rate = Fraction(stream.average_rate or DEFAULT_RATE)
+        for frame in container.decode(stream):
+            if getattr(frame, "rotation", 0):
+                return None
+            pictures.append(torch.from_numpy(frame.to_ndarray(format="rgb24")))
+    if not pictures:
+        return None
+    count = len(pictures)
+    frames = scratch.stack(pictures, node=name, advice="A shorter clip also fits it.")
+    return Clip(
+        frames=frames,
+        alpha=None,
+        audio=audio_span(path, 0.0, count / float(rate)),
+        rate=rate,
+        metadata=None,
+        bit_depth=8,
+        color_space=str(getattr(video, "get_color_space", lambda: "sRGB")()),
+    )
 
 
 def rebuild(clip: Clip, frames, alpha=None, audio="same", rate=None):

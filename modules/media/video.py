@@ -21,6 +21,7 @@ __all__ = [
     "CODECS",
     "blend_frames",
     "ENCODERS",
+    "Encoder",
     "EXTENSIONS",
     "PIXEL_FORMAT",
     "PIXEL_FORMATS",
@@ -36,8 +37,6 @@ __all__ = [
 ]
 
 logger = log.get_logger("media.video")
-
-#: Config key of the feature group the video nodes are gated on.
 
 
 def resize_frame(image: np.ndarray, width: int, height: int) -> np.ndarray:
@@ -145,6 +144,9 @@ AUDIO_ENCODERS = {
 #: Pixel format requested for an encoder that :data:`PIXEL_FORMATS` does not name.
 PIXEL_FORMAT = "yuv420p"
 
+#: Matrix coefficients number of BT.709.
+BT709 = 1
+
 #: Pixel formats to try for one encoder, best first, where :data:`PIXEL_FORMAT` is wrong
 #: for it. ffv1 is a lossless codec and 4:2:0 chroma subsampling is not lossless, so it
 #: takes packed BGRA, which is what a ``bgr24`` frame reaches without resampling and what
@@ -215,10 +217,10 @@ def write_frames(path: str, frames, fps: float, codec: str, audio=None) -> str:
     height, width = int(frames.shape[1]), int(frames.shape[2])
     rate = Fraction(float(fps)).limit_denominator(65535)
 
-    with _Encoder(target, code, width, height, rate, audio=audio) as encoder:
+    with Encoder(target, code, width, height, rate, audio=audio, color_space="sRGB") as encoder:
         for frame in frames:
             picture = frame.detach().cpu().numpy() if hasattr(frame, "detach") else np.asarray(frame)
-            picture = (np.clip(picture[..., :3], 0.0, 1.0) * 255.0).astype(np.uint8)
+            picture = np.round(np.clip(picture[..., :3], 0.0, 1.0) * 255.0).astype(np.uint8)
             encoder.write(np.ascontiguousarray(picture[..., ::-1]))
     return target
 
@@ -333,7 +335,7 @@ class VideoWriter:
                 raise ValueError("Invalid image dimensions")
 
             progress = progress_bar(self.still_image_delay_frames)
-            with _Encoder(video_path, self.codec, width, height, self.fps) as encoder:
+            with Encoder(video_path, self.codec, width, height, self.fps, color_space="sRGB") as encoder:
                 for _ in range(self.still_image_delay_frames):
                     encoder.write(end_image)
                     progress.update()
@@ -361,7 +363,7 @@ class VideoWriter:
             progress = progress_bar(copied + self.transition_frames + self.still_image_delay_frames)
             last_frame = None
 
-            with _Encoder(temp_file_path, self.codec, width, height, rate) as encoder:
+            with Encoder(temp_file_path, self.codec, width, height, rate, color_space="sRGB") as encoder:
                 for frame in source.decode(stream):
                     last_frame = frame.to_ndarray(format="bgr24")
                     encoder.write(last_frame)
@@ -432,7 +434,7 @@ class VideoWriter:
         height, width = image.shape[:2]
 
         progress = progress_bar(len(image_paths))
-        with _Encoder(output_file, self.codec, width, height, self.fps) as encoder:
+        with Encoder(output_file, self.codec, width, height, self.fps, color_space="sRGB") as encoder:
             encoder.write(image)
             for _ in range(self.still_image_delay_frames - 1):
                 encoder.write(image)
@@ -542,8 +544,8 @@ class VideoWriter:
         return self.valid_codecs
 
 
-class _Encoder:
-    """An open output container and the single video stream inside it.
+class Encoder:
+    """An open output container, its video stream, and an audio stream where audio is given.
 
     Args:
         path: File to write. Its extension selects the container format.
@@ -551,6 +553,11 @@ class _Encoder:
         width: Frame width in pixels.
         height: Frame height in pixels.
         rate: Frame rate, as an int or a ``Fraction``.
+        audio: ``{"waveform", "sample_rate"}`` laid under the frames, or ``None``.
+        options: Encoder options, such as ``{"crf": "16"}``, or ``None``.
+        color_space: ``"sRGB"`` converts and tags a YUV stream as BT.709 in limited range;
+            ``None`` leaves the converter's default untagged.
+        bit_depth: 10 or more writes a 10-bit 4:2:0 stream where the encoder takes one.
 
     Raises:
         DependencyError: av is not installed.
@@ -558,7 +565,10 @@ class _Encoder:
             the frame size.
     """
 
-    def __init__(self, path: str, codec: str, width: int, height: int, rate, audio=None):
+    def __init__(
+        self, path: str, codec: str, width: int, height: int, rate, audio=None, options=None,
+        color_space: str | None = None, bit_depth: int = 8,
+    ):
         av = deps.require("av")
 
         self.av = av
@@ -569,12 +579,22 @@ class _Encoder:
         # Resolved before the container is opened, so a codec this build of av cannot write
         # leaves no empty file behind.
         encoder, pixel_format = _encoder_for(codec)
+        if int(bit_depth) >= 10 and pixel_format == PIXEL_FORMAT:
+            offered = {entry.name for entry in encoder.video_formats or ()}
+            if "yuv420p10le" in offered:
+                pixel_format = "yuv420p10le"
+        self.pixel_format = pixel_format
+        self.color_space = color_space if pixel_format.startswith("yuv") else None
         self.container = av.open(path, mode="w")
         try:
             self.stream = self.container.add_stream(encoder.name, rate=rate)
             self.stream.width = self.width
             self.stream.height = self.height
             self.stream.pix_fmt = pixel_format
+            if options:
+                self.stream.options = {str(key): str(value) for key, value in options.items()}
+            if self.color_space == "sRGB":
+                _tag_bt709(self.stream.codec_context)
             try:
                 self.stream.codec_context.open()
             except Exception as error:
@@ -592,7 +612,7 @@ class _Encoder:
             self.container.close()
             raise
 
-    def __enter__(self) -> "_Encoder":
+    def __enter__(self) -> "Encoder":
         return self
 
     def __exit__(self, kind, value, traceback) -> bool:
@@ -633,9 +653,30 @@ class _Encoder:
         # An encoder is opened once for a fixed frame size.
         if array.shape[0] != self.height or array.shape[1] != self.width:
             array = resize_frame(array, self.width, self.height)
-        frame = self.av.VideoFrame.from_ndarray(array, format="bgr24")
+        self._encode(self.av.VideoFrame.from_ndarray(array, format="bgr24"))
+
+    def write_rgb(self, array: np.ndarray) -> None:
+        """Encode one ``(height, width, 3)`` array of the stream's size, uint8 or uint16 RGB."""
+        packed = "rgb48le" if array.dtype == np.uint16 else "rgb24"
+        self._encode(self.av.VideoFrame.from_ndarray(np.ascontiguousarray(array), format=packed))
+
+    def _encode(self, frame) -> None:
+        """Convert one frame to the stream's pixel format and encode it."""
+        if self.color_space == "sRGB":
+            frame = frame.reformat(format=self.pixel_format, dst_colorspace=BT709)
+            _tag_bt709(frame)
         for packet in self.stream.encode(frame):
             self.container.mux(packet)
+
+
+def _tag_bt709(target) -> None:
+    """Mark a codec context or a frame as BT.709 primaries and matrix, sRGB transfer, limited range."""
+    from av.video.reformatter import ColorPrimaries, ColorRange, ColorTrc
+
+    target.color_primaries = ColorPrimaries.BT709
+    target.color_trc = ColorTrc.IEC61966_2_1
+    target.colorspace = BT709
+    target.color_range = ColorRange.MPEG
 
 
 def _encoder_for(codec: str):

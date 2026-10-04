@@ -6,6 +6,7 @@ from comfy_api.latest import io
 
 from ....modules import log
 from ....modules.compat.sockets import require_input
+from ....modules.image import tiled_upscale as tiling
 from ....modules.interface import size_report
 
 REQUIRES = "extras"
@@ -14,9 +15,6 @@ logger = log.get_logger("nodes.extras.image")
 
 #: Smallest tile the out-of-memory retry will fall back to before giving up.
 MINIMUM_TILE = 64
-
-#: What the model may run in, `auto` following what the model declares it supports.
-PRECISIONS = ("auto", "32 bit float", "16 bit float", "bfloat16")
 
 
 class TiledImageUpscaleWithModel(io.ComfyNode):
@@ -50,8 +48,9 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
                 io.Image.Input(
                     "image",
                     tooltip=(
-                        "The pictures to enlarge. Each frame of a batch is upscaled in turn, "
-                        "so memory use is set by the tile size rather than by the batch."
+                        "The pictures to enlarge, one frame at a time. A result too large "
+                        "for free memory is kept in a temporary file in ComfyUI's temp folder, "
+                        "or in the folder paths.scratch names in config.yaml."
                     ),
                 ),
                 io.Float.Input(
@@ -100,8 +99,8 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "precision",
-                    options=list(PRECISIONS),
-                    default=PRECISIONS[0],
+                    options=list(tiling.PRECISIONS),
+                    default=tiling.PRECISIONS[0],
                     optional=True,
                     tooltip=(
                         "What the model runs in. `auto` = half precision where the model "
@@ -147,13 +146,14 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
 
         Raises:
             ValueError: Nothing is connected to the upscale_model input.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         import torch
 
         import comfy.utils
         from comfy import model_management
 
-        from ....modules.image.tiled_upscale import tiled_upscale
+        from ....modules.image import scratch
 
         require_input(
             upscale_model,
@@ -165,6 +165,17 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
         )
 
         device = model_management.get_torch_device()
+
+        batch, in_height, in_width, channels = image.shape
+        upscale_factor = max(float(upscale_factor), 1.0)
+        target_height = max(1, int(round(in_height * upscale_factor)))
+        target_width = max(1, int(round(in_width * upscale_factor)))
+        out_channels = int(getattr(upscale_model, "output_channels", 0) or channels)
+        frames = scratch.allocate(
+            (batch, target_height, target_width, out_channels),
+            node="Tiled Image Upscale (With Model)",
+            advice="Lowering upscale_factor or upscaling the clip in shorter parts also fits it.",
+        )
 
         if clear_comfy_memory:
             try:
@@ -181,93 +192,60 @@ class TiledImageUpscaleWithModel(io.ComfyNode):
         memory_required += (
             (tile_size * tile_size * 3) * element_size * max(scale_estimate, 1.0) * 384.0
         )
-        memory_required += image.nelement() * element_size
+        memory_required += in_height * in_width * channels * element_size
+        memory_required += target_height * target_width * (out_channels + 1) * 4
         model_management.free_memory(memory_required, device)
 
         upscale_model.to(device)
-        working = cls.pick_dtype(precision, upscale_model, device)
+        working = tiling.pick_dtype(precision, upscale_model, device)
         if working is not torch.float32:
             upscale_model.model.to(working)
             logger.info("running the upscale model in %s", working)
-
-        _batch, in_height, in_width, _channels = image.shape
-        upscale_factor = max(float(upscale_factor), 1.0)
-        target_height = max(1, int(round(in_height * upscale_factor)))
-        target_width = max(1, int(round(in_width * upscale_factor)))
 
         source = image.movedim(-1, -3).to("cpu")
         current_tile = int(tile_size)
         result = None
 
-        while result is None:
-            try:
-                steps = source.shape[0] * comfy.utils.get_tiled_scale_steps(
-                    source.shape[3], source.shape[2],
-                    tile_x=current_tile, tile_y=current_tile, overlap=overlap,
-                )
-                result = tiled_upscale(
-                    samples=source,
-                    function=lambda tile: upscale_model(
-                        tile.to(working).contiguous(memory_format=torch.channels_last)
-                    ).float(),
-                    tile_size=current_tile,
-                    overlap=overlap,
-                    output_device="cpu",
-                    pbar=comfy.utils.ProgressBar(steps),
-                    feather=feather,
-                    target_height=target_height,
-                    target_width=target_width,
-                    resample_method=resample_method,
-                    device=device,
-                )
-            except model_management.OOM_EXCEPTION:
-                current_tile //= 2
-                if current_tile < MINIMUM_TILE:
-                    upscale_model.to("cpu")
-                    raise
-                logger.warning(
-                    "the upscale ran out of memory; retrying with %d pixel tiles", current_tile
-                )
+        try:
+            while result is None:
+                try:
+                    steps = source.shape[0] * comfy.utils.get_tiled_scale_steps(
+                        source.shape[3], source.shape[2],
+                        tile_x=current_tile, tile_y=current_tile, overlap=overlap,
+                    )
+                    result = tiling.tiled_upscale(
+                        samples=source,
+                        function=lambda tile: upscale_model(
+                            tile.to(working).contiguous(memory_format=torch.channels_last)
+                        ).float(),
+                        tile_size=current_tile,
+                        overlap=overlap,
+                        output_device="cpu",
+                        pbar=comfy.utils.ProgressBar(steps),
+                        feather=feather,
+                        target_height=target_height,
+                        target_width=target_width,
+                        resample_method=resample_method,
+                        device=device,
+                        out=frames,
+                        limits=(0.0, 1.0),
+                    )
+                except model_management.OOM_EXCEPTION:
+                    current_tile //= 2
+                    if current_tile < MINIMUM_TILE:
+                        raise
+                    logger.warning(
+                        "the upscale ran out of memory; retrying with %d pixel tiles",
+                        current_tile,
+                    )
+        finally:
+            tiling.release(upscale_model)
 
-        upscale_model.model.to(torch.float32)
-        upscale_model.to("cpu")
-        upscaled = torch.clamp(result, min=0.0, max=1.0).movedim(-3, -1)
         size_report.publish(
             image,
-            upscaled,
+            result,
             action="upscaled",
             requested=(target_width, target_height),
             facts={"tile": f"{current_tile} px", "precision": str(working).replace("torch.", "")},
         )
-        return io.NodeOutput(upscaled)
-
-    @staticmethod
-    def pick_dtype(precision: str, upscale_model, device):
-        """What the model runs in.
-
-        Args:
-            precision: An entry from :data:`PRECISIONS`.
-            upscale_model: The loaded upscale model, read for the dtypes it declares.
-            device: The device the model runs on.
-
-        Returns:
-            A ``torch.dtype``.
-        """
-        import torch
-
-        from comfy import model_management
-
-        named = {
-            "32 bit float": torch.float32,
-            "16 bit float": torch.float16,
-            "bfloat16": torch.bfloat16,
-        }
-        if precision in named:
-            return named[precision]
-        if not model_management.should_use_fp16(device):
-            return torch.float32
-        if getattr(upscale_model, "supports_half", False):
-            return torch.float16
-        if getattr(upscale_model, "supports_bfloat16", False):
-            return torch.bfloat16
-        return torch.float32
+        return io.NodeOutput(result)

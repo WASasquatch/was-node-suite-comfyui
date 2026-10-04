@@ -286,6 +286,7 @@ DEFAULTS = {
         "wildcards": None,
         "styles": None,
         "luts": None,
+        "scratch": None,
         "allow_read": [],
         "allow_write": [],
     },

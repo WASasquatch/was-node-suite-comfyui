@@ -186,6 +186,14 @@ class ImagePerspective(io.ComfyNode):
         bottom_right_x=0, bottom_right_y=0, bottom_left_x=0, bottom_left_y=0,
         width=0, height=0, edge=optics.EDGES[2],
     ) -> io.NodeOutput:
+        """Warp every frame and build the coverage mask.
+
+        Raises:
+            ValueError: The four corners lie on one line.
+            MemoryError: Neither free memory nor a scratch drive can hold the warped frames.
+        """
+        from ....modules.image import scratch
+
         source_h, source_w = int(images.shape[1]), int(images.shape[2])
         out_w = int(width) or source_w
         out_h = int(height) or source_h
@@ -196,8 +204,16 @@ class ImagePerspective(io.ComfyNode):
             (int(bottom_left_x), out_h - 1 - int(bottom_left_y)),
         )
 
-        folded = dynamic.fold(images)
-        warped = optics.perspective(folded.images, corners, out_w, out_h, edge)
+        warped = None
+        if images.device.type == "cpu":
+            warped = scratch.allocate(
+                (int(images.shape[0]), out_h, out_w, int(images.shape[3])),
+                dtype=images.dtype,
+                node="Image Perspective",
+                advice="A smaller width and height or fewer frames also fit it.",
+            )
+        peak = dynamic.peak(images) if dynamic.carries(images) else None
+        warped = optics.perspective(images, corners, out_w, out_h, edge, out=warped, peak=peak)
 
         solid = torch.ones(
             (1, source_h, source_w, 1), dtype=torch.float32, device=images.device
@@ -208,6 +224,4 @@ class ImagePerspective(io.ComfyNode):
             "Image Perspective warped %d frame(s) from %dx%d to %dx%d",
             int(images.shape[0]), source_w, source_h, out_w, out_h,
         )
-        return io.NodeOutput(
-            dynamic.unfold(warped, folded), cover[..., 0].clamp(0.0, 1.0)
-        )
+        return io.NodeOutput(warped, cover[..., 0].clamp(0.0, 1.0))

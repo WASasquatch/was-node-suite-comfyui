@@ -200,6 +200,9 @@ NARROWEST = 8
 #: at a fixed edge is what keeps a setting meaning the same thing on every image size.
 DEFAULT_EDGE = 512
 
+#: Source samples one pass of a preprocessor without a model reads at once.
+PASS_SAMPLES = 1 << 24
+
 
 def bounded(name: str, value, kind: str):
     """Hold one setting inside the bounds the chosen preprocessor reads it by.
@@ -556,6 +559,7 @@ class PowerPreprocessor(io.ComfyNode):
         Raises:
             ValueError: ``preprocessor`` names no question this node answers, or ``model``
                 cannot answer the one chosen.
+            MemoryError: Neither free memory nor a scratch drive can hold the answer.
         """
         if preprocessor not in CONTROLS:
             raise ValueError(
@@ -579,18 +583,18 @@ class PowerPreprocessor(io.ComfyNode):
                        conditioning_name, conditioning, image, int(resolution))
             )
         if not allowed:
-            result = _without_model(preprocessor, image, int(resolution), settings)
-        else:
-            if model_name not in allowed:
-                raise ValueError(
-                    f"{preprocessor!r} cannot be worked out by {model_name!r}. "
-                    f"Choose one of: {', '.join(allowed)}."
-                )
-            loaded = Loaded(backend=build(model_name), name=model_name)
-            result = _with_model(preprocessor, loaded, image, int(resolution), settings)
-
-        answer = (result.clamp(0.0, 255.0) / 255.0).permute(0, 2, 3, 1)
-        return io.NodeOutput(answer.to(image.device, dtype=image.dtype).contiguous())
+            return io.NodeOutput(_without_model(preprocessor, image, int(resolution), settings))
+        if model_name not in allowed:
+            raise ValueError(
+                f"{preprocessor!r} cannot be worked out by {model_name!r}. "
+                f"Choose one of: {', '.join(allowed)}."
+            )
+        loaded = Loaded(backend=build(model_name), name=model_name)
+        result = _with_model(preprocessor, loaded, image, int(resolution), settings)
+        frames, channels, height, width = (int(side) for side in result.shape)
+        answer = _allocated(image, (frames, height, width, channels))
+        _store(answer, 0, result, 255.0)
+        return io.NodeOutput(answer)
 
 
 def _prompt_of(conditioning):
@@ -684,13 +688,9 @@ def _wired(name, model, vae, adapter_name, vae_name, conditioning_name, conditio
     else:
         answer = marigold_v2.albedo(decoded)
 
-    answer = answer.permute(0, 3, 1, 2)
-    if answer.shape[-2:] != (height, width):
-        answer = functional.interpolate(
-            answer, size=(height, width), mode="bicubic", align_corners=False
-        )
-    answer = answer.clamp(0.0, 1.0).permute(0, 2, 3, 1)
-    return answer.to(image.device, dtype=image.dtype).contiguous()
+    out = _allocated(image, (int(answer.shape[0]), height, width, int(answer.shape[-1])))
+    _store(out, 0, answer.permute(0, 3, 1, 2), 1.0)
+    return out
 
 
 def _without_model(name, image, resolution: int, settings):
@@ -703,7 +703,8 @@ def _without_model(name, image, resolution: int, settings):
         settings: The shared settings, already held to this preprocessor's bounds.
 
     Returns:
-        A ``(batch, 3, height, width)`` tensor on a 0 to 255 scale.
+        A ``(batch, height, width, 3)`` tensor in ``[0, 1]``, in the image's dtype and on its
+        device.
     """
     import torch.nn.functional as functional
 
@@ -711,28 +712,32 @@ def _without_model(name, image, resolution: int, settings):
     from ....modules.model import compute_device
 
     device = compute_device()
-    planes = image[..., :3].permute(0, 3, 1, 2).to(device=device, dtype=torch.float32) * 255.0
-    height, width = planes.shape[-2:]
+    frames, height, width = (int(side) for side in image.shape[:3])
     working = _working_size(height, width, resolution)
-    if working != (height, width):
-        planes = functional.interpolate(planes, size=working, mode="area")
+    out = _allocated(image, (frames, height, width, 3))
+    # The shuffle draws its flow for the whole batch at once.
+    span = frames if name == "shuffle" else PASS_SAMPLES // max(1, height * width * 3)
+    span = max(1, span)
+    for start in range(0, frames, span):
+        planes = image[start:start + span, ..., :3].permute(0, 3, 1, 2)
+        planes = planes.to(device=device, dtype=torch.float32) * 255.0
+        if working != (height, width):
+            planes = functional.interpolate(planes, size=working, mode="area")
 
-    if name == "canny_pyramid":
-        result = preprocess.pyramid_canny(planes, settings[LOW], settings[HIGH])
-    elif name == "lineart_simple":
-        result = preprocess.lineart_simple(planes, settings[RADIUS], settings[LOW])
-    elif name == "scribble_xdog":
-        result = preprocess.scribble_xdog(planes, settings[LOW])
-    elif name == "binary":
-        result = preprocess.binary(planes, settings[LOW])
-    else:
-        result = preprocess.shuffle(planes, settings[SEED])
-
-    if result.shape[-2:] != (height, width):
-        result = functional.interpolate(
-            result, size=(height, width), mode="bicubic", align_corners=False
-        )
-    return result
+        if name == "canny_pyramid":
+            result = preprocess.pyramid_canny(planes, settings[LOW], settings[HIGH])
+        elif name == "lineart_simple":
+            result = preprocess.lineart_simple(planes, settings[RADIUS], settings[LOW])
+        elif name == "scribble_xdog":
+            result = preprocess.scribble_xdog(planes, settings[LOW])
+        elif name == "binary":
+            result = preprocess.binary(planes, settings[LOW])
+        else:
+            result = preprocess.shuffle(planes, settings[SEED])
+        del planes
+        _store(out, start, result, 255.0)
+        del result
+    return out
 
 
 def _with_model(name, loaded, image, resolution: int, settings):
@@ -751,7 +756,7 @@ def _with_model(name, loaded, image, resolution: int, settings):
     from ....modules.image import preprocess, preprocess_models
 
     if name == "depth_map":
-        return preprocess_models.depth(loaded, image, resolution).repeat(1, 3, 1, 1)
+        return preprocess_models.depth(loaded, image, resolution).expand(-1, 3, -1, -1)
     if name == "normal_map":
         estimate = preprocess_models.depth(loaded, image, resolution)
         return preprocess.normal_from_depth(
@@ -777,6 +782,52 @@ def _with_model(name, loaded, image, resolution: int, settings):
     return preprocess_models.line_segments(
         loaded, image, resolution, settings[LOW], settings[HIGH]
     )
+
+
+def _allocated(image, shape):
+    """An uninitialised answer in the image's dtype, on its device.
+
+    Args:
+        image: The ``IMAGE`` the answer is for.
+        shape: ``(frames, height, width, channels)`` of the answer.
+
+    Returns:
+        A contiguous tensor, held in a scratch file where a CPU answer outgrows free memory.
+
+    Raises:
+        MemoryError: Neither free memory nor a scratch drive can hold the answer.
+    """
+    if image.device.type != "cpu":
+        return torch.empty(shape, dtype=image.dtype, device=image.device)
+    from ....modules.image import scratch
+
+    return scratch.allocate(
+        shape, image.dtype, node="Power Preprocessor",
+        advice="Passing fewer or smaller frames also fits it.",
+    )
+
+
+def _store(out, start: int, answer, white: float) -> None:
+    """Write a channels-first answer into a channels-last result, one frame at a time.
+
+    Args:
+        out: ``(frames, height, width, channels)`` result, written from ``start`` on.
+        start: Index of the first frame written.
+        answer: ``(batch, channels, height, width)`` on a 0 to ``white`` scale, resized
+            to the height and width of ``out`` where it differs.
+        white: Value of white in ``answer``, 255.0 or 1.0.
+    """
+    import torch.nn.functional as functional
+
+    size = tuple(out.shape[1:3])
+    for offset in range(int(answer.shape[0])):
+        frame = answer[offset:offset + 1]
+        if tuple(frame.shape[-2:]) != size:
+            frame = functional.interpolate(frame, size=size, mode="bicubic", align_corners=False)
+        frame = frame[0].clamp(0.0, white)
+        if white != 1.0:
+            frame = frame / white
+        out[start + offset].copy_(frame.permute(1, 2, 0))
 
 
 def _working_size(height: int, width: int, edge: int) -> tuple[int, int]:

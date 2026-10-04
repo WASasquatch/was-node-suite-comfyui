@@ -167,6 +167,7 @@ class ImageBatchRepeat(io.ComfyNode):
 
         Raises:
             ValueError: The batch is empty, the mode is unknown, or a count is below 1.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         count = int(images.shape[0])
         if count == 0:
@@ -174,7 +175,19 @@ class ImageBatchRepeat(io.ComfyNode):
                 "Image Batch Repeat was given an empty batch and has nothing to repeat. "
                 "Connect an images input carrying at least one frame."
             )
+        from ...modules.image import scratch
+
         order = repeat_indices(count, str(mode), int(times), int(length), bool(each_frame))
         index = torch.tensor(order, dtype=torch.long, device=images.device)
-        repeated = images.index_select(0, index)
+        shape = (len(order),) + tuple(images.shape[1:])
+        if images.device.type == "cpu":
+            repeated = scratch.allocate(
+                shape,
+                images.dtype,
+                node="Image Batch Repeat",
+                advice="Lowering times or length, or passing fewer frames, also fits it.",
+            )
+        else:
+            repeated = images.new_empty(shape)
+        torch.index_select(images, 0, index, out=repeated)
         return io.NodeOutput(repeated, int(repeated.shape[0]))

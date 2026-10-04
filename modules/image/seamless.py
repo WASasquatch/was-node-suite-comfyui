@@ -10,7 +10,9 @@ import math
 
 import torch
 
-__all__ = ["LARGEST_BLEND", "make_seamless", "seamless_size", "tile_grid"]
+from . import scratch
+
+__all__ = ["LARGEST_BLEND", "make_seamless", "seamless_size"]
 
 #: Largest fraction of a side the blend can span. Above a half the stripe taken off one edge
 #: reaches past the middle and there is nothing left to keep.
@@ -67,25 +69,13 @@ def seamless_size(height: int, width: int, blending: float) -> tuple[int, int]:
     return height - down, width - right
 
 
-def tile_grid(images: torch.Tensor, tiles: int) -> torch.Tensor:
-    """Repeat every frame into a square grid of copies.
-
-    Args:
-        images: ``(batch, height, width, channels)`` tensor.
-        tiles: Copies along each side.
-
-    Returns:
-        A tensor ``tiles`` times taller and wider than ``images``.
-    """
-    count = max(int(tiles), 1)
-    return images.repeat(1, count, count, 1)
-
-
 def make_seamless(
     images: torch.Tensor,
     blending: float = 0.4,
     tiled: bool = False,
     tiles: int = 2,
+    node: str = "",
+    advice: str = "",
 ) -> torch.Tensor:
     """Make every frame tile against itself, optionally answering a grid of the tiles.
 
@@ -95,13 +85,34 @@ def make_seamless(
             0 answers the source unchanged.
         tiled: Answer a ``tiles`` by ``tiles`` grid rather than the single tile.
         tiles: Grid size along each axis, read only when ``tiled`` is set.
+        node: Display name of the calling node, for a refusal to hold the answer.
+        advice: Closing sentence of that refusal, naming what to change on the node.
 
     Returns:
         The tiles, or the grids of them, as ``(batch, height, width, channels)``.
+
+    Raises:
+        MemoryError: Neither free memory nor a scratch drive can hold the answer.
     """
     fraction = min(max(float(blending), 0.0), LARGEST_BLEND)
-    answer = _blended(images, fraction, 2)
-    answer = _blended(answer, fraction, 1)
-    if tiled:
-        answer = tile_grid(answer, tiles)
-    return answer.contiguous()
+    batch, height, width, channels = (int(side) for side in images.shape)
+    tile_height, tile_width = seamless_size(height, width, fraction)
+    if not tiled and (tile_height, tile_width) == (height, width):
+        return images.contiguous()
+
+    count = max(int(tiles), 1) if tiled else 1
+    shape = (batch, tile_height * count, tile_width * count, channels)
+    if images.device.type == "cpu":
+        answer = scratch.allocate(shape, dtype=images.dtype, node=node, advice=advice)
+    else:
+        answer = torch.empty(shape, dtype=images.dtype, device=images.device)
+    for index in range(batch):
+        tile = _blended(_blended(images[index:index + 1], fraction, 2), fraction, 1)[0]
+        for row in range(count):
+            for column in range(count):
+                answer[
+                    index,
+                    row * tile_height:(row + 1) * tile_height,
+                    column * tile_width:(column + 1) * tile_width,
+                ].copy_(tile)
+    return answer

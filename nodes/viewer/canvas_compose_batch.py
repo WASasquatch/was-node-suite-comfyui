@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+
 from comfy_api.latest import io
 
 from ...modules import log
@@ -75,6 +77,7 @@ class WASCanvasComposeBatch(io.ComfyNode):
 
         Raises:
             ValueError: A slot holds a tensor that is not an image.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         import torch
 
@@ -90,9 +93,21 @@ class WASCanvasComposeBatch(io.ComfyNode):
         width = max(int(frame.shape[2]) for frame in flat)
         logger.debug("padding %s image(s) to %sx%s", len(flat), width, height)
 
-        stacked = torch.cat(
-            [fit.pad_to(frame, height, width, transparent=True) for frame in flat], dim=0
-        )
+        from ...modules.image import scratch
+
+        shape = (len(flat), height, width, fit.RGBA)
+        dtype = functools.reduce(torch.promote_types, (frame.dtype for frame in flat))
+        if all(frame.device.type == "cpu" for frame in flat):
+            stacked = scratch.allocate(
+                shape,
+                dtype,
+                node="CV Canvas Compose Batch",
+                advice="Connecting fewer frames, or a smaller largest frame, also fits it.",
+            )
+        else:
+            stacked = torch.empty(shape, dtype=dtype, device=flat[0].device)
+        for index, frame in enumerate(flat):
+            fit.pad_to(frame, height, width, transparent=True, out=stacked[index:index + 1])
         # The size report pairs the smallest frame with the canvas it was padded onto.
         smallest = min(flat, key=lambda frame: int(frame.shape[1]) * int(frame.shape[2]))
         size_report.publish(

@@ -344,13 +344,14 @@ class ImageAmbientOcclusion(io.ComfyNode):
     def execute(cls, images, height_maps, strength, radius, height_scale, ray_count,
                 step_count, angle_bias, ao_blur, specular_threshold,
                 enable_specular_masking, precision) -> io.NodeOutput:
+        from ....modules.image import scratch
+
         folded = dynamic.fold(images)
         maps = dynamic.fold(height_maps).images
-        composited = []
-        occlusions = []
-        speculars = []
+        count = len(folded.images)
+        batches = None
         for i, image in enumerate(folded.images):
-            logger.info("Processing SSAO image %d/%d ...", i + 1, len(folded.images))
+            logger.info("Processing SSAO image %d/%d ...", i + 1, count)
             composited_image, occlusion_image, specular_mask = create_ambient_occlusion(
                 image,
                 maps[i if i < len(maps) else -1],
@@ -365,12 +366,23 @@ class ImageAmbientOcclusion(io.ComfyNode):
                 enable_specular_masking=enable_specular_masking,
                 levels=occlusion.PRECISIONS[precision],
             )
-            composited.append(_output(composited_image))
-            occlusions.append(_output(occlusion_image))
-            speculars.append(_output(specular_mask))
+            frames = (_output(composited_image), _output(occlusion_image), _output(specular_mask))
+            if batches is None:
+                batches = tuple(
+                    scratch.allocate(
+                        (count,) + tuple(frame.shape[1:]),
+                        node="Image SSAO (Ambient Occlusion)",
+                        advice="Passing fewer or smaller frames also fits it.",
+                    )
+                    for frame in frames
+                )
+            batches[0][i] = dynamic.unfold(frames[0][0], folded)
+            for batch, frame in zip(batches[1:], frames[1:]):
+                batch[i] = frame[0]
 
-        return io.NodeOutput(
-            dynamic.unfold(torch.cat(composited, dim=0), folded),
-            torch.cat(occlusions, dim=0),
-            torch.cat(speculars, dim=0),
-        )
+        if batches is None:
+            raise ValueError(
+                "Image SSAO (Ambient Occlusion) was handed an empty image batch. Wire in at "
+                "least one image."
+            )
+        return io.NodeOutput(*batches)

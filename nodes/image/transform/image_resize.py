@@ -62,7 +62,7 @@ def resize_target(size, mode="rescale", factor=2, width=1024, height=1024):
 
 
 def resized_frames(frames, target, resampling, supersample=False, resize_mode=None,
-                   align=sizing.DEFAULT_ALIGNMENT, pad=FALLBACK_PAD):
+                   align=sizing.DEFAULT_ALIGNMENT, pad=FALLBACK_PAD, scale=1.0):
     """A batch at exactly the target size, through :data:`SUPERSAMPLE_SCALE` when asked.
 
     Args:
@@ -73,13 +73,17 @@ def resized_frames(frames, target, resampling, supersample=False, resize_mode=No
         resize_mode: One of :data:`modules.image.sizing.MODES`, or None to stretch.
         align: A key of :data:`modules.image.sizing.ALIGNMENTS`.
         pad: ``(red, green, blue, alpha)`` in 0 to 255 filling what the image does not cover.
+        scale: From :func:`modules.image.dynamic.factor`, 1.0 for frames inside 0 to 1.
 
     Returns:
         The resized batch on the frames' own device.
+
+    Raises:
+        MemoryError: Neither free memory nor any scratch drive has room for the result.
     """
     return sizing.fit_frames(
         frames, target, resize_mode or sizing.STRETCH, resampling, align, pad,
-        supersample=SUPERSAMPLE_SCALE if supersample else 1,
+        supersample=SUPERSAMPLE_SCALE if supersample else 1, scale=scale,
     )
 
 
@@ -266,8 +270,7 @@ class ImageResize(io.ComfyNode):
                 resize_height, resize_mode=sizing.STRETCH,
                 align=sizing.DEFAULT_ALIGNMENT, pad_color="#000000",
                 multiple_of=0) -> io.NodeOutput:
-        folded = dynamic.fold(image)
-        image = folded.images
+        scale = dynamic.factor(image)
         source = size_report.frame_size(image)
         requested, delivered = resize_target(
             # A source whose size could not be read falls back to 1 by 1.
@@ -278,10 +281,10 @@ class ImageResize(io.ComfyNode):
             target = rounded(delivered[0], delivered[1], multiple_of)
             scaled = resized_frames(
                 image, target, resampling, supersample, resize_mode, align,
-                parse_color(pad_color, FALLBACK_PAD),
+                parse_color(pad_color, FALLBACK_PAD), scale,
             )
         else:
-            scaled = resized_frames(image, delivered, resampling, supersample)
+            scaled = resized_frames(image, delivered, resampling, supersample, scale=scale)
 
         size_report.publish(
             image,
@@ -290,4 +293,4 @@ class ImageResize(io.ComfyNode):
             requested=requested if source else None,
         )
         height, width = int(scaled.shape[1]), int(scaled.shape[2])
-        return io.NodeOutput(dynamic.unfold(scaled, folded), width, height)
+        return io.NodeOutput(scaled, width, height)

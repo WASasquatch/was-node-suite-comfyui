@@ -161,14 +161,29 @@ class ImagePadForOutpaint(io.ComfyNode):
 
     @classmethod
     def execute(cls, image, left=0, top=0, right=0, bottom=0, feathering=40) -> io.NodeOutput:
+        """Set every frame on the canvas and build the mask.
+
+        Raises:
+            MemoryError: Neither free memory nor a scratch drive can hold the canvas.
+        """
+        from ....modules.image import scratch
+
         frames, height, width, channels = (int(size) for size in image.shape)
-        canvas = torch.full(
-            (frames, height + top + bottom, width + left + right, channels),
-            CANVAS_LEVEL,
-            dtype=torch.float32,
-            device=image.device,
-        )
-        canvas[:, top:top + height, left:left + width, :] = image
+        shape = (frames, height + top + bottom, width + left + right, channels)
+        if image.device.type == "cpu":
+            canvas = scratch.allocate(
+                shape,
+                node="Image Pad for Outpaint",
+                advice="Smaller margins or fewer frames also fit it.",
+            )
+        else:
+            canvas = torch.empty(shape, dtype=torch.float32, device=image.device)
+        canvas[:, :top].fill_(CANVAS_LEVEL)
+        canvas[:, top + height:].fill_(CANVAS_LEVEL)
+        band = canvas[:, top:top + height]
+        band[:, :, :left].fill_(CANVAS_LEVEL)
+        band[:, :, left + width:].fill_(CANVAS_LEVEL)
+        band[:, :, left:left + width].copy_(image)
 
         mask = torch.ones(
             (height + top + bottom, width + left + right),

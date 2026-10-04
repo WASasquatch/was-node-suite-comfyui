@@ -5,9 +5,9 @@ from __future__ import annotations
 import torch
 from comfy_api.latest import io
 
-from ...modules.convert.tensors import broadcast_image_planes, tensor2pil
+from ...modules.convert.tensors import broadcast_image_planes, pil2tensor, tensor2pil
 from ...modules.image import dynamic
-from . import quantises_exactly, stack_images
+from . import quantises_exactly
 
 
 class ImageBlend(io.ComfyNode):
@@ -65,21 +65,30 @@ class ImageBlend(io.ComfyNode):
 
     @classmethod
     def execute(cls, image_a, image_b, blend_percentage) -> io.NodeOutput:
+        from ...modules.image import scratch
+
         scale = dynamic.peak(image_a, image_b)
-        first, second = dynamic.fold(image_a, scale), dynamic.fold(image_b, scale)
-        pairs = broadcast_image_planes(first.images, second.images)
-        if all(quantises_exactly(a) and a.shape == b.shape for a, b in pairs):
-            return io.NodeOutput(dynamic.unfold(
-                cls.blend(
-                    torch.stack([a for a, _ in pairs]),
-                    torch.stack([b for _, b in pairs]),
-                    blend_percentage,
-                ),
-                first,
-            ))
-        return io.NodeOutput(dynamic.unfold(
-            stack_images([cls.composite(a, b, blend_percentage) for a, b in pairs]), first
-        ))
+        pairs = broadcast_image_planes(image_a, image_b)
+        exact = all(quantises_exactly(a) and a.shape == b.shape for a, b in pairs)
+        out = None
+        for index, (plane_a, plane_b) in enumerate(pairs):
+            first, second = dynamic.fold(plane_a, scale), dynamic.fold(plane_b, scale)
+            if exact:
+                mixed = cls.blend(first.images[None], second.images[None], blend_percentage)[0]
+            else:
+                mixed = pil2tensor(cls.composite(first.images, second.images, blend_percentage))[0]
+            mixed = dynamic.unfold(mixed, first)
+            if out is None:
+                shape = (len(pairs), *mixed.shape)
+                if mixed.device.type == "cpu":
+                    out = scratch.allocate(
+                        shape, mixed.dtype, node="Image Blend",
+                        advice="Passing shorter or smaller batches also fits it.",
+                    )
+                else:
+                    out = torch.empty(shape, dtype=mixed.dtype, device=mixed.device)
+            out[index].copy_(mixed)
+        return io.NodeOutput(out)
 
     @staticmethod
     def blend(images_a: torch.Tensor, images_b: torch.Tensor, blend_percentage: float) -> torch.Tensor:

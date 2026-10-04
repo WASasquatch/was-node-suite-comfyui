@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+
 import torch
 from comfy_api.latest import io
 
@@ -195,6 +197,7 @@ class ImageBatch(io.ComfyNode):
         Raises:
             ValueError: No slot holds an image, a slot holds something that is not one, or
                 two frame shapes disagree.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         names = connected_in_order(images, IMAGE_SLOTS)
         tensors = [as_batch(images[name], name) for name in names]
@@ -219,7 +222,17 @@ class ImageBatch(io.ComfyNode):
                 refused=str(refused),
             )
             raise
-        batched = torch.cat(tensors, dim=0)
+        if all(tensor.device.type == "cpu" for tensor in tensors):
+            from ...modules.image import scratch
+
+            batched = scratch.join(
+                list(tensors),
+                node="Image Batch",
+                advice="Connecting fewer or smaller images also fits it.",
+                dtype=functools.reduce(torch.promote_types, (t.dtype for t in tensors)),
+            )
+        else:
+            batched = torch.cat(tensors, dim=0)
         batch_report.publish(
             frames=int(batched.shape[0]),
             slots=len(tensors),

@@ -10,9 +10,7 @@ from ...modules.model import frame_interpolation
 
 NODE_NAME = "EMA-VFI Frame Interpolation"
 
-#: Most frames a run will produce before it refuses. A 2x pass over a long sequence is cheap to
-#: ask for and expensive to run, and a mistyped multiplier on a 300 frame batch would otherwise
-#: sit there for an hour.
+#: Most frames a run will produce before it refuses.
 MAX_FRAMES = 4096
 
 
@@ -94,8 +92,9 @@ class EMAVFIFrameInterpolation(io.ComfyNode):
             ValueError: Fewer than two frames arrived, the multiplier needs a timestep the
                 chosen weights were not trained for, or the run would produce more frames
                 than :data:`MAX_FRAMES`.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
-        import torch
+        from ...modules.image import scratch
 
         if getattr(images, "ndim", 0) != 4:
             raise ValueError(f"{NODE_NAME} needs a batch of images shaped (frames, H, W, C).")
@@ -125,6 +124,13 @@ class EMAVFIFrameInterpolation(io.ComfyNode):
                 f"the sequence."
             )
 
+        answer = scratch.allocate(
+            (produced, int(images.shape[1]), int(images.shape[2]), 3),
+            images.dtype,
+            node=NODE_NAME,
+            advice="Lowering multiplier or passing fewer frames also fits it.",
+        )
+
         backend = ema_vfi_model.backend
         backend.load()
         net = backend.model
@@ -135,6 +141,9 @@ class EMAVFIFrameInterpolation(io.ComfyNode):
         def as_planes(index):
             return images[index:index + 1, :, :, :3].permute(0, 3, 1, 2).to(device)
 
+        def keep(at, planes):
+            answer[at].copy_(planes[0].permute(1, 2, 0).clamp(0.0, 1.0))
+
         try:
             from comfy.utils import ProgressBar
 
@@ -142,21 +151,19 @@ class EMAVFIFrameInterpolation(io.ComfyNode):
         except Exception:
             progress = None
 
-        pieces = []
         for index in range(frames - 1):
             first, second = as_planes(index), as_planes(index + 1)
-            pieces.append(first)
+            keep(index * multiplier, first)
             for step in range(1, multiplier):
-                pieces.append(
-                    frame_interpolation.interpolate(net, first, second, step / multiplier)
+                keep(
+                    index * multiplier + step,
+                    frame_interpolation.interpolate(net, first, second, step / multiplier),
                 )
             if progress is not None:
                 progress.update(1)
-        # The last frame closes the sequence; every loop above emitted only its own left edge.
-        pieces.append(as_planes(frames - 1))
+        # The last frame closes the sequence; every loop above wrote only its own left edge.
+        keep(produced - 1, as_planes(frames - 1))
 
-        answer = torch.cat(pieces, dim=0).permute(0, 2, 3, 1).clamp(0.0, 1.0)
-        answer = answer.to(images.device).to(images.dtype)
         size, mode = batch_report.describe_images(answer)
         batch_report.publish(
             frames=int(answer.shape[0]),

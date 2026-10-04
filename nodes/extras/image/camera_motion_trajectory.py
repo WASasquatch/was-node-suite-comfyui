@@ -75,6 +75,31 @@ PADDING_MODES = {"mirror": "reflection", "border": "border", "wrap": "border"}
 MAX_SHAKE_SEED = 2147483647
 
 
+def _depth_plane(depth_map, index, height, width, dtype):
+    """One frame of a depth map as a single plane at the picture's size.
+
+    Args:
+        depth_map: ``(batch, height, width, channels)`` depth batch, white near.
+        index: Frame of ``depth_map`` to read.
+        height: Picture height in pixels.
+        width: Picture width in pixels.
+        dtype: Element type of the picture.
+
+    Returns:
+        A ``(1, height, width)`` tensor, the luma of a three channel map or its first channel.
+    """
+    import torch.nn.functional as functional
+
+    planes = depth_map[index:index + 1].movedim(-1, 1).to(dtype)
+    if depth_map.shape[1] != height or depth_map.shape[2] != width:
+        planes = functional.interpolate(
+            planes, size=(height, width), mode="bilinear", align_corners=False
+        )
+    if depth_map.shape[3] == 3:
+        return (0.299 * planes[:, 0:1] + 0.587 * planes[:, 1:2] + 0.114 * planes[:, 2:3])[0]
+    return planes[0, 0:1]
+
+
 class CameraMotionTrajectory(io.ComfyNode):
     """Render a keyframed camera move over a still picture as a frame sequence."""
 
@@ -211,10 +236,12 @@ class CameraMotionTrajectory(io.ComfyNode):
         Raises:
             ValueError: The trajectory spec is not valid JSON, or an input tensor is not
                 shaped ``(batch, height, width, channels)``.
+            MemoryError: Neither free memory nor a scratch drive can hold the frames.
         """
         import torch
         import torch.nn.functional as functional
 
+        from ....modules.image import scratch
         from ....modules.image.camera_path import (
             build_base_grid,
             build_camera_shake,
@@ -230,7 +257,7 @@ class CameraMotionTrajectory(io.ComfyNode):
                 f"{tuple(image.shape)}"
             )
 
-        batch_size, height, width, _channels = image.shape
+        batch_size, height, width, channels = image.shape
         config = load_trajectory_config(trajectory_spec)
 
         default_mode = str(config.get("dolly_mode", "radial")).lower()
@@ -252,40 +279,37 @@ class CameraMotionTrajectory(io.ComfyNode):
             seed=shake_seed,
         )
 
-        source = image.movedim(-1, 1).contiguous()
         base_grid = build_base_grid(height, width, device=image.device, dtype=image.dtype)
 
-        depth = None
-        if depth_map is not None:
-            if depth_map.ndim != 4:
-                raise ValueError(
-                    f"depth_map must be shaped (batch, height, width, channels) and is "
-                    f"{tuple(depth_map.shape)}"
-                )
-            planes = depth_map.movedim(-1, 1).to(image.dtype)
-            if depth_map.shape[1] != height or depth_map.shape[2] != width:
-                planes = functional.interpolate(
-                    planes, size=(height, width), mode="bilinear", align_corners=False
-                )
-            if depth_map.shape[3] == 3:
-                depth = (
-                    0.299 * planes[:, 0:1] + 0.587 * planes[:, 1:2] + 0.114 * planes[:, 2:3]
-                )
-            else:
-                depth = planes[:, 0:1]
+        if depth_map is not None and depth_map.ndim != 4:
+            raise ValueError(
+                f"depth_map must be shaped (batch, height, width, channels) and is "
+                f"{tuple(depth_map.shape)}"
+            )
 
         padding_mode = PADDING_MODES.get(edge_mode, "border")
-        frames = []
+        shape = (num_frames, height, width, channels)
+        if image.device.type == "cpu":
+            video = scratch.allocate(
+                shape,
+                dtype=image.dtype,
+                node="Camera Motion Trajectory from Images",
+                advice="Lowering num_frames or passing a smaller image also fits it.",
+            )
+        else:
+            video = torch.empty(shape, dtype=image.dtype, device=image.device)
+        source_index, source = None, None
+        depth_index, depth_frame = None, None
 
         for index in range(num_frames):
             src_index = index if (batch_size > 1 and num_frames == batch_size) else index % batch_size
+            if src_index != source_index:
+                source_index = src_index
+                source = image[src_index:src_index + 1].movedim(-1, 1).contiguous()
 
-            depth_frame = None
-            if depth is not None:
-                if depth.shape[0] == 1:
-                    depth_frame = depth[0, 0:1]
-                else:
-                    depth_frame = depth[src_index % depth.shape[0], 0:1]
+            if depth_map is not None and src_index % depth_map.shape[0] != depth_index:
+                depth_index = src_index % depth_map.shape[0]
+                depth_frame = _depth_plane(depth_map, depth_index, height, width, image.dtype)
 
             grid = create_frame_grid(
                 base_grid=base_grid,
@@ -315,17 +339,15 @@ class CameraMotionTrajectory(io.ComfyNode):
             if edge_mode == "wrap":
                 grid = (grid + 1.0) % 2.0 - 1.0
 
-            frames.append(
-                functional.grid_sample(
-                    source[src_index:src_index + 1],
-                    grid,
-                    mode="bilinear",
-                    padding_mode=padding_mode,
-                    align_corners=True,
-                )
+            sampled = functional.grid_sample(
+                source,
+                grid,
+                mode="bilinear",
+                padding_mode=padding_mode,
+                align_corners=True,
             )
+            video[index].copy_(sampled[0].movedim(0, -1))
 
-        video = torch.cat(frames, dim=0).movedim(1, 3).contiguous()
         size, mode = batch_report.describe_images(video)
         batch_report.publish(
             frames=int(video.shape[0]),

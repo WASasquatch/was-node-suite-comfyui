@@ -246,14 +246,14 @@ class ImageDirectOcclusion(io.ComfyNode):
     @classmethod
     def execute(cls, images, depth_images, strength, radius, specular_threshold,
                 colored_occlusion) -> io.NodeOutput:
+        from ....modules.image import scratch
+
         folded = dynamic.fold(images)
         maps = dynamic.fold(depth_images).images
-        composited = []
-        occlusions = []
-        occlusion_masks = []
-        light_sources = []
+        count = len(folded.images)
+        batches = None
         for i, image in enumerate(folded.images):
-            logger.info("Processing SSDO image %d/%d ...", i + 1, len(folded.images))
+            logger.info("Processing SSDO image %d/%d ...", i + 1, count)
             composited_image, occlusion_image, occlusion_mask, light_source = (
                 create_direct_occlusion(
                     image,
@@ -264,14 +264,28 @@ class ImageDirectOcclusion(io.ComfyNode):
                     colored=colored_occlusion,
                 )
             )
-            composited.append(_output(composited_image))
-            occlusions.append(_output(occlusion_image))
-            occlusion_masks.append(_output(occlusion_mask))
-            light_sources.append(_output(light_source))
+            frames = (
+                _output(composited_image),
+                _output(occlusion_image),
+                _output(occlusion_mask),
+                _output(light_source),
+            )
+            if batches is None:
+                batches = tuple(
+                    scratch.allocate(
+                        (count,) + tuple(frame.shape[1:]),
+                        node="Image SSDO (Direct Occlusion)",
+                        advice="Passing fewer or smaller frames also fits it.",
+                    )
+                    for frame in frames
+                )
+            batches[0][i] = dynamic.unfold(frames[0][0], folded)
+            for batch, frame in zip(batches[1:], frames[1:]):
+                batch[i] = frame[0]
 
-        return io.NodeOutput(
-            dynamic.unfold(torch.cat(composited, dim=0), folded),
-            torch.cat(occlusions, dim=0),
-            torch.cat(occlusion_masks, dim=0),
-            torch.cat(light_sources, dim=0),
-        )
+        if batches is None:
+            raise ValueError(
+                "Image SSDO (Direct Occlusion) was handed an empty image batch. Wire in at "
+                "least one image."
+            )
+        return io.NodeOutput(*batches)

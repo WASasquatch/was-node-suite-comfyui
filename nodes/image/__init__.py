@@ -8,7 +8,7 @@ from __future__ import annotations
 import torch
 from PIL import Image
 
-from ...modules.convert.tensors import pil2tensor
+from ...modules.convert import tensors
 
 __all__ = ["image_planes", "quantises_exactly", "stack_images"]
 
@@ -43,25 +43,15 @@ def stack_images(images: list[Image.Image]) -> torch.Tensor:
 
     Raises:
         ValueError: No image was given, or the images do not share a channel count.
+        MemoryError: Neither free memory nor any scratch drive has room for the batch.
     """
     if not images:
         raise ValueError("At least one image must be provided.")
-    planes = [pil2tensor(image)[0] for image in images]
-    channels = {plane.shape[2] if plane.ndim > 2 else 1 for plane in planes}
+    shapes = [tensors.array_shape(image) for image in images]
+    channels = {shape[2] if len(shape) > 2 else 1 for shape in shapes}
     if len(channels) > 1:
         raise ValueError(f"All images must share a channel count, got {sorted(channels)}.")
-    height = max(plane.shape[0] for plane in planes)
-    width = max(plane.shape[1] for plane in planes)
-    padded = []
-    for plane in planes:
-        if plane.shape[:2] != (height, width):
-            canvas = plane.new_zeros((height, width, *plane.shape[2:]))
-            top = (height - plane.shape[0]) // 2
-            left = (width - plane.shape[1]) // 2
-            canvas[top:top + plane.shape[0], left:left + plane.shape[1]] = plane
-            plane = canvas
-        padded.append(plane)
-    return torch.stack(padded, dim=0)
+    return tensors.stack_images(images, advice="Fewer or smaller frames also fit it.")
 
 
 def quantises_exactly(plane: torch.Tensor) -> bool:

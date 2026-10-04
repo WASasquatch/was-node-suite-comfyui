@@ -5,7 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
-from ....modules.convert.tensors import broadcast_image_planes, stack_images, tensor2pil
+from ....modules.convert.tensors import broadcast_image_planes, pil2tensor, tensor2pil
 from ....modules.image.stitch import stitch_image
 from ....modules.interface import size_report
 
@@ -279,28 +279,42 @@ class ImageStitch(io.ComfyNode):
 
         Returns:
             One picture per frame, every connected slot stitched on in order.
+
+        Raises:
+            ValueError: A connected slot holds an empty batch.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
+        from ....modules.image import scratch
+
         scale = dynamic.peak(
             image_a, image_b, *(extra.get(name) for name in SLOT_NAMES[2:])
         )
-        folded = dynamic.fold(image_a, scale)
-        joined = [
-            tensor2pil(first)
-            for first, _ in broadcast_image_planes(folded.images, folded.images)
+        slots = [image_a, image_b] + [extra.get(name) for name in SLOT_NAMES[2:]]
+        planes = [
+            [plane for plane, _ in broadcast_image_planes(slot, slot)]
+            for slot in slots
+            if slot is not None
         ]
-        for name in SLOT_NAMES[1:]:
-            following = image_b if name == "image_b" else extra.get(name)
-            if following is None:
-                continue
-            following = dynamic.fold(following, scale).images
-            joined = [
-                stitch_image(carried, tensor2pil(plane), stitch, feathering)
-                for carried, (plane, _) in zip(
-                    joined, broadcast_image_planes(following, following)
-                )
-            ]
+        frames = min(len(slot) for slot in planes)
 
-        canvas = stack_images(joined)
+        canvas = None
+        for index in range(frames):
+            folded = dynamic.fold(planes[0][index], scale)
+            joined = tensor2pil(folded.images)
+            for following in planes[1:]:
+                plane = dynamic.fold(following[index], scale).images
+                joined = stitch_image(joined, tensor2pil(plane), stitch, feathering)
+            joined = pil2tensor(joined)[0]
+            if canvas is None:
+                canvas = scratch.allocate(
+                    (frames,) + tuple(joined.shape),
+                    node="Image Stitch (Advanced)",
+                    advice="Stitching fewer or smaller images, or fewer frames, also fits it.",
+                )
+            canvas[index].copy_(joined)
+            if folded.scale != 1.0:
+                canvas[index].mul_(folded.scale)
+
         filled = [n for n in SLOT_NAMES[2:] if extra.get(n) is not None]
         size_report.publish(
             image_a,
@@ -308,4 +322,4 @@ class ImageStitch(io.ComfyNode):
             action=f"stitched with {len(filled) + 1} more on the {stitch}",
             facts={"image_b": size_report.spell(image_b)},
         )
-        return io.NodeOutput(dynamic.unfold(canvas, folded))
+        return io.NodeOutput(canvas)

@@ -17,8 +17,8 @@ import torch
 from PIL import Image
 
 from .. import deps, log
-from ..convert.tensors import stack_images
-from ..image import sizing
+from ..convert.tensors import pil2tensor
+from ..image import scratch, sizing
 from ..image.draw import parse_color
 from ..util import file_listing, sandbox
 from . import sampling
@@ -55,9 +55,11 @@ VIDEO_EXTENSIONS = (
 MAX_FRAMES = 4096
 
 #: How many pixels one read may answer in total, counting every frame it keeps. A colour
-#: batch costs twelve bytes a pixel as float32, and the stack that builds it holds the
-#: frames twice over, so this is around five gigabytes at the moment the batch is assembled.
+#: batch costs twelve bytes a pixel as float32.
 MAX_BATCH_PIXELS = 192 * 1024 * 1024
+
+#: Closing sentence of the refusal for a batch that does not fit.
+SMALLER = "Keep fewer frames with num_frames, or set a smaller width and height."
 
 #: Frame rate a stream is read at when its header names none.
 DEFAULT_RATE = 30.0
@@ -305,8 +307,9 @@ def read(
 
         target = frame_size((source.width, source.height), width, height, max_size)
         _affordable(len(chosen), target)
+        batch = _allocated(len(chosen), target, 4 if channels == "RGBA" else 3)
         decoded = _decoded(
-            container, stream, set(chosen), target, resize_mode, interpolation, align, pad,
+            container, stream, chosen, batch, target, resize_mode, interpolation, align, pad,
             channels,
         )
         indices = [number for number in chosen if number in decoded]
@@ -325,9 +328,9 @@ def read(
         rate = float(target_fps) if target_fps > 0 else source.fps
         audio = None
         if source.has_audio and rate > 0:
-            audio = _audio(name, min(indices) / source.fps, len(indices) / rate)
+            audio = audio_span(name, min(indices) / source.fps, len(indices) / rate)
 
-    return Clip(_stacked(decoded, indices, target), audio, rate, indices, source)
+    return Clip(_kept(batch, chosen, decoded), audio, rate, indices, source)
 
 
 def frame_size(source: tuple[int, int], width: int, height: int, cap: int) -> tuple[int, int]:
@@ -552,16 +555,40 @@ def _affordable(frames: int, target: tuple[int, int]) -> None:
     )
 
 
+def _allocated(frames: int, target: tuple[int, int], channels: int) -> torch.Tensor:
+    """An unfilled ``IMAGE`` batch for a read.
+
+    Args:
+        frames: Frames it holds.
+        target: ``(width, height)`` of every frame.
+        channels: 3 or 4.
+
+    Returns:
+        A float32 tensor shaped ``(frames, height, width, channels)``, in memory or in a
+        scratch file.
+
+    Raises:
+        ValueError: Neither memory nor a scratch drive has room for it.
+    """
+    try:
+        return scratch.allocate((frames, target[1], target[0], channels), advice=SMALLER)
+    except MemoryError as short:
+        raise ValueError(str(short)) from short
+
+
 def _decoded(
-    container, stream, wanted: set[int], target: tuple[int, int], resize_mode: str,
-    interpolation: str, align: str, pad: tuple[int, int, int, int], channels: str,
-) -> dict[int, Image.Image]:
-    """Decode the listed frames of a video stream, each one brought to a single size.
+    container, stream, chosen: list[int], batch: torch.Tensor, target: tuple[int, int],
+    resize_mode: str, interpolation: str, align: str, pad: tuple[int, int, int, int],
+    channels: str,
+) -> set[int]:
+    """Decode the listed frames of a video stream into their slots of a batch.
 
     Args:
         container: An open av container, positioned at the start.
         stream: Its video stream.
-        wanted: Frame numbers to keep, counting from 0.
+        chosen: Frame number each slot of ``batch`` holds, counting from 0. A number may
+            fill several slots.
+        batch: ``(len(chosen), height, width, channels)`` float32 tensor, written in place.
         target: ``(width, height)`` every frame is brought to.
         resize_mode: One of :data:`modules.image.sizing.MODES`.
         interpolation: A name from :data:`modules.image.sizing.FILTER_NAMES`.
@@ -570,53 +597,57 @@ def _decoded(
         channels: ``"RGB"`` or ``"RGBA"``.
 
     Returns:
-        ``{frame number: image}`` for every frame that decoded.
+        The frame numbers that decoded. The slots of every other number are left unwritten.
     """
-    last = max(wanted)
-    kept: dict[int, Image.Image] = {}
-    # One pass in presentation order, stopping at the last frame asked for. Seeking per
-    # frame would be slower on a long clip than reading through it once. Each frame is
-    # brought to size as it arrives, so a 4K source never holds more than one 4K image.
+    slots: dict[int, list[int]] = {}
+    for position, number in enumerate(chosen):
+        slots.setdefault(number, []).append(position)
+    last = max(slots)
+    decoded: set[int] = set()
+    # One pass in presentation order, stopping at the last frame asked for.
     for number, frame in enumerate(container.decode(stream)):
-        if number in wanted:
+        if number in slots:
             image = Image.fromarray(frame.to_ndarray(format="rgb24"))
-            kept[number] = sizing.as_channels(
+            plane = pil2tensor(sizing.as_channels(
                 sizing.fit(image, target[0], target[1], resize_mode, interpolation, align, pad),
                 channels,
-            )
+            ))[0]
+            for position in slots[number]:
+                batch[position].copy_(plane)
+            decoded.add(number)
         if number >= last:
             break
-    return kept
+    return decoded
 
 
-def _stacked(
-    decoded: dict[int, Image.Image], indices: list[int], target: tuple[int, int]
-) -> torch.Tensor:
-    """Assemble the decoded frames into one ``IMAGE`` batch, in playback order.
+def _kept(batch: torch.Tensor, chosen: list[int], decoded: set[int]) -> torch.Tensor:
+    """The batch without the slots of frames that did not decode, in playback order.
 
     Args:
-        decoded: ``{frame number: image}``, every image already at ``target``.
-        indices: Frame numbers to stack, in the order they play.
-        target: ``(width, height)`` they were brought to, named in the message.
+        batch: The batch :func:`_decoded` filled.
+        chosen: Frame number each slot holds.
+        decoded: The frame numbers that decoded.
 
     Returns:
-        A float32 tensor shaped ``(frames, height, width, channels)``.
+        ``batch`` itself where every frame decoded, otherwise a new batch of the slots that
+        were written.
 
     Raises:
-        ValueError: The batch did not fit in memory.
+        ValueError: Neither memory nor a scratch drive has room for the smaller batch.
     """
+    if all(number in decoded for number in chosen):
+        return batch
+    filled = [
+        batch[position:position + 1]
+        for position, number in enumerate(chosen) if number in decoded
+    ]
     try:
-        return stack_images([decoded[number] for number in indices])
-    except (MemoryError, ArithmeticError, RuntimeError) as short:
-        need = len(indices) * target[0] * target[1] * 4 * 4 / (1024 ** 3)
-        raise ValueError(
-            f"{len(indices)} frame(s) at {target[0]}x{target[1]} need about {need:.1f} GiB "
-            f"as one batch and would not fit ({short}). Keep fewer frames with num_frames, "
-            f"or set a smaller width and height"
-        ) from short
+        return scratch.join(filled, advice=SMALLER)
+    except MemoryError as short:
+        raise ValueError(str(short)) from short
 
 
-def _audio(path: str, begin: float, seconds: float) -> dict | None:
+def audio_span(path: str, begin: float, seconds: float) -> dict | None:
     """Decode the sound playing over one span of a video.
 
     Args:

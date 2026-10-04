@@ -165,13 +165,23 @@ class ImagePaletteMap(io.ComfyNode):
         blend=1.0,
         color_palettes=None,
     ) -> io.NodeOutput:
+        """Repaint every image of the batch.
+
+        Raises:
+            ValueError: The batch holds no images.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        from ....modules.image import scratch
+
         sources = cls.palettes(palette, color_palettes)
 
-        folded = dynamic.fold(images)
-        results = []
-        for index, plane in enumerate(image_planes(folded.images)):
+        scale = dynamic.peak(images) if dynamic.carries(images) else 1.0
+        planes = image_planes(images)
+        repainted = None
+        for index, plane in enumerate(planes):
+            folded = dynamic.fold(plane, scale)
             colors = palette_map.parse_palette(sources[index % len(sources)])
-            pixels = plane[..., :3].detach().cpu().numpy().astype(np.float32)
+            pixels = folded.images[..., :3].detach().cpu().numpy().astype(np.float32)
             mapped = palette_map.apply_palette(
                 pixels,
                 colors,
@@ -182,9 +192,23 @@ class ImagePaletteMap(io.ComfyNode):
                 blend=blend,
                 normalize=normalize,
             )
-            results.append(torch.from_numpy(mapped).unsqueeze(0))
+            frame = torch.from_numpy(mapped)
+            if repainted is None:
+                repainted = scratch.allocate(
+                    (len(planes),) + tuple(frame.shape),
+                    frame.dtype,
+                    node="Image Palette Map",
+                    advice="Passing fewer frames also fits it.",
+                )
+            repainted[index] = frame
+            if folded.scale != 1.0:
+                repainted[index].mul_(folded.scale)
 
-        return io.NodeOutput(dynamic.unfold(torch.cat(results, dim=0), folded))
+        if repainted is None:
+            raise ValueError(
+                "Image Palette Map was given no images. Connect an image or a batch of them."
+            )
+        return io.NodeOutput(repainted)
 
     @staticmethod
     def palettes(typed: str, connected) -> list:

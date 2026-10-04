@@ -69,10 +69,13 @@ class SamImageMask(io.ComfyNode):
         """Segment the image at the given points.
 
         Raises:
-            ValueError: Nothing is connected to the sam_model or sam_parameters input.
+            ValueError: Nothing is connected to the sam_model or sam_parameters input, or the
+                image batch is empty.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
-        import numpy as np
         import torch
+
+        from ...modules.image import scratch
 
         require_input(
             sam_model,
@@ -98,9 +101,9 @@ class SamImageMask(io.ComfyNode):
         processor = sam_model.processor
         model = sam_model.model
 
-        mattes = []
-        masks = []
-        for plane in image_planes(image):
+        planes = image_planes(image)
+        mattes = masks = None
+        for index, plane in enumerate(planes):
             inputs = processor(
                 tensor2sam(plane),
                 input_points=[points.tolist()],
@@ -108,8 +111,7 @@ class SamImageMask(io.ComfyNode):
                 return_tensors="pt",
             ).to(device)
 
-            # The points together describe one thing to select, so multimask_output=False
-            # asks for a single mask over the whole set rather than one per point.
+            # One mask is asked for over the whole set of points.
             with torch.no_grad():
                 outputs = model(
                     pixel_values=inputs["pixel_values"],
@@ -118,26 +120,31 @@ class SamImageMask(io.ComfyNode):
                     multimask_output=False,
                 )
 
-            # post_process_masks removes the padding the processor added and scales the mask
-            # back to the source resolution, returning one (point_batch, masks, h, w) tensor
-            # per image. One image and one mask leaves a leading axis on each.
-            predicted = processor.image_processor.post_process_masks(
+            # The mask comes back at the source resolution with the padding removed.
+            selection = processor.image_processor.post_process_masks(
                 outputs.pred_masks.cpu(),
                 inputs["original_sizes"].cpu(),
                 inputs["reshaped_input_sizes"].cpu(),
-            )[0][0].numpy()
+            )[0][0].squeeze().to(torch.float32)
 
-            selection = np.expand_dims(predicted, axis=-1)
+            if mattes is None:
+                advice = "Passing fewer or smaller frames also fits it."
+                mattes = scratch.allocate(
+                    (len(planes),) + tuple(selection.shape) + (3,),
+                    node="SAM Image Mask",
+                    advice=advice,
+                )
+                masks = scratch.allocate(
+                    (len(planes),) + tuple(selection.shape), node="SAM Image Mask", advice=advice
+                )
+            mattes[index] = selection.unsqueeze(-1)
+            masks[index] = selection
 
-            mattes.append(torch.from_numpy(np.repeat(selection, 3, axis=-1)))
-
-            mask = torch.from_numpy(selection)
-            mask = mask.squeeze(2)
-            masks.append(mask.squeeze().to(torch.float32))
-
-        # The leading axis post_process_masks leaves on each matte is the batch axis, so
-        # the mattes concatenate. A single mask keeps the unbatched 2D shape it has always
-        # returned and more than one takes a batch axis.
-        stacked = masks[0] if len(masks) == 1 else torch.stack(masks, dim=0)
+        if mattes is None:
+            raise ValueError(
+                "SAM Image Mask was handed an empty image batch. Wire in at least one image."
+            )
+        # A single mask is answered as one unbatched plane.
+        stacked = masks[0] if len(planes) == 1 else masks
         mask_report.publish(None, stacked)
-        return io.NodeOutput(torch.cat(mattes, dim=0), stacked)
+        return io.NodeOutput(mattes, stacked)

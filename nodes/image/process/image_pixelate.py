@@ -485,13 +485,16 @@ def pixel_art_batch(
 
     Raises:
         ValueError: The colour reduction runs on an image with fewer pixels than
-            ``num_colors``.
+            ``num_colors``, or the batch holds no image.
         IndexError: ``palette`` holds fewer palettes than the batch holds images.
+        MemoryError: Neither free memory nor a scratch drive can hold the result.
     """
-    pil_images = [tensor2pil(image).convert("RGB") for image in batch]
+    from ....modules.image import scratch
+
     pixel_art_images = []
     original_sizes = []
-    for image in pil_images:
+    for plane in batch:
+        image = tensor2pil(plane).convert("RGB")
         width, height = image.size
         original_sizes.append((width, height))
         if max(width, height) > min_size:
@@ -533,11 +536,22 @@ def pixel_art_batch(
             map_to_palette(image, palette[i], palette_mode, reverse_palette)
             for i, image in enumerate(pixel_art_images)
         ]
-    pixel_art_images = [
-        image.resize(size, Image.NEAREST) for image, size in zip(pixel_art_images, original_sizes)
-    ]
+    pixels = None
+    for index, (image, size) in enumerate(zip(pixel_art_images, original_sizes)):
+        frame = pil2tensor(image.resize(size, Image.NEAREST))
+        if pixels is None:
+            pixels = scratch.allocate(
+                (len(pixel_art_images),) + tuple(frame.shape[1:]),
+                node="Image Pixelate",
+                advice="Passing fewer or smaller frames also fits it.",
+            )
+        pixels[index] = frame[0]
 
-    return torch.cat([pil2tensor(image) for image in pixel_art_images], dim=0)
+    if pixels is None:
+        raise ValueError(
+            "Image Pixelate was handed an empty image batch. Wire in at least one image."
+        )
+    return pixels
 
 
 class ImagePixelate(io.ComfyNode):
@@ -754,22 +768,22 @@ class ImagePixelate(io.ComfyNode):
             for palette in color_palettes:
                 color_palettes_list.append([color.strip() for color in palette.splitlines()])
 
-        return io.NodeOutput(dynamic.unfold(
-            pixel_art_batch(
-                images,
-                int(pixelation_size),
-                int(num_colors),
-                init_mode,
-                int(max_iterations),
-                color_palettes_list or None,
-                color_palette_mode,
-                reverse_palette,
-                dither,
-                dither_mode,
-                palette_dither,
-                palette_smooth,
-                palette_blend,
-                palette_normalize,
-            ),
-            folded,
-        ))
+        pixels = pixel_art_batch(
+            images,
+            int(pixelation_size),
+            int(num_colors),
+            init_mode,
+            int(max_iterations),
+            color_palettes_list or None,
+            color_palette_mode,
+            reverse_palette,
+            dither,
+            dither_mode,
+            palette_dither,
+            palette_smooth,
+            palette_blend,
+            palette_normalize,
+        )
+        if folded.scale != 1.0:
+            pixels.mul_(folded.scale)
+        return io.NodeOutput(pixels)

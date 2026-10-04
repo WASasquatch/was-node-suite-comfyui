@@ -17,6 +17,7 @@ const NODES = [
   "WASVideoMotion",
   "WASVideoMotionBlur",
   "WASVideoTemporalConsistency",
+  "WASVideoTemporalUpscale",
   "WASVideoStabilize",
   "WASVideoMotionMask",
   "WASVideoMotionTrails",

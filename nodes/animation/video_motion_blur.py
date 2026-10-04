@@ -151,9 +151,8 @@ class VideoMotionBlur(io.ComfyNode):
             ValueError: The clip holds fewer than two frames, a mask or depth batch holds a
                 different number of frames than the clip, the motion was measured from
                 another clip, or the shutter curve holds something other than numbers.
+            MemoryError: Neither free memory nor a scratch drive can hold the blurred clip.
         """
-        import torch
-
         import comfy.model_management
 
         from ...modules.media import clip as clips
@@ -187,15 +186,11 @@ class VideoMotionBlur(io.ComfyNode):
                     f"disconnect it to use shutter_angle."
                 )
 
-        frames = source.frames
-        if source.alpha is not None:
-            frames = torch.cat([frames, source.alpha.to(frames.dtype).unsqueeze(-1)], -1)
-
         device = comfy.model_management.get_torch_device()
         step = clips.progress(2 * count - 1)
         motion = clips.motion_for(source, motion, NODE_NAME, device, step)
-        blurred, pictures = motion_blur.blur_frames(
-            frames,
+        blurred, pictures, alpha = motion_blur.blur_frames(
+            source.frames,
             shutter=shutter,
             samples=int(samples),
             mask=mask,
@@ -204,10 +199,9 @@ class VideoMotionBlur(io.ComfyNode):
             device=device,
             progress=step,
             motion=motion,
+            alpha=source.alpha,
+            name=NODE_NAME,
         )
-        alpha = None
-        if source.alpha is not None:
-            blurred, alpha = blurred[..., :-1].contiguous(), blurred[..., -1].contiguous()
 
         answer = clips.rebuild(source, blurred, alpha=alpha)
         logger.info("blurred %s at %s", motion.describe(), (

@@ -5,7 +5,6 @@ from __future__ import annotations
 import random
 
 import numpy as np
-import torch
 from comfy_api.latest import io
 
 from .....modules.convert.tensors import pil2tensor, tensor2pil
@@ -123,7 +122,9 @@ class ImageToNoise(io.ComfyNode):
     def execute(
         cls, images, num_colors, black_mix, gaussian_mix, brightness, output_mode, seed
     ) -> io.NodeOutput:
-        noise_images = [
+        from .....modules.image import scratch
+
+        noise_images = (
             pil2tensor(
                 _image_to_noise(
                     tensor2pil(image),
@@ -135,11 +136,24 @@ class ImageToNoise(io.ComfyNode):
                 )
             )
             for image in images
-        ]
+        )
 
         if output_mode == "list":
-            return io.NodeOutput(noise_images)
-        return io.NodeOutput(torch.cat(noise_images, dim=0))
+            return io.NodeOutput(list(noise_images))
+        batch = None
+        for index, frame in enumerate(noise_images):
+            if batch is None:
+                batch = scratch.allocate(
+                    (len(images),) + tuple(frame.shape[1:]),
+                    node="Image to Noise",
+                    advice="Passing fewer or smaller frames also fits it.",
+                )
+            batch[index] = frame[0]
+        if batch is None:
+            raise ValueError(
+                "Image to Noise was handed an empty image batch. Wire in at least one image."
+            )
+        return io.NodeOutput(batch)
 
 
 def _image_to_noise(

@@ -32,8 +32,7 @@ def append(accumulated: dict[str, list] | None, name: str, value: Any) -> dict[s
     Returns:
         A new mapping. The lists inside it are new too, so the argument is left as it was.
     """
-    # Copied rather than appended in place: a token from an earlier iteration stays reachable
-    # through the execution cache and must not see a later iteration's contents.
+    # A new mapping holding a new list for name, with the old ones untouched.
     current = accumulated or {}
     return {**current, name: [*current.get(name, []), value]}
 
@@ -61,8 +60,7 @@ def frame_count(value: Any) -> int | None:
         The length along the value's frame dimension, or None for a value that is not a
         sequence of frames, such as a number or a string.
     """
-    # Duck typed rather than checked against torch: a readout and a frame count must not be
-    # what makes the pack import it.
+    # Values are read by their attributes, with no torch import.
     if value is None or isinstance(value, (bool, int, float, str, bytes)):
         return None
 
@@ -70,8 +68,7 @@ def frame_count(value: Any) -> int | None:
         samples = value.get("samples")
         return frame_count(samples) if samples is not None else None
 
-    # A nested tensor keeps one tensor per resolution and the same number of frames in each,
-    # so the first one answers for all of them.
+    # A nested tensor answers with the frame count of its first tensor.
     tensors = getattr(value, "tensors", None)
     if isinstance(tensors, (list, tuple)) and tensors:
         return frame_count(tensors[0])
@@ -150,6 +147,43 @@ def _joinable(shapes: list, dim: int) -> bool:
     )
 
 
+def _joined(tensors: list, dim: int):
+    """Tensors joined end to end along ``dim``, into a scratch batch when all are on the CPU.
+
+    Args:
+        tensors: Tensors matching on every axis but ``dim``. The list is left as it was.
+        dim: The axis they are joined along.
+
+    Returns:
+        One tensor of the element type ``torch.cat`` answers.
+
+    Raises:
+        MemoryError: Neither free memory nor any scratch drive has room for the result.
+    """
+    import functools
+
+    import torch
+
+    if any(tensor.device.type != "cpu" for tensor in tensors):
+        return torch.cat(tensors, dim=dim)
+
+    from ..image import scratch
+
+    shape = list(tensors[0].shape)
+    shape[dim] = sum(int(tensor.shape[dim]) for tensor in tensors)
+    joined = scratch.allocate(
+        shape,
+        functools.reduce(torch.promote_types, (tensor.dtype for tensor in tensors)),
+        advice="Running fewer iterations or collecting smaller frames also fits it.",
+    )
+    position = 0
+    for tensor in tensors:
+        span = int(tensor.shape[dim])
+        joined.narrow(dim, position, span).copy_(tensor)
+        position += span
+    return joined
+
+
 def batch_values(values: list):
     """The collected values joined into one batch, or None when they do not join.
 
@@ -158,22 +192,26 @@ def batch_values(values: list):
 
     Returns:
         One tensor, one latent, one soundtrack, or None.
+
+    Raises:
+        MemoryError: Neither free memory nor any scratch drive has room for the batch.
     """
     if not values:
         return None
 
-    # Imported here rather than at module scope: a loop carrying nothing but numbers must not
-    # pay for torch, and the pack's import budget is measured.
+    # torch is imported only once a value is there to join.
     try:
         import torch
     except ImportError:
         return None
 
     if all(isinstance(value, torch.Tensor) for value in values):
+        if values[0].ndim == 0:
+            return None
         dim = _frame_dim(values[0])
         if not _joinable([tuple(v.shape) for v in values], dim):
             return None
-        return torch.cat(values, dim=dim)
+        return _joined(values, dim)
 
     # Audio clips are joined along time into one track.
     if all(isinstance(value, dict) and isinstance(value.get("waveform"), torch.Tensor)
@@ -186,7 +224,7 @@ def batch_values(values: list):
         if not _joinable([tuple(wave.shape) for wave in waves], along):
             return None
         joined = dict(values[0])
-        joined["waveform"] = torch.cat(waves, dim=along)
+        joined["waveform"] = _joined(waves, along)
         return joined
 
     if all(isinstance(value, dict) and isinstance(value.get("samples"), torch.Tensor)
@@ -196,16 +234,15 @@ def batch_values(values: list):
         if not _joinable([tuple(s.shape) for s in samples], dim):
             return None
         joined = dict(values[0])
-        joined["samples"] = torch.cat(samples, dim=dim)
-        # A per-frame mask cannot describe frames it was never measured against, so a joined
-        # latent carries one only when every part brought a matching one.
+        joined["samples"] = _joined(samples, dim)
+        # A noise mask is kept only when every part brought one matching its samples.
         masks = [value.get("noise_mask") for value in values]
         covers = all(
             mask is not None and getattr(mask, "ndim", None) == sample.ndim
             for mask, sample in zip(masks, samples)
         )
         if covers and _joinable([tuple(m.shape) for m in masks], dim):
-            joined["noise_mask"] = torch.cat(masks, dim=dim)
+            joined["noise_mask"] = _joined(masks, dim)
         else:
             joined.pop("noise_mask", None)
         return joined

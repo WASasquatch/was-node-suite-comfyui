@@ -142,7 +142,7 @@ class ImageBlank(io.ComfyNode):
         import torch
         from PIL import Image
 
-        # Floored at one whole step, since a side of zero pixels is not an image.
+        # Each side rounded down to a multiple of divisible_by, and no shorter than one step.
         width = max(divisible_by, (width // divisible_by) * divisible_by)
         height = max(divisible_by, (height // divisible_by) * divisible_by)
 
@@ -153,4 +153,17 @@ class ImageBlank(io.ComfyNode):
             level = min(1.0, max(0.0, float(alpha)))
             frames = torch.cat([frames, torch.full_like(frames[..., :1], level)], dim=-1)
         count = max(1, int(batch_size))
-        return io.NodeOutput(frames if count == 1 else frames.repeat(count, 1, 1, 1))
+        if count == 1:
+            return io.NodeOutput(frames)
+
+        from ...modules.image import scratch
+
+        batch = scratch.allocate(
+            (count,) + tuple(frames.shape[1:]),
+            frames.dtype,
+            node="Image Blank",
+            advice="Lowering batch_size, width or height also fits it.",
+        )
+        # Every frame of the batch takes the one fill.
+        batch.copy_(frames)
+        return io.NodeOutput(batch)

@@ -297,9 +297,9 @@ class ThreePathTraceRender(io.ComfyNode):
                 f"viewer's own error line usually says more."
             )
         return io.NodeOutput(
-            ThreeRender.as_batch(bodies["png"]),
-            ThreeRender.as_batch(bodies["depth"]),
-            ThreeRender.as_batch(bodies["normal"]),
+            ThreeRender.as_batch(bodies["png"], "Three Path Trace Render"),
+            ThreeRender.as_batch(bodies["depth"], "Three Path Trace Render"),
+            ThreeRender.as_batch(bodies["normal"], "Three Path Trace Render"),
             len(bodies["png"]),
             float(fps),
         )

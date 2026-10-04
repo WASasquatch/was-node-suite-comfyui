@@ -195,26 +195,45 @@ class ImageFilterAdjustments(io.ComfyNode):
     @classmethod
     def execute(cls, image, brightness, contrast, saturation, sharpness, blur, gaussian_blur,
                 edge_enhance, detail_enhance) -> io.NodeOutput:
+        """Adjust every image of the batch.
+
+        Raises:
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        from ....modules.image import scratch
+
         settings = (brightness, contrast, saturation, sharpness, blur, gaussian_blur,
                     edge_enhance, detail_enhance)
 
-        # Eight settings compound on the image published here, which is what a preview
-        # applies them to. Publishing changes nothing this returns, and does nothing at all
-        # until a panel on this node is open.
+        # Publishes the input for a preview panel to apply the settings to.
         preview.publish(image)
 
-        folded = dynamic.fold(image)
-        if len(folded.images) > 1:
-            tensors = []
-            for img in folded.images:
-                adjusted, img = filter_adjustments(img, *settings)
-                tensors.append(pil2tensor(adjusted) if adjusted is not None else img.unsqueeze(0))
-            adjusted_batch = torch.cat(tensors, dim=0)
+        scale = dynamic.peak(image) if dynamic.carries(image) else 1.0
+        if len(image) > 1:
+            adjusted_batch = None
+            for index, plane in enumerate(image):
+                folded = dynamic.fold(plane, scale)
+                adjusted, img = filter_adjustments(folded.images, *settings)
+                frame = pil2tensor(adjusted)[0] if adjusted is not None else img
+                if adjusted_batch is None:
+                    shape = (len(image),) + tuple(frame.shape)
+                    adjusted_batch = (
+                        scratch.allocate(
+                            shape,
+                            frame.dtype,
+                            node="Image Filter Adjustments",
+                            advice="Passing fewer frames also fits it.",
+                        )
+                        if frame.device.type == "cpu"
+                        else torch.empty(shape, dtype=frame.dtype, device=frame.device)
+                    )
+                adjusted_batch[index] = frame
+                if folded.scale != 1.0:
+                    adjusted_batch[index].mul_(folded.scale)
         else:
+            folded = dynamic.fold(image, scale)
             adjusted, img = filter_adjustments(folded.images, *settings)
             adjusted_batch = pil2tensor(adjusted) if adjusted is not None else img
-        adjusted_batch = dynamic.unfold(adjusted_batch, folded)
+            adjusted_batch = dynamic.unfold(adjusted_batch, folded)
 
-        # One return rather than two, so the batch and the single frame leave through the same
-        # statement and a caller reading this reads one answer.
         return io.NodeOutput(adjusted_batch)

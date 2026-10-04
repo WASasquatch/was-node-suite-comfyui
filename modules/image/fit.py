@@ -1,14 +1,14 @@
 """Bringing images of different sizes to one size, so they can share a batch.
 
-Images are float tensors shaped ``(batch, height, width, channels)`` in ``[0, 1]``. Every method
-answers a tensor of the requested height and width.
+Images are ``(batch, height, width, channels)`` in ``[0, 1]``. Every method writes frames of the
+requested size into a batch the caller holds.
 """
 
 from __future__ import annotations
 
 import torch
 
-__all__ = ["METHODS", "PAD_LEVEL", "RGBA", "fit_to", "pad_to", "target_size"]
+__all__ = ["METHODS", "PAD_LEVEL", "RGBA", "check_method", "fit_into", "pad_to", "target_size"]
 
 # `resize` scales to the target and ignores the shape it had, so nothing is lost or added but a
 # picture of another shape is stretched. `crop` scales until the target is covered, keeping the
@@ -38,15 +38,13 @@ def target_size(tensor) -> tuple[int, int]:
 
 
 def _scaled(tensor, height: int, width: int):
-    """``tensor`` resampled to exactly ``height`` by ``width``."""
-    # Interpolation wants the channels next to the batch, and an image carries them last.
+    """``tensor`` resampled to exactly ``height`` by ``width`` and clamped to ``[0, 1]``."""
+    # Channels move next to the batch for interpolation and back after it.
     planes = tensor.permute(0, 3, 1, 2)
-    # `antialias` only applies when scaling down, where without it a large reduction drops
-    # detail between samples instead of averaging it.
     resampled = torch.nn.functional.interpolate(
         planes, size=(height, width), mode="bilinear", align_corners=False, antialias=True,
     )
-    return resampled.permute(0, 2, 3, 1).clamp(0.0, 1.0)
+    return resampled.clamp_(0.0, 1.0).permute(0, 2, 3, 1)
 
 
 def _centre_crop(tensor, height: int, width: int):
@@ -58,6 +56,7 @@ def _centre_crop(tensor, height: int, width: int):
 
 def pad_to(
     tensor, height: int, width: int, level: float = PAD_LEVEL, transparent: bool = False,
+    out=None,
 ):
     """One image batch centred on a larger field, with nothing resampled.
 
@@ -69,18 +68,22 @@ def pad_to(
         level: What the field around the frame holds, as a level in ``[0, 1]``.
         transparent: Answer 4 channels, the field fully transparent and the frame opaque. A
             frame that already carries alpha keeps its own.
+        out: A tensor shaped as the answer to write the field into, or None for a new one.
 
     Returns:
-        A tensor of exactly that height and width, at the source channel count, or at
-        :data:`RGBA` channels where ``transparent`` is set.
+        ``out``, or a new tensor, of exactly that height and width, at the source channel
+        count, or at :data:`RGBA` channels where ``transparent`` is set.
     """
     height, width = int(height), int(width)
     batch, current_height, current_width, channels = (int(axis) for axis in tensor.shape)
     depth = RGBA if transparent else channels
-    field = torch.full(
-        (batch, height, width, depth), level,
-        dtype=tensor.dtype, device=tensor.device,
-    )
+    if out is None:
+        field = torch.full(
+            (batch, height, width, depth), level,
+            dtype=tensor.dtype, device=tensor.device,
+        )
+    else:
+        field = out.fill_(level)
     if transparent:
         field[..., 3] = 0.0
     top = max(0, (height - current_height) // 2)
@@ -94,18 +97,11 @@ def pad_to(
     return field
 
 
-def fit_to(tensor, height: int, width: int, method: str = "resize"):
-    """One image batch brought to ``height`` by ``width``.
+def check_method(method: str) -> None:
+    """Refuse a fitting method that is not one of :data:`METHODS`.
 
     Args:
-        tensor: An ``IMAGE`` tensor, ``(batch, height, width, channels)``.
-        height: The height to answer with.
-        width: The width to answer with.
-        method: One of :data:`METHODS`.
-
-    Returns:
-        A tensor of exactly that height and width. The same tensor is handed back untouched
-        when it is already that size, whatever the method.
+        method: The method named on the node.
 
     Raises:
         ValueError: ``method`` is not one of :data:`METHODS`.
@@ -114,23 +110,46 @@ def fit_to(tensor, height: int, width: int, method: str = "resize"):
         raise ValueError(
             f"resize_method is {method!r}, which is not one of {', '.join(METHODS)}."
         )
+
+
+def fit_into(tensor, out, method: str = "resize"):
+    """Write one image batch into ``out``, brought to its height and width a frame at a time.
+
+    Args:
+        tensor: An ``IMAGE`` tensor, ``(batch, height, width, channels)``.
+        out: A tensor of the same batch and channels at the target height and width, which
+            is overwritten.
+        method: One of :data:`METHODS`.
+
+    Returns:
+        ``out``.
+
+    Raises:
+        ValueError: ``method`` is not one of :data:`METHODS`.
+    """
+    check_method(method)
+    height, width = target_size(out)
     current_height, current_width = target_size(tensor)
-    if (current_height, current_width) == (int(height), int(width)):
-        return tensor
+    if (current_height, current_width) == (height, width):
+        return out.copy_(tensor)
 
     if method == "resize":
-        return _scaled(tensor, int(height), int(width))
-
-    # Both of the shape-keeping methods scale by a single factor and then square the frame up,
-    # one by taking the middle and one by filling around it.
-    if method == "crop":
-        factor = max(height / current_height, width / current_width)
+        scaled_height, scaled_width = height, width
     else:
-        factor = min(height / current_height, width / current_width)
-    scaled_height = max(1, round(current_height * factor))
-    scaled_width = max(1, round(current_width * factor))
-    scaled = _scaled(tensor, scaled_height, scaled_width)
+        # Crop scales until the target is covered, pad until the target contains the frame.
+        if method == "crop":
+            factor = max(height / current_height, width / current_width)
+        else:
+            factor = min(height / current_height, width / current_width)
+        scaled_height = max(1, round(current_height * factor))
+        scaled_width = max(1, round(current_width * factor))
 
-    if method == "crop":
-        return _centre_crop(scaled, int(height), int(width))
-    return pad_to(scaled, int(height), int(width))
+    for index in range(int(tensor.shape[0])):
+        scaled = _scaled(tensor[index:index + 1], scaled_height, scaled_width)
+        frame = out[index:index + 1]
+        if method == "pad":
+            pad_to(scaled, height, width, out=frame)
+        else:
+            frame.copy_(_centre_crop(scaled, height, width))
+        del scaled
+    return out

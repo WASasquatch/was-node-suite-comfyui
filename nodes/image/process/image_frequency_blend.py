@@ -121,7 +121,10 @@ class ImageFrequencyBlend(io.ComfyNode):
 
         Raises:
             ValueError: The two inputs are different sizes, or one is empty.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
+        from ....modules.image import scratch
+
         steady = image_planes(consistent)
         detailed = image_planes(sharp)
         if not steady or not detailed:
@@ -136,18 +139,29 @@ class ImageFrequencyBlend(io.ComfyNode):
                 f"{second[1]}x{second[0]}. Resize one to match the other."
             )
 
-        # A shorter input repeats its last frame, so a single still can be blended against a
-        # sequence without the caller padding it first.
+        # A shorter input repeats its last frame.
         frames = max(len(steady), len(detailed))
-        blended = [
-            cls.blend_one(
+        blended = None
+        for index in range(frames):
+            frame = cls.blend_one(
                 steady[min(index, len(steady) - 1)],
                 detailed[min(index, len(detailed) - 1)],
                 cutoff, order, strength, border,
             )
-            for index in range(frames)
-        ]
-        return io.NodeOutput(torch.stack(blended, dim=0))
+            if blended is None:
+                shape = (frames,) + tuple(frame.shape)
+                blended = (
+                    scratch.allocate(
+                        shape,
+                        frame.dtype,
+                        node="Image Frequency Blend",
+                        advice="Passing fewer frames also fits it.",
+                    )
+                    if frame.device.type == "cpu"
+                    else torch.empty(shape, dtype=frame.dtype, device=frame.device)
+                )
+            blended[index] = frame
+        return io.NodeOutput(blended)
 
     @classmethod
     def blend_one(cls, steady, detailed, cutoff, order, strength, border):

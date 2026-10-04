@@ -15,6 +15,7 @@ import torch.nn.functional as F
 from . import optical_flow
 
 __all__ = [
+    "CHANGED_LEVELS",
     "CUT_SHARE",
     "HOLD_CHANGE",
     "MOTION_SIDE",
@@ -41,6 +42,9 @@ CUT_SHARE = 0.4
 
 #: Mean luminance change, in levels of 255, below which a frame repeats the one before it.
 HOLD_CHANGE = 0.5
+
+#: Luminance difference, in levels of 255, at which a pixel counts as changed between two frames.
+CHANGED_LEVELS = 12.0
 
 #: Distances, in pixels of the measured motion, a pixel looks for a motion that matches better.
 SNAP_REACH = (4, 8, 16, 24)
@@ -224,6 +228,26 @@ class Motion:
         """
         return [float(value) < float(change) for value in self.change.tolist()]
 
+    def unexplained(self, device=None) -> list[float]:
+        """Share of each pair's changed pixels still changed after following the motion.
+
+        Args:
+            device: Where the work runs; the CPU when None.
+
+        Returns:
+            One share per pair, ``frames - 1`` in all: 0 where the motion accounts for every
+            change, 1 where it accounts for none, 0 where nothing changed.
+        """
+        found = []
+        for index in range(self.count - 1):
+            here = self._plane(index, device)
+            there = self._plane(index + 1, device)
+            flow = self.forward[index:index + 1].to(device=device, dtype=torch.float32)
+            changed = float(((there - here).abs() > CHANGED_LEVELS).sum())
+            left = float(((optical_flow.warp(there, flow) - here).abs() > CHANGED_LEVELS).sum())
+            found.append(min(1.0, left / changed) if changed > 0 else 0.0)
+        return found
+
     def _pair(self, index: int, device):
         """Flows of pair ``index`` as float32 on ``device``, ``(ahead, behind)``."""
         ahead = self.forward[index:index + 1].to(device=device, dtype=torch.float32)
@@ -318,7 +342,7 @@ def measure(frames, side: int = MOTION_SIDE, device=None, progress=None, network
     """Measure the flow between every pair of neighbouring frames.
 
     Args:
-        frames: ``(frames, height, width, channels)`` in ``[0, 1]``.
+        frames: ``(frames, height, width, channels)`` in ``[0, 1]``, or uint8 codes.
         side: Long side motion is measured at; 0 measures at the frame's own size.
         device: Where the work runs. Defaults to the frames' own device.
         progress: Optional callable taking a step count, called once per pair measured.
@@ -340,12 +364,12 @@ def measure(frames, side: int = MOTION_SIDE, device=None, progress=None, network
     mismatch = torch.zeros(pairs)
     change = torch.zeros(pairs)
     if count == 1:
-        plane = optical_flow.resize(optical_flow.luminance(frames[:1].to(device)), h, w)
+        plane = optical_flow.resize(optical_flow.luminance(optical_flow.unit(frames[:1], device)), h, w)
         luma[0] = plane.round().clamp(0, 255).to(torch.uint8).cpu()[0]
     batch = PAIR_BATCH if network is None else max(1, NETWORK_PIXELS // (h * w))
     for start in range(0, pairs, batch):
         stop = min(start + batch, pairs)
-        chunk = frames[start:stop + 1].to(device)
+        chunk = optical_flow.unit(frames[start:stop + 1], device)
         planes = optical_flow.resize(optical_flow.luminance(chunk), h, w)
         first, second = planes[:-1], planes[1:]
         if network is None:

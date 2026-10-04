@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.compat.types import IMAGE_BOUNDS
@@ -141,6 +140,8 @@ class DrawImageBounds(io.ComfyNode):
     ) -> io.NodeOutput:
         from PIL import ImageOps
 
+        from ....modules.image import scratch
+
         rows = bounds.rows(image_bounds)
         if not rows:
             raise ValueError(
@@ -156,8 +157,8 @@ class DrawImageBounds(io.ComfyNode):
         planes = image_planes(image)
         grouped = [rows] if len(planes) == 1 else [[rows[index % len(rows)]] for index in range(len(planes))]
 
-        drawn, masks = [], []
-        for plane, group in zip(planes, grouped):
+        drawn = masks = None
+        for index, (plane, group) in enumerate(zip(planes, grouped)):
             picture = tensor2pil(plane).convert("RGB")
             boxes = [(left, top, right, bottom) for top, bottom, left, right in group]
             labels = [cls.caption(label, index, box) for index, box in enumerate(boxes)] if label else None
@@ -171,12 +172,25 @@ class DrawImageBounds(io.ComfyNode):
                 font=font,
                 label_color=outline,
             )
-            drawn.append(pil2tensor(draw.composite(picture, layer, opacity)))
-            # pil2mask reports black as 1.0, so the coverage channel is inverted first to
-            # give a mask that is white where the overlay is rather than around it.
-            masks.append(pil2mask(ImageOps.invert(draw.layer_mask(layer))))
+            frame = pil2tensor(draw.composite(picture, layer, opacity))
+            # The coverage channel is inverted so the mask is white where the overlay is.
+            coverage = pil2mask(ImageOps.invert(draw.layer_mask(layer)))
+            if drawn is None:
+                advice = "Passing fewer or smaller frames also fits it."
+                drawn = scratch.allocate(
+                    (len(planes),) + tuple(frame.shape[1:]), node="Draw Image Bounds", advice=advice
+                )
+                masks = scratch.allocate(
+                    (len(planes),) + tuple(coverage.shape), node="Draw Image Bounds", advice=advice
+                )
+            drawn[index] = frame[0]
+            masks[index] = coverage
 
-        return io.NodeOutput(torch.cat(drawn, dim=0), torch.stack(masks, dim=0))
+        if drawn is None:
+            raise ValueError(
+                "Draw Image Bounds was handed an empty image batch. Wire in at least one image."
+            )
+        return io.NodeOutput(drawn, masks)
 
     @staticmethod
     def caption(template: str, index: int, box: tuple[int, int, int, int]) -> str:

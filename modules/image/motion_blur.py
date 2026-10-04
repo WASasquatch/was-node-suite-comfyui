@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 from ..media import clip as clips
 from . import motion as motion_field
-from . import optical_flow
+from . import optical_flow, scratch
 
 __all__ = [
     "LAYERS",
@@ -180,10 +180,11 @@ def _plane(batch, index: int, size, device):
 
 def _depth_range(depth) -> tuple[float, float]:
     """The 1st and 99th percentile of a depth batch, read from a strided sample."""
-    values = depth[..., :3].float().mean(-1) if depth.ndim == 4 else depth.float()
-    flat = values.reshape(-1)
-    step = max(1, flat.numel() // 1_000_000)
-    sample = flat[::step]
+    count, height, width = (int(v) for v in depth.shape[:3])
+    total = count * height * width
+    at = torch.arange(0, total, max(1, total // 1_000_000))
+    picked = depth[at // (height * width), at % (height * width) // width, at % width]
+    sample = picked[:, :3].float().mean(-1) if depth.ndim == 4 else picked.float()
     low = float(torch.quantile(sample, 0.01))
     high = float(torch.quantile(sample, 0.99))
     return low, max(high, low + 1e-6)
@@ -200,6 +201,8 @@ def blur_frames(
     device=None,
     progress=None,
     motion=None,
+    alpha=None,
+    name: str = "",
 ):
     """Blur every frame of a sequence along the motion measured between its frames.
 
@@ -215,37 +218,56 @@ def blur_frames(
         progress: Optional callable taking a step count, called as work completes.
         motion: A :class:`~.motion.Motion` measured from these frames, or ``None`` to
             measure here.
+        alpha: Optional ``(frames, height, width)`` coverage, blurred along with the frames.
+        name: Display name of the calling node, for the log and the refusal.
 
     Returns:
-        ``(blurred, pictures)``: the blurred frames on the frames' device, and
-        ``(frames, h, w, 3)`` pictures of the paths at the measured size.
+        ``(blurred, pictures, coverage)``: the blurred frames on the CPU, ``(frames, h, w, 3)``
+        pictures of the paths at the measured size, and the blurred ``alpha`` in the frames'
+        dtype, or None without one.
+
+    Raises:
+        MemoryError: Neither free memory nor a scratch drive can hold the result.
     """
     count, height, width, channels = (int(v) for v in frames.shape)
     device = frames.device if device is None else torch.device(device)
     angles = clips.stretch(shutter if isinstance(shutter, (list, tuple)) else [shutter], count)
     samples = max(1, min(int(samples), MAX_SAMPLES))
-    blurred = torch.empty_like(frames)
+    advice = "A shorter clip also fits it."
+    blurred = scratch.allocate(tuple(frames.shape), frames.dtype, name, advice)
+    coverage = None
+    if alpha is not None:
+        coverage = scratch.allocate((count, height, width), frames.dtype, name, advice)
+
+    def unchanged():
+        blurred.copy_(frames)
+        if coverage is not None:
+            coverage.copy_(alpha)
+
     if motion is None:
         if count < 2 or max(angles) <= 0.0:
             size = motion_field.working_size(height, width, int(motion_side))
-            blurred.copy_(frames)
+            unchanged()
             if progress is not None:
                 progress(max(count - 1, 0) + count)
-            return blurred, torch.zeros(count, size[0], size[1], 3)
+            pictures = scratch.allocate((count, size[0], size[1], 3), torch.float32, name, advice)
+            return blurred, pictures.zero_(), coverage
         motion = motion_field.measure(frames, int(motion_side), device, progress)
     size = motion.size
-    pictures = torch.zeros(count, size[0], size[1], 3)
+    pictures = scratch.allocate((count, size[0], size[1], 3), torch.float32, name, advice).zero_()
     if count < 2:
-        blurred.copy_(frames)
+        unchanged()
         if progress is not None:
             progress(count)
-        return blurred, pictures
+        return blurred, pictures, coverage
 
     depth_range = _depth_range(depth) if depth is not None else None
     for index in range(count):
         half = 0.5 * max(0.0, angles[index]) / 360.0
         if half <= 0.0:
             blurred[index] = frames[index]
+            if coverage is not None:
+                coverage[index] = alpha[index]
             if progress is not None:
                 progress(1)
             continue
@@ -280,11 +302,16 @@ def blur_frames(
             band = optical_flow.gaussian(occluded, 1.5)
             near = optical_flow.resize(0.5 - 0.5 * band.clamp(0.0, 1.0), height, width)
 
-        colour = frames[index].to(device=device, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
-        out = render(colour, a, c, near, samples)
-        blurred[index] = out[0].permute(1, 2, 0).to(blurred.dtype).to(blurred.device)
+        colour = frames[index]
+        if coverage is not None:
+            colour = torch.cat([colour, alpha[index].to(frames.dtype).unsqueeze(-1)], -1)
+        colour = colour.to(device=device, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
+        out = render(colour, a, c, near, samples)[0].permute(1, 2, 0)
+        blurred[index] = out[..., :channels]
+        if coverage is not None:
+            coverage[index] = out[..., channels]
         small = F.interpolate(torch.cat([a, c], 1), size=size, mode="bilinear", align_corners=False)
         pictures[index] = motion_field.visualise(small[:, 0:2], small[:, 2:4]).cpu()
         if progress is not None:
             progress(1)
-    return blurred, pictures
+    return blurred, pictures, coverage

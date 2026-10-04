@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
-from ....modules.convert.tensors import image_planes, stack_images, tensor2pil
+from ....modules.convert.tensors import image_planes, pil2tensor, tensor2pil
 from ....modules.image import dynamic
 
 
@@ -155,13 +155,13 @@ class ImageShadowsAndHighlights(io.ComfyNode):
         highlight_smoothing,
         simplify_isolation,
     ) -> io.NodeOutput:
+        from ....modules.image import scratch
         from ....modules.image.filters import shadows_and_highlights
 
-        adjusted = []
-        shadow_maps = []
-        highlight_maps = []
         folded = dynamic.fold(image)
-        for plane in image_planes(folded.images):
+        planes = image_planes(folded.images)
+        batches = None
+        for index, plane in enumerate(planes):
             result, shadows, highlights = shadows_and_highlights(
                 tensor2pil(plane),
                 shadow_threshold,
@@ -172,12 +172,23 @@ class ImageShadowsAndHighlights(io.ComfyNode):
                 highlight_smoothing,
                 simplify_isolation,
             )
-            adjusted.append(result)
-            shadow_maps.append(shadows)
-            highlight_maps.append(highlights)
+            frames = (pil2tensor(result), pil2tensor(shadows), pil2tensor(highlights))
+            if batches is None:
+                batches = tuple(
+                    scratch.allocate(
+                        (len(planes),) + tuple(frame.shape[1:]),
+                        node="Image Shadows and Highlights",
+                        advice="Passing fewer or smaller frames also fits it.",
+                    )
+                    for frame in frames
+                )
+            batches[0][index] = dynamic.unfold(frames[0][0], folded)
+            for batch, frame in zip(batches[1:], frames[1:]):
+                batch[index] = frame[0]
 
-        return io.NodeOutput(
-            dynamic.unfold(stack_images(adjusted), folded),
-            stack_images(shadow_maps),
-            stack_images(highlight_maps),
-        )
+        if batches is None:
+            raise ValueError(
+                "Image Shadows and Highlights was handed an empty image batch. Wire in at "
+                "least one image."
+            )
+        return io.NodeOutput(*batches)

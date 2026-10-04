@@ -83,12 +83,25 @@ class ImageMorphology(io.ComfyNode):
 
         Returns:
             The reshaped images on the intermediate device.
+
+        Raises:
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
+        from ....modules.image import scratch
+
         device = comfy.model_management.get_torch_device()
-        keep = comfy.model_management.intermediate_device()
-        parts = []
+        keep = torch.device(comfy.model_management.intermediate_device())
+        if keep.type == "cpu":
+            reshaped = scratch.allocate(
+                tuple(image.shape),
+                image.dtype,
+                node="Image Morphology",
+                advice="Passing fewer frames also fits it.",
+            )
+        else:
+            reshaped = torch.empty(tuple(image.shape), dtype=image.dtype, device=keep)
         for start in range(0, int(image.shape[0]), CHUNK_FRAMES):
             planes = image[start:start + CHUNK_FRAMES].to(device).movedim(-1, 1)
             shaped = morphology.morph(planes, operation, int(kernel_size))
-            parts.append(shaped.movedim(1, -1).to(keep))
-        return io.NodeOutput(torch.cat(parts, dim=0))
+            reshaped[start:start + CHUNK_FRAMES] = shaped.movedim(1, -1)
+        return io.NodeOutput(reshaped)

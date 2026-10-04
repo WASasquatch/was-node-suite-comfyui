@@ -86,6 +86,22 @@ def gaussian(x, sigma: float):
     return F.conv2d(F.pad(x, (0, 0, radius, radius), mode="replicate"), down, groups=channels)
 
 
+def unit(x, device=None):
+    """Frames as float32 in ``[0, 1]``, 8-bit codes divided by 255.
+
+    Args:
+        x: A float tensor, or a uint8 one.
+        device: Where the answer is placed; the tensor's own device when None.
+
+    Returns:
+        The float32 tensor.
+    """
+    x = x.to(device=device if device is not None else x.device)
+    if x.dtype == torch.uint8:
+        return x.to(torch.float32) / 255.0
+    return x.to(torch.float32)
+
+
 def resize(x, height: int, width: int):
     """Antialiased bilinear resize.
 

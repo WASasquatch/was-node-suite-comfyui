@@ -136,6 +136,8 @@ class ImageMatte(io.ComfyNode):
         cls, images, masks, certain_foreground=240, certain_background=10, band=10,
         unmix_foreground=True,
     ) -> io.NodeOutput:
+        from ....modules.image import scratch
+
         if certain_background >= certain_foreground:
             raise ValueError(
                 f"Image Matte needs certain_background ({certain_background}) below "
@@ -143,8 +145,7 @@ class ImageMatte(io.ComfyNode):
                 f"solve. Lower certain_background, or raise certain_foreground."
             )
 
-        # The solve reads colour as a 0 to 1 line, so a frame above white is folded for
-        # it and the colour it answers is put back on the scale it arrived on.
+        # A frame above white is solved inside 0 to 1 and its colour put back on its scale.
         folded = dynamic.fold(images if images.ndim == 4 else images.unsqueeze(0))
         frames = folded.images
         planes = cls.planes(masks)
@@ -154,8 +155,16 @@ class ImageMatte(io.ComfyNode):
                 "one plane."
             )
 
-        mattes, fronts, cutouts = [], [], []
-        for index in range(int(frames.shape[0])):
+        count, height, width = (int(side) for side in frames.shape[:3])
+        if count == 0:
+            raise ValueError(
+                "Image Matte was handed an empty image batch. Wire in at least one image."
+            )
+        advice = "Passing fewer or smaller frames also fits it."
+        solved = scratch.allocate((count, height, width), node="Image Matte", advice=advice)
+        fronts = scratch.allocate((count, height, width, 3), node="Image Matte", advice=advice)
+        cutouts = scratch.allocate((count, height, width, 4), node="Image Matte", advice=advice)
+        for index in range(count):
             frame = frames[index, :, :, :3].to(dtype=torch.float32).clamp(0.0, 1.0)
             rough = cls.fitted(planes, index, int(frame.shape[0]), int(frame.shape[1]))
             marked = matting.trimap(
@@ -167,18 +176,14 @@ class ImageMatte(io.ComfyNode):
             matte = matting.alpha(frame, marked)
             front = matting.foreground(frame, matte) if unmix_foreground else frame
             colour = dynamic.unfold(front, folded)
-            mattes.append(matte)
-            fronts.append(colour)
-            cutouts.append(torch.cat([colour, matte.unsqueeze(-1)], dim=-1))
+            solved[index] = matte
+            fronts[index] = colour
+            cutouts[index, :, :, :3] = colour
+            cutouts[index, :, :, 3] = matte
 
-        solved = torch.stack(mattes, dim=0)
         mask_report.publish(planes, solved, source="masks")
-        logger.info(
-            "Image Matte solved %d frame(s) over a %dpx band", len(mattes), int(band)
-        )
-        return io.NodeOutput(
-            solved, torch.stack(fronts, dim=0), torch.stack(cutouts, dim=0)
-        )
+        logger.info("Image Matte solved %d frame(s) over a %dpx band", count, int(band))
+        return io.NodeOutput(solved, fronts, cutouts)
 
     @staticmethod
     def planes(masks):

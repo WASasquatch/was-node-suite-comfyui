@@ -14,9 +14,14 @@ REQUIRES = "pssr"
 
 logger = log.get_logger("nodes.ai.pssr")
 
-#: Resampling used to reach the target grid before the model restores detail into it. Lanczos
-#: keeps the most of the source, which is what the model then has to work from.
+#: Resampling used to reach the target grid before the model restores detail into it.
 INTERPOLATION = ("lanczos", "bicubic", "bilinear")
+
+#: Name the node goes by in the log and in its refusals.
+NAME = "Video Super Resolution (PS-SR)"
+
+#: Closing sentence of a refusal for want of memory.
+ADVICE = "Lowering scale or passing fewer frames also fits it."
 
 
 class PSSRSuperResolution(io.ComfyNode):
@@ -172,22 +177,29 @@ class PSSRSuperResolution(io.ComfyNode):
         """Raise every frame and answer them as one batch.
 
         Raises:
-            ValueError: No frames were given, or the overlap is not smaller than the window.
+            ValueError: No frames were given, they are not colour frames, or the overlap is not
+                smaller than the window.
             FileNotFoundError: The checkout or its weights are not where they should be.
+            MemoryError: Neither free memory nor a scratch drive has room for the result.
         """
         from ...modules.model import pssr
 
         frames = image_planes(images)
         if not frames:
-            raise ValueError("Video Super Resolution (PS-SR) was given no frames.")
+            raise ValueError(f"{NAME} was given no frames.")
         if overlap_frames >= window_frames:
             raise ValueError(
                 f"overlap_frames ({overlap_frames}) has to be smaller than window_frames "
                 f"({window_frames}), or the windows would never advance."
             )
+        source = images.contiguous() if images.ndim >= 4 else torch.stack(frames, dim=0)
+        if source.ndim != 4 or source.shape[-1] < 3:
+            raise ValueError(
+                f"{NAME} restores colour frames shaped (frames, height, width, 3 or 4) and was "
+                f"given {tuple(source.shape)}. Pass them through Images to RGB first."
+            )
 
         root = pssr.find_root()
-        source = torch.stack(frames, dim=0)
         target = cls.resize(source, scale, interpolation)
         logger.info(
             "PS-SR: %d frame(s), %dx%d -> %dx%d",
@@ -198,19 +210,13 @@ class PSSRSuperResolution(io.ComfyNode):
         supplied = pssr.dit_state_dict(model)
         context = pssr.conditioning_tensor(positive).detach().to("cpu", copy=True)
         against = pssr.conditioning_tensor(negative).detach().to("cpu", copy=True)
-        # Everything needed from ComfyUI has been copied out, so its models can go. Without this
-        # its transformer and text encoder stay resident and the two PS-SR pipelines do not fit.
         pssr.release_comfy_models()
-        # Keyed on the weights themselves, not on the object: ComfyUI hands out a new object on
-        # every reload, and Python reuses ids, so an identity key both rebuilds needlessly and
-        # risks serving one model the pipelines built for another.
+        # Built pipelines are reused while this fingerprint of the weights matches.
         key = pssr.fingerprint(supplied)
         base, draft = pssr.load_pipelines(
             root, torch.bfloat16, device, k_select=1.5, dit_state=supplied, dit_key=key,
         )
-        # The pipelines would otherwise tag the frames and encode a string with their own copy
-        # of umt5. The conditioning wired in is that same encoder's output, so it is used as
-        # it stands and the tagging and encoding are both skipped.
+        # The wired conditioning stands in for the pipelines' own prompt encoding.
         with pssr.supplied_conditioning((base, draft), context, against):
             restored = cls.with_a_tile_that_fits(
                 pssr, base, draft, target, seed, window_frames, overlap_frames,
@@ -239,39 +245,57 @@ class PSSRSuperResolution(io.ComfyNode):
             interpolation: One of :data:`INTERPOLATION`.
 
         Returns:
-            The resampled batch, sides rounded to a multiple of 16.
+            The resampled batch, sides rounded to a multiple of 16, or ``frames`` itself where
+            that is its size already.
+
+        Raises:
+            MemoryError: Neither free memory nor a scratch drive has room for the batch.
         """
         import torch.nn.functional as functional
 
-        height, width = frames.shape[1], frames.shape[2]
-        # The latent grid is the picture over 16, and a side that is not a multiple would be
-        # rounded up inside the pipeline, which then answers a size nobody asked for.
+        from ...modules.image import scratch
+
+        count, height, width, channels = frames.shape
+        # Each side rounds to the nearest multiple of 16, the latent grid's step.
         target_h = max(16, int(round(height * scale / 16)) * 16)
         target_w = max(16, int(round(width * scale / 16)) * 16)
         if (target_h, target_w) == (height, width):
             return frames
 
-        planes = frames.permute(0, 3, 1, 2)
-        if interpolation == "lanczos":
-            resized = PSSRSuperResolution.lanczos(planes, target_h, target_w)
-        else:
-            resized = functional.interpolate(
-                planes, size=(target_h, target_w), mode=interpolation, align_corners=False,
-            )
-        return resized.permute(0, 2, 3, 1).clamp(0, 1)
+        lanczos = interpolation == "lanczos"
+        resized = scratch.allocate(
+            (count, target_h, target_w, channels), torch.float32 if lanczos else frames.dtype,
+            node=NAME, advice=ADVICE,
+        )
+        for index in range(count):
+            if lanczos:
+                resized[index] = PSSRSuperResolution.lanczos(frames[index], target_h, target_w)
+            else:
+                plane = frames[index : index + 1].permute(0, 3, 1, 2)
+                resized[index] = functional.interpolate(
+                    plane, size=(target_h, target_w), mode=interpolation, align_corners=False,
+                )[0].permute(1, 2, 0)
+            resized[index].clamp_(0, 1)
+        return resized
 
     @staticmethod
-    def lanczos(planes: torch.Tensor, height: int, width: int) -> torch.Tensor:
-        """Resize a batch to a target size with a Lanczos kernel, through PIL."""
+    def lanczos(frame: torch.Tensor, height: int, width: int) -> torch.Tensor:
+        """Resize one frame with a Lanczos kernel, through PIL.
+
+        Args:
+            frame: ``(height, width, channels)`` in 0 to 1.
+            height: Target height.
+            width: Target width.
+
+        Returns:
+            A float32 ``(height, width, channels)`` frame.
+        """
         import numpy as np
         from PIL import Image
 
-        out = []
-        for plane in planes:
-            array = (plane.permute(1, 2, 0).clamp(0, 1) * 255).round().to(torch.uint8).cpu().numpy()
-            resized = Image.fromarray(array).resize((width, height), Image.LANCZOS)
-            out.append(torch.from_numpy(np.asarray(resized, dtype=np.float32) / 255.0))
-        return torch.stack(out, dim=0).permute(0, 3, 1, 2)
+        array = (frame.clamp(0, 1) * 255).round().to(torch.uint8).cpu().numpy()
+        resized = Image.fromarray(array).resize((width, height), Image.LANCZOS)
+        return torch.from_numpy(np.asarray(resized, dtype=np.float32) / 255.0)
 
     @classmethod
     def with_a_tile_that_fits(
@@ -338,13 +362,17 @@ class PSSRSuperResolution(io.ComfyNode):
             strength: How much of the sharp pass to blend in.
 
         Returns:
-            The restored batch, the same shape as ``frames``.
+            The restored batch, the same shape as ``frames``, any alpha carried from ``frames``.
+
+        Raises:
+            MemoryError: Neither free memory nor a scratch drive has room for the batch.
         """
+        from ...modules.image import scratch
         from ...nodes.image.process.image_frequency_blend import ImageFrequencyBlend
 
-        count, height, width = frames.shape[0], frames.shape[1], frames.shape[2]
+        count, height, width, channels = frames.shape
         window = min(window, count)
-        # A patch keeps the 16:9 shape the method was tuned with rather than being square.
+        # Patches are 16:9 along the longer side of the frame.
         if width >= height:
             tile_w, tile_h = min(tile, width), min(round(tile * 9 / 16 / 16) * 16, height)
         else:
@@ -354,7 +382,7 @@ class PSSRSuperResolution(io.ComfyNode):
         times = pssr.window_starts(count, window, overlap)
         rows = pssr.window_starts(height, tile_h, min(tile_overlap, tile_h - 1))
         columns = pssr.window_starts(width, tile_w, min(tile_overlap, tile_w - 1))
-        # Feather across what neighbours really share, not what was asked for.
+        # Feathers span what neighbouring windows actually share.
         time_feather = pssr.shared_extent(times, window)
         row_feather = pssr.shared_extent(rows, tile_h)
         column_feather = pssr.shared_extent(columns, tile_w)
@@ -364,15 +392,21 @@ class PSSRSuperResolution(io.ComfyNode):
             len(times), window, len(rows), len(columns), tile_w, tile_h, patches,
         )
 
-        steady_total = torch.zeros_like(frames)
-        sharp_total = torch.zeros_like(frames)
-        weight = torch.zeros((count, height, width, 1), dtype=frames.dtype)
+        # The steady sum becomes the result and carries every channel of ``frames``.
+        steady_total = scratch.allocate(
+            frames.shape, frames.dtype, node=NAME, advice=ADVICE,
+        ).zero_()
+        sharp_total = scratch.allocate(
+            (count, height, width, 3), frames.dtype, node=NAME, advice=ADVICE,
+        ).zero_()
+        weight = scratch.allocate(
+            (count, height, width, 1), frames.dtype, node=NAME, advice=ADVICE,
+        ).zero_()
         bar = progress_bar(patches)
         done = 0
 
         for start in times:
-            # An outermost window has no neighbour on its outer side, and that side is left
-            # unfeathered.
+            # The outer side of the first and the last window is left unfeathered.
             frame_ramp = pssr.blend_weights(
                 window, time_feather, frames.device, frames.dtype,
                 lead=start != times[0], trail=start != times[-1],
@@ -383,7 +417,7 @@ class PSSRSuperResolution(io.ComfyNode):
                     logger.info("PS-SR: patch %d/%d, frames %d-%d at %d,%d",
                                 done, patches, start, start + window - 1, left, top)
                     chunk = frames[start : start + window, top : top + tile_h,
-                                   left : left + tile_w]
+                                   left : left + tile_w, :3]
                     steady, sharp = cls.restore_chunk(pssr, base, draft, chunk, seed)
                     ramp = (
                         frame_ramp.view(-1, 1, 1, 1)
@@ -399,24 +433,25 @@ class PSSRSuperResolution(io.ComfyNode):
                     window_slice = (slice(start, start + window),
                                     slice(top, top + tile_h),
                                     slice(left, left + tile_w))
-                    steady_total[window_slice] += steady * ramp
+                    steady_total[window_slice + (slice(0, 3),)] += steady * ramp
                     sharp_total[window_slice] += sharp * ramp
                     weight[window_slice] += ramp
-                    settled = steady_total / weight.clamp(min=1e-6)
-                    bar.update(1, preview=settled[min(start, settled.shape[0] - 1)].clamp(0, 1))
+                    shown = min(start, count - 1)
+                    settled = steady_total[shown, ..., :3] / weight[shown].clamp(min=1e-6)
+                    bar.update(1, preview=settled.clamp_(0, 1))
 
-        divisor = weight.clamp(min=1e-6)
-        assembled_steady = (steady_total / divisor).clamp(0, 1)
-        assembled_sharp = (sharp_total / divisor).clamp(0, 1)
-
-        # One blend, on the finished frames, which is what upstream's second step does.
-        return torch.stack([
-            ImageFrequencyBlend.blend_one(
-                assembled_steady[i], assembled_sharp[i],
-                cutoff=0.20, order=2, strength=strength, border=2,
+        # Each finished frame blends its two passes by frequency and replaces its steady sum.
+        for index in range(count):
+            divisor = weight[index].clamp(min=1e-6)
+            steady = (steady_total[index, ..., :3] / divisor).clamp_(0, 1)
+            sharp = (sharp_total[index] / divisor).clamp_(0, 1)
+            blended = ImageFrequencyBlend.blend_one(
+                steady, sharp, cutoff=0.20, order=2, strength=strength, border=2,
             )
-            for i in range(assembled_steady.shape[0])
-        ], dim=0).clamp(0, 1)
+            steady_total[index, ..., :3] = blended.clamp_(0, 1)
+            if channels > 3:
+                steady_total[index, ..., 3:] = frames[index, ..., 3:]
+        return steady_total
 
     @staticmethod
     def restore_chunk(pssr, base, draft, chunk, seed):
@@ -426,15 +461,13 @@ class PSSRSuperResolution(io.ComfyNode):
             pssr: The runtime module.
             base: The steady pipeline.
             draft: The sharp pipeline.
-            chunk: One patch, ``(frames, height, width, channels)``.
+            chunk: One patch, ``(frames, height, width, 3)``.
             seed: Diffusion seed.
 
         Returns:
             ``(steady frames, sharp frames)``, each a batch shaped like ``chunk``.
         """
         images = pssr.to_pil(chunk)
-        # The prompt strings are still required arguments upstream but are never read: the
-        # encoder they would go through has been redirected to the wired conditioning.
         shared = dict(
             prompt="", negative_prompt="", input_video=images,
             denoising_strength=1.0, seed=seed, tiled=False,
@@ -447,6 +480,5 @@ class PSSRSuperResolution(io.ComfyNode):
         sharp_list = draft(
             latents_next=draft_latents, latents_feature_list=features, **shared,
         )
-        # The draft branches are a chain and only the last one is the sharp result; the earlier
-        # two exist so it can be reached and are not otherwise wanted.
+        # The last draft branch is the sharp result.
         return pssr.from_pil(steady), pssr.from_pil(sharp_list[-1])

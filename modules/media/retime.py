@@ -6,14 +6,27 @@ Positions count in source frames from 0; a position between two frames lands bet
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 
 import numpy as np
 import torch
 
+from ..image import scratch
 from . import clip as clips
 
 __all__ = [
-    "EXACT", "MAX_FRAMES", "MAX_SPEED", "MIN_SPEED", "MODES", "frames_at", "positions", "retimed_audio",
+    "EXACT",
+    "MAX_FRAMES",
+    "MAX_SPEED",
+    "MIN_SPEED",
+    "MODES",
+    "AUTO_UNEXPLAINED",
+    "check_network",
+    "drawable",
+    "frames_at",
+    "positions",
+    "rate_positions",
+    "retimed_audio",
 ]
 
 #: Slowest and fastest speed a clip plays at.
@@ -24,8 +37,12 @@ MAX_SPEED = 16.0
 MAX_FRAMES = 20000
 
 #: How a frame between two source frames is made: drawn by the interpolation network, the two
-#: mixed, or the nearer held.
-MODES = ("interpolate", "blend", "hold")
+#: mixed, the nearer held, or drawn only where the motion accounts for the change.
+MODES = ("interpolate", "blend", "hold", "auto")
+
+#: Share of a pair's changed pixels the motion may leave unaccounted for and the pair still be
+#: drawn on ``auto``.
+AUTO_UNEXPLAINED = 0.75
 
 #: Distance from a source frame within which that frame is used as it is.
 EXACT = 1e-3
@@ -65,11 +82,87 @@ def positions(count: int, speeds) -> list[float]:
     return found
 
 
-def frames_at(frames, where, mode: str, cuts, net=None, device=None, progress=None):
+def rate_positions(count: int, source_rate, target_rate) -> list[float]:
+    """Where in the source each frame falls once the clip plays at another frame rate, its length kept.
+
+    Args:
+        count: Frames in the source.
+        source_rate: The source's frames per second.
+        target_rate: Frames per second wanted.
+
+    Returns:
+        Source positions, one per new frame; any past the last source frame hold on it.
+
+    Raises:
+        ValueError: The clip would hold more than :data:`MAX_FRAMES` frames.
+    """
+    step = Fraction(source_rate) / Fraction(target_rate)
+    total = max(1, round(Fraction(count) / step))
+    if total > MAX_FRAMES:
+        raise ValueError(
+            f"{count} frames at {float(target_rate):g} fps would make {total} frames, more than "
+            f"{MAX_FRAMES}. Lower the frame rate or shorten the clip."
+        )
+    last = float(count - 1)
+    return [min(float(index * step), last) for index in range(total)]
+
+
+def check_network(name: str, where) -> None:
+    """Raise unless an EMA-VFI checkpoint can land at every in-between position given.
+
+    Args:
+        name: The checkpoint's file name.
+        where: Source positions, from :func:`positions` or :func:`rate_positions`.
+
+    Raises:
+        ValueError: A position falls off the halfway point and the checkpoint only lands there.
+    """
+    from ..model import frame_interpolation
+
+    shares = [at - int(at) for at in where]
+    between = [share for share in shares if EXACT < share < 1.0 - EXACT]
+    if not any(abs(share - 0.5) > 1e-3 for share in between):
+        return
+    if frame_interpolation.spec_for(name).get("any_timestep", False):
+        return
+    choices = ", ".join(
+        entry for entry, spec in frame_interpolation.CHECKPOINTS.items() if spec["any_timestep"]
+    )
+    raise ValueError(
+        f"{name} only lands halfway between two frames, which suits half speed or twice the "
+        f"frame rate. For these frames choose one of: {choices}."
+    )
+
+
+def drawable(motion) -> list[bool]:
+    """Which neighbouring pairs ``auto`` draws new frames between.
+
+    Args:
+        motion: A :class:`~modules.image.motion.Motion` of the source clip.
+
+    Returns:
+        One flag per pair: True where the pair moves, is no cut, and its motion accounts for
+        the change.
+    """
+    import comfy.model_management
+
+    device = comfy.model_management.get_torch_device()
+    cuts, holds = motion.cuts(), motion.holds()
+    left = motion.unexplained(device)
+    return [
+        not cut and not held and share <= AUTO_UNEXPLAINED
+        for cut, held, share in zip(cuts, holds, left)
+    ]
+
+
+def frames_at(
+    frames, where, mode: str, cuts, net=None, device=None, progress=None, name: str = "",
+    drawn=None,
+):
     """The frames at the given source positions.
 
     Args:
-        frames: ``(frames, height, width, channels)``.
+        frames: ``(frames, height, width, channels)`` on the CPU, float or uint8 codes.
         where: Source positions, from :func:`positions`.
         mode: One of :data:`MODES`.
         cuts: One flag per neighbouring pair, True where the clip cuts; nothing is made across
@@ -77,14 +170,33 @@ def frames_at(frames, where, mode: str, cuts, net=None, device=None, progress=No
         net: The interpolation network, for ``interpolate``.
         device: Where the work runs.
         progress: Optional callable taking a step count, called once per frame made.
+        name: Display name of the calling node, for the log and the refusal.
+        drawn: One flag per pair for ``auto``, from :func:`drawable`: the network draws where
+            True and the nearer frame is held elsewhere.
 
     Returns:
-        ``(len(where), height, width, channels)`` on the frames' device.
+        ``(len(where), height, width, channels)`` on the CPU, of the frames' own type.
+
+    Raises:
+        MemoryError: Neither free memory nor a scratch drive can hold the frames.
     """
+    from ..image.optical_flow import unit
     from ..model import frame_interpolation
 
+    codes = frames.dtype == torch.uint8
+
+    def kept(value):
+        if codes:
+            return value.mul(255.0).round().clamp(0, 255).to(torch.uint8)
+        return value.to(frames.dtype)
+
     device = frames.device if device is None else torch.device(device)
-    out = torch.empty((len(where),) + tuple(frames.shape[1:]), dtype=frames.dtype, device=frames.device)
+    out = scratch.allocate(
+        (len(where),) + tuple(frames.shape[1:]),
+        frames.dtype,
+        node=name,
+        advice="A higher speed or a shorter clip also fits it.",
+    )
     last = int(frames.shape[0]) - 1
     for index, at in enumerate(where):
         low = min(int(math.floor(at)), last)
@@ -93,17 +205,19 @@ def frames_at(frames, where, mode: str, cuts, net=None, device=None, progress=No
             out[index] = frames[low]
         elif share > 1.0 - EXACT:
             out[index] = frames[low + 1]
-        elif cuts[low] or mode == "hold":
+        elif cuts[low] or mode == "hold" or (mode == "auto" and not (drawn and drawn[low])):
             out[index] = frames[low if share < 0.5 else low + 1]
         elif mode == "blend":
-            out[index] = frames[low] * (1.0 - share) + frames[low + 1] * share
+            out[index] = kept(unit(frames[low]) * (1.0 - share) + unit(frames[low + 1]) * share)
         else:
-            first = frames[low:low + 1, ..., :3].permute(0, 3, 1, 2).to(device=device, dtype=torch.float32)
-            second = frames[low + 1:low + 2, ..., :3].permute(0, 3, 1, 2).to(device=device, dtype=torch.float32)
+            first = unit(frames[low:low + 1, ..., :3], device).permute(0, 3, 1, 2)
+            second = unit(frames[low + 1:low + 2, ..., :3], device).permute(0, 3, 1, 2)
             made = frame_interpolation.interpolate(net, first, second, float(share))
-            out[index, ..., :3] = made[0].permute(1, 2, 0).clamp(0.0, 1.0).to(out.dtype).to(out.device)
+            out[index, ..., :3] = kept(made[0].permute(1, 2, 0).clamp(0.0, 1.0)).to(out.device)
             if frames.shape[-1] > 3:
-                out[index, ..., 3:] = frames[low, ..., 3:] * (1.0 - share) + frames[low + 1, ..., 3:] * share
+                out[index, ..., 3:] = kept(
+                    unit(frames[low, ..., 3:]) * (1.0 - share) + unit(frames[low + 1, ..., 3:]) * share
+                )
         if progress is not None:
             progress(1)
     return out

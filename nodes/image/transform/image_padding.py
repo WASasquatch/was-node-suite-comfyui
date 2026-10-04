@@ -6,10 +6,13 @@ from comfy_api.latest import io
 
 from ....modules.image import dynamic
 from ....modules import log
-from ....modules.convert.tensors import image_planes, stack_images, tensor2pil
+from ....modules.convert.tensors import image_planes, pil2tensor, tensor2pil
 from ....modules.interface import size_report
 
 logger = log.get_logger("nodes.image.transform")
+
+#: Mask level for each alpha level of the padded canvas: 255 where it is fully transparent.
+UNCOVERED = [int(255 * (1 - alpha / 255)) if alpha != 0 else 255 for alpha in range(256)]
 
 
 def _faded(size, masks):
@@ -100,9 +103,7 @@ def apply_image_padding(image, left_pad=100, right_pad=100, top_pad=100, bottom_
     new_im = Image.new('RGBA', new_size, (0, 0, 0, 0))
     new_im.paste(feathered_im, (left_pad, top_pad))
 
-    # An entirely transparent canvas means the fade reached across the whole image, which
-    # is silent otherwise: the node returns a canvas with nothing on it and a mask that
-    # says fill everything, so an inpainting pass downstream has no image to work from.
+    # Warns when the fade has left nothing of the image on the canvas.
     if new_im.getbbox() is None:
         logger.warning(
             "feathering of %s pixels fades in over %s pixels from every edge, which covers "
@@ -113,12 +114,7 @@ def apply_image_padding(image, left_pad=100, right_pad=100, top_pad=100, bottom_
             min(image.width, image.height) // 4,
         )
 
-    padding_mask = Image.new('L', new_size, 0)
-
-    gradient = [
-        (int(255 * (1 - p[3] / 255)) if p[3] != 0 else 255) for p in new_im.getdata()
-    ]
-    padding_mask.putdata(gradient)
+    padding_mask = new_im.getchannel('A').point(UNCOVERED)
 
     return (new_im, padding_mask.convert('RGB'))
 
@@ -251,13 +247,24 @@ class ImagePadding(io.ComfyNode):
     @classmethod
     def execute(cls, image, feathering, feather_second_pass, left_padding, right_padding,
                 top_padding, bottom_padding, target_width=0, target_height=0) -> io.NodeOutput:
-        folded = dynamic.fold(image)
-        image = folded.images
+        """Pad every frame and assemble the canvases and masks one frame at a time.
+
+        Raises:
+            ValueError: The batch holds no frame.
+            MemoryError: Neither free memory nor a scratch drive can hold the canvases.
+        """
+        from ....modules.image import scratch
+
+        scale = dynamic.peak(image) if dynamic.carries(image) else 1.0
         planes = image_planes(image)
+        if not planes:
+            raise ValueError(
+                "Image Padding was given an empty batch. Connect an image with at least one "
+                "frame."
+            )
         if target_width or target_height:
             width, height = tensor2pil(planes[0]).size
-            # Centred, and never negative: a target smaller than the picture pads nothing on
-            # that axis rather than cropping, which is not what a pad node is asked for.
+            # Centred, and nothing added on an axis the target is smaller than.
             spare_x = max(0, int(target_width) - width)
             spare_y = max(0, int(target_height) - height)
             left_padding = spare_x // 2
@@ -265,9 +272,12 @@ class ImagePadding(io.ComfyNode):
             top_padding = spare_y // 2
             bottom_padding = spare_y - top_padding
 
-        padded = [
-            apply_image_padding(
-                tensor2pil(plane),
+        advice = "Smaller paddings, a smaller target size or fewer frames also fit it."
+        canvases = masks = None
+        for index, plane in enumerate(planes):
+            folded = dynamic.fold(plane, scale)
+            canvas, mask = apply_image_padding(
+                tensor2pil(folded.images),
                 left_padding,
                 right_padding,
                 top_padding,
@@ -275,12 +285,18 @@ class ImagePadding(io.ComfyNode):
                 feathering,
                 second_pass=feather_second_pass,
             )
-            for plane in planes
-        ]
+            canvas, mask = pil2tensor(canvas)[0], pil2tensor(mask)[0]
+            if canvases is None:
+                canvases = scratch.allocate(
+                    (len(planes),) + tuple(canvas.shape), node="Image Padding", advice=advice
+                )
+                masks = scratch.allocate(
+                    (len(planes),) + tuple(mask.shape), node="Image Padding", advice=advice
+                )
+            canvases[index].copy_(canvas)
+            if folded.scale != 1.0:
+                canvases[index].mul_(folded.scale)
+            masks[index].copy_(mask)
 
-        canvases = stack_images([canvas for canvas, _ in padded])
         size_report.publish(image, canvases, action="padded")
-        return io.NodeOutput(
-            dynamic.unfold(canvases, folded),
-            stack_images([mask for _, mask in padded]),
-        )
+        return io.NodeOutput(canvases, masks)

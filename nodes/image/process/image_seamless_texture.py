@@ -75,7 +75,14 @@ class ImageSeamlessTexture(io.ComfyNode):
 
     @classmethod
     def execute(cls, images, blending, tiled, tiles) -> io.NodeOutput:
-        tiled_images = make_seamless(images, blending, tiled, tiles)
+        tiled_images = make_seamless(
+            images,
+            blending,
+            tiled,
+            tiles,
+            node="Image Seamless Texture",
+            advice="Turning tiled off, lowering tiles or passing fewer frames also fits it.",
+        )
         size_report.publish(
             images,
             tiled_images,

@@ -133,7 +133,7 @@ class VideoFrameSample(io.ComfyNode):
         picked = sampling.frame_indices(span, num_frames, strategy, nth, seed)
         indices = [first + index for index in picked]
         logger.debug("decoding %d of %d frame(s) by %s", len(indices), total, strategy)
-        answer = sampling.decode_frames(video, indices)
+        answer = sampling.decode_frames(video, indices, "Video Frame Sample (Advanced)")
         cls.report(len(indices), total, strategy, nth, width, height, rate, decoded=True)
         return io.NodeOutput(answer)
 

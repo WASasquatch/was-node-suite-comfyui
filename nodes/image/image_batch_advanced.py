@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+
 import torch
 from comfy_api.latest import io
 
@@ -22,8 +24,7 @@ class ImageBatchAdvanced(io.ComfyNode):
 
     @classmethod
     def define_schema(cls) -> io.Schema:
-        # The settings are declared before the slot list, so they keep their place as the list
-        # grows and are read before the sockets they govern.
+        # The settings come before the growing slot list.
         return io.Schema(
             node_id="WASImageBatchAdvanced",
             display_name="Image Batch Advanced",
@@ -98,6 +99,7 @@ class ImageBatchAdvanced(io.ComfyNode):
         Raises:
             ValueError: No slot holds an image, a slot holds something that is not one, or
                 the sizes differ while ``enforce_aspect_ratio`` is off.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         names = connected_in_order(images, IMAGE_SLOTS)
         tensors = [as_batch(images[name], name) for name in names]
@@ -106,23 +108,26 @@ class ImageBatchAdvanced(io.ComfyNode):
                 "Image Batch Advanced has no images connected. Connect at least one slot."
             )
 
+        method = str(resize_method)
         fitted = 0
+        outlines = tensors
         if enforce_aspect_ratio:
+            fit.check_method(method)
             height, width = fit.target_size(tensors[0])
-            resized = []
-            for tensor in tensors:
-                before = fit.target_size(tensor)
-                brought = fit.fit_to(tensor, height, width, str(resize_method))
-                fitted += before != (height, width)
-                resized.append(brought)
-            tensors = resized
+            fitted = sum(fit.target_size(tensor) != (height, width) for tensor in tensors)
+            # Zero-copy stand-ins shaped as each slot is once fitted.
+            outlines = [
+                tensor.new_empty(()).expand(
+                    int(tensor.shape[0]), height, width, int(tensor.shape[3])
+                )
+                for tensor in tensors
+            ]
 
-        size, mode = batch_report.describe_images(tensors[0])
+        size, mode = batch_report.describe_images(outlines[0])
         try:
-            # Channels still have to agree, and so do sizes when nothing was fitted, so the
-            # same check answers for both and names the slot either way.
+            # Refuses slots whose fitted size or channel count disagree.
             check_image_dimensions(
-                tensors,
+                outlines,
                 names,
                 node="Image Batch Advanced",
                 advice=(
@@ -132,15 +137,38 @@ class ImageBatchAdvanced(io.ComfyNode):
             )
         except ValueError as refused:
             batch_report.publish(
-                frames=sum(int(tensor.shape[0]) for tensor in tensors),
-                slots=len(tensors),
+                frames=sum(int(outline.shape[0]) for outline in outlines),
+                slots=len(outlines),
                 size=size,
                 mode=mode,
-                memory=sum(batch_report.memory_of(tensor) for tensor in tensors),
+                memory=sum(batch_report.memory_of(outline) for outline in outlines),
                 refused=str(refused),
             )
             raise
-        batched = torch.cat(tensors, dim=0)
+
+        from ...modules.image import scratch
+
+        shape = (sum(int(outline.shape[0]) for outline in outlines),) + tuple(
+            outlines[0].shape[1:]
+        )
+        dtype = functools.reduce(torch.promote_types, (tensor.dtype for tensor in tensors))
+        if all(tensor.device.type == "cpu" for tensor in tensors):
+            batched = scratch.allocate(
+                shape,
+                dtype,
+                node="Image Batch Advanced",
+                advice="Connecting fewer images, or a smaller first slot, also fits it.",
+            )
+        else:
+            batched = torch.empty(shape, dtype=dtype, device=tensors[0].device)
+        position = 0
+        for tensor in tensors:
+            span = int(tensor.shape[0])
+            if enforce_aspect_ratio:
+                fit.fit_into(tensor, batched[position:position + span], method)
+            else:
+                batched[position:position + span].copy_(tensor)
+            position += span
         batch_report.publish(
             frames=int(batched.shape[0]),
             slots=len(tensors),

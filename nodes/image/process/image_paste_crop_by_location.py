@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
@@ -134,11 +133,16 @@ class ImagePasteCropByLocation(io.ComfyNode):
         crop_blending=0.25,
         crop_sharpening=0,
     ) -> io.NodeOutput:
+        from ....modules.image import scratch
+
         folded = dynamic.fold(image)
+        if folded.scale != 1.0 and image.shape[-1] == 4:
+            # Alpha keeps its own 0 to 1 scale while the colour is folded.
+            folded.images[..., 3] = image[..., 3].clamp(0.0, 1.0)
         image = folded.images
-        pasted = []
-        blends = []
-        for plane, crop in broadcast_image_planes(image, crop_image):
+        pairs = broadcast_image_planes(image, crop_image)
+        pasted = blends = None
+        for index, (plane, crop) in enumerate(pairs):
             result_image, result_mask = cls.paste_image(
                 tensor2pil(plane),
                 tensor2pil(crop),
@@ -149,11 +153,23 @@ class ImagePasteCropByLocation(io.ComfyNode):
                 crop_blending,
                 crop_sharpening,
             )
-            pasted.append(result_image)
-            blends.append(result_mask)
+            if pasted is None:
+                advice = "Passing fewer or smaller frames also fits it."
+                pasted = scratch.allocate(
+                    (len(pairs),) + tuple(result_image.shape[1:]),
+                    node="Image Paste Crop by Location",
+                    advice=advice,
+                )
+                blends = scratch.allocate(
+                    (len(pairs),) + tuple(result_mask.shape[1:]),
+                    node="Image Paste Crop by Location",
+                    advice=advice,
+                )
+            pasted[index, ..., :3] = dynamic.unfold(result_image[0, ..., :3], folded)
+            pasted[index, ..., 3:] = result_image[0, ..., 3:]
+            blends[index] = result_mask[0]
 
-        # The canvas keeps the image's size, so the pair worth reporting is the crop
-        # against the rectangle the four widgets describe, which it is resampled into.
+        # The crop is reported against the rectangle it is resampled into.
         size_report.publish(
             crop_image,
             (right - left, bottom - top),
@@ -161,9 +177,7 @@ class ImagePasteCropByLocation(io.ComfyNode):
             resampled=True,
             facts={"canvas": size_report.spell(image)},
         )
-        return io.NodeOutput(
-            dynamic.unfold(torch.cat(pasted, dim=0), folded), torch.cat(blends, dim=0)
-        )
+        return io.NodeOutput(pasted, blends)
 
     @staticmethod
     def inset_border(image, border_width=20, border_color=(0)):

@@ -117,12 +117,14 @@ class VideoReframe(io.ComfyNode):
         Raises:
             ValueError: The mask holds a different number of frames than the clip, or the motion
                 was measured from another clip.
+            MemoryError: Neither free memory nor a scratch drive can hold the reframed clip.
         """
         import torch
 
         import comfy.model_management
 
         from ...modules.image import motion as motion_field
+        from ...modules.image import scratch
         from ...modules.media import clip as clips
 
         source = clips.open_clip(video, NODE_NAME)
@@ -145,9 +147,14 @@ class VideoReframe(io.ComfyNode):
         crop = reframe.crop_size(height, width, reframe.ASPECTS[str(aspect)], float(zoom))
         path = reframe.follow(mask, count, (height, width), crop, cuts, float(smoothing) * float(source.rate), str(follow))
 
-        framed = torch.empty((count, crop[0], crop[1], source.frames.shape[-1]), dtype=source.frames.dtype)
-        shown = torch.empty_like(source.frames)
-        alpha = torch.empty((count, crop[0], crop[1]), dtype=source.alpha.dtype) if source.alpha is not None else None
+        advice = "A shorter clip also fits it."
+        framed = scratch.allocate(
+            (count, crop[0], crop[1], source.frames.shape[-1]), source.frames.dtype, NODE_NAME, advice
+        )
+        shown = scratch.allocate(tuple(source.frames.shape), source.frames.dtype, NODE_NAME, advice)
+        alpha = None
+        if source.alpha is not None:
+            alpha = scratch.allocate((count, crop[0], crop[1]), source.alpha.dtype, NODE_NAME, advice)
         for index, (left, top) in enumerate(path):
             planes = source.frames[index:index + 1].to(device=device, dtype=torch.float32).permute(0, 3, 1, 2)
             framed[index] = reframe.cropped(planes, left, top, crop)[0].permute(1, 2, 0).to(framed.dtype).cpu()

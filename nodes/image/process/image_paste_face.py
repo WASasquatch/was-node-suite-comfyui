@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules import log
@@ -12,7 +11,6 @@ from ....modules.convert.tensors import (
     broadcast_image_planes,
     image_planes,
     pil2tensor,
-    stack_images,
     tensor2pil,
 )
 
@@ -102,26 +100,40 @@ class ImagePasteFace(io.ComfyNode):
     def execute(
         cls, image, crop_image, crop_data=None, crop_blending=0.25, crop_sharpening=0
     ) -> io.NodeOutput:
-        from PIL import Image
+        from ....modules.image import scratch
 
+        advice = "Passing fewer or smaller frames also fits it."
         if crop_data is False:
             logger.error("no valid crop data found!")
             planes = image_planes(image)
-            blank = Image.new("RGB", tensor2pil(planes[0]).size, (0, 0, 0))
-            return io.NodeOutput(image, stack_images([blank] * len(planes)))
+            width, height = tensor2pil(planes[0]).size
+            blank = scratch.allocate(
+                (len(planes), height, width, 3), node="Image Paste Face", advice=advice
+            )
+            return io.NodeOutput(image, blank.zero_())
 
-        pasted = []
-        blends = []
         # A socket holding a single image cycles, contributing it to every result.
-        for plane, crop in broadcast_image_planes(image, crop_image):
+        pairs = broadcast_image_planes(image, crop_image)
+        answered = blends = None
+        for index, (plane, crop) in enumerate(pairs):
             result_image, result_mask = cls.paste_image(
                 tensor2pil(plane), tensor2pil(crop), crop_data, crop_blending, crop_sharpening
             )
-            pasted.append(result_image)
-            blends.append(result_mask)
+            if answered is None:
+                answered = scratch.allocate(
+                    (len(pairs),) + tuple(result_image.shape[1:]),
+                    node="Image Paste Face",
+                    advice=advice,
+                )
+                blends = scratch.allocate(
+                    (len(pairs),) + tuple(result_mask.shape[1:]),
+                    node="Image Paste Face",
+                    advice=advice,
+                )
+            answered[index] = result_image[0]
+            blends[index] = result_mask[0]
 
-        # The canvas keeps the image's size, so the pair worth reporting is the crop
-        # against the window crop_data recorded, which the crop is resampled into.
+        # The crop is reported against the window crop_data recorded.
         size_report.publish(
             crop_image,
             crop_data[0],
@@ -129,9 +141,8 @@ class ImagePasteFace(io.ComfyNode):
             resampled=True,
             facts={"canvas": size_report.spell(image)},
         )
-        answered = torch.cat(pasted, dim=0)
         preview.publish_output(answered)
-        return io.NodeOutput(answered, torch.cat(blends, dim=0))
+        return io.NodeOutput(answered, blends)
 
     @staticmethod
     def lingrad(size, direction: str, white_ratio: float):

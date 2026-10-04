@@ -8,7 +8,12 @@ from __future__ import annotations
 
 import torch
 
-__all__ = ["tiled_upscale"]
+from . import scratch
+
+__all__ = ["PRECISIONS", "pick_dtype", "release", "tiled_upscale"]
+
+#: What an upscale model may run in, `auto` following what the model declares it supports.
+PRECISIONS = ("auto", "32 bit float", "16 bit float", "bfloat16")
 
 
 #: Masks already built, keyed by shape, fade widths, dtype and device.
@@ -16,6 +21,90 @@ _MASKS: dict = {}
 
 #: Masks held before the oldest is dropped.
 _MASK_CACHE = 16
+
+#: Lanczos axis matrices already built, keyed by source length, target length and device.
+_AXES: dict = {}
+
+#: Axis matrices held before the oldest is dropped.
+_AXIS_CACHE = 32
+
+
+def pick_dtype(precision: str, upscale_model, device) -> torch.dtype:
+    """What an upscale model runs in.
+
+    Args:
+        precision: An entry from :data:`PRECISIONS`.
+        upscale_model: The loaded upscale model, read for the dtypes it declares.
+        device: The device the model runs on.
+
+    Returns:
+        A ``torch.dtype``.
+    """
+    from comfy import model_management
+
+    named = {
+        "32 bit float": torch.float32,
+        "16 bit float": torch.float16,
+        "bfloat16": torch.bfloat16,
+    }
+    if precision in named:
+        return named[precision]
+    if not model_management.should_use_fp16(device):
+        return torch.float32
+    if getattr(upscale_model, "supports_half", False):
+        return torch.float16
+    if getattr(upscale_model, "supports_bfloat16", False):
+        return torch.bfloat16
+    return torch.float32
+
+
+def release(upscale_model) -> None:
+    """Return an upscale model to float32 on the CPU.
+
+    Args:
+        upscale_model: The loaded upscale model.
+    """
+    upscale_model.model.to(torch.float32)
+    upscale_model.to("cpu")
+
+
+def _axis_weights(size_in: int, size_out: int, device) -> torch.Tensor:
+    """The ``(size_out, size_in)`` lanczos matrix for one axis, as float32 on ``device``."""
+    from .resample import matrix
+
+    key = (int(size_in), int(size_out), str(device))
+    held = _AXES.get(key)
+    if held is None:
+        held = matrix(int(size_in), int(size_out), "lanczos").to(device, torch.float32)
+        if len(_AXES) >= _AXIS_CACHE:
+            _AXES.pop(next(iter(_AXES)))
+        _AXES[key] = held
+    return held
+
+
+def _resample(tile: torch.Tensor, width: int, height: int, method: str) -> torch.Tensor:
+    """Resize one ``(1, channels, height, width)`` tile on its own device, in float.
+
+    Args:
+        tile: The model's answer for one tile.
+        width: Target width in pixels.
+        height: Target height in pixels.
+        method: ``nearest-exact``, ``bilinear``, ``area``, ``bicubic`` or ``lanczos``.
+
+    Returns:
+        ``(1, channels, height, width)`` on the tile's device and dtype.
+    """
+    import torch.nn.functional as F
+
+    if method == "lanczos":
+        down = _axis_weights(tile.shape[2], height, tile.device)
+        across = _axis_weights(tile.shape[3], width, tile.device)
+        return torch.matmul(torch.matmul(down, tile.float()), across.T).to(tile.dtype)
+    if method in ("bilinear", "bicubic"):
+        return F.interpolate(
+            tile, size=(height, width), mode=method, align_corners=False, antialias=True
+        )
+    return F.interpolate(tile, size=(height, width), mode=method)
 
 
 def _ramp(length: int, taper: int, device, dtype) -> torch.Tensor:
@@ -132,6 +221,8 @@ def tiled_upscale(
     target_width=None,
     resample_method="lanczos",
     device=None,
+    out=None,
+    limits=None,
 ):
     """Upscale a batch tile by tile and cross-fade the overlaps.
 
@@ -152,15 +243,19 @@ def tiled_upscale(
         resample_method: Kernel used where the model's own output size does not match the
             share of the target the tile covers.
         device: Compute device tiles are moved to. Defaults to ComfyUI's torch device.
+        out: A ``(batch, target_height, target_width, channels)`` tensor each finished frame
+            is written into, channels last. None allocates the result on ``output_device``.
+        limits: ``(low, high)`` each finished frame is clamped to, or None to leave it as
+            the model answered.
 
     Returns:
-        A ``(batch, channels, target_height, target_width)`` tensor on ``output_device``.
+        ``out`` where one is given, otherwise a ``(batch, channels, target_height,
+        target_width)`` tensor on ``output_device``.
 
     Raises:
-        ValueError: ``samples`` is not four-dimensional, the target size is missing, or
-            ``tile_size`` is not positive.
+        ValueError: ``samples`` is not four-dimensional, the target size is missing,
+            ``tile_size`` is not positive, or ``out`` does not match the result's shape.
     """
-    import comfy.utils
     from comfy import model_management
 
     if samples.ndim != 4:
@@ -195,7 +290,8 @@ def tiled_upscale(
     blended = None
 
     for index in range(batch_size):
-        source = samples[index:index + 1]
+        # The frame moves to the device whole; its tiles are cut there.
+        source = samples[index:index + 1].to(device)
         accumulator = None
         weights = None
 
@@ -204,9 +300,17 @@ def tiled_upscale(
                 y_end = min(y + tile_size, in_height)
                 x_end = min(x + tile_size, in_width)
 
-                tile_source = source[:, :, y:y_end, x:x_end].to(device, non_blocking=False)
+                tile_source = source[:, :, y:y_end, x:x_end]
                 tile_native = function(tile_source)
 
+                if out is not None and blended is None:
+                    wanted = (batch_size, target_height, target_width, tile_native.shape[1])
+                    if tuple(out.shape) != wanted:
+                        raise ValueError(
+                            f"tiled_upscale() was given an out tensor shaped "
+                            f"{tuple(out.shape)} for a result shaped {wanted}"
+                        )
+                    blended = out
                 if blended is None:
                     blended = torch.zeros(
                         (batch_size, tile_native.shape[1], target_height, target_width),
@@ -231,9 +335,7 @@ def tiled_upscale(
                 tile_width = max(1, int(round(x_end * target_width / in_width)) - out_x)
 
                 if tile_native.shape[2] != tile_height or tile_native.shape[3] != tile_width:
-                    tile_scaled = comfy.utils.common_upscale(
-                        tile_native, tile_width, tile_height, resample_method, "disabled"
-                    )
+                    tile_scaled = _resample(tile_native, tile_width, tile_height, resample_method)
                 else:
                     tile_scaled = tile_native
                 tile = tile_scaled.to(gather)
@@ -258,8 +360,16 @@ def tiled_upscale(
         # A pixel no tile reached keeps a zero weight; dividing by one there leaves it black
         # rather than turning it into a division by zero.
         safe = torch.where(weights == 0.0, torch.ones_like(weights), weights)
-        blended[index:index + 1] = (accumulator / safe).to(output_device)
+        frame = accumulator.div_(safe)
+        if limits is not None:
+            frame.clamp_(limits[0], limits[1])
+        if out is not None:
+            # Reordered to channels last on the frame's own device before the copy out.
+            out[index].copy_(frame[0].permute(1, 2, 0).contiguous())
+            scratch.trim(out[index])
+        else:
+            blended[index:index + 1] = frame.to(output_device)
 
-        del accumulator, weights, safe
+        del accumulator, weights, safe, frame, source
 
-    return blended.to(output_device)
+    return out if out is not None else blended.to(output_device)

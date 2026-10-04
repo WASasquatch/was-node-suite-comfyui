@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.convert.tensors import pil2tensor, tensor2pil
@@ -95,15 +94,21 @@ class ImageRemoveBackground(io.ComfyNode):
 
         Returns:
             A batch tensor of ``RGBA`` images.
+
+        Raises:
+            ValueError: The batch holds no image.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from PIL import ImageFilter, ImageOps
 
-        # The inverted threshold is derived once. Deriving it per image would fold the
-        # previous image's value into the next one's, so a batch would alternate.
+        from ....modules.image import scratch
+
+        # One cut-off serves every image of the batch.
         cutoff = 255 - threshold if mode == "background" else threshold
 
-        images = []
-        for img in [tensor2pil(img) for img in image]:
+        images = None
+        for index, plane in enumerate(image):
+            img = tensor2pil(plane)
             grayscale_image = img.convert("L")
             if mode == "background":
                 grayscale_image = ImageOps.invert(grayscale_image)
@@ -115,6 +120,18 @@ class ImageRemoveBackground(io.ComfyNode):
             inverted_mask = ImageOps.invert(mask)
             transparent_image = img.copy()
             transparent_image.putalpha(inverted_mask)
-            images.append(pil2tensor(transparent_image))
+            frame = pil2tensor(transparent_image)
+            if images is None:
+                images = scratch.allocate(
+                    (len(image),) + tuple(frame.shape[1:]),
+                    node="Image Remove Background (Threshold)",
+                    advice="Passing fewer or smaller frames also fits it.",
+                )
+            images[index] = frame[0]
 
-        return torch.cat(images, dim=0)
+        if images is None:
+            raise ValueError(
+                "Image Remove Background (Threshold) was handed an empty image batch. Wire in "
+                "at least one image."
+            )
+        return images

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+
 import torch
 from comfy_api.latest import io
 
@@ -198,10 +200,10 @@ class MaskBatch(io.ComfyNode):
 
         Raises:
             ValueError: No slot holds a mask, or two masks are different sizes.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         names = connected_in_order(masks, SLOT_NAMES)
-        # Split to one plane per frame first, so a slot carrying a batch contributes every
-        # frame rather than one entry, which is what makes `count` mean frames.
+        # Every slot split into one plane per frame.
         per_slot = [(name, mask_planes(masks[name])) for name in names]
         planes = [plane for _, found in per_slot for plane in found]
         if not planes:
@@ -214,8 +216,7 @@ class MaskBatch(io.ComfyNode):
         try:
             cls.check_mask_dimensions(per_slot)
         except ValueError as refused:
-            # Reported before it is raised, so the node itself says which slot disagreed
-            # rather than leaving it to a message in the log.
+            # The refusal reaches the node's own panel before it is raised.
             batch_report.publish(
                 frames=len(planes),
                 slots=len(per_slot),
@@ -226,7 +227,17 @@ class MaskBatch(io.ComfyNode):
             )
             raise
 
-        batched = torch.stack(planes, dim=0)
+        if all(plane.device.type == "cpu" for plane in planes):
+            from ...modules.image import scratch
+
+            batched = scratch.stack(
+                planes,
+                node="Mask Batch",
+                advice="Connecting fewer or smaller masks also fits it.",
+                dtype=functools.reduce(torch.promote_types, (p.dtype for p in planes)),
+            )
+        else:
+            batched = torch.stack(planes, dim=0)
         batch_report.publish(
             frames=int(batched.shape[0]),
             slots=len(per_slot),

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
@@ -77,9 +76,16 @@ class ImageRotate(io.ComfyNode):
 
     @classmethod
     def execute(cls, images, mode, rotation, sampler) -> io.NodeOutput:
-        folded = dynamic.fold(images)
-        images = folded.images
+        """Turn every image of the batch.
+
+        Raises:
+            ValueError: The batch holds no images.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        scale = dynamic.peak(images) if dynamic.carries(images) else 1.0
         from PIL import Image
+
+        from ....modules.image import scratch
 
         resample = {
             "nearest": Image.Resampling.NEAREST,
@@ -93,9 +99,10 @@ class ImageRotate(io.ComfyNode):
         if rotation % 90 != 0:
             rotation = int((rotation // 90) * 90)
 
-        batch_tensor = []
-        for image in images:
-            image = tensor2pil(image)
+        turned = None
+        for index, image in enumerate(images):
+            folded = dynamic.fold(image, scale)
+            image = tensor2pil(folded.images)
 
             if mode == "internal":
                 image = image.rotate(rotation, resample)
@@ -103,9 +110,22 @@ class ImageRotate(io.ComfyNode):
                 for _ in range(int(rotation / 90)):
                     image = image.transpose(Image.Transpose.ROTATE_90)
 
-            batch_tensor.append(pil2tensor(image))
+            frame = pil2tensor(image)
+            if turned is None:
+                turned = scratch.allocate(
+                    (len(images),) + tuple(frame.shape[1:]),
+                    node="Image Rotate (Advanced)",
+                    advice="Passing fewer frames also fits it.",
+                )
+            turned[index] = frame[0]
+            if folded.scale != 1.0:
+                turned[index].mul_(folded.scale)
 
-        turned = torch.cat(batch_tensor, dim=0)
+        if turned is None:
+            raise ValueError(
+                "Image Rotate (Advanced) was given no images. Connect an image or a batch of "
+                "them."
+            )
         size_report.publish(
             images,
             turned,
@@ -115,4 +135,4 @@ class ImageRotate(io.ComfyNode):
                 else None
             ),
         )
-        return io.NodeOutput(dynamic.unfold(turned, folded))
+        return io.NodeOutput(turned)

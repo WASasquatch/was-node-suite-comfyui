@@ -63,7 +63,8 @@ class VideoRetime(io.ComfyNode):
                     tooltip=(
                         "How a frame between two is made: 'interpolate' draws it with EMA-VFI, "
                         "which needs ema_vfi_model; 'blend' mixes the two; 'hold' repeats the "
-                        "nearer one."
+                        "nearer one; 'auto' draws with EMA-VFI only where the motion accounts "
+                        "for the change, such as a body moving rather than a mouth changing shape."
                     ),
                 ),
                 io.Combo.Input(
@@ -124,12 +125,12 @@ class VideoRetime(io.ComfyNode):
             ValueError: The clip holds fewer than two frames, the speed curve holds something
                 other than numbers, 'interpolate' has no network or a checkpoint that cannot
                 land between frames as the speed needs, or the retime runs too long.
+            MemoryError: Neither free memory nor a scratch drive can hold the retimed clip.
         """
         import comfy.model_management
 
         from ...modules.image import motion as motion_field
         from ...modules.media import clip as clips
-        from ...modules.model import frame_interpolation
 
         source = clips.open_clip(video, NODE_NAME)
         count = int(source.frames.shape[0])
@@ -149,23 +150,13 @@ class VideoRetime(io.ComfyNode):
         where = retime.positions(count, speeds)
 
         net = None
-        if new_frames == "interpolate":
+        if new_frames in ("interpolate", "auto"):
             if ema_vfi_model is None:
                 raise ValueError(
-                    f"{NODE_NAME} draws new frames with EMA-VFI on 'interpolate'. Wire EMA-VFI "
-                    f"Model Loader into ema_vfi_model, or choose 'blend' or 'hold'."
+                    f"{NODE_NAME} draws new frames with EMA-VFI on '{new_frames}'. Wire EMA-VFI "
+                    f"Video Model Loader into ema_vfi_model, or choose 'blend' or 'hold'."
                 )
-            shares = [at - int(at) for at in where]
-            between = [share for share in shares if retime.EXACT < share < 1.0 - retime.EXACT]
-            spec = frame_interpolation.spec_for(ema_vfi_model.name)
-            if any(abs(share - 0.5) > 1e-3 for share in between) and not spec.get("any_timestep", False):
-                choices = ", ".join(
-                    name for name, entry in frame_interpolation.CHECKPOINTS.items() if entry["any_timestep"]
-                )
-                raise ValueError(
-                    f"{ema_vfi_model.name} only lands halfway between two frames, which suits a "
-                    f"speed of exactly 0.5. For this retime choose one of: {choices}."
-                )
+            retime.check_network(ema_vfi_model.name, where)
             backend = ema_vfi_model.backend
             backend.load()
             net = backend.model
@@ -176,11 +167,15 @@ class VideoRetime(io.ComfyNode):
             motion = motion_field.measure(source.frames, CUT_SIDE, device, step)
         else:
             motion = clips.motion_for(source, motion, NODE_NAME, device, step)
-        drawn_on = next(net.parameters()).device if net is not None else device
-        frames = retime.frames_at(source.frames, where, str(new_frames), motion.cuts(), net, drawn_on, step)
+        cuts = motion.cuts()
+        pairs = retime.drawable(motion) if new_frames == "auto" else None
         alpha = None
         if source.alpha is not None:
-            alpha = retime.frames_at(source.alpha.unsqueeze(-1), where, "blend", motion.cuts())[..., 0]
+            alpha = retime.frames_at(source.alpha.unsqueeze(-1), where, "blend", cuts, name=NODE_NAME)[..., 0]
+        drawn_on = next(net.parameters()).device if net is not None else device
+        frames = retime.frames_at(
+            source.frames, where, str(new_frames), cuts, net, drawn_on, step, NODE_NAME, drawn=pairs
+        )
         sound = retime.retimed_audio(source.audio, where, float(source.rate)) if audio == "keep pitch" else None
 
         logger.info("retimed %d frame(s) to %d", count, len(where))

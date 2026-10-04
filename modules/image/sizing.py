@@ -24,6 +24,7 @@ __all__ = [
     "FILTERS",
     "FILTER_NAMES",
     "FIT_AND_PAD",
+    "FOLD_BUDGET",
     "ImageTooLarge",
     "MAX_BATCH_PIXELS",
     "MAX_RESAMPLE_PIXELS",
@@ -106,6 +107,9 @@ MAX_BATCH_PIXELS = 32 * 1024 * 1024
 #: bound is the count one decoded source may hold, so no resample works on more pixels than an
 #: image is allowed to arrive with.
 MAX_RESAMPLE_PIXELS = MAX_SOURCE_PIXELS
+
+#: Elements of source and result one run of frames holds while :func:`fit_frames` folds it.
+FOLD_BUDGET = 1 << 26
 
 #: What Pillow raises and warns with when a header claims more pixels than it will decode.
 #: Neither derives from ``OSError``, and the warning becomes an exception under a warning
@@ -433,7 +437,8 @@ def _frame_plans(source, target, mode, resampling, align):
 
 
 def fit_frames(frames, target, mode=FIT_AND_PAD, resample_name=DEFAULT_FILTER,
-               align=DEFAULT_ALIGNMENT, pad=draw.TRANSPARENT, supersample: int = 1):
+               align=DEFAULT_ALIGNMENT, pad=draw.TRANSPARENT, supersample: int = 1,
+               scale: float = 1.0):
     """A batch of float frames at exactly the target size, as :func:`fit` places one image.
 
     Args:
@@ -445,13 +450,20 @@ def fit_frames(frames, target, mode=FIT_AND_PAD, resample_name=DEFAULT_FILTER,
         pad: ``(red, green, blue, alpha)`` in 0 to 255 filling what the frames do not cover.
         supersample: Resample through this many times the target, folded into one pass. Not
             applied under :data:`CROP_OR_PAD`.
+        scale: From :func:`modules.image.dynamic.factor`. Each run of frames is folded by it
+            before the resample and unfolded after; 1.0 resamples the frames as they are.
 
     Returns:
-        The batch on the frames' own device, resampled on the GPU where there is one.
+        The batch on the frames' own device, resampled on the GPU where there is one. A CPU
+        batch comes from :func:`modules.image.scratch.allocate`.
+
+    Raises:
+        MemoryError: Neither free memory nor any scratch drive has room for the result.
     """
     import comfy.model_management
+    import torch
 
-    from . import resample
+    from . import dynamic, resample, scratch
 
     name = resample_name if resample_name in FILTERS else DEFAULT_FILTER
     target = (max(1, int(target[0])), max(1, int(target[1])))
@@ -463,11 +475,25 @@ def fit_frames(frames, target, mode=FIT_AND_PAD, resample_name=DEFAULT_FILTER,
         down = resample.supersampled(down, target[1], name)
     else:
         across, down = _frame_plans(source, target, mode, name, align)
-    return resample.apply(
-        frames,
-        across,
-        down,
-        pad=[value / 255.0 for value in pad],
-        device=comfy.model_management.get_torch_device(),
-        premultiply=name != "nearest",
-    )
+    options = {
+        "pad": [value / 255.0 for value in pad],
+        "device": comfy.model_management.get_torch_device(),
+        "premultiply": name != "nearest",
+    }
+    if scale == 1.0:
+        return resample.apply(frames, across, down, **options)
+
+    batch, channels = int(frames.shape[0]), int(frames.shape[3])
+    shape = (batch, target[1], target[0], channels)
+    if frames.device.type == "cpu":
+        result = scratch.allocate(shape, frames.dtype, advice=resample.ADVICE)
+    else:
+        result = torch.empty(shape, dtype=frames.dtype, device=frames.device)
+    per_frame = max(1, (source[0] * source[1] + target[0] * target[1]) * channels)
+    step = max(1, FOLD_BUDGET // per_frame)
+    for begin in range(0, batch, step):
+        folded = dynamic.fold(frames[begin:begin + step], scale)
+        held = result[begin:begin + step]
+        held.copy_(resample.apply(folded.images, across, down, **options))
+        dynamic.unfold(held, folded, in_place=True)
+    return result

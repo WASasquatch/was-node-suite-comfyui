@@ -12,7 +12,7 @@ from ...modules import log
 from ...modules import constants
 from ...modules.compat import limits
 from ...modules.compat.lists import require_values
-from ...modules.convert.tensors import stack_images
+from ...modules.convert.tensors import pil2tensor
 from ...modules.image import colour_profile, deep_png, sizing
 from ...modules.image.draw import parse_color
 from ...modules.interface import batch_report
@@ -81,6 +81,42 @@ def deep_rgba(path):
             logger.error("%s, so it is read at 8 bits instead", error)
     opened = colour_profile.to_srgb(ImageOps.exif_transpose(Image.open(path)), name)
     return np.asarray(opened.convert("RGBA")).astype(np.float32) / 255.0
+
+
+def opened_rgba(path):
+    """One file as an upright ``RGBA`` PIL image in sRGB.
+
+    Args:
+        path: The file, already contained.
+
+    Returns:
+        The image.
+    """
+    from PIL import Image, ImageOps
+
+    return colour_profile.to_srgb(
+        ImageOps.exif_transpose(Image.open(path)), os.path.basename(str(path))
+    ).convert("RGBA")
+
+
+def too_large(count: int, target: tuple[int, int], channels: int, short: Exception) -> ValueError:
+    """The refusal for a batch that would not fit.
+
+    Args:
+        count: Frames in the batch.
+        target: ``(width, height)`` of every frame.
+        channels: Channels every frame carries.
+        short: What was raised while the batch was built.
+
+    Returns:
+        The error, naming the size and the settings that shrink it.
+    """
+    need = count * target[0] * target[1] * channels * 4 / (1024 ** 3)
+    return ValueError(
+        f"{count} frame(s) at {target[0]}x{target[1]} need about {need:.1f} GiB "
+        f"as one batch and would not fit ({short}). Take fewer frames with "
+        f"num_frames, or set a smaller width and height"
+    )
 
 
 class LoadImageSequence(io.ComfyNode):
@@ -357,7 +393,7 @@ class LoadImageSequence(io.ComfyNode):
         """
         import os
 
-        from PIL import Image, ImageOps
+        from ...modules.image import scratch
 
         directory = sequence_directory(folder)
         if not directory or not os.path.isdir(directory):
@@ -386,44 +422,36 @@ class LoadImageSequence(io.ComfyNode):
 
         pad = parse_color(pad_color, FALLBACK_PAD)
         deep = any(deep_png.is_deep(name) for name in chosen)
-        if deep:
-            images = [deep_rgba(name) for name in chosen]
-            first_size = (int(images[0].shape[1]), int(images[0].shape[0]))
-        else:
-            images = [
-                colour_profile.to_srgb(
-                    ImageOps.exif_transpose(Image.open(name)), os.path.basename(str(name))
-                ).convert("RGBA")
-                for name in chosen
-            ]
-            first_size = images[0].size
+        opened = deep_rgba if deep else opened_rgba
+        frame = opened(chosen[0])
+        first_size = (int(frame.shape[1]), int(frame.shape[0])) if deep else frame.size
         target = cls.target_size(first_size, width, height, max_size)
+        keep = 4 if channels == "RGBA" else 3
         try:
-            if deep:
-                keep = 4 if channels == "RGBA" else 3
-                batched = torch.cat([
-                    sizing.fit_frames(
+            batched = scratch.allocate(
+                (len(chosen), target[1], target[0], keep), node="Load Image Sequence",
+                advice="Take fewer frames with num_frames, or set a smaller width and height.",
+            )
+        except MemoryError as short:
+            raise ValueError(str(short)) from short
+
+        for index, name in enumerate(chosen):
+            if index:
+                frame = opened(name)
+            try:
+                if deep:
+                    sized = sizing.fit_frames(
                         torch.from_numpy(frame)[None], target, resize_mode, interpolation,
                         align, pad,
-                    )[..., :keep]
-                    for frame in images
-                ])
-            else:
-                sized = [
-                    sizing.as_channels(
-                        sizing.fit(image, target[0], target[1], resize_mode, interpolation, align, pad),
-                        channels,
+                    )[0, ..., :keep]
+                else:
+                    fitted = sizing.fit(
+                        frame, target[0], target[1], resize_mode, interpolation, align, pad,
                     )
-                    for image in images
-                ]
-                batched = stack_images(sized)
-        except (MemoryError, ArithmeticError, RuntimeError) as short:
-            need = len(images) * target[0] * target[1] * 4 * 4 / (1024 ** 3)
-            raise ValueError(
-                f"{len(images)} frame(s) at {target[0]}x{target[1]} need about {need:.1f} GiB "
-                f"as one batch and would not fit ({short}). Take fewer frames with "
-                f"num_frames, or set a smaller width and height"
-            ) from short
+                    sized = pil2tensor(sizing.as_channels(fitted, channels))[0]
+                batched[index].copy_(sized)
+            except (MemoryError, ArithmeticError, RuntimeError) as short:
+                raise too_large(len(chosen), target, keep, short) from short
 
         size, mode = batch_report.describe_images(batched)
         batch_report.publish(

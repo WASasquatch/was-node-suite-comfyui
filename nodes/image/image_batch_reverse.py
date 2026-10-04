@@ -18,25 +18,43 @@ def replay(images, mode: str):
 
     Raises:
         ValueError: The batch holds no frames, or the mode is not one of the three.
+        MemoryError: Neither free memory nor any scratch drive has room for the batch.
     """
-    if int(images.shape[0]) == 0:
+    count = int(images.shape[0])
+    if count == 0:
         raise ValueError(
             "Image Batch Reverse was handed a batch with no frames in it. Connect the images "
             "input to something that produces at least one frame, such as Load Image, a "
             "sampler, or Load Video."
         )
-    backwards = torch.flip(images, dims=[0])
+    backwards = list(range(count - 1, -1, -1))
     if mode == "reverse":
-        return backwards
-    if mode == "ping-pong":
-        return torch.cat([images, backwards], dim=0)
-    if mode == "ping-pong trimmed":
-        # The tail starts one frame in and stops one frame short, so neither end repeats.
-        return torch.cat([images, backwards[1:-1]], dim=0)
-    raise ValueError(
-        f"Image Batch Reverse does not know the mode {mode!r}. Set mode to 'reverse', "
-        "'ping-pong' or 'ping-pong trimmed'."
-    )
+        order = backwards
+    elif mode == "ping-pong":
+        order = list(range(count)) + backwards
+    elif mode == "ping-pong trimmed":
+        # The tail starts one frame in and stops one frame short.
+        order = list(range(count)) + backwards[1:-1]
+    else:
+        raise ValueError(
+            f"Image Batch Reverse does not know the mode {mode!r}. Set mode to 'reverse', "
+            "'ping-pong' or 'ping-pong trimmed'."
+        )
+
+    from ...modules.image import scratch
+
+    shape = (len(order),) + tuple(images.shape[1:])
+    if images.device.type == "cpu":
+        played = scratch.allocate(
+            shape,
+            images.dtype,
+            node="Image Batch Reverse",
+            advice="Passing fewer frames, or choosing reverse over ping-pong, also fits it.",
+        )
+    else:
+        played = images.new_empty(shape)
+    index = torch.tensor(order, dtype=torch.long, device=images.device)
+    return torch.index_select(images, 0, index, out=played)
 
 
 class ImageBatchReverse(io.ComfyNode):
@@ -118,6 +136,7 @@ class ImageBatchReverse(io.ComfyNode):
 
         Raises:
             ValueError: The batch is empty, or the mode is unknown.
+            MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         played = replay(images, mode)
         return io.NodeOutput(played, int(played.shape[0]))

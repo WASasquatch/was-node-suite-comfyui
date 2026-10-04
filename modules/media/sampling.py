@@ -211,50 +211,60 @@ def frame_indices(
     return [pool[position] for position in _picked(len(pool), count, strategy, seed)]
 
 
-def decode_frames(video, indices: list[int]):
+def decode_frames(video, indices: list[int], name: str = ""):
     """Decode only the listed frames of a video, and answer them as a video.
 
     Args:
         video: The source, a ComfyUI ``VideoInput``.
         indices: Frame numbers to keep, ascending.
+        name: Display name of the calling node, for the log and the refusal.
 
     Returns:
         A video holding those frames at the source's frame rate.
 
     Raises:
         DependencyError: PyAV is absent.
+        ValueError: The video ended before the last frame asked for.
+        MemoryError: Neither free memory nor a scratch drive can hold the frames.
     """
     import torch
     from comfy_api.latest import InputImpl, Types
 
+    from ..image import scratch
+
     av = deps.require("av")
 
-    wanted = set(indices)
+    slots: dict[int, list[int]] = {}
+    for slot, number in enumerate(indices):
+        slots.setdefault(number, []).append(slot)
     last = indices[-1]
-    kept: dict[int, torch.Tensor] = {}
-    # One pass in presentation order, stopping at the last frame asked for. Seeking per
-    # frame would be slower on a long clip than reading through it once.
+    images = None
+    kept: set[int] = set()
+    # One pass in presentation order, stopping at the last frame asked for.
     with av.open(video.get_stream_source(), mode="r") as container:
         for number, frame in enumerate(container.decode(container.streams.video[0])):
-            if number in wanted:
-                plane = frame.to_ndarray(format="rgb24")
-                kept[number] = torch.from_numpy(plane.copy()).float() / 255.0
+            if number in slots:
+                plane = torch.from_numpy(frame.to_ndarray(format="rgb24").copy())
+                if images is None:
+                    images = scratch.allocate(
+                        (len(indices),) + tuple(plane.shape),
+                        node=name,
+                        advice="Lowering num_frames also fits it.",
+                    )
+                for slot in slots[number]:
+                    images[slot].copy_(plane).div_(255.0)
+                kept.add(number)
             if number >= last:
                 break
 
     missing = [i for i in indices if i not in kept]
     if missing:
-        # A container whose header count is higher than what it actually decodes. Reported
-        # rather than silently shortened, since a temporal model given fewer frames than it
-        # asked for fails somewhere less obvious.
+        # A container whose header count is higher than what it actually decodes.
         raise ValueError(
             f"the video ended before frame {missing[0]}: asked for {len(indices)} frame(s) "
             f"and {len(kept)} could be decoded"
         )
 
     return InputImpl.VideoFromComponents(
-        Types.VideoComponents(
-            images=torch.stack([kept[i] for i in indices]),
-            frame_rate=video.get_frame_rate(),
-        )
+        Types.VideoComponents(images=images, frame_rate=video.get_frame_rate())
     )

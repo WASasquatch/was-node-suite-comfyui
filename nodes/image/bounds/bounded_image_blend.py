@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.compat.sockets import require_input
@@ -89,9 +88,13 @@ class BoundedImageBlend(io.ComfyNode):
         """Blend each source image into its window of the target.
 
         Raises:
-            ValueError: Nothing is connected to the target_bounds input.
+            ValueError: Nothing is connected to the target_bounds input, or source holds no
+                images.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from PIL import Image, ImageFilter, ImageOps
+
+        from ....modules.image import scratch
 
         require_input(
             target_bounds,
@@ -110,17 +113,13 @@ class BoundedImageBlend(io.ComfyNode):
         tgt_len = 1 if len(target) != len(source) else len(source)
         bounds_len = 1 if len(target_bounds) != len(source) else len(source)
 
-        tgt_arr = [tensor2pil(tgt) for tgt in target[:tgt_len]]
-        src_arr = [tensor2pil(src) for src in source]
-
-        result_tensors = []
-        # The first window, kept for the readout: `width` and `height` are bound inside the
-        # loop, and a batch with nothing in it must raise where it raised before.
+        blended = None
+        # The first window, kept for the readout.
         first_window = None
-        for idx in range(len(src_arr)):
-            src = src_arr[idx]
+        for idx in range(len(source)):
+            src = tensor2pil(source[idx])
             if (tgt_len == 1 and idx == 0) or tgt_len > 1:
-                tgt = tgt_arr[idx]
+                tgt = tensor2pil(target[idx])
 
             if (bounds_len == 1 and idx == 0) or bounds_len > 1:
                 rmin, rmax, cmin, cmax = target_bounds[idx]
@@ -147,9 +146,20 @@ class BoundedImageBlend(io.ComfyNode):
             src_positioned = Image.new(tgt.mode, tgt.size)
             src_positioned.paste(src_resized, (cmin, rmin))
 
-            result = Image.composite(src_positioned, tgt, tgt_mask)
+            frame = pil2tensor(Image.composite(src_positioned, tgt, tgt_mask))
+            if blended is None:
+                blended = scratch.allocate(
+                    (len(source),) + tuple(frame.shape[1:]),
+                    node="Bounded Image Blend",
+                    advice="Passing fewer source images or a smaller target also fits it.",
+                )
+            blended[idx] = frame[0]
 
-            result_tensors.append(pil2tensor(result))
+        if blended is None:
+            raise ValueError(
+                "Bounded Image Blend was given no source images. Connect an image or a batch "
+                "of them to source."
+            )
 
         # The canvas keeps the target's size, so the pair worth reporting is the source
         # against the window the bounds row cut for it.
@@ -162,4 +172,4 @@ class BoundedImageBlend(io.ComfyNode):
                 facts={"canvas": size_report.spell(target)},
             )
 
-        return io.NodeOutput(torch.cat(result_tensors, dim=0))
+        return io.NodeOutput(blended)

@@ -129,14 +129,16 @@ class HDRVAEDecode(io.ComfyNode):
             images = images.reshape(-1, *images.shape[-3:])
         decoded = float(images.amax())
 
-        images = images * (STOP ** float(exposure))
+        if float(exposure) != 0.0:
+            images.mul_(STOP ** float(exposure))
         if float(ceiling) > UNCAPPED:
-            images = images.clamp(max=float(ceiling))
+            images.clamp_(max=float(ceiling))
         if negatives == NEGATIVES[0]:
-            images = images.clamp(min=0.0)
+            images.clamp_(min=0.0)
 
         peak = float(images.amax())
-        above = float((images[..., :3] > 1.0).float().mean()) * 100.0
+        bright = sum(int((frame[..., :3] > 1.0).count_nonzero()) for frame in images)
+        above = bright / max(1, images[..., :3].numel()) * 100.0
         logger.info(
             "decoded %d frame(s), peak %.4g, %.2f%% above white%s",
             int(images.shape[0]), peak, above, "" if lifted else ", nothing was held",

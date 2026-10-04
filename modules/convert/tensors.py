@@ -13,7 +13,10 @@ import numpy as np
 import torch
 from PIL import Image
 
+from ..image import scratch
+
 __all__ = [
+    "array_shape",
     "broadcast_image_planes",
     "filtered_planes",
     "image_planes",
@@ -171,12 +174,48 @@ def broadcast_image_planes(*images: torch.Tensor) -> list[tuple[torch.Tensor, ..
     return [tuple(group[index % len(group)] for group in planes) for index in range(length)]
 
 
-def stack_images(images: list[Image.Image]) -> torch.Tensor:
+def array_shape(image) -> tuple[int, ...]:
+    """The shape :func:`numpy.array` gives an image, read without decoding its pixels.
+
+    Args:
+        image: A PIL image, or anything :func:`numpy.shape` accepts.
+
+    Returns:
+        ``(height, width)`` for a single-band image and ``(height, width, bands)`` otherwise.
+    """
+    if isinstance(image, Image.Image):
+        bands = len(image.getbands())
+        return (image.height, image.width) + ((bands,) if bands != 1 else ())
+    return tuple(int(side) for side in np.shape(image))
+
+
+def _place(slot: torch.Tensor, plane: torch.Tensor) -> None:
+    """Copy one image into its slot of a batch, centred on black where it is smaller.
+
+    Args:
+        slot: ``(height, width, ...)`` view of the batch, overwritten.
+        plane: The image, no larger than ``slot`` on either side.
+    """
+    high, wide = int(plane.shape[0]), int(plane.shape[1])
+    if (high, wide) == (int(slot.shape[0]), int(slot.shape[1])):
+        slot.copy_(plane)
+        return
+    slot.zero_()
+    top = (int(slot.shape[0]) - high) // 2
+    left = (int(slot.shape[1]) - wide) // 2
+    slot[top:top + high, left:left + wide] = plane
+
+
+def stack_images(
+    images: list[Image.Image], node: str = "", advice: str = "Fewer or smaller images also fit it.",
+) -> torch.Tensor:
     """Assemble PIL images into one ``IMAGE`` batch, centred and black-padded to the largest size.
 
     Args:
         images: One PIL image per item of the batch, in batch order. All of them must
             carry the same number of channels, since one batch carries one channel count.
+        node: Display name of the calling node, named where the batch does not fit.
+        advice: Closing sentence of that refusal, naming what to change on the node.
 
     Returns:
         A float32 tensor scaled to ``[0, 1]``, shaped
@@ -187,6 +226,7 @@ def stack_images(images: list[Image.Image]) -> torch.Tensor:
         ValueError: No image was given, or the images differ in channel count.
         TypeError: A tensor was given where a PIL image was expected; a batch of tensors
             is assembled with :func:`torch.cat` instead.
+        MemoryError: Neither free memory nor any scratch drive has room for the batch.
     """
     if not images:
         raise ValueError("At least one image must be provided.")
@@ -196,23 +236,24 @@ def stack_images(images: list[Image.Image]) -> torch.Tensor:
                 "stack_images() assembles PIL images. Concatenate image tensors with "
                 "torch.cat(planes, dim=0) instead."
             )
-    planes = [pil2tensor(image) for image in images]
-    channels = {tuple(plane.shape[3:]) for plane in planes}
+    shapes = [array_shape(image) for image in images]
+    channels = {shape[2:] for shape in shapes}
     if len(channels) > 1:
         raise ValueError(f"All images must have the same channel count, got {sorted(channels)}.")
-    height = max(plane.shape[1] for plane in planes)
-    width = max(plane.shape[2] for plane in planes)
-    padded = []
-    for plane in planes:
-        if plane.shape[1] != height or plane.shape[2] != width:
-            canvas = plane.new_zeros((1, height, width) + tuple(plane.shape[3:]))
-            top = (height - plane.shape[1]) // 2
-            left = (width - plane.shape[2]) // 2
-            canvas[:, top:top + plane.shape[1], left:left + plane.shape[2]] = plane
-            plane = canvas
-        padded.append(plane)
-    return torch.cat(padded, dim=0)
-
+    height = max(shape[0] for shape in shapes)
+    width = max(shape[1] for shape in shapes)
+    batch = scratch.allocate(
+        (len(images), height, width) + shapes[0][2:], node=node, advice=advice,
+    )
+    for index, image in enumerate(images):
+        plane = pil2tensor(image)[0]
+        if tuple(plane.shape) != shapes[index]:
+            raise ValueError(
+                f"Image {index} decoded to the shape {tuple(plane.shape)}, not the "
+                f"{shapes[index]} its size and mode give."
+            )
+        _place(batch[index], plane)
+    return batch
 
 
 def _progress(total: int):
@@ -255,15 +296,18 @@ def filtered_planes(images: torch.Tensor, filter_fn) -> torch.Tensor:
     """
     from ..image import dynamic
 
-    folded = dynamic.fold(images)
-    planes = image_planes(folded.images)
+    scale = dynamic.peak(images) if dynamic.carries(images) else 1.0
+    planes = image_planes(images)
     step = _progress(len(planes))
     filtered = []
     for plane in planes:
-        filtered.append(filter_fn(tensor2pil(plane)))
+        folded = dynamic.fold(plane, scale)
+        filtered.append(filter_fn(tensor2pil(folded.images)))
         step()
-    stacked = stack_images(filtered)
-    result = dynamic.unfold(stacked, folded)
+    result = stack_images(filtered)
+    del filtered
+    if folded.scale != 1.0:
+        result.mul_(folded.scale)
     if images.is_floating_point():
         return result.to(device=images.device, dtype=images.dtype)
     return result.to(images.device)

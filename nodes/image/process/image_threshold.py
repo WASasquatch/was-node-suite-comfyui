@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from comfy_api.latest import io
 
 from ....modules.convert.tensors import pil2tensor, tensor2pil
@@ -53,8 +52,23 @@ class ImageThreshold(io.ComfyNode):
 
     @classmethod
     def execute(cls, image, threshold=0.5) -> io.NodeOutput:
-        images = [pil2tensor(cls.apply_threshold(tensor2pil(img), threshold)) for img in image]
-        return io.NodeOutput(torch.cat(images, dim=0))
+        from ....modules.image import scratch
+
+        batch = None
+        for index, plane in enumerate(image):
+            frame = pil2tensor(cls.apply_threshold(tensor2pil(plane), threshold))
+            if batch is None:
+                batch = scratch.allocate(
+                    (len(image),) + tuple(frame.shape[1:]),
+                    node="Image Threshold",
+                    advice="Passing fewer or smaller frames also fits it.",
+                )
+            batch[index] = frame[0]
+        if batch is None:
+            raise ValueError(
+                "Image Threshold was handed an empty image batch. Wire in at least one image."
+            )
+        return io.NodeOutput(batch)
 
     @classmethod
     def apply_threshold(cls, input_image, threshold=0.5):

@@ -7,7 +7,7 @@ import math
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
-from ....modules.convert.tensors import broadcast_image_planes, stack_images, tensor2pil
+from ....modules.convert.tensors import broadcast_image_planes, pil2tensor, tensor2pil
 from ....modules.interface import size_report
 
 
@@ -249,19 +249,38 @@ class ImageTranspose(io.ComfyNode):
     @classmethod
     def execute(cls, image, image_overlay, width, height, X, Y, rotation,
                 feathering) -> io.NodeOutput:
-        folded = dynamic.fold(image)
-        image = folded.images
-        composited = [
-            apply_transpose_image(
-                tensor2pil(background),
-                tensor2pil(overlay),
-                (width, height),
-                (X, Y),
-                rotation,
-                feathering,
+        """Composite the overlay onto every background frame.
+
+        Raises:
+            ValueError: An input holds no images, or width or height is below 1.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        from ....modules.image import scratch
+
+        scale = dynamic.peak(image) if dynamic.carries(image) else 1.0
+        pairs = broadcast_image_planes(image, image_overlay)
+        composited = None
+        for index, (background, overlay) in enumerate(pairs):
+            folded = dynamic.fold(background, scale)
+            frame = pil2tensor(
+                apply_transpose_image(
+                    tensor2pil(folded.images),
+                    tensor2pil(overlay),
+                    (width, height),
+                    (X, Y),
+                    rotation,
+                    feathering,
+                )
             )
-            for background, overlay in broadcast_image_planes(image, image_overlay)
-        ]
+            if composited is None:
+                composited = scratch.allocate(
+                    (len(pairs),) + tuple(frame.shape[1:]),
+                    node="Image Transpose",
+                    advice="Passing fewer frames or a smaller image also fits it.",
+                )
+            composited[index] = frame[0]
+            if folded.scale != 1.0:
+                composited[index].mul_(folded.scale)
 
         # The canvas keeps the background's size, so the pair worth reporting is the
         # overlay against the box the widgets scale it into.
@@ -272,4 +291,4 @@ class ImageTranspose(io.ComfyNode):
             resampled=True,
             facts={"canvas": size_report.spell(image)},
         )
-        return io.NodeOutput(dynamic.unfold(stack_images(composited), folded))
+        return io.NodeOutput(composited)

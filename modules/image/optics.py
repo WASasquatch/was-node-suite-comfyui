@@ -21,6 +21,8 @@ import math
 import torch
 from torch.nn import functional
 
+from . import dynamic
+
 #: How a blur travels across the frame, in menu order.
 BLURS = ("linear", "zoom", "spin")
 
@@ -176,6 +178,8 @@ def perspective(
     width: int = 0,
     height: int = 0,
     edge: str = EDGES[0],
+    out: torch.Tensor | None = None,
+    peak: float | None = None,
 ) -> torch.Tensor:
     """Pin the four corners of a frame to four new places.
 
@@ -186,27 +190,76 @@ def perspective(
         width: Answer width in pixels, 0 to keep the source's.
         height: Answer height in pixels, 0 to keep the source's.
         edge: One of :data:`EDGES`.
+        out: A ``(batch, height, width, channels)`` tensor each answered frame is written
+            into. None allocates one on the device of ``images``.
+        peak: Scale each frame is brought inside 0 to 1 by with :func:`dynamic.fold` before
+            it is read, and its answer multiplied back up by. None reads frames as they are.
 
     Returns:
-        A ``(batch, height, width, channels)`` tensor in the dtype it was given.
+        ``out``, or a new ``(batch, height, width, channels)`` tensor, in the dtype of
+        ``images``.
 
     Raises:
-        ValueError: Fewer than four corners, or the four are collinear so no mapping exists.
+        ValueError: Fewer than four corners, the four are collinear so no mapping exists,
+            or ``out`` is not shaped like the answer.
     """
     if len(corners) < 4:
         raise ValueError(f"perspective needs four corners, got {len(corners)}.")
-    frames = images.to(dtype=torch.float32)
-    source_h, source_w = int(frames.shape[1]), int(frames.shape[2])
+    batch, source_h, source_w, channels = (int(side) for side in images.shape)
     out_w = int(width) or source_w
     out_h = int(height) or source_h
+    shape = (batch, out_h, out_w, channels)
+    if out is None:
+        out = torch.empty(shape, dtype=images.dtype, device=images.device)
+    elif tuple(out.shape) != shape:
+        raise ValueError(
+            f"perspective() was given an out tensor shaped {tuple(out.shape)} for an answer "
+            f"shaped {shape}"
+        )
 
+    grid = _pinned_grid(corners, source_w, source_h, out_w, out_h, images.device)
+    for index in range(batch):
+        frame = images[index:index + 1]
+        folded = dynamic.fold(frame, peak) if peak is not None else None
+        if folded is not None:
+            frame = folded.images
+        read = functional.grid_sample(
+            frame.to(dtype=torch.float32).permute(0, 3, 1, 2),
+            grid,
+            mode="bilinear",
+            padding_mode=_PADDING.get(edge, "border"),
+            align_corners=True,
+        )
+        out[index].copy_(read[0].permute(1, 2, 0))
+        if folded is not None and folded.scale != 1.0:
+            out[index].mul_(folded.scale)
+    return out
+
+
+def _pinned_grid(corners, source_w: int, source_h: int, out_w: int, out_h: int, device):
+    """Where each answer pixel of :func:`perspective` reads the source frame.
+
+    Args:
+        corners: Four ``(x, y)`` pairs in pixels, clockwise from the top left.
+        source_w: Source width in pixels.
+        source_h: Source height in pixels.
+        out_w: Answer width in pixels.
+        out_h: Answer height in pixels.
+        device: Device the grid is built on.
+
+    Returns:
+        A ``(1, out_h, out_w, 2)`` float32 grid in the -1 to 1 that ``grid_sample`` reads.
+
+    Raises:
+        ValueError: The four corners are collinear, so no mapping exists.
+    """
     source = [(0.0, 0.0), (source_w - 1.0, 0.0),
               (source_w - 1.0, source_h - 1.0), (0.0, source_h - 1.0)]
     matrix = _homography([(float(x), float(y)) for x, y in corners[:4]], source,
-                         frames.device).to(dtype=frames.dtype)
+                         device).to(dtype=torch.float32)
 
-    ys = torch.arange(out_h, device=frames.device, dtype=frames.dtype)
-    xs = torch.arange(out_w, device=frames.device, dtype=frames.dtype)
+    ys = torch.arange(out_h, device=device, dtype=torch.float32)
+    xs = torch.arange(out_w, device=device, dtype=torch.float32)
     grid_y, grid_x = torch.meshgrid(ys, xs, indexing="ij")
     ones = torch.ones_like(grid_x)
     stacked = torch.stack([grid_x, grid_y, ones], dim=-1)
@@ -217,7 +270,7 @@ def perspective(
 
     read_x = flat[..., 0] / max(source_w - 1.0, EPSILON) * 2.0 - 1.0
     read_y = flat[..., 1] / max(source_h - 1.0, EPSILON) * 2.0 - 1.0
-    return _sample(frames, read_x, read_y, edge).to(dtype=images.dtype)
+    return torch.stack([read_x, read_y], dim=-1).unsqueeze(0)
 
 
 def _homography(source, target, device):

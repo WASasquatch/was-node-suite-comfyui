@@ -148,7 +148,9 @@ class HDRReconstruct(io.ComfyNode):
         Raises:
             ValueError: No frames were given.
             ModelUnavailable: The checkpoint is absent and ``features.network`` is off.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
+        from ....modules.image import scratch
         from ....modules.model import hdrcnn
 
         frames = image_planes(images)
@@ -162,19 +164,26 @@ class HDRReconstruct(io.ComfyNode):
         network = backend.model
 
         bar = progress_bar(len(frames))
-        answered = []
-        for frame in frames:
+        reconstructed = None
+        lifted = 0
+        for index, frame in enumerate(frames):
             planes = _rgb(frame).to(device=device)
             if dequantise:
                 planes = hdr.dequantise(planes)
             with torch.no_grad():
-                linear = network(planes.permute(0, 3, 1, 2))
-            answered.append(linear.permute(0, 2, 3, 1).float().cpu().contiguous())
+                linear = network(planes.permute(0, 3, 1, 2))[0].permute(1, 2, 0)
+            if reconstructed is None:
+                reconstructed = scratch.allocate(
+                    (len(frames),) + tuple(linear.shape),
+                    node="HDR Reconstruct",
+                    advice="Passing fewer frames also fits it.",
+                )
+            reconstructed[index] = linear
+            # A pixel counts once however many of its channels carry the headroom.
+            lifted += int((reconstructed[index].amax(dim=-1) > WHITE).sum())
             bar.update(1)
 
-        reconstructed = torch.cat(answered, dim=0)
         peak = float(reconstructed.amax())
-        # A pixel counts once however many of its channels carry the headroom.
-        above = float((reconstructed.amax(dim=-1) > WHITE).to(torch.float32).mean())
+        above = lifted / max(1, reconstructed[..., 0].numel())
         _publish_report(reconstructed, peak, above, bool(dequantise))
         return io.NodeOutput(reconstructed, peak)

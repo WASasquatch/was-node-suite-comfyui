@@ -88,6 +88,7 @@ class ApplyLUT(io.ComfyNode):
         Raises:
             ValueError: Nothing is connected to the lut input, or the LUT holds no table to
                 apply.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         import os
         import threading
@@ -95,6 +96,8 @@ class ApplyLUT(io.ComfyNode):
 
         import torch
         from comfy.utils import ProgressBar
+
+        from ....modules.image import scratch
 
         require_input(lut, "Apply LUT", "lut", "table", "Load LUT or LUT Blender")
 
@@ -111,27 +114,31 @@ class ApplyLUT(io.ComfyNode):
                 graded = source * (1.0 - strength) + graded * strength
             return graded.clamp(0, 1)
 
+        shape = tuple(image.shape[:-1]) + (3,)
+        if image.device.type == "cpu":
+            result = scratch.allocate(
+                shape, image.dtype, node="Apply LUT", advice="Passing fewer frames also fits it."
+            )
+        else:
+            result = torch.empty(shape, dtype=image.dtype, device=image.device)
+        lock = threading.Lock()
+
+        def work(index):
+            result[index:index + 1] = grade(image[index:index + 1])
+            with lock:
+                progress.update(1)
+
         if not use_threads or frames <= 1:
-            result = grade(image)
-            progress.update(frames)
+            for index in range(frames):
+                work(index)
             return io.NodeOutput(result)
 
         workers = int(threads) if int(threads) > 0 else min(os.cpu_count() or 1, frames)
         workers = max(1, min(workers, MAX_WORKERS))
 
-        results = [None] * frames
-        lock = threading.Lock()
-
-        def work(index):
-            graded = grade(image[index:index + 1])
-            with lock:
-                progress.update(1)
-            return index, graded
-
         with ThreadPoolExecutor(max_workers=workers) as pool:
             pending = [pool.submit(work, index) for index in range(frames)]
             for finished in as_completed(pending):
-                index, graded = finished.result()
-                results[index] = graded
+                finished.result()
 
-        return io.NodeOutput(torch.cat(results, dim=0))
+        return io.NodeOutput(result)

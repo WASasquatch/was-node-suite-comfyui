@@ -10,7 +10,12 @@ import math
 
 import torch
 
-__all__ = ["FILTERS", "SUPPORT", "apply", "axis", "matrix", "resize", "supersampled"]
+from . import scratch
+
+__all__ = ["ADVICE", "FILTERS", "SUPPORT", "apply", "axis", "matrix", "resize", "supersampled"]
+
+#: Closing sentence of the refusal when a resampled batch fits neither memory nor a drive.
+ADVICE = "Lowering the target size or passing fewer frames also fits it."
 
 
 def _bilinear(x: float) -> float:
@@ -46,6 +51,40 @@ FILTERS = {"bilinear": _bilinear, "bicubic": _bicubic, "lanczos": _lanczos}
 SUPPORT = {"bilinear": 1.0, "bicubic": 2.0, "lanczos": 3.0}
 
 
+def _fill(weights, size_in: int, size_out: int, name: str, box, rows: range, shift: int = 0):
+    """Write rows of one axis's resample weights into a matrix.
+
+    Args:
+        weights: ``(rows, size_in)`` float64 tensor, written in place.
+        size_in: Source length in pixels.
+        size_out: Target length of the resample in pixels.
+        name: ``nearest``, ``bilinear``, ``bicubic`` or ``lanczos``.
+        box: ``(start, end)`` of the source span to resample, the whole axis when None.
+        rows: Indices of the resample rows to write.
+        shift: Added to a resample row index to give the row of ``weights`` it lands on.
+    """
+    start, end = box if box is not None else (0.0, float(size_in))
+    scale = (end - start) / size_out
+    if name not in FILTERS:
+        for index in rows:
+            source = int(start + (index + 0.5) * scale)
+            weights[index + shift, min(max(source, 0), size_in - 1)] = 1.0
+        return
+    kernel = FILTERS[name]
+    widen = max(scale, 1.0)
+    support = SUPPORT[name] * widen
+    for index in rows:
+        centre = start + (index + 0.5) * scale
+        first = max(math.trunc(centre - support + 0.5), 0)
+        last = min(math.trunc(centre + support + 0.5), size_in)
+        taps = [kernel((x + first - centre + 0.5) / widen) for x in range(last - first)]
+        total = sum(taps)
+        if total != 0.0:
+            taps = [tap / total for tap in taps]
+        if taps:
+            weights[index + shift, first:last] = torch.tensor(taps, dtype=torch.float64)
+
+
 def matrix(size_in: int, size_out: int, name: str, box: tuple[float, float] | None = None):
     """The weights that resample one axis.
 
@@ -58,27 +97,8 @@ def matrix(size_in: int, size_out: int, name: str, box: tuple[float, float] | No
     Returns:
         A ``(size_out, size_in)`` float64 tensor whose rows sum to 1.
     """
-    start, end = box if box is not None else (0.0, float(size_in))
-    scale = (end - start) / size_out
     weights = torch.zeros((size_out, size_in), dtype=torch.float64)
-    if name not in FILTERS:
-        for index in range(size_out):
-            source = int(start + (index + 0.5) * scale)
-            weights[index, min(max(source, 0), size_in - 1)] = 1.0
-        return weights
-    kernel = FILTERS[name]
-    widen = max(scale, 1.0)
-    support = SUPPORT[name] * widen
-    for index in range(size_out):
-        centre = start + (index + 0.5) * scale
-        first = max(math.trunc(centre - support + 0.5), 0)
-        last = min(math.trunc(centre + support + 0.5), size_in)
-        taps = [kernel((x + first - centre + 0.5) / widen) for x in range(last - first)]
-        total = sum(taps)
-        if total != 0.0:
-            taps = [tap / total for tap in taps]
-        if taps:
-            weights[index, first:last] = torch.tensor(taps, dtype=torch.float64)
+    _fill(weights, size_in, size_out, name, box, range(size_out))
     return weights
 
 
@@ -109,6 +129,7 @@ def resize(
     down = axis(rows, height, height, 0, name, (upper, lower))
     return apply(frames, across, down, device=device, premultiply=name != "nearest")
 
+
 def axis(
     size_in: int,
     scaled: int,
@@ -131,13 +152,15 @@ def axis(
         ``(weights, coverage)``: a ``(target, size_in)`` float64 matrix and a ``(target,)``
         vector, 1 where the canvas shows the source and 0 where it shows padding.
     """
-    resampled = matrix(size_in, scaled, name, box)
-    placed = torch.zeros((target, scaled), dtype=torch.float64)
-    for index in range(target):
-        source = index - offset
-        if 0 <= source < scaled:
-            placed[index, source] = 1.0
-    return placed @ resampled, placed.sum(dim=1)
+    weights = torch.zeros((target, size_in), dtype=torch.float64)
+    coverage = torch.zeros(target, dtype=torch.float64)
+    first, last = max(offset, 0), min(offset + scaled, target)
+    if first < last:
+        _fill(weights, size_in, scaled, name, box, range(first - offset, last - offset), offset)
+        # Adding zero turns a negative zero tap into a positive one.
+        weights[first:last] += 0.0
+        coverage[first:last] = 1.0
+    return weights, coverage
 
 
 def supersampled(plan, target: int, name: str):
@@ -181,7 +204,10 @@ def apply(
 
     Returns:
         ``(batch, target height, target width, channels)`` on the frames' own device and
-        dtype.
+        dtype. A CPU result comes from :func:`modules.image.scratch.allocate`.
+
+    Raises:
+        MemoryError: Neither free memory nor any scratch drive has room for the result.
     """
     batch, rows, columns, channels = (int(size) for size in frames.shape)
     run = device or frames.device
@@ -197,20 +223,33 @@ def apply(
     premultiply = premultiply and channels == 4
     if premultiply:
         fill = torch.cat([fill[:3] * fill[3], fill[3:]])
+    backdrop = uncovered[None, :, :, None] * fill
     per_frame = max(1, (rows * columns + height * width + rows * width) * channels)
     chunk = max(1, int(budget // per_frame))
-    parts = []
+    shape = (batch, height, width, channels)
+    if frames.device.type == "cpu":
+        result = scratch.allocate(shape, frames.dtype, advice=ADVICE)
+    else:
+        result = torch.empty(shape, dtype=frames.dtype, device=frames.device)
+    direct = result.device == torch.device(run) and result.dtype == torch.float32
     for begin in range(0, batch, chunk):
         part = frames[begin:begin + chunk].to(run, torch.float32)
         if premultiply:
-            alpha = part[..., 3:4]
-            part = torch.cat([part[..., :3] * alpha, alpha], dim=-1)
-        # One frame per product, so a frame comes out the same whatever batch it arrived in.
-        part = torch.stack([_resampled(one, across_weights, down_weights) for one in part])
-        part = part + uncovered[None, :, :, None] * fill
+            part = torch.cat([part[..., :3] * part[..., 3:4], part[..., 3:4]], dim=-1)
+        count = int(part.shape[0])
+        held = result[begin:begin + count]
+        done = held if direct else torch.empty(
+            (count, height, width, channels), dtype=torch.float32, device=run
+        )
+        # Each frame is resampled by its own pair of products.
+        for index in range(count):
+            done[index] = _resampled(part[index], across_weights, down_weights)
+        del part
+        done += backdrop
         if premultiply:
-            alpha = part[..., 3:4]
+            alpha = done[..., 3:4]
             safe = torch.where(alpha > 0, alpha, torch.ones_like(alpha))
-            part = torch.cat([torch.where(alpha > 0, part[..., :3] / safe, 0.0), alpha], dim=-1)
-        parts.append(part.to(frames.device, frames.dtype))
-    return torch.cat(parts, dim=0)
+            done[..., :3] = torch.where(alpha > 0, done[..., :3] / safe, 0.0)
+        if not direct:
+            held.copy_(done)
+    return result
