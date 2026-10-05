@@ -319,7 +319,9 @@ another room comes back looking as it did. `refresh` carries the same frames wit
 sets, so a scene that sticks on one picture evolves while the shot stays unbroken, and
 `handoff` starts the next segment on the last frame alone. `cut`, or an overlap
 of `0`, samples a new scene from an empty latent with nothing carried, and H3 Extend Append
-joins it after the clip's last full 17 frame block. `drift_control` takes the contrast and
+joins it after the clip's last full 17 frame block. `carry (audio only)` cuts to new picture the
+same way while carrying the soundtrack across the cut, in whole 17 frame clips of it, so music or
+ambience runs on into the new scene. `drift_control` takes the contrast and
 fine detail the carried frames have gained back out again in latent space, each segment, and
 never sharpens.
 **H3 Extend Append** joins each sampled segment onto the clip and drops the carried head, so
@@ -373,7 +375,10 @@ multiple of 32.
 
 The nodes run inside a loop. **While Loop Open** and **While Loop Close** carry the clip from
 one segment to the next, `segments` sets the loop's count, and the clip is decoded once after
-the last segment.
+the last segment. **H3 Decode Video** decodes it one scene at a time into a frame cache on
+disk, each scene that opens on a cut on its own and a long scene in pieces, with the sound
+decoded once, so a long multi-scene run never sits in memory as one batch and Save Video
+writes it straight from disk.
 
 For growing a clip past the length a single sampling pass covers, and for directing it as it
 grows.
@@ -381,7 +386,9 @@ grows.
 [`NODES.md`](NODES.md) under **WAS Suite/Latent/Video** and **WAS Suite/Logic/Loop**. Graphs:
 [`minimax-h3-extend-loop.json`](docs/workflows/minimax-h3-extend-loop.json),
 [`minimax-h3-ref2va-extend-loop.json`](docs/workflows/minimax-h3-ref2va-extend-loop.json),
-[`minimax-h3-flf-pair-loop.json`](docs/workflows/minimax-h3-flf-pair-loop.json).
+[`minimax-h3-flf-pair-loop.json`](docs/workflows/minimax-h3-flf-pair-loop.json),
+[`minimax-h3-scene-loop.json`](docs/workflows/minimax-h3-scene-loop.json),
+[`minimax-h3-extend-loop-audio-carry.json`](docs/workflows/minimax-h3-extend-loop-audio-carry.json).
 
 ---
 

@@ -6,6 +6,7 @@ as mp4, no longer than :data:`PREVIEW_SIDE` on its long side.
 
 from __future__ import annotations
 
+import contextlib
 import os
 
 from .. import log
@@ -77,14 +78,24 @@ def _smaller(video, target: str, size: tuple[int, int]) -> None:
     """
     import av
     from av.video.reformatter import Interpolation
+    from comfy_api.latest import InputImpl
 
     from ..image import scratch
     from .video import Encoder
 
     width, height = size
-    source = getattr(video, "get_stream_source", None)
-    if source is not None:
-        with av.open(source()) as container:
+    lazy = getattr(video, "lazy_frames", None)
+    if lazy is not None:
+        import comfy.model_management
+
+        device = comfy.model_management.get_torch_device()
+        with Encoder(target, "h264", width, height, video.get_frame_rate(),
+                     options=PREVIEW_OPTIONS, color_space="sRGB") as out:
+            for frame in lazy():
+                out.write_rgb(shrink(frame.to(device), size))
+        return
+    if isinstance(video, InputImpl.VideoFromFile):
+        with av.open(video.get_stream_source()) as container:
             stream = container.streams.video[0]
             rate = stream.average_rate or 24
             with Encoder(target, "h264", width, height, rate, options=PREVIEW_OPTIONS,
@@ -197,13 +208,15 @@ def to_temp(video, prefix: str) -> dict | None:
             )
             return None
 
+    keeping = getattr(video, "keeping", None)
     for codec in CODECS:
         try:
-            video.save_to(
-                target,
-                format=VideoContainer(CONTAINER),
-                codec=VideoCodec(codec),
-            )
+            with keeping() if keeping is not None else contextlib.nullcontext():
+                video.save_to(
+                    target,
+                    format=VideoContainer(CONTAINER),
+                    codec=VideoCodec(codec),
+                )
             return {"filename": file, "subfolder": subfolder, "type": "temp"}
         except Exception as error:  # noqa: BLE001
             logger.debug("codec %s did not encode the clip (%s)", codec, error)

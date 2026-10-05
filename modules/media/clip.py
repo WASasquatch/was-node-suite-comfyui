@@ -86,11 +86,39 @@ def open_clip(video, name: str, compact: bool = False) -> Clip:
     return clip
 
 
+def _cached(video, name: str) -> Clip | None:
+    """A clip kept in a frame cache as uint8 frames, or ``None`` where any frame is half floats."""
+    from ..image import scratch
+
+    cache = video.cache()
+    if cache.halves:
+        return None
+    pictures = [cache.codes(index) for index in range(video.start, video.stop)]
+    frames = scratch.stack(pictures, node=name, advice="A shorter clip also fits it.")
+    return Clip(
+        frames=frames,
+        alpha=None,
+        audio=cache.audio(video.start, video.stop),
+        rate=cache.rate,
+        metadata=None,
+        bit_depth=8,
+        color_space=cache.color_space,
+    )
+
+
 def _compact(video, name: str) -> Clip | None:
-    """An untrimmed 8-bit video file decoded to uint8 frames, or ``None`` for any other video."""
-    source = getattr(video, "get_stream_source", None)
+    """An untrimmed 8-bit video file or frame cache as uint8 frames, or ``None`` for any other video."""
+    from comfy_api.latest import InputImpl
+
+    from . import frame_cache
+
+    if frame_cache.cached(video):
+        return _cached(video, name)
+    if not isinstance(video, InputImpl.VideoFromFile):
+        return None
+    source = video.get_stream_source
     window = getattr(video, "get_active_trim_window", None)
-    if source is None or window is None or not isinstance(source(), str):
+    if window is None or not isinstance(source(), str):
         return None
     if any(window()) or getattr(video, "_VideoFromFile__crop", None) is not None:
         return None

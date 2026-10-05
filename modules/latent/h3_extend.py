@@ -22,6 +22,8 @@ __all__ = [
     "audio_lead",
     "bands",
     "audio_span",
+    "bridge",
+    "bridge_frames",
     "cut_point",
     "empty_like",
     "extension_tokens",
@@ -36,11 +38,13 @@ __all__ = [
     "snap_clip",
     "snap_extension",
     "snap_overlap",
+    "scene_starts",
     "settled",
     "split",
     "tail",
     "tokens_for",
     "window_frames",
+    "with_scenes",
 ]
 
 #: Frames one clip of latent tokens covers, and the lead frame every sequence opens with.
@@ -103,8 +107,11 @@ REFERENCE_VIDEO = "reference (video)"
 #: A cut referencing stills sampled across the whole clip as pictures.
 REFERENCE_SAMPLE = "reference (sample)"
 
+#: A cut to new picture with the soundtrack carried across it.
+AUDIO_CARRY = "carry (audio only)"
+
 #: How a segment continues from the one before it.
-CONTINUITY = ("carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut")
+CONTINUITY = ("carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut", AUDIO_CARRY)
 
 #: Continuity names a saved workflow may still hold, and what each is now.
 CONTINUITY_RENAMED = {"reference": REFERENCE_VIDEO}
@@ -118,6 +125,12 @@ REJOIN_KEY = "h3_rejoin"
 
 #: Latent key holding the rows and audio a cut trimmed off each segment's end, by segment.
 TAILS_KEY = "h3_segment_tails"
+
+#: Latent key holding the token each fresh scene of a joined clip opens on, the first at 0.
+SCENES_KEY = "h3_scene_starts"
+
+#: Window key marking a pass that carries sound but no picture, holding the bridge in frames.
+BRIDGE_KEY = "h3_sound_bridge"
 
 #: Stills `reference (sample)` takes from the clip by default.
 REFERENCE_SAMPLES = 4
@@ -530,6 +543,34 @@ def with_ends(latent: dict, ends: list[int]) -> dict:
     return out
 
 
+def scene_starts(latent: dict) -> list[int] | None:
+    """The token each fresh scene of a joined clip opens on, as H3 Extend Append recorded it.
+
+    Args:
+        latent: A joined clip.
+
+    Returns:
+        Token numbers in order, the first ``0``, or ``None`` where nothing was recorded.
+    """
+    starts = latent.get(SCENES_KEY) if isinstance(latent, dict) else None
+    return [int(start) for start in starts] if starts else None
+
+
+def with_scenes(latent: dict, starts: list[int]) -> dict:
+    """A joined clip carrying the token each of its fresh scenes opens on.
+
+    Args:
+        latent: A joined clip.
+        starts: Token numbers in order, the first ``0``.
+
+    Returns:
+        A shallow copy of the latent holding the record.
+    """
+    out = dict(latent)
+    out[SCENES_KEY] = [int(start) for start in starts]
+    return out
+
+
 def until_segment(latent: dict, index: int) -> dict:
     """A joined clip cut back to the end of one of its segments.
 
@@ -755,6 +796,44 @@ def tail(latent: dict, overlap: int):
         )
     span = min(audio.shape[-1], audio_span(snap_overlap(overlap)))
     return video[:, :, -tokens:].clone(), audio[..., -span:].clone()
+
+
+def bridge_frames(frames: int) -> int:
+    """The sound bridge closest to a frame count, in whole clips and never under one.
+
+    Args:
+        frames: Frames asked for.
+
+    Returns:
+        A positive multiple of :data:`CLIP_FRAMES`.
+    """
+    return nearest_clips(max(1, int(frames)), 1) * CLIP_FRAMES
+
+
+def bridge(done: dict, sampled: dict) -> tuple[dict, int, int]:
+    """Join a window that carried sound but no picture: a cut for the picture, a carry for the sound.
+
+    Args:
+        done: The clip so far.
+        sampled: The window, marked with :data:`BRIDGE_KEY`.
+
+    Returns:
+        ``(joined, rows, kept)``: the joined clip, the token its new scene opens on, and the
+        frames of the clip so far kept ahead of it.
+    """
+    import torch
+
+    frames = int(sampled[BRIDGE_KEY])
+    done_video, done_audio = split(done)
+    new_video, new_audio = split(sampled)
+    rows, kept = cut_point(done_video.shape[2])
+    span = min(audio_span(frames), new_audio.shape[-1])
+    joined = join(
+        torch.cat([done_video[:, :, :rows], new_video[:, :, frames // CLIP_FRAMES * CLIP_TOKENS:]], dim=2),
+        torch.cat([done_audio[..., :min(done_audio.shape[-1], audio_span(kept))], new_audio[..., span:]],
+                  dim=-1),
+    )
+    return joined, rows, kept
 
 
 def append(done: dict, sampled: dict, overlap: int) -> dict:

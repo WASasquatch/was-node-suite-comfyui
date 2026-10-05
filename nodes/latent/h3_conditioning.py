@@ -115,7 +115,7 @@ BATCH_HINT = (
 SEGMENT_PROMPT_HINT = (
     "One segment of the video, as `a lone astronaut walks across a red desert plain`. The "
     "first segment starts the clip and each one after it continues where the last left off. "
-    "Blank ends the run."
+    "A blank row is skipped."
 )
 
 SEGMENT_DURATION_HINT = (
@@ -145,13 +145,15 @@ SEGMENT_CONTINUITY_HINT = (
     "carried frames, for a scene that sticks; `handoff` = a cut opening on the last "
     "frame; `reference (video)` = a cut referencing the last frames as a video; "
     "`reference (sample)` = a cut referencing stills from across the whole clip, so a "
-    "cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`. "
+    "cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; "
+    "`carry (audio only)` = a cut to new picture with the soundtrack carried across it. "
     "Ignored on segment 1."
 )
 
 SEGMENT_OVERLAP_HINT = (
     "Frames of the previous segment this one continues from, as `22` for a scene carrying "
-    "on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder. Ignored on "
+    "on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; "
+    "`carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on "
     "the first segment."
 )
 

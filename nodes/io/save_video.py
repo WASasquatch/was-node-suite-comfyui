@@ -249,11 +249,20 @@ class SaveVideo(io.ComfyNode):
                 crf=float(crf) if crf and crf > 0 else None,
             )
         else:
-            frames, sound = images, audio
+            frames, sound, rate = images, audio, float(fps)
             if frames is None:
-                parts = written.get_components()
-                frames, sound = parts.images, (sound if sound is not None else parts.audio)
-            encoding.write_frames(str(target), frames, float(fps), codec, audio=sound)
+                rate = float(written.get_frame_rate())
+                lazy = getattr(written, "lazy_frames", None)
+                if lazy is not None:
+                    frames = lazy()
+                    if sound is None:
+                        sound = written.cache().audio(written.start, written.stop)
+                else:
+                    parts = written.get_components()
+                    frames, sound = parts.images, (sound if sound is not None else parts.audio)
+            encoding.write_frames(str(target), frames, rate, codec, audio=sound)
+            if images is None and hasattr(written, "saved"):
+                written.saved()
         logger.info("wrote %s", target)
 
         # A preview is addressed as a name and a subfolder of one of ComfyUI's own

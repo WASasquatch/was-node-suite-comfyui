@@ -21,7 +21,8 @@ OVERLAP_HINT = (
     "Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. "
     "Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. "
     "Longer gives the new frames more of the "
-    "scene to continue from. `reference (video)` reads at least `56`."
+    "scene to continue from. `reference (video)` reads at least `56`; `carry (audio only)` "
+    "carries whole clips of sound, `17` for about 0.7s."
 )
 
 CONTINUITY_HINT = (
@@ -31,7 +32,8 @@ CONTINUITY_HINT = (
     "last frame; `reference (video)` = a cut referencing the clip's last frames as a "
     "video; `reference (sample)` = a cut referencing stills sampled across the whole clip, "
     "so a cast seen before a cutaway comes back as it was; `cut` = a new scene from an "
-    "empty latent, nothing carried. `handoff` and both references need vae."
+    "empty latent, nothing carried; `carry (audio only)` = a cut to new picture with the "
+    "soundtrack carried across it. `handoff` and both references need vae."
 )
 
 DRIFT_HINT = (
@@ -43,15 +45,15 @@ DRIFT_HINT = (
 RELEASE_HINT = (
     "Audio latent steps the held soundtrack opens back up over where it meets the new "
     "frames, as `8` for 0.2 seconds at 40 steps a second, `0` for a hard edge or `20` "
-    "for half a second. Read by `carry` and `refresh`."
+    "for half a second. Read by `carry`, `refresh` and `carry (audio only)`."
 )
 
 SOURCE_HINT = (
     "Which segment this pass continues from, as `-1` for the one before it, `-2` for the "
     "one before that, or `2` for segment 2. Every continuity reads from that segment's "
     "end, and the new frames still join the end of the clip; from an earlier segment the "
-    "picture carries and the sound starts fresh. A row's own source replaces this where "
-    "prompts is wired."
+    "picture carries and the sound starts fresh. `carry (audio only)` always reads the "
+    "segment before. A row's own source replaces this where prompts is wired."
 )
 
 SAMPLES_HINT = (
@@ -283,6 +285,52 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         )
 
     @classmethod
+    def bridged(cls, latent, positive, extension_frames, overlap_frames, audio_release,
+                named) -> io.NodeOutput:
+        """A new scene sampled under the soundtrack of the clip's last whole clips.
+
+        Args:
+            latent: The finished H3 joint latent.
+            positive: This segment's prompt.
+            extension_frames: Frames the new scene adds.
+            overlap_frames: Frames of sound to carry, snapped to whole clips.
+            audio_release: Audio steps the held sound opens back up over.
+            named: The segment's name in the report.
+
+        Returns:
+            The window, its prompt, the bridge in frames and the report.
+
+        Raises:
+            ValueError: The clip holds less sound than the bridge carries.
+        """
+        video, audio = h3_extend.split(latent)
+        frames = h3_extend.bridge_frames(overlap_frames)
+        extension = h3_extend.snap_extension(extension_frames)
+        window = h3_extend.snap_clip(frames + extension)
+        _, kept = h3_extend.cut_point(video.shape[2])
+        end = min(audio.shape[-1], h3_extend.audio_span(kept))
+        span = h3_extend.audio_span(frames)
+        if end < span:
+            raise ValueError(
+                f"{named} carries {frames} frames of sound and the clip so far holds "
+                f"{kept}. Lower the overlap, or carry from a longer clip"
+            )
+        # The window holds the whole span of sound the join drops.
+        release = max(0, min(int(audio_release), span))
+        carried, mask, held = h3_extend.masked_window(
+            video[:, :, :0], audio[..., end - span:end].clone(), h3_extend.tokens_for(window),
+            h3_extend.audio_span(window), span, release,
+        )
+        carried["noise_mask"] = mask["samples"]
+        carried[h3_extend.BRIDGE_KEY] = frames
+        report = (
+            f"{named}: cutting to new picture after frame {kept} under {held} audio steps "
+            f"({frames} frames) of its sound, released over {release}; sampling {window} "
+            f"frames and keeping the {window - frames} after the bridge"
+        )
+        return io.NodeOutput(carried, positive, frames, report)
+
+    @classmethod
     def execute(cls, latent, continuity, extension_frames, overlap_frames,
                 vae=None, positive=None, prompts=None, pass_index=0,
                 drift_control=0.0,
@@ -312,6 +360,9 @@ class ThreeH3ExtendWindow(io.ComfyNode):
 
         continuity = h3_extend.CONTINUITY_RENAMED.get(continuity, continuity)
         named = f"segment {int(pass_index) + 1}"
+        if continuity == h3_extend.AUDIO_CARRY and int(pass_index) > 0:
+            return cls.bridged(latent, positive, extension_frames, overlap_frames,
+                               audio_release, named)
         earlier = False
         seen = 0
         if int(pass_index) > 0:

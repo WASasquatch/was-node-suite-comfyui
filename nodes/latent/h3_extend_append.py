@@ -90,19 +90,24 @@ class ThreeH3ExtendAppend(io.ComfyNode):
         return h3_extend.segment_ends(latent) or [h3_extend.frames_for(video.shape[2])]
 
     @staticmethod
-    def recorded(latent, joined, ends, trimmed=None) -> dict:
-        """The joined clip carrying its segment ends and every trimmed tail.
+    def recorded(latent, joined, ends, trimmed=None, opened=None) -> dict:
+        """The joined clip carrying its segment ends, its scene starts and every trimmed tail.
 
         Args:
             latent: The clip so far.
             joined: The joined clip.
             ends: Frame counts at the end of each segment.
             trimmed: ``(index, video, audio)`` a cut took off the clip's last segment.
+            opened: The token a fresh scene opens on in ``joined``, or ``None`` for none.
 
         Returns:
-            The joined clip holding both records.
+            The joined clip holding every record.
         """
         out = h3_extend.with_ends(joined, ends)
+        starts = h3_extend.scene_starts(latent) or [0]
+        if opened is not None and int(opened) not in starts:
+            starts.append(int(opened))
+        out = h3_extend.with_scenes(out, starts)
         out[h3_extend.TAILS_KEY] = dict(latent.get(h3_extend.TAILS_KEY) or {})
         if trimmed is not None:
             out = h3_extend.with_tail(out, *trimmed)
@@ -137,14 +142,30 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             opened, _ = h3_extend.split(sampled)
             frames = h3_extend.frames_for(opened.shape[2])
             return io.NodeOutput(
-                h3_extend.with_ends(sampled, [frames]), frames,
+                h3_extend.with_scenes(h3_extend.with_ends(sampled, [frames]), [0]), frames,
                 f"opened the clip at {frames} frames ({opened.shape[2]} tokens)",
+            )
+
+        if h3_extend.BRIDGE_KEY in sampled:
+            # New picture under a carried soundtrack: joined as a cut, its sound as a carry.
+            done_video, _ = h3_extend.split(latent)
+            joined, rows, kept = h3_extend.bridge(latent, sampled)
+            whole, _ = h3_extend.split(joined)
+            frames = h3_extend.frames_for(whole.shape[2])
+            ends = cls.ends_before(latent, done_video)
+            tail = cls.trimmed_tail(latent, len(ends) - 1)
+            ends[-1] = min(ends[-1], kept)
+            return io.NodeOutput(
+                cls.recorded(latent, joined, ends + [frames], tail, opened=rows), frames,
+                f"cut to new picture after frame {kept}, its sound carried across "
+                f"{int(sampled[h3_extend.BRIDGE_KEY])} frames; {whole.shape[2]} tokens and "
+                f"{frames} frames now",
             )
 
         if int(overlap_frames) <= 0:
             # A cut: the whole fresh scene follows the clip's last whole clip.
             done_video, _ = h3_extend.split(latent)
-            _, kept = h3_extend.cut_point(done_video.shape[2])
+            rows, kept = h3_extend.cut_point(done_video.shape[2])
             trimmed = h3_extend.frames_for(done_video.shape[2]) - kept
             joined = h3_extend.append(latent, sampled, 0)
             whole, _ = h3_extend.split(joined)
@@ -154,7 +175,7 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             tail = cls.trimmed_tail(latent, len(ends) - 1)
             ends[-1] = min(ends[-1], kept)
             return io.NodeOutput(
-                cls.recorded(latent, joined, ends + [frames], tail), frames,
+                cls.recorded(latent, joined, ends + [frames], tail, opened=rows), frames,
                 f"cut in {h3_extend.frames_for(added.shape[2])} fresh frames after frame "
                 f"{kept}, trimming the clip's last {trimmed}; {whole.shape[2]} tokens "
                 f"and {frames} frames now",
@@ -163,6 +184,7 @@ class ThreeH3ExtendAppend(io.ComfyNode):
         if h3_extend.REJOIN_KEY in sampled:
             # Carried from an earlier segment: a cut back to that scene.
             done_video, _ = h3_extend.split(latent)
+            rows, _ = h3_extend.cut_point(done_video.shape[2])
             joined, kept, dropped = h3_extend.rejoin(latent, sampled, overlap_frames)
             whole, _ = h3_extend.split(joined)
             frames = h3_extend.frames_for(whole.shape[2])
@@ -170,7 +192,7 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             tail = cls.trimmed_tail(latent, len(ends) - 1)
             ends[-1] = min(ends[-1], kept)
             return io.NodeOutput(
-                cls.recorded(latent, joined, ends + [frames], tail), frames,
+                cls.recorded(latent, joined, ends + [frames], tail, opened=rows), frames,
                 f"cut back after frame {kept} to the earlier scene, opening {dropped} "
                 f"frames into the window on the first frame not shown before; "
                 f"{whole.shape[2]} tokens and {frames} frames now",
