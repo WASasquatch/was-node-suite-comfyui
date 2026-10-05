@@ -99,31 +99,41 @@ function reorder(node, side, order) {
   const sockets = node[side];
   if (!Array.isArray(sockets)) return;
   const rank = new Map(order.map((name, index) => [name, index]));
-  const place = (socket) => rank.get(socket.name) ?? 0;
+  // A socket the declaration does not name sorts after every one it does.
+  const place = (socket) => rank.get(socket.name) ?? order.length;
   if (sockets.every((socket, slot) => slot === 0 || place(sockets[slot - 1]) <= place(socket))) {
     return;
   }
 
   const graph = node.graph;
-  // Tied to their sockets by name before the sort, from the slot number each link records.
+  // Tied to their sockets by name before the sort.
   const held = graph ? linksBySocket(graph, node, side) : new Map();
   sockets.sort((a, b) => place(a) - place(b));
   const moves = new Map();
   sockets.forEach((socket, slot) => {
     for (const link of held.get(socket.name) ?? []) moves.set(link, slot);
   });
-  if (side === "inputs") moveTargets(moves, sockets.length);
-  else for (const [link, slot] of moves) link.origin_slot = slot;
+  if (side === "inputs") {
+    const stranded = moveTargets(moves, graph ? linksEndingAt(graph, node, side) : []);
+    if (stranded.length) {
+      console.error(
+        `[${LOG_NAME}] ${node?.type} #${node?.id}: links ${stranded.map((link) => link.id).join(", ")} `
+          + "could not be moved with their sockets. Reconnect them by hand.",
+      );
+    }
+  } else {
+    for (const [link, slot] of moves) link.origin_slot = slot;
+  }
 }
 
 /**
  * Point input links at their new slots without two ever landing on one slot at once.
  *
  * @param {Map<object, number>} moves - Link to the slot it belongs on.
- * @param {number} slots - How many input slots the node has.
- * @returns {void}
+ * @param {object[]} resident - Every link ending at the node, moving or not.
+ * @returns {object[]} The links that did not reach their slot.
  */
-function moveTargets(moves, slots) {
+function moveTargets(moves, resident) {
   const pending = new Map([...moves].filter(([link, slot]) => link.target_slot !== slot));
   while (pending.size > 0) {
     let progressed = false;
@@ -136,17 +146,34 @@ function moveTargets(moves, slots) {
       progressed = true;
     }
     if (progressed) continue;
-    // A cycle of moves: one link steps aside to a slot nothing targets.
-    const occupied = new Set([...moves.keys()].map((link) => link.target_slot));
-    const free = Array.from({ length: slots }, (unused, slot) => slot).find((slot) => !occupied.has(slot));
+    // A cycle of moves: one link steps aside to the lowest slot no link on the node holds.
+    const occupied = new Set([...resident, ...moves.keys()].map((link) => link.target_slot));
+    let free = 0;
+    while (occupied.has(free)) free += 1;
     const [link] = pending.keys();
-    if (free !== undefined) link.target_slot = free;
-    // With nowhere to step aside to, or the step refused, the link takes its slot directly.
-    if (free === undefined || link.target_slot !== free) {
-      link.target_slot = pending.get(link);
-      pending.delete(link);
-    }
+    link.target_slot = free;
+    if (link.target_slot !== free) break;
   }
+  return [...moves].filter(([link, slot]) => link.target_slot !== slot).map(([link]) => link);
+}
+
+/**
+ * Every link ending at one side of a node.
+ *
+ * @param {object} graph - The graph holding the node.
+ * @param {object} node - The node whose links are read.
+ * @param {"inputs"|"outputs"} side - Which end of the link is the node.
+ * @returns {object[]} The link objects.
+ */
+function linksEndingAt(graph, node, side) {
+  const links = graph.links instanceof Map
+    ? [...graph.links.values()]
+    : Object.values(graph.links ?? {});
+  return links.filter((link) => {
+    if (!link) return false;
+    const end = side === "inputs" ? link.target_id : link.origin_id;
+    return String(end) === String(node.id);
+  });
 }
 
 /**
@@ -158,19 +185,20 @@ function moveTargets(moves, slots) {
  * @returns {Map<string, object[]>} Socket name to the link objects on it.
  */
 function linksBySocket(graph, node, side) {
-  const names = node[side].map((socket) => socket.name);
-  const links = graph.links instanceof Map
-    ? [...graph.links.values()]
-    : Object.values(graph.links ?? {});
   const held = new Map();
-  for (const link of links) {
-    if (!link) continue;
-    const end = side === "inputs" ? link.target_id : link.origin_id;
-    if (String(end) !== String(node.id)) continue;
-    const name = names[side === "inputs" ? link.target_slot : link.origin_slot];
-    if (name === undefined) continue;
+  const hold = (name, link) => {
+    if (name === undefined || !link) return;
     if (!held.has(name)) held.set(name, []);
     held.get(name).push(link);
+  };
+  // An input's link as the frontend itself resolves it, by slot or by the socket's own id.
+  if (side === "inputs" && typeof node.getInputLink === "function") {
+    node.inputs.forEach((socket, slot) => hold(socket.name, node.getInputLink(slot)));
+    return held;
+  }
+  const names = node[side].map((socket) => socket.name);
+  for (const link of linksEndingAt(graph, node, side)) {
+    hold(names[side === "inputs" ? link.target_slot : link.origin_slot], link);
   }
   return held;
 }
@@ -253,6 +281,45 @@ function capture(node, side, groups) {
 }
 
 /**
+ * Lay one side of a node out as a saved copy of it lists its sockets, moving no link.
+ *
+ * @param {object} node - The node about to be configured.
+ * @param {"inputs"|"outputs"} side - Which list to lay out.
+ * @param {object} plan - The captured declaration for this side.
+ * @param {object[]} saved - The saved sockets, in saved order.
+ * @returns {void}
+ */
+function matchSaved(node, side, plan, saved) {
+  const sockets = node[side];
+  if (!Array.isArray(sockets) || !Array.isArray(saved) || plan.types.size === 0) return;
+  const growable = new Set(plan.groups.flat());
+  const savedNames = saved.map((socket) => socket?.name);
+
+  for (const name of savedNames) {
+    if (!growable.has(name) || sockets.some((socket) => socket.name === name)) continue;
+    const declared = plan.types.get(name);
+    if (!declared) continue;
+    if (side === "inputs") node.addInput(name, declared.type, declared.options);
+    else node.addOutput(name, declared.type, declared.options);
+  }
+
+  // The saved sockets in saved order, then every other declared socket that is always drawn.
+  const placed = new Set();
+  const ordered = [];
+  for (const name of savedNames) {
+    const socket = sockets.find((candidate) => candidate.name === name && !placed.has(candidate));
+    if (!socket) continue;
+    placed.add(socket);
+    ordered.push(socket);
+  }
+  for (const socket of sockets) {
+    if (placed.has(socket) || growable.has(socket.name)) continue;
+    ordered.push(socket);
+  }
+  sockets.splice(0, sockets.length, ...ordered);
+}
+
+/**
  * Draw a node's repeated sockets as they are wired.
  *
  * @param {object} node - The node to grow.
@@ -267,7 +334,8 @@ function capture(node, side, groups) {
  *   kept whatever this answers.
  * @param {() => number[]} [options.select] - Which entries to draw, by index, for a node whose
  *   visible set changes rather than only its length. Takes precedence over exactCount.
- * @returns {() => void} A function that re-fits, for a caller with its own reason to.
+ * @returns {() => void} A function that re-fits, for a caller with its own reason to. While the
+ *   node is being built or configured the fit is queued until that has finished.
  */
 export function growSockets(node, growable, options = {}) {
   // Read per fit rather than once, so a caller whose count comes from a widget can keep the
@@ -287,7 +355,7 @@ export function growSockets(node, growable, options = {}) {
     outputs: capture(node, "outputs", groups),
   };
 
-  const refit = () => {
+  const fit = () => {
     try {
       // One count for both sides, taken from whichever is further along. On a loop's Open node
       // a carried value arrives as an input and is read as an output, so revealing the input
@@ -307,10 +375,7 @@ export function growSockets(node, growable, options = {}) {
       const dedupedOut = dedupe(node, "outputs");
       const changedIn = fitSide(node, "inputs", plans.inputs, wanted, chosen);
       const changedOut = fitSide(node, "outputs", plans.outputs, wanted, chosen);
-      // Ordered every time rather than only after a change made here. Loading a workflow
-      // restores its sockets by name onto a node this has already shrunk, and appends any it
-      // does not find, so a saved socket can arrive after the widget inputs without this code
-      // having touched anything.
+      // Ordered on every fit, whether or not this fit changed anything.
       reorder(node, "inputs", plans.inputs.order);
       reorder(node, "outputs", plans.outputs.order);
       if (!changedIn && !changedOut && !dedupedIn && !dedupedOut) return;
@@ -323,32 +388,62 @@ export function growSockets(node, growable, options = {}) {
     }
   };
 
-  // Every link a workflow restores lands here, so they share one fit.
-  let refitQueued = false;
-  const queueRefit = () => {
-    if (refitQueued) return;
-    refitQueued = true;
+  // Every declared socket stays on the node until it is built and any configure has returned.
+  let settled = false;
+  let configuring = 0;
+  let fitQueued = false;
+  const queueFit = () => {
+    if (fitQueued) return;
+    fitQueued = true;
     queueMicrotask(() => {
-      refitQueued = false;
-      refit();
+      fitQueued = false;
+      if (configuring > 0) return;
+      settled = true;
+      fit();
     });
   };
+  const refit = () => {
+    if (!settled || configuring > 0) queueFit();
+    else fit();
+  };
+
+  // Every link a workflow restores lands here, so they share one fit.
   const originalConnections = node.onConnectionsChange;
   node.onConnectionsChange = function (...args) {
     const result = originalConnections?.apply(this, args);
-    queueRefit();
+    queueFit();
     return result;
   };
 
-  // A workflow restores its links after the node is built, so the fit is run again once they
-  // are in place. Without this a saved workflow opens with every socket drawn.
-  const originalConfigure = node.onConfigure;
+  // A node with no links yet takes the saved socket layout before it is configured. Fits asked
+  // for while it is configured, by this or by another extension's hook, run once that returns.
+  const originalConfigureMethod = node.configure;
+  if (typeof originalConfigureMethod === "function") {
+    node.configure = function (...args) {
+      configuring += 1;
+      try {
+        const info = args[0];
+        const linked = node.graph
+          && (linksEndingAt(node.graph, node, "inputs").length
+            || linksEndingAt(node.graph, node, "outputs").length);
+        if (info && (!settled || !linked)) {
+          matchSaved(node, "inputs", plans.inputs, info.inputs);
+          matchSaved(node, "outputs", plans.outputs, info.outputs);
+        }
+        return originalConfigureMethod.apply(this, args);
+      } finally {
+        configuring -= 1;
+        queueFit();
+      }
+    };
+  }
+  const originalOnConfigure = node.onConfigure;
   node.onConfigure = function (...args) {
-    const result = originalConfigure?.apply(this, args);
-    refit();
+    const result = originalOnConfigure?.apply(this, args);
+    queueFit();
     return result;
   };
 
-  refit();
+  queueFit();
   return refit;
 }

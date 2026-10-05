@@ -1,0 +1,647 @@
+{
+  "id": "9beda21c-5565-48b7-9cc2-dc8d3ec202fb",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 11,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        282.798828125,
+        234.50744298986487
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "vid_00004-audio.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "vid_00004-audio.mp4",
+        "upload": "image"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 2,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        0,
+        420
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "4xNomosWebPhoto_RealPLKSR.safetensors"
+      ],
+      "widgets_values_named": {
+        "model_name": "4xNomosWebPhoto_RealPLKSR.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 3,
+      "type": "WASVideoMotionModelLoader",
+      "pos": [
+        -16.910992565211764,
+        540
+      ],
+      "size": [
+        283.0484375,
+        82
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "motion_model",
+          "type": "WAS_MOTION_MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoMotionModelLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "sea_raft_s_spring.safetensors",
+        4
+      ],
+      "widgets_values_named": {
+        "checkpoint": "sea_raft_s_spring.safetensors",
+        "iterations": 4
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 4,
+      "type": "WASVideoTemporalUpscale",
+      "pos": [
+        380,
+        0
+      ],
+      "size": [
+        860,
+        640
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "VIDEO,IMAGE",
+          "link": 1
+        },
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 2
+        },
+        {
+          "name": "motion_model",
+          "shape": 7,
+          "type": "WAS_MOTION_MODEL",
+          "link": 3
+        },
+        {
+          "name": "ema_vfi_model",
+          "shape": 7,
+          "type": "EMA_VFI_MODEL",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "frames",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoTemporalUpscale",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        },
+        "was_compare_sides": {
+          "a": {
+            "filename": "was.temporal_upscale.before_00001_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          },
+          "b": {
+            "filename": "was.temporal_upscale.after_00001_.mp4",
+            "subfolder": "",
+            "type": "temp"
+          }
+        }
+      },
+      "widgets_values": [
+        4,
+        0.8,
+        0,
+        512,
+        32,
+        16,
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "upscale_factor": 4,
+        "strength": 0.8,
+        "frame_rate": 0,
+        "tile_size": 512,
+        "overlap": 32,
+        "crf": 16,
+        "precision": "auto",
+        "new_frames": "auto"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 5,
+      "type": "SaveVideo",
+      "pos": [
+        2149.3420212384667,
+        -2.310087093123661
+      ],
+      "size": [
+        270,
+        251.24324324324326
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "video/vc_gan_upscale_vtu",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/vc_gan_upscale_vtu",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 6,
+      "type": "WASEMAVFIModelLoader",
+      "pos": [
+        -22.27874276892046,
+        696.3518722894269
+      ],
+      "size": [
+        295.0318359375,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "ema_vfi_model",
+          "type": "EMA_VFI_MODEL",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASEMAVFIModelLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "ours_small_t.safetensors"
+      ],
+      "widgets_values_named": {
+        "checkpoint": "ours_small_t.safetensors"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 8,
+      "type": "Image Resize",
+      "pos": [
+        1540.9710534387582,
+        -3.6172859857635427
+      ],
+      "size": [
+        270,
+        526
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Image Resize",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "rescale",
+        true,
+        "lanczos",
+        0.5,
+        1024,
+        1536,
+        "stretch",
+        "middle center",
+        "#000000",
+        0
+      ],
+      "widgets_values_named": {
+        "mode": "rescale",
+        "supersample": true,
+        "resampling": "lanczos",
+        "rescale_factor": 0.5,
+        "resize_width": 1024,
+        "resize_height": 1536,
+        "resize_mode": "stretch",
+        "align": "middle center",
+        "pad_color": "#000000",
+        "multiple_of": 0
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 9,
+      "type": "GetVideoComponents",
+      "pos": [
+        1290.4447371108,
+        1.0028882004838096
+      ],
+      "size": [
+        193.530859375,
+        106
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            9
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "bit_depth",
+          "type": "COMBO",
+          "links": null
+        },
+        {
+          "name": "color_space",
+          "type": "COMBO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 10,
+      "type": "CreateVideo",
+      "pos": [
+        1838.97228845171,
+        -1.3071988926399065
+      ],
+      "size": [
+        270,
+        150
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 9
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        30,
+        "auto",
+        "sRGB",
+        "none"
+      ],
+      "widgets_values_named": {
+        "fps": 30,
+        "bit_depth": "auto",
+        "color_space": "sRGB",
+        "codec": "none"
+      },
+      "bgcolor": "transparent"
+    },
+    {
+      "id": 11,
+      "type": "MarkdownNote",
+      "pos": [
+        1501.2161654506845,
+        -156.89753233950864
+      ],
+      "size": [
+        331.65791573906654,
+        88
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Downscale by 50%"
+      ],
+      "widgets_values_named": {
+        "text": "# Downscale by 50%"
+      },
+      "color": "#432",
+      "bgcolor": "transparent"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      4,
+      1,
+      "UPSCALE_MODEL"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      2,
+      "WAS_MOTION_MODEL"
+    ],
+    [
+      5,
+      6,
+      0,
+      4,
+      3,
+      "EMA_VFI_MODEL"
+    ],
+    [
+      6,
+      4,
+      0,
+      9,
+      0,
+      "VIDEO"
+    ],
+    [
+      7,
+      9,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      8,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      9,
+      1,
+      10,
+      1,
+      "AUDIO"
+    ],
+    [
+      11,
+      9,
+      2,
+      10,
+      2,
+      "FLOAT"
+    ],
+    [
+      10,
+      10,
+      0,
+      5,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.8869970193740764,
+      "offset": [
+        966.5601188354277,
+        476.93239603505776
+      ]
+    },
+    "frontendVersion": "1.53.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
