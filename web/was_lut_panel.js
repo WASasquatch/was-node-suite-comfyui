@@ -10,7 +10,7 @@ import { readPixels } from "./interface/image_metrics.js";
 import { PREVIEW_STATE, fetchOutputPreview } from "./interface/preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
 import { onRunEnded } from "./interface/run_events.js";
-import { fetchRunResult } from "./interface/run_result.js";
+import { fetchRunResult, whenReadable } from "./interface/run_result.js";
 import { onThemeChange, readTheme } from "./interface/theme.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
@@ -308,6 +308,8 @@ function createLutPanel(node, withChart) {
   } catch (error) {
     console.error(`[${EXT_NAME}] Failed to watch for the end of a run:`, error);
   }
+  // A panel built before its node joined the graph reads the report the server already holds.
+  const stopSettling = whenReadable(node, () => { load(); });
   // The panel is drawn into a canvas, which takes literal colours, so a palette change repaints.
   let releaseTheme = onThemeChange(schedulePaint);
 
@@ -320,6 +322,7 @@ function createLutPanel(node, withChart) {
     load,
     dispose() {
       state.disposed = true;
+      stopSettling();
       try {
         releaseRatio?.();
         releaseRun?.();

@@ -10,7 +10,7 @@ import torch
 
 from . import h3_extend
 
-__all__ = ["LEAD_IN", "LOOKAHEAD", "PIECE_CLIPS", "decode_audio", "decode_scene", "scenes"]
+__all__ = ["LEAD_IN", "LOOKAHEAD", "PIECE_CLIPS", "decode_audio", "decode_scene", "frame_at", "scenes"]
 
 #: Clips decoded together at most, inside one scene.
 PIECE_CLIPS = 12
@@ -85,6 +85,36 @@ def decode_scene(vae, video, start: int, stop: int, emit, clips: int = PIECE_CLI
         handed += int(frames.shape[0])
         piece = end
     return handed
+
+
+def frame_at(vae, latent: dict, frame: int) -> torch.Tensor:
+    """One frame of a joined clip, decoded as its scene's decode draws it.
+
+    Args:
+        vae: The H3 video VAE.
+        latent: An H3 joint latent.
+        frame: A frame of the clip, from 0.
+
+    Returns:
+        ``(1, height, width, 3)``.
+    """
+    video, _ = h3_extend.split(latent)
+    start, stop = scenes(latent)[0]
+    for span in scenes(latent):
+        if span[0] // h3_extend.CLIP_TOKENS * h3_extend.CLIP_FRAMES <= int(frame):
+            start, stop = span
+    local = max(0, int(frame) - start // h3_extend.CLIP_TOKENS * h3_extend.CLIP_FRAMES)
+    clip = min(local // h3_extend.CLIP_FRAMES, max(0, (stop - start - 1) // h3_extend.CLIP_TOKENS))
+    piece = start + clip * h3_extend.CLIP_TOKENS
+    end = min(piece + h3_extend.CLIP_TOKENS, stop)
+    if stop - end < h3_extend.CLIP_TOKENS:
+        end = stop
+    lead = LEAD_IN if piece > start else 0
+    ahead = LOOKAHEAD if end < stop else 0
+    frames = _frames(vae, video[:, :, piece - lead:end + ahead])
+    index = (h3_extend.CLIP_FRAMES if lead else 0) + local - clip * h3_extend.CLIP_FRAMES
+    index = max(0, min(index, int(frames.shape[0]) - 1))
+    return frames[index:index + 1]
 
 
 def decode_audio(audio_vae, audio) -> dict:

@@ -117,7 +117,8 @@ def _frames(rows: int) -> int:
     return sum(h3_tiles.ROW_FRAMES[k % h3_tiles.CHUNK_ROWS] for k in range(int(rows)))
 
 
-def _publish(plan, rows: int, height: int, width: int, start, anchored: bool) -> None:
+def _publish(plan, rows: int, height: int, width: int, start, anchored: bool,
+             starts=None) -> None:
     """Publish the tile plan and its figures, for the node's own panel.
 
     Args:
@@ -127,24 +128,31 @@ def _publish(plan, rows: int, height: int, width: int, start, anchored: bool) ->
         width: Latent width, even.
         start: Sigma the run started from, or None.
         anchored: Whether every chunk's first frame guided the run.
+        starts: Latent rows each scene of the clip opens on, or None for one scene.
     """
     try:
-        published.publish_output(h3_tiles.plot(plan, rows, height, width, start=start))
+        published.publish_output(h3_tiles.plot(plan, rows, height, width, start=start, starts=starts))
         if not run_result.watching():
             return
         across = len(plan.heights) * len(plan.widths)
         window = max(b - a for a, b in plan.rows)
-        shared = min((plan.rows[i][1] - plan.rows[i + 1][0] for i in range(len(plan.rows) - 1)),
+        shared = max((plan.rows[i][1] - plan.rows[i + 1][0] for i in range(len(plan.rows) - 1)),
                      default=0)
         counts = {"windows": len(plan.rows), "tiles across": across, "frames a window": _frames(window)}
         if shared:
             counts["frames shared"] = _frames(shared)
+        cuts = len(h3_tiles.scene_spans(starts, rows)) - 1
+        if cuts:
+            counts["cuts"] = cuts
         if start is not None:
             counts["start sigma"] = round(float(start), 3)
         crowded = (across > 1 and not anchored and start is not None
                    and float(start) > h3_tiles.TILED_SIGMA)
         summary = (f"{len(plan.rows)} window(s), the frame whole" if across == 1
                    else f"{len(plan.rows)} window(s) x {across} tiles across the frame")
+        note = h3_tiles.cut_report(starts, rows, len(plan.rows))
+        if note:
+            summary += f"; {note}"
         if crowded:
             summary += f"; above sigma {h3_tiles.TILED_SIGMA} a subject can repeat across tiles"
         run_result.publish(
@@ -223,8 +231,10 @@ class H3TiledSamplerWIP(io.ComfyNode):
                 "Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across "
                 "the frame and overlapping windows along the clip, blended at every step so the "
                 "tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each "
-                "fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. The "
-                "panel shows where the tiles sit and the sigma the run started from."
+                "fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip "
+                "joined by H3 Extend Append keeps its cuts: where it takes several time windows, "
+                "each stays inside one scene. The panel shows where the tiles sit, marks each "
+                "cut and gives the sigma the run started from."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),
@@ -268,7 +278,7 @@ class H3TiledSamplerWIP(io.ComfyNode):
                     tooltip="`auto` keeps the whole clip in one time window and splits the frame into "
                             "the fewest tiles under the token budget, adding time windows only where no "
                             "tiling of one window fits or the clip runs past 362 frames; `manual` sets tile "
-                            "and window sizes.",
+                            "and window sizes. Added windows never cross a cut the latent records.",
                 ),
                 io.Latent.Input(
                     "audio", optional=True,
@@ -327,12 +337,14 @@ class H3TiledSamplerWIP(io.ComfyNode):
         rows, height, width = shape
         even_h, even_w = height + height % 2, width + width % 2
         settings = h3_tiles.tiling_settings(tiling)
+        starts = h3_extend.scene_starts(latent_image)
         text = max((int(cond[0].shape[1]) for cond in (positive or []) + (negative or [])
                     if hasattr(cond[0], "shape") and cond[0].ndim >= 2), default=0)
         if settings[0] == "manual":
             planned = h3_tiles.manual_tiling(rows, even_h, even_w, *settings[1:])
         else:
             planned = h3_tiles.auto_tiling(rows, even_h, even_w, text, max_tokens=settings[1])
+        planned = h3_tiles.scene_tiling(planned, settings, starts, rows)
         split = len(planned.heights) * len(planned.widths) > 1
         anchored = anchor == "on" or (anchor == "auto" and split)
         if anchored:
@@ -341,7 +353,7 @@ class H3TiledSamplerWIP(io.ComfyNode):
         video_only = getattr(latent["samples"], "tensors", None) is None
         if video_only:
             latent = _with_audio(latent, audio)
-        tiled = h3_tiles.tiled_model(model, settings)
+        tiled = h3_tiles.tiled_model(model, settings, starts)
         samples = comfy.sample.fix_empty_latent_channels(
             tiled, latent["samples"],
             latent.get("downscale_ratio_spacial", None),
@@ -363,5 +375,5 @@ class H3TiledSamplerWIP(io.ComfyNode):
             out.pop("noise_mask", None)
             out["samples"] = h3_extend.split(out)[0]
         plan, start = h3_tiles.last_run(tiled)
-        _publish(plan or planned, rows, even_h, even_w, start, anchored)
+        _publish(plan or planned, rows, even_h, even_w, start, anchored, starts)
         return io.NodeOutput(out)

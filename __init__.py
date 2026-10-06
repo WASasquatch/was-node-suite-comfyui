@@ -180,6 +180,18 @@ def register_interface_routes() -> None:
     else:
         register_files()
     try:
+        from .modules.interface.file_thumbnail import register_routes as register_thumbnails
+    except Exception as error:
+        logger.debug("the interface file picture channel is unavailable (%s)", error)
+    else:
+        register_thumbnails()
+    try:
+        from .modules.interface.segment_preview import register_routes as register_segment_previews
+    except Exception as error:
+        logger.debug("the interface segment preview channel is unavailable (%s)", error)
+    else:
+        register_segment_previews()
+    try:
         from .modules.interface.pantry import register_routes as register_pantry
     except Exception as error:
         logger.debug("the interface terminology pantry channel is unavailable (%s)", error)

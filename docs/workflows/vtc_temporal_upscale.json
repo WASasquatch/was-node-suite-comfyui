@@ -43,8 +43,7 @@
       "widgets_values_named": {
         "file": "vid_00004-audio.mp4",
         "upload": "image"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 2,
@@ -83,8 +82,7 @@
       ],
       "widgets_values_named": {
         "model_name": "4xNomosWebPhoto_RealPLKSR.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 3,
@@ -125,8 +123,7 @@
       "widgets_values_named": {
         "checkpoint": "sea_raft_s_spring.safetensors",
         "iterations": 4
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 4,
@@ -219,8 +216,7 @@
         "crf": 16,
         "precision": "auto",
         "new_frames": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 5,
@@ -269,8 +265,7 @@
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 6,
@@ -309,8 +304,7 @@
       ],
       "widgets_values_named": {
         "checkpoint": "ours_small_t.safetensors"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 8,
@@ -383,8 +377,7 @@
         "align": "middle center",
         "pad_color": "#000000",
         "multiple_of": 0
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 9,
@@ -447,8 +440,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 10,
@@ -513,8 +505,7 @@
         "bit_depth": "auto",
         "color_space": "sRGB",
         "codec": "none"
-      },
-      "bgcolor": "transparent"
+      }
     },
     {
       "id": 11,
@@ -539,8 +530,7 @@
       "widgets_values_named": {
         "text": "# Downscale by 50%"
       },
-      "color": "#432",
-      "bgcolor": "transparent"
+      "color": "#432"
     }
   ],
   "links": [

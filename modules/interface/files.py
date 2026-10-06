@@ -1,7 +1,7 @@
 """ComfyUI's input, output and temp folders as JSON a node interface draws.
 
-``GET /was/interface/api/file_listing`` answers up to :data:`MAX_ENTRIES` entries, each
-carrying a menu label, a path below its own root and a tag, never an absolute path.
+``GET /was/interface/api/file_listing`` answers labelled entries, never an absolute path.
+``ext`` keeps given suffixes and ``limit`` raises the count to :data:`MOST_ENTRIES`.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from .. import log
 from ..util import file_listing
 from .channel import NO_STORE
 
-__all__ = ["MAX_ENTRIES", "ROUTE", "listing_payload", "register_routes"]
+__all__ = ["MAX_ENTRIES", "MOST_ENTRIES", "ROUTE", "listing_payload", "register_routes", "suffixes"]
 
 logger = log.get_logger("interface.files")
 
@@ -21,13 +21,41 @@ ROUTE = "/was/interface/api/file_listing"
 #: not, and narrow enough that the answer stays a few hundred kilobytes.
 MAX_ENTRIES = 1000
 
+#: Entries a request may ask for with ``limit``.
+MOST_ENTRIES = 5000
+
+#: Suffixes one request may filter on.
+MAX_SUFFIXES = 64
+
 _registered = False
 
 
-def listing_payload() -> dict:
+def suffixes(text: str) -> tuple[str, ...] | None:
+    """The suffixes an ``ext`` query names.
+
+    Args:
+        text: Comma separated suffixes, as ``.png,.jpg``, each with or without its dot.
+
+    Returns:
+        The lowercased suffixes with their dots, or ``None`` where none was named.
+    """
+    found = []
+    for piece in str(text or "").split(","):
+        piece = piece.strip().lower()
+        if not piece:
+            continue
+        found.append(piece if piece.startswith(".") else "." + piece)
+    return tuple(found[:MAX_SUFFIXES]) or None
+
+
+def listing_payload(extensions=None, limit: int = MAX_ENTRIES) -> dict:
     """The whole listing, as the object the route answers with.
 
     Never raises. The walk is memoized, so a burst of requests costs one directory walk.
+
+    Args:
+        extensions: Suffixes to keep, or ``None`` for every file.
+        limit: Entries the answer holds, held to :data:`MOST_ENTRIES`.
 
     Returns:
         ``{"roots", "entries", "truncated"}``. ``roots`` names each folder that could be
@@ -35,9 +63,10 @@ def listing_payload() -> dict:
         ``relative``, ``tag``, ``size`` and ``mtime`` per file, in the order a menu offers
         them, and ``truncated`` says whether the walk found more than this answer holds.
     """
+    limit = max(1, min(MOST_ENTRIES, int(limit or MAX_ENTRIES)))
     try:
-        entries = file_listing.view(tags=file_listing.ROOTS, limit=MAX_ENTRIES)
-        walked = len(file_listing.scan())
+        entries = file_listing.view(extensions, tags=file_listing.ROOTS, limit=limit)
+        walked = len(file_listing.view(extensions, tags=file_listing.ROOTS, limit=MOST_ENTRIES))
         reachable = [tag for tag, _ in file_listing.roots(file_listing.ROOTS)]
     except Exception as error:
         # A listing nobody can build is an empty panel, never a failed request: the widget
@@ -82,8 +111,13 @@ def register_routes() -> bool:
 
         @PromptServer.instance.routes.get(ROUTE)
         async def get_file_listing(request):
-            del request
-            return web.json_response(listing_payload(), headers=NO_STORE)
+            try:
+                limit = int(request.query.get("limit", MAX_ENTRIES))
+            except (TypeError, ValueError):
+                limit = MAX_ENTRIES
+            return web.json_response(
+                listing_payload(suffixes(request.query.get("ext", "")), limit), headers=NO_STORE
+            )
 
     except Exception as error:
         logger.warning(

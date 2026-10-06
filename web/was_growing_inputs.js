@@ -8,6 +8,7 @@
 import { app } from "../../scripts/app.js";
 import { growWidgets } from "./interface/grow.js";
 import { addSectionHeader } from "./interface/decoration.js";
+import { sceneTint } from "./interface/h3_timeline.js";
 import { addRowHeaders, rowColourMenu } from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.GrowingInputs";
@@ -64,11 +65,30 @@ function h3SegmentTitle(node, row) {
   }
   const wrap = widgetValue(node, `header_footer_${row}`);
   if (wrap && wrap !== "both") parts.push(String(wrap));
+  const model = widgetValue(node, `model_${row}`);
+  if (model && model !== "auto") parts.push(String(model));
+  const hold = Number(widgetValue(node, `strength_${row}`));
+  if (Number.isFinite(hold) && hold < 1) parts.push(`hold ${hold.toFixed(2)}`);
+  const sound = widgetValue(node, `sound_${row}`);
+  if (row > 1 && sound && sound !== "auto") parts.push(`sound ${sound}`);
   return parts.join(" · ");
 }
 
-// A prompt, a frame count, an overlap, a continuity, a source and the shared text it takes to a
-// row on MiniMax H3 Conditioning.
+/**
+ * Colour of one segment's header on MiniMax H3 Conditioning where none is chosen for it.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} row - Segment number, from 1.
+ * @returns {object} The transition's `{fill, stripe, text}`.
+ */
+function h3SegmentTint(node, row) {
+  const overlap = Number(widgetValue(node, `overlap_${row}`));
+  return sceneTint(row - 1, widgetValue(node, `continuity_${row}`), Number.isFinite(overlap) ? overlap : 0,
+    String(widgetValue(node, `sound_${row}`) ?? "auto"));
+}
+
+// A prompt, a frame count, an overlap, a continuity, a source, the shared text it takes and the
+// model it samples with, to a row on MiniMax H3 Conditioning.
 // `decidesAt` names the prompt as the widget that says whether a row is in use.
 const H3_PROMPT_ROWS = {
   groups: Array.from({ length: 24 }, (unused, index) => [
@@ -78,6 +98,10 @@ const H3_PROMPT_ROWS = {
     `continuity_${index + 1}`,
     `source_${index + 1}`,
     `header_footer_${index + 1}`,
+    `model_${index + 1}`,
+    `strength_${index + 1}`,
+    `sound_${index + 1}`,
+    `seed_${index + 1}`,
   ]),
   minVisible: 2,
   decidesAt: 0,
@@ -85,6 +109,7 @@ const H3_PROMPT_ROWS = {
   rowHeaders: {
     name: (row) => `was_segment_header_${row}`,
     title: h3SegmentTitle,
+    tint: h3SegmentTint,
     noun: "Segment",
   },
 };

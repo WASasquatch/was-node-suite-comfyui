@@ -40,6 +40,8 @@ __all__ = [
     "probe",
     "read",
     "to_video",
+    "audio_length",
+    "audio_span",
 ]
 
 logger = log.get_logger("media.reader")
@@ -645,6 +647,35 @@ def _kept(batch: torch.Tensor, chosen: list[int], decoded: set[int]) -> torch.Te
         return scratch.join(filled, advice=SMALLER)
     except MemoryError as short:
         raise ValueError(str(short)) from short
+
+
+def audio_length(path: str) -> float:
+    """How long the sound in a file runs for, from its header.
+
+    Args:
+        path: The file to open, a video or a sound file.
+
+    Returns:
+        The length in seconds, ``0.0`` where the file carries no audio stream or states no
+        length.
+
+    Raises:
+        DependencyError: PyAV is not installed.
+    """
+    av = deps.require("av")
+
+    with av.open(str(path), mode="r") as container:
+        stream = next(
+            (entry for entry in container.streams.audio if entry.codec_context is not None),
+            None,
+        )
+        if stream is None:
+            return 0.0
+        if stream.duration is not None and stream.time_base is not None:
+            return max(0.0, float(stream.duration * stream.time_base))
+        if container.duration is not None:
+            return max(0.0, float(container.duration) / 1_000_000.0)
+    return 0.0
 
 
 def audio_span(path: str, begin: float, seconds: float) -> dict | None:

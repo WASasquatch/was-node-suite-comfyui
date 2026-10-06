@@ -16,6 +16,8 @@ __all__ = [
     "TOKEN_LEAD",
     "FPS",
     "append",
+    "AUDIO_REFERENCE",
+    "BRIDGING",
     "CONTINUITY",
     "audio_carry",
     "audio_lands_whole",
@@ -35,6 +37,13 @@ __all__ = [
     "reference_canvas",
     "SEGMENT_GAIN",
     "video_reference",
+    "WINDOW_KEY",
+    "window_place",
+    "SOUNDS",
+    "segment_rows",
+    "CUT_PICTURES",
+    "resolved",
+    "geometry_of",
     "snap_clip",
     "snap_extension",
     "snap_overlap",
@@ -110,14 +119,24 @@ REFERENCE_SAMPLE = "reference (sample)"
 #: A cut to new picture with the soundtrack carried across it.
 AUDIO_CARRY = "carry (audio only)"
 
+#: A cut to new picture referencing the clip's last frames, with the soundtrack carried across.
+AUDIO_REFERENCE = "carry (audio) + reference (video)"
+
 #: How a segment continues from the one before it.
-CONTINUITY = ("carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut", AUDIO_CARRY)
+CONTINUITY = ("carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut", AUDIO_CARRY,
+              AUDIO_REFERENCE)
+
+#: Continuities that carry the soundtrack across a cut to new picture.
+BRIDGING = (AUDIO_CARRY, AUDIO_REFERENCE)
 
 #: Continuity names a saved workflow may still hold, and what each is now.
 CONTINUITY_RENAMED = {"reference": REFERENCE_VIDEO}
 
 #: Latent key holding the clip's frame count at the end of each segment.
 SEGMENT_ENDS_KEY = "h3_segment_frames"
+
+#: Latent key holding the clip's audio length in steps at the end of each segment.
+SEGMENT_AUDIO_KEY = "h3_segment_audio"
 
 #: Window key marking a pass carried from an earlier segment than the last, holding the
 #: window rows to skip at the join.
@@ -131,6 +150,16 @@ SCENES_KEY = "h3_scene_starts"
 
 #: Window key marking a pass that carries sound but no picture, holding the bridge in frames.
 BRIDGE_KEY = "h3_sound_bridge"
+
+#: How a row's sound follows the scene before: as its transition does, carried, or fresh.
+SOUNDS: tuple[str, ...] = ("auto", "carry", "fresh")
+
+#: Picture transitions that cut to a new scene, which a carried sound bridges.
+CUT_PICTURES: tuple[str, ...] = ("cut", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE)
+
+#: Window key placing a pass on the finished clip, as ``{"start": frame, "head": frames,
+#: "audio": step}``, ``audio`` the clip's audio step the window's first audio step sits on.
+WINDOW_KEY = "h3_window_place"
 
 #: Stills `reference (sample)` takes from the clip by default.
 REFERENCE_SAMPLES = 4
@@ -613,8 +642,13 @@ def until_segment(latent: dict, index: int) -> dict:
         return with_ends(restored, ends[:int(index)] + [frames_for(rows + tail[0].shape[2])])
     tokens = clip_end(tokens_for(end))
     frames = frames_for(tokens)
-    cut = join(video[:, :, :tokens], audio[..., :audio_span(frames)])
-    return with_ends(cut, ends[:int(index)] + [frames])
+    heard = [int(step) for step in (latent.get(SEGMENT_AUDIO_KEY) or [])]
+    steps = heard[int(index)] if int(index) < len(heard) else audio_span(frames)
+    cut = join(video[:, :, :tokens], audio[..., :steps])
+    out = with_ends(cut, ends[:int(index)] + [frames])
+    if heard:
+        out[SEGMENT_AUDIO_KEY] = heard[:int(index)] + [int(steps)]
+    return out
 
 
 def seen_rows(frames: int) -> int:
@@ -709,6 +743,93 @@ def rejoin(done: dict, sampled: dict, overlap: int) -> tuple[dict, int, int]:
                    new_audio[..., min(new_audio.shape[-1], audio_span(dropped)):]], dim=-1),
     )
     return joined, kept, dropped
+
+
+def resolved(continuity: str, sound: str = "auto") -> tuple[str, bool, bool]:
+    """What a transition draws once its sound choice is applied.
+
+    Args:
+        continuity: The row's continuity.
+        sound: An entry of :data:`SOUNDS`.
+
+    Returns:
+        ``(picture, bridged, fresh)``: the picture transition, whether the scene before's sound
+        carries across a cut, and whether a carried shot's sound starts fresh.
+    """
+    named = CONTINUITY_RENAMED.get(continuity, continuity)
+    picture = {AUDIO_CARRY: "cut", AUDIO_REFERENCE: REFERENCE_VIDEO}.get(named, named)
+    bridged = named in BRIDGING
+    if sound == "fresh":
+        return picture, False, picture in ("carry", "refresh")
+    if sound == "carry" and picture in CUT_PICTURES:
+        bridged = True
+    return picture, bridged, False
+
+
+def geometry_of(continuity: str, sound: str = "auto") -> str:
+    """The continuity a row's window is sized as once its sound choice is applied.
+
+    Args:
+        continuity: The row's continuity.
+        sound: An entry of :data:`SOUNDS`.
+
+    Returns:
+        :data:`AUDIO_CARRY` for a bridged cut, else the picture transition.
+    """
+    picture, bridged, _ = resolved(continuity, sound)
+    return AUDIO_CARRY if bridged else picture
+
+
+def segment_rows(latent: dict, index: int) -> tuple[int, int | None]:
+    """The latent rows one segment of a joined clip covers.
+
+    Args:
+        latent: A joined clip carrying :data:`SEGMENT_ENDS_KEY`.
+        index: The segment, from 0.
+
+    Returns:
+        ``(first, end)``, or ``(0, None)`` for the whole clip where the segment is not recorded.
+    """
+    ends = segment_ends(latent) or []
+    if not 0 <= int(index) < len(ends):
+        return 0, None
+    start = ends[int(index) - 1] if int(index) > 0 else 0
+    return (tokens_for(start) if start > 0 else 0), tokens_for(ends[int(index)])
+
+
+def window_place(clip_rows: int, window: dict, overlap: int, opening: bool,
+                 clip_audio: int | None = None) -> dict:
+    """Where a pass's window lands on the finished clip.
+
+    Args:
+        clip_rows: Rows of the whole clip the pass continues.
+        window: The window the pass samples.
+        overlap: Frames the pass carries, 0 for a cut.
+        opening: True for the pass that opens the clip.
+        clip_audio: Audio steps the whole clip holds, or ``None``.
+
+    Returns:
+        ``{"start": frame, "head": frames, "audio": step}``: the finished clip's frame the
+        window's first kept frame lands on, the window frames ahead of that one, and the clip's
+        audio step the window's first audio step sits on.
+    """
+    if opening:
+        return {"start": 0, "head": 0, "audio": 0}
+    _, kept = cut_point(clip_rows)
+    held = clip_audio if clip_audio is not None else audio_span(frames_for(clip_rows))
+    if BRIDGE_KEY in window:
+        start, head, base = kept, int(window[BRIDGE_KEY]), min(held, audio_span(kept))
+    elif REJOIN_KEY in window:
+        rows = split(window)[0].shape[2]
+        start = kept
+        head = rejoin_start(window, overlap, rows) // CLIP_TOKENS * CLIP_FRAMES
+        base = min(held, audio_span(kept))
+    elif int(overlap) > 0:
+        start, head, base = frames_for(clip_rows), snap_overlap(overlap), held
+    else:
+        start, head, base = kept, 0, min(held, audio_span(kept))
+    window_audio = split(window)[1].shape[-1]
+    return {"start": start, "head": head, "audio": max(0, base - min(audio_span(head), window_audio))}
 
 
 def rejoin_start(window: dict, overlap: int, rows: int) -> int:

@@ -12,7 +12,7 @@ import { PREVIEW_STATE, fetchInputPreview } from "./preview.js";
 import { statusColour } from "./report_panel.js";
 import { withGraphChange } from "./region.js";
 import { onNodeFinished, onRunEnded } from "./run_events.js";
-import { RUN_LABELS, fetchRunResult } from "./run_result.js";
+import { RUN_LABELS, fetchRunResult, whenReadable } from "./run_result.js";
 import { themeVar } from "./theme.js";
 import { chainWidgetCallback } from "./widget.js";
 
@@ -631,6 +631,8 @@ export function createLayerArrangePanel(node, options = {}) {
 
   const stopFinished = onNodeFinished(node, () => refresh());
   const stopEnded = onRunEnded(() => refresh());
+  // A panel built before its node joined the graph reads the report the server already holds.
+  const stopSettling = whenReadable(node, () => refresh());
 
   paint();
   refresh();
@@ -649,6 +651,7 @@ export function createLayerArrangePanel(node, options = {}) {
       generation += 1;
       if (typeof stopFinished === "function") stopFinished();
       if (typeof stopEnded === "function") stopEnded();
+      stopSettling();
       thumbs.clear();
     },
   };

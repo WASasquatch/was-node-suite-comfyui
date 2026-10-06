@@ -10,6 +10,25 @@ import { migrateWidgetValues } from "./interface/widget_migration.js";
 
 const EXT_NAME = "WASNodeSuite.WidgetMigration";
 
+// MiniMax H3 Conditioning's row widgets, in the order each row took them.
+const H3_ROW_FIELDS = ["prompt", "duration", "overlap", "continuity", "source", "header_footer", "model"];
+
+/**
+ * One earlier MiniMax H3 Conditioning widget order.
+ *
+ * @param {number} fields - How many of each row's widgets the layout held.
+ * @param {boolean} refSize - Whether the layout ends on `ref_image_size`.
+ * @returns {string[]} The widget names, in saved order.
+ */
+function h3Layout(fields, refSize) {
+  return [
+    "mode", "aspect_ratio", "megapixels", "width", "height", "prompt_header", "prompt_footer",
+    ...Array.from({ length: 24 }, (unused, index) =>
+      H3_ROW_FIELDS.slice(0, fields).map((field) => `${field}_${index + 1}`)).flat(),
+    ...(refSize ? ["ref_image_size"] : []),
+  ];
+}
+
 // Node id -> the widgets an earlier save's `widgets_values` holds, in the order it holds them. Read
 // left to right against the node's current widgets: anything the node has that is not named here
 // is new, and takes its default rather than a value that was meant for the widget before it.
@@ -62,41 +81,15 @@ const V2_WIDGET_ORDER = {
   WASCNSModelPatch: ["mode", "strength", "bands", "slope", "start", "end"],
   "Text to Console": ["label"],
   // MiniMax H3 Conditioning gained a continuity menu on each row, after that row's overlap,
-  // then a source, then a header and footer menu. One earlier order per layout a save may hold.
-  "WASMiniMaxH3Conditioning": [
-    [
-      "mode", "aspect_ratio", "megapixels", "width", "height",
-      "prompt_header", "prompt_footer",
-      ...Array.from({ length: 24 }, (unused, index) => [
-        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
-      ]).flat(),
-    ],
-    [
-      "mode", "aspect_ratio", "megapixels", "width", "height",
-      "prompt_header", "prompt_footer",
-      ...Array.from({ length: 24 }, (unused, index) => [
-        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
-        `continuity_${index + 1}`,
-      ]).flat(),
-    ],
-    [
-      "mode", "aspect_ratio", "megapixels", "width", "height",
-      "prompt_header", "prompt_footer",
-      ...Array.from({ length: 24 }, (unused, index) => [
-        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
-        `continuity_${index + 1}`,
-      ]).flat(),
-      "ref_image_size",
-    ],
-    [
-      "mode", "aspect_ratio", "megapixels", "width", "height",
-      "prompt_header", "prompt_footer",
-      ...Array.from({ length: 24 }, (unused, index) => [
-        `prompt_${index + 1}`, `duration_${index + 1}`, `overlap_${index + 1}`,
-        `continuity_${index + 1}`, `source_${index + 1}`,
-      ]).flat(),
-      "ref_image_size",
-    ],
+  // then a source, a header and footer menu, a model menu, and then a hold, a sound and a seed.
+  // One earlier order per layout a save may hold.
+  WASMiniMaxH3Conditioning: [
+    h3Layout(3, false),
+    h3Layout(4, false),
+    h3Layout(4, true),
+    h3Layout(5, true),
+    h3Layout(6, true),
+    h3Layout(7, true),
   ],
 };
 
@@ -149,7 +142,7 @@ const RENAMED_OPTIONS = {
   WASH3ExtendWindow: [["continuity"], H3_CONTINUITY_RENAMED],
   WASMiniMaxH3Conditioning: [
     Array.from({ length: 24 }, (unused, index) => `continuity_${index + 1}`),
-    H3_CONTINUITY_RENAMED,
+    { ...H3_CONTINUITY_RENAMED, "as set": "carry" },
   ],
   WASRembgModelLoader: [
     ["model"],

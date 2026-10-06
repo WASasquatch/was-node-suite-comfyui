@@ -91,9 +91,12 @@ class H3DeRopeStretch(io.ComfyNode):
                 "sampler. The clip comes in as frames, as a latent, or both; for a clip "
                 "generated from text, wire the finished output of its sampler. Sample it at "
                 "the `denoise` output's strength, decode it, and H3 De-RoPE Recover puts "
-                "the frames back on the clip's timing. The GPU's models are released before "
-                "and after its VAE work, so the samplers either side of it get the whole card. "
-                "The strip shows the motion of each latent row and what was held."
+                "the frames back on the clip's timing. A clip joined from several scenes keeps "
+                "its cuts when its latent is wired: each scene is measured and held on its own, "
+                "and the stretched latent records where each one opens. The GPU's models are "
+                "released before and after its VAE work, so the samplers either side of it get "
+                "the whole card. The strip shows the motion of each latent row, what was held "
+                "and where the scenes cut."
             ),
             inputs=[
                 io.Image.Input(
@@ -135,10 +138,10 @@ class H3DeRopeStretch(io.ComfyNode):
                 ),
                 io.Latent.Input(
                     "latent", optional=True,
-                    tooltip="The clip's finished H3 latent, such as a sampler's output. Motion "
-                            "and audio are read from it instead of encoding the frames. An "
-                            "early, unfinished estimate carries no motion to keep, and comes "
-                            "back fast-forwarded.",
+                    tooltip="The clip's finished H3 latent, such as a sampler's output. Motion, "
+                            "audio and scene cuts are read from it instead of encoding the "
+                            "frames, and no hold crosses a cut. An early, unfinished estimate "
+                            "carries no motion to keep, and comes back fast-forwarded.",
                 ),
                 io.Model.Input(
                     "model", optional=True,
@@ -155,7 +158,8 @@ class H3DeRopeStretch(io.ComfyNode):
             outputs=[
                 io.Latent.Output(
                     display_name="latent",
-                    tooltip="The stretched clip and its audio, for the sampler's latent_image.",
+                    tooltip="The stretched clip and its audio, for the sampler's latent_image. A "
+                            "clip with cuts carries where each scene opens, for H3 Decode Video.",
                 ),
                 H3_DEROPE.Output(
                     display_name="derope",
@@ -167,7 +171,8 @@ class H3DeRopeStretch(io.ComfyNode):
                 ),
                 io.String.Output(
                     display_name="report",
-                    tooltip="Frames in and out, frames held and the peak hold.",
+                    tooltip="Frames in and out, frames held, the peak hold and the cuts kept "
+                            "out of the motion measure.",
                 ),
                 io.Model.Output(
                     display_name="model",
@@ -218,6 +223,7 @@ class H3DeRopeStretch(io.ComfyNode):
 
         release_models()
         given = h3_derope.video_of(latent) if latent is not None else None
+        starts = h3_extend.scene_starts(latent) if latent is not None else None
         heard_from = "wired"
         if audio is None and latent is not None and audio_vae is not None:
             audio = h3_derope.latent_audio(audio_vae, latent)
@@ -227,9 +233,9 @@ class H3DeRopeStretch(io.ComfyNode):
         # Weighted by frames passed through the VAE: decode, measure, then about three
         # times as many stretched.
         bar = progress_bar(count * 5 + AUDIO_STEPS)
-        if images is None:
-            images = vae.decode(given)
-            images = images.reshape(-1, *images.shape[-3:])
+        decoded = images is None
+        if decoded:
+            images = h3_derope.decode_scenes(vae, given, starts)
             lap("decode")
         bar.update(count)
 
@@ -237,11 +243,15 @@ class H3DeRopeStretch(io.ComfyNode):
         images, audio = h3_derope.fit(images, audio, fps)
         reused = given is not None and given.shape[2] == h3_extend.tokens_for(images.shape[0])
         source_latent = given if reused else vae.encode(images[..., :3])
-        profile = h3_derope.motion(source_latent)
+        # Scene starts are read only where the frames follow the latent's timeline.
+        scenes = starts if decoded or reused else None
+        cuts = [start for start, _ in h3_derope.scene_spans(scenes, source_latent.shape[2])[1:]]
+        profile = h3_derope.motion(source_latent, scenes)
         bar.update(count)
         lap("measure")
-        holds, row_holds = h3_derope.plan(profile, images.shape[0], quantile, peak, bridge, ramp)
-        holds = h3_derope.aligned(holds)
+        holds, row_holds = h3_derope.plan(profile, images.shape[0], quantile, peak, bridge, ramp,
+                                          scenes)
+        holds = h3_derope.aligned(holds, scenes)
         video, encoded, chunks = h3_derope.encode_stretched(vae, images, holds, source_latent)
         bar.update(count * 3)
         lap("encode")
@@ -263,18 +273,26 @@ class H3DeRopeStretch(io.ComfyNode):
         release_models()
         lap("audio")
         latent = h3_extend.join(video, sound)
+        if cuts:
+            latent = h3_extend.with_scenes(latent, h3_derope.stretched_starts(holds, scenes))
         if mask is not None:
             latent["noise_mask"] = mask
 
         result = h3_derope.Plan(
             holds=tuple(holds), fps=float(fps), audio=heard_audio,
             rows=tuple(float(value) for value in profile), row_holds=tuple(row_holds),
-            source=source,
+            source=source, cuts=tuple(cuts),
         )
         held = sum(1 for hold in holds[:source] if hold > 1)
+        unread = len(h3_derope.scene_spans(starts, given.shape[2])) - 1 if given is not None else 0
         report = (
             f"{source} frames -> {result.stretched} ({result.stretched / source:.2f}x); "
             f"{held} held, peak x{max(holds)}; {chosen}; {encoded} of {chunks} chunks encoded"
+            + (f"; {len(cuts)} {'cut' if len(cuts) == 1 else 'cuts'} kept out of the motion "
+               f"measure, each scene {'decoded, ' if decoded else ''}held and encoded on its own"
+               if cuts else "")
+            + (f"; the latent's {unread} {'cut' if unread == 1 else 'cuts'} went unread, as the "
+               f"frames wired are not its length" if unread and not cuts else "")
             + (f"; audio {heard_from}, re-rendered at {audio_strength:g}" if audio is not None
                else "; no audio, so the pass invents its own at natural pace and held spans "
                     "can come back rushed")

@@ -11,6 +11,46 @@ import { LABELS, PREVIEW_STATE, connected, executionId, placed } from "./preview
 
 const LOG_PREFIX = "[WASNodeSuite.RunResult]";
 
+// How often, and how many times, a panel built before its node could be read looks again.
+const SETTLE_MS = 500;
+const SETTLE_TRIES = 40;
+
+/**
+ * Call back once a node has its place in the graph and the socket is open.
+ *
+ * @param {object} node - The node a panel is drawn on.
+ * @param {() => void} callback - Called once, when both hold.
+ * @returns {() => void} Cancels the wait.
+ */
+export function whenReadable(node, callback) {
+  let timer = 0;
+  let tries = 0;
+  let waiting = true;
+  const look = () => {
+    timer = 0;
+    if (!waiting) return;
+    if (placed(executionId(node)) && connected()) {
+      waiting = false;
+      try {
+        callback();
+      } catch (error) {
+        console.error(`${LOG_PREFIX} A panel failed to read its node:`, error);
+      }
+      return;
+    }
+    if (tries < SETTLE_TRIES) {
+      tries += 1;
+      timer = setTimeout(look, SETTLE_MS);
+    }
+  };
+  timer = setTimeout(look, SETTLE_MS);
+  return () => {
+    waiting = false;
+    if (timer) clearTimeout(timer);
+    timer = 0;
+  };
+}
+
 const ROUTE = "/was/interface/api/run_result";
 
 const PAGE_ROUTE = "/was/interface/api/run_result_page";

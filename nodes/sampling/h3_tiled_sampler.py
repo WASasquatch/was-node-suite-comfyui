@@ -96,8 +96,10 @@ class H3TiledSampler(io.ComfyNode):
                 "Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across "
                 "the frame and overlapping windows along the clip, blended at every step so the "
                 "tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each "
-                "fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. The "
-                "panel shows where the tiles sit."
+                "fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip "
+                "joined by H3 Extend Append keeps its cuts: where it takes several time windows, "
+                "each stays inside one scene. The panel shows where the tiles sit and marks "
+                "each cut."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),
@@ -136,7 +138,8 @@ class H3TiledSampler(io.ComfyNode):
                     "tiling", options=_tiling_options(), display_name="tiling",
                     tooltip="`auto` splits the clip into windows along time under a token budget, "
                             "and across the frame only where a window will not fit; "
-                            "`manual` sets tile and window sizes.",
+                            "`manual` sets tile and window sizes. Where there are several windows, "
+                            "none crosses a cut the latent records.",
                 ),
                 io.Latent.Input(
                     "audio", optional=True,
@@ -186,8 +189,9 @@ class H3TiledSampler(io.ComfyNode):
         video_only = getattr(latent["samples"], "tensors", None) is None
         if video_only:
             latent = _with_audio(latent, audio)
+        starts = h3_extend.scene_starts(latent_image)
         settings = h3_tiles.tiling_settings(tiling)
-        tiled = h3_tiles.tiled_model(model, settings)
+        tiled = h3_tiles.tiled_model(model, settings, starts)
         samples = comfy.sample.fix_empty_latent_channels(
             tiled, latent["samples"],
             latent.get("downscale_ratio_spacial", None),
@@ -211,9 +215,6 @@ class H3TiledSampler(io.ComfyNode):
         even_h, even_w = height + height % 2, width + width % 2
         text = max((int(cond[0].shape[1]) for cond in (positive or []) + (negative or [])
                     if hasattr(cond[0], "shape") and cond[0].ndim >= 2), default=0)
-        if settings[0] == "manual":
-            plan = h3_tiles.manual_tiling(rows, even_h, even_w, *settings[1:])
-        else:
-            plan = h3_tiles.auto_tiling(rows, even_h, even_w, text, max_tokens=settings[1])
-        picture = h3_tiles.plot(plan, rows, even_h, even_w)
+        plan = h3_tiles.planned(settings, rows, even_h, even_w, text, starts)
+        picture = h3_tiles.plot(plan, rows, even_h, even_w, starts=starts)
         return io.NodeOutput(out, ui=ui.PreviewImage(picture, cls=cls))

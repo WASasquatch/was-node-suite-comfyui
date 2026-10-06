@@ -5,7 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import H3_PROMPTS
-from ...modules.latent import h3_conditioning
+from ...modules.latent import h3_conditioning, h3_extend
 
 INDEX_HINT = (
     "Which clip to take, from `0`. Wire a While Loop Open's index in to step through "
@@ -66,6 +66,14 @@ class ThreeH3ClipSelect(io.ComfyNode):
                     display_name="report",
                     tooltip="Which clip was taken and how long it is.",
                 ),
+                io.Model.Output(
+                    display_name="model",
+                    tooltip=(
+                        "The model that clip's row chose, from the ones wired into MiniMax "
+                        "H3 Conditioning, for the guider that samples it. Blocked with a "
+                        "message where none is wired."
+                    ),
+                ),
             ],
         )
 
@@ -77,7 +85,11 @@ class ThreeH3ClipSelect(io.ComfyNode):
             ValueError: Nothing arrived, the index is outside it, or that clip carries
                 no latent of its own.
         """
-        positive, frames, _, _ = h3_conditioning.pick(prompts, index)
+        positive, _, _, _ = h3_conditioning.pick(prompts, index)
         latent = h3_conditioning.latent_at(prompts, index)
+        frames = h3_extend.frames_for(h3_extend.split(latent)[0].shape[2])
         report = f"clip {int(index) + 1} of {len(prompts)}, {frames} frames"
-        return io.NodeOutput(positive, latent, frames, report)
+        return io.NodeOutput(
+            positive, latent, frames, report,
+            h3_conditioning.model_or_blocker(prompts, index, "MiniMax H3 Clip Select"),
+        )

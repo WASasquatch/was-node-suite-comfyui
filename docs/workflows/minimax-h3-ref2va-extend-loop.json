@@ -18,9 +18,20 @@
       "flags": {},
       "order": 0,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -52,36 +63,68 @@
       ],
       "size": [
         300,
-        262
+        494
       ],
       "flags": {},
       "order": 22,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "link": 19
         },
         {
+          "localized_name": "positive",
           "name": "positive",
           "shape": 7,
           "type": "CONDITIONING",
           "link": null
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "shape": 7,
           "type": "VAE",
           "link": 8
         },
         {
+          "localized_name": "prompts",
           "name": "prompts",
           "shape": 7,
           "type": "WAS_H3_PROMPTS",
           "link": 13
         },
         {
+          "localized_name": "continuity",
+          "name": "continuity",
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extension_frames",
+          "name": "extension_frames",
+          "type": "INT",
+          "widget": {
+            "name": "extension_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_frames",
+          "name": "overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pass_index",
           "name": "pass_index",
           "shape": 7,
           "type": "INT",
@@ -89,10 +132,121 @@
             "name": "pass_index"
           },
           "link": 15
+        },
+        {
+          "localized_name": "drift_control",
+          "name": "drift_control",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "drift_control"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "refresh_gain",
+          "name": "refresh_gain",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "refresh_gain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audio_release",
+          "name": "audio_release",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "audio_release"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "renewal",
+          "name": "renewal",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "renewal"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reference_samples",
+          "name": "reference_samples",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "reference_samples"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source",
+          "name": "source",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "live_preview",
+          "name": "live_preview",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "live_preview"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reference_sound",
+          "name": "reference_sound",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "reference_sound"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reencode_prompt",
+          "name": "reencode_prompt",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "reencode_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sample_span",
+          "name": "sample_span",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sample_span"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "window",
           "name": "window",
           "type": "LATENT",
           "links": [
@@ -100,6 +254,7 @@
           ]
         },
         {
+          "localized_name": "positive",
           "name": "positive",
           "type": "CONDITIONING",
           "links": [
@@ -107,6 +262,7 @@
           ]
         },
         {
+          "localized_name": "overlap_frames",
           "name": "overlap_frames",
           "type": "INT",
           "links": [
@@ -114,11 +270,24 @@
           ]
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": [
             24
           ]
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "links": null
         }
       ],
       "properties": {
@@ -139,7 +308,12 @@
         8,
         0.35,
         4,
-        -1
+        -1,
+        true,
+        true,
+        true,
+        "source scene",
+        0
       ],
       "widgets_values_named": {
         "continuity": "carry",
@@ -148,7 +322,15 @@
         "pass_index": 0,
         "drift_control": 0,
         "refresh_gain": 1.15,
-        "audio_release": 8
+        "audio_release": 8,
+        "renewal": 0.35,
+        "reference_samples": 4,
+        "source": -1,
+        "live_preview": true,
+        "reference_sound": true,
+        "reencode_prompt": true,
+        "sample_span": "source scene",
+        "seed": 0
       }
     },
     {
@@ -167,26 +349,31 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "noise",
           "name": "noise",
           "type": "NOISE",
           "link": 26
         },
         {
+          "localized_name": "guider",
           "name": "guider",
           "type": "GUIDER",
           "link": 27
         },
         {
+          "localized_name": "sampler",
           "name": "sampler",
           "type": "SAMPLER",
           "link": 28
         },
         {
+          "localized_name": "sigmas",
           "name": "sigmas",
           "type": "SIGMAS",
           "link": 29
         },
         {
+          "localized_name": "latent_image",
           "name": "latent_image",
           "type": "LATENT",
           "link": 21
@@ -194,6 +381,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "output",
           "name": "output",
           "type": "LATENT",
           "links": [
@@ -201,6 +389,7 @@
           ]
         },
         {
+          "localized_name": "denoised_output",
           "name": "denoised_output",
           "type": "LATENT",
           "links": null
@@ -213,9 +402,7 @@
           "input_ue_unconnectable": {},
           "version": "7.8"
         }
-      },
-      "widgets_values": [],
-      "widgets_values_named": {}
+      }
     },
     {
       "id": 22,
@@ -233,44 +420,60 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "iterator",
           "name": "iterator",
           "type": "WAS_LOOP",
           "link": 34
         },
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "shape": 7,
           "type": "*",
           "link": 35
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "shape": 7,
           "type": "*",
           "link": 36
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "shape": 7,
           "type": "*",
           "link": null
         },
         {
+          "localized_name": "continue_loop",
           "name": "continue_loop",
           "type": "BOOLEAN,NUMBER,INT,FLOAT",
           "widget": {
             "name": "continue_loop"
           },
           "link": 37
+        },
+        {
+          "localized_name": "accumulate",
+          "name": "accumulate",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "accumulate"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "metadata",
           "name": "metadata",
           "type": "DICT",
           "links": null
         },
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "type": "LATENT",
           "links": [
@@ -278,6 +481,7 @@
           ]
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "type": "STRING",
           "links": [
@@ -285,6 +489,7 @@
           ]
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "type": "*",
           "links": null
@@ -321,9 +526,29 @@
       "flags": {},
       "order": 1,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -353,7 +578,7 @@
       "type": "BasicGuider",
       "pos": [
         2030,
-        482
+        752
       ],
       "size": [
         300,
@@ -364,11 +589,13 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 5
         },
         {
+          "localized_name": "conditioning",
           "name": "conditioning",
           "type": "CONDITIONING",
           "link": 22
@@ -376,6 +603,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "GUIDER",
           "name": "GUIDER",
           "type": "GUIDER",
           "links": [
@@ -408,16 +636,19 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "link": 20
         },
         {
+          "localized_name": "sampled",
           "name": "sampled",
           "type": "LATENT",
           "link": 30
         },
         {
+          "localized_name": "overlap_frames",
           "name": "overlap_frames",
           "type": "INT",
           "widget": {
@@ -426,6 +657,7 @@
           "link": 23
         },
         {
+          "localized_name": "segment_index",
           "name": "segment_index",
           "shape": 7,
           "type": "INT",
@@ -437,6 +669,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "links": [
@@ -444,11 +677,13 @@
           ]
         },
         {
+          "localized_name": "frames",
           "name": "frames",
           "type": "INT",
           "links": null
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": [
@@ -489,6 +724,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "string_a",
           "name": "string_a",
           "type": "STRING",
           "widget": {
@@ -497,16 +733,27 @@
           "link": 32
         },
         {
+          "localized_name": "string_b",
           "name": "string_b",
           "type": "STRING",
           "widget": {
             "name": "string_b"
           },
           "link": 33
+        },
+        {
+          "localized_name": "delimiter",
+          "name": "delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "delimiter"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -549,11 +796,13 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "samples",
           "name": "samples",
           "type": "LATENT",
           "link": 39
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 9
@@ -561,6 +810,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -593,11 +843,13 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "samples",
           "name": "samples",
           "type": "LATENT",
           "link": 40
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 10
@@ -605,6 +857,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "AUDIO",
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
@@ -637,19 +890,61 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 42
         },
         {
+          "localized_name": "audio",
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
           "link": 43
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bit_depth",
+          "name": "bit_depth",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "bit_depth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "VIDEO",
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
@@ -694,13 +989,52 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "link": 44
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "format.codec",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "format.codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "shape": 7,
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "links": null
@@ -736,21 +1070,70 @@
       ],
       "size": [
         300,
-        210
+        234
       ],
       "flags": {},
       "order": 31,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "shape": 7,
           "type": "*",
           "link": 38
+        },
+        {
+          "localized_name": "unload_models",
+          "name": "unload_models",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "unload_models"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "empty_cache",
+          "name": "empty_cache",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "empty_cache"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "collect_garbage",
+          "name": "collect_garbage",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "collect_garbage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "release_fraction",
+          "name": "release_fraction",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "release_fraction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "always_run",
+          "name": "always_run",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "always_run"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "type": "LATENT",
           "links": [
@@ -759,21 +1142,25 @@
           ]
         },
         {
+          "localized_name": "vram_before",
           "name": "vram_before",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "vram_after",
           "name": "vram_after",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "freed",
           "name": "freed",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": null
@@ -791,13 +1178,15 @@
         true,
         true,
         true,
-        0
+        0,
+        false
       ],
       "widgets_values_named": {
         "unload_models": true,
         "empty_cache": true,
         "collect_garbage": true,
-        "release_fraction": 0
+        "release_fraction": 0,
+        "always_run": false
       }
     },
     {
@@ -809,33 +1198,55 @@
       ],
       "size": [
         300,
-        158
+        182
       ],
       "flags": {},
       "order": 19,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "shape": 7,
           "type": "*",
           "link": 46
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "shape": 7,
           "type": "*",
           "link": 12
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "shape": 7,
           "type": "*",
+          "link": null
+        },
+        {
+          "localized_name": "max_iterations",
+          "name": "max_iterations",
+          "type": "INT",
+          "widget": {
+            "name": "max_iterations"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "INT",
+          "widget": {
+            "name": "start"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "iterator",
           "name": "iterator",
           "type": "WAS_LOOP",
           "links": [
@@ -843,6 +1254,7 @@
           ]
         },
         {
+          "localized_name": "index",
           "name": "index",
           "type": "INT",
           "links": [
@@ -853,11 +1265,13 @@
           ]
         },
         {
+          "localized_name": "metadata",
           "name": "metadata",
           "type": "DICT",
           "links": null
         },
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "type": "LATENT",
           "links": [
@@ -866,6 +1280,7 @@
           ]
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "type": "STRING",
           "links": [
@@ -873,6 +1288,7 @@
           ]
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "type": "*",
           "links": null
@@ -887,10 +1303,12 @@
         }
       },
       "widgets_values": [
-        12
+        12,
+        0
       ],
       "widgets_values_named": {
-        "max_iterations": 12
+        "max_iterations": 12,
+        "start": 0
       }
     },
     {
@@ -907,9 +1325,20 @@
       "flags": {},
       "order": 2,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "SAMPLER",
           "name": "SAMPLER",
           "type": "SAMPLER",
           "links": [
@@ -941,85 +1370,2599 @@
       ],
       "size": [
         620,
-        1136
+        2094
       ],
       "flags": {},
       "order": 14,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 6
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 7
         },
         {
+          "localized_name": "model_fl2va",
+          "name": "model_fl2va",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "model_ref2va",
+          "name": "model_ref2va",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "audio_vae",
           "name": "audio_vae",
           "shape": 7,
           "type": "VAE",
           "link": 52
         },
         {
+          "localized_name": "ref_image_1",
           "name": "ref_image_1",
           "shape": 7,
           "type": "IMAGE",
           "link": 53
         },
         {
+          "localized_name": "ref_image_2",
           "name": "ref_image_2",
           "shape": 7,
           "type": "IMAGE",
           "link": 60
         },
         {
+          "localized_name": "ref_image_3",
           "name": "ref_image_3",
           "shape": 7,
           "type": "IMAGE",
           "link": null
         },
         {
+          "localized_name": "ref_video_1",
           "name": "ref_video_1",
           "shape": 7,
           "type": "IMAGE",
           "link": 54
         },
         {
+          "localized_name": "ref_video_audio_1",
           "name": "ref_video_audio_1",
           "shape": 7,
           "type": "AUDIO",
           "link": 55
         },
         {
+          "localized_name": "ref_video_2",
           "name": "ref_video_2",
           "shape": 7,
           "type": "IMAGE",
           "link": null
         },
         {
+          "localized_name": "ref_video_audio_2",
           "name": "ref_video_audio_2",
           "shape": 7,
           "type": "AUDIO",
           "link": null
         },
         {
+          "localized_name": "ref_audio_1",
           "name": "ref_audio_1",
           "shape": 7,
           "type": "AUDIO",
           "link": 56
         },
         {
+          "localized_name": "ref_audio_2",
           "name": "ref_audio_2",
           "shape": 7,
           "type": "AUDIO",
+          "link": null
+        },
+        {
+          "localized_name": "assets",
+          "name": "assets",
+          "shape": 7,
+          "type": "WAS_H3_ASSETS",
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aspect_ratio",
+          "name": "aspect_ratio",
+          "type": "COMBO",
+          "widget": {
+            "name": "aspect_ratio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "megapixels",
+          "name": "megapixels",
+          "type": "FLOAT",
+          "widget": {
+            "name": "megapixels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_header",
+          "name": "prompt_header",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_header"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_footer",
+          "name": "prompt_footer",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_footer"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_1",
+          "name": "prompt_1",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_1",
+          "name": "duration_1",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_1",
+          "name": "overlap_1",
+          "type": "INT",
+          "widget": {
+            "name": "overlap_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_1",
+          "name": "continuity_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_1",
+          "name": "source_1",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_1",
+          "name": "header_footer_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_1",
+          "name": "model_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_1",
+          "name": "strength_1",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_1",
+          "name": "sound_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_1",
+          "name": "seed_1",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_2",
+          "name": "prompt_2",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_2",
+          "name": "duration_2",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_2",
+          "name": "overlap_2",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_2",
+          "name": "continuity_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_2",
+          "name": "source_2",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_2",
+          "name": "header_footer_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_2",
+          "name": "model_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_2",
+          "name": "strength_2",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_2",
+          "name": "sound_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_2",
+          "name": "seed_2",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_3",
+          "name": "prompt_3",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_3",
+          "name": "duration_3",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_3",
+          "name": "overlap_3",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_3",
+          "name": "continuity_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_3",
+          "name": "source_3",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_3",
+          "name": "header_footer_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_3",
+          "name": "model_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_3",
+          "name": "strength_3",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_3",
+          "name": "sound_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_3",
+          "name": "seed_3",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_4",
+          "name": "prompt_4",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_4",
+          "name": "duration_4",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_4",
+          "name": "overlap_4",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_4",
+          "name": "continuity_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_4",
+          "name": "source_4",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_4",
+          "name": "header_footer_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_4",
+          "name": "model_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_4",
+          "name": "strength_4",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_4",
+          "name": "sound_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_4",
+          "name": "seed_4",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_5",
+          "name": "prompt_5",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_5",
+          "name": "duration_5",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_5",
+          "name": "overlap_5",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_5",
+          "name": "continuity_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_5",
+          "name": "source_5",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_5",
+          "name": "header_footer_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_5",
+          "name": "model_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_5",
+          "name": "strength_5",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_5",
+          "name": "sound_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_5",
+          "name": "seed_5",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_6",
+          "name": "prompt_6",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_6",
+          "name": "duration_6",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_6",
+          "name": "overlap_6",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_6",
+          "name": "continuity_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_6",
+          "name": "source_6",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_6",
+          "name": "header_footer_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_6",
+          "name": "model_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_6",
+          "name": "strength_6",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_6",
+          "name": "sound_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_6",
+          "name": "seed_6",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_7",
+          "name": "prompt_7",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_7",
+          "name": "duration_7",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_7",
+          "name": "overlap_7",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_7",
+          "name": "continuity_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_7",
+          "name": "source_7",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_7",
+          "name": "header_footer_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_7",
+          "name": "model_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_7",
+          "name": "strength_7",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_7",
+          "name": "sound_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_7",
+          "name": "seed_7",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_8",
+          "name": "prompt_8",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_8",
+          "name": "duration_8",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_8",
+          "name": "overlap_8",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_8",
+          "name": "continuity_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_8",
+          "name": "source_8",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_8",
+          "name": "header_footer_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_8",
+          "name": "model_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_8",
+          "name": "strength_8",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_8",
+          "name": "sound_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_8",
+          "name": "seed_8",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_9",
+          "name": "prompt_9",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_9",
+          "name": "duration_9",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_9",
+          "name": "overlap_9",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_9",
+          "name": "continuity_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_9",
+          "name": "source_9",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_9",
+          "name": "header_footer_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_9",
+          "name": "model_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_9",
+          "name": "strength_9",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_9",
+          "name": "sound_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_9",
+          "name": "seed_9",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_10",
+          "name": "prompt_10",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_10",
+          "name": "duration_10",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_10",
+          "name": "overlap_10",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_10",
+          "name": "continuity_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_10",
+          "name": "source_10",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_10",
+          "name": "header_footer_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_10",
+          "name": "model_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_10",
+          "name": "strength_10",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_10",
+          "name": "sound_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_10",
+          "name": "seed_10",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_11",
+          "name": "prompt_11",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_11",
+          "name": "duration_11",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_11",
+          "name": "overlap_11",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_11",
+          "name": "continuity_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_11",
+          "name": "source_11",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_11",
+          "name": "header_footer_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_11",
+          "name": "model_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_11",
+          "name": "strength_11",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_11",
+          "name": "sound_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_11",
+          "name": "seed_11",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_12",
+          "name": "prompt_12",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_12",
+          "name": "duration_12",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_12",
+          "name": "overlap_12",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_12",
+          "name": "continuity_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_12",
+          "name": "source_12",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_12",
+          "name": "header_footer_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_12",
+          "name": "model_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_12",
+          "name": "strength_12",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_12",
+          "name": "sound_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_12",
+          "name": "seed_12",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_13",
+          "name": "prompt_13",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_13",
+          "name": "duration_13",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_13",
+          "name": "overlap_13",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_13",
+          "name": "continuity_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_13",
+          "name": "source_13",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_13",
+          "name": "header_footer_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_13",
+          "name": "model_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_13",
+          "name": "strength_13",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_13",
+          "name": "sound_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_13",
+          "name": "seed_13",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_14",
+          "name": "prompt_14",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_14",
+          "name": "duration_14",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_14",
+          "name": "overlap_14",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_14",
+          "name": "continuity_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_14",
+          "name": "source_14",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_14",
+          "name": "header_footer_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_14",
+          "name": "model_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_14",
+          "name": "strength_14",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_14",
+          "name": "sound_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_14",
+          "name": "seed_14",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_15",
+          "name": "prompt_15",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_15",
+          "name": "duration_15",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_15",
+          "name": "overlap_15",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_15",
+          "name": "continuity_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_15",
+          "name": "source_15",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_15",
+          "name": "header_footer_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_15",
+          "name": "model_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_15",
+          "name": "strength_15",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_15",
+          "name": "sound_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_15",
+          "name": "seed_15",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_16",
+          "name": "prompt_16",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_16",
+          "name": "duration_16",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_16",
+          "name": "overlap_16",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_16",
+          "name": "continuity_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_16",
+          "name": "source_16",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_16",
+          "name": "header_footer_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_16",
+          "name": "model_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_16",
+          "name": "strength_16",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_16",
+          "name": "sound_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_16",
+          "name": "seed_16",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_17",
+          "name": "prompt_17",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_17",
+          "name": "duration_17",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_17",
+          "name": "overlap_17",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_17",
+          "name": "continuity_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_17",
+          "name": "source_17",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_17",
+          "name": "header_footer_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_17",
+          "name": "model_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_17",
+          "name": "strength_17",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_17",
+          "name": "sound_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_17",
+          "name": "seed_17",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_18",
+          "name": "prompt_18",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_18",
+          "name": "duration_18",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_18",
+          "name": "overlap_18",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_18",
+          "name": "continuity_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_18",
+          "name": "source_18",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_18",
+          "name": "header_footer_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_18",
+          "name": "model_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_18",
+          "name": "strength_18",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_18",
+          "name": "sound_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_18",
+          "name": "seed_18",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_19",
+          "name": "prompt_19",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_19",
+          "name": "duration_19",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_19",
+          "name": "overlap_19",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_19",
+          "name": "continuity_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_19",
+          "name": "source_19",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_19",
+          "name": "header_footer_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_19",
+          "name": "model_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_19",
+          "name": "strength_19",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_19",
+          "name": "sound_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_19",
+          "name": "seed_19",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_20",
+          "name": "prompt_20",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_20",
+          "name": "duration_20",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_20",
+          "name": "overlap_20",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_20",
+          "name": "continuity_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_20",
+          "name": "source_20",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_20",
+          "name": "header_footer_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_20",
+          "name": "model_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_20",
+          "name": "strength_20",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_20",
+          "name": "sound_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_20",
+          "name": "seed_20",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_21",
+          "name": "prompt_21",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_21",
+          "name": "duration_21",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_21",
+          "name": "overlap_21",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_21",
+          "name": "continuity_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_21",
+          "name": "source_21",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_21",
+          "name": "header_footer_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_21",
+          "name": "model_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_21",
+          "name": "strength_21",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_21",
+          "name": "sound_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_21",
+          "name": "seed_21",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_22",
+          "name": "prompt_22",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_22",
+          "name": "duration_22",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_22",
+          "name": "overlap_22",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_22",
+          "name": "continuity_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_22",
+          "name": "source_22",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_22",
+          "name": "header_footer_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_22",
+          "name": "model_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_22",
+          "name": "strength_22",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_22",
+          "name": "sound_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_22",
+          "name": "seed_22",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_23",
+          "name": "prompt_23",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_23",
+          "name": "duration_23",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_23",
+          "name": "overlap_23",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_23",
+          "name": "continuity_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_23",
+          "name": "source_23",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_23",
+          "name": "header_footer_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_23",
+          "name": "model_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_23",
+          "name": "strength_23",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_23",
+          "name": "sound_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_23",
+          "name": "seed_23",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_24",
+          "name": "prompt_24",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_24",
+          "name": "duration_24",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_24",
+          "name": "overlap_24",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_24",
+          "name": "continuity_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_24",
+          "name": "source_24",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_24",
+          "name": "header_footer_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_24",
+          "name": "model_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_24",
+          "name": "strength_24",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_24",
+          "name": "sound_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_24",
+          "name": "seed_24",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_image_size",
+          "name": "ref_image_size",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "ref_image_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "loop",
+          "name": "loop",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "loop"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "links": [
@@ -1027,6 +3970,7 @@
           ]
         },
         {
+          "localized_name": "prompts",
           "name": "prompts",
           "type": "WAS_H3_PROMPTS",
           "links": [
@@ -1034,6 +3978,7 @@
           ]
         },
         {
+          "localized_name": "segments",
           "name": "segments",
           "type": "INT",
           "links": [
@@ -1041,6 +3986,7 @@
           ]
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": [
@@ -1048,6 +3994,7 @@
           ]
         },
         {
+          "localized_name": "latents",
           "name": "latents",
           "shape": 6,
           "type": "LATENT",
@@ -1073,148 +4020,245 @@
         "summary:\n[reference generation + audio reference] The target video shows <Subject 2> seated in <Subject 3> under the midday light of <Subject 5>, with <Subject 1> sitting in his lap. He flips a row of switches, the panel lamps come on and the engine hum swells, and he speaks a short line in the voice timbre referenced from <Audio 2> over cockpit ambience referenced from <Audio 1>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the doll's blonde yarn hair, black bow, embroidered blue eyes, light-blue dress, rabbit-emblem apron and striped stockings are retained.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the pilot's short dark hair, navy flight suit with red collar and trim, white harness, wristwatch and black gloves are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - the grey switch panels, analog gauges, red guarded covers, dark monitor screens, brown seat and control sticks are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the midday blue sky and white clouds stay visible through the canopy frame at the upper left, under the same high midday light.\n<Audio 1>: reference - its engine hum and switch-click texture guide the cockpit ambience without copying the original signal.\n<Audio 2>: reference - its voice timbre guides the delivery of <Subject 2> without copying the original signal or its words.\n\ndetailed_description:\nThe target video is in a clean, cel-shaded anime style with crisp line work and bright midday light, and it keeps the same midday light from the first shot to the last.\n[Shot 1] A medium shot from the co-pilot's side frames <Subject 2>, the young pilot with short dark hair, a dark navy flight suit with a red collar and red shoulder trim, white harness straps with a silver chest buckle and black gloves, seated in the brown padded seat of <Subject 3>. The frame runs from just above his head down to his knees. The grey instrument panels, with their rows of toggle switches, round analog gauges and red guarded covers, fill both sides of the frame, the two monitor screens above them are dark, and at the upper left corner a wedge of <Subject 5>, bright midday blue sky with a tall white cloud, shows through the canopy frame. Hard midday sunlight falls in from above, catching his hair and the top edges of the panels. <Subject 1>, the hand-stitched Alice doll with long wavy blonde yarn hair, a black bow, embroidered blue eyes, a light-blue dress, a white apron with a small black rabbit emblem and black-and-white striped stockings, sits upright in his lap, small in the lower centre of the frame, her head resting against his harness buckle and her striped legs hanging over his knee. His left hand rests lightly on her shoulder so she does not slide. His right hand reaches past her and flips four toggle switches upward one after another, each landing with a crisp metallic click, and a row of amber lamps above them lights up in sequence. The low engine hum referenced from <Audio 1> swells as the lamps come on and the cockpit gives a faint shudder. <Subject 2> (S1) glances across the lit panel and, in the calm, even voice timbre referenced from <Audio 2>, says, <d>[English] All systems green.</d> He closes his mouth, looks up briefly at the bright sky in the canopy frame, then settles his right hand on the control stick. The camera holds steady with a very slow push in toward the doll and his hands.\n\noverall_soundscape:\nA low cockpit engine hum that slowly swells, crisp metallic switch clicks and a faint shudder of the frame, all referenced from <Audio 1>.\n\nnon_diegetic_music:\nN/A",
         4,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "summary:\n[reference generation + audio reference] The same shot continues in <Subject 3> under the same midday light of <Subject 5>. <Subject 2> looks down at <Subject 1> in his lap, straightens her black bow with one gloved finger, speaks a short line in the voice timbre referenced from <Audio 2> and eases the control stick forward as the engine climbs.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the doll's blonde yarn hair, black bow, embroidered blue eyes, light-blue dress, rabbit-emblem apron and striped stockings are retained.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the pilot's short dark hair, navy flight suit with red collar and trim, white harness, wristwatch and black gloves are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - the grey switch panels, analog gauges, red guarded covers, dark monitor screens, brown seat and control sticks are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the midday blue sky and white clouds stay visible through the canopy frame at the upper left, under the same high midday light.\n<Audio 1>: reference - its engine hum and switch-click texture guide the cockpit ambience without copying the original signal.\n<Audio 2>: reference - its voice timbre guides the delivery of <Subject 2> without copying the original signal or its words.\n\ndetailed_description:\nThe target video continues in the same clean, cel-shaded anime style and the same bright midday light.\n[Shot 1] The same medium shot from the co-pilot's side continues without a cut. <Subject 2> sits in the brown padded seat of <Subject 3>, the row of amber lamps now lit on the grey switch panel, the two monitor screens above still dark, and the wedge of <Subject 5>, midday blue sky with a tall white cloud, still showing through the canopy frame at the upper left. Midday sunlight still falls in from above. <Subject 1>, the hand-stitched Alice doll with long wavy blonde yarn hair, a black bow, embroidered blue eyes, a light-blue dress, a white apron with a small black rabbit emblem and black-and-white striped stockings, sits in his lap in the lower centre of the frame, her black bow knocked slightly askew. He tilts his head down to look at her, lifts his right hand from the control stick and straightens her bow with one gloved finger, and the doll's head bobs softly under the touch. A faint smile crosses his face. <Subject 2> (S1), in the calm voice timbre referenced from <Audio 2>, says, <d>[English] Hold on tight.</d> He closes his mouth, wraps his left arm around the doll and returns his right hand to the control stick, easing it forward. The engine hum referenced from <Audio 1> climbs in pitch and the cockpit begins to tremble, rattling the switches lightly. The camera holds still.\n\noverall_soundscape:\nThe cockpit engine hum referenced from <Audio 1> climbing steadily in pitch, with a light rattle of the switches and the cockpit frame.\n\nnon_diegetic_music:\nN/A",
         4,
         22,
         "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "summary:\n[reference generation + audio reference] The shot cuts to a closer angle inside <Subject 3> in the same midday light as <Subject 4> climbs. The clouds of <Subject 5> stream past the canopy frame, <Subject 1> is pressed back against <Subject 2>, and he calls out over the radio in the voice timbre referenced from <Audio 2>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the doll's blonde yarn hair, black bow, embroidered blue eyes, light-blue dress, rabbit-emblem apron and striped stockings are retained.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the pilot's short dark hair, navy flight suit with red collar and trim, white harness, wristwatch and black gloves are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - the grey switch panels, analog gauges, red guarded covers, dark monitor screens, brown seat and control sticks are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the midday blue sky and white clouds stay visible through the canopy frame at the upper left, under the same high midday light.\n<Audio 1>: reference - its engine hum and switch-click texture guide the cockpit ambience without copying the original signal.\n<Audio 2>: reference - its voice timbre guides the delivery of <Subject 2> without copying the original signal or its words.\n\ndetailed_description:\nThe target video continues in the same clean, cel-shaded anime style and the same bright midday light.\n[Shot 1] A closer shot from just above the co-pilot's side of <Subject 3> frames <Subject 2> from the chest down with <Subject 1> held in his lap, lit from above by the same midday sun. <Subject 1>, the hand-stitched Alice doll with long wavy blonde yarn hair, a black bow, embroidered blue eyes, a light-blue dress, a white apron with a small black rabbit emblem and black-and-white striped stockings, is pressed back against his silver harness buckle. At the upper left, through the canopy frame, the white clouds of <Subject 5> now stream past quickly against the same midday blue sky. The two monitor screens above the panel stay dark and the row of amber lamps stays lit. <Subject 2> pushes the control stick forward with his right hand and the cockpit shudders as the mobile suit climbs, pressing him and the doll back into the brown seat. His left arm stays around the doll. He presses the transmit button on the control stick with his thumb. <Subject 2> (S1), in the calm voice timbre referenced from <Audio 2>, says, <d>[English] Tower, we are airborne.</d> A soft radio click follows the line. The engine hum referenced from <Audio 1> deepens into a steady roar and a rush of wind passes over the canopy. The camera drifts slowly to the right with the shudder of the cockpit.\n\noverall_soundscape:\nThe deep, steady engine roar referenced from <Audio 1>, a rush of wind over the canopy and a soft radio click.\n\nnon_diegetic_music:\nN/A",
         4,
         22,
         "reference (video)",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "summary:\n[reference generation + audio reference] The target video cuts outside to <Subject 4>, the mobile suit <Subject 2> is flying, climbing through <Subject 5> in the same midday light, driven by the four boosters on its back and the two thrusters under its feet, over engine sound broadly referenced from <Audio 1>.\n\nretention_analysis:\n<Subject 4> (appears in [Shot 1]): fully_preserved - the white armour, dark navy chest and legs, yellow V-fin, red accents, folded fin funnels, four-booster backpack and foot thrusters are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the same midday blue sky, tall white cumulus clouds and high sun seen from the cockpit surround the mobile suit.\n<Audio 1>: weak_reference - only the broad character of the engine sound carries over, grown into the roar of the boosters.\n\ndetailed_description:\nThe target video continues in the same clean, cel-shaded anime style under the same bright midday light.\n[Shot 1] A wide tracking shot flies alongside <Subject 4>, the RX-93 ν Gundam, as it climbs through <Subject 5>, the clear midday blue sky between tall white cumulus clouds, with the sun high overhead. The mobile suit is seen from a rear three-quarter angle, its white armour lit from above by the midday sun, its dark navy chest and waist, yellow V-fin antenna and red accents sharp against the blue, and the six long white fin funnels folded into a wing along its left back. From the first frame, all four round boosters on its backpack blaze with bright blue-white exhaust, and the two thrusters on the soles of its feet, one under each foot, fire long jets down and back, driving it forward and upward. Its body leans into the climb with arms held close and legs trailing behind, and thin vapour trails peel off its shoulders. It punches through a thin veil of cloud, which bursts into streaming wisps around it, and emerges into open blue sky with sunlight glinting across its armour. The deep, rising roar of the boosters, broadly referenced from the engine hum of <Audio 1>, fills the shot with a hard rush of wind over the armour. The camera tracks with it at matching speed, then drops back slightly as it pulls ahead.\n\noverall_soundscape:\nThe thunderous roar of the boosters and a constant rush of high-altitude wind run through the whole shot.\n\nnon_diegetic_music:\nN/A",
         4,
         0,
         "cut",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         10,
         0,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         12,
         22,
         "reference (video)",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
-        "1024"
+        "auto",
+        1,
+        "auto",
+        0,
+        "1024",
+        false
       ],
       "widgets_values_named": {
         "mode": "ref2va",
@@ -1227,100 +4271,245 @@
         "prompt_1": "summary:\n[reference generation + audio reference] The target video shows <Subject 2> seated in <Subject 3> under the midday light of <Subject 5>, with <Subject 1> sitting in his lap. He flips a row of switches, the panel lamps come on and the engine hum swells, and he speaks a short line in the voice timbre referenced from <Audio 2> over cockpit ambience referenced from <Audio 1>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the doll's blonde yarn hair, black bow, embroidered blue eyes, light-blue dress, rabbit-emblem apron and striped stockings are retained.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the pilot's short dark hair, navy flight suit with red collar and trim, white harness, wristwatch and black gloves are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - the grey switch panels, analog gauges, red guarded covers, dark monitor screens, brown seat and control sticks are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the midday blue sky and white clouds stay visible through the canopy frame at the upper left, under the same high midday light.\n<Audio 1>: reference - its engine hum and switch-click texture guide the cockpit ambience without copying the original signal.\n<Audio 2>: reference - its voice timbre guides the delivery of <Subject 2> without copying the original signal or its words.\n\ndetailed_description:\nThe target video is in a clean, cel-shaded anime style with crisp line work and bright midday light, and it keeps the same midday light from the first shot to the last.\n[Shot 1] A medium shot from the co-pilot's side frames <Subject 2>, the young pilot with short dark hair, a dark navy flight suit with a red collar and red shoulder trim, white harness straps with a silver chest buckle and black gloves, seated in the brown padded seat of <Subject 3>. The frame runs from just above his head down to his knees. The grey instrument panels, with their rows of toggle switches, round analog gauges and red guarded covers, fill both sides of the frame, the two monitor screens above them are dark, and at the upper left corner a wedge of <Subject 5>, bright midday blue sky with a tall white cloud, shows through the canopy frame. Hard midday sunlight falls in from above, catching his hair and the top edges of the panels. <Subject 1>, the hand-stitched Alice doll with long wavy blonde yarn hair, a black bow, embroidered blue eyes, a light-blue dress, a white apron with a small black rabbit emblem and black-and-white striped stockings, sits upright in his lap, small in the lower centre of the frame, her head resting against his harness buckle and her striped legs hanging over his knee. His left hand rests lightly on her shoulder so she does not slide. His right hand reaches past her and flips four toggle switches upward one after another, each landing with a crisp metallic click, and a row of amber lamps above them lights up in sequence. The low engine hum referenced from <Audio 1> swells as the lamps come on and the cockpit gives a faint shudder. <Subject 2> (S1) glances across the lit panel and, in the calm, even voice timbre referenced from <Audio 2>, says, <d>[English] All systems green.</d> He closes his mouth, looks up briefly at the bright sky in the canopy frame, then settles his right hand on the control stick. The camera holds steady with a very slow push in toward the doll and his hands.\n\noverall_soundscape:\nA low cockpit engine hum that slowly swells, crisp metallic switch clicks and a faint shudder of the frame, all referenced from <Audio 1>.\n\nnon_diegetic_music:\nN/A",
         "duration_1": 4,
         "overlap_1": 22,
-        "continuity_1": "as set",
+        "continuity_1": "carry",
+        "source_1": -1,
+        "header_footer_1": "both",
+        "model_1": "auto",
+        "strength_1": 1,
+        "sound_1": "auto",
+        "seed_1": 0,
         "prompt_2": "summary:\n[reference generation + audio reference] The same shot continues in <Subject 3> under the same midday light of <Subject 5>. <Subject 2> looks down at <Subject 1> in his lap, straightens her black bow with one gloved finger, speaks a short line in the voice timbre referenced from <Audio 2> and eases the control stick forward as the engine climbs.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the doll's blonde yarn hair, black bow, embroidered blue eyes, light-blue dress, rabbit-emblem apron and striped stockings are retained.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the pilot's short dark hair, navy flight suit with red collar and trim, white harness, wristwatch and black gloves are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - the grey switch panels, analog gauges, red guarded covers, dark monitor screens, brown seat and control sticks are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the midday blue sky and white clouds stay visible through the canopy frame at the upper left, under the same high midday light.\n<Audio 1>: reference - its engine hum and switch-click texture guide the cockpit ambience without copying the original signal.\n<Audio 2>: reference - its voice timbre guides the delivery of <Subject 2> without copying the original signal or its words.\n\ndetailed_description:\nThe target video continues in the same clean, cel-shaded anime style and the same bright midday light.\n[Shot 1] The same medium shot from the co-pilot's side continues without a cut. <Subject 2> sits in the brown padded seat of <Subject 3>, the row of amber lamps now lit on the grey switch panel, the two monitor screens above still dark, and the wedge of <Subject 5>, midday blue sky with a tall white cloud, still showing through the canopy frame at the upper left. Midday sunlight still falls in from above. <Subject 1>, the hand-stitched Alice doll with long wavy blonde yarn hair, a black bow, embroidered blue eyes, a light-blue dress, a white apron with a small black rabbit emblem and black-and-white striped stockings, sits in his lap in the lower centre of the frame, her black bow knocked slightly askew. He tilts his head down to look at her, lifts his right hand from the control stick and straightens her bow with one gloved finger, and the doll's head bobs softly under the touch. A faint smile crosses his face. <Subject 2> (S1), in the calm voice timbre referenced from <Audio 2>, says, <d>[English] Hold on tight.</d> He closes his mouth, wraps his left arm around the doll and returns his right hand to the control stick, easing it forward. The engine hum referenced from <Audio 1> climbs in pitch and the cockpit begins to tremble, rattling the switches lightly. The camera holds still.\n\noverall_soundscape:\nThe cockpit engine hum referenced from <Audio 1> climbing steadily in pitch, with a light rattle of the switches and the cockpit frame.\n\nnon_diegetic_music:\nN/A",
         "duration_2": 4,
         "overlap_2": 22,
         "continuity_2": "carry",
+        "source_2": -1,
+        "header_footer_2": "both",
+        "model_2": "auto",
+        "strength_2": 1,
+        "sound_2": "auto",
+        "seed_2": 0,
         "prompt_3": "summary:\n[reference generation + audio reference] The shot cuts to a closer angle inside <Subject 3> in the same midday light as <Subject 4> climbs. The clouds of <Subject 5> stream past the canopy frame, <Subject 1> is pressed back against <Subject 2>, and he calls out over the radio in the voice timbre referenced from <Audio 2>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the doll's blonde yarn hair, black bow, embroidered blue eyes, light-blue dress, rabbit-emblem apron and striped stockings are retained.\n<Subject 2> (appears in [Shot 1]): fully_preserved - the pilot's short dark hair, navy flight suit with red collar and trim, white harness, wristwatch and black gloves are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - the grey switch panels, analog gauges, red guarded covers, dark monitor screens, brown seat and control sticks are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the midday blue sky and white clouds stay visible through the canopy frame at the upper left, under the same high midday light.\n<Audio 1>: reference - its engine hum and switch-click texture guide the cockpit ambience without copying the original signal.\n<Audio 2>: reference - its voice timbre guides the delivery of <Subject 2> without copying the original signal or its words.\n\ndetailed_description:\nThe target video continues in the same clean, cel-shaded anime style and the same bright midday light.\n[Shot 1] A closer shot from just above the co-pilot's side of <Subject 3> frames <Subject 2> from the chest down with <Subject 1> held in his lap, lit from above by the same midday sun. <Subject 1>, the hand-stitched Alice doll with long wavy blonde yarn hair, a black bow, embroidered blue eyes, a light-blue dress, a white apron with a small black rabbit emblem and black-and-white striped stockings, is pressed back against his silver harness buckle. At the upper left, through the canopy frame, the white clouds of <Subject 5> now stream past quickly against the same midday blue sky. The two monitor screens above the panel stay dark and the row of amber lamps stays lit. <Subject 2> pushes the control stick forward with his right hand and the cockpit shudders as the mobile suit climbs, pressing him and the doll back into the brown seat. His left arm stays around the doll. He presses the transmit button on the control stick with his thumb. <Subject 2> (S1), in the calm voice timbre referenced from <Audio 2>, says, <d>[English] Tower, we are airborne.</d> A soft radio click follows the line. The engine hum referenced from <Audio 1> deepens into a steady roar and a rush of wind passes over the canopy. The camera drifts slowly to the right with the shudder of the cockpit.\n\noverall_soundscape:\nThe deep, steady engine roar referenced from <Audio 1>, a rush of wind over the canopy and a soft radio click.\n\nnon_diegetic_music:\nN/A",
         "duration_3": 4,
         "overlap_3": 22,
-        "continuity_3": "reference",
+        "continuity_3": "reference (video)",
+        "source_3": -1,
+        "header_footer_3": "both",
+        "model_3": "auto",
+        "strength_3": 1,
+        "sound_3": "auto",
+        "seed_3": 0,
         "prompt_4": "summary:\n[reference generation + audio reference] The target video cuts outside to <Subject 4>, the mobile suit <Subject 2> is flying, climbing through <Subject 5> in the same midday light, driven by the four boosters on its back and the two thrusters under its feet, over engine sound broadly referenced from <Audio 1>.\n\nretention_analysis:\n<Subject 4> (appears in [Shot 1]): fully_preserved - the white armour, dark navy chest and legs, yellow V-fin, red accents, folded fin funnels, four-booster backpack and foot thrusters are retained.\n<Subject 5> (appears in [Shot 1]): fully_preserved - the same midday blue sky, tall white cumulus clouds and high sun seen from the cockpit surround the mobile suit.\n<Audio 1>: weak_reference - only the broad character of the engine sound carries over, grown into the roar of the boosters.\n\ndetailed_description:\nThe target video continues in the same clean, cel-shaded anime style under the same bright midday light.\n[Shot 1] A wide tracking shot flies alongside <Subject 4>, the RX-93 ν Gundam, as it climbs through <Subject 5>, the clear midday blue sky between tall white cumulus clouds, with the sun high overhead. The mobile suit is seen from a rear three-quarter angle, its white armour lit from above by the midday sun, its dark navy chest and waist, yellow V-fin antenna and red accents sharp against the blue, and the six long white fin funnels folded into a wing along its left back. From the first frame, all four round boosters on its backpack blaze with bright blue-white exhaust, and the two thrusters on the soles of its feet, one under each foot, fire long jets down and back, driving it forward and upward. Its body leans into the climb with arms held close and legs trailing behind, and thin vapour trails peel off its shoulders. It punches through a thin veil of cloud, which bursts into streaming wisps around it, and emerges into open blue sky with sunlight glinting across its armour. The deep, rising roar of the boosters, broadly referenced from the engine hum of <Audio 1>, fills the shot with a hard rush of wind over the armour. The camera tracks with it at matching speed, then drops back slightly as it pulls ahead.\n\noverall_soundscape:\nThe thunderous roar of the boosters and a constant rush of high-altitude wind run through the whole shot.\n\nnon_diegetic_music:\nN/A",
         "duration_4": 4,
         "overlap_4": 0,
         "continuity_4": "cut",
+        "source_4": -1,
+        "header_footer_4": "both",
+        "model_4": "auto",
+        "strength_4": 1,
+        "sound_4": "auto",
+        "seed_4": 0,
         "prompt_5": "",
         "duration_5": 10,
         "overlap_5": 0,
-        "continuity_5": "as set",
+        "continuity_5": "carry",
+        "source_5": -1,
+        "header_footer_5": "both",
+        "model_5": "auto",
+        "strength_5": 1,
+        "sound_5": "auto",
+        "seed_5": 0,
         "prompt_6": "",
         "duration_6": 12,
         "overlap_6": 22,
-        "continuity_6": "reference",
+        "continuity_6": "reference (video)",
+        "source_6": -1,
+        "header_footer_6": "both",
+        "model_6": "auto",
+        "strength_6": 1,
+        "sound_6": "auto",
+        "seed_6": 0,
         "prompt_7": "",
         "duration_7": 4.25,
         "overlap_7": 22,
-        "continuity_7": "as set",
+        "continuity_7": "carry",
+        "source_7": -1,
+        "header_footer_7": "both",
+        "model_7": "auto",
+        "strength_7": 1,
+        "sound_7": "auto",
+        "seed_7": 0,
         "prompt_8": "",
         "duration_8": 4.25,
         "overlap_8": 22,
-        "continuity_8": "as set",
+        "continuity_8": "carry",
+        "source_8": -1,
+        "header_footer_8": "both",
+        "model_8": "auto",
+        "strength_8": 1,
+        "sound_8": "auto",
+        "seed_8": 0,
         "prompt_9": "",
         "duration_9": 4.25,
         "overlap_9": 22,
-        "continuity_9": "as set",
+        "continuity_9": "carry",
+        "source_9": -1,
+        "header_footer_9": "both",
+        "model_9": "auto",
+        "strength_9": 1,
+        "sound_9": "auto",
+        "seed_9": 0,
         "prompt_10": "",
         "duration_10": 4.25,
         "overlap_10": 22,
-        "continuity_10": "as set",
+        "continuity_10": "carry",
+        "source_10": -1,
+        "header_footer_10": "both",
+        "model_10": "auto",
+        "strength_10": 1,
+        "sound_10": "auto",
+        "seed_10": 0,
         "prompt_11": "",
         "duration_11": 4.25,
         "overlap_11": 22,
-        "continuity_11": "as set",
+        "continuity_11": "carry",
+        "source_11": -1,
+        "header_footer_11": "both",
+        "model_11": "auto",
+        "strength_11": 1,
+        "sound_11": "auto",
+        "seed_11": 0,
         "prompt_12": "",
         "duration_12": 4.25,
         "overlap_12": 22,
-        "continuity_12": "as set",
+        "continuity_12": "carry",
+        "source_12": -1,
+        "header_footer_12": "both",
+        "model_12": "auto",
+        "strength_12": 1,
+        "sound_12": "auto",
+        "seed_12": 0,
         "prompt_13": "",
         "duration_13": 4.25,
         "overlap_13": 22,
-        "continuity_13": "as set",
+        "continuity_13": "carry",
+        "source_13": -1,
+        "header_footer_13": "both",
+        "model_13": "auto",
+        "strength_13": 1,
+        "sound_13": "auto",
+        "seed_13": 0,
         "prompt_14": "",
         "duration_14": 4.25,
         "overlap_14": 22,
-        "continuity_14": "as set",
+        "continuity_14": "carry",
+        "source_14": -1,
+        "header_footer_14": "both",
+        "model_14": "auto",
+        "strength_14": 1,
+        "sound_14": "auto",
+        "seed_14": 0,
         "prompt_15": "",
         "duration_15": 4.25,
         "overlap_15": 22,
-        "continuity_15": "as set",
+        "continuity_15": "carry",
+        "source_15": -1,
+        "header_footer_15": "both",
+        "model_15": "auto",
+        "strength_15": 1,
+        "sound_15": "auto",
+        "seed_15": 0,
         "prompt_16": "",
         "duration_16": 4.25,
         "overlap_16": 22,
-        "continuity_16": "as set",
+        "continuity_16": "carry",
+        "source_16": -1,
+        "header_footer_16": "both",
+        "model_16": "auto",
+        "strength_16": 1,
+        "sound_16": "auto",
+        "seed_16": 0,
         "prompt_17": "",
         "duration_17": 4.25,
         "overlap_17": 22,
-        "continuity_17": "as set",
+        "continuity_17": "carry",
+        "source_17": -1,
+        "header_footer_17": "both",
+        "model_17": "auto",
+        "strength_17": 1,
+        "sound_17": "auto",
+        "seed_17": 0,
         "prompt_18": "",
         "duration_18": 4.25,
         "overlap_18": 22,
-        "continuity_18": "as set",
+        "continuity_18": "carry",
+        "source_18": -1,
+        "header_footer_18": "both",
+        "model_18": "auto",
+        "strength_18": 1,
+        "sound_18": "auto",
+        "seed_18": 0,
         "prompt_19": "",
         "duration_19": 4.25,
         "overlap_19": 22,
-        "continuity_19": "as set",
+        "continuity_19": "carry",
+        "source_19": -1,
+        "header_footer_19": "both",
+        "model_19": "auto",
+        "strength_19": 1,
+        "sound_19": "auto",
+        "seed_19": 0,
         "prompt_20": "",
         "duration_20": 4.25,
         "overlap_20": 22,
-        "continuity_20": "as set",
+        "continuity_20": "carry",
+        "source_20": -1,
+        "header_footer_20": "both",
+        "model_20": "auto",
+        "strength_20": 1,
+        "sound_20": "auto",
+        "seed_20": 0,
         "prompt_21": "",
         "duration_21": 4.25,
         "overlap_21": 22,
-        "continuity_21": "as set",
+        "continuity_21": "carry",
+        "source_21": -1,
+        "header_footer_21": "both",
+        "model_21": "auto",
+        "strength_21": 1,
+        "sound_21": "auto",
+        "seed_21": 0,
         "prompt_22": "",
         "duration_22": 4.25,
         "overlap_22": 22,
-        "continuity_22": "as set",
+        "continuity_22": "carry",
+        "source_22": -1,
+        "header_footer_22": "both",
+        "model_22": "auto",
+        "strength_22": 1,
+        "sound_22": "auto",
+        "seed_22": 0,
         "prompt_23": "",
         "duration_23": 4.25,
         "overlap_23": 22,
-        "continuity_23": "as set",
+        "continuity_23": "carry",
+        "source_23": -1,
+        "header_footer_23": "both",
+        "model_23": "auto",
+        "strength_23": 1,
+        "sound_23": "auto",
+        "seed_23": 0,
         "prompt_24": "",
         "duration_24": 4.25,
         "overlap_24": 22,
-        "continuity_24": "as set",
-        "ref_image_size": "1024"
+        "continuity_24": "carry",
+        "source_24": -1,
+        "header_footer_24": "both",
+        "model_24": "auto",
+        "strength_24": 1,
+        "sound_24": "auto",
+        "seed_24": 0,
+        "ref_image_size": "1024",
+        "loop": false
       }
     },
     {
@@ -1328,7 +4517,7 @@
       "type": "WASFreeMemory",
       "pos": [
         1421.700294701774,
-        1350.9118521365874
+        2350.5976039464413
       ],
       "size": [
         270,
@@ -1341,14 +4530,63 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "shape": 7,
           "type": "*",
           "link": 45
+        },
+        {
+          "localized_name": "unload_models",
+          "name": "unload_models",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "unload_models"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "empty_cache",
+          "name": "empty_cache",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "empty_cache"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "collect_garbage",
+          "name": "collect_garbage",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "collect_garbage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "release_fraction",
+          "name": "release_fraction",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "release_fraction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "always_run",
+          "name": "always_run",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "always_run"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "type": "LATENT",
           "links": [
@@ -1356,21 +4594,25 @@
           ]
         },
         {
+          "localized_name": "vram_before",
           "name": "vram_before",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "vram_after",
           "name": "vram_after",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "freed",
           "name": "freed",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": null
@@ -1388,13 +4630,15 @@
         true,
         true,
         true,
-        0
+        0,
+        false
       ],
       "widgets_values_named": {
         "unload_models": true,
         "empty_cache": true,
         "collect_garbage": true,
-        "release_fraction": 0
+        "release_fraction": 0,
+        "always_run": false
       }
     },
     {
@@ -1411,9 +4655,20 @@
       "flags": {},
       "order": 3,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "VAE",
           "name": "VAE",
           "type": "VAE",
           "links": [
@@ -1451,9 +4706,20 @@
       "flags": {},
       "order": 4,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "VAE",
           "name": "VAE",
           "type": "VAE",
           "links": [
@@ -1492,9 +4758,39 @@
       "flags": {},
       "order": 5,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "CLIP",
           "name": "CLIP",
           "type": "CLIP",
           "links": [
@@ -1537,13 +4833,24 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 3
+        },
+        {
+          "localized_name": "head_chunks",
+          "name": "head_chunks",
+          "type": "INT",
+          "widget": {
+            "name": "head_chunks"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "links": [
@@ -1583,13 +4890,24 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 2
+        },
+        {
+          "localized_name": "backend",
+          "name": "attention",
+          "type": "COMBO",
+          "widget": {
+            "name": "attention"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "links": [
@@ -1628,13 +4946,33 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 1
+        },
+        {
+          "localized_name": "lora_name",
+          "name": "lora_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_model",
+          "name": "strength_model",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_model"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -1675,13 +5013,42 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 4
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "SIGMAS",
           "name": "SIGMAS",
           "type": "SIGMAS",
           "links": [
@@ -1724,6 +5091,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "type": "*",
           "link": 41
@@ -1731,6 +5099,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "shape": 6,
           "type": "STRING",
@@ -1764,6 +5133,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "string_a",
           "name": "string_a",
           "type": "STRING",
           "widget": {
@@ -1772,16 +5142,27 @@
           "link": 24
         },
         {
+          "localized_name": "string_b",
           "name": "string_b",
           "type": "STRING",
           "widget": {
             "name": "string_b"
           },
           "link": 31
+        },
+        {
+          "localized_name": "delimiter",
+          "name": "delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "delimiter"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -1824,41 +5205,77 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 18
         },
         {
+          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 48
         },
         {
+          "localized_name": "c",
           "name": "c",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "localized_name": "expression",
+          "name": "expression",
+          "type": "STRING",
+          "widget": {
+            "name": "expression"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_error",
+          "name": "on_error",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "on_error"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
+          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": null
         },
         {
+          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": [
@@ -1866,6 +5283,7 @@
           ]
         },
         {
+          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -1906,6 +5324,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "noise_seed",
           "name": "noise_seed",
           "type": "INT",
           "widget": {
@@ -1916,6 +5335,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "NOISE",
           "name": "NOISE",
           "type": "NOISE",
           "links": [
@@ -1956,36 +5376,71 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": null
         },
         {
+          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 17
         },
         {
+          "localized_name": "c",
           "name": "c",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "localized_name": "expression",
+          "name": "expression",
+          "type": "STRING",
+          "widget": {
+            "name": "expression"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_error",
+          "name": "on_error",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "on_error"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
+          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": [
@@ -1994,11 +5449,13 @@
           ]
         },
         {
+          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": null
         },
         {
+          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -2041,46 +5498,83 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 58
         },
         {
+          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 50
         },
         {
+          "localized_name": "c",
           "name": "c",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "localized_name": "expression",
+          "name": "expression",
+          "type": "STRING",
+          "widget": {
+            "name": "expression"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_error",
+          "name": "on_error",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "on_error"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
+          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": []
         },
         {
+          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": []
         },
         {
+          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -2114,14 +5608,34 @@
       ],
       "size": [
         282.798828125,
-        314
+        326
       ],
       "flags": {},
       "order": 6,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -2129,6 +5643,7 @@
           ]
         },
         {
+          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -2159,15 +5674,35 @@
         601
       ],
       "size": [
-        282.798828125,
-        234.50744298986487
+        387,
+        294
       ],
       "flags": {},
       "order": 7,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "VIDEO",
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
@@ -2197,7 +5732,7 @@
       "type": "GetVideoComponents",
       "pos": [
         120,
-        601
+        945
       ],
       "size": [
         193.530859375,
@@ -2208,6 +5743,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "link": 51
@@ -2215,6 +5751,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "links": [
@@ -2222,6 +5759,7 @@
           ]
         },
         {
+          "localized_name": "audio",
           "name": "audio",
           "type": "AUDIO",
           "links": [
@@ -2229,16 +5767,19 @@
           ]
         },
         {
+          "localized_name": "fps",
           "name": "fps",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "bit_depth",
           "name": "bit_depth",
           "type": "COMBO",
           "links": null
         },
         {
+          "localized_name": "color_space",
           "name": "color_space",
           "type": "COMBO",
           "links": null
@@ -2267,9 +5808,38 @@
       "flags": {},
       "order": 8,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "COMBO",
+          "widget": {
+            "name": "audio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audioUI",
+          "name": "audioUI",
+          "type": "AUDIO_UI",
+          "widget": {
+            "name": "audioUI"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "AUDIOUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "AUDIO",
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
@@ -2310,6 +5880,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "type": "*",
           "link": 57
@@ -2317,6 +5888,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "shape": 6,
           "type": "STRING",
@@ -2348,9 +5920,20 @@
       "flags": {},
       "order": 9,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "INT",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "INT",
           "name": "INT",
           "type": "INT",
           "links": [
@@ -2384,14 +5967,34 @@
       ],
       "size": [
         282.798828125,
-        314
+        326
       ],
       "flags": {},
       "order": 10,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -2399,6 +6002,7 @@
           ]
         },
         {
+          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -2776,14 +6380,6 @@
       "INT"
     ],
     [
-      44,
-      26,
-      0,
-      27,
-      0,
-      "VIDEO"
-    ],
-    [
       6,
       5,
       0,
@@ -2800,14 +6396,6 @@
       "VAE"
     ],
     [
-      15,
-      12,
-      1,
-      15,
-      4,
-      "INT"
-    ],
-    [
       37,
       14,
       3,
@@ -2816,27 +6404,35 @@
       "BOOLEAN"
     ],
     [
-      52,
-      7,
+      44,
+      26,
       0,
-      10,
-      2,
-      "VAE"
+      27,
+      0,
+      "VIDEO"
+    ],
+    [
+      15,
+      12,
+      1,
+      15,
+      7,
+      "INT"
     ],
     [
       53,
       37,
       0,
       10,
-      3,
+      5,
       "IMAGE"
     ],
     [
-      60,
-      43,
+      54,
+      39,
       0,
       10,
-      4,
+      8,
       "IMAGE"
     ],
     [
@@ -2844,7 +6440,7 @@
       39,
       1,
       10,
-      7,
+      9,
       "AUDIO"
     ],
     [
@@ -2852,16 +6448,24 @@
       40,
       0,
       10,
-      10,
+      12,
       "AUDIO"
     ],
     [
-      54,
-      39,
+      60,
+      43,
       0,
       10,
       6,
       "IMAGE"
+    ],
+    [
+      52,
+      7,
+      0,
+      10,
+      4,
+      "VAE"
     ]
   ],
   "groups": [
@@ -2884,7 +6488,7 @@
         940,
         120,
         680,
-        1280
+        2190.5976039464413
       ],
       "color": "#4a3f59",
       "flags": {}
@@ -2955,10 +6559,10 @@
     "ue_links": [],
     "links_added_by_ue": [],
     "ds": {
-      "scale": 0.9349605033557049,
+      "scale": 0.5559917313492291,
       "offset": [
-        337.7000553495833,
-        -33.90239444776638
+        225.6813150225171,
+        304.0419647077992
       ]
     },
     "frontendVersion": "1.53.6",

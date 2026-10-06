@@ -18,6 +18,7 @@ __all__ = [
     "DICT",
     "DOC",
     "EMA_VFI_MODEL",
+    "H3_ASSETS",
     "H3_DEROPE",
     "H3_PROMPTS",
     "IMAGE_BOUNDS",
@@ -81,6 +82,11 @@ CROP_DATA = io.Custom("CROP_DATA")
 #: `MiniMax H3 Conditioning` -> `H3 Extend Window`. One encoded conditioning and one frame
 #: count per extension pass, in pass order.
 H3_PROMPTS = io.Custom("WAS_H3_PROMPTS")
+
+#: `MiniMax H3 Asset` -> the next `MiniMax H3 Asset` and `MiniMax H3 Conditioning`. The
+#: pictures, clips and sounds of a chain, each with the segment it belongs to and the part it
+#: plays there, as a tuple of `modules.latent.h3_assets.Asset` in chain order.
+H3_ASSETS = io.Custom("WAS_H3_ASSETS")
 
 #: `Audio Beats` output. A track's beat times, downbeats, tempo and per-frame loudness, as a
 #: `modules.media.beats.Beats`.

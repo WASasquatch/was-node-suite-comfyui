@@ -20,6 +20,7 @@ __all__ = [
     "Plan",
     "aligned",
     "audio_row_strength",
+    "decode_scenes",
     "encode_stretched",
     "fit",
     "latent_audio",
@@ -29,9 +30,12 @@ __all__ = [
     "plot",
     "recover",
     "row_of_frame",
+    "scene_frames",
+    "scene_spans",
     "squeeze_audio",
     "stretch_audio",
     "stretch_frames",
+    "stretched_starts",
     "video_of",
 ]
 
@@ -64,6 +68,7 @@ class Plan:
         rows: Motion of each latent row, for the plot.
         row_holds: Hold of each latent row.
         source: Frames of the clip as wired.
+        cuts: Latent rows each scene after the first opens on.
     """
 
     holds: tuple
@@ -72,6 +77,7 @@ class Plan:
     rows: tuple
     row_holds: tuple
     source: int
+    cuts: tuple = ()
 
     @property
     def frames(self) -> int:
@@ -161,6 +167,61 @@ def latent_audio(audio_vae, latent: dict) -> dict | None:
     return {"waveform": waveform, "sample_rate": int(rate)}
 
 
+def scene_spans(starts, rows: int) -> list[tuple[int, int]]:
+    """``(start, stop)`` latent rows of each scene of a clip.
+
+    Args:
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+        rows: Latent rows of the clip.
+
+    Returns:
+        Spans in order covering every row, one where ``starts`` names no cut inside the clip.
+    """
+    rows = int(rows)
+    kept = sorted({int(start) for start in starts or ()
+                   if 0 < int(start) < rows and int(start) % h3_extend.CLIP_TOKENS == 0})
+    edges = [0, *kept, rows]
+    return [(edges[index], edges[index + 1]) for index in range(len(edges) - 1)]
+
+
+def scene_frames(starts, frames: int) -> list[tuple[int, int]]:
+    """``(start, stop)`` frames of each scene of a clip on the 17k+5 grid.
+
+    Args:
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+        frames: Frames of the clip.
+
+    Returns:
+        Spans in order covering every frame.
+    """
+    spans = scene_spans(starts, h3_extend.tokens_for(int(frames)))
+    edges = [start // h3_extend.CLIP_TOKENS * h3_extend.CLIP_FRAMES for start, _ in spans]
+    edges.append(int(frames))
+    return [(edges[index], edges[index + 1]) for index in range(len(spans))]
+
+
+def decode_scenes(vae, video: torch.Tensor, starts=None) -> torch.Tensor:
+    """A clip's frames, each scene decoded on its own.
+
+    Args:
+        vae: The H3 video VAE.
+        video: The clip's video latent, ``[B, 24, T, H, W]``.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+
+    Returns:
+        ``[F, H, W, C]`` frames.
+    """
+    spans = scene_spans(starts, video.shape[2])
+    if len(spans) == 1:
+        images = vae.decode(video)
+        return images.reshape(-1, *images.shape[-3:])
+    pieces = []
+    for start, stop in spans:
+        images = vae.decode(video[:, :, start:stop])
+        pieces.append(images.reshape(-1, *images.shape[-3:]))
+    return torch.cat(pieces)
+
+
 def row_of_frame(frame: int) -> int:
     """The latent row a frame is encoded into.
 
@@ -174,16 +235,15 @@ def row_of_frame(frame: int) -> int:
     return clip * h3_extend.CLIP_TOKENS + (0 if offset == 0 else 1 + (offset - 1) // 4)
 
 
-def motion(video: torch.Tensor) -> np.ndarray:
-    """Motion per latent row, the mean size of its third difference over time.
+def _third(rows: torch.Tensor) -> np.ndarray:
+    """Mean size of the third difference over time ending at each row of one scene.
 
     Args:
-        video: The clip's video latent, ``[B, 24, T, H, W]``.
+        rows: A float ``[B, 24, T, H, W]`` latent.
 
     Returns:
-        ``T`` values. The first three rows take the fourth row's value.
+        ``T`` values, the first three taking the fourth's, or zeros under four rows.
     """
-    rows = video.float()
     count = rows.shape[2]
     if count < 4:
         return np.zeros(count)
@@ -192,25 +252,35 @@ def motion(video: torch.Tensor) -> np.ndarray:
     return np.concatenate([np.full(3, values[0]), values])
 
 
-def plan(profile: np.ndarray, frames: int, quantile: float, peak: int, bridge: int,
-         ramp: bool = True):
-    """The hold of every frame, from the motion of every row.
+def motion(video: torch.Tensor, starts=None) -> np.ndarray:
+    """Motion per latent row, the mean size of its third difference over time inside its scene.
 
     Args:
-        profile: Motion per latent row.
-        frames: Frames of the clip.
-        quantile: Share of rows below the hold threshold, ``0.5`` to ``0.99``.
-        peak: Hold of the fastest rows, ``2`` to ``8``.
+        video: The clip's video latent, ``[B, 24, T, H, W]``.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+
+    Returns:
+        ``T`` values. The first three rows of each scene take its fourth row's value.
+    """
+    rows = video.float()
+    spans = scene_spans(starts, rows.shape[2])
+    if len(spans) == 1:
+        return _third(rows)
+    return np.concatenate([_third(rows[:, :, start:stop]) for start, stop in spans])
+
+
+def _spread(rows: np.ndarray, peak: int, bridge: int, ramp: bool) -> np.ndarray:
+    """Row holds with short gaps between held rows filled and each held span ramped down.
+
+    Args:
+        rows: Hold of each row of one scene, ``peak`` or ``1``.
+        peak: Hold of the fastest rows.
         bridge: Longest gap in rows between held rows that is held too.
         ramp: Whether holds fall by one per row away from a held span.
 
     Returns:
-        ``(holds, row_holds)``, one hold per frame and one per row.
+        The holds.
     """
-    profile = np.asarray(profile, dtype=np.float64)
-    rows = np.ones(len(profile), dtype=int)
-    if len(profile) and float(profile.max()) > 0.0:
-        rows[profile > np.quantile(profile, float(quantile))] = int(peak)
     hot = np.flatnonzero(rows == int(peak))
     for first, second in zip(hot[:-1], hot[1:]):
         if 1 < second - first <= int(bridge):
@@ -220,6 +290,36 @@ def plan(profile: np.ndarray, frames: int, quantile: float, peak: int, bridge: i
             left = np.concatenate([[1], rows[:-1]])
             right = np.concatenate([rows[1:], [1]])
             rows = np.maximum(rows, np.maximum(left, right) - 1)
+    return rows
+
+
+def plan(profile: np.ndarray, frames: int, quantile: float, peak: int, bridge: int,
+         ramp: bool = True, starts=None):
+    """The hold of every frame, from the motion of every row.
+
+    Args:
+        profile: Motion per latent row.
+        frames: Frames of the clip.
+        quantile: Share of rows below the hold threshold, ``0.5`` to ``0.99``.
+        peak: Hold of the fastest rows, ``2`` to ``8``.
+        bridge: Longest gap in rows between held rows that is held too.
+        ramp: Whether holds fall by one per row away from a held span.
+        starts: Latent rows each scene opens on, or ``None`` for one scene. Bridges and
+            ramps stop at a scene's edges.
+
+    Returns:
+        ``(holds, row_holds)``, one hold per frame and one per row.
+    """
+    profile = np.asarray(profile, dtype=np.float64)
+    rows = np.ones(len(profile), dtype=int)
+    if len(profile) and float(profile.max()) > 0.0:
+        rows[profile > np.quantile(profile, float(quantile))] = int(peak)
+    spans = scene_spans(starts, len(rows))
+    if len(spans) == 1:
+        rows = _spread(rows, peak, bridge, ramp)
+    else:
+        rows = np.concatenate([_spread(rows[start:stop].copy(), peak, bridge, ramp)
+                               for start, stop in spans])
     last = len(rows) - 1
     holds = [int(rows[min(row_of_frame(frame), last)]) for frame in range(int(frames))]
     return holds, [int(value) for value in rows]
@@ -239,19 +339,8 @@ def padding(holds) -> int:
     return h3_extend.CLIP_LEAD + clips * h3_extend.CLIP_FRAMES - total
 
 
-def aligned(holds) -> list[int]:
-    """Holds lengthened to put the stretched clip on the 17k+5 grid.
-
-    Extra showings go to the most held frames, spread evenly.
-
-    Args:
-        holds: One hold per frame of a clip on the 17k+5 grid.
-
-    Returns:
-        The lengthened holds.
-    """
-    holds = [int(hold) for hold in holds]
-    extra = padding(holds)
+def _lengthen(holds: list, extra: int) -> list:
+    """Holds with ``extra`` showings added to the most held frames, spread evenly."""
     if not extra:
         return holds
     peak = max(holds)
@@ -259,6 +348,45 @@ def aligned(holds) -> list[int]:
     for step in range(extra):
         holds[chosen[(step * len(chosen)) // extra]] += 1
     return holds
+
+
+def aligned(holds, starts=None) -> list[int]:
+    """Holds lengthened to put the stretched clip on the 17k+5 grid, every scene on whole clips.
+
+    Extra showings go to each scene's most held frames.
+
+    Args:
+        holds: One hold per frame of a clip on the 17k+5 grid.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+
+    Returns:
+        The lengthened holds.
+    """
+    holds = [int(hold) for hold in holds]
+    spans = scene_frames(starts, len(holds))
+    if len(spans) == 1:
+        return _lengthen(holds, padding(holds))
+    out = []
+    for index, (start, stop) in enumerate(spans):
+        part = holds[start:stop]
+        extra = (padding(part) if index == len(spans) - 1
+                 else -sum(part) % h3_extend.CLIP_FRAMES)
+        out.extend(_lengthen(part, extra))
+    return out
+
+
+def stretched_starts(holds, starts) -> list[int]:
+    """Latent rows each scene opens on in the stretched clip.
+
+    Args:
+        holds: Holds from :func:`aligned`, one per source frame.
+        starts: Latent rows each scene opens on in the source clip.
+
+    Returns:
+        Row numbers in order, the first ``0``.
+    """
+    return [int(sum(holds[:start])) // h3_extend.CLIP_FRAMES * h3_extend.CLIP_TOKENS
+            for start, _ in scene_frames(starts, len(holds))]
 
 
 def stretch_frames(images: torch.Tensor, holds) -> torch.Tensor:
@@ -423,17 +551,19 @@ def plot(result: Plan, width: int = 1280, height: int = 200) -> torch.Tensor:
         colour = colours.get(hold, (232, 72, 72))
         draw.rectangle([left, base - int(value / tallest * (base - top)), right, base],
                        fill=colour)
+    for cut in result.cuts:
+        x = int(cut / span * width)
+        draw.line([(x, top - 4), (x, base)], fill=(236, 236, 242), width=2)
     seconds = result.frames / float(result.fps)
     step = 1 if seconds <= 12 else 5
     for mark in range(0, int(seconds) + 1, step):
         x = int(mark / max(seconds, 1e-6) * (width - 1))
         draw.text((x + 2, base + 3), f"{mark}s", fill=(150, 150, 160))
     held = sum(1 for hold in result.holds[:result.source] if hold > 1)
-    draw.text(
-        (8, 6),
-        f"{held} of {result.source} frames held, peak x{max(result.holds)}, "
-        f"{result.source} -> {result.stretched} frames",
-        fill=(230, 230, 235),
-    )
+    heading = (f"{held} of {result.source} frames held, peak x{max(result.holds)}, "
+               f"{result.source} -> {result.stretched} frames")
+    if result.cuts:
+        heading += f", {len(result.cuts)} {'cut' if len(result.cuts) == 1 else 'cuts'} marked"
+    draw.text((8, 6), heading, fill=(230, 230, 235))
     array = np.asarray(picture, dtype=np.float32) / 255.0
     return torch.from_numpy(array)[None]

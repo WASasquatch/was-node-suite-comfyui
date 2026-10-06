@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **481 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **509 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -51,13 +51,13 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-481 nodes across a package of source files. The pack itself needs no packages, and nothing is
+509 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 468 |
+| Nodes | 220 | 500 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 128 files: browser libraries, fonts, eight face cascades, two sets of weights and one network, each with its licence |
@@ -70,13 +70,13 @@ on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, sci
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
 belongs to an optional group.
 
-## 253 new nodes
+## 287 new nodes
 
 | Area | New | Area | New |
 |---|--:|---|--:|
 | Three.js scenes | 43 | HDR and linear light | 9 |
-| Files, archives and documents | 28 | Affine sampling | 8 |
-| Logic and flow | 25 | Everything else | 108 |
+| Files, archives and documents | 28 | Affine sampling | 7 |
+| Logic and flow | 26 | Everything else | 142 |
 | Layers | 22 | | |
 | Bounds | 10 | | |
 
@@ -87,7 +87,7 @@ What each area does: [`FEATURES.md`](FEATURES.md).
 # Opening a workflow saved before v3
 
 No node id is renamed. Two nodes are now a different node under the same menu name, two ids
-are gone and another node does the job of each, and ComfyUI offers to swap all four in. Three
+are gone and another node does the job of each, and ComfyUI offers to swap all four in. Five
 ids are removed with nothing in their place. Widgets, slot counts, three menu labels and four
 results changed, and a workflow saved before v3 is carried across as it loads.
 
@@ -150,7 +150,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**481 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
+**509 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 

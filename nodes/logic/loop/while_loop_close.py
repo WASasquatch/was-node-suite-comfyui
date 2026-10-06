@@ -259,7 +259,8 @@ class WhileLoopClose(io.ComfyNode):
             "end_id": end_id,
             "mode": "condition",
             "max_iterations": max_iterations,
-            "index": completed,
+            "start_index": int(iterator.get("start_index", 0)),
+            "index": int(iterator.get("start_index", 0)) + completed,
             "iteration": completed + 1,
             "accumulated": accumulated,
         }
@@ -276,7 +277,7 @@ class WhileLoopClose(io.ComfyNode):
         # metadata, then value_1 onward.
         next_values = {
             0: next_flow,
-            1: completed,
+            1: next_flow["index"],
             2: next_metadata,
             3: value_1,
             4: value_2,

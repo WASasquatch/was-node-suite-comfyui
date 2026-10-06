@@ -166,12 +166,12 @@ const H3_FRAME_SLOTS = [
   ...H3_REF_AUDIOS,
 ];
 // Which of those the chosen mode reads. `fl2va_batched` takes a whole batch and draws that
-// instead of the two single frames.
+// instead of the two single frames. The audio VAE is drawn in every mode.
 const H3_MODE_SLOTS = {
-  t2va: [],
-  i2va: [0],
-  fl2va: [0, 1],
-  fl2va_batched: [2],
+  t2va: [3],
+  i2va: [0, 3],
+  fl2va: [0, 1, 3],
+  fl2va_batched: [2, 3],
   ref2va: [3],
 };
 // Where each reference series starts in H3_FRAME_SLOTS.
@@ -192,7 +192,9 @@ const H3_REF_SERIES = [
 function h3RefSlots(node, start, series) {
   const linked = new Set(
     (node?.inputs ?? [])
-      .filter((socket) => socket.link !== null && socket.link !== undefined)
+      .filter((socket, slot) => (typeof node.isInputConnected === "function"
+        ? node.isInputConnected(slot)
+        : socket.link !== null && socket.link !== undefined))
       .map((socket) => socket.name),
   );
   let lastUsed = -1;

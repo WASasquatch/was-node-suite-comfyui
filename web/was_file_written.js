@@ -24,6 +24,7 @@ const NODES = [
   "Write to Video",
   "WASFastSaveAnimatedWEBP",
   "Create Morph Image",
+  "WASH3SaveClip",
 ];
 
 // Height of the panel in node units: the summary line, the two figures, the five fact rows the
@@ -65,7 +66,7 @@ app.registerExtension({
       tooltip:
         "Draw the number of files, the number of writes, the folder, the format, the first and "
         + "last names and the bytes on Image Save, EXR Save, Write to GIF, Write to Video, "
-        + "Fast Save Animated WEBP and Create Morph Image. A naming scheme that replaces its own "
+        + "Fast Save Animated WEBP, Create Morph Image and H3 Save Clip. A naming scheme that replaces its own "
         + "output on every frame, and a "
         + "write that failed, are drawn in the warning colour. The nodes run the same either "
         + "way. This applies to nodes added after the setting changes, so a reload shows it "

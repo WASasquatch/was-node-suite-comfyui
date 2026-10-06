@@ -129,6 +129,8 @@ export function addDecoration(node, widget, before) {
   }
   // Serialisers that walk the widget list themselves read this rather than `node.serialize`.
   widget.serialize = false;
+  // Keeps the decoration out of the API prompt, which reads the option rather than the flag.
+  widget.options = { ...(widget.options ?? {}), serialize: false };
   widgets.splice(at, 0, widget);
   const decorations = armed(node);
   decorations.add(widget);

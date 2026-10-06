@@ -104,6 +104,13 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             The joined clip holding every record.
         """
         out = h3_extend.with_ends(joined, ends)
+        # The audio each segment ends on, so a clip cut back to one keeps its sound to the step.
+        heard = [int(step) for step in (latent.get(h3_extend.SEGMENT_AUDIO_KEY) or [])][:len(ends) - 1]
+        while len(heard) < len(ends) - 1:
+            heard.append(h3_extend.audio_span(ends[len(heard)]))
+        if trimmed is not None and heard:
+            heard[-1] = min(heard[-1], h3_extend.audio_span(ends[len(heard) - 1]))
+        out[h3_extend.SEGMENT_AUDIO_KEY] = heard + [int(h3_extend.split(joined)[1].shape[-1])]
         starts = h3_extend.scene_starts(latent) or [0]
         if opened is not None and int(opened) not in starts:
             starts.append(int(opened))

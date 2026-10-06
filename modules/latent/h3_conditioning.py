@@ -34,6 +34,18 @@ SECTION_LINE = re.compile(r"^([a-z][a-z0-9_]*):(?:\s|$)")
 #: The tag opening a spoken line, which the text encoder reads as one token.
 DIALOGUE_OPEN = "<d>"
 
+#: A shot heading in a prompt, as ``[Shot 2]``.
+SHOT_HEADING = re.compile(r"\[Shot (\d+)\]")
+
+#: A shot's start time in a prompt, as ``At 00:04.000``.
+SHOT_TIME = re.compile(r"\bAt (\d+):(\d{2})\.(\d{3})\b")
+
+#: A line opening the section a prompt writes its shots in.
+SHOT_SECTION = re.compile(r"^(integrated_multimodal_description|detailed_description):[ \t]*", re.M)
+
+#: The shot a window opens on before a cut, ahead of the segment's own shots.
+CUT_LEAD = "The last moments of the previous shot continue unchanged."
+
 #: Latent channels in the video and audio halves.
 VIDEO_CHANNELS = 24
 AUDIO_CHANNELS = 32
@@ -75,11 +87,39 @@ BATCHED_MODES = ("fl2va_batched",)
 #: Modes that build every segment on reference pictures, videos and audio.
 REFERENCE_MODES = ("ref2va",)
 
-#: A row's continuity choice that leaves the sampling node's own setting in place.
-AS_SET = "as set"
+#: How clean core holds a pinned frame or a reference by default.
+KEYFRAME_CLEAN = 0.999
+
+#: The continuity a row takes where it names none.
+DEFAULT_CONTINUITY = h3_extend.CONTINUITY[0]
+
+#: The key a keyframe block closing its segment carries.
+CLOSING_KEY = "was_closing"
+
+#: Bundle entry key naming the node a segment's prompt came from.
+OWNER_KEY = "owner"
+
+#: Bundle entry key marking the last segment of a loop, which closes on the video's first frame.
+LOOP_KEY = "closes_loop"
+
+#: Bundle entry key holding what a segment's prompt was encoded from.
+ENCODING_KEY = "encoding"
+
+#: Prompt keys a prompt encoded again keeps from the one it replaces.
+KEPT_KEYS = ("minimax_keyframes", "minimax_visual_cond_noise_aug", "minimax_audio_cond_noise_aug")
 
 #: What a row may choose for how it continues from the row before it.
-ROW_CONTINUITY: tuple[str, ...] = (AS_SET,) + h3_extend.CONTINUITY
+ROW_CONTINUITY: tuple[str, ...] = h3_extend.CONTINUITY
+
+#: A row's model choice that picks between the wired models by what the row carries.
+AUTO_MODEL = "auto"
+
+#: The two MiniMax H3 models a row may sample with.
+FL2VA = "fl2va"
+REF2VA = "ref2va"
+
+#: What a row may choose for the model its segment is sampled with.
+MODEL_CHOICES: tuple[str, ...] = (AUTO_MODEL, FL2VA, REF2VA)
 
 
 def prompt_name(row: int) -> str:
@@ -190,6 +230,272 @@ def wraps_of(widgets: dict) -> list[str]:
         value = widgets.get(wrap_name(row))
         wraps.append(value if value in WRAPS else WRAPS[0])
     return wraps
+
+
+def seed_name(row: int) -> str:
+    """The widget name of a row's seed.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"seed_{row}"
+
+
+def seeds_of(widgets: dict) -> list[int]:
+    """The seed each row carrying a prompt names, in row order.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One seed per row whose prompt is not blank, ``0`` where the row leaves it to the run.
+    """
+    values = []
+    for row in range(1, MAX_ROWS + 1):
+        text = widgets.get(prompt_name(row))
+        if not isinstance(text, str) or not text.strip():
+            continue
+        try:
+            values.append(max(0, int(widgets.get(seed_name(row)) or 0)))
+        except (TypeError, ValueError):
+            values.append(0)
+    return values
+
+
+def seed_of(prompts, index: int, base: int) -> int:
+    """The seed one segment samples with.
+
+    Args:
+        prompts: A bundle from :func:`bundle`, or ``None``.
+        index: Segment number, from 0.
+        base: The run's seed.
+
+    Returns:
+        The row's own seed where it names one, else ``base`` plus the segment number.
+    """
+    own = 0
+    if prompts and 0 <= int(index) < len(prompts):
+        own = int(prompts[int(index)].get("seed") or 0)
+    return own if own > 0 else int(base) + int(index)
+
+
+def sound_name(row: int) -> str:
+    """The widget name of a row's sound choice.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"sound_{row}"
+
+
+def sounds_of(widgets: dict) -> list[str]:
+    """How each row carrying a prompt takes its sound, in row order.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One entry of :data:`h3_extend.SOUNDS` per row whose prompt is not blank.
+    """
+    values = []
+    for row in range(1, MAX_ROWS + 1):
+        text = widgets.get(prompt_name(row))
+        if not isinstance(text, str) or not text.strip():
+            continue
+        value = widgets.get(sound_name(row))
+        values.append(value if value in h3_extend.SOUNDS else h3_extend.SOUNDS[0])
+    return values
+
+
+def sound_of(prompts, index: int) -> str:
+    """One segment's sound choice.
+
+    Args:
+        prompts: A bundle from :func:`bundle`.
+        index: Segment number, from 0.
+
+    Returns:
+        An entry of :data:`h3_extend.SOUNDS`, ``auto`` where the segment names none.
+    """
+    if not prompts or not 0 <= int(index) < len(prompts):
+        return h3_extend.SOUNDS[0]
+    value = prompts[int(index)].get("sound")
+    return value if value in h3_extend.SOUNDS else h3_extend.SOUNDS[0]
+
+
+def strength_name(row: int) -> str:
+    """The widget name of a row's hold on its pinned frames and references.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"strength_{row}"
+
+
+def strengths_of(widgets: dict) -> list[float]:
+    """How firmly each row carrying a prompt holds its pinned frames and references.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One value in ``[0, 1]`` per row whose prompt is not blank, ``1.0`` where none is set.
+    """
+    values = []
+    for row in range(1, MAX_ROWS + 1):
+        text = widgets.get(prompt_name(row))
+        if not isinstance(text, str) or not text.strip():
+            continue
+        try:
+            value = float(widgets.get(strength_name(row), 1.0))
+        except (TypeError, ValueError):
+            value = 1.0
+        values.append(max(0.0, min(1.0, value)))
+    return values
+
+
+def held(conditioning, strength: float):
+    """A prompt whose pinned frames and references are held at a strength.
+
+    Args:
+        conditioning: The segment's prompt.
+        strength: ``1.0`` to hold them as given, lower to add noise to them before sampling.
+
+    Returns:
+        The prompt, unchanged at ``1.0``.
+    """
+    if float(strength) >= 1.0:
+        return conditioning
+    import node_helpers
+
+    return node_helpers.conditioning_set_values(
+        conditioning, {"minimax_visual_cond_noise_aug": KEYFRAME_CLEAN * max(0.0, float(strength))})
+
+
+def model_name(row: int) -> str:
+    """The widget name of a row's model choice.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"model_{row}"
+
+
+def models_of(widgets: dict) -> list[str]:
+    """The model each row carrying a prompt chose, in row order.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One entry of :data:`MODEL_CHOICES` per row whose prompt is not blank.
+    """
+    choices = []
+    for row in range(1, MAX_ROWS + 1):
+        text = widgets.get(prompt_name(row))
+        if not isinstance(text, str) or not text.strip():
+            continue
+        value = widgets.get(model_name(row))
+        choices.append(value if value in MODEL_CHOICES else AUTO_MODEL)
+    return choices
+
+
+def pick_model(choice: str, fl2va, ref2va, referenced: bool) -> tuple:
+    """The model a segment is sampled with.
+
+    Args:
+        choice: An entry of :data:`MODEL_CHOICES`.
+        fl2va: The wired fl2va model, or ``None``.
+        ref2va: The wired ref2va model, or ``None``.
+        referenced: Whether the segment's prompt carries references.
+
+    Returns:
+        ``(model, kind)``: the model, or ``None`` where the kind asked for is not wired, and
+        the kind as :data:`FL2VA`, :data:`REF2VA`, or an empty string where nothing is wired
+        to choose from.
+    """
+    if choice == FL2VA:
+        return fl2va, FL2VA
+    if choice == REF2VA:
+        return ref2va, REF2VA
+    if fl2va is not None and ref2va is not None:
+        return (ref2va, REF2VA) if referenced else (fl2va, FL2VA)
+    if ref2va is not None:
+        return ref2va, REF2VA
+    if fl2va is not None:
+        return fl2va, FL2VA
+    return None, ""
+
+
+def model_or_blocker(prompts, index: int, named: str, referenced: bool | None = None):
+    """The model one bundled segment is sampled with, or what stops a node reading it.
+
+    Args:
+        prompts: A bundle from :func:`bundle`, or ``None`` where none is wired.
+        index: Segment number, from 0.
+        named: The node answering, as ``H3 Extend Window``.
+        referenced: True where the answering node adds references of its own, which an
+            ``auto`` row answers with ref2va. ``None`` keeps the choice the bundle made.
+
+    Returns:
+        The model, or an ``ExecutionBlocker`` saying what to wire.
+    """
+    from comfy_execution.graph_utils import ExecutionBlocker
+
+    guidance = "or feed the guider's model from a loader and leave this output unwired"
+    if prompts is None:
+        return ExecutionBlocker(
+            f"{named} has no prompts wired, so it has no segment model to answer. Wire "
+            f"MiniMax H3 Conditioning's prompts into prompts, {guidance}"
+        )
+    model, kind = model_of(prompts, index, referenced)
+    if model is not None:
+        return model
+    segment = f"segment {int(index) + 1}"
+    if kind:
+        return ExecutionBlocker(
+            f"{segment} asks for the {kind} model and model_{kind} is not wired on MiniMax H3 "
+            f"Conditioning. Wire it there, set that row's model to the one that is wired, "
+            f"{guidance}"
+        )
+    return ExecutionBlocker(
+        f"no model is wired into MiniMax H3 Conditioning, so it has none to answer for "
+        f"{segment}. Wire model_fl2va or model_ref2va there, {guidance}"
+    )
+
+
+def model_of(prompts, index: int, referenced: bool | None = None) -> tuple:
+    """The model one bundled segment is sampled with.
+
+    Args:
+        prompts: A bundle from :func:`bundle`.
+        index: Segment number, from 0.
+        referenced: True where the reader adds references of its own, which an ``auto``
+            row answers with ref2va. ``None`` keeps the choice the bundle made.
+
+    Returns:
+        ``(model, kind)`` as :func:`pick_model` answers them, ``(None, "")`` where the bundle
+        carries no model for that segment.
+    """
+    if not prompts or not 0 <= int(index) < len(prompts):
+        return None, ""
+    entry = prompts[int(index)]
+    models = entry.get("models")
+    if referenced and entry.get("model_choice") == AUTO_MODEL and models:
+        return pick_model(AUTO_MODEL, models.get(FL2VA), models.get(REF2VA), True)
+    return entry.get("model"), str(entry.get("model_kind") or "")
 
 
 def takes_header(wrap: str) -> bool:
@@ -307,12 +613,13 @@ def filled_rows(widgets: dict) -> list[tuple[str, int, int]]:
         text = widgets.get(prompt_key)
         if not isinstance(text, str) or not text.strip():
             continue
-        choice = widgets.get(continuity_key) or AS_SET
+        choice = widgets.get(continuity_key) or DEFAULT_CONTINUITY
+        choice = h3_extend.CONTINUITY_RENAMED.get(choice, choice)
         rows.append((
             text,
             frames_of(widgets.get(duration_key) or 0.0),
             int(widgets.get(overlap_key) or 0),
-            choice if choice in ROW_CONTINUITY else AS_SET,
+            choice if choice in ROW_CONTINUITY else DEFAULT_CONTINUITY,
         ))
     return rows
 
@@ -381,7 +688,7 @@ def composed(header: str, prompt: str, footer: str) -> str:
     return "\n\n".join(part for part in parts if part)
 
 
-def snap_segment(frames: int, overlap: int = 0, continuity: str = AS_SET) -> int:
+def snap_segment(frames: int, overlap: int = 0, continuity: str = DEFAULT_CONTINUITY) -> int:
     """New frames a segment adds so its window runs the clip length closest to ``frames``.
 
     Args:
@@ -477,13 +784,34 @@ def carried_timeline(text: str, frames: int, overlap: int, continuity: str,
     Returns:
         The prompt, its last beat and ``duration_seconds`` ending where its window ends.
     """
-    if opening:
-        window = h3_extend.snap_clip(frames)
-    elif continuity in CUT_LIKE or int(overlap) <= 0:
-        window = snap_segment(frames, overlap, continuity) + h3_extend.CLIP_LEAD
-    else:
-        window = snap_overlap_for(frames, overlap) + snap_segment(frames, overlap, continuity)
+    _, window = window_of(frames, overlap, continuity, opening)
     return shifted(text, 0.0, window / h3_extend.FPS)
+
+
+def window_of(frames: int, overlap: int, continuity: str,
+              opening: bool = False) -> tuple[int, int]:
+    """The window a row is sampled in, and how much of its start is not new.
+
+    Args:
+        frames: Frames the row's window is asked to run.
+        overlap: Frames asked to carry, ``0`` for a cut.
+        continuity: The row's continuity.
+        opening: True for the row that opens the clip.
+
+    Returns:
+        ``(head, window)``: frames at the start of the window that are carried or bridged
+        rather than new, and frames the whole window holds.
+    """
+    if opening:
+        return 0, h3_extend.snap_clip(frames)
+    if continuity in h3_extend.BRIDGING:
+        # The sound bridge is whole clips of the snapped overlap, one clip at least.
+        bridge = h3_extend.bridge_frames(snap_overlap_for(frames, overlap))
+        return bridge, h3_extend.snap_clip(bridge + snap_segment(frames, overlap, continuity))
+    if continuity in CUT_LIKE or int(overlap) <= 0:
+        return 0, snap_segment(frames, overlap, continuity) + h3_extend.CLIP_LEAD
+    carried = snap_overlap_for(frames, overlap)
+    return carried, carried + snap_segment(frames, overlap, continuity)
 
 
 def stated_seconds(text: str) -> float | None:
@@ -673,6 +1001,24 @@ def covered(image, width: int, height: int):
     return samples.movedim(1, -1)
 
 
+def covered_batch(frames, width: int, height: int):
+    """Every frame of a batch scaled to cover the canvas and cropped to it, colour only.
+
+    Args:
+        frames: A ``[T, H, W, C]`` tensor.
+        width: Canvas width in pixels.
+        height: Canvas height in pixels.
+
+    Returns:
+        A ``[T, height, width, 3]`` tensor.
+    """
+    import comfy.utils
+
+    samples = frames[..., :3].movedim(-1, 1)
+    samples = comfy.utils.common_upscale(samples, width, height, "lanczos", "center")
+    return samples.movedim(1, -1)
+
+
 #: How a keyframe is brought to the canvas, the same way for both of its roles.
 FITS = ("cover", "stretch")
 
@@ -754,6 +1100,110 @@ def encode(clip, prompt: str, images: list | None = None, references=None):
     )
 
 
+def encoding_of(clip, text: str, shown, references) -> dict:
+    """What a segment's prompt was encoded from, for encoding it again.
+
+    Args:
+        clip: The loaded minimax CLIP.
+        text: The prompt text as encoded.
+        shown: Keyframe images the encoder read.
+        references: The segment's references, or ``None``.
+
+    Returns:
+        The entry stored under :data:`ENCODING_KEY`.
+    """
+    return {"clip": clip, "text": text, "shown": list(shown or []), "references": references}
+
+
+def shot_time(seconds: float) -> str:
+    """A time as a prompt writes a shot's start.
+
+    Args:
+        seconds: From the start of the clip.
+
+    Returns:
+        ``MM:SS.mmm``, as ``00:00.708``.
+    """
+    millis = max(0, round(float(seconds) * 1000))
+    return f"{millis // 60000:02d}:{millis // 1000 % 60:02d}.{millis % 1000:03d}"
+
+
+def cut_in(text: str, seconds: float) -> str:
+    """A prompt whose own shots follow a cut ``seconds`` in, after a shot continuing the last scene.
+
+    Args:
+        text: A segment's prompt.
+        seconds: Where the cut lands, from the start of the window.
+
+    Returns:
+        The prompt with :data:`CUT_LEAD` as ``[Shot 1]`` and its own shots renumbered and retimed
+        after it.
+    """
+    text = str(text or "")
+    lead = f"[Shot 1] {CUT_LEAD}\n\n"
+    cut = f"At {shot_time(seconds)}, the shot cuts to the next scene."
+    first = SHOT_HEADING.search(text)
+    if first is None:
+        section = SHOT_SECTION.search(text)
+        at = section.end() if section else 0
+        gap = "\n" if section and not text[at:].startswith("\n") else ""
+        return f"{text[:at].rstrip(' ')}{gap}{lead}[Shot 2] {cut} {text[at:].lstrip()}".rstrip()
+
+    def later(match):
+        minutes, whole, millis = (int(part) for part in match.groups())
+        return f"At {shot_time(minutes * 60 + whole + millis / 1000 + float(seconds))}"
+
+    body = SHOT_TIME.sub(later, text[first.start():])
+    body = SHOT_HEADING.sub(lambda match: f"[Shot {int(match.group(1)) + 1}]", body)
+    opening = SHOT_HEADING.match(body)
+    return f"{text[:first.start()]}{lead}{opening.group(0)} {cut}{body[opening.end():]}"
+
+
+def encoded_text(entry) -> str:
+    """The prompt text a segment was encoded from.
+
+    Args:
+        entry: The segment's bundle entry.
+
+    Returns:
+        The text, or an empty string where the entry holds none.
+    """
+    encoding = entry.get(ENCODING_KEY) if isinstance(entry, dict) else None
+    return str((encoding or {}).get("text") or "")
+
+
+def reencoded(entry, positive, items, blocks, pictures=(), text=None):
+    """A segment's prompt encoded again with what a pass adds shown to the text encoder.
+
+    Args:
+        entry: The segment's bundle entry.
+        positive: The prompt as the pass received it, whose keyframes and holds are kept.
+        items: Text encoder entries for the references the pass adds.
+        blocks: Their ``minimax_refs`` blocks, in the same order.
+        pictures: Keyframe pictures the pass adds, read where the prompt has no reference.
+        text: The prompt text to encode in place of the segment's own, or ``None``.
+
+    Returns:
+        The new prompt, or ``None`` where the entry holds nothing to encode from.
+    """
+    encoding = entry.get(ENCODING_KEY) if isinstance(entry, dict) else None
+    if not encoding or encoding.get("clip") is None:
+        return None
+    import types
+
+    import node_helpers
+
+    base = encoding.get("references")
+    every_item = list(getattr(base, "items", None) or []) + list(items)
+    every_block = list(getattr(base, "blocks", None) or []) + list(blocks)
+    references = types.SimpleNamespace(items=every_item, blocks=every_block) if every_item else None
+    fresh = encode(encoding["clip"], encoding["text"] if text is None else text,
+                   list(pictures) + list(encoding.get("shown") or []), references)
+    held = positive[0][1] if positive else {}
+    kept = {key: held[key] for key in KEPT_KEYS if key in held}
+    return node_helpers.conditioning_set_values(fresh, kept) if kept else fresh
+
+
 def keyframes(vae, first, last, width: int, height: int, frames: int):
     """The guide keyframes a first and last frame contribute.
 
@@ -776,7 +1226,8 @@ def keyframes(vae, first, last, width: int, height: int, frames: int):
     if last is not None:
         picture = covered(last, width, height)
         images.append(picture)
-        blocks.append({"resolved_frame_index": frames - 1, "latent": vae.encode(picture)})
+        blocks.append({"resolved_frame_index": frames - 1, "latent": vae.encode(picture),
+                       CLOSING_KEY: True})
     return images, blocks
 
 
@@ -785,8 +1236,10 @@ def bundle(segments: list[tuple]) -> list[dict]:
 
     Args:
         segments: One ``(conditioning, frames, overlap)`` triple per segment, in order,
-            optionally with that segment's own empty latent as a fourth item and its
-            continuity as a fifth.
+            optionally with that segment's own empty latent as a fourth item, its
+            continuity as a fifth, its model as a sixth, the model's kind as a seventh, the
+            row's model choice as an eighth and ``{kind: model}`` of every wired model as a
+            ninth.
 
     Returns:
         One entry per segment.
@@ -798,12 +1251,22 @@ def bundle(segments: list[tuple]) -> list[dict]:
             "conditioning": conditioning,
             "frames": int(frames),
             "overlap": int(overlap),
-            "continuity": AS_SET,
+            "continuity": DEFAULT_CONTINUITY,
+            "model": None,
+            "model_kind": "",
         }
         if len(segment) > 3 and segment[3] is not None:
             entry["latent"] = segment[3]
         if len(segment) > 4 and segment[4] in ROW_CONTINUITY:
             entry["continuity"] = segment[4]
+        if len(segment) > 5:
+            entry["model"] = segment[5]
+        if len(segment) > 6 and segment[6] in (FL2VA, REF2VA):
+            entry["model_kind"] = segment[6]
+        if len(segment) > 7 and segment[7] in MODEL_CHOICES:
+            entry["model_choice"] = segment[7]
+        if len(segment) > 8 and isinstance(segment[8], dict):
+            entry["models"] = dict(segment[8])
         entries.append(entry)
     return entries
 
@@ -880,4 +1343,4 @@ def pick(prompts, index: int) -> tuple:
         )
     entry = prompts[position]
     return (entry["conditioning"], int(entry["frames"]), int(entry.get("overlap", 0)),
-            entry.get("continuity", AS_SET))
+            entry.get("continuity", DEFAULT_CONTINUITY))

@@ -117,9 +117,11 @@ export function askRowColour(node, row, title, event) {
  * @param {string} options.noun - What a row is called in menus, as `Segment`.
  * @param {number} [options.before] - Position within a row of the widget the header sits
  *   above, the first by default.
+ * @param {(node: object, row: number) => object|null} [options.tint] - The `{fill, stripe,
+ *   text}` a row takes where no colour is chosen for it.
  * @returns {string[]} Header widget names, one per row, for folding with their rows.
  */
-export function addRowHeaders(node, { groups, name, title, noun, before = 0 }) {
+export function addRowHeaders(node, { groups, name, title, noun, before = 0, tint }) {
   const headers = [];
   groups.forEach((names, index) => {
     const row = index + 1;
@@ -127,7 +129,7 @@ export function addRowHeaders(node, { groups, name, title, noun, before = 0 }) {
       name: name(row),
       title: () => title(node, row),
       before: names[before],
-      colour: () => ROW_PALETTE[rowColour(node, row)] ?? null,
+      colour: () => ROW_PALETTE[rowColour(node, row)] ?? tint?.(node, row) ?? null,
       onClick: (host, event) => askRowColour(host, row, `${noun} ${row} colour`, event),
     });
     headers.push(widget);

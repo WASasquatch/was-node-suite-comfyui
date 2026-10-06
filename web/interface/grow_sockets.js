@@ -12,15 +12,22 @@ const LOG_NAME = "WASNodeSuite.GrowSockets";
 const MIN_VISIBLE = 2;
 
 /**
- * Whether a socket carries a link.
+ * Whether one of a node's sockets carries a link.
  *
- * @param {object} socket - An entry of `node.inputs` or `node.outputs`.
+ * @param {object} node - The node.
+ * @param {"inputs"|"outputs"} side - Which list the socket is on.
+ * @param {number} slot - Its index on that list, or -1 for none.
  * @returns {boolean} True when anything is wired to it.
  */
-function wired(socket) {
-  if (!socket) return false;
-  if (Array.isArray(socket.links)) return socket.links.length > 0;
-  return socket.link !== null && socket.link !== undefined;
+function wired(node, side, slot) {
+  if (!node || slot === undefined || slot < 0) return false;
+  if (side === "outputs") {
+    if (typeof node.isOutputConnected === "function") return node.isOutputConnected(slot);
+    return (node.outputs?.[slot]?.links ?? []).length > 0;
+  }
+  if (typeof node.isInputConnected === "function") return node.isInputConnected(slot);
+  const link = node.inputs?.[slot]?.link;
+  return link !== null && link !== undefined;
 }
 
 /**
@@ -36,16 +43,17 @@ function asGroups(growable) {
 /**
  * How many of a growable list to draw: those in use, plus one spare.
  *
- * @param {object[]} sockets - The node's current `inputs` or `outputs`.
+ * @param {object} node - The node.
+ * @param {"inputs"|"outputs"} side - Which list to count.
  * @param {string[][]} groups - The growable groups, in declared order.
  * @param {number} minVisible - The fewest to draw.
  * @returns {number} A count between `minVisible` and `groups.length`.
  */
-function wantedCount(sockets, groups, minVisible) {
-  const byName = new Map(sockets.map((socket) => [socket.name, socket]));
+function wantedCount(node, side, groups, minVisible) {
+  const byName = new Map((node[side] ?? []).map((socket, slot) => [socket.name, slot]));
   let lastUsed = -1;
   groups.forEach((names, index) => {
-    if (names.some((name) => wired(byName.get(name)))) lastUsed = index;
+    if (names.some((name) => wired(node, side, byName.get(name) ?? -1))) lastUsed = index;
   });
   return Math.max(minVisible, Math.min(lastUsed + 2, groups.length));
 }
@@ -69,7 +77,7 @@ function dedupe(node, side) {
   sockets.forEach((socket, slot) => {
     const held = keep.get(socket.name);
     // The wired copy is the one worth keeping: dropping it would take a link with it.
-    if (held === undefined || (!wired(sockets[held]) && wired(socket))) keep.set(socket.name, slot);
+    if (held === undefined || (!wired(node, side, held) && wired(node, side, slot))) keep.set(socket.name, slot);
   });
 
   const doomed = [];
@@ -230,7 +238,7 @@ function fitSide(node, side, plan, wanted, chosen) {
     for (const name of plan.groups[index]) {
       if (!present.has(name)) continue;
       const slot = sockets.findIndex((socket) => socket.name === name);
-      if (slot === -1 || wired(sockets[slot])) continue;
+      if (slot === -1 || wired(node, side, slot)) continue;
       if (side === "inputs") node.removeInput(slot);
       else node.removeOutput(slot);
       present.delete(name);
@@ -367,8 +375,8 @@ export function growSockets(node, growable, options = {}) {
       const wanted = Number.isFinite(asked)
         ? Math.max(0, Math.min(asked, groups.length))
         : Math.max(
-            wantedCount(node.inputs ?? [], plans.inputs.groups, minVisible),
-            wantedCount(node.outputs ?? [], plans.outputs.groups, minVisible),
+            wantedCount(node, "inputs", plans.inputs.groups, minVisible),
+            wantedCount(node, "outputs", plans.outputs.groups, minVisible),
           );
       // Before anything is counted or moved, since a duplicate makes both meaningless.
       const dedupedIn = dedupe(node, "inputs");

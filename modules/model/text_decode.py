@@ -1,6 +1,7 @@
 """Run a ComfyUI language model's generate on its fixed-cache, graph-captured decode path.
 
-The switches are set on the model for one generation and restored afterwards.
+The switches are set on the model for one generation and restored afterwards, and the decode
+graphs a generation captured are dropped when it returns.
 """
 
 from __future__ import annotations
@@ -175,6 +176,20 @@ def split_rope(model) -> bool:
     return isinstance(theta, (list, tuple)) and len(theta) > 1
 
 
+def release_graphs():
+    """Drop the decode graphs, prefetch queues and cast buffers a generation left on the device."""
+    import comfy.memory_management
+
+    if not getattr(comfy.memory_management, "aimdo_enabled", False):
+        return
+    import comfy_aimdo.model_vbar
+
+    # Captured graphs hold the finished generation's cache addresses; the next one allocates anew.
+    comfy.model_prefetch.cleanup_prefetch_queues()
+    comfy.model_management.reset_cast_buffers()
+    comfy_aimdo.model_vbar.vbars_reset_watermark_limits()
+
+
 @contextlib.contextmanager
 def switched(model, values: dict):
     """Set switches on a model for the length of a block and put the old values back.
@@ -268,6 +283,7 @@ def generate(clip, tokens, max_length, fast=True, **options):
             stack.enter_context(switched(model, values))
             stack.enter_context(_shadow(transformer, "generate", guarded))
         ids = clip.generate(tokens, **options, max_length=max_length)
+    release_graphs()
     report.seconds = time.perf_counter() - started
     report.new_tokens = len(ids)
     if model is not None:

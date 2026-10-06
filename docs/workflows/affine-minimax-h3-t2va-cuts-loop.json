@@ -18,9 +18,20 @@
       "flags": {},
       "order": 0,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -57,9 +68,29 @@
       "flags": {},
       "order": 1,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -100,6 +131,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "string_a",
           "name": "string_a",
           "type": "STRING",
           "widget": {
@@ -108,16 +140,27 @@
           "link": 32
         },
         {
+          "localized_name": "string_b",
           "name": "string_b",
           "type": "STRING",
           "widget": {
             "name": "string_b"
           },
           "link": 33
+        },
+        {
+          "localized_name": "delimiter",
+          "name": "delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "delimiter"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -160,11 +203,13 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "samples",
           "name": "samples",
           "type": "LATENT",
           "link": 39
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 9
@@ -172,6 +217,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -204,11 +250,13 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "samples",
           "name": "samples",
           "type": "LATENT",
           "link": 40
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 10
@@ -216,6 +264,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "AUDIO",
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
@@ -248,19 +297,61 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 42
         },
         {
+          "localized_name": "audio",
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
           "link": 43
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bit_depth",
+          "name": "bit_depth",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "bit_depth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "VIDEO",
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
@@ -298,21 +389,70 @@
       ],
       "size": [
         300,
-        210
+        234
       ],
       "flags": {},
       "order": 27,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "shape": 7,
           "type": "*",
           "link": 38
+        },
+        {
+          "localized_name": "unload_models",
+          "name": "unload_models",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "unload_models"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "empty_cache",
+          "name": "empty_cache",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "empty_cache"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "collect_garbage",
+          "name": "collect_garbage",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "collect_garbage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "release_fraction",
+          "name": "release_fraction",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "release_fraction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "always_run",
+          "name": "always_run",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "always_run"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "type": "LATENT",
           "links": [
@@ -321,21 +461,25 @@
           ]
         },
         {
+          "localized_name": "vram_before",
           "name": "vram_before",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "vram_after",
           "name": "vram_after",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "freed",
           "name": "freed",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": null
@@ -353,13 +497,15 @@
         true,
         true,
         true,
-        0
+        0,
+        false
       ],
       "widgets_values_named": {
         "unload_models": true,
         "empty_cache": true,
         "collect_garbage": true,
-        "release_fraction": 0
+        "release_fraction": 0,
+        "always_run": false
       }
     },
     {
@@ -367,7 +513,7 @@
       "type": "VAELoader",
       "pos": [
         556,
-        1048.3335186470613
+        1161.0
       ],
       "size": [
         300,
@@ -376,9 +522,20 @@
       "flags": {},
       "order": 2,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "VAE",
           "name": "VAE",
           "type": "VAE",
           "links": [
@@ -406,7 +563,7 @@
       "type": "VAELoader",
       "pos": [
         556,
-        918.5097276470607
+        1053.0
       ],
       "size": [
         300,
@@ -415,9 +572,20 @@
       "flags": {},
       "order": 3,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "VAE",
           "name": "VAE",
           "type": "VAE",
           "links": [
@@ -447,7 +615,7 @@
       "type": "CLIPLoader",
       "pos": [
         556,
-        740.6859366470602
+        897.0
       ],
       "size": [
         300,
@@ -456,9 +624,39 @@
       "flags": {},
       "order": 4,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "CLIP",
           "name": "CLIP",
           "type": "CLIP",
           "links": [
@@ -490,7 +688,7 @@
       "type": "MiniMaxLowVRAMAttention",
       "pos": [
         556,
-        615.0767092941187
+        789.0
       ],
       "size": [
         300,
@@ -501,13 +699,24 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 3
+        },
+        {
+          "localized_name": "head_chunks",
+          "name": "head_chunks",
+          "type": "INT",
+          "widget": {
+            "name": "head_chunks"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "links": [
@@ -536,7 +745,7 @@
       "type": "ModelAttentionBackend",
       "pos": [
         556,
-        493.682045588236
+        681.0
       ],
       "size": [
         300,
@@ -547,13 +756,24 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 2
+        },
+        {
+          "localized_name": "backend",
+          "name": "attention",
+          "type": "COMBO",
+          "widget": {
+            "name": "attention"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "links": [
@@ -581,7 +801,7 @@
       "type": "LoraLoaderModelOnly",
       "pos": [
         556,
-        352.5019455294122
+        549.0
       ],
       "size": [
         300,
@@ -592,13 +812,33 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 1
+        },
+        {
+          "localized_name": "lora_name",
+          "name": "lora_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_model",
+          "name": "strength_model",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_model"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -639,6 +879,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "type": "*",
           "link": 41
@@ -646,6 +887,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "shape": 6,
           "type": "STRING",
@@ -668,7 +910,7 @@
       "type": "StringConcatenate",
       "pos": [
         2621.265127906968,
-        1344.1111953488403
+        1544.1111953488403
       ],
       "size": [
         300,
@@ -679,6 +921,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "string_a",
           "name": "string_a",
           "type": "STRING",
           "widget": {
@@ -687,16 +930,27 @@
           "link": 24
         },
         {
+          "localized_name": "string_b",
           "name": "string_b",
           "type": "STRING",
           "widget": {
             "name": "string_b"
           },
           "link": 31
+        },
+        {
+          "localized_name": "delimiter",
+          "name": "delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "delimiter"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -728,7 +982,7 @@
       "type": "BasicGuider",
       "pos": [
         2030,
-        482
+        752
       ],
       "size": [
         300,
@@ -739,11 +993,13 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 5
         },
         {
+          "localized_name": "conditioning",
           "name": "conditioning",
           "type": "CONDITIONING",
           "link": 22
@@ -751,6 +1007,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "GUIDER",
           "name": "GUIDER",
           "type": "GUIDER",
           "links": [
@@ -781,9 +1038,20 @@
       "flags": {},
       "order": 5,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "SAMPLER",
           "name": "SAMPLER",
           "type": "SAMPLER",
           "links": [
@@ -822,13 +1090,42 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 4
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "SIGMAS",
           "name": "SIGMAS",
           "type": "SIGMAS",
           "links": [
@@ -864,36 +1161,68 @@
       ],
       "size": [
         300,
-        262
+        494
       ],
       "flags": {},
       "order": 18,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "link": 19
         },
         {
+          "localized_name": "positive",
           "name": "positive",
           "shape": 7,
           "type": "CONDITIONING",
           "link": null
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "shape": 7,
           "type": "VAE",
           "link": 8
         },
         {
+          "localized_name": "prompts",
           "name": "prompts",
           "shape": 7,
           "type": "WAS_H3_PROMPTS",
           "link": 13
         },
         {
+          "localized_name": "continuity",
+          "name": "continuity",
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extension_frames",
+          "name": "extension_frames",
+          "type": "INT",
+          "widget": {
+            "name": "extension_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_frames",
+          "name": "overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pass_index",
           "name": "pass_index",
           "shape": 7,
           "type": "INT",
@@ -901,10 +1230,121 @@
             "name": "pass_index"
           },
           "link": 15
+        },
+        {
+          "localized_name": "drift_control",
+          "name": "drift_control",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "drift_control"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "refresh_gain",
+          "name": "refresh_gain",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "refresh_gain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audio_release",
+          "name": "audio_release",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "audio_release"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "renewal",
+          "name": "renewal",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "renewal"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reference_samples",
+          "name": "reference_samples",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "reference_samples"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source",
+          "name": "source",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "live_preview",
+          "name": "live_preview",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "live_preview"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reference_sound",
+          "name": "reference_sound",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "reference_sound"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reencode_prompt",
+          "name": "reencode_prompt",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "reencode_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sample_span",
+          "name": "sample_span",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sample_span"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "window",
           "name": "window",
           "type": "LATENT",
           "links": [
@@ -912,6 +1352,7 @@
           ]
         },
         {
+          "localized_name": "positive",
           "name": "positive",
           "type": "CONDITIONING",
           "links": [
@@ -919,6 +1360,7 @@
           ]
         },
         {
+          "localized_name": "overlap_frames",
           "name": "overlap_frames",
           "type": "INT",
           "links": [
@@ -926,11 +1368,24 @@
           ]
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": [
             24
           ]
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "links": null
         }
       ],
       "properties": {
@@ -951,7 +1406,12 @@
         8,
         0.35,
         4,
-        -1
+        -1,
+        true,
+        true,
+        true,
+        "source scene",
+        0
       ],
       "widgets_values_named": {
         "continuity": "carry",
@@ -960,7 +1420,15 @@
         "pass_index": 0,
         "drift_control": 0,
         "refresh_gain": 1.15,
-        "audio_release": 8
+        "audio_release": 8,
+        "renewal": 0.35,
+        "reference_samples": 4,
+        "source": -1,
+        "live_preview": true,
+        "reference_sound": true,
+        "reencode_prompt": true,
+        "sample_span": "source scene",
+        "seed": 0
       }
     },
     {
@@ -977,9 +1445,461 @@
       "flags": {},
       "order": 6,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "COMBO",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "green_center_frac",
+          "name": "green_center_frac",
+          "type": "FLOAT",
+          "widget": {
+            "name": "green_center_frac"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "green_bandwidth_frac",
+          "name": "green_bandwidth_frac",
+          "type": "FLOAT",
+          "widget": {
+            "name": "green_bandwidth_frac"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "black_bins_per_kpx",
+          "name": "black_bins_per_kpx",
+          "type": "INT",
+          "widget": {
+            "name": "black_bins_per_kpx"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hatch_freq_cyc_px",
+          "name": "hatch_freq_cyc_px",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hatch_freq_cyc_px"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hatch_angle1_deg",
+          "name": "hatch_angle1_deg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hatch_angle1_deg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hatch_angle2_deg",
+          "name": "hatch_angle2_deg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hatch_angle2_deg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hatch_square",
+          "name": "hatch_square",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "hatch_square"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hatch_phase_jitter",
+          "name": "hatch_phase_jitter",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hatch_phase_jitter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hatch_supersample",
+          "name": "hatch_supersample",
+          "type": "INT",
+          "widget": {
+            "name": "hatch_supersample"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highpass_cutoff_frac",
+          "name": "highpass_cutoff_frac",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highpass_cutoff_frac"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highpass_order",
+          "name": "highpass_order",
+          "type": "INT",
+          "widget": {
+            "name": "highpass_order"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ring_center_frac",
+          "name": "ring_center_frac",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ring_center_frac"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ring_bandwidth_frac",
+          "name": "ring_bandwidth_frac",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ring_bandwidth_frac"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "poisson_radius_px",
+          "name": "poisson_radius_px",
+          "type": "FLOAT",
+          "widget": {
+            "name": "poisson_radius_px"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "poisson_softness",
+          "name": "poisson_softness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "poisson_softness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "worley_points_per_kpx",
+          "name": "worley_points_per_kpx",
+          "type": "FLOAT",
+          "widget": {
+            "name": "worley_points_per_kpx"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "worley_metric",
+          "name": "worley_metric",
+          "type": "COMBO",
+          "widget": {
+            "name": "worley_metric"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "worley_edge_sharpness",
+          "name": "worley_edge_sharpness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "worley_edge_sharpness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tile_line_tile_size",
+          "name": "tile_line_tile_size",
+          "type": "INT",
+          "widget": {
+            "name": "tile_line_tile_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tile_line_freq_cyc_px",
+          "name": "tile_line_freq_cyc_px",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tile_line_freq_cyc_px"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tile_line_jitter",
+          "name": "tile_line_jitter",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tile_line_jitter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dot_cell_size",
+          "name": "dot_cell_size",
+          "type": "INT",
+          "widget": {
+            "name": "dot_cell_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dot_jitter_px",
+          "name": "dot_jitter_px",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dot_jitter_px"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dot_fill_ratio",
+          "name": "dot_fill_ratio",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dot_fill_ratio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "velvet_taps_per_kpx",
+          "name": "velvet_taps_per_kpx",
+          "type": "INT",
+          "widget": {
+            "name": "velvet_taps_per_kpx"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "perlin_scale",
+          "name": "perlin_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "perlin_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "perlin_octaves",
+          "name": "perlin_octaves",
+          "type": "INT",
+          "widget": {
+            "name": "perlin_octaves"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "perlin_persistence",
+          "name": "perlin_persistence",
+          "type": "FLOAT",
+          "widget": {
+            "name": "perlin_persistence"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "perlin_lacunarity",
+          "name": "perlin_lacunarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "perlin_lacunarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "checker_size",
+          "name": "checker_size",
+          "type": "INT",
+          "widget": {
+            "name": "checker_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bayer_size",
+          "name": "bayer_size",
+          "type": "INT",
+          "widget": {
+            "name": "bayer_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "solid_alpha",
+          "name": "solid_alpha",
+          "type": "FLOAT",
+          "widget": {
+            "name": "solid_alpha"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "content_window",
+          "name": "content_window",
+          "type": "INT",
+          "widget": {
+            "name": "content_window"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mask_strength",
+          "name": "mask_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "mask_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threshold",
+          "name": "threshold",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "invert_mask",
+          "name": "invert_mask",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "invert_mask"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mask_blur",
+          "name": "mask_blur",
+          "type": "FLOAT",
+          "widget": {
+            "name": "mask_blur"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mask_sharpen",
+          "name": "mask_sharpen",
+          "type": "FLOAT",
+          "widget": {
+            "name": "mask_sharpen"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sharpen_radius",
+          "name": "sharpen_radius",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sharpen_radius"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sharpen_threshold",
+          "name": "sharpen_threshold",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sharpen_threshold"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clamp",
+          "name": "clamp",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "clamp"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clamp_min",
+          "name": "clamp_min",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clamp_min"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clamp_max",
+          "name": "clamp_max",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clamp_max"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "frame_seed_stride",
+          "name": "frame_seed_stride",
+          "type": "INT",
+          "widget": {
+            "name": "frame_seed_stride"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "drift_speed",
+          "name": "drift_speed",
+          "type": "FLOAT",
+          "widget": {
+            "name": "drift_speed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "drift_angle_deg",
+          "name": "drift_angle_deg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "drift_angle_deg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "drift_renew",
+          "name": "drift_renew",
+          "type": "FLOAT",
+          "widget": {
+            "name": "drift_renew"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bias_field",
+          "name": "bias_field",
+          "type": "COMBO",
+          "widget": {
+            "name": "bias_field"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "content_gate",
+          "name": "content_gate",
+          "type": "COMBO",
+          "widget": {
+            "name": "content_gate"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "affine_options",
           "name": "affine_options",
           "type": "DICT",
           "links": [
@@ -1116,16 +2036,19 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "link": 20
         },
         {
+          "localized_name": "sampled",
           "name": "sampled",
           "type": "LATENT",
           "link": 59
         },
         {
+          "localized_name": "overlap_frames",
           "name": "overlap_frames",
           "type": "INT",
           "widget": {
@@ -1134,6 +2057,7 @@
           "link": 23
         },
         {
+          "localized_name": "segment_index",
           "name": "segment_index",
           "shape": 7,
           "type": "INT",
@@ -1145,6 +2069,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "links": [
@@ -1152,11 +2077,13 @@
           ]
         },
         {
+          "localized_name": "frames",
           "name": "frames",
           "type": "INT",
           "links": null
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": [
@@ -1195,9 +2122,84 @@
       "flags": {},
       "order": 7,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end",
+          "name": "end",
+          "type": "FLOAT",
+          "widget": {
+            "name": "end"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bias",
+          "name": "bias",
+          "type": "FLOAT",
+          "widget": {
+            "name": "bias"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exponent",
+          "name": "exponent",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exponent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start_offset",
+          "name": "start_offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start_offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end_offset",
+          "name": "end_offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "end_offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "curve",
+          "name": "curve",
+          "type": "COMBO",
+          "widget": {
+            "name": "curve"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "preview_steps",
+          "name": "preview_steps",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "preview_steps"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "affine_schedule",
           "name": "affine_schedule",
           "type": "DICT",
           "links": [
@@ -1243,41 +2245,55 @@
       ],
       "size": [
         300,
-        158
+        182
       ],
       "flags": {},
       "order": 14,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "shape": 7,
           "type": "*",
           "link": 46
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "shape": 7,
           "type": "*",
           "link": 12
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "shape": 7,
           "type": "*",
           "link": null
         },
         {
+          "localized_name": "max_iterations",
           "name": "max_iterations",
           "type": "INT",
           "widget": {
             "name": "max_iterations"
           },
           "link": 61
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "INT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "iterator",
           "name": "iterator",
           "type": "WAS_LOOP",
           "links": [
@@ -1285,6 +2301,7 @@
           ]
         },
         {
+          "localized_name": "index",
           "name": "index",
           "type": "INT",
           "links": [
@@ -1295,11 +2312,13 @@
           ]
         },
         {
+          "localized_name": "metadata",
           "name": "metadata",
           "type": "DICT",
           "links": null
         },
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "type": "LATENT",
           "links": [
@@ -1308,6 +2327,7 @@
           ]
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "type": "STRING",
           "links": [
@@ -1315,6 +2335,7 @@
           ]
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "type": "*",
           "links": null
@@ -1329,10 +2350,12 @@
         }
       },
       "widgets_values": [
-        1
+        1,
+        0
       ],
       "widgets_values_named": {
-        "max_iterations": 1
+        "max_iterations": 1,
+        "start": 0
       }
     },
     {
@@ -1351,36 +2374,60 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "iterator",
           "name": "iterator",
           "type": "WAS_LOOP",
           "link": 34
         },
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "shape": 7,
           "type": "*",
           "link": 35
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "shape": 7,
           "type": "*",
           "link": 36
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "shape": 7,
           "type": "*",
+          "link": null
+        },
+        {
+          "localized_name": "continue_loop",
+          "name": "continue_loop",
+          "type": "BOOLEAN,NUMBER,INT,FLOAT",
+          "widget": {
+            "name": "continue_loop"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accumulate",
+          "name": "accumulate",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "accumulate"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "metadata",
           "name": "metadata",
           "type": "DICT",
           "links": null
         },
         {
+          "localized_name": "value_1",
           "name": "value_1",
           "type": "LATENT",
           "links": [
@@ -1388,6 +2435,7 @@
           ]
         },
         {
+          "localized_name": "value_2",
           "name": "value_2",
           "type": "STRING",
           "links": [
@@ -1395,6 +2443,7 @@
           ]
         },
         {
+          "localized_name": "value_3",
           "name": "value_3",
           "type": "*",
           "links": null
@@ -1426,66 +2475,170 @@
       ],
       "size": [
         438.61908273676136,
-        836
+        628
       ],
       "flags": {},
       "order": 22,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "noise",
           "name": "noise",
           "type": "NOISE",
           "link": 63
         },
         {
+          "localized_name": "guider",
           "name": "guider",
           "type": "GUIDER",
           "link": 53
         },
         {
+          "localized_name": "sampler",
           "name": "sampler",
           "type": "SAMPLER",
           "link": 54
         },
         {
+          "localized_name": "sigmas",
           "name": "sigmas",
           "type": "SIGMAS",
           "link": 55
         },
         {
+          "localized_name": "latent_image",
           "name": "latent_image",
           "type": "LATENT",
           "link": 56
         },
         {
+          "localized_name": "affine_schedule",
           "name": "affine_schedule",
           "shape": 7,
           "type": "DICT",
           "link": 57
         },
         {
+          "localized_name": "external_mask",
           "name": "external_mask",
           "shape": 7,
           "type": "MASK",
           "link": null
         },
         {
+          "localized_name": "affine_options",
           "name": "affine_options",
           "shape": 7,
           "type": "DICT",
           "link": 58
         },
         {
+          "localized_name": "affine_interval",
+          "name": "affine_interval",
+          "type": "INT",
+          "widget": {
+            "name": "affine_interval"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_scale",
+          "name": "max_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "max_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_bias",
+          "name": "max_bias",
+          "type": "FLOAT",
+          "widget": {
+            "name": "max_bias"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "COMBO",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "affine_seed",
           "name": "affine_seed",
           "type": "INT",
           "widget": {
             "name": "affine_seed"
           },
           "link": 60
+        },
+        {
+          "localized_name": "affine_seed_increment",
+          "name": "affine_seed_increment",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "affine_seed_increment"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "temporal_mode",
+          "name": "temporal_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "temporal_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "affine_streams",
+          "name": "affine_streams",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "affine_streams"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "affine_space",
+          "name": "affine_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "affine_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "debug",
+          "name": "debug",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "debug"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "affine_acts_on",
+          "name": "affine_acts_on",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "affine_acts_on"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "output",
           "name": "output",
           "type": "LATENT",
           "links": [
@@ -1493,11 +2646,13 @@
           ]
         },
         {
+          "localized_name": "denoised_output",
           "name": "denoised_output",
           "type": "LATENT",
           "links": null
         },
         {
+          "localized_name": "mask",
           "name": "mask",
           "type": "MASK",
           "links": null
@@ -1556,14 +2711,63 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "shape": 7,
           "type": "*",
           "link": 45
+        },
+        {
+          "localized_name": "unload_models",
+          "name": "unload_models",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "unload_models"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "empty_cache",
+          "name": "empty_cache",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "empty_cache"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "collect_garbage",
+          "name": "collect_garbage",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "collect_garbage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "release_fraction",
+          "name": "release_fraction",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "release_fraction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "always_run",
+          "name": "always_run",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "always_run"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "passthrough",
           "name": "passthrough",
           "type": "LATENT",
           "links": [
@@ -1571,21 +2775,25 @@
           ]
         },
         {
+          "localized_name": "vram_before",
           "name": "vram_before",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "vram_after",
           "name": "vram_after",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "freed",
           "name": "freed",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": null
@@ -1603,13 +2811,15 @@
         true,
         true,
         true,
-        0
+        0,
+        false
       ],
       "widgets_values_named": {
         "unload_models": true,
         "empty_cache": true,
         "collect_garbage": true,
-        "release_fraction": 0
+        "release_fraction": 0,
+        "always_run": false
       }
     },
     {
@@ -1628,13 +2838,52 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "link": 44
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "format.codec",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "format.codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "shape": 7,
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "links": null
@@ -1670,25 +2919,2536 @@
       ],
       "size": [
         620,
-        1098
+        2210
       ],
       "flags": {},
       "order": 10,
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 6
         },
         {
+          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 7
+        },
+        {
+          "localized_name": "model_fl2va",
+          "name": "model_fl2va",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "model_ref2va",
+          "name": "model_ref2va",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "audio_vae",
+          "name": "audio_vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        },
+        {
+          "localized_name": "assets",
+          "name": "assets",
+          "shape": 7,
+          "type": "WAS_H3_ASSETS",
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aspect_ratio",
+          "name": "aspect_ratio",
+          "type": "COMBO",
+          "widget": {
+            "name": "aspect_ratio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "megapixels",
+          "name": "megapixels",
+          "type": "FLOAT",
+          "widget": {
+            "name": "megapixels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_header",
+          "name": "prompt_header",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_header"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_footer",
+          "name": "prompt_footer",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_footer"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_1",
+          "name": "prompt_1",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_1",
+          "name": "duration_1",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_1",
+          "name": "overlap_1",
+          "type": "INT",
+          "widget": {
+            "name": "overlap_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_1",
+          "name": "continuity_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_1",
+          "name": "source_1",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_1",
+          "name": "header_footer_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_1",
+          "name": "model_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_1",
+          "name": "strength_1",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_1",
+          "name": "sound_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_1",
+          "name": "seed_1",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_2",
+          "name": "prompt_2",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_2",
+          "name": "duration_2",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_2",
+          "name": "overlap_2",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_2",
+          "name": "continuity_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_2",
+          "name": "source_2",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_2",
+          "name": "header_footer_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_2",
+          "name": "model_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_2",
+          "name": "strength_2",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_2",
+          "name": "sound_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_2",
+          "name": "seed_2",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_3",
+          "name": "prompt_3",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_3",
+          "name": "duration_3",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_3",
+          "name": "overlap_3",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_3",
+          "name": "continuity_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_3",
+          "name": "source_3",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_3",
+          "name": "header_footer_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_3",
+          "name": "model_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_3",
+          "name": "strength_3",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_3",
+          "name": "sound_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_3",
+          "name": "seed_3",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_4",
+          "name": "prompt_4",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_4",
+          "name": "duration_4",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_4",
+          "name": "overlap_4",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_4",
+          "name": "continuity_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_4",
+          "name": "source_4",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_4",
+          "name": "header_footer_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_4",
+          "name": "model_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_4",
+          "name": "strength_4",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_4",
+          "name": "sound_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_4",
+          "name": "seed_4",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_5",
+          "name": "prompt_5",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_5",
+          "name": "duration_5",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_5",
+          "name": "overlap_5",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_5",
+          "name": "continuity_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_5",
+          "name": "source_5",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_5",
+          "name": "header_footer_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_5",
+          "name": "model_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_5",
+          "name": "strength_5",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_5",
+          "name": "sound_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_5",
+          "name": "seed_5",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_6",
+          "name": "prompt_6",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_6",
+          "name": "duration_6",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_6",
+          "name": "overlap_6",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_6",
+          "name": "continuity_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_6",
+          "name": "source_6",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_6",
+          "name": "header_footer_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_6",
+          "name": "model_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_6",
+          "name": "strength_6",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_6",
+          "name": "sound_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_6",
+          "name": "seed_6",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_7",
+          "name": "prompt_7",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_7",
+          "name": "duration_7",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_7",
+          "name": "overlap_7",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_7",
+          "name": "continuity_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_7",
+          "name": "source_7",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_7",
+          "name": "header_footer_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_7",
+          "name": "model_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_7",
+          "name": "strength_7",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_7",
+          "name": "sound_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_7",
+          "name": "seed_7",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_8",
+          "name": "prompt_8",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_8",
+          "name": "duration_8",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_8",
+          "name": "overlap_8",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_8",
+          "name": "continuity_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_8",
+          "name": "source_8",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_8",
+          "name": "header_footer_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_8",
+          "name": "model_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_8",
+          "name": "strength_8",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_8",
+          "name": "sound_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_8",
+          "name": "seed_8",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_9",
+          "name": "prompt_9",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_9",
+          "name": "duration_9",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_9",
+          "name": "overlap_9",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_9",
+          "name": "continuity_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_9",
+          "name": "source_9",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_9",
+          "name": "header_footer_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_9",
+          "name": "model_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_9",
+          "name": "strength_9",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_9",
+          "name": "sound_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_9",
+          "name": "seed_9",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_10",
+          "name": "prompt_10",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_10",
+          "name": "duration_10",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_10",
+          "name": "overlap_10",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_10",
+          "name": "continuity_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_10",
+          "name": "source_10",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_10",
+          "name": "header_footer_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_10",
+          "name": "model_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_10",
+          "name": "strength_10",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_10",
+          "name": "sound_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_10",
+          "name": "seed_10",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_11",
+          "name": "prompt_11",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_11",
+          "name": "duration_11",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_11",
+          "name": "overlap_11",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_11",
+          "name": "continuity_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_11",
+          "name": "source_11",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_11",
+          "name": "header_footer_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_11",
+          "name": "model_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_11",
+          "name": "strength_11",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_11",
+          "name": "sound_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_11",
+          "name": "seed_11",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_12",
+          "name": "prompt_12",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_12",
+          "name": "duration_12",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_12",
+          "name": "overlap_12",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_12",
+          "name": "continuity_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_12",
+          "name": "source_12",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_12",
+          "name": "header_footer_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_12",
+          "name": "model_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_12",
+          "name": "strength_12",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_12",
+          "name": "sound_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_12",
+          "name": "seed_12",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_13",
+          "name": "prompt_13",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_13",
+          "name": "duration_13",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_13",
+          "name": "overlap_13",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_13",
+          "name": "continuity_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_13",
+          "name": "source_13",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_13",
+          "name": "header_footer_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_13",
+          "name": "model_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_13",
+          "name": "strength_13",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_13",
+          "name": "sound_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_13",
+          "name": "seed_13",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_14",
+          "name": "prompt_14",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_14",
+          "name": "duration_14",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_14",
+          "name": "overlap_14",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_14",
+          "name": "continuity_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_14",
+          "name": "source_14",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_14",
+          "name": "header_footer_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_14",
+          "name": "model_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_14",
+          "name": "strength_14",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_14",
+          "name": "sound_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_14",
+          "name": "seed_14",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_15",
+          "name": "prompt_15",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_15",
+          "name": "duration_15",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_15",
+          "name": "overlap_15",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_15",
+          "name": "continuity_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_15",
+          "name": "source_15",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_15",
+          "name": "header_footer_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_15",
+          "name": "model_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_15",
+          "name": "strength_15",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_15",
+          "name": "sound_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_15",
+          "name": "seed_15",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_16",
+          "name": "prompt_16",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_16",
+          "name": "duration_16",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_16",
+          "name": "overlap_16",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_16",
+          "name": "continuity_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_16",
+          "name": "source_16",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_16",
+          "name": "header_footer_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_16",
+          "name": "model_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_16",
+          "name": "strength_16",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_16",
+          "name": "sound_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_16",
+          "name": "seed_16",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_17",
+          "name": "prompt_17",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_17",
+          "name": "duration_17",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_17",
+          "name": "overlap_17",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_17",
+          "name": "continuity_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_17",
+          "name": "source_17",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_17",
+          "name": "header_footer_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_17",
+          "name": "model_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_17",
+          "name": "strength_17",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_17",
+          "name": "sound_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_17",
+          "name": "seed_17",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_18",
+          "name": "prompt_18",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_18",
+          "name": "duration_18",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_18",
+          "name": "overlap_18",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_18",
+          "name": "continuity_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_18",
+          "name": "source_18",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_18",
+          "name": "header_footer_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_18",
+          "name": "model_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_18",
+          "name": "strength_18",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_18",
+          "name": "sound_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_18",
+          "name": "seed_18",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_19",
+          "name": "prompt_19",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_19",
+          "name": "duration_19",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_19",
+          "name": "overlap_19",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_19",
+          "name": "continuity_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_19",
+          "name": "source_19",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_19",
+          "name": "header_footer_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_19",
+          "name": "model_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_19",
+          "name": "strength_19",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_19",
+          "name": "sound_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_19",
+          "name": "seed_19",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_20",
+          "name": "prompt_20",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_20",
+          "name": "duration_20",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_20",
+          "name": "overlap_20",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_20",
+          "name": "continuity_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_20",
+          "name": "source_20",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_20",
+          "name": "header_footer_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_20",
+          "name": "model_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_20",
+          "name": "strength_20",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_20",
+          "name": "sound_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_20",
+          "name": "seed_20",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_21",
+          "name": "prompt_21",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_21",
+          "name": "duration_21",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_21",
+          "name": "overlap_21",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_21",
+          "name": "continuity_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_21",
+          "name": "source_21",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_21",
+          "name": "header_footer_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_21",
+          "name": "model_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_21",
+          "name": "strength_21",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_21",
+          "name": "sound_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_21",
+          "name": "seed_21",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_22",
+          "name": "prompt_22",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_22",
+          "name": "duration_22",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_22",
+          "name": "overlap_22",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_22",
+          "name": "continuity_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_22",
+          "name": "source_22",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_22",
+          "name": "header_footer_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_22",
+          "name": "model_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_22",
+          "name": "strength_22",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_22",
+          "name": "sound_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_22",
+          "name": "seed_22",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_23",
+          "name": "prompt_23",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_23",
+          "name": "duration_23",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_23",
+          "name": "overlap_23",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_23",
+          "name": "continuity_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_23",
+          "name": "source_23",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_23",
+          "name": "header_footer_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_23",
+          "name": "model_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_23",
+          "name": "strength_23",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_23",
+          "name": "sound_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_23",
+          "name": "seed_23",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt_24",
+          "name": "prompt_24",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration_24",
+          "name": "duration_24",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlap_24",
+          "name": "overlap_24",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "overlap_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "continuity_24",
+          "name": "continuity_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "continuity_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_24",
+          "name": "source_24",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "source_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "header_footer_24",
+          "name": "header_footer_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "header_footer_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_24",
+          "name": "model_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_24",
+          "name": "strength_24",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sound_24",
+          "name": "sound_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sound_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed_24",
+          "name": "seed_24",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "seed_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_image_size",
+          "name": "ref_image_size",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "ref_image_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "loop",
+          "name": "loop",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "loop"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "latent",
           "name": "latent",
           "type": "LATENT",
           "links": [
@@ -1696,6 +5456,7 @@
           ]
         },
         {
+          "localized_name": "prompts",
           "name": "prompts",
           "type": "WAS_H3_PROMPTS",
           "links": [
@@ -1703,6 +5464,7 @@
           ]
         },
         {
+          "localized_name": "segments",
           "name": "segments",
           "type": "INT",
           "links": [
@@ -1711,11 +5473,13 @@
           ]
         },
         {
+          "localized_name": "report",
           "name": "report",
           "type": "STRING",
           "links": null
         },
         {
+          "localized_name": "latents",
           "name": "latents",
           "shape": 6,
           "type": "LATENT",
@@ -1744,145 +5508,242 @@
         "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "id=\"x402\"\nduration_seconds: 8\n\nThe shot cuts abruptly to the interior of the already-sealed humanoid-mecha cockpit.\n\nThe same Japanese male pilot is already seated correctly in the fixed forward-facing pilot seat. His dark navy pressure suit, red shoulder markings, black gloves and grey chest life-support hardware remain unchanged. The heavy restraint harness is already locked firmly across his torso.\n\nThe circular armored exterior hatch remains completely closed and sealed behind the pilot seat.\n\nThe compact cockpit contains dense dark-grey mechanical instrumentation. Existing physical toggle switches, guarded power switches, rotary controls, analog gauges and indicator lamps are built into fixed control banks to the pilot's left and right. Two heavy flight throttles are mounted beside his thighs. A wide curved forward display assembly is already installed ahead of him but begins mostly dark.\n\nA low front-left three-quarter camera is positioned ahead and slightly left of the pilot near knee height, looking slightly upward. His face, upper torso, restraint harness and both control banks are visible.\n\nThe pilot immediately reaches to the existing left switch bank.\n\nHis gloved fingers throw four adjacent metal toggle switches upward in rapid succession.\n\nCLICK. CLICK. CLICK. CLICK.\n\nSmall amber indicators beside those switches illuminate in sequence.\n\nHis right hand moves directly to the opposite control bank.\n\nHe flips open two existing red safety covers and firmly depresses the guarded switches beneath them.\n\nElectrical relays activate throughout the cockpit.\n\nAnalog gauge needles sweep rapidly upward.\n\nRows of existing amber and green indicators illuminate in cascading sequences.\n\nThe camera makes a small slow push toward the pilot.\n\nHe reaches forward with both hands and grips two existing heavy main activation levers.\n\nHe braces his shoulders against the restraint harness and pulls both levers decisively into their powered positions.\n\nThe forward panoramic display illuminates from darkness with cool green-blue system graphics.\n\nCold display light washes across his face, gloves and pressure suit.\n\nA deep mechanical power vibration builds through the seat and surrounding instrument panels.\n\nStatus lights stabilize.\n\nThe pilot releases the activation levers.\n\nHis left hand lowers onto the existing left flight throttle.\n\nHis right hand lowers onto the existing right flight throttle.\n\nBoth hands close firmly around the throttles while he continues looking directly forward.\n\noverall_soundscape:\nMetal toggle clicks, safety-cover snaps, guarded switch impacts, relay chatter, moving gauge mechanisms, electrical startup tones, rising turbine-like machinery, hydraulic pressure and steady cockpit vibration.\n\nnon_diegetic_music:\nRapid analog arpeggios and tightly spaced tom hits build through the startup sequence. Sustained brass-synth tones rise during the main power activation.",
         8,
         0,
         "cut",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "id=\"x403\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a mechanically fixed camera mounted immediately BEHIND the pilot seat inside the same sealed and fully powered cockpit.\n\nThe same Japanese male pilot remains correctly seated and tightly restrained.\n\nHis spine is pressed against the seat back. His chest, face, knees and toes all point FORWARD in the same direction.\n\nThe camera is centered immediately behind and slightly above his shoulders.\n\nThe visible physical order from nearest to farthest is:\n\ncamera → seat back → back of pilot's head and shoulders → his forward-facing body → his hands and knees → panoramic HUD → launch tube.\n\nOnly the BACK of his short messy black hair, neck, shoulders, upper restraint straps, forearms and gloved hands are visible.\n\nHis face points away from the camera for the entire scene.\n\nDirectly ahead of him is an existing 180-degree wrap-around panoramic tactical HUD. The HUD is positioned on the same side of the pilot that his face, chest, knees and toes point toward.\n\nIt is a forward display rather than a reflective surface.\n\nBeyond the HUD is the mecha's forward-camera view down a perfectly straight enclosed spacecraft launch tube.\n\nThe launch tube contains repeating dark structural ribs, bright white guidance lamps, parallel acceleration rails, yellow-black service markings and a distant central vanishing point directly ahead of the pilot.\n\nTwo existing flight throttles sit beside the pilot's thighs beneath his hands.\n\nOne existing illuminated red launch button is mounted forward and slightly to his right, between his seated position and the panoramic HUD.\n\nFor approximately one second, the powered cockpit vibrates gently while the pilot remains still.\n\nBoth hands hold the throttles.\n\nHe stares straight forward toward the distant vanishing point.\n\n(S1) says: <d>[Japanese] システム、オールグリーン。発進！</d>\n\nAs the final word ends, his right hand releases the right throttle.\n\nHis right arm reaches FORWARD toward the existing red launch button.\n\nHe strikes the button once.\n\nThe button visibly depresses.\n\nThe mecha immediately accelerates FORWARD in exactly the same direction the pilot is facing.\n\nThe massive acceleration force pushes the pilot BACKWARD against his seat, opposite the direction of travel.\n\nHis spine and shoulders compress firmly against the seat back nearest the camera.\n\nThe restraint harness pulls tight across his shoulders.\n\nHis head moves slightly backward under the force but continues facing forward toward the HUD.\n\nHis right hand immediately returns to the right throttle.\n\nBoth hands grip the throttles tightly.\n\nThe cockpit enters intense high-frequency vibration.\n\nBecause the camera is mechanically mounted behind the pilot seat, the camera vibrates with the cockpit while preserving exactly the same rear-facing composition.\n\nOn the panoramic HUD, the distant launch-tube vanishing point remains centered.\n\nGuidance lights and structural ribs rush from the distant CENTER of the forward view toward the pilot and sweep outward past the left and right edges of the display at rapidly increasing speed.\n\nThe velocity indicator climbs rapidly.\n\nThe central alignment reticle remains fixed directly ahead.\n\nThe camera stays behind the pilot.\n\nThe pilot continues facing forward.\n\nThe HUD remains ahead of him.\n\nThe launch tube remains beyond the HUD.\n\nThe machine continues accelerating in the exact direction the pilot is looking.\n\nThe scene ends with the pilot pinned firmly into the seat, both hands gripping the throttles, while the launch tube streams past ahead at extreme speed.\n\noverall_soundscape:\nLow powered-cockpit vibration, launch-button impact, a heavy initial acceleration shock, rapidly intensifying propulsion noise, structural rattling, restraint tension, panel vibration and increasingly powerful launch-tube resonance.\n\nnon_diegetic_music:\nThe action score briefly pulls back beneath the Japanese line, then surges immediately after launch with pounding percussion, rapid analog bass pulses and sustained high strings.",
         9,
         0,
         "cut",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "id=\"x404\"\nduration_seconds: 10\n\nThe shot cuts completely away from the cockpit to a very wide exterior orbital view.\n\nA colossal dark-grey military capital spacecraft several kilometers long hangs in low orbit above a vast blue-white planet.\n\nThe ship is covered in layered armored hull plating, recessed launch bays, antenna structures, radiator surfaces, engine sections and thousands of tiny illuminated windows.\n\nThe blue-white planet curves across the lower portion of the composition. A thin luminous blue atmosphere follows its limb and enormous white cloud systems spread across the visible surface.\n\nBlack star-filled space surrounds both ship and planet.\n\nThe immense capital spacecraft stretches across the upper-middle frame.\n\nThe camera remains almost completely still for approximately three seconds.\n\nThe ship drifts only subtly relative to the distant stars.\n\nIts tiny illuminated windows and recessed hull lights emphasize its enormous physical scale.\n\nA single brilliant point suddenly emerges from a launch opening on the underside of the capital ship.\n\nThe launched object is so distant that its humanoid form cannot be resolved.\n\nIt appears only as a tiny brilliant moving point.\n\nThe object rapidly travels downward away from the vessel toward the planet.\n\nThe camera begins a slow large-amplitude TILT DOWN, following the descending point without rapidly zooming toward it.\n\nThe enormous capital ship gradually moves toward the upper edge of frame.\n\nThe planet occupies progressively more of the composition as the camera continues its slow downward tilt.\n\nThe tiny bright object approaches the planet's thin atmospheric limb.\n\nAs it reaches the atmosphere, a compact orange glow forms tightly around it.\n\nThe atmospheric glow becomes slightly brighter as the object continues downward while remaining extremely small compared with the planet.\n\nThe scene ends with the vast planet dominating the image and the tiny orange-glowing object descending deeper into its atmosphere.\n\noverall_soundscape:\nNo diegetic exterior sound in the vacuum of space.\n\nnon_diegetic_music:\nA broad sustained analog-orchestral chord replaces the rapid action rhythm. Deep synthesizer pads and sparse low percussion create a deliberate sense of orbital scale.",
         11,
         0,
         "cut",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "id=\"x405\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a completely new exterior camera already descending at extreme speed through dense planetary clouds.\n\nThe first frame contains only layered grey-white cloud formations and cold blue daylight filtering through openings above.\n\nNearby vapor streams rapidly UPWARD across the image because the camera is plunging downward.\n\nAfter approximately one second, a huge dark mechanical silhouette begins forming inside the dense cloud behind and above the camera's direction of travel.\n\nThe silhouette rapidly becomes clearer.\n\nThe same colossal humanoid combat mecha breaks through the cloud layer.\n\nIts complete form becomes readable: compact helmet-like head with narrow luminous green visor, broad white and pale-grey armored shoulders, dark navy armored torso, muted red warning markings, two articulated arms, two articulated legs, heavy mechanical joints, vents and stabilization-thruster assemblies.\n\nWhite atmospheric vapor peels away from its head, shoulders and forearms.\n\nThe camera continues descending ahead of the machine and performs a small-amplitude arc toward the mecha's front-left side.\n\nIt settles into a low front three-quarter tracking view several body lengths ahead of the descending mecha.\n\nThe camera matches most of its downward velocity, keeping the machine large and stable in frame while cloud formations continue streaming rapidly upward around it.\n\nThe mecha holds both arms slightly away from its torso for stability.\n\nIts legs extend beneath and slightly behind its body.\n\nDense airflow strikes the armor.\n\nShoulder plates and exposed mechanical components visibly vibrate under atmospheric turbulence.\n\nWhite condensation forms around the leading edges of the shoulders and forearms, stretches backward in the airflow and collapses.\n\nBrief orange-red atmospheric heating flickers intermittently along the forward shoulder, forearm and lower-leg armor.\n\nA powerful lateral turbulence pulse strikes one side of the mecha.\n\nIts torso and shoulders yaw several degrees away from alignment while its articulated limbs respond physically to the force.\n\nCompact stabilization thrusters on the opposite side fire short bright exhaust bursts.\n\nThe thrust corrects the machine back toward its previous descending orientation.\n\nThe Japanese pilot remains physically inside the sealed torso cockpit and is not visible from this exterior camera.\n\n(S1) says: <d>[Japanese] 大気圏内。目標に接近中。</d>\n\nAs the radio line finishes, the mecha punches through another thinner cloud layer.\n\nVapor bursts outward around the shoulders and streams rapidly upward behind the descending machine.\n\nThe luminous green visor remains pointed along the direction of travel.\n\nThe camera maintains the same low front three-quarter tracking relationship while the mecha continues its hypersonic descent.\n\noverall_soundscape:\nContinuous atmospheric roar, severe wind shear, armor vibration, structural groans, turbulent buffeting, pressure changes while crossing cloud layers and short stabilization-thruster bursts.\n\nnon_diegetic_music:\nRapid tom percussion, low analog bass pulses, urgent high strings and sustained brass-synth layers drive the descent.",
         10,
         0,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         10,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         10,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         9,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         11,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         10,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
+        "auto",
+        1,
+        "auto",
+        0,
         "",
         4.25,
         22,
-        "as set",
+        "carry",
         -1,
         "both",
-        "match"
+        "auto",
+        1,
+        "auto",
+        0,
+        "match",
+        false
       ],
       "widgets_values_named": {
         "mode": "t2va",
@@ -1896,98 +5757,244 @@
         "duration_1": 9,
         "overlap_1": 12,
         "continuity_1": "carry",
+        "source_1": -1,
+        "header_footer_1": "both",
+        "model_1": "auto",
+        "strength_1": 1,
+        "sound_1": "auto",
+        "seed_1": 0,
         "prompt_2": "id=\"x402\"\nduration_seconds: 8\n\nThe shot cuts abruptly to the interior of the already-sealed humanoid-mecha cockpit.\n\nThe same Japanese male pilot is already seated correctly in the fixed forward-facing pilot seat. His dark navy pressure suit, red shoulder markings, black gloves and grey chest life-support hardware remain unchanged. The heavy restraint harness is already locked firmly across his torso.\n\nThe circular armored exterior hatch remains completely closed and sealed behind the pilot seat.\n\nThe compact cockpit contains dense dark-grey mechanical instrumentation. Existing physical toggle switches, guarded power switches, rotary controls, analog gauges and indicator lamps are built into fixed control banks to the pilot's left and right. Two heavy flight throttles are mounted beside his thighs. A wide curved forward display assembly is already installed ahead of him but begins mostly dark.\n\nA low front-left three-quarter camera is positioned ahead and slightly left of the pilot near knee height, looking slightly upward. His face, upper torso, restraint harness and both control banks are visible.\n\nThe pilot immediately reaches to the existing left switch bank.\n\nHis gloved fingers throw four adjacent metal toggle switches upward in rapid succession.\n\nCLICK. CLICK. CLICK. CLICK.\n\nSmall amber indicators beside those switches illuminate in sequence.\n\nHis right hand moves directly to the opposite control bank.\n\nHe flips open two existing red safety covers and firmly depresses the guarded switches beneath them.\n\nElectrical relays activate throughout the cockpit.\n\nAnalog gauge needles sweep rapidly upward.\n\nRows of existing amber and green indicators illuminate in cascading sequences.\n\nThe camera makes a small slow push toward the pilot.\n\nHe reaches forward with both hands and grips two existing heavy main activation levers.\n\nHe braces his shoulders against the restraint harness and pulls both levers decisively into their powered positions.\n\nThe forward panoramic display illuminates from darkness with cool green-blue system graphics.\n\nCold display light washes across his face, gloves and pressure suit.\n\nA deep mechanical power vibration builds through the seat and surrounding instrument panels.\n\nStatus lights stabilize.\n\nThe pilot releases the activation levers.\n\nHis left hand lowers onto the existing left flight throttle.\n\nHis right hand lowers onto the existing right flight throttle.\n\nBoth hands close firmly around the throttles while he continues looking directly forward.\n\noverall_soundscape:\nMetal toggle clicks, safety-cover snaps, guarded switch impacts, relay chatter, moving gauge mechanisms, electrical startup tones, rising turbine-like machinery, hydraulic pressure and steady cockpit vibration.\n\nnon_diegetic_music:\nRapid analog arpeggios and tightly spaced tom hits build through the startup sequence. Sustained brass-synth tones rise during the main power activation.",
         "duration_2": 8,
         "overlap_2": 0,
         "continuity_2": "cut",
+        "source_2": -1,
+        "header_footer_2": "both",
+        "model_2": "auto",
+        "strength_2": 1,
+        "sound_2": "auto",
+        "seed_2": 0,
         "prompt_3": "id=\"x403\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a mechanically fixed camera mounted immediately BEHIND the pilot seat inside the same sealed and fully powered cockpit.\n\nThe same Japanese male pilot remains correctly seated and tightly restrained.\n\nHis spine is pressed against the seat back. His chest, face, knees and toes all point FORWARD in the same direction.\n\nThe camera is centered immediately behind and slightly above his shoulders.\n\nThe visible physical order from nearest to farthest is:\n\ncamera → seat back → back of pilot's head and shoulders → his forward-facing body → his hands and knees → panoramic HUD → launch tube.\n\nOnly the BACK of his short messy black hair, neck, shoulders, upper restraint straps, forearms and gloved hands are visible.\n\nHis face points away from the camera for the entire scene.\n\nDirectly ahead of him is an existing 180-degree wrap-around panoramic tactical HUD. The HUD is positioned on the same side of the pilot that his face, chest, knees and toes point toward.\n\nIt is a forward display rather than a reflective surface.\n\nBeyond the HUD is the mecha's forward-camera view down a perfectly straight enclosed spacecraft launch tube.\n\nThe launch tube contains repeating dark structural ribs, bright white guidance lamps, parallel acceleration rails, yellow-black service markings and a distant central vanishing point directly ahead of the pilot.\n\nTwo existing flight throttles sit beside the pilot's thighs beneath his hands.\n\nOne existing illuminated red launch button is mounted forward and slightly to his right, between his seated position and the panoramic HUD.\n\nFor approximately one second, the powered cockpit vibrates gently while the pilot remains still.\n\nBoth hands hold the throttles.\n\nHe stares straight forward toward the distant vanishing point.\n\n(S1) says: <d>[Japanese] システム、オールグリーン。発進！</d>\n\nAs the final word ends, his right hand releases the right throttle.\n\nHis right arm reaches FORWARD toward the existing red launch button.\n\nHe strikes the button once.\n\nThe button visibly depresses.\n\nThe mecha immediately accelerates FORWARD in exactly the same direction the pilot is facing.\n\nThe massive acceleration force pushes the pilot BACKWARD against his seat, opposite the direction of travel.\n\nHis spine and shoulders compress firmly against the seat back nearest the camera.\n\nThe restraint harness pulls tight across his shoulders.\n\nHis head moves slightly backward under the force but continues facing forward toward the HUD.\n\nHis right hand immediately returns to the right throttle.\n\nBoth hands grip the throttles tightly.\n\nThe cockpit enters intense high-frequency vibration.\n\nBecause the camera is mechanically mounted behind the pilot seat, the camera vibrates with the cockpit while preserving exactly the same rear-facing composition.\n\nOn the panoramic HUD, the distant launch-tube vanishing point remains centered.\n\nGuidance lights and structural ribs rush from the distant CENTER of the forward view toward the pilot and sweep outward past the left and right edges of the display at rapidly increasing speed.\n\nThe velocity indicator climbs rapidly.\n\nThe central alignment reticle remains fixed directly ahead.\n\nThe camera stays behind the pilot.\n\nThe pilot continues facing forward.\n\nThe HUD remains ahead of him.\n\nThe launch tube remains beyond the HUD.\n\nThe machine continues accelerating in the exact direction the pilot is looking.\n\nThe scene ends with the pilot pinned firmly into the seat, both hands gripping the throttles, while the launch tube streams past ahead at extreme speed.\n\noverall_soundscape:\nLow powered-cockpit vibration, launch-button impact, a heavy initial acceleration shock, rapidly intensifying propulsion noise, structural rattling, restraint tension, panel vibration and increasingly powerful launch-tube resonance.\n\nnon_diegetic_music:\nThe action score briefly pulls back beneath the Japanese line, then surges immediately after launch with pounding percussion, rapid analog bass pulses and sustained high strings.",
         "duration_3": 9,
         "overlap_3": 0,
         "continuity_3": "cut",
+        "source_3": -1,
+        "header_footer_3": "both",
+        "model_3": "auto",
+        "strength_3": 1,
+        "sound_3": "auto",
+        "seed_3": 0,
         "prompt_4": "id=\"x404\"\nduration_seconds: 10\n\nThe shot cuts completely away from the cockpit to a very wide exterior orbital view.\n\nA colossal dark-grey military capital spacecraft several kilometers long hangs in low orbit above a vast blue-white planet.\n\nThe ship is covered in layered armored hull plating, recessed launch bays, antenna structures, radiator surfaces, engine sections and thousands of tiny illuminated windows.\n\nThe blue-white planet curves across the lower portion of the composition. A thin luminous blue atmosphere follows its limb and enormous white cloud systems spread across the visible surface.\n\nBlack star-filled space surrounds both ship and planet.\n\nThe immense capital spacecraft stretches across the upper-middle frame.\n\nThe camera remains almost completely still for approximately three seconds.\n\nThe ship drifts only subtly relative to the distant stars.\n\nIts tiny illuminated windows and recessed hull lights emphasize its enormous physical scale.\n\nA single brilliant point suddenly emerges from a launch opening on the underside of the capital ship.\n\nThe launched object is so distant that its humanoid form cannot be resolved.\n\nIt appears only as a tiny brilliant moving point.\n\nThe object rapidly travels downward away from the vessel toward the planet.\n\nThe camera begins a slow large-amplitude TILT DOWN, following the descending point without rapidly zooming toward it.\n\nThe enormous capital ship gradually moves toward the upper edge of frame.\n\nThe planet occupies progressively more of the composition as the camera continues its slow downward tilt.\n\nThe tiny bright object approaches the planet's thin atmospheric limb.\n\nAs it reaches the atmosphere, a compact orange glow forms tightly around it.\n\nThe atmospheric glow becomes slightly brighter as the object continues downward while remaining extremely small compared with the planet.\n\nThe scene ends with the vast planet dominating the image and the tiny orange-glowing object descending deeper into its atmosphere.\n\noverall_soundscape:\nNo diegetic exterior sound in the vacuum of space.\n\nnon_diegetic_music:\nA broad sustained analog-orchestral chord replaces the rapid action rhythm. Deep synthesizer pads and sparse low percussion create a deliberate sense of orbital scale.",
         "duration_4": 11,
         "overlap_4": 0,
         "continuity_4": "cut",
+        "source_4": -1,
+        "header_footer_4": "both",
+        "model_4": "auto",
+        "strength_4": 1,
+        "sound_4": "auto",
+        "seed_4": 0,
         "prompt_5": "id=\"x405\"\nduration_seconds: 9\n\nThe shot cuts abruptly to a completely new exterior camera already descending at extreme speed through dense planetary clouds.\n\nThe first frame contains only layered grey-white cloud formations and cold blue daylight filtering through openings above.\n\nNearby vapor streams rapidly UPWARD across the image because the camera is plunging downward.\n\nAfter approximately one second, a huge dark mechanical silhouette begins forming inside the dense cloud behind and above the camera's direction of travel.\n\nThe silhouette rapidly becomes clearer.\n\nThe same colossal humanoid combat mecha breaks through the cloud layer.\n\nIts complete form becomes readable: compact helmet-like head with narrow luminous green visor, broad white and pale-grey armored shoulders, dark navy armored torso, muted red warning markings, two articulated arms, two articulated legs, heavy mechanical joints, vents and stabilization-thruster assemblies.\n\nWhite atmospheric vapor peels away from its head, shoulders and forearms.\n\nThe camera continues descending ahead of the machine and performs a small-amplitude arc toward the mecha's front-left side.\n\nIt settles into a low front three-quarter tracking view several body lengths ahead of the descending mecha.\n\nThe camera matches most of its downward velocity, keeping the machine large and stable in frame while cloud formations continue streaming rapidly upward around it.\n\nThe mecha holds both arms slightly away from its torso for stability.\n\nIts legs extend beneath and slightly behind its body.\n\nDense airflow strikes the armor.\n\nShoulder plates and exposed mechanical components visibly vibrate under atmospheric turbulence.\n\nWhite condensation forms around the leading edges of the shoulders and forearms, stretches backward in the airflow and collapses.\n\nBrief orange-red atmospheric heating flickers intermittently along the forward shoulder, forearm and lower-leg armor.\n\nA powerful lateral turbulence pulse strikes one side of the mecha.\n\nIts torso and shoulders yaw several degrees away from alignment while its articulated limbs respond physically to the force.\n\nCompact stabilization thrusters on the opposite side fire short bright exhaust bursts.\n\nThe thrust corrects the machine back toward its previous descending orientation.\n\nThe Japanese pilot remains physically inside the sealed torso cockpit and is not visible from this exterior camera.\n\n(S1) says: <d>[Japanese] 大気圏内。目標に接近中。</d>\n\nAs the radio line finishes, the mecha punches through another thinner cloud layer.\n\nVapor bursts outward around the shoulders and streams rapidly upward behind the descending machine.\n\nThe luminous green visor remains pointed along the direction of travel.\n\nThe camera maintains the same low front three-quarter tracking relationship while the mecha continues its hypersonic descent.\n\noverall_soundscape:\nContinuous atmospheric roar, severe wind shear, armor vibration, structural groans, turbulent buffeting, pressure changes while crossing cloud layers and short stabilization-thruster bursts.\n\nnon_diegetic_music:\nRapid tom percussion, low analog bass pulses, urgent high strings and sustained brass-synth layers drive the descent.",
         "duration_5": 10,
         "overlap_5": 0,
-        "continuity_5": "as set",
+        "continuity_5": "carry",
+        "source_5": -1,
+        "header_footer_5": "both",
+        "model_5": "auto",
+        "strength_5": 1,
+        "sound_5": "auto",
+        "seed_5": 0,
         "prompt_6": "",
         "duration_6": 10,
         "overlap_6": 22,
-        "continuity_6": "as set",
+        "continuity_6": "carry",
+        "source_6": -1,
+        "header_footer_6": "both",
+        "model_6": "auto",
+        "strength_6": 1,
+        "sound_6": "auto",
+        "seed_6": 0,
         "prompt_7": "",
         "duration_7": 10,
         "overlap_7": 22,
-        "continuity_7": "as set",
+        "continuity_7": "carry",
+        "source_7": -1,
+        "header_footer_7": "both",
+        "model_7": "auto",
+        "strength_7": 1,
+        "sound_7": "auto",
+        "seed_7": 0,
         "prompt_8": "",
         "duration_8": 9,
         "overlap_8": 22,
-        "continuity_8": "as set",
+        "continuity_8": "carry",
+        "source_8": -1,
+        "header_footer_8": "both",
+        "model_8": "auto",
+        "strength_8": 1,
+        "sound_8": "auto",
+        "seed_8": 0,
         "prompt_9": "",
         "duration_9": 11,
         "overlap_9": 22,
-        "continuity_9": "as set",
+        "continuity_9": "carry",
+        "source_9": -1,
+        "header_footer_9": "both",
+        "model_9": "auto",
+        "strength_9": 1,
+        "sound_9": "auto",
+        "seed_9": 0,
         "prompt_10": "",
         "duration_10": 10,
         "overlap_10": 22,
-        "continuity_10": "as set",
+        "continuity_10": "carry",
+        "source_10": -1,
+        "header_footer_10": "both",
+        "model_10": "auto",
+        "strength_10": 1,
+        "sound_10": "auto",
+        "seed_10": 0,
         "prompt_11": "",
         "duration_11": 4.25,
         "overlap_11": 22,
-        "continuity_11": "as set",
+        "continuity_11": "carry",
+        "source_11": -1,
+        "header_footer_11": "both",
+        "model_11": "auto",
+        "strength_11": 1,
+        "sound_11": "auto",
+        "seed_11": 0,
         "prompt_12": "",
         "duration_12": 4.25,
         "overlap_12": 22,
-        "continuity_12": "as set",
+        "continuity_12": "carry",
+        "source_12": -1,
+        "header_footer_12": "both",
+        "model_12": "auto",
+        "strength_12": 1,
+        "sound_12": "auto",
+        "seed_12": 0,
         "prompt_13": "",
         "duration_13": 4.25,
         "overlap_13": 22,
-        "continuity_13": "as set",
+        "continuity_13": "carry",
+        "source_13": -1,
+        "header_footer_13": "both",
+        "model_13": "auto",
+        "strength_13": 1,
+        "sound_13": "auto",
+        "seed_13": 0,
         "prompt_14": "",
         "duration_14": 4.25,
         "overlap_14": 22,
-        "continuity_14": "as set",
+        "continuity_14": "carry",
+        "source_14": -1,
+        "header_footer_14": "both",
+        "model_14": "auto",
+        "strength_14": 1,
+        "sound_14": "auto",
+        "seed_14": 0,
         "prompt_15": "",
         "duration_15": 4.25,
         "overlap_15": 22,
-        "continuity_15": "as set",
+        "continuity_15": "carry",
+        "source_15": -1,
+        "header_footer_15": "both",
+        "model_15": "auto",
+        "strength_15": 1,
+        "sound_15": "auto",
+        "seed_15": 0,
         "prompt_16": "",
         "duration_16": 4.25,
         "overlap_16": 22,
-        "continuity_16": "as set",
+        "continuity_16": "carry",
+        "source_16": -1,
+        "header_footer_16": "both",
+        "model_16": "auto",
+        "strength_16": 1,
+        "sound_16": "auto",
+        "seed_16": 0,
         "prompt_17": "",
         "duration_17": 4.25,
         "overlap_17": 22,
-        "continuity_17": "as set",
+        "continuity_17": "carry",
+        "source_17": -1,
+        "header_footer_17": "both",
+        "model_17": "auto",
+        "strength_17": 1,
+        "sound_17": "auto",
+        "seed_17": 0,
         "prompt_18": "",
         "duration_18": 4.25,
         "overlap_18": 22,
-        "continuity_18": "as set",
+        "continuity_18": "carry",
+        "source_18": -1,
+        "header_footer_18": "both",
+        "model_18": "auto",
+        "strength_18": 1,
+        "sound_18": "auto",
+        "seed_18": 0,
         "prompt_19": "",
         "duration_19": 4.25,
         "overlap_19": 22,
-        "continuity_19": "as set",
+        "continuity_19": "carry",
+        "source_19": -1,
+        "header_footer_19": "both",
+        "model_19": "auto",
+        "strength_19": 1,
+        "sound_19": "auto",
+        "seed_19": 0,
         "prompt_20": "",
         "duration_20": 4.25,
         "overlap_20": 22,
-        "continuity_20": "as set",
+        "continuity_20": "carry",
+        "source_20": -1,
+        "header_footer_20": "both",
+        "model_20": "auto",
+        "strength_20": 1,
+        "sound_20": "auto",
+        "seed_20": 0,
         "prompt_21": "",
         "duration_21": 4.25,
         "overlap_21": 22,
-        "continuity_21": "as set",
+        "continuity_21": "carry",
+        "source_21": -1,
+        "header_footer_21": "both",
+        "model_21": "auto",
+        "strength_21": 1,
+        "sound_21": "auto",
+        "seed_21": 0,
         "prompt_22": "",
         "duration_22": 4.25,
         "overlap_22": 22,
-        "continuity_22": "as set",
+        "continuity_22": "carry",
+        "source_22": -1,
+        "header_footer_22": "both",
+        "model_22": "auto",
+        "strength_22": 1,
+        "sound_22": "auto",
+        "seed_22": 0,
         "prompt_23": "",
         "duration_23": 4.25,
         "overlap_23": 22,
-        "continuity_23": "as set",
+        "continuity_23": "carry",
+        "source_23": -1,
+        "header_footer_23": "both",
+        "model_23": "auto",
+        "strength_23": 1,
+        "sound_23": "auto",
+        "seed_23": 0,
         "prompt_24": "",
         "duration_24": 4.25,
         "overlap_24": 22,
-        "continuity_24": "as set"
+        "continuity_24": "carry",
+        "source_24": -1,
+        "header_footer_24": "both",
+        "model_24": "auto",
+        "strength_24": 1,
+        "sound_24": "auto",
+        "seed_24": 0,
+        "ref_image_size": "match",
+        "loop": false
       }
     },
     {
@@ -2006,46 +6013,83 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 18
         },
         {
+          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 48
         },
         {
+          "localized_name": "c",
           "name": "c",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "localized_name": "expression",
+          "name": "expression",
+          "type": "STRING",
+          "widget": {
+            "name": "expression"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_error",
+          "name": "on_error",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "on_error"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
+          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": null
         },
         {
+          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": []
         },
         {
+          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -2086,36 +6130,71 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": null
         },
         {
+          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 17
         },
         {
+          "localized_name": "c",
           "name": "c",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "localized_name": "expression",
+          "name": "expression",
+          "type": "STRING",
+          "widget": {
+            "name": "expression"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_error",
+          "name": "on_error",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "on_error"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
+          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": [
@@ -2124,11 +6203,13 @@
           ]
         },
         {
+          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": null
         },
         {
+          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -2169,6 +6250,7 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "noise_seed",
           "name": "noise_seed",
           "type": "INT",
           "widget": {
@@ -2179,6 +6261,7 @@
       ],
       "outputs": [
         {
+          "localized_name": "NOISE",
           "name": "NOISE",
           "type": "NOISE",
           "links": [
@@ -2221,36 +6304,71 @@
       "mode": 0,
       "inputs": [
         {
+          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 64
         },
         {
+          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 66
         },
         {
+          "localized_name": "c",
           "name": "c",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
+          "link": null
+        },
+        {
+          "localized_name": "expression",
+          "name": "expression",
+          "type": "STRING",
+          "widget": {
+            "name": "expression"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_error",
+          "name": "on_error",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "on_error"
+          },
           "link": null
         }
       ],
       "outputs": [
         {
+          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
+          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
+          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": [
@@ -2258,11 +6376,13 @@
           ]
         },
         {
+          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": []
         },
         {
+          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -2292,7 +6412,7 @@
       "type": "INTConstant",
       "pos": [
         579.5803752739012,
-        1225.0071901732333
+        1269.0
       ],
       "size": [
         210,
@@ -2301,9 +6421,20 @@
       "flags": {},
       "order": 8,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "INT",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
+          "localized_name": "value",
           "name": "value",
           "type": "INT",
           "links": [
@@ -2326,7 +6457,8 @@
       "widgets_values_named": {
         "value": 4242
       },
-      "color": "#1b4669"
+      "color": "#1b4669",
+      "bgcolor": "#29699c"
     }
   ],
   "links": [
@@ -2531,14 +6663,6 @@
       "NOISE"
     ],
     [
-      44,
-      26,
-      0,
-      27,
-      0,
-      "VIDEO"
-    ],
-    [
       6,
       5,
       0,
@@ -2576,14 +6700,6 @@
       2,
       14,
       1,
-      "INT"
-    ],
-    [
-      60,
-      13,
-      2,
-      38,
-      8,
       "INT"
     ],
     [
@@ -2675,14 +6791,6 @@
       "WAS_LOOP"
     ],
     [
-      15,
-      12,
-      1,
-      15,
-      4,
-      "INT"
-    ],
-    [
       16,
       12,
       1,
@@ -2729,6 +6837,30 @@
       21,
       0,
       "STRING"
+    ],
+    [
+      44,
+      26,
+      0,
+      27,
+      0,
+      "VIDEO"
+    ],
+    [
+      15,
+      12,
+      1,
+      15,
+      7,
+      "INT"
+    ],
+    [
+      60,
+      13,
+      2,
+      38,
+      12,
+      "INT"
     ]
   ],
   "groups": [
@@ -2739,7 +6871,7 @@
         526,
         117,
         350,
-        1040
+        1220.0
       ],
       "color": "#3f5159",
       "flags": {}
@@ -2751,7 +6883,7 @@
         940,
         120,
         680,
-        1230
+        2311.340606969697
       ],
       "color": "#4a3f59",
       "flags": {}
@@ -2787,7 +6919,7 @@
         2591.265127906968,
         1144.1111953488403,
         360,
-        500
+        576.0
       ],
       "color": "#593f3f",
       "flags": {}
@@ -2824,8 +6956,8 @@
     "ds": {
       "scale": 0.5559917313492291,
       "offset": [
-        -544.2642064100165,
-        170.49681320020926
+        225.6813150225171,
+        304.0419647077992
       ]
     },
     "frontendVersion": "1.53.6",

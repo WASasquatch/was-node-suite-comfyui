@@ -58,6 +58,16 @@ class WhileLoopOpen(io.ComfyNode):
                         "stays true, so a mistake cannot run forever."
                     ),
                 ),
+                io.Int.Input(
+                    "start",
+                    default=0,
+                    min=0,
+                    max=MAX_ITERATIONS,
+                    tooltip=(
+                        "The index the first iteration reads, as `0`, or `2` to resume a run "
+                        "at its third item; INT. Counts up by 1 from here."
+                    ),
+                ),
                 io.MatchType.Input(
                     "value_1", template=templates[0], optional=True,
                     tooltip=FIRST_IN_TIP,
@@ -102,8 +112,8 @@ class WhileLoopOpen(io.ComfyNode):
                 io.Int.Output(
                     display_name="index",
                     tooltip=(
-                        "The loop's counter; INT. Starts at 0 and counts up by 1 each "
-                        "iteration, for reading a position in a list."
+                        "The loop's counter; INT. Starts at start, 0 by default, and counts "
+                        "up by 1 each iteration, for reading a position in a list."
                     ),
                 ),
                 DICT.Output(
@@ -154,6 +164,7 @@ class WhileLoopOpen(io.ComfyNode):
     def execute(
         cls,
         max_iterations=DEFAULT_MAX_ITERATIONS,
+        start=0,
         value_1=None,
         value_2=None,
         value_3=None,
@@ -167,22 +178,24 @@ class WhileLoopOpen(io.ComfyNode):
         # not held to it, so every ceiling is enforced again here.
         from ....modules.logic import loop_meta
 
+        first = max(0, min(int(start), MAX_ITERATIONS))
         iterator = {
             "start_id": str(cls.hidden.unique_id),
             "mode": "condition",
             "max_iterations": max(1, min(int(max_iterations), MAX_ITERATIONS)),
-            "index": 0,
+            "start_index": first,
+            "index": first,
             "iteration": 1,
         }
         metadata = loop_meta.build(
             mode="condition",
             current_iteration=1,
-            index=0,
+            index=first,
             limit=iterator["max_iterations"],
         )
         return io.NodeOutput(
             iterator,
-            0,
+            first,
             metadata,
             value_1, value_2, value_3, value_4, value_5, value_6, value_7, value_8,
         )

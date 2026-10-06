@@ -10,7 +10,7 @@ import { captureWheel, wheelPixels } from "./pointer.js";
 import { PREVIEW_STATE, executionId } from "./preview.js";
 import { createFigureTile, statusColour } from "./report_panel.js";
 import { onRunEnded } from "./run_events.js";
-import { RUN_LABELS, fetchRunResult } from "./run_result.js";
+import { RUN_LABELS, fetchRunResult, whenReadable } from "./run_result.js";
 import { themeVar } from "./theme.js";
 
 const LOG_NAME = "WASNodeSuite.FrameTimeline";
@@ -395,6 +395,8 @@ export function createFrameTimelinePanel(node, options = {}) {
 
   api.addEventListener("executed", onExecuted);
   const stopWatchingRuns = onRunEnded(() => refresh());
+  // A panel built before its node joined the graph reads the report the server already holds.
+  const stopSettling = whenReadable(node, () => refresh());
 
   // The rows are the only thing here that scrolls, and the panel takes every wheel gesture
   // over it, so the rows at either end leave the next tick doing nothing rather than zooming.
@@ -421,6 +423,7 @@ export function createFrameTimelinePanel(node, options = {}) {
       releaseWheel();
       api.removeEventListener?.("executed", onExecuted);
       if (typeof stopWatchingRuns === "function") stopWatchingRuns();
+      stopSettling();
     },
   };
 }

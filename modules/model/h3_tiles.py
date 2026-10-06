@@ -20,8 +20,12 @@ __all__ = [
     "TILES_WRAPPER",
     "Tiling",
     "auto_tiling",
+    "cut_report",
     "manual_tiling",
+    "planned",
     "plot",
+    "scene_spans",
+    "scene_tiling",
     "tiled_model",
     "tiling_settings",
 ]
@@ -193,6 +197,81 @@ def manual_tiling(rows: int, height: int, width: int, tile_height: int, tile_wid
     )
 
 
+def scene_spans(starts, rows: int) -> tuple:
+    """``(start, stop)`` latent rows of each scene of a clip.
+
+    Args:
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+        rows: Latent rows of the clip.
+
+    Returns:
+        Spans in order covering every row, one where ``starts`` names no cut inside the clip.
+    """
+    rows = int(rows)
+    kept = sorted({int(start) for start in starts or ()
+                   if 0 < int(start) < rows and int(start) % CHUNK_ROWS == 0})
+    edges = [0, *kept, rows]
+    return tuple((edges[index], edges[index + 1]) for index in range(len(edges) - 1))
+
+
+def _fitted_spans(length: int, window: int, overlap: int) -> tuple:
+    """The fewest equal ``(start, stop)`` ranges covering ``length`` with none longer than ``window``."""
+    most = max(1, (int(length) - max(1, int(overlap))) // CHUNK_ROWS)
+    for pieces in range(1, most + 1):
+        spans = _spans(length, pieces, overlap, CHUNK_ROWS)
+        if max(stop - start for start, stop in spans) <= window:
+            break
+    return spans
+
+
+def scene_tiling(tiling: Tiling, settings: tuple, starts, rows: int) -> Tiling:
+    """A tiling whose time windows each lie inside one scene, none longer than its longest.
+
+    Args:
+        tiling: A tiling of the whole clip.
+        settings: The settings it was planned from, as :func:`tiling_settings` gives them.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+        rows: Latent rows of the clip.
+
+    Returns:
+        The tiling, unchanged where it holds one time window or the clip one scene.
+    """
+    scenes = scene_spans(starts, rows)
+    if len(tiling.rows) < 2 or len(scenes) < 2:
+        return tiling
+    overlap = settings[5] if settings[0] == "manual" else AUTO_WINDOW_OVERLAP
+    window = max(stop - start for start, stop in tiling.rows)
+    windows = []
+    for start, stop in scenes:
+        windows.extend((start + a, start + b) for a, b in _fitted_spans(stop - start, window, overlap))
+    return Tiling(tuple(windows), tiling.heights, tiling.widths)
+
+
+def planned(settings: tuple, rows: int, height: int, width: int, text: int = 0,
+            starts=None) -> Tiling:
+    """The tiling a run plans for a latent of this size.
+
+    Args:
+        settings: ``("auto", max_tokens)`` or ``("manual", tile_height, tile_width, window_rows,
+            overlap, window_overlap)`` in latent units.
+        rows: Latent rows of the clip.
+        height: Latent height, even.
+        width: Latent width, even.
+        text: Text tokens every tile carries.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+
+    Returns:
+        The tiling.
+    """
+    if settings[0] == "manual":
+        _, tile_h, tile_w, window_rows, overlap, window_overlap = settings
+        tiling = manual_tiling(rows, height, width, tile_h, tile_w, window_rows, overlap,
+                               window_overlap)
+    else:
+        tiling = auto_tiling(rows, height, width, text, max_tokens=settings[1])
+    return scene_tiling(tiling, settings, starts, rows)
+
+
 def _smooth(weight: torch.Tensor) -> torch.Tensor:
     """Raised-cosine form of a linear ramp in ``[0, 1]``; two ramps summing to 1 still do."""
     return 0.5 - 0.5 * torch.cos(math.pi * weight.clamp(0.0, 1.0))
@@ -362,13 +441,15 @@ class _Tiled:
         text: Most text tokens among the current run's conditionings.
         plans: Tilings planned in the current run, by latent shape.
         reported: Plans already logged.
+        starts: Latent rows each scene of the clip opens on.
     """
 
-    def __init__(self, settings: tuple):
+    def __init__(self, settings: tuple, starts=None):
         self.settings = settings
         self.text = 0
         self.plans = {}
         self.reported = set()
+        self.starts = tuple(int(start) for start in starts or ())
 
     def sample(self, executor, *args, **kwargs):
         """Runs a sampling run with its tilings planned afresh from the run's longest prompt."""
@@ -377,11 +458,7 @@ class _Tiled:
 
     def tiling(self, rows: int, height: int, width: int, text: int) -> Tiling:
         """The tiling for a latent of this size."""
-        if self.settings[0] == "manual":
-            _, tile_h, tile_w, window_rows, overlap, window_overlap = self.settings
-            return manual_tiling(rows, height, width, tile_h, tile_w, window_rows, overlap,
-                                 window_overlap)
-        return auto_tiling(rows, height, width, text, max_tokens=self.settings[1])
+        return planned(self.settings, rows, height, width, text, self.starts)
 
     def plan(self, frames: int, height: int, width: int, text: int) -> Tiling:
         """The run's tiling for a latent of this size, planned once and shared by every call."""
@@ -396,6 +473,9 @@ class _Tiled:
                             "largest %d tokens", plan.count, frames, height, width,
                             len(plan.rows), len(plan.heights), len(plan.widths),
                             plan.tokens(text + _audio_tokens(max(b - a for a, b in plan.rows))))
+                note = cut_report(self.starts, frames, len(plan.rows))
+                if note:
+                    logger.info("H3 tiles: %s", note)
         return plan
 
     def __call__(self, executor, *args, **kwargs):
@@ -527,13 +607,14 @@ def tiling_settings(choice: dict) -> tuple:
     return ("auto", int(choice.get("max_tokens", AUTO_TOKENS)))
 
 
-def tiled_model(model, settings: tuple):
+def tiled_model(model, settings: tuple, starts=None):
     """A low VRAM clone of an H3 model whose every call runs over overlapping tiles, blended per step.
 
     Args:
         model: A MiniMax H3 model patcher.
         settings: ``("auto", max_tokens)`` or ``("manual", tile_height, tile_width, window_rows,
             overlap, window_overlap)`` in latent units.
+        starts: Latent rows each scene of the clip opens on, or ``None`` for one scene.
 
     Returns:
         The patched clone.
@@ -545,7 +626,7 @@ def tiled_model(model, settings: tuple):
     kind = comfy.patcher_extension.WrappersMP.DIFFUSION_MODEL
     outer = comfy.patcher_extension.WrappersMP.OUTER_SAMPLE
     patched = model.clone() if h3_low_vram.is_low_vram(model) else h3_low_vram.low_vram_model(model)
-    tiles = _Tiled(tuple(settings))
+    tiles = _Tiled(tuple(settings), starts)
     for wrapper_kind in (kind, outer):
         patched.wrappers.get(wrapper_kind, {}).pop(TILES_WRAPPER, None)
     patched.add_wrapper_with_key(kind, TILES_WRAPPER, tiles)
@@ -555,7 +636,8 @@ def tiled_model(model, settings: tuple):
     return patched
 
 
-def plot(tiling: Tiling, rows: int, height: int, width: int, size: int = 960) -> torch.Tensor:
+def plot(tiling: Tiling, rows: int, height: int, width: int, size: int = 960,
+         starts=None) -> torch.Tensor:
     """A picture of a tiling: the tiles over one frame, and the time windows along the clip.
 
     Args:
@@ -564,6 +646,7 @@ def plot(tiling: Tiling, rows: int, height: int, width: int, size: int = 960) ->
         height: Latent height.
         width: Latent width.
         size: Picture width in pixels.
+        starts: Latent rows each scene opens on, or ``None`` for one scene; cuts are marked.
 
     Returns:
         An IMAGE tensor ``[1, H, W, 3]``.
@@ -589,7 +672,33 @@ def plot(tiling: Tiling, rows: int, height: int, width: int, size: int = 960) ->
         lane = bar + (index % 2) * 18
         draw.rectangle([left + r0 / rows * frame_w, lane, left + r1 / rows * frame_w - 1, lane + 12],
                        fill=colour)
+    for cut, _ in scene_spans(starts, rows)[1:]:
+        x = left + cut / rows * frame_w
+        draw.line([(x, bar - 6), (x, bar + 32)], fill=(236, 236, 242), width=2)
+    note = cut_report(starts, rows, len(tiling.rows))
+    if note:
+        draw.text((left, bar + 34), note, fill=(150, 154, 165))
     draw.text((left, 8), f"{tiling.count} tiles: {len(tiling.rows)} time window(s), "
               f"{len(tiling.heights)} x {len(tiling.widths)} across the frame, "
               f"{width * LATENT_SCALE}x{height * LATENT_SCALE} px", fill=(230, 230, 235))
     return torch.from_numpy(np.asarray(picture, dtype=np.float32) / 255.0)[None]
+
+
+def cut_report(starts, rows: int, windows: int) -> str:
+    """One line saying how a tiling treats the clip's cuts.
+
+    Args:
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+        rows: Latent rows of the clip.
+        windows: Time windows the tiling holds.
+
+    Returns:
+        The line, empty for a clip of one scene.
+    """
+    cuts = len(scene_spans(starts, rows)) - 1
+    if not cuts:
+        return ""
+    count = f"{cuts} {'cut' if cuts == 1 else 'cuts'}"
+    if windows > 1:
+        return f"{count} kept out of the window blend, every time window inside one scene"
+    return f"{count} inside the one time window, sampled whole"

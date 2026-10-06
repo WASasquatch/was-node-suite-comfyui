@@ -5,7 +5,7 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **468** across **48** categories |
+| Nodes | **509** across **48** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 194 nodes draw their own readout, picture or editor on the canvas |
@@ -307,88 +307,106 @@ one to music.
 
 ---
 
-## A clip extended one segment at a time
+## A video built one segment at a time
 
-**H3 Extend Window** opens one segment of a MiniMax H3 clip for a sampler. The first segment
-samples an empty latent. Every segment after it picks up from the clip so far: `carry` copies
-the clip's last frames into the window and masks them, so the sampler holds those frames and
-generates only what follows, and `reference (video)` decodes them and encodes them again as a
-video reference. `reference (sample)` cuts to a new scene that references stills taken evenly
-across the whole clip so far, `reference_samples` of them, so a cast seen before a cutaway to
-another room comes back looking as it did. `refresh` carries the same frames with fresh noise in them, as much as `renewal`
-sets, so a scene that sticks on one picture evolves while the shot stays unbroken, and
-`handoff` starts the next segment on the last frame alone. `cut`, or an overlap
-of `0`, samples a new scene from an empty latent with nothing carried, and H3 Extend Append
-joins it after the clip's last full 17 frame block. `carry (audio only)` cuts to new picture the
-same way while carrying the soundtrack across the cut, in whole 17 frame clips of it, so music or
-ambience runs on into the new scene. `drift_control` takes the contrast and
-fine detail the carried frames have gained back out again in latent space, each segment, and
-never sharpens.
-**H3 Extend Append** joins each sampled segment onto the clip and drops the carried head, so
-no rendered frame is written twice. Overlaps and lengths snap to the model's frame grid, and
-both nodes carry the audio with the video. A `carry` or `refresh` segment holds the soundtrack
-for the whole audio steps its overlap covers, whatever length that overlap is, and
-`audio_release` opens the mask back up over the last of those steps so the held take meets the
-new frames without a step in level.
+**MiniMax H3 Conditioning** writes every segment of a MiniMax H3 video on one node. Each row is
+one segment with its own prompt, length, transition, overlap, source, header and footer choice,
+model, hold, sound and seed, and a new row appears as the last one is filled. `prompt_header`
+and `prompt_footer` wrap the rows; a section a row writes itself, as `overall_soundscape:`,
+replaces theirs for that row, and `header_footer_N` takes either, both or neither. `t2va` takes
+no pictures, `i2va` opens on a first frame, `fl2va` closes on a last one, `fl2va_batched` runs
+every segment between a neighbouring pair out of one batch, and `ref2va` builds every segment on
+shared references: up to 9 pictures, 3 clips each with its own soundtrack, and 3 sounds, named
+`<Picture 1>`, `<Video 1>` and `<Audio 1>` in the prompts, at the size `ref_image_size` sets.
+`aspect_ratio` and `megapixels` pick the canvas, a `width` or `height` above `0` sets that side,
+and `loop` closes the last scene on the video's first frame. With `model_fl2va` and
+`model_ref2va` both wired, each row's `model_N` picks the one that samples it: `auto` is ref2va
+where the segment references anything and fl2va otherwise. Every prompt is encoded before
+sampling starts.
 
-**MiniMax H3 Conditioning** writes the whole run on one node. Each row is one segment with its
-own prompt, its own frame count, its own overlap and its own continuity, and a new row appears
-as the last one is filled. A bar above each row names the segment with its length and
-continuity, and right clicking it or clicking it picks a colour for that segment, saved with
-the workflow, to sort prompts by kind at a glance. `prompt_header` and `prompt_footer`
-surround every row, and a section a row writes itself, as `overall_soundscape:`, replaces the
-one they carry for that row alone, so a silent reveal can drop the run's dialogue voice while
-keeping its music. A row's `continuity_N` is `as set` until it is changed, leaving H3
-Extend Window's own setting to drive the run, and any other choice overrides it for that
-segment alone. A row's `source_N` names the segment it continues from, `-1` for the one before
-it or a segment number, and every continuity reads from the end of that segment while the new
-frames still join the end of the clip. A `cut` to another room followed by a `carry` from the
-segment before it picks the scene back up exactly where it was left, so fresh cutaways mix
-into one carried scene. A row's `header_footer_N` picks which of `prompt_header` and
-`prompt_footer` wrap its prompt, so a cutaway on `footer only` keeps the run's sound and none of
-the cast the header defines. That is how one run holds a continuous scene, cutaways and returns,
-and a cut to somewhere new on an overlap of `0`. `t2va` takes no pictures,
-`i2va` opens on a first frame, `fl2va` closes on a last one and `fl2va_batched` runs every
-segment between a neighbouring pair out of one batch, and only the pictures the mode reads
-are drawn. Every prompt is encoded together before any sampling starts, so the text encoder
-is loaded once rather than between segments.
+**MiniMax H3 Asset** gives a segment its own picture, clip or sound: the frame it opens or closes
+on, a keyframe pinned at any frame of it, or a reference its prompt names as `<Picture N>`,
+`<Video N>` or `<Audio N>`, from ComfyUI's folders, any `paths.allow_read` folder or a wired
+input. `(the video being made)` takes one frame of the video itself, for a later segment to
+reference. Asset nodes chain, each into the next one's `assets`, and the last goes into `assets`
+on the conditioning node.
 
-`ref2va` builds every segment on references: up to 9 pictures, 3 clips each with its own
-soundtrack, and 3 sounds, named `<Picture 1>`, `<Video 1>` and `<Audio 1>` in the prompts. Every
-row carries the same references, so a cast, a location or a voice holds across carried shots
-and cuts alike, and the `report` lists each tag with the size it was encoded at. A soundtrack
-takes its `<Audio>` number ahead of the standalone sounds, and any audio needs `audio_vae`.
-`ref_image_size` sets how large every reference picture is encoded: `match` fits it to the
-clip's area, `256` to `2048` cap its longest side, which keeps very large pictures light, and
-`max` takes it up to a 2048 pixel short edge for the closest likeness at several times the
-sampling cost. Every picture lands between 256 and 5760 pixels a side.
+**H3 Extend Window** opens each segment for a sampler and **H3 Extend Append** joins the result
+onto the clip so far, dropping what was carried so no frame is written twice. The transition into
+a segment is one of `carry` (the same shot goes on, picture and sound held), `refresh` (carried
+with fresh noise, as much as `renewal` sets), `handoff` (a cut that opens on the last frame),
+`reference (video)` (a cut that keeps the cast by referencing the last frames),
+`reference (sample)` (a cut referencing stills from the whole clip), `cut` (a new scene, nothing
+carried), `carry (audio only)` (a cut whose sound runs on, in whole 17 frame clips) and
+`carry (audio) + reference (video)` (a cut that keeps both). A bridged cut that references the
+scene before opens its prompt on a shot of that scene and cuts to its own shots where the bridge
+ends. `sound_N` sets each segment's sound apart from its picture: `auto` as the transition does,
+`carry` across any cut, `fresh` under a carried shot. `strength_N` loosens how firmly a segment
+holds its pinned frames and references, and `seed_N` gives a segment a seed of its own. A cut
+trims the 5 frames the model renders past its last whole clip. `drift_control` takes back the
+contrast and detail carried frames gain, and `audio_release` opens a held soundtrack back up
+where it meets new frames. With a `taeh3` decoder in `models/vae_approx`, `live_preview` draws
+each segment as it samples.
 
-`prompt_header` and `prompt_footer` go before and after every segment's prompt, so whatever
-holds across the whole run is written once and each row carries only what that segment does.
-A blank line separates them, and either left blank adds nothing.
+**H3 Decode Video** decodes the finished clip one scene at a time into a frame cache on disk, each
+scene that opens on a cut on its own, and **Save Video** writes it straight from the cache.
+**Video Cache** keeps any long frame batch on disk the same way, and **Load Video Cache** opens a
+cache again after a restart. **H3 Save Clip** writes a finished clip with every scene boundary,
+and **H3 Load Clip** reads it back whole or as it stood after any scene, so a later scene renders
+again without the ones before it. **H3 Repair Window** and **H3 Repair Splice** redraw a stretch
+of a finished clip, picture, sound or both, and write it back with everything else untouched.
+**H3 Soundtrack** lays one long track, a music bed or a recorded dialogue, under the whole video
+so it runs on unbroken across carries and cuts. **H3 Control** drives each segment with its own
+stretch of one control video through the H3 Fun ControlNet-Union patch, whose weights the pack
+does not ship. **MiniMax H3 Clip Select** takes one clip of a run with its own empty latent, for a
+loop that samples every clip from fresh.
 
-`aspect_ratio` picks the canvas shape and `megapixels` its area, so a size is chosen the way
-a resolution picker does. `custom` takes the shape from the pictures the mode reads, and 16:9
-where it reads none. A `width` or `height` above `0` sets that side itself and the other is
-worked out from the area, which makes the shape whatever those give. Sides round to a
-multiple of 32.
+**H3 Low VRAM** samples long clips in less memory with the same result, **H3 Tiles** runs every
+model call in overlapping tiles across the frame and windows along the clip, and **H3 Tiled
+Sampler** refines a long or upscaled clip that way with KSampler's settings. All three keep a
+joined clip's scene cuts.
 
-The nodes run inside a loop. **While Loop Open** and **While Loop Close** carry the clip from
-one segment to the next, `segments` sets the loop's count, and the clip is decoded once after
-the last segment. **H3 Decode Video** decodes it one scene at a time into a frame cache on
-disk, each scene that opens on a cut on its own and a long scene in pieces, with the sound
-decoded once, so a long multi-scene run never sits in memory as one batch and Save Video
-writes it straight from disk.
+For growing a video past the length one sampling pass covers, scene by scene, and for going back
+to any part of it.
 
-For growing a clip past the length a single sampling pass covers, and for directing it as it
-grows.
-
-[`NODES.md`](NODES.md) under **WAS Suite/Latent/Video** and **WAS Suite/Logic/Loop**. Graphs:
+[`NODES.md`](NODES.md) under **WAS Suite/Latent/Video**, **WAS Suite/Sampling**,
+**WAS Suite/IO** and **WAS Suite/Logic/Loop**. Graphs:
+[`minimax-h3-prompt-timeline.json`](docs/workflows/minimax-h3-prompt-timeline.json),
 [`minimax-h3-extend-loop.json`](docs/workflows/minimax-h3-extend-loop.json),
 [`minimax-h3-ref2va-extend-loop.json`](docs/workflows/minimax-h3-ref2va-extend-loop.json),
 [`minimax-h3-flf-pair-loop.json`](docs/workflows/minimax-h3-flf-pair-loop.json),
 [`minimax-h3-scene-loop.json`](docs/workflows/minimax-h3-scene-loop.json),
 [`minimax-h3-extend-loop-audio-carry.json`](docs/workflows/minimax-h3-extend-loop-audio-carry.json).
+
+---
+
+## The Prompt Timeline
+
+**The Prompt Timeline** is the editor window MiniMax H3 Conditioning opens from its **Open Prompt
+Timeline** button: the run's scenes along a time ruler with tracks for pinned frames and
+references, a media bin of every picture, clip and sound the pack may read, the chosen scene's
+settings, and a monitor that plays each segment as it samples and the finished video once the run
+saves it. Dragging sets a scene's length, its overlap, its order, a keyframe's frame and which
+scene a reference belongs to. **Reference frame** makes the frame under the playhead a picture
+reference in any scene. Every edit writes the node's rows and a chain of MiniMax H3 Asset nodes, so
+the graph runs the same with the window closed, and one undo takes back one gesture. The **Show
+the Open Prompt Timeline button** setting, under WAS Node Suite, hides the button.
+
+With a language model wired into `vlm_clip`, the window writes too. **Write scenes** turns a
+description of the video into every scene's prompt, a shared header and footer, and a transition
+between each pair of scenes, casting each scene from the reference pictures in the asset chain.
+**Rewrite** rewrites one scene's prompt to directions, or writes it from them where it is empty.
+**Plan transitions** reads the scenes as they stand and picks each cut and carry. The **LLM
+settings** tab holds the system prompt every one of them is written under and how the model draws
+its words. Each job is a queued prompt of its own, so it waits behind any run, and the model is
+never loaded by a render. **MiniMax H3 Scene Writer**, **MiniMax H3 Prompt Rewrite** and **MiniMax
+H3 Plan Transitions** are the nodes those jobs run, and work on a graph of their own as well.
+
+For laying out a whole video by eye, and for drafting it from a few sentences.
+
+[`docs/H3_COND_TIMELINE.md`](docs/H3_COND_TIMELINE.md) for the window, tab by tab.
+[`NODES.md`](NODES.md) under **WAS Suite/Latent/Video**. Graph:
+[`minimax-h3-prompt-timeline.json`](docs/workflows/minimax-h3-prompt-timeline.json).
 
 ---
 

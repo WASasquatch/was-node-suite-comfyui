@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.2.16"
+version = "3.3.0"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
@@ -24,13 +24,7 @@ branch = "main"
 docs = "https://github.com/WASasquatch/was-node-suite-comfyui/blob/main/NODES.md"
 funding = "https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US"
 release_note = """
-Nothing here starts a process, installs a package or ships a binary. A feature group that needs
-a library names it in the log with the pip command to run; install it yourself with
-requirements/<group>.txt.
-
-Outbound traffic is huggingface_hub fetching model weights, and only while features.network is
-on. A view extension installed by hand is imported as python, and a Three.js scene may carry
-browser javascript while threejs.allow_scripts is on. Both of those settings are off by default.
+New MiniMax H3 Conditioning Timeline editor, creaft scenes in a visual timeline, with LLM assistance via a Load CLIP node.
 """
 themes = ["themes/was-node-suite-dark/was-node-suite.json", "themes/was-node-suite-light/was-node-suite.json"]
 example_workflows = [

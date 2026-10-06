@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules.latent import h3_extend
 from ...modules.model import h3_tiles
 
 
@@ -65,7 +66,9 @@ class H3Tiles(io.ComfyNode):
                 "overlapping windows along the clip, blended where they meet at each step so the "
                 "tiles stay one clip. Any sampler then refines a long or upscaled H3 latent in "
                 "tiles that each fit the card, run as H3 Low VRAM runs them. Upscale the latent "
-                "first, or decode, upscale and encode, and sample it at a partial denoise."
+                "first, or decode, upscale and encode, and sample it at a partial denoise. Wire "
+                "the clip's latent as well and, where it takes several time windows, each one "
+                "stays inside one scene, so no blend crosses a cut."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),
@@ -75,16 +78,48 @@ class H3Tiles(io.ComfyNode):
                             "and across the frame only where a window will not fit; "
                             "`manual` sets tile and window sizes.",
                 ),
+                io.Latent.Input(
+                    "latent", optional=True,
+                    tooltip="The clip the sampler refines, read only for where its scenes cut, "
+                            "as H3 Extend Append records them. Wired, a clip that takes several "
+                            "time windows gets none that crosses a cut. Leave empty for a clip of "
+                            "one scene.",
+                ),
             ],
             outputs=[
                 io.Model.Output(
                     display_name="model",
                     tooltip="The model for the sampler that refines the latent.",
                 ),
+                io.String.Output(
+                    display_name="report",
+                    tooltip="How many cuts the latent records; where there are several time "
+                            "windows, none crosses one.",
+                ),
             ],
         )
 
     @classmethod
-    def execute(cls, model, tiling) -> io.NodeOutput:
-        """Wrap the model with the chosen tiling."""
-        return io.NodeOutput(h3_tiles.tiled_model(model, h3_tiles.tiling_settings(tiling)))
+    def execute(cls, model, tiling, latent=None) -> io.NodeOutput:
+        """Wrap the model with the chosen tiling, its time windows kept inside the latent's scenes.
+
+        Raises:
+            ValueError: latent is wired and is not a MiniMax H3 latent.
+        """
+        settings = h3_tiles.tiling_settings(tiling)
+        if latent is None:
+            return io.NodeOutput(h3_tiles.tiled_model(model, settings),
+                                 "no latent wired, so time windows can run across a cut")
+        samples = latent.get("samples") if isinstance(latent, dict) else None
+        video = (getattr(samples, "tensors", None) or [samples])[0]
+        if getattr(video, "ndim", 0) != 5:
+            raise ValueError(
+                "H3 Tiles reads scene cuts from a MiniMax H3 latent, and the latent wired is "
+                "not one. Wire the H3 latent the sampler refines, or leave latent empty"
+            )
+        starts = h3_extend.scene_starts(latent)
+        cuts = len(h3_tiles.scene_spans(starts, video.shape[2])) - 1
+        report = (f"{cuts} {'cut' if cuts == 1 else 'cuts'} read from the latent; where the clip "
+                  f"takes several time windows, none crosses a cut" if cuts
+                  else "the latent holds one scene")
+        return io.NodeOutput(h3_tiles.tiled_model(model, settings, starts), report)

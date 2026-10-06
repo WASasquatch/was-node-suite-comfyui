@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **499** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **509** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-492 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+502 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 377 |
+| [Always loaded](#always-loaded) | always on | 387 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-377 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+387 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -63,7 +63,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (7)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (17)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (2)
 - [WAS Suite/Logic](#was-suitelogic) (5)
@@ -7271,6 +7271,40 @@ A latent resized by a multiplier, with a choice of how the values in between are
 
 ### WAS Suite/Latent/Video
 
+<a id="node-wash3control"></a>
+<details>
+<summary><b>H3 Control</b></summary>
+
+Drive each segment of a MiniMax H3 extend loop with its own stretch of one control video: pose, depth, canny, lines or any other map the H3 Fun ControlNet-Union patch takes. Wire the whole video's control frames once; every pass reads the frames that land on its window, carried frames included, so each scene follows the video in step. A mask and source video add inpainting, regenerating inside the mask and keeping the rest. Place it between H3 Extend Window's model output and the guider.
+
+| | |
+|---|---|
+| Node id | `WASH3Control` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | This segment's MiniMax H3 model, from H3 Extend Window's model output. |
+| `model_patch` | `MODEL_PATCH` | Yes |  |  | The H3 Fun ControlNet-Union patch, from Load Model Patch set to a `minimax_h3_fun_controlnet_union` file in models/model_patches. |
+| `vae` | `VAE` | Yes |  |  | The H3 video VAE, which encodes this segment's control frames. |
+| `window` | `LATENT` | Yes |  |  | The window this segment samples, from H3 Extend Window. Its place on the finished clip picks the control frames; a latent with no place reads from frame 0. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | How hard the control frames steer: `0.0` = off, model passed through; `1.0` = as trained; `0.5` = a looser follow the prompt can bend; `1.5` = stricter. |
+| `start_percent` | `FLOAT` | Yes | 0.0 |  | Where in the noise schedule control starts: `0.0` = from the first step; `0.2` = a little later, leaving the opening steps to the prompt. |
+| `end_percent` | `FLOAT` | Yes | 1.0 |  | Where in the noise schedule control stops: `1.0` = to the last step; `0.6` = released for the final steps, so fine detail follows the prompt rather than the control frames. |
+| `control_video` | `IMAGE` | No |  |  | The whole video's control frames at 24 fps, frame 0 lining up with the finished clip's frame 0: pose, depth, canny, lines or any map the patch takes. Cropped to the window's canvas; a short video holds its last frame. |
+| `mask` | `MASK` | No |  |  | Where to regenerate, the whole video's length at 24 fps: `1` = regenerate, `0` = keep source_video. One frame holds for every frame. Needs source_video. |
+| `source_video` | `IMAGE` | No |  |  | The video the mask was drawn on, the whole length at 24 fps. Kept outside the mask and regenerated inside it. Read only with a mask. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The segment's model steered by its control frames, for the guider. |
+| `report` | `STRING` | Which control frames the window reads, at what strength, and whether it inpaints. |
+
+</details>
+
 <a id="node-wash3deroperecover"></a>
 <details>
 <summary><b>H3 De-RoPE Recover</b></summary>
@@ -7303,7 +7337,7 @@ Take the frames H3 De-RoPE Stretch held back out of the decoded, refined clip, s
 <details>
 <summary><b>H3 De-RoPE Stretch</b></summary>
 
-Find where a MiniMax H3 clip moves too fast, show those frames several times over, and encode the result with its audio as the start latent for any sampler. The clip comes in as frames, as a latent, or both; for a clip generated from text, wire the finished output of its sampler. Sample it at the `denoise` output's strength, decode it, and H3 De-RoPE Recover puts the frames back on the clip's timing. The GPU's models are released before and after its VAE work, so the samplers either side of it get the whole card. The strip shows the motion of each latent row and what was held.
+Find where a MiniMax H3 clip moves too fast, show those frames several times over, and encode the result with its audio as the start latent for any sampler. The clip comes in as frames, as a latent, or both; for a clip generated from text, wire the finished output of its sampler. Sample it at the `denoise` output's strength, decode it, and H3 De-RoPE Recover puts the frames back on the clip's timing. A clip joined from several scenes keeps its cuts when its latent is wired: each scene is measured and held on its own, and the stretched latent records where each one opens. The GPU's models are released before and after its VAE work, so the samplers either side of it get the whole card. The strip shows the motion of each latent row, what was held and where the scenes cut.
 
 | | |
 |---|---|
@@ -7321,7 +7355,7 @@ Find where a MiniMax H3 clip moves too fast, show those frames several times ove
 | `audio` | `AUDIO` | No |  |  | The clip's soundtrack, from Get Video Components. Left empty, a joint H3 latent's own audio is used. Without either, held spans come back rushed. |
 | `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, for encoding the audio and decoding a latent's. |
 | `fps` | `FLOAT` | No | 24.0 |  | Frame rate of the clip, as `24`, for timing its audio. |
-| `latent` | `LATENT` | No |  |  | The clip's finished H3 latent, such as a sampler's output. Motion and audio are read from it instead of encoding the frames. An early, unfinished estimate carries no motion to keep, and comes back fast-forwarded. |
+| `latent` | `LATENT` | No |  |  | The clip's finished H3 latent, such as a sampler's output. Motion, audio and scene cuts are read from it instead of encoding the frames, and no hold crosses a cut. An early, unfinished estimate carries no motion to keep, and comes back fast-forwarded. |
 | `model` | `MODEL` | No |  |  | The H3 model the sampler uses. Passed out for the sampler's model. |
 | `low_vram` | `BOOLEAN` | No | True |  | `true` runs each model block over the stretched clip in slices of 8192 tokens and keeps only the weights that fit beside it on the card, streaming the rest, for the same output at a lower memory peak. Needs model. |
 
@@ -7329,10 +7363,10 @@ Find where a MiniMax H3 clip moves too fast, show those frames several times ove
 
 | Name | Type | What it is |
 |---|---|---|
-| `latent` | `LATENT` | The stretched clip and its audio, for the sampler's latent_image. |
+| `latent` | `LATENT` | The stretched clip and its audio, for the sampler's latent_image. A clip with cuts carries where each scene opens, for H3 Decode Video. |
 | `derope` | `WAS_H3_DEROPE` | What was held, for H3 De-RoPE Recover. |
 | `denoise` | `FLOAT` | The strength, for the sampler's denoise. |
-| `report` | `STRING` | Frames in and out, frames held and the peak hold. |
+| `report` | `STRING` | Frames in and out, frames held, the peak hold and the cuts kept out of the motion measure. |
 | `model` | `MODEL` | The model for the sampler, run in slices when low_vram is on. |
 
 </details>
@@ -7401,7 +7435,7 @@ Join a sampled segment onto the clip so far. The opening segment becomes the cli
 <details>
 <summary><b>H3 Extend Window</b></summary>
 
-Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empty latent it is handed. Every segment after it picks up from the clip so far: `carry` copies its last frames and the soundtrack under them into the window and masks them, so the sampler holds them and generates only what follows, `refresh` carries them with fresh noise so a scene that sticks moves on, `handoff` starts the next segment on their last frame alone, and `reference (video)` hands them over as a video reference, and `reference (sample)` cuts to a new scene referencing stills from across the whole clip. `cut`, or an overlap of `0`, samples a new scene from an empty latent of its own length with nothing carried. Send the latent to a sampler and its result to H3 Extend Append.
+Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empty latent it is handed. Each later segment picks up from the clip so far: `carry` holds its last frames and their sound and generates what follows, `refresh` carries them with fresh noise, `handoff` opens on their last frame, `reference (video)` hands them over as a reference, and `reference (sample)` references stills from the whole clip. `carry (audio only)` cuts to new picture under the carried sound, and `carry (audio) + reference (video)` also references the last frames. `cut`, or an overlap of `0` under `carry` or `refresh`, starts a fresh scene. Send the latent to a sampler and its result to H3 Extend Append.
 
 | | |
 |---|---|
@@ -7412,19 +7446,24 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `latent` | `LATENT` | Yes |  |  | The finished H3 video and audio latent this pass continues. |
-| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)` | How this segment picks up from the one before it. `carry` = one unbroken shot, soundtrack held; `refresh` = the same shot with fresh noise in the carried frames, set by renewal, so a scene that sticks moves on; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the clip's last frames as a video; `reference (sample)` = a cut referencing stills sampled across the whole clip, so a cast seen before a cutaway comes back as it was; `cut` = a new scene from an empty latent, nothing carried; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. `handoff` and both references need vae. |
+| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, cast from stills; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. A row of prompts replaces this. References and handoff need vae. |
 | `extension_frames` | `INT` | Yes | 102 |  | New frames this pass adds, as `17` for about 0.7s or `102` for about 4.2s at 24 fps. Snapped to the nearest multiple of 17. |
-| `overlap_frames` | `INT` | Yes | 22 |  | Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. Longer gives the new frames more of the scene to continue from. `reference (video)` reads at least `56`; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. |
+| `overlap_frames` | `INT` | Yes | 22 |  | Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. Longer gives the new frames more of the scene to continue from. `reference (video)` reads at least `56`; both sound carries take whole clips of sound, `17` for about 0.7s. |
 | `positive` | `CONDITIONING` | No |  |  | Prompt for the new frames. A different prompt per pass moves the scene on. |
 | `vae` | `VAE` | No |  |  | The H3 video VAE. Needed by `handoff` and both references. |
 | `prompts` | `WAS_H3_PROMPTS` | No |  |  | Every pass's prompt from MiniMax H3 Conditioning. Wired in, it supplies this pass's prompt and its frame count, and extension_frames is not read. |
 | `pass_index` | `INT` | No | 0 |  | Which segment this is, from `0`. Wire a While Loop Open's index in to step through them one per iteration. |
 | `drift_control` | `FLOAT` | No | 0.0 |  | How much of the contrast and fine detail the carried frames have gained is taken back out, as `0.0` to carry them exactly as sampled, `0.5` for half or `1.0` for all of it. Measured against the clip's opening frames, and it only ever softens. |
 | `refresh_gain` | `FLOAT` | No | 1.15 |  | Fine detail a segment adds, which `handoff` softens the frame it opens on below so the pass lands back on the opening's reading. `1.15` suits most scenes, `1.0` softens to match the opening exactly. Read by `handoff`. |
-| `audio_release` | `INT` | No | 8 |  | Audio latent steps the held soundtrack opens back up over where it meets the new frames, as `8` for 0.2 seconds at 40 steps a second, `0` for a hard edge or `20` for half a second. Read by `carry`, `refresh` and `carry (audio only)`. |
+| `audio_release` | `INT` | No | 8 |  | Audio latent steps the held soundtrack opens back up over where it meets the new frames, as `8` for 0.2 seconds at 40 steps a second, `0` for a hard edge or `20` for half a second. Read by `carry`, `refresh` and both sound carries. |
 | `renewal` | `FLOAT` | No | 0.35 |  | Fresh noise `refresh` puts into the carried frames, as `0.0` to hold them as `carry` does, `0.35` to loosen them so the scene can evolve, or `1.0` to resample them with only the carried picture to start from. Read by `refresh`. |
 | `reference_samples` | `INT` | No | 4 |  | Stills `reference (sample)` takes from the clip so far, spread evenly from its first frame to its last, as `4`, or `6` for a long clip with many scenes. Read by `reference (sample)`. |
-| `source` | `INT` | No | -1 |  | Which segment this pass continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for segment 2. Every continuity reads from that segment's end, and the new frames still join the end of the clip; from an earlier segment the picture carries and the sound starts fresh. `carry (audio only)` always reads the segment before. A row's own source replaces this where prompts is wired. |
+| `source` | `INT` | No | -1 |  | Which segment this pass continues from: `-1` = the one before, `-2` = the one before that, `2` = segment 2. From an earlier segment the picture carries and the sound starts fresh; the new frames still join the clip's end. Both sound carries always read the segment before. A row's own source replaces this where prompts is wired. |
+| `live_preview` | `BOOLEAN` | No | True |  | `true` = the Prompt Timeline draws this segment as it samples and keeps its last step, through the preview decoder in models/vae_approx whose name starts `taeh3`, as ComfyUI's own previews find theirs; `false` = no previews. Needs prompts. |
+| `reference_sound` | `BOOLEAN` | No | True |  | On, a clip the window references from the scene before carries that scene's sound under it, so voices and ambience follow the cast across the cut. Read by `reference (video)` and `carry (audio) + reference (video)`. |
+| `reencode_prompt` | `BOOLEAN` | No | True |  | `true` = a segment this window adds references or a handoff frame to has its prompt encoded again with them, as wired references are; one text encoder pass for that segment. `false` = they are attached as they are. |
+| `sample_span` | `COMBO` | No | source scene | `source scene`, `whole clip` | Where `reference (sample)` takes its stills: `source scene` = spread across the scene this segment continues from, `whole clip` = spread from the first frame to the last. |
+| `seed` | `INT` | No | 0 |  | The run's seed, as `42`. The seed output answers this plus the segment number, or the segment's own seed where its row names one. |
 
 **Outputs**
 
@@ -7434,6 +7473,194 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 | `positive` | `CONDITIONING` | The prompt for this pass, for the guider that samples the window. |
 | `overlap_frames` | `INT` | The snapped overlap, for the same input on H3 Extend Append. |
 | `report` | `STRING` | What the pass will sample and what it snapped to. |
+| `model` | `MODEL` | The model this segment's row chose, from the ones wired into MiniMax H3 Conditioning, for the guider that samples the window. Blocked with a message where none is wired. |
+| `seed` | `INT` | This segment's seed, for the noise the sampler draws, as `43`. |
+
+</details>
+
+<a id="node-wash3loadclip"></a>
+<details>
+<summary><b>H3 Load Clip</b></summary>
+
+Read a MiniMax H3 clip H3 Save Clip wrote, whole or as it stood when any scene finished, with every record the extend loop keeps. Hand it to the loop as its starting clip and start the loop at next_index, and only the scenes after it are rendered again: change scene 3's prompt and run from scene 3 without sampling scenes 1 and 2.
+
+| | |
+|---|---|
+| Node id | `WASH3LoadClip` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip_file` | `COMBO` | Yes |  |  | Which saved clip to read, as `h3_clips/clip_00001.h3clip [output]`, written by H3 Save Clip. A clip saved to temp is gone after a restart. |
+| `up_to_scene` | `INT` | Yes | 0 |  | `0` = the whole clip; `2` = the clip as it stood when scene 2 finished, every later scene dropped, so the loop renders scene 3 onward again. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The clip with its scene records, for While Loop Open's or For Loop Open's value_1, or for a decode. |
+| `next_index` | `INT` | Loop index of the first scene still to render, from `0`: `2` after up_to_scene `2`, the scene count for the whole clip. Wire into For Loop Open's start, or add it to a While Loop Open's index. |
+| `report` | `STRING` | Scenes, frames and seconds read, and the frames each scene spans. |
+
+</details>
+
+<a id="node-wash3repairsplice"></a>
+<details>
+<summary><b>H3 Repair Splice</b></summary>
+
+Write a sampled H3 Repair Window back into the clip it was cut from. Only the frames and sound the window redrew are replaced; every other latent row and audio step of the clip is carried through unchanged, along with its record of segments and scene cuts. The report names the frames and seconds that changed. Decode the result as any finished clip, or repair another stretch of it.
+
+| | |
+|---|---|
+| Node id | `WASH3RepairSplice` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The clip the window was cut from, the same latent wired into H3 Repair Window. |
+| `sampled` | `LATENT` | Yes |  |  | What the sampler returned for the window H3 Repair Window opened. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The repaired clip, for a decode or another repair. |
+| `report` | `STRING` | Which frames and seconds changed and at what strength, as `picture frames 68-118 (2.83-4.96 s, tokens 20-34) at 1.00, sound kept`. |
+
+</details>
+
+<a id="node-wash3repairwindow"></a>
+<details>
+<summary><b>H3 Repair Window</b></summary>
+
+Open part of a finished MiniMax H3 clip for a sampler to redraw. The stretch from start_seconds to end_seconds widens to whole 17 frame blocks, and the window around it carries context_frames of the clip either side, held as they are. picture_strength and sound_strength set how much of the stretch's picture and sound is drawn again: `1.0` from fresh noise, `0.5` half way from what is there, `0.0` kept. Wire MiniMax H3 Conditioning's prompts to reuse a segment's prompt, references, keyframes and model; a wired positive replaces the prompt. Sample the window at denoise 1.0, then hand the result and the clip to H3 Repair Splice. A stretch crossing a scene cut is refused.
+
+| | |
+|---|---|
+| Node id | `WASH3RepairWindow` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The finished H3 clip to repair, from H3 Extend Append or a sampler. |
+| `start_seconds` | `FLOAT` | Yes | 0.0 |  | Where the repair starts, as `3.0` seconds. Widened back to the start of its 17 frame block, so `3.0` opens on frame 68 (2.83 s). |
+| `end_seconds` | `FLOAT` | Yes | 1.0 |  | Where the repair ends, as `4.9` seconds. Widened on to the end of its 17 frame block, so `4.9` closes after frame 118 (4.96 s). |
+| `picture_strength` | `FLOAT` | Yes | 1.0 |  | How much of the picture in the span is drawn again: `1.0` = from fresh noise, `0.6` = renewed from what is there, `0.0` = kept, for a sound-only repair. |
+| `sound_strength` | `FLOAT` | Yes | 0.0 |  | How much of the sound in the span is drawn again: `0.0` = kept, so the picture is redrawn in sync under it; `0.5` = renewed from what is there; `1.0` = from fresh noise. |
+| `context_frames` | `INT` | Yes | 34 |  | Frames of the clip either side of the span the sampler sees and keeps, as `34`, in steps of 17, or `0` for none. Widened by up to `34` so the window's sound starts on a whole audio step. Never reaches past a scene cut. |
+| `audio_release` | `INT` | Yes | 8 |  | Audio latent steps the redrawn sound fades in and out over beyond the span, as `8` for 0.2 seconds at 40 steps a second, or `0` for a hard edge. Read where sound_strength is above `0`. |
+| `feather` | `FLOAT` | Yes | 0.0 |  | Strength the 17 frame block either side of the span is redrawn at, as `0.0` for hard edges or `0.35` to soften the seam. Never above picture_strength; needs context_frames of at least `17`. |
+| `positive` | `CONDITIONING` | No |  |  | Prompt for the repair. Wired, it replaces the segment's prompt from prompts and is used as written. |
+| `prompts` | `WAS_H3_PROMPTS` | No |  |  | Every segment's prompt from MiniMax H3 Conditioning. Wired, the repair reuses its segment's prompt, references, keyframes and model. |
+| `segment` | `INT` | No | 0 |  | Which segment's prompt the repair reuses, from `1`, or `0` for the segment holding most of the span. Read where prompts is wired. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `window` | `LATENT` | The window to sample at denoise `1.0`, for the sampler's latent input. Its result goes to H3 Repair Splice. |
+| `positive` | `CONDITIONING` | The repair's prompt, its keyframes moved into the window, for the guider. |
+| `model` | `MODEL` | The model the segment's row chose on MiniMax H3 Conditioning, for the guider. Blocked with a message where prompts is not wired. |
+| `report` | `STRING` | Which frames and seconds the window redraws, at what strength, and its context. |
+
+</details>
+
+<a id="node-wash3saveclip"></a>
+<details>
+<summary><b>H3 Save Clip</b></summary>
+
+Save a finished MiniMax H3 clip to a file: its picture and sound, where each scene ends, and the frames each cut trimmed, all kept exactly. H3 Load Clip reads it back whole or as it stood after any scene, so a later scene can be rendered again without rendering the scenes before it.
+
+| | |
+|---|---|
+| Node id | `WASH3SaveClip` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The clip to keep, from H3 Extend Append or the value While Loop Close hands out once the loop finishes. |
+| `root` | `COMBO` | Yes | output |  | Which folder the file lands in: 'output' = kept until deleted; 'temp' = cleared when ComfyUI restarts; or a folder added under paths.allow_write in config.yaml. H3 Load Clip lists input, output, temp and paths.allow_read. |
+| `name` | `STRING` | Yes | h3_clips/clip |  | The file's name below root, numbered on each run, as `h3_clips/episode` for `h3_clips/episode_00001.h3clip`. Tokens expand, so `[time(%Y-%m-%d)]/clip` dates the folder. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The same clip, unchanged, for a decode such as H3 Decode Video. |
+| `path` | `STRING` | Full path of the file written, ending in `h3_clips/clip_00001.h3clip`. |
+| `report` | `STRING` | Scenes, frames and seconds saved, and the frames each scene spans. |
+
+</details>
+
+<a id="node-wash3soundtrack"></a>
+<details>
+<summary><b>H3 Soundtrack</b></summary>
+
+Lay one long soundtrack, a music bed or a recorded dialogue, under a whole MiniMax H3 video built a segment at a time. Place it between H3 Extend Window's window and the sampler: each segment samples its picture under its own slice of the same track, so the sound runs on unbroken across carries and cuts. `offset_seconds` sets where the track starts on the video, `strength` how firmly it is held, and `past_end` what plays once it runs out. Sound the window already carries from the clip so far stays as it was. The track is encoded once and every later segment reuses it.
+
+| | |
+|---|---|
+| Node id | `WASH3Soundtrack` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `window` | `LATENT` | Yes |  |  | The window to sample, from H3 Extend Window's window output, or an Empty MiniMax H3 AV Latent for a single shot. Passed on to the sampler's latent input. |
+| `audio` | `AUDIO` | Yes |  |  | The whole track, as Load Audio's output: a music bed or a recorded dialogue. Any sample rate; a mono track plays on both sides. The same track goes into every segment. |
+| `audio_vae` | `VAE` | Yes |  |  | The H3 audio VAE, as Load VAE set to `minimax_h3_audio_vae_fp32`. It encodes the track once and every later segment reuses that. |
+| `offset_seconds` | `FLOAT` | Yes | 0.0 |  | Where the track starts on the finished video, in seconds: `0` = with the first frame; `2.5` = 2.5 s in, with the model's own sound before it; `-10` = skips the track's first 10 s. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | How firmly the track is held under the new picture: `0` = ignored, the window passes through; `0.5` = guides the sound, which may drift from it; `1.0` = the track exactly. |
+| `release` | `INT` | Yes | 8 |  | Audio steps the hold eases over where the track starts, ends or loops inside the video, at 40 a second: `0` = a hard edge; `8` = 0.2 s; `20` = half a second for the model to blend in and out. |
+| `past_end` | `COMBO` | Yes | model sound | `model sound`, `silence`, `loop` | What plays once the track runs out before the video does: `model sound` = whatever the model makes; `silence` = held quiet; `loop` = the track starts again, the seam eased over `release`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `window` | `LATENT` | The window holding its slice of the track, for the sampler's latent input. |
+| `report` | `STRING` | Which stretch of the track the window holds, how firmly, and under which frames of the finished video. |
+
+</details>
+
+<a id="node-wasminimaxh3asset"></a>
+<details>
+<summary><b>MiniMax H3 Asset</b></summary>
+
+One picture, clip or sound for a MiniMax H3 run, with the segment it belongs to and the part it plays there: the frame a segment opens or closes on, a keyframe pinned at any frame of it, or a picture, clip or sound its prompt references as `<Picture N>`, `<Video N>` or `<Audio N>`. Pick a file from ComfyUI's folders, or wire an image, a video or an audio in. Chain as many as the run needs, each into the next one's assets, and wire the last into assets on MiniMax H3 Conditioning. The Prompt Timeline window on that node places them for you.
+
+| | |
+|---|---|
+| Node id | `WASMiniMaxH3Asset` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `file` | `COMBO` | Yes |  |  | Which picture, clip or sound to read, as `cast/alice.png [input]` or `takes/shot_03.mp4 [output]`. `(wired input)` reads the image, video and audio sockets instead, and a wired socket always wins over the file. |
+| `role` | `COMBO` | Yes | first frame | `first frame`, `last frame`, `keyframe`, `reference picture`, `reference clip`, `reference audio` | What this does for its segment. `first frame` = the segment opens on it; `last frame` = closes on it; `keyframe` = pinned at `frame`, as a still, a clip, a sound, or a clip with its sound; `reference picture`, `reference clip` and `reference audio` = named `<Picture N>`, `<Video N>` and `<Audio N>` in that segment's prompt. |
+| `segment` | `INT` | Yes | 1 |  | Which segment it belongs to, as `1` for the opening segment or `3` for Segment 3. `0` = every segment, as a cast picture the whole run references. |
+| `frame` | `INT` | Yes | 0 |  | Where a `keyframe` lands, counted in the segment's new frames at 24 fps: `0` = its first new frame, `48` = two seconds in, `-1` = its last frame. With `(the video being made)`, the frame of the finished video to reference, as `120`. |
+| `assets` | `WAS_H3_ASSETS` | No |  |  | The assets before this one, from another MiniMax H3 Asset's assets output. This asset joins the end of that chain, so a run of any length is one wire into the next node. |
+| `clip_start` | `FLOAT` | No | 0.0 |  | Seconds into the file a clip or sound starts, as `0` or `12.5`. |
+| `clip_seconds` | `FLOAT` | No | 0.0 |  | Seconds of the file to read, as `5`, or `0` for the first 362 frames of a clip, about 15 seconds, and the whole of a sound. A reference clip is cut to the longest segment either way. |
+| `image` | `IMAGE` | No |  |  | A picture, or a batch of frames at 24 fps for a clip, in place of a file. |
+| `video` | `VIDEO` | No |  |  | A video in place of a file: its frames, brought to 24 fps, and its sound. |
+| `audio` | `AUDIO` | No |  |  | A sound in place of a file, or the soundtrack of the wired image frames. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `assets` | `WAS_H3_ASSETS` | The chain with this asset at its end, for the next MiniMax H3 Asset or for assets on MiniMax H3 Conditioning. |
+| `image` | `IMAGE` | The picture or frames it holds, for a preview or another node. |
+| `audio` | `AUDIO` | The sound it holds. |
+| `report` | `STRING` | What was read and where it goes. |
 
 </details>
 
@@ -7462,6 +7689,7 @@ Take one clip out of a MiniMax H3 run: its prompt, and the empty latent it sampl
 | `latent` | `LATENT` | That clip's own empty latent, for the sampler's latent input. |
 | `frames` | `INT` | Frames that clip runs for, as `124`. |
 | `report` | `STRING` | Which clip was taken and how long it is. |
+| `model` | `MODEL` | The model that clip's row chose, from the ones wired into MiniMax H3 Conditioning, for the guider that samples it. Blocked with a message where none is wired. |
 
 </details>
 
@@ -7469,7 +7697,7 @@ Take one clip out of a MiniMax H3 run: its prompt, and the empty latent it sampl
 <details>
 <summary><b>MiniMax H3 Conditioning</b></summary>
 
-Prompt every segment of a MiniMax H3 video on one node. Each row is one segment with its own prompt and its own frame count, and a new row appears as the last one is filled. Each row also says how much of the segment before it to continue from and how, so a scene can carry on, cut somewhere new, or cut and still keep the cast it had. `ref2va` builds every segment on reference pictures, clips and audio, so the whole run keeps the same people, places and voices. A loop sampling one row per iteration builds the whole video. Every prompt is encoded together before any sampling starts, so the text encoder is loaded once. Send segments to a While Loop's count and prompts to H3 Extend Window.
+Prompt every segment of a MiniMax H3 video on one node. Each row is one segment with its own prompt, length, overlap and continuity, so a scene can carry on, cut somewhere new, or cut and keep its cast. `ref2va` builds every segment on shared reference pictures, clips and audio. A chain of MiniMax H3 Asset nodes wired into assets gives a segment its own opening frame, closing frame, keyframe at any frame, or references, and with both models wired in each row picks the one it samples with. The Prompt Timeline button opens a window that writes these rows and places the assets. A loop sampling one row per iteration builds the whole video, with every prompt encoded before sampling starts. Send segments to a While Loop's count and prompts to H3 Extend Window.
 
 | | |
 |---|---|
@@ -7481,7 +7709,7 @@ Prompt every segment of a MiniMax H3 video on one node. Each row is one segment 
 |---|---|---|---|---|---|
 | `clip` | `CLIP` | Yes |  |  | A minimax CLIP, from Load CLIP with type `minimax`. |
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE, which encodes first_frame, last_frame, images and the reference pictures and clips. |
-| `mode` | `COMBO` | Yes | t2va | `t2va`, `i2va`, `fl2va`, `fl2va_batched`, `ref2va` | The task to condition for. `t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = every segment between a neighbouring pair of images; `ref2va` = every segment built on the ref inputs, named `<Picture 1>`, `<Video 1>`, `<Audio 1>` in the prompt. |
+| `mode` | `COMBO` | Yes | t2va | `t2va`, `i2va`, `fl2va`, `fl2va_batched`, `ref2va` | The task to condition for. `t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = every segment between a neighbouring pair of images; `ref2va` = every segment built on the ref inputs, named `<Picture 1>`, `<Video 1>`, `<Audio 1>` in the prompt. Assets wired into assets add to any mode. |
 | `aspect_ratio` | `COMBO` | Yes | custom | `custom`, `1:1`, `5:4`, `4:3`, `3:2`, `16:10`, `16:9`, `2:1`, `21:9`, `4:5`, `3:4`, `2:3` and 4 more | Canvas shape, as `16:9` or `9:16`. `custom` takes it from the first picture the mode reads, and 16:9 where it reads none. A width or height above `0` sets that side itself, so the shape is whatever those give. |
 | `megapixels` | `FLOAT` | Yes | 0.4 |  | Canvas area in millions of pixels, as `0.4` for 832x480 or `1.0` for 1344x736. Worked against aspect_ratio. Ignored when both width and height are set. |
 | `width` | `INT` | Yes | 0 |  | Canvas width in pixels, as `1024`. `0` works it out from megapixels. Rounded to a multiple of 32. |
@@ -7490,153 +7718,251 @@ Prompt every segment of a MiniMax H3 video on one node. Each row is one segment 
 | `prompt_footer` | `STRING` | Yes |  |  | Text put after every segment's prompt, as `overall_soundscape:` and `non_diegetic_music:` for the whole run. Blank adds nothing. A section a row writes itself, as `overall_soundscape: Server hum.`, replaces the one here for that row. A `<d>` line here is spoken in every segment. |
 | `prompt_1` | `STRING` | Yes |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_1` | `FLOAT` | Yes | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_1` | `INT` | Yes | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_1` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_1` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_1` | `INT` | Yes | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_1` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_1` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_1` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_1` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_1` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_1` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_1` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_2` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_2` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_2` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_2` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_2` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_2` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_2` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_2` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_2` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_2` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_2` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_2` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_2` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_3` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_3` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_3` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_3` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_3` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_3` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_3` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_3` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_3` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_3` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_3` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_3` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_3` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_4` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_4` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_4` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_4` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_4` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_4` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_4` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_4` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_4` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_4` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_4` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_4` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_4` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_5` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_5` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_5` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_5` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_5` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_5` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_5` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_5` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_5` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_5` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_5` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_5` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_5` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_6` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_6` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_6` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_6` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_6` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_6` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_6` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_6` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_6` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_6` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_6` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_6` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_6` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_7` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_7` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_7` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_7` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_7` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_7` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_7` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_7` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_7` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_7` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_7` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_7` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_7` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_8` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_8` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_8` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_8` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_8` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_8` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_8` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_8` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_8` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_8` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_8` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_8` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_8` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_9` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_9` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_9` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_9` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_9` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_9` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_9` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_9` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_9` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_9` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_9` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_9` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_9` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_10` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_10` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_10` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_10` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_10` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_10` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_10` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_10` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_10` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_10` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_10` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_10` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_10` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_11` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_11` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_11` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_11` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_11` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_11` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_11` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_11` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_11` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_11` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_11` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_11` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_11` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_12` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_12` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_12` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_12` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_12` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_12` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_12` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_12` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_12` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_12` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_12` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_12` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_12` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_13` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_13` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_13` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_13` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_13` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_13` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_13` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_13` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_13` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_13` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_13` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_13` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_13` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_14` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_14` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_14` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_14` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_14` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_14` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_14` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_14` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_14` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_14` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_14` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_14` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_14` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_15` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_15` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_15` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_15` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_15` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_15` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_15` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_15` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_15` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_15` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_15` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_15` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_15` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_16` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_16` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_16` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_16` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_16` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_16` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_16` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_16` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_16` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_16` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_16` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_16` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_16` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_17` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_17` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_17` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_17` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_17` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_17` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_17` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_17` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_17` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_17` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_17` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_17` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_17` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_18` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_18` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_18` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_18` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_18` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_18` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_18` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_18` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_18` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_18` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_18` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_18` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_18` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_19` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_19` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_19` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_19` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_19` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_19` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_19` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_19` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_19` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_19` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_19` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_19` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_19` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_20` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_20` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_20` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_20` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_20` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_20` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_20` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_20` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_20` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_20` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_20` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_20` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_20` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_21` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_21` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_21` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_21` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_21` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_21` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_21` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_21` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_21` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_21` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_21` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_21` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_21` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_22` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_22` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_22` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_22` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_22` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_22` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_22` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_22` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_22` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_22` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_22` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_22` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_22` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_23` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_23` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_23` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_23` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_23` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_23` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_23` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_23` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_23` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_23` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_23` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_23` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_23` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_24` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
 | `duration_24` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_24` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; `carry (audio only)` carries whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_24` | `COMBO` | No | as set |  | Overrides H3 Extend Window's setting for this segment. `as set` = that node's choice; `carry` = one unbroken shot; `refresh` = the same shot with fresh noise in the carried frames, for a scene that sticks; `handoff` = a cut opening on the last frame; `reference (video)` = a cut referencing the last frames as a video; `reference (sample)` = a cut referencing stills from across the whole clip, so a cast comes back after a cutaway; `cut` = a new scene, like an overlap of `0`; `carry (audio only)` = a cut to new picture with the soundtrack carried across it. Ignored on segment 1. |
-| `source_24` | `INT` | No | -1 |  | Which segment this one continues from, as `-1` for the one before it, `-2` for the one before that, or `2` for Segment 2. Every continuity reads from that segment's end, so after a cutaway `carry` picks the scene back up where it was left, with its sound starting fresh, and the new frames still join the end of the clip. `0` is the same as `-1`. Ignored on segment 1. |
+| `overlap_24` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
+| `continuity_24` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
+| `source_24` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_24` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
+| `model_24` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `strength_24` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
+| `sound_24` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
+| `seed_24` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `model_fl2va` | `MODEL` | No |  |  | The MiniMax H3 fl2va model, which samples a segment from text and pinned frames. Optional: with it wired, H3 Extend Window and MiniMax H3 Clip Select answer it on their model output for every row set to `fl2va`, or to `auto` with no references. |
+| `model_ref2va` | `MODEL` | No |  |  | The MiniMax H3 ref2va model, which samples a segment on reference pictures, clips and sounds. Optional: with it wired, H3 Extend Window and MiniMax H3 Clip Select answer it on their model output for every row set to `ref2va`, or to `auto` with references. |
 | `first_frame` | `IMAGE` | No |  |  | The frame the clip opens on, stretched to the canvas. |
 | `last_frame` | `IMAGE` | No |  |  | The frame the clip closes on, cropped to cover the canvas. |
 | `images` | `IMAGE` | No |  |  | The pictures `fl2va_batched` runs between, in order. Segment 1 runs from picture 1 to picture 2, segment 2 from 2 to 3, and so on, so 5 pictures cover 4 segments. Read by `fl2va_batched` only. |
-| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, which encodes the reference soundtracks and audio. Needed by `ref2va` when any audio is wired. |
-| `ref_image_size` | `COMBO` | No | match | `match`, `256`, `512`, `768`, `1024`, `1536`, `2048`, `max` | How large each reference picture is encoded, for every row. `match` = scaled down to the clip's area; `256` to `2048` = longest side at most that; `max` = up to a 2048 pixel short edge, the closest likeness and the heaviest. Always 256 to 5760 pixels a side. Read by `ref2va` only. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, which encodes the reference soundtracks and audio. Needed by `ref2va` when any audio is wired, and by any asset carrying sound. |
+| `ref_image_size` | `COMBO` | No | match | `match`, `256`, `512`, `768`, `1024`, `1536`, `2048`, `max` | How large each reference picture is encoded, for every row. `match` = scaled down to the clip's area; `256` to `2048` = longest side at most that; `max` = up to a 2048 pixel short edge, the closest likeness and the heaviest. Always 256 to 5760 pixels a side. Read by `ref2va` and by reference assets. |
 | `ref_image_1` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
 | `ref_image_2` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
 | `ref_image_3` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
@@ -7655,16 +7981,136 @@ Prompt every segment of a MiniMax H3 video on one node. Each row is one segment 
 | `ref_audio_1` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
 | `ref_audio_2` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
 | `ref_audio_3` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
+| `assets` | `WAS_H3_ASSETS` | No |  |  | The pictures, clips and sounds of a chain of MiniMax H3 Asset nodes. Each names the segment it belongs to and whether it opens or closes it, is pinned at a frame of it, or is referenced by its prompt. Wire the last asset of the chain here. |
+| `loop` | `BOOLEAN` | No | False |  | `true` = the last segment closes on the video's first frame, so the video plays round as a loop; `false` = it ends where its prompt takes it. |
+| `vlm_clip` | `CLIP` | No |  |  | A language model from Load CLIP, as `qwen3vl_8b_fp8_scaled.safetensors`, for the Prompt Timeline's Write scenes. Never loaded by a render of this node. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `latent` | `LATENT` | The empty latent the first segment samples into, for a loop's value slot. |
-| `prompts` | `WAS_H3_PROMPTS` | Every segment's prompt and frame count, for H3 Extend Window. |
+| `prompts` | `WAS_H3_PROMPTS` | Every segment's prompt, frame count, assets and model, for H3 Extend Window. |
 | `segments` | `INT` | Rows carrying a prompt, for a While Loop's count. |
-| `report` | `STRING` | What each segment snapped to and the frames they come to. |
+| `report` | `STRING` | What each segment snapped to, the frames they come to, and the assets and model each one was given. |
 | `latents` | `LATENT` | One empty latent per segment, at that segment's own length, so a loop samples every clip from fresh. Wire to MiniMax H3 Clip Select, or take one with an index node. |
+
+</details>
+
+<a id="node-wash3plantransitions"></a>
+<details>
+<summary><b>MiniMax H3 Plan Transitions</b></summary>
+
+Reads the scenes of a MiniMax H3 video with a language model and chooses how each follows the one before: a cut, a carry of the same shot, a cut that keeps the sound, or a cut that keeps the cast with or without the sound. The Prompt Timeline's Plan transitions runs it and sets each row's transition and overlap.
+
+| | |
+|---|---|
+| Node id | `WASH3PlanTransitions` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vlm_clip` | `CLIP` | Yes |  |  | The language model that reads the scenes, from Load CLIP, as `qwen3vl_8b_fp8_scaled.safetensors` or `qwen_3_8b_fp8mixed.safetensors`. |
+| `scenes` | `STRING` | Yes |  |  | The scene prompts in order, divided by a line of dashes as MiniMax H3 Scene Writer's prompts output, or its scenes JSON. |
+| `seed` | `INT` | Yes | 0 |  | Which draw of the model's choices to take, as `0` or `42`. |
+| `temperature` | `FLOAT` | No | 0.3 |  | How adventurous each pick is. `0.3` keeps to the likeliest reading, `0.8` varies it. |
+| `top_k` | `INT` | No | 64 |  | Pick only among this many likeliest tokens. `0` turns the limit off. |
+| `top_p` | `FLOAT` | No | 0.95 |  | Pick only among the likeliest tokens whose chances add up to this. `1.0` turns it off. |
+| `min_p` | `FLOAT` | No | 0.05 |  | Drop any token less likely than this fraction of the likeliest one. `0` turns it off. |
+| `repetition_penalty` | `FLOAT` | No | 1.05 |  | Above `1.0` makes a token already used less likely again. `1.0` turns it off. |
+| `thinking` | `BOOLEAN` | No | False |  | `true` lets a model that reasons, such as Qwen3, think before answering. |
+| `fast_decode` | `BOOLEAN` | No | True |  | `true` decodes on the fixed cache graph path where the model allows it; `false` runs as core Generate Text. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `transitions` | `STRING` | One entry per scene from the second, as JSON: scene number, transition, the continuity and overlap it sets, and why. |
+| `report` | `STRING` | How many of each transition were chosen. |
+
+</details>
+
+<a id="node-wash3promptrewrite"></a>
+<details>
+<summary><b>MiniMax H3 Prompt Rewrite</b></summary>
+
+Rewrites one MiniMax H3 scene prompt with a language model so it follows a system prompt of rules, keeping its story, tags and dialogue unless the directions change them. An empty prompt is written from the directions. The Prompt Timeline's Rewrite runs it on the chosen scene.
+
+| | |
+|---|---|
+| Node id | `WASH3PromptRewrite` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vlm_clip` | `CLIP` | Yes |  |  | The language model that writes, from Load CLIP, as `qwen3vl_8b_fp8_scaled.safetensors` or `qwen_3_8b_fp8mixed.safetensors`. |
+| `prompt` | `STRING` | Yes |  |  | The scene prompt to rewrite, as written for MiniMax H3 Conditioning. Blank writes a new one from directions. |
+| `directions` | `STRING` | Yes |  |  | What to change, as `make it night and add rain` or `give Jo a line asking where everyone went`. Blank brings the prompt in line with the rules. |
+| `seed` | `INT` | Yes | 0 |  | Which draw of the model's choices to take, as `0` or `42`. |
+| `context` | `STRING` | No |  |  | What the model should know around the scene, as `The scene before: the gang reach the factory.` or `<Picture 1> is purz.png`. |
+| `system_prompt` | `STRING` | No | You write production-ready prompts for MiniMax H3, which generates synchronized video and audio from text.  Each requested scene is one independent prompt. Write in English except dialogue, lyrics, and visible on-screen text. Never assume textual context from another prompt. Explicitly restate any continuity-critical starting state. Every clip must state its duration and be no longer than 12 seconds.  GLOBAL HEADER / FOOTER  Use a shared HEADER or FOOTER only when multiple scenes genuinely inherit the same context.  HEADER may contain persistent visual style, character/environment rules, continuity constraints, or recurring cinematography.  FOOTER may contain persistent overall soundscape, non-diegetic music, or shared audio treatment.  Do not emit empty HEADER/FOOTER sections or attach them to scenes that do not use the shared context. Do not duplicate global information inside scenes. Scene-specific instructions override the corresponding global rule.  Never move scene-specific action, framing, timing, dialogue, or temporary sound into global sections.  PROMPT MODES  Standard T2VA and keyframe modes use:  integrated_multimodal_description: overall_soundscape: non_diegetic_music:  T2VA: no alignment line.  I2VA: For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.  FL2VA: How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with 0.00 seconds; Picture 2 (from Shot N) aligns with the final timestamp.  L2VA: How the reference pictures align with the target video — <Picture 1> (from [Shot N]) aligns with the final timestamp.  For I2VA, develop naturally forward from the reference frame. For FL2VA, describe the visible transition connecting both frames. For L2VA, infer a plausible earlier state that progressively converges on the reference frame.  Full-Reference mode uses exactly:  subject_definitions: summary: retention_analysis: detailed_description: overall_soundscape: non_diegetic_music:  subject_definitions: Define only references that must be tracked.  Use <Subject N> for reusable visible subjects, environments, objects, costumes, poses, effects, or styles; <Picture N> for explicit frame/composition anchors; <Video N> for source motion/editing/continuation; <Audio N> only for intentionally referenced or reused audio.  If a picture only defines a subject's appearance, mention the picture inside that subject definition instead of creating a separate picture entry.  summary: Begin with one or more applicable task types: [reference generation], [keyframe completion], [video editing], [video continuation], [audio reuse], [audio reference]. Join multiple types with " + ". Briefly state what happens and how references are used.  retention_analysis: One line per tracked reference.  Visual relationships: fully_preserved partially_preserved attribute_transfer weak_reference  Audio relationships: fully_copy partially_copy reference weak_reference  detailed_description: Describe the complete audiovisual timeline using [Shot N]. Include composition, subject appearance/position, environment, light, chronological action, camera, synchronized sound, and reference usage. Use roughly 350–500 words only when the scene actually benefits from that detail.  SHOTS, CAMERA, AND CONTINUITY  [Shot 1] has no timestamp.  Later cuts use: [Shot 2] At 00:04.000, the shot cuts to ...  Timestamps must increase and remain within the clip duration.  Cut only when revealing genuinely new information. For smaller framing or angle changes, move the camera instead.  At each shot start, establish shot size/composition, subjects and positions, setting/light, action order, camera behavior, and relevant synchronized sound.  Useful camera terms include push in, pull out, zoom, pan, truck, tilt, pedestal, arc shot, tracking shot, static shot, POV, roll, and shake. State direction, amplitude, and speed when meaningful. Distinguish physical camera movement from optical zoom.  Maintain subject identity, wardrobe, lighting, spatial relationships, screen direction, and object state unless the change is visibly shown.  Describe only what can be seen or heard. Prefer concrete audiovisual instructions over literary or psychological prose.  STYLE AND SUBJECTS  When not supplied by HEADER, establish the visual medium and concrete treatment: live-action, cinematic, 2D animation, 3D CG, claymation, watercolor, vintage film, etc., plus relevant line treatment, materials, palette, contrast, lighting, lens behavior, grain, or rendering characteristics.  When a subject first appears, establish the visible identity anchors needed for that scene, then use its tag or an unambiguous description consistently.  A place, vehicle, creature, prop, effect, costume, or pose may be a subject.  Prefer no more than three principal characters simultaneously unless the requested scene requires more.  DIALOGUE  Speaker IDs are local to each independent prompt and restart at (S1). Assign IDs in order of first vocalization; a speaker keeps the same ID within that prompt.  Format: <Subject N> (S1) performs an action and says, <d>[Language] Exact words.</d>  Inside <d>, include only the language tag and spoken words.  On the first vocal event, describe useful voice properties when relevant.  Voiceover: says in an off-screen voiceover: If that character is visible, explicitly state that their lips remain closed.  Use <scenetrans> only when dialogue intentionally continues across a cut. Use <cutoff> only when speech is intentionally truncated by the end of the clip.  Keep dialogue physically achievable within the duration and, unless necessary otherwise, leave a final silent action or reaction beat.  ON-SCREEN TEXT  Only visibly rendered text goes in double quotation marks, exactly as shown. Dialogue does not.  AUDIO  Place event-synchronized sounds inside the shot description where they occur.  overall_soundscape: 1–4 concise sentences covering ambience, physical sounds, and non-verbal human sounds. Do not repeat dialogue. Use N/A only for intentional complete silence.  non_diegetic_music: 1–3 concise sentences describing instrumentation, tempo, rhythm, density, dynamics, and changes over time. Do not describe intended emotion. Diegetic music belongs in the shot description. Use N/A when there is no score.  Create <Audio N> only when source audio is intentionally reused or referenced. Distinguish full copy, partial copy, and characteristic/reference use. Referencing a speaker's voice does not imply copying unrelated source dialogue.  FINAL RULES  Each prompt must be independently understandable and chronologically executable.  Do not refer to "the same character," "the previous scene," or other unavailable textual context.  Do not invent cuts, actions, dialogue, text, props, camera motion, or reference relationships that conflict with the user's staging.  Do not overload a short clip. Ensure all action, dialogue, camera movement, transitions, and the final beat can physically fit within the stated duration. |  | The rules the prompt is rewritten under: the prompt layout, shots, dialogue and sound. A line such as `Keep every line of dialogue under 12 words.` adds a rule; blank rewrites under none. |
+| `temperature` | `FLOAT` | No | 0.7 |  | How adventurous each pick is. `0.7` is balanced, `0.3` stays close to the likeliest words, `1.1` wanders. |
+| `top_k` | `INT` | No | 64 |  | Pick only among this many likeliest tokens. `0` turns the limit off. |
+| `top_p` | `FLOAT` | No | 0.95 |  | Pick only among the likeliest tokens whose chances add up to this. `1.0` turns it off. |
+| `min_p` | `FLOAT` | No | 0.05 |  | Drop any token less likely than this fraction of the likeliest one. `0` turns it off. |
+| `repetition_penalty` | `FLOAT` | No | 1.05 |  | Above `1.0` makes a token already used less likely again. `1.0` turns it off. |
+| `thinking` | `BOOLEAN` | No | False |  | `true` lets a model that reasons, such as Qwen3, think before answering. |
+| `fast_decode` | `BOOLEAN` | No | True |  | `true` decodes on the fixed cache graph path where the model allows it; `false` runs as core Generate Text. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `prompt` | `STRING` | The rewritten prompt. |
+| `report` | `STRING` | How long the prompt was before and after. |
+
+</details>
+
+<a id="node-wash3scenewriter"></a>
+<details>
+<summary><b>MiniMax H3 Scene Writer</b></summary>
+
+Writes a whole MiniMax H3 video from an idea: a language model outlines the story, casts each scene from the reference pictures in an asset chain, writes every scene's prompt and the shared header and footer under a system prompt of rules, then reads the scenes back to choose the cuts and carries between them. The Prompt Timeline's Write scenes runs it and fills the rows.
+
+| | |
+|---|---|
+| Node id | `WASH3SceneWriter` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vlm_clip` | `CLIP` | Yes |  |  | The language model that writes, from Load CLIP, as `qwen3vl_8b_fp8_scaled.safetensors`. One that reads pictures, such as Qwen3-VL or Gemma 3, describes the cast from their pictures; a text model such as `qwen_3_8b` works from the file names. |
+| `idea` | `STRING` | Yes |  |  | What the video is about, as `The gang drive to a shrimp factory in the bayou and unmask the monster haunting it.` Names, who speaks which language and the beats to hit all carry into the scenes. |
+| `scenes` | `INT` | Yes | 8 |  | How many scenes to write, `1` to `24`. |
+| `seconds` | `FLOAT` | Yes | 8.0 |  | About how long each scene runs, as `8.0`, at most `12`; the model may vary it scene by scene. |
+| `style` | `STRING` | Yes | a 2D-animated cartoon with clean inked outlines and flat cel-painted colours |  | The look, finishing the sentence `The target video is ...`, as `a 2D-animated 1970s Saturday-morning mystery cartoon with bold inked outlines`. |
+| `seed` | `INT` | Yes | 0 |  | Which draw of the model's choices to take, as `0` or `42`; the same seed with the same inputs writes the same scenes. |
+| `assets` | `WAS_H3_ASSETS` | No |  |  | The chain whose reference pictures are the cast and places to write for, as wired into assets on MiniMax H3 Conditioning. Without it every subject is described in words. |
+| `system_prompt` | `STRING` | No | You write production-ready prompts for MiniMax H3, which generates synchronized video and audio from text.  Each requested scene is one independent prompt. Write in English except dialogue, lyrics, and visible on-screen text. Never assume textual context from another prompt. Explicitly restate any continuity-critical starting state. Every clip must state its duration and be no longer than 12 seconds.  GLOBAL HEADER / FOOTER  Use a shared HEADER or FOOTER only when multiple scenes genuinely inherit the same context.  HEADER may contain persistent visual style, character/environment rules, continuity constraints, or recurring cinematography.  FOOTER may contain persistent overall soundscape, non-diegetic music, or shared audio treatment.  Do not emit empty HEADER/FOOTER sections or attach them to scenes that do not use the shared context. Do not duplicate global information inside scenes. Scene-specific instructions override the corresponding global rule.  Never move scene-specific action, framing, timing, dialogue, or temporary sound into global sections.  PROMPT MODES  Standard T2VA and keyframe modes use:  integrated_multimodal_description: overall_soundscape: non_diegetic_music:  T2VA: no alignment line.  I2VA: For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.  FL2VA: How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with 0.00 seconds; Picture 2 (from Shot N) aligns with the final timestamp.  L2VA: How the reference pictures align with the target video — <Picture 1> (from [Shot N]) aligns with the final timestamp.  For I2VA, develop naturally forward from the reference frame. For FL2VA, describe the visible transition connecting both frames. For L2VA, infer a plausible earlier state that progressively converges on the reference frame.  Full-Reference mode uses exactly:  subject_definitions: summary: retention_analysis: detailed_description: overall_soundscape: non_diegetic_music:  subject_definitions: Define only references that must be tracked.  Use <Subject N> for reusable visible subjects, environments, objects, costumes, poses, effects, or styles; <Picture N> for explicit frame/composition anchors; <Video N> for source motion/editing/continuation; <Audio N> only for intentionally referenced or reused audio.  If a picture only defines a subject's appearance, mention the picture inside that subject definition instead of creating a separate picture entry.  summary: Begin with one or more applicable task types: [reference generation], [keyframe completion], [video editing], [video continuation], [audio reuse], [audio reference]. Join multiple types with " + ". Briefly state what happens and how references are used.  retention_analysis: One line per tracked reference.  Visual relationships: fully_preserved partially_preserved attribute_transfer weak_reference  Audio relationships: fully_copy partially_copy reference weak_reference  detailed_description: Describe the complete audiovisual timeline using [Shot N]. Include composition, subject appearance/position, environment, light, chronological action, camera, synchronized sound, and reference usage. Use roughly 350–500 words only when the scene actually benefits from that detail.  SHOTS, CAMERA, AND CONTINUITY  [Shot 1] has no timestamp.  Later cuts use: [Shot 2] At 00:04.000, the shot cuts to ...  Timestamps must increase and remain within the clip duration.  Cut only when revealing genuinely new information. For smaller framing or angle changes, move the camera instead.  At each shot start, establish shot size/composition, subjects and positions, setting/light, action order, camera behavior, and relevant synchronized sound.  Useful camera terms include push in, pull out, zoom, pan, truck, tilt, pedestal, arc shot, tracking shot, static shot, POV, roll, and shake. State direction, amplitude, and speed when meaningful. Distinguish physical camera movement from optical zoom.  Maintain subject identity, wardrobe, lighting, spatial relationships, screen direction, and object state unless the change is visibly shown.  Describe only what can be seen or heard. Prefer concrete audiovisual instructions over literary or psychological prose.  STYLE AND SUBJECTS  When not supplied by HEADER, establish the visual medium and concrete treatment: live-action, cinematic, 2D animation, 3D CG, claymation, watercolor, vintage film, etc., plus relevant line treatment, materials, palette, contrast, lighting, lens behavior, grain, or rendering characteristics.  When a subject first appears, establish the visible identity anchors needed for that scene, then use its tag or an unambiguous description consistently.  A place, vehicle, creature, prop, effect, costume, or pose may be a subject.  Prefer no more than three principal characters simultaneously unless the requested scene requires more.  DIALOGUE  Speaker IDs are local to each independent prompt and restart at (S1). Assign IDs in order of first vocalization; a speaker keeps the same ID within that prompt.  Format: <Subject N> (S1) performs an action and says, <d>[Language] Exact words.</d>  Inside <d>, include only the language tag and spoken words.  On the first vocal event, describe useful voice properties when relevant.  Voiceover: says in an off-screen voiceover: If that character is visible, explicitly state that their lips remain closed.  Use <scenetrans> only when dialogue intentionally continues across a cut. Use <cutoff> only when speech is intentionally truncated by the end of the clip.  Keep dialogue physically achievable within the duration and, unless necessary otherwise, leave a final silent action or reaction beat.  ON-SCREEN TEXT  Only visibly rendered text goes in double quotation marks, exactly as shown. Dialogue does not.  AUDIO  Place event-synchronized sounds inside the shot description where they occur.  overall_soundscape: 1–4 concise sentences covering ambience, physical sounds, and non-verbal human sounds. Do not repeat dialogue. Use N/A only for intentional complete silence.  non_diegetic_music: 1–3 concise sentences describing instrumentation, tempo, rhythm, density, dynamics, and changes over time. Do not describe intended emotion. Diegetic music belongs in the shot description. Use N/A when there is no score.  Create <Audio N> only when source audio is intentionally reused or referenced. Distinguish full copy, partial copy, and characteristic/reference use. Referencing a speaker's voice does not imply copying unrelated source dialogue.  FINAL RULES  Each prompt must be independently understandable and chronologically executable.  Do not refer to "the same character," "the previous scene," or other unavailable textual context.  Do not invent cuts, actions, dialogue, text, props, camera motion, or reference relationships that conflict with the user's staging.  Do not overload a short clip. Ensure all action, dialogue, camera movement, transitions, and the final beat can physically fit within the stated duration. |  | The rules every scene, header and footer is written under: the prompt layout, shots, dialogue and sound. A line such as `Keep every line of dialogue under 12 words.` adds a rule; blank writes under none. |
+| `plan_transitions` | `BOOLEAN` | No | True |  | `true` reads the written scenes back and chooses each one's transition: cut, carry, sound, cast or cast and sound. `false` cuts between every scene. |
+| `temperature` | `FLOAT` | No | 0.7 |  | How adventurous each pick is. `0.7` is balanced, `0.3` stays close to the likeliest words, `1.1` wanders. |
+| `top_k` | `INT` | No | 64 |  | Pick only among this many likeliest tokens. `0` turns the limit off. |
+| `top_p` | `FLOAT` | No | 0.95 |  | Pick only among the likeliest tokens whose chances add up to this. `1.0` turns it off. |
+| `min_p` | `FLOAT` | No | 0.05 |  | Drop any token less likely than this fraction of the likeliest one. `0` turns it off. |
+| `repetition_penalty` | `FLOAT` | No | 1.05 |  | Above `1.0` makes a token already used less likely again. `1.0` turns it off. |
+| `thinking` | `BOOLEAN` | No | False |  | `true` lets a model that reasons, such as Qwen3, think before each answer. |
+| `fast_decode` | `BOOLEAN` | No | True |  | `true` decodes on the fixed cache graph path where the model allows it; `false` runs as core Generate Text. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `scenes` | `STRING` | Every scene as JSON, with the header and footer: title, summary, prompt, seconds, transition, continuity, overlap and the cast pictures it references. |
+| `prompts` | `STRING` | Every scene's prompt, in order, divided by a line of dashes. |
+| `header` | `STRING` | The text put before every scene's prompt. |
+| `footer` | `STRING` | The text put after every scene's prompt. |
+| `report` | `STRING` | What was written, and how long it runs. |
 
 </details>
 
@@ -8650,6 +9096,7 @@ Open a loop that runs until a condition says stop. The body runs at least once; 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `max_iterations` | `INT` | Yes | 100 |  | Safety limit; INT, 1 to 10000. Stops the loop even if the condition stays true, so a mistake cannot run forever. |
+| `start` | `INT` | Yes | 0 |  | The index the first iteration reads, as `0`, or `2` to resume a run at its third item; INT. Counts up by 1 from here. |
 | `value_1` | `COMFY_MATCHTYPE_V3` | No |  |  | The value slot 1 starts with; any type. Read it back out of value_1 and hand the changed one to While Loop Close's value_1. |
 | `value_2` | `COMFY_MATCHTYPE_V3` | No |  |  | The value slot {n} starts with; any type. A new slot appears as this one is wired. |
 | `value_3` | `COMFY_MATCHTYPE_V3` | No |  |  | The value slot {n} starts with; any type. A new slot appears as this one is wired. |
@@ -8664,7 +9111,7 @@ Open a loop that runs until a condition says stop. The body runs at least once; 
 | Name | Type | What it is |
 |---|---|---|
 | `iterator` | `WAS_LOOP` | Identifies the loop and where it is up to; WAS_LOOP. Wire it straight to While Loop Close's iterator input, and nothing else. |
-| `index` | `INT` | The loop's counter; INT. Starts at 0 and counts up by 1 each iteration, for reading a position in a list. |
+| `index` | `INT` | The loop's counter; INT. Starts at start, 0 by default, and counts up by 1 each iteration, for reading a position in a list. |
 | `metadata` | `DICT` | This iteration's counters as one value; DICT. Read them with Loop Metadata: current_iteration, index, and the frames collected so far. |
 | `value_1` | `COMFY_MATCHTYPE_V3` | Slot 1 as this iteration receives it; any type. The starting value on iteration 1, then whatever While Loop Close was given last iteration. |
 | `value_2` | `COMFY_MATCHTYPE_V3` | Slot {n} as this iteration receives it; any type. |
@@ -9890,7 +10337,7 @@ Denoise a latent exactly as core KSampler does, with the live preview made cheap
 <details>
 <summary><b>H3 Low VRAM</b></summary>
 
-Set a MiniMax H3 model up to sample long clips in less VRAM, with the same result. Each block runs over the clip in slices of 8192 tokens, and only the weights that fit beside the clip stay on the card while the rest stream in as each block runs. Place it after the model loaders and any LoRA so every H3 sampler in the graph uses it.
+Set a MiniMax H3 model up to sample long clips in less VRAM, with the same result. Each block runs over the clip in token slices, and only the weights that fit beside the clip stay on the card while the rest stream in as each block runs. head_chunks and query_chunks split attention, the largest memory a block holds, into smaller calls, and the room they free keeps more weights on the card. The log names what was applied when sampling starts. Place it after the model loaders and any LoRA so every H3 sampler in the graph uses it.
 
 | | |
 |---|---|
@@ -9901,6 +10348,9 @@ Set a MiniMax H3 model up to sample long clips in less VRAM, with the same resul
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+| `head_chunks` | `INT` | Yes | 0 |  | 0 = off; 4 = attention runs over 14 of the 56 heads at a time; 8 = 7 at a time. Every head is computed as before, so the result is unchanged. Frees roughly a third of the memory attention holds on a long clip. |
+| `query_chunks` | `INT` | Yes | 0 |  | 0 = off; 4 = attention answers the clip's tokens in 4 chunks against keys and values worked out once. Each token is computed as before, so the result is unchanged. Frees about half the memory attention holds, at the cost of one extra attention projection per block. Combines with head_chunks. |
+| `token_slice` | `INT` | Yes | 8192 |  | 8192 = norms, projections and feed-forward run 8192 tokens at a time; 4096 holds about half the working memory there. The result matches up to float rounding. Lower it when memory is still short after head_chunks and query_chunks. |
 
 **Outputs**
 
@@ -9914,7 +10364,7 @@ Set a MiniMax H3 model up to sample long clips in less VRAM, with the same resul
 <details>
 <summary><b>H3 Tiled Sampler</b></summary>
 
-Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. The panel shows where the tiles sit.
+Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip joined by H3 Extend Append keeps its cuts: where it takes several time windows, each stays inside one scene. The panel shows where the tiles sit and marks each cut.
 
 | | |
 |---|---|
@@ -9934,7 +10384,7 @@ Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across
 | `negative` | `CONDITIONING` | Yes |  |  | The clip's negative conditioning. |
 | `latent_image` | `LATENT` | Yes |  |  | The H3 latent to refine, such as an upscaled clip encoded again. |
 | `denoise` | `FLOAT` | Yes | 0.4 |  | Share of the schedule run, `0.3` to `0.5` to refine, `1.0` from noise. |
-| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` splits the clip into windows along time under a token budget, and across the frame only where a window will not fit; `manual` sets tile and window sizes. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` splits the clip into windows along time under a token budget, and across the frame only where a window will not fit; `manual` sets tile and window sizes. Where there are several windows, none crosses a cut the latent records. |
 | `audio` | `LATENT` | No |  |  | The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, held as it is beside a video-only latent_image. Left empty, silence is held. |
 
 **Outputs**
@@ -9949,7 +10399,7 @@ Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across
 <details>
 <summary><b>H3 Tiled Sampler [WIP]</b></summary>
 
-Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. The panel shows where the tiles sit and the sigma the run started from.
+Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip joined by H3 Extend Append keeps its cuts: where it takes several time windows, each stays inside one scene. The panel shows where the tiles sit, marks each cut and gives the sigma the run started from.
 
 | | |
 |---|---|
@@ -9969,7 +10419,7 @@ Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overla
 | `negative` | `CONDITIONING` | Yes |  |  | The clip's negative conditioning. |
 | `latent_image` | `LATENT` | Yes |  |  | The H3 latent to refine, such as an upscaled clip encoded again. A video-only latent has its audio held; a joined audio and video latent has both refined. |
 | `strength` | `FLOAT` | Yes | 0.45 |  | Noise level the refine starts from, on any scheduler: `0.3` keeps the clip and sharpens it, `0.5` adds detail, `0.8` redraws detail on the clip's own layout, `0.93` redraws nearly all of it, `1.0` from noise. |
-| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` keeps the whole clip in one time window and splits the frame into the fewest tiles under the token budget, adding time windows only where no tiling of one window fits or the clip runs past 362 frames; `manual` sets tile and window sizes. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` keeps the whole clip in one time window and splits the frame into the fewest tiles under the token budget, adding time windows only where no tiling of one window fits or the clip runs past 362 frames; `manual` sets tile and window sizes. Added windows never cross a cut the latent records. |
 | `anchor` | `COMBO` | Yes | auto | `auto`, `on`, `off` | Guides each tile with its own part of latent_image at the first frame of every 17: `auto` when tiles split the frame, `on` always, `off` never. |
 | `audio` | `LATENT` | No |  |  | The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, held as it is beside a video-only latent_image. Left empty, silence is held. |
 
@@ -9985,7 +10435,7 @@ Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overla
 <details>
 <summary><b>H3 Tiles</b></summary>
 
-Run every MiniMax H3 model call in overlapping tiles across the frame and overlapping windows along the clip, blended where they meet at each step so the tiles stay one clip. Any sampler then refines a long or upscaled H3 latent in tiles that each fit the card, run as H3 Low VRAM runs them. Upscale the latent first, or decode, upscale and encode, and sample it at a partial denoise.
+Run every MiniMax H3 model call in overlapping tiles across the frame and overlapping windows along the clip, blended where they meet at each step so the tiles stay one clip. Any sampler then refines a long or upscaled H3 latent in tiles that each fit the card, run as H3 Low VRAM runs them. Upscale the latent first, or decode, upscale and encode, and sample it at a partial denoise. Wire the clip's latent as well and, where it takes several time windows, each one stays inside one scene, so no blend crosses a cut.
 
 | | |
 |---|---|
@@ -9997,12 +10447,14 @@ Run every MiniMax H3 model call in overlapping tiles across the frame and overla
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
 | `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` splits the clip into windows along time under a token budget, and across the frame only where a window will not fit; `manual` sets tile and window sizes. |
+| `latent` | `LATENT` | No |  |  | The clip the sampler refines, read only for where its scenes cut, as H3 Extend Append records them. Wired, a clip that takes several time windows gets none that crosses a cut. Leave empty for a clip of one scene. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `model` | `MODEL` | The model for the sampler that refines the latent. |
+| `report` | `STRING` | How many cuts the latent records; where there are several time windows, none crosses one. |
 
 </details>
 

@@ -14,17 +14,29 @@ from .h3_conditioning import fitted_batch
 __all__ = [
     "IMAGE_EDGE",
     "IMAGE_SIZES",
+    "MOST_AUDIOS",
+    "MOST_IMAGES",
+    "MOST_VIDEOS",
+    "Picture",
     "QWEN_STRIDE",
     "REF_AUDIOS",
     "REF_IMAGES",
     "REF_VIDEOS",
     "References",
+    "Sound",
+    "Video",
+    "assemble",
     "audio_latent",
     "audio_name",
     "build",
+    "clip_items",
     "collect",
+    "encode_picture",
+    "encode_sound",
+    "encode_video",
     "image_canvas",
     "image_name",
+    "room",
     "soundtrack_name",
     "video_name",
 ]
@@ -33,6 +45,11 @@ __all__ = [
 REF_IMAGES = 9
 REF_VIDEOS = 3
 REF_AUDIOS = 3
+
+#: Most references of each kind one prompt carries.
+MOST_IMAGES = 9
+MOST_VIDEOS = 3
+MOST_AUDIOS = 3
 
 #: How a reference picture is sized: to the canvas's area, to a longest side in pixels, or
 #: to :data:`IMAGE_EDGE` on its short side.
@@ -70,6 +87,50 @@ class References(NamedTuple):
     items: list
     blocks: list
     tags: list
+
+
+class Picture(NamedTuple):
+    """One reference picture, encoded.
+
+    Attributes:
+        item: What the text encoder is shown.
+        block: The ``minimax_refs`` block.
+        size: The size it was encoded at, as ``832x480``.
+    """
+
+    item: dict
+    block: dict
+    size: str
+
+
+class Video(NamedTuple):
+    """One reference clip, encoded, with its soundtrack where it has one.
+
+    Attributes:
+        items: What the text encoder is shown, the soundtrack's entry ahead of the clip's.
+        block: The ``minimax_refs`` block.
+        text: The frames and size it was encoded at, as ``124 frames at 832x480``.
+        seconds: How long its soundtrack runs, or ``None`` for a silent clip.
+    """
+
+    items: list
+    block: dict
+    text: str
+    seconds: float | None
+
+
+class Sound(NamedTuple):
+    """One reference sound, encoded.
+
+    Attributes:
+        item: What the text encoder is shown.
+        block: The ``minimax_refs`` block.
+        seconds: How long it runs.
+    """
+
+    item: dict
+    block: dict
+    seconds: float
 
 
 def image_name(slot: int) -> str:
@@ -201,6 +262,13 @@ def audio_latent(audio_vae, audio: dict):
     wanted = int(getattr(audio_vae, "audio_sample_rate", AUDIO_RATE))
     if rate != wanted:
         waveform = torchaudio.functional.resample(waveform, rate, wanted)
+    # Whole latent steps, so the encoder trims nothing off the start.
+    hop = max(1, wanted // h3_extend.AUDIO_LATENT_FPS)
+    short = (-int(waveform.shape[-1])) % hop
+    if short:
+        import torch
+
+        waveform = torch.nn.functional.pad(waveform, (0, short))
     latent = audio_vae.encode(waveform.movedim(1, -1))
     return latent, int(latent.shape[-1])
 
@@ -208,6 +276,185 @@ def audio_latent(audio_vae, audio: dict):
 def _seconds(audio: dict) -> float:
     """How long a ComfyUI audio runs for."""
     return audio["waveform"].shape[-1] / max(1, int(audio["sample_rate"]))
+
+
+def encode_picture(vae, picture, canvas_width: int, canvas_height: int,
+                   size: str = "match") -> Picture:
+    """One reference picture encoded once.
+
+    Args:
+        vae: The H3 video VAE.
+        picture: A ``[1, H, W, C]`` tensor.
+        canvas_width: The clip's width in pixels.
+        canvas_height: The clip's height in pixels.
+        size: An entry from :data:`IMAGE_SIZES`.
+
+    Returns:
+        The encoded picture.
+    """
+    wide, high = image_canvas(picture.shape[2], picture.shape[1], canvas_width,
+                              canvas_height, size)
+    resized = fitted_batch(picture[:1], wide, high)
+    return Picture(
+        {"type": "image", "data": resized},
+        {"kind": "image", "latent_h": high // SPATIAL_STRIDE, "latent_w": wide // SPATIAL_STRIDE,
+         "latent": vae.encode(resized)},
+        f"{wide}x{high}",
+    )
+
+
+def clip_items(clip, sounding: bool) -> list:
+    """What the text encoder is shown for one reference clip, its sound's entry first.
+
+    Args:
+        clip: ``[T, H, W, C]`` frames fitted to the reference canvas, at 24 fps.
+        sounding: Whether the clip carries a soundtrack.
+
+    Returns:
+        The entries, in presentation order.
+    """
+    shown = list(range(0, int(clip.shape[0]), QWEN_STRIDE))
+    items = [{"type": "audio"}] if sounding else []
+    items.append({"type": "video", "data": clip[shown],
+                  "timestamps": [index / 2.0 for index in range(len(shown))]})
+    return items
+
+
+def encode_video(vae, audio_vae, frames, soundtrack, longest: int, named: str) -> Video:
+    """One reference clip encoded once, with its soundtrack where it has one.
+
+    Args:
+        vae: The H3 video VAE.
+        audio_vae: The H3 audio VAE, or ``None`` where the clip is silent.
+        frames: A ``[T, H, W, C]`` tensor at 24 fps.
+        soundtrack: The clip's sound, or ``None``.
+        longest: Frames the longest segment runs for, which the clip is cut to.
+        named: The clip's name, for the error.
+
+    Returns:
+        The encoded clip.
+
+    Raises:
+        ValueError: The clip is under five frames, or carries sound with no audio VAE.
+    """
+    count = min(int(frames.shape[0]), max(h3_extend.CLIP_LEAD, int(longest)))
+    if count < h3_extend.CLIP_LEAD:
+        raise ValueError(
+            f"{named} holds {frames.shape[0]} frame(s) and a MiniMax H3 reference video "
+            f"needs at least {h3_extend.CLIP_LEAD}, about 0.2s at {h3_extend.FPS} fps. Wire a "
+            f"longer clip, or use the picture as a reference picture"
+        )
+    if soundtrack is not None and audio_vae is None:
+        raise ValueError(
+            f"{named} carries a soundtrack and audio_vae is not wired, so there is nothing to "
+            f"encode it with. Wire the H3 audio VAE into audio_vae"
+        )
+    count = h3_extend.floor_overlap(count)
+    wide, high = h3_extend.reference_canvas(frames.shape[2], frames.shape[1])
+    clip = fitted_batch(frames[:count], wide, high)
+    heard, seconds = None, None
+    if soundtrack is not None:
+        heard, _ = audio_latent(audio_vae, soundtrack)
+        seconds = _seconds(soundtrack)
+    items = clip_items(clip, soundtrack is not None)
+    return Video(
+        items, h3_extend.video_reference(vae.encode(clip), heard),
+        f"{count} frames at {wide}x{high}", seconds,
+    )
+
+
+def encode_sound(audio_vae, audio: dict, named: str) -> Sound:
+    """One reference sound encoded once.
+
+    Args:
+        audio_vae: The H3 audio VAE, or ``None``.
+        audio: A ComfyUI audio.
+        named: The sound's name, for the error.
+
+    Returns:
+        The encoded sound.
+
+    Raises:
+        ValueError: No audio VAE arrived.
+    """
+    if audio_vae is None:
+        raise ValueError(
+            f"{named} is a reference sound and audio_vae is not wired, so there is nothing to "
+            f"encode it with. Wire the H3 audio VAE into audio_vae"
+        )
+    latent, steps = audio_latent(audio_vae, audio)
+    return Sound(
+        {"type": "audio"}, {"kind": "audio", "ref_audio_t": steps, "audio_latent": latent},
+        _seconds(audio),
+    )
+
+
+def assemble(pictures: list, videos: list, sounds: list, named: str = "the prompt") -> References:
+    """The references one prompt carries, tagged in presentation order.
+
+    Args:
+        pictures: Encoded pictures, from :func:`encode_picture`.
+        videos: Encoded clips, from :func:`encode_video`.
+        sounds: Encoded sounds, from :func:`encode_sound`.
+        named: What the prompt is called, for the error.
+
+    Returns:
+        The references, in presentation order.
+
+    Raises:
+        ValueError: More of one kind than a prompt carries.
+    """
+    for count, most, kind in (
+        (len(pictures), MOST_IMAGES, "pictures"),
+        (len(videos), MOST_VIDEOS, "clips"),
+        (len(sounds), MOST_AUDIOS, "sounds"),
+    ):
+        if count > most:
+            raise ValueError(
+                f"{named} references {count} {kind}, and a MiniMax H3 prompt carries at most "
+                f"{most}. Take some off, or move them to the segments that need them"
+            )
+    items, blocks, tags = [], [], []
+    for number, picture in enumerate(pictures, start=1):
+        items.append(picture.item)
+        blocks.append(picture.block)
+        tags.append(f"<Picture {number}> {picture.size}")
+    heard = 0
+    for number, video in enumerate(videos, start=1):
+        label = ""
+        if video.seconds is not None:
+            heard += 1
+            label = f" with <Audio {heard}> {video.seconds:.1f}s"
+        items.extend(video.items)
+        blocks.append(video.block)
+        tags.append(f"<Video {number}> {video.text}{label}")
+    for sound in sounds:
+        heard += 1
+        items.append(sound.item)
+        blocks.append(sound.block)
+        tags.append(f"<Audio {heard}> {sound.seconds:.1f}s")
+    return References(items, blocks, tags)
+
+
+def room(conditioning, kind: str) -> int:
+    """How many more references of one kind every entry of a prompt has space for.
+
+    Args:
+        conditioning: A conditioning list.
+        kind: A ``minimax_refs`` block kind: ``image``, ``video``, ``video_audio`` or ``audio``.
+
+    Returns:
+        The fewest free places across the entries, ``0`` when one is full.
+    """
+    group = "video" if kind == "video_audio" else kind
+    most = {"image": MOST_IMAGES, "video": MOST_VIDEOS, "audio": MOST_AUDIOS}[group]
+    free = most
+    for entry in conditioning or ():
+        blocks = entry[1].get("minimax_refs") or ()
+        held = sum(1 for block in blocks
+                   if ("video" if block.get("kind") == "video_audio" else block.get("kind")) == group)
+        free = min(free, most - held)
+    return max(0, free)
 
 
 def build(vae, audio_vae, images: list, videos: list, audios: list, canvas_width: int,
@@ -236,47 +483,10 @@ def build(vae, audio_vae, images: list, videos: list, audios: list, canvas_width
             "a reference audio or video soundtrack is wired and audio_vae is not, so "
             "there is nothing to encode it with. Wire the H3 audio VAE into audio_vae"
         )
-
-    items, blocks, tags = [], [], []
-    for number, picture in enumerate(images, start=1):
-        wide, high = image_canvas(picture.shape[2], picture.shape[1], canvas_width,
-                                  canvas_height, size)
-        resized = fitted_batch(picture[:1], wide, high)
-        items.append({"type": "image", "data": resized})
-        blocks.append({"kind": "image", "latent_h": high // SPATIAL_STRIDE,
-                       "latent_w": wide // SPATIAL_STRIDE, "latent": vae.encode(resized)})
-        tags.append(f"<Picture {number}> {wide}x{high}")
-
-    heard = 0
-    for number, (slot, frames, soundtrack) in enumerate(videos, start=1):
-        count = min(int(frames.shape[0]), max(h3_extend.CLIP_LEAD, int(longest)))
-        if count < h3_extend.CLIP_LEAD:
-            raise ValueError(
-                f"{video_name(slot)} holds {frames.shape[0]} frame(s) and a MiniMax H3 "
-                f"reference video needs at least {h3_extend.CLIP_LEAD}, about 0.2s at "
-                f"{h3_extend.FPS} fps. Wire a longer clip, or wire the picture to a "
-                f"ref_image input"
-            )
-        count = h3_extend.floor_overlap(count)
-        wide, high = h3_extend.reference_canvas(frames.shape[2], frames.shape[1])
-        clip = fitted_batch(frames[:count], wide, high)
-        heard_latent, steps = None, 0
-        label = ""
-        if soundtrack is not None:
-            heard += 1
-            items.append({"type": "audio"})
-            heard_latent, steps = audio_latent(audio_vae, soundtrack)
-            label = f" with <Audio {heard}> {_seconds(soundtrack):.1f}s"
-        shown = list(range(0, count, QWEN_STRIDE))
-        items.append({"type": "video", "data": clip[shown],
-                      "timestamps": [index / 2.0 for index in range(len(shown))]})
-        blocks.append(h3_extend.video_reference(vae.encode(clip), heard_latent))
-        tags.append(f"<Video {number}> {count} frames at {wide}x{high}{label}")
-
-    for audio in audios:
-        heard += 1
-        latent, steps = audio_latent(audio_vae, audio)
-        items.append({"type": "audio"})
-        blocks.append({"kind": "audio", "ref_audio_t": steps, "audio_latent": latent})
-        tags.append(f"<Audio {heard}> {_seconds(audio):.1f}s")
-    return References(items, blocks, tags)
+    pictures = [encode_picture(vae, picture, canvas_width, canvas_height, size)
+                for picture in images]
+    clips = [encode_video(vae, audio_vae, frames, soundtrack, longest, video_name(slot))
+             for slot, frames, soundtrack in videos]
+    sounds = [encode_sound(audio_vae, audio, audio_name(number))
+              for number, audio in enumerate(audios, start=1)]
+    return assemble(pictures, clips, sounds)

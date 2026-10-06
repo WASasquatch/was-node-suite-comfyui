@@ -10,7 +10,7 @@ import { createListing } from "./listing.js";
 import { captureWheel, wheelPixels } from "./pointer.js";
 import { PREVIEW_STATE, executionId } from "./preview.js";
 import { onNodeFinished, onRunEnded } from "./run_events.js";
-import { RUN_LABELS, fetchRunResult, fetchRunResultPage } from "./run_result.js";
+import { RUN_LABELS, fetchRunResult, fetchRunResultPage, whenReadable } from "./run_result.js";
 import { themeVar } from "./theme.js";
 
 const LOG_NAME = "WASNodeSuite.ReportPanel";
@@ -493,6 +493,8 @@ export function createReportPanel(node, options = {}) {
 
   const stopFinished = onNodeFinished(node, () => refresh());
   const stopEnded = onRunEnded(() => refresh());
+  // A panel built before its node joined the graph reads the report the server already holds.
+  const stopSettling = whenReadable(node, () => refresh());
 
   // A region under the pointer scrolls while it has somewhere left to go. Once it has not, the
   // gesture is the graph's and zooms the node under the pointer.
@@ -525,6 +527,7 @@ export function createReportPanel(node, options = {}) {
       if (live) api.removeEventListener?.("executed", onExecuted);
       if (typeof stopFinished === "function") stopFinished();
       if (typeof stopEnded === "function") stopEnded();
+      stopSettling();
       releaseWheel();
       release();
       band?.dispose?.();
