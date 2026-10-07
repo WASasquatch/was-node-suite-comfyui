@@ -490,7 +490,7 @@ class _Run:
             x: The tensor the sampler is about to denoise.
             step: The step index the strength is read at.
         """
-        transformed = self.transform(x, step, self._clean_streams())
+        transformed = self.transform(x, step, self._clean_streams(x))
         if transformed is None:
             return
         x.copy_(transformed)
@@ -521,7 +521,9 @@ class _Run:
         bias = spec.max_bias * strength
         seed = spec.seed + (self.applications if spec.seed_increment else 0)
 
-        parts = comfy.utils.unpack_latents(x, self.shapes) if self.packed else [x]
+        # The shapes as they stand at this step, which a growing sampler changes mid-run.
+        shapes = _latent_shapes(self.model, x)
+        parts = comfy.utils.unpack_latents(x, shapes) if self.packed else [x]
         out = list(parts)
         touched = False
         for index in self.stream_ids:
@@ -606,19 +608,23 @@ class _Run:
             return None
         return content * share
 
-    def _clean_streams(self) -> list:
+    def _clean_streams(self, x: torch.Tensor) -> list:
         """The model's clean estimate, split the way the latent is.
 
+        Args:
+            x: The tensor the sampler is about to denoise.
+
         Returns:
-            One tensor per stream, or an empty list before the first estimate arrives.
+            One tensor per stream, or an empty list before the first estimate arrives or
+            where the estimate is not the size ``x`` is.
         """
         import comfy.utils
 
-        if not torch.is_tensor(self.denoised):
+        if not torch.is_tensor(self.denoised) or self.denoised.shape != x.shape:
             return []
         try:
             if self.packed:
-                return comfy.utils.unpack_latents(self.denoised, self.shapes)
+                return comfy.utils.unpack_latents(self.denoised, _latent_shapes(self.model, x))
             return [self.denoised]
         except Exception:
             return []

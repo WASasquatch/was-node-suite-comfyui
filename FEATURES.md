@@ -5,7 +5,7 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **509** across **48** categories |
+| Nodes | **513** across **48** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 194 nodes draw their own readout, picture or editor on the canvas |
@@ -407,6 +407,25 @@ For laying out a whole video by eye, and for drafting it from a few sentences.
 [`docs/H3_COND_TIMELINE.md`](docs/H3_COND_TIMELINE.md) for the window, tab by tab.
 [`NODES.md`](NODES.md) under **WAS Suite/Latent/Video**. Graph:
 [`minimax-h3-prompt-timeline.json`](docs/workflows/minimax-h3-prompt-timeline.json).
+
+---
+
+## Kandinsky 6 video with sound
+
+Kandinsky 6 runs on ComfyUI's own nodes: **Load Diffusion Model** loads the transformer,
+**DualCLIPLoader** with type `kandinsky5` and **CLIP Text Encode** read the prompt, **KSampler**
+samples the picture and the sound together, and **VAE Decode (Tiled)** and **VAE Decode Audio**
+turn them into frames and a soundtrack. **Empty Kandinsky 6 Latent** starts a clip, **Kandinsky 6 Image To
+Video** starts one on a picture, **Kandinsky 6 Audio VAE Loader** loads the sound's decoder, and
+**Kandinsky 6 Text Encode** takes what is seen and what is heard in separate boxes. Pro and Lite,
+distilled and not, as released or as the int8 ConvRot and W6A8 checkpoints the pack publishes.
+
+For text-to-video and image-to-video with a soundtrack generated alongside the picture.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Latent/Video** and **WAS Suite/Loaders**. Weights and
+settings: [`docs/MODELS.md`](docs/MODELS.md#kandinsky-6). Graphs:
+[`kandinsky6-lite-distill.json`](docs/workflows/kandinsky6-lite-distill.json),
+[`kandinsky6-pro-distill.json`](docs/workflows/kandinsky6-pro-distill.json).
 
 ---
 

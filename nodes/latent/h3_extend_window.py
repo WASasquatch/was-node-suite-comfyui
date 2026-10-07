@@ -28,11 +28,11 @@ OVERLAP_HINT = (
 )
 
 CONTINUITY_HINT = (
-    "How this segment follows the last. `carry` = one shot; `refresh` = re-noised; "
+    "`carry` = one shot; `refresh` = re-noised; "
     "`handoff` = cut on last frame; `reference (video)` = cut, cast kept; "
     "`reference (sample)` = cut, cast from stills; `cut` = new scene; "
     "`carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, "
-    "sound and cast kept. A row of prompts replaces this. References and handoff need vae."
+    "sound and cast kept. A prompt row overrides it. References and handoff need vae."
 )
 
 DRIFT_HINT = (

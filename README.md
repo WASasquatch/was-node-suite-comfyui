@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **509 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **513 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -51,16 +51,16 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-509 nodes across a package of source files. The pack itself needs no packages, and nothing is
+513 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 500 |
+| Nodes | 220 | 513 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
-| Third-party carried in the repository | SAM and BLIP, 75 files of python | 128 files: browser libraries, fonts, eight face cascades, two sets of weights and one network, each with its licence |
+| Third-party carried in the repository | SAM and BLIP, 75 files of python | 143 files: browser libraries, fonts, eight face cascades, three sets of weights and two networks, each with its licence |
 | Optional node groups | none | 22 keys in `config.yaml`, 8 of them off out of the box. Per-node disable group. |
 
 213 of the 220 node ids are unchanged. Four are retired onto replacements, three are removed
@@ -70,13 +70,13 @@ on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, sci
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
 belongs to an optional group.
 
-## 287 new nodes
+## 299 new nodes
 
 | Area | New | Area | New |
 |---|--:|---|--:|
 | Three.js scenes | 43 | HDR and linear light | 9 |
 | Files, archives and documents | 28 | Affine sampling | 7 |
-| Logic and flow | 26 | Everything else | 142 |
+| Logic and flow | 26 | Everything else | 164 |
 | Layers | 22 | | |
 | Bounds | 10 | | |
 
@@ -150,7 +150,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**509 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
+**513 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 
@@ -164,8 +164,8 @@ replacement. They sit in the nine `legacy` groups in `config.yaml`, four of whic
 [`FEATURES.md`](FEATURES.md) covers what the pack does, by area: masking, layers, bounds,
 filters and optics, transforms, colour and LUTs, HDR, instruments, logic and flow, numbers,
 text and dictionaries, prompt terminology and styles, files and archives, animation, models
-and LoRA, the affine transform, noise shaping, video comparison, execution gating, the
-Content Viewer, Three.js scenes and graph plumbing.
+and LoRA, the affine transform, noise shaping, Kandinsky 6 video with sound, video comparison,
+execution gating, the Content Viewer, Three.js scenes and graph plumbing.
 
 ---
 # Model weights
@@ -190,9 +190,9 @@ explains it. Edit it there as it will survive updates.
 
 # Third-party code in the pack
 
-The suite is MIT, see [`LICENSE`](LICENSE). It bundles 128 third-party files: three.js and
-three-gpu-pathtracer, HugeRTE, Prism.js, KaTeX and Mermaid, the EMA-VFI network, the DejaVu and
-Liberation fonts, eight face cascades and two sets of weights. Each keeps its own licence text
+The suite is MIT, see [`LICENSE`](LICENSE). It bundles 143 third-party files: three.js and
+three-gpu-pathtracer, HugeRTE, Prism.js, KaTeX and Mermaid, the EMA-VFI and Kandinsky 6 networks,
+the DejaVu and Liberation fonts, eight face cascades and three sets of weights. Each keeps its own licence text
 in the folder it ships in, and none of it is ever fetched. Every licence permits redistribution.
 
 Versions, copyright lines, which licence covers what and a byte-level account of every bundled

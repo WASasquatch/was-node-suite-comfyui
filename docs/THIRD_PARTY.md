@@ -14,6 +14,10 @@ runs.
 | [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) | MIT, Shiqi Yu | The face detector **Image Crop Face (YuNet)** uses, as weights converted to safetensors in [`modules/data/models/`](../modules/data/models/) | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [Marigold IID](https://huggingface.co/prs-eth/marigold-iid-appearance-v1-1) | Open RAIL++-M, PRS ETH Zürich | The two token empty prompt embedding the intrinsic maps on **Power Preprocessor** condition on, read out of the checkpoints' own text encoder into [`modules/data/models/`](../modules/data/models/). The checkpoints themselves are downloaded, not bundled | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [EMA-VFI](https://github.com/MCG-NJU/EMA-VFI) | Apache-2.0, Zhang, Zhu, Wang, Chen, Wu and Wang | The network **EMA-VFI Frame Interpolation** runs, vendored in [`modules/vendor/ema_vfi/`](../modules/vendor/ema_vfi/). No weights are bundled | [`LICENSE`](../modules/vendor/ema_vfi/LICENSE), [`NOTICE.md`](../modules/vendor/ema_vfi/NOTICE.md) |
+| [Kandinsky 6](https://github.com/kandinskylab/kandinsky-6) | MIT, Kandinsky Lab | The video and audio transformer and the PiFlow policy the Kandinsky 6 nodes run, vendored in [`modules/vendor/kandinsky6/`](../modules/vendor/kandinsky6/). No weights are bundled | [`LICENSE`](../modules/vendor/kandinsky6/LICENSE), [`NOTICE.md`](../modules/vendor/kandinsky6/NOTICE.md) |
+| ⤷ [MMAudio](https://github.com/hkchengrex/MMAudio) | MIT, Sony Research Inc. | The audio autoencoder **Kandinsky 6 Audio VAE Loader** builds, taken with Kandinsky 6 | [`LICENSE.mmaudio`](../modules/vendor/kandinsky6/licenses/LICENSE.mmaudio) |
+| ⤷ [BigVGAN](https://github.com/NVIDIA/BigVGAN) | MIT, NVIDIA Corporation, with the MIT, Apache-2.0 and BSD-3-Clause notices of the projects it carries | The vocoder that loader builds, taken with Kandinsky 6 | [`LICENSE.bigvgan`](../modules/vendor/kandinsky6/licenses/LICENSE.bigvgan), `LICENSE.bigvgan_1` to `_8` beside it |
+| [Qwen2.5-VL-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) | Apache-2.0, Alibaba Cloud | The text encoder's final norm weight, 3,584 numbers, which the Kandinsky 6 model applies to its prompts, in [`modules/data/models/`](../modules/data/models/) | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [Prism.js](https://prismjs.com/) | MIT, Lea Verou | Syntax highlighting in the **Content Viewer** | [`code_scripts/LICENSE`](../web/viewer/views/code_scripts/LICENSE) |
 | [KaTeX](https://katex.org/) 0.16.9 | MIT, Khan Academy and other contributors | Maths in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
 | [Mermaid](https://mermaid.js.org/) 10.9.5 | MIT, Knut Sveidqvist and contributors | Diagrams in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
@@ -22,8 +26,8 @@ runs.
 | [DejaVu](https://github.com/dejavu-fonts/dejavu-fonts) 2.37 | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | Four faces **Image Draw Text** renders with, in [`modules/data/fonts/dejavu/`](../modules/data/fonts/dejavu/) | [`dejavu/LICENSE`](../modules/data/fonts/dejavu/LICENSE), [`AUTHORS`](../modules/data/fonts/dejavu/AUTHORS) |
 | [Liberation](https://github.com/liberationfonts/liberation-fonts) 2.1.5 | SIL Open Font License 1.1, Red Hat, Inc., with digitized data copyright Google Corporation | Four faces metric-compatible with Arial, Times New Roman and Courier New, in [`modules/data/fonts/liberation/`](../modules/data/fonts/liberation/) | [`liberation/LICENSE`](../modules/data/fonts/liberation/LICENSE), [`AUTHORS`](../modules/data/fonts/liberation/AUTHORS) |
 
-Seven of the components are MIT in their own code, and two of those compile in a copy of
-DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, one is Apache-2.0, two
+Eight of the components are MIT in their own code, and two of those compile in a copy of
+DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, two are Apache-2.0, two
 are under the SIL Open Font License, one is Bitstream Vera with Arev, and one is Open RAIL++-M.
 All of those permit redistribution. MPL-2.0 is the only copyleft licence here and its conditions
 are file level, reaching the two files DOMPurify is compiled into and nothing beside them;
@@ -33,9 +37,9 @@ restrictions. The two font licences ask that the licence and copyright travel wi
 which is what the `LICENSE` and `AUTHORS` beside each family are, and the OFL reserves the
 Liberation names against modified copies. These are unmodified.
 
-Counting every file rather than every component, the pack carries 128 third-party files, 26.5 MB
-of the repository: browser libraries, fonts, the eight face cascades, two sets of weights and
-one network.
+Counting every file rather than every component, the pack carries 143 third-party files, 26.6 MB
+of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
+two networks.
 
 ## Verifying a copy
 

@@ -235,6 +235,30 @@ def register_interface_routes() -> None:
         register_three_module()
 
 
+def register_loop_errors() -> None:
+    """Make a failure inside a loop's pass name the node that raised it."""
+    # Imported inside the call and guarded: load_custom_node turns anything escaping
+    # comfy_entrypoint into zero registered nodes.
+    try:
+        from .modules.logic.loop_errors import register
+    except Exception as error:
+        logger.debug("loop error reports are unavailable (%s)", error)
+    else:
+        register()
+
+
+def register_models() -> None:
+    """Teach ComfyUI's model loaders the architectures the pack adds."""
+    # Imported inside the call and guarded: load_custom_node turns anything escaping
+    # comfy_entrypoint into zero registered nodes.
+    try:
+        from .modules.model.kandinsky6 import register
+        register()
+    except Exception as error:
+        logger.warning("Kandinsky 6 checkpoints will not load (%s)", error)
+        logger.debug("%s", traceback.format_exc())
+
+
 def register_viewer_nodes(config: Mapping, reserved: set[str]) -> None:
     """Register the nodes shipped by installed view extensions, when that group is on.
 
@@ -572,6 +596,8 @@ else:
                 rich=setting(self.config, "logging", "rich", True),
             )
             register_interface_routes()
+            register_loop_errors()
+            register_models()
             await register_replacements()
 
         async def get_node_list(self) -> list[type[io.ComfyNode]]:

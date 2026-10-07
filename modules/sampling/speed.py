@@ -407,8 +407,9 @@ def _transition_steps(
             threshold that is already a sigma, which is what manual thresholds are.
 
     Returns:
-        ``(step, scale before, scale after)`` per transition, dropping any that would land past
-        the end of the schedule.
+        ``(step, scale before, scale after)`` per transition. Where one would land past the end
+        of the schedule, it and every one after it land on the last step that did, and where
+        none lands the list is empty.
     """
     steps = len(sigmas) - 1
     landed = []
@@ -421,6 +422,10 @@ def _transition_steps(
         if step >= steps:
             break
         landed.append((step, before, after))
+    if landed:
+        last = landed[-1][0]
+        for before, after in zip(scales[len(landed):-1], scales[len(landed) + 1:]):
+            landed.append((last, before, after))
     return landed
 
 
@@ -476,6 +481,170 @@ def _rebased(callback, offset: int):
         callback(status)
 
     return shifted
+
+
+def _holder(model, attribute: str):
+    """The first model in an inner-model chain carrying an attribute, or ``None``."""
+    seen = set()
+    node = model
+    for _ in range(8):
+        if node is None or id(node) in seen:
+            return None
+        seen.add(id(node))
+        if getattr(node, attribute, None) is not None:
+            return node
+        node = getattr(node, "inner_model", None)
+    return None
+
+
+def _area(mask: torch.Tensor, size: tuple[int, int]) -> torch.Tensor:
+    """A mask averaged down to ``size`` over its trailing two axes."""
+    height, width = mask.shape[-2], mask.shape[-1]
+    if (height, width) == tuple(size):
+        return mask
+    flat = mask.reshape(-1, 1, height, width).to(torch.float32)
+    shrunk = torch.nn.functional.interpolate(flat, size=tuple(size), mode="area")
+    return shrunk.reshape(*mask.shape[:-2], *size).to(mask.dtype)
+
+
+#: Conditioning keys a model derives from the denoise mask at the latent's own size.
+MASK_CONDS = ("denoise_mask", "audio_denoise_mask")
+
+
+class _Held:
+    """A run's denoise mask, held picture, noise and keyframes, fitted to each grid.
+
+    Attributes:
+        active: Whether the run carries a denoise mask or MiniMax H3 keyframes.
+        mask: The full-size denoise mask, or ``None``.
+        latent: The full-size picture held under the mask, or ``None``.
+        noise: The full-size noise held under the mask, or ``None``.
+        conds: The full-size conditioning entries, by kind.
+    """
+
+    def __init__(self, model, extra_args: dict, shapes: list | None, height: int, width: int):
+        self.extra_args = extra_args
+        self.shapes = shapes
+        self.full_shapes = [tuple(shape) for shape in shapes] if shapes else None
+        self.height, self.width = height, width
+        self.inpaint = _holder(model, "latent_image")
+        self.guider = _holder(model, "conds")
+        self.base = getattr(self.guider, "inner_model", None)
+        self.mask = extra_args.get("denoise_mask")
+        self.latent = getattr(self.inpaint, "latent_image", None)
+        self.noise = getattr(self.inpaint, "noise", None)
+        conds = getattr(self.guider, "conds", None)
+        self.conds = (
+            {kind: list(entries or ()) for kind, entries in conds.items()}
+            if isinstance(conds, dict) else {}
+        )
+        keyframed = any(
+            entry.get("minimax_keyframes") for entries in self.conds.values() for entry in entries
+        )
+        self.active = self.mask is not None or keyframed
+
+    def refusal(self) -> str | None:
+        """Why the run cannot be fitted to a smaller grid, or ``None`` where it can."""
+        if not self.active:
+            return None
+        missing = []
+        if self.mask is not None and self.inpaint is None:
+            missing.append("the picture held under the denoise mask")
+        if not self.conds or not hasattr(self.base, "extra_conds"):
+            missing.append("the conditioning")
+        if not missing:
+            return None
+        return (
+            f"SPEED samples the early steps on a smaller latent, and this run's sampler does not "
+            f"reach {' or '.join(missing)} to fit it to that size. Use an ordinary sampler for "
+            f"it, or set scales to 1.0 to turn growth off and keep the rest of the schedule."
+        )
+
+    def _first(self, packed, fit):
+        """Apply ``fit`` to the first stream of a tensor packed the way the latent is."""
+        if packed is None:
+            return None
+        if not self.full_shapes:
+            return fit(packed)
+        import comfy.utils
+
+        parts = unpack(packed, self.full_shapes)
+        parts[0] = fit(parts[0])
+        return comfy.utils.pack_latents(parts)[0]
+
+    def _set(self, mask, latent, noise) -> None:
+        """Hand the sampler a mask, held picture and noise."""
+        if self.mask is not None:
+            self.extra_args["denoise_mask"] = mask
+        if self.inpaint is not None:
+            if self.latent is not None:
+                self.inpaint.latent_image = latent
+            if self.noise is not None:
+                self.inpaint.noise = noise
+
+    def _fitted(self, entry: dict, scale: float, ratio: float) -> dict:
+        """One conditioning entry with its keyframes on the smaller grid and no mask conds."""
+        model_conds = {
+            key: value for key, value in (entry.get("model_conds") or {}).items()
+            if key not in MASK_CONDS
+        }
+        fitted = {**entry, "model_conds": model_conds}
+        blocks = entry.get("minimax_keyframes")
+        if blocks:
+            # H3 lays keyframe rows out on the video's own grid.
+            resized = []
+            for block in blocks:
+                latent = block.get("latent") if isinstance(block, dict) else None
+                if torch.is_tensor(latent) and tuple(latent.shape[-2:]) == (self.height, self.width):
+                    block = {**block, "latent": spectral.downscale(latent, scale) * ratio}
+                resized.append(block)
+            fitted["minimax_keyframes"] = resized
+        return fitted
+
+    def fit(self, scale: float, x: torch.Tensor) -> None:
+        """Fit everything held to the grid ``scale`` makes, or restore it at 1.0.
+
+        Args:
+            scale: Fraction of the full resolution the latent is at.
+            x: The latent at that scale, packed the way the sampler carries it.
+        """
+        if not self.active:
+            return
+        if scale >= 1.0:
+            self.restore()
+            return
+        import comfy.samplers
+
+        size = (round(self.height * scale), round(self.width * scale))
+        # A clean picture keeps its level on the smaller grid; noise keeps its variance.
+        ratio = math.sqrt(size[0] * size[1] / (self.height * self.width))
+        mask = self._first(self.mask, lambda part: _area(part, size))
+        latent = self._first(self.latent, lambda part: spectral.downscale(part, scale) * ratio)
+        noise = self._first(self.noise, lambda part: spectral.downscale(part, scale))
+        self._set(mask, latent, noise)
+
+        shapes = self.shapes if self.shapes else [x.shape]
+        for kind, entries in self.conds.items():
+            self.guider.conds[kind] = comfy.samplers.encode_model_conds(
+                self.base.extra_conds,
+                [self._fitted(entry, scale, ratio) for entry in entries],
+                noise if noise is not None else x,
+                x.device,
+                kind,
+                latent_image=latent,
+                denoise_mask=mask,
+                seed=self.extra_args.get("seed"),
+                latent_shapes=shapes,
+            )
+
+    def restore(self) -> None:
+        """Hand the sampler back everything held at full size."""
+        if not self.active:
+            return
+        self._set(self.mask, self.latent, self.noise)
+        if self.guider is not None:
+            for kind, entries in self.conds.items():
+                self.guider.conds[kind] = entries
 
 
 def conditioned_on_a_picture(model) -> list[str]:
@@ -559,8 +728,9 @@ def sample_speed(
         The sampled latent, at full resolution.
 
     Raises:
-        ValueError: The solver is unknown, the latent has no spatial grid, or ``manual_sigmas``
-            does not carry one threshold per transition.
+        ValueError: The solver is unknown, the latent has no spatial grid, ``manual_sigmas``
+            does not carry one threshold per transition, the model takes a picture as an extra
+            input, or a masked run's held picture or conditioning cannot be reached.
     """
     import comfy.k_diffusion.sampling as k_diffusion
 
@@ -604,45 +774,53 @@ def sample_speed(
         )
 
     picture_conds = conditioned_on_a_picture(model)
-    mask = extra_args.get("denoise_mask")
-    if picture_conds or mask is not None:
-        carried = ", ".join(picture_conds) if picture_conds else "a denoise mask"
+    if picture_conds:
         raise ValueError(
-            f"SPEED samples the early steps on a smaller latent, and this run conditions on a "
-            f"picture at the full one ({carried}), which is built before sampling starts and is "
-            f"never resized to follow. Image to video, reference to video, inpainting and any "
-            f"masked run are not supported. Use an ordinary sampler for those, or set scales to "
-            f"1.0 to turn growth off and keep the rest of the schedule."
+            f"SPEED samples the early steps on a smaller latent, and this run gives the model a "
+            f"picture at the full one ({', '.join(picture_conds)}) as an extra input, which is "
+            f"built before sampling starts and is never resized to follow. Image to video and "
+            f"inpainting models that take the picture this way are not supported. Use an "
+            f"ordinary sampler for those, or set scales to 1.0 to turn growth off and keep the "
+            f"rest of the schedule."
         )
+    held = _Held(model, extra_args, shapes, height, width)
+    refusal = held.refusal()
+    if refusal:
+        raise ValueError(refusal)
 
     parts[0] = spectral.downscale(parts[0], scales[0])
     x = repack(parts, shapes)
     sigmas = sigmas.clone()
 
     starts = [0] + [step for step, _, _ in transitions]
-    for index, start in enumerate(starts):
-        end = transitions[index][0] if index < len(transitions) else len(sigmas) - 1
-        segment = sigmas[start : end + 1]
-        if len(segment) >= 2:
-            x = solver(
-                model, x, segment, extra_args=extra_args,
-                callback=_rebased(callback, start), disable=disable,
-            )
-        if index >= len(transitions):
-            break
+    try:
+        held.fit(scales[0], x)
+        for index, start in enumerate(starts):
+            end = transitions[index][0] if index < len(transitions) else len(sigmas) - 1
+            segment = sigmas[start : end + 1]
+            if len(segment) >= 2:
+                x = solver(
+                    model, x, segment, extra_args=extra_args,
+                    callback=_rebased(callback, start), disable=disable,
+                )
+            if index >= len(transitions):
+                break
 
-        step, before, after = transitions[index]
-        # The growth and the realignment are both in flow time, so the sigma is converted in
-        # and the answer converted back out.
-        at_time = time_of(float(sigmas[step]), shift)
-        parts = unpack(x, shapes)
-        parts[0], realigned = _grow(
-            parts[0], before, after, at_time, transform,
-            seed + (index + 1) * 10000, height, width,
-        )
-        x = repack(parts, shapes)
-        # Only the sigma at the transition moves: the trajectory either side of it is unchanged,
-        # and the realigned time is where the grown latent actually sits.
-        sigmas[step] = sigma_of(realigned, shift)
+            step, before, after = transitions[index]
+            # The growth and the realignment are both in flow time, so the sigma is converted
+            # in and the answer converted back out.
+            at_time = time_of(float(sigmas[step]), shift)
+            parts = unpack(x, shapes)
+            parts[0], realigned = _grow(
+                parts[0], before, after, at_time, transform,
+                seed + (index + 1) * 10000, height, width,
+            )
+            x = repack(parts, shapes)
+            held.fit(after, x)
+            # Only the sigma at the transition moves: the trajectory either side of it is
+            # unchanged, and the realigned time is where the grown latent actually sits.
+            sigmas[step] = sigma_of(realigned, shift)
+    finally:
+        held.restore()
 
     return x

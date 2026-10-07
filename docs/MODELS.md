@@ -6,8 +6,7 @@ folder it searched.
 
 ## EMA-VFI frame interpolation
 
-Published at <https://huggingface.co/WAS/was-node-suite-weights> under `EMA-VFI/`. Goes in
-`ComfyUI/models/EMA-VFI`.
+Published at <https://huggingface.co/WAS/EMA-VFI>. Goes in `ComfyUI/models/EMA-VFI`.
 
 | File | Size | Quality | Multiplier above 2 |
 |---|---|---|---|
@@ -181,6 +180,51 @@ encoder are not read at all.
 `diffsynth` is the one package the pack imports for this that ComfyUI does not already have.
 The checkout's own requirements file names the rest.
 
+## Kandinsky 6
+
+ComfyUI's own loaders read every file, and nothing is fetched. The pack publishes them at
+<https://huggingface.co/WAS/was-node-suite-weights> under `models/kandinsky6/`, laid out as
+ComfyUI's `models` folder. The transformer files Kandinsky Lab publishes,
+`transformer/diffusion_pytorch_model.safetensors` in each Kandinsky-6.0 repository, load as they
+are.
+
+| File | Goes in | Size | Loaded by |
+|---|---|--:|---|
+| `kandinsky6_lite_distill_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 4.2 GB | Load Diffusion Model |
+| `kandinsky6_lite_distill_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 3.8 GB | Load Diffusion Model |
+| `kandinsky6_lite_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 4.2 GB | Load Diffusion Model |
+| `kandinsky6_lite_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 3.8 GB | Load Diffusion Model |
+| `kandinsky6_pro_distill_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 34.9 GB | Load Diffusion Model |
+| `kandinsky6_pro_distill_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 29.4 GB | Load Diffusion Model |
+| `kandinsky6_pro_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 34.9 GB | Load Diffusion Model |
+| `kandinsky6_pro_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 29.3 GB | Load Diffusion Model |
+| `qwen_2.5_vl_7b_fp8_scaled.safetensors` | `ComfyUI/models/text_encoders` | 9.4 GB | DualCLIPLoader, type `kandinsky5` |
+| `clip_l.safetensors` | `ComfyUI/models/text_encoders` | 246 MB | DualCLIPLoader, type `kandinsky5` |
+| `kandinsky6_audio_vae.safetensors` | `ComfyUI/models/vae` | 1.7 GB | Kandinsky 6 Audio VAE Loader |
+| `hunyuan_video_vae_bf16.safetensors` | `ComfyUI/models/vae` | 493 MB | Load VAE |
+
+`hunyuan_video_vae_bf16.safetensors` is published by Comfy-Org at
+<https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged> under `split_files/vae/`.
+
+| Transformer | Weights |
+|---|---|
+| `_int8_convrot` | 8-bit, run as 8-bit |
+| `_w6a8` | 6-bit, run with 8-bit activations, the smallest |
+| Kandinsky Lab's own file | bfloat16 |
+
+| Transformer | KSampler |
+|---|---|
+| `_distill_` | 10 steps, CFG 1, `euler`, `simple` |
+| the others | 50 steps, CFG 5, `euler`, `simple` |
+
+| File | Licence |
+|---|---|
+| The Kandinsky 6 transformers | MIT, Kandinsky Lab |
+| `qwen_2.5_vl_7b_fp8_scaled.safetensors` | Apache-2.0, Alibaba Cloud |
+| `clip_l.safetensors` | MIT, OpenAI |
+| `kandinsky6_audio_vae.safetensors` | **CC BY-NC 4.0, non-commercial use only**, the MMAudio autoencoder in it; MIT, the BigVGAN vocoder |
+| `hunyuan_video_vae_bf16.safetensors` | Tencent Hunyuan Community License, which does not apply in the European Union, the United Kingdom or South Korea |
+
 ## The gated model nodes
 
 | Group | Goes in | Widget | Repository |
@@ -217,3 +261,8 @@ Each is searched under its folder in these layouts, and Hugging Face's own cache
 | `was not found ... Setting features.network: true` | The run wanted a file you have not got, with fetching off |
 | `could not be fetched` | Fetching is on and the download failed. The message carries the reason and the directory to place it in |
 | `only trained to land halfway between two frames` | The multiplier is above 2 and this is not a `_t` file |
+| `Could not detect model type` on a Kandinsky 6 file | The file is not a Kandinsky 6 transformer. Pick one from the Kandinsky 6 table, or `transformer/diffusion_pytorch_model.safetensors` from a Kandinsky-6.0 repository |
+| `This file is not the Kandinsky 6 audio VAE` | Kandinsky 6 Audio VAE Loader is set to another file in `models/vae` |
+| Out of memory on Kandinsky 6 Pro | The `_w6a8` file is the smallest. Pro runs on a 24 GB card in either quantised form, streamed through ComfyUI's VRAM management |
+| ComfyUI quits with `Fatal Python error: Aborted` in VAE Decode after Kandinsky 6 Pro | Decode with VAE Decode (Tiled): `tile_size` 512, `overlap` 64, `temporal_size` 64, `temporal_overlap` 8 |
+| Sound from a `pretrain` Kandinsky 6 transformer is off | The pack decodes every non-distilled transformer at audio scale 0.5302, the released checkpoints' value; the pretrained ones use 0.417 |

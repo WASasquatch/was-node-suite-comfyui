@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **509** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **513** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-502 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+506 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 387 |
+| [Always loaded](#always-loaded) | always on | 391 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-387 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+391 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -63,9 +63,9 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (17)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (20)
 - [WAS Suite/LoRA](#was-suitelora) (1)
-- [WAS Suite/Loaders](#was-suiteloaders) (2)
+- [WAS Suite/Loaders](#was-suiteloaders) (3)
 - [WAS Suite/Logic](#was-suitelogic) (5)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
@@ -7271,6 +7271,34 @@ A latent resized by a multiplier, with a choice of how the values in between are
 
 ### WAS Suite/Latent/Video
 
+<a id="node-wasemptykandinsky6latent"></a>
+<details>
+<summary><b>Empty Kandinsky 6 Latent</b></summary>
+
+Start a Kandinsky 6 text-to-video clip: empty video and sound of one duration, which KSampler generates together. VAE Decode turns the result into frames and VAE Decode Audio into its soundtrack.
+
+| | |
+|---|---|
+| Node id | `WASEmptyKandinsky6Latent` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `width` | `INT` | Yes | 864 |  | Clip width in pixels, a multiple of 16. 864 x 480 = the size Kandinsky 6 was trained at. |
+| `height` | `INT` | Yes | 480 |  | Clip height in pixels, a multiple of 16. |
+| `length` | `INT` | Yes | 121 |  | Frames, 4n + 1: 121 = 5 seconds at 24 fps; 241 = 10 seconds. |
+| `fps` | `FLOAT` | Yes | 24.0 |  | Frame rate the clip plays at, which sets how much sound is generated. 24 = Kandinsky 6's own; give Create Video the same. |
+| `batch_size` | `INT` | Yes | 1 |  | Clips generated at once: 1 = one clip; 2 = two clips, each from its own noise. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `LATENT` | Video and audio latents of one duration, for KSampler. |
+
+</details>
+
 <a id="node-wash3control"></a>
 <details>
 <summary><b>H3 Control</b></summary>
@@ -7446,7 +7474,7 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `latent` | `LATENT` | Yes |  |  | The finished H3 video and audio latent this pass continues. |
-| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, cast from stills; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. A row of prompts replaces this. References and handoff need vae. |
+| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, cast from stills; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. A prompt row overrides it. References and handoff need vae. |
 | `extension_frames` | `INT` | Yes | 102 |  | New frames this pass adds, as `17` for about 0.7s or `102` for about 4.2s at 24 fps. Snapped to the nearest multiple of 17. |
 | `overlap_frames` | `INT` | Yes | 22 |  | Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. Longer gives the new frames more of the scene to continue from. `reference (video)` reads at least `56`; both sound carries take whole clips of sound, `17` for about 0.7s. |
 | `positive` | `CONDITIONING` | No |  |  | Prompt for the new frames. A different prompt per pass moves the scene on. |
@@ -7625,6 +7653,66 @@ Lay one long soundtrack, a music bed or a recorded dialogue, under a whole MiniM
 |---|---|---|
 | `window` | `LATENT` | The window holding its slice of the track, for the sampler's latent input. |
 | `report` | `STRING` | Which stretch of the track the window holds, how firmly, and under which frames of the finished video. |
+
+</details>
+
+<a id="node-waskandinsky6imagetovideo"></a>
+<details>
+<summary><b>Kandinsky 6 Image To Video</b></summary>
+
+Start a Kandinsky 6 clip from a picture: the clip opens on it and moves on from there, with sound. Answers the conditioning and the empty latent for KSampler; without a start image it is plain text-to-video.
+
+| | |
+|---|---|
+| Node id | `WASKandinsky6ImageToVideo` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `positive` | `CONDITIONING` | Yes |  |  | The prompt, from CLIP Text Encode or Kandinsky 6 Text Encode. |
+| `negative` | `CONDITIONING` | Yes |  |  | The negative prompt, from CLIP Text Encode or Kandinsky 6 Text Encode. |
+| `vae` | `VAE` | Yes |  |  | The HunyuanVideo VAE, the same one VAE Decode uses. |
+| `width` | `INT` | Yes | 864 |  | Clip width in pixels, a multiple of 16. The start image is resized and center-cropped to it. |
+| `height` | `INT` | Yes | 480 |  | Clip height in pixels, a multiple of 16. |
+| `length` | `INT` | Yes | 121 |  | Frames, 4n + 1: 121 = 5 seconds at 24 fps; 241 = 10 seconds. |
+| `fps` | `FLOAT` | Yes | 24.0 |  | Frame rate the clip plays at, which sets how much sound is generated. 24 = Kandinsky 6's own; give Create Video the same. |
+| `batch_size` | `INT` | Yes | 1 |  | Clips generated at once: 1 = one clip; 2 = two clips, each from its own noise. |
+| `start_image` | `IMAGE` | No |  |  | The picture the clip opens on; the first of a batch is used. Empty = text-to-video. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | The prompt with the start image, for KSampler. |
+| `negative` | `CONDITIONING` | The negative prompt with the start image, for KSampler. |
+| `latent` | `LATENT` | Video and audio latents of one duration, for KSampler. |
+
+</details>
+
+<a id="node-waskandinsky6textencode"></a>
+<details>
+<summary><b>Kandinsky 6 Text Encode</b></summary>
+
+Turn a Kandinsky 6 prompt into conditioning for KSampler, with what is seen and what is heard written separately. Use one for the prompt and one for the negative, both on the text encoders DualCLIPLoader loads with type kandinsky5.
+
+| | |
+|---|---|
+| Node id | `WASKandinsky6TextEncode` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | qwen_2.5_vl_7b and clip_l, from DualCLIPLoader with type 'kandinsky5'. |
+| `video_prompt` | `STRING` | Yes |  |  | What is seen, as 'a red fox trots through deep snow, low tracking shot'. Spoken lines go where they are said, as <S>Look there!<E>. |
+| `audio_prompt` | `STRING` | Yes |  |  | What is heard besides speech, as 'rain on a tin roof, distant thunder'. Empty = no sound description. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `CONDITIONING` | Conditioning for KSampler, or for Kandinsky 6 Image To Video. |
 
 </details>
 
@@ -8272,6 +8360,30 @@ Build an EMA-VFI network for EMA-VFI Frame Interpolation. The network is kept fo
 | Name | Type | What it is |
 |---|---|---|
 | `ema_vfi_model` | `EMA_VFI_MODEL` | The built network, for the ema_vfi_model input of EMA-VFI Frame Interpolation. |
+
+</details>
+
+<a id="node-waskandinsky6audiovaeloader"></a>
+<details>
+<summary><b>Kandinsky 6 Audio VAE Loader</b></summary>
+
+Load the Kandinsky 6 audio VAE, which turns the sound half of a Kandinsky 6 latent into a waveform through VAE Decode Audio. The one file holds the autoencoder and its vocoder.
+
+| | |
+|---|---|
+| Node id | `WASKandinsky6AudioVAELoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vae_name` | `COMBO` | Yes |  |  | The audio_vae file from a Kandinsky-6.0 repository, saved under models/vae, as kandinsky6_audio_vae.safetensors. One file serves every Kandinsky 6 checkpoint. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `VAE` | The audio VAE, for VAE Decode Audio and VAE Encode Audio. 44.1 kHz, mono. |
 
 </details>
 
