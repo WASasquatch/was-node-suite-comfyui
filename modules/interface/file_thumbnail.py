@@ -40,6 +40,9 @@ MAX_BYTES = 48 * 1024 * 1024
 #: Pixels a side a source picture is decoded at before it is fitted.
 DECODE_EDGE = 2048
 
+#: Pictures drawn at once, each on a worker thread.
+DECODERS = 4
+
 #: Headers for a picture, which changes URL whenever the file does.
 CACHED = {"Cache-Control": "private, max-age=86400"}
 
@@ -146,8 +149,12 @@ def register_routes() -> bool:
     if _registered:
         return False
     try:
+        import asyncio
+
         from aiohttp import web
         from server import PromptServer
+
+        gate = asyncio.Semaphore(DECODERS)
 
         @PromptServer.instance.routes.get(ROUTE)
         async def get_file_thumbnail(request):
@@ -155,7 +162,8 @@ def register_routes() -> bool:
                 edge = int(request.query.get("edge", DEFAULT_EDGE))
             except (TypeError, ValueError):
                 edge = DEFAULT_EDGE
-            answer = thumbnail(request.query.get("label", ""), edge)
+            async with gate:
+                answer = await asyncio.to_thread(thumbnail, request.query.get("label", ""), edge)
             if answer is None:
                 return web.Response(
                     status=204, headers={**NO_STORE, "X-WAS-Refusal": "nothing to draw"}

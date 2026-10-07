@@ -1332,7 +1332,7 @@ function createPromptTimeline(first) {
         ["Transitions", "The round button between two scenes says how the next one follows: the same shot carrying on, a cut, or a cut that keeps the sound. Click it to choose, drag it to change how many frames carry over."],
         ["Pictures and sounds", "Drag a file from Media onto a track. On Scenes or Pinned frames it holds the scene to that picture at that moment; near a scene's start or end it becomes the opening or closing frame. On References the scene's prompt can name it as <Picture 1>; on All scenes every prompt can. Drag a reference to another scene to move it."],
         ["Files from your computer", "Drop them on Media to upload them, or straight onto a track."],
-        ["Reference frame", "Reference frame, under Preview, makes the frame at the playhead a picture reference: a later scene reads it from the video as it is made, this scene and earlier ones take it saved as a picture in the input folder, and A new scene at the end adds a scene for it."],
+        ["Reference frame", "Reference frame, under Preview, makes the frame at the playhead a picture reference. Once a preview or Final holds the frame it is saved as a picture in the input folder, a new asset any scene can take and Media lists; before then a later scene reads it from the video as it is made. A new scene at the end adds a scene for it."],
         ["Preview", "With taeh3 in models/vae_approx, each scene is drawn on its clip and in Preview as it samples, and keeps its last step. Space plays from the playhead. A scene changed since its render is marked, and so is every scene after it."],
         ["The node", "Everything here is written to MiniMax H3 Conditioning and to a chain of MiniMax H3 Asset nodes wired into its assets input, so the graph runs the same with this window closed. Ctrl+Z undoes a change."],
         ["Keys", "N adds a scene, D duplicates it, Delete removes the chosen scene or asset, ← and → choose a scene, Space plays, V switches Preview and Final, + and − zoom, F fits, Esc closes."],
@@ -2110,7 +2110,7 @@ function createPromptTimeline(first) {
   }
 
   /**
-   * Offer the scenes after the playhead a reference to the frame under it.
+   * Offer the scenes a reference to the frame under the playhead.
    *
    * @param {MouseEvent} event - The press that opened the menu.
    * @returns {void}
@@ -2118,28 +2118,31 @@ function createPromptTimeline(first) {
   function openMomentMenu(event) {
     const frame = Math.max(0, Math.min(Math.round(playhead * FPS), lastFrame() - 1));
     const here = sceneAt(state.layout, frame);
-    // A later scene reads the frame from the video as it is made; this scene and earlier ones take
-    // it saved as a picture, from the finished video or the preview.
+    // A drawn frame is saved as a picture any scene can take; an undrawn one is read from the video
+    // as it is made, by the scenes after it.
     const drawn = Boolean(finished) || sheets.previews.has(here);
-    const items = [{ header: `Reference frame ${frame} (${clockOf(frame / FPS)}) in` }];
+    const place = (segment) => (drawn ? addStill(frame, segment) : addMoment(frame, segment));
+    const items = [{
+      header: drawn
+        ? `Save frame ${frame} (${clockOf(frame / FPS)}) as a picture in`
+        : `Reference frame ${frame} (${clockOf(frame / FPS)}) in`,
+    }];
     state.scenes.forEach((scene, index) => {
-      const later = index > here;
       items.push({
-        label: `Scene ${index + 1}`, detail: later ? scene.title : "saved as a picture",
-        disabled: !later && !drawn, onSelect: () => (later ? addMoment(frame, index + 1) : addStill(frame, index + 1)),
+        label: `Scene ${index + 1}`, detail: scene.title,
+        disabled: !drawn && index <= here, onSelect: () => place(index + 1),
       });
     });
     items.push({ separator: true });
-    if (here < state.scenes.length - 1) {
+    if (drawn) {
+      items.push({ label: "Every scene", onSelect: () => addStill(frame, EVERY_SEGMENT) });
+    } else if (here < state.scenes.length - 1) {
       items.push({ label: "Every later scene", onSelect: () => addMoment(frame, EVERY_SEGMENT) });
     }
-    items.push({
-      label: "Every scene", detail: "saved as a picture", disabled: !drawn, onSelect: () => addStill(frame, EVERY_SEGMENT),
-    });
     items.push({ separator: true });
     items.push({
       label: "A new scene at the end", detail: `Scene ${state.scenes.length + 1}`,
-      disabled: state.scenes.length >= MAX_ROWS, onSelect: () => momentInNewScene(frame),
+      disabled: state.scenes.length >= MAX_ROWS, onSelect: () => frameInNewScene(frame, drawn),
     });
     openPopupMenu({ items, x: event.clientX, y: event.clientY, logName: LOG_NAME });
   }
@@ -2184,6 +2187,30 @@ function createPromptTimeline(first) {
   }
 
   /**
+   * Save one frame of the video to the input folder.
+   *
+   * @param {number} frame - The frame of the video.
+   * @returns {Promise<string>} The saved picture's menu label, or an empty string where it was not saved.
+   */
+  async function savedFrame(frame) {
+    say(`Saving frame ${frame}…`);
+    try {
+      const blob = await frameStill(frame);
+      if (!blob) {
+        say("Nothing is drawn at this frame yet. Run the graph first");
+        return "";
+      }
+      const file = new File([blob], `h3_frame_${String(frame).padStart(5, "0")}.png`, { type: "image/png" });
+      const [saved] = await browser.upload([file]);
+      if (saved) return saved.label;
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Frame ${frame} could not be saved:`, error);
+    }
+    say("The frame could not be saved to the input folder");
+    return "";
+  }
+
+  /**
    * Save one frame of the video to the input folder and reference it in a scene, as one undo entry.
    *
    * @param {number} frame - The frame of the video.
@@ -2191,46 +2218,37 @@ function createPromptTimeline(first) {
    * @returns {Promise<void>}
    */
   async function addStill(frame, segment) {
-    say(`Saving frame ${frame}…`);
-    try {
-      const blob = await frameStill(frame);
-      if (!blob) {
-        say("Nothing is drawn at this frame yet. Run the graph first");
-        return;
-      }
-      const file = new File([blob], `h3_frame_${String(frame).padStart(5, "0")}.png`, { type: "image/png" });
-      const [saved] = await browser.upload([file]);
-      if (!saved) {
-        say("The frame could not be saved to the input folder");
-        return;
-      }
-      commit(node, () => makeAsset(saved.label, "reference picture", segment, 0));
-      say(`Frame ${frame} saved as ${baseName(saved.label)}, referenced in `
-        + `${segment === EVERY_SEGMENT ? "every scene" : `scene ${segment}`}`);
-      refresh(true);
-    } catch (error) {
-      console.error(`[${LOG_NAME}] Frame ${frame} could not be saved:`, error);
-      say("The frame could not be saved to the input folder");
-    }
+    const label = await savedFrame(frame);
+    if (!label || disposed) return;
+    commit(node, () => makeAsset(label, "reference picture", segment, 0));
+    say(`Frame ${frame} saved as ${baseName(label)}, referenced in `
+      + `${segment === EVERY_SEGMENT ? "every scene" : `scene ${segment}`}`);
+    refresh(true);
   }
 
   /**
-   * Add a scene at the end that references one frame of the video being made, as one undo entry.
+   * Add a scene at the end that references one frame of the video, as one undo entry.
    *
-   * @param {number} frame - The frame of the finished video.
-   * @returns {void}
+   * @param {number} frame - The frame of the video.
+   * @param {boolean} drawn - Whether the frame is saved as a picture rather than read from the
+   *   video as it is made.
+   * @returns {Promise<void>}
    */
-  function momentInNewScene(frame) {
+  async function frameInNewScene(frame, drawn) {
+    const label = drawn ? await savedFrame(frame) : MOMENT;
+    if (!label || disposed) return;
     const index = commit(node, () => {
       const made = writeNewScene();
-      if (made >= 0) makeAsset(MOMENT, "reference picture", made + 1, frame);
+      if (made >= 0) makeAsset(label, "reference picture", made + 1, drawn ? 0 : frame);
       return made;
     });
     if (index === undefined || index < 0) {
       say(`The node holds ${MAX_ROWS} scenes at most`);
       return;
     }
-    say(`Frame ${frame} referenced in the new scene ${index + 1}`);
+    say(drawn
+      ? `Frame ${frame} saved as ${baseName(label)}, referenced in the new scene ${index + 1}`
+      : `Frame ${frame} referenced in the new scene ${index + 1}`);
     selectScene(index);
     refresh(true);
     strip.reveal(index);

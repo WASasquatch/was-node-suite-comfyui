@@ -97,6 +97,7 @@ Every route the pack registers takes a key. None takes a path.
 | `GET /was/interface/api/font` | font name | the font catalog |
 | `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most |
 | `GET /was/interface/api/file_thumbnail` | menu label, a size | the file listing, then the allowlist; a picture of the file or a video's first frame, 512 pixels a side at most |
+| `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment | an in-memory store of preview frames, 384 MB at most |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
 | `GET /was/interface/api/video_probe` | menu label | another machine refused, then the allowlist |
 | `GET`, `POST /was/interface/api/pause` | node id, session id, value | an in-memory hold; a held run is released only by the session that queued it |

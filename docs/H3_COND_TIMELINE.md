@@ -194,13 +194,16 @@ is never given a cast transition.
 
 <img src="images/h3-timeline/reference-frame.jpg" alt="Reference frame" width="900">
 
-| Entry | Adds |
-|---|---|
-| A later scene | A MiniMax H3 Asset reading that frame from the video as it is made |
-| This scene or an earlier one | The frame saved as a picture in `ComfyUI/input`, from Final where it holds the frame and the preview otherwise |
-| Every later scene | The frame from the video, in every scene after it |
-| Every scene | The saved picture, in every scene |
-| A new scene at the end | A scene after the last, referencing the frame from the video |
+Once a preview or Final holds the frame, Reference frame saves it as a picture in `ComfyUI/input`,
+from Final where it holds the frame and the preview otherwise, and adds a MiniMax H3 Asset holding
+it. The picture is listed under Media and its reference can be dragged to any scene. Before then,
+the asset reads the frame from the video as it is made, and reaches the scenes after it only.
+
+| Entry | Once the frame is drawn | Before then |
+|---|---|---|
+| Scene N | The saved picture, in scene N | The frame from the video, in scene N; later scenes only |
+| Every scene, Every later scene | The saved picture, in every scene | The frame from the video, in every scene after it |
+| A new scene at the end | A scene after the last, referencing the saved picture | A scene after the last, referencing the frame from the video |
 
 <img src="images/h3-timeline/references.jpg" alt="References on the tracks" width="900">
 
@@ -232,7 +235,8 @@ is never given a cast transition.
 | Idle Preview through a whole run | Put a `taeh3` decoder in `ComfyUI/models/vae_approx` and leave `live_preview` on H3 Extend Window |
 | Write scenes asks for a language model | Wire Load CLIP with a language model into `vlm_clip` on MiniMax H3 Conditioning |
 | Queued behind the runs ahead of it | The job starts when the runs ahead of it finish |
-| Reference frame entries for this scene and earlier ones are greyed | Run the graph; a frame is saved once a preview or the Final video holds it |
-| A frame reference dragged to an earlier scene springs back | A frame of the video reaches later scenes only; use Reference frame to save it as a picture for an earlier one |
+| Reference frame entries for this scene and earlier ones are greyed | Run the graph; once a preview or the Final video holds the frame, every scene takes it |
+| A frame reference dragged to an earlier scene springs back | A frame read from the video reaches later scenes only; run the graph and use Reference frame again to save it as a picture |
+| A saved frame still shows the old render after a new run | The saved picture keeps the frame it was saved from; use Reference frame again on the new Final |
 | Final shows Different length | The saved video came from a run before the scenes changed length; run again |
 | The window opens on an empty Scene tab | The node has no prompt yet; write one or use Write scenes |

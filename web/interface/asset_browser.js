@@ -887,22 +887,29 @@ export function createAssetBrowser(options = {}) {
   }
 
   /**
-   * Send files to the input folder, then read the listing again.
+   * Send the pictures, clips and sounds among some files to the input folder, then read the
+   * listing again.
    *
-   * @param {File[]} files - What to send.
+   * @param {File[]} chosen - What to send. Files of any other kind are left out.
    * @returns {Promise<object[]>} One `{label, kind}` per file sent, once every file has been
    *   sent or refused.
    */
-  async function upload(files) {
-    if (!files.length || uploading || disposed) return [];
+  async function upload(chosen) {
+    if (!chosen.length || uploading || disposed) return [];
+    const files = chosen.filter((file) => kindOf({ relative: file.name }));
+    if (!files.length) {
+      setStatus("only pictures, clips and sounds can be uploaded", true);
+      return [];
+    }
     uploading = true;
     uploadChip.disabled = true;
-    const failed = [];
+    const failed = chosen.filter((file) => !files.includes(file)).map((file) => file.name);
+    const skipped = failed.length;
     const placed = [];
     let sent = 0;
     for (const file of files) {
       if (disposed) return placed;
-      setStatus(`uploading ${file.name} (${sent + failed.length + 1} of ${files.length})`);
+      setStatus(`uploading ${file.name} (${sent + failed.length - skipped + 1} of ${files.length})`);
       try {
         const body = new FormData();
         body.append("image", file, file.name);
