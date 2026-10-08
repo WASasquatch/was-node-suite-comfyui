@@ -19,13 +19,16 @@ __all__ = [
     "AUTO_WINDOW_OVERLAP",
     "TILES_WRAPPER",
     "Tiling",
+    "anchored",
     "auto_tiling",
     "cut_report",
+    "frames_of",
     "last_run",
     "manual_tiling",
     "plot",
     "scene_spans",
     "scene_tiling",
+    "start_sigmas",
     "tiled_model",
     "tiling_settings",
 ]
@@ -763,6 +766,85 @@ class _Tiled:
 def _rows(frames: int) -> int:
     """Latent rows covering ``frames`` video frames."""
     return max(1, math.ceil(int(frames) * CHUNK_ROWS / 17))
+
+
+def frames_of(rows: int) -> int:
+    """Video frames ``rows`` latent rows cover from the start of a chunk."""
+    return sum(ROW_FRAMES[k % CHUNK_ROWS] for k in range(int(rows)))
+
+
+def start_sigmas(model, scheduler: str, steps: int, strength: float):
+    """The scheduler's sigmas for ``steps`` steps starting nearest ``strength``.
+
+    Args:
+        model: The model patcher sampling.
+        scheduler: Scheduler name.
+        steps: Steps to run.
+        strength: Noise level to start from, ``0`` to ``1``.
+
+    Returns:
+        ``steps + 1`` sigmas, the last ``0``.
+    """
+    import comfy.samplers
+
+    sampling = model.get_model_object("model_sampling")
+    steps = max(1, int(steps))
+    if strength >= 0.9999:
+        return comfy.samplers.calculate_sigmas(sampling, scheduler, steps)
+
+    def tail(total):
+        return comfy.samplers.calculate_sigmas(sampling, scheduler, total)[-(steps + 1):]
+
+    seen = {}
+
+    def miss(total):
+        if total not in seen:
+            seen[total] = float(tail(total)[0])
+        return abs(seen[total] - strength)
+
+    totals = sorted({min(steps * 1000, int(round(steps * 1.15 ** k))) for k in range(0, 50)} | {steps})
+    best = min(totals, key=miss)
+    low, high = max(steps, int(best / 1.15)), int(best * 1.15) + 1
+    while high - low > 1:
+        middle = (low + high) // 2
+        if miss(middle) < miss(best):
+            best = middle
+        if seen[middle] > strength:
+            low = middle
+        else:
+            high = middle
+    best = min((low, high, best), key=miss)
+    sigmas = tail(best)
+    sigmas = sigmas if isinstance(sigmas, torch.Tensor) else torch.tensor(sigmas)
+    if abs(float(sigmas[0]) - strength) > 0.02 and scheduler in ("karras", "exponential", "kl_optimal"):
+        import comfy.k_diffusion.sampling as k_sampling
+
+        builders = {"karras": k_sampling.get_sigmas_karras,
+                    "exponential": k_sampling.get_sigmas_exponential,
+                    "kl_optimal": comfy.samplers.kl_optimal_scheduler}
+        low = float(sampling.sigma_min)
+        sigmas = builders[scheduler](n=steps, sigma_min=low, sigma_max=max(low * 1.01, strength))
+    return sigmas
+
+
+def anchored(positive, video, rows: int):
+    """``positive`` with the first frame of every chunk of ``video`` held as a guide.
+
+    Args:
+        positive: Positive conditioning.
+        video: The H3 video latent ``[B, 24, rows, H, W]`` the run refines.
+        rows: Latent rows of the clip.
+
+    Returns:
+        The conditioning, with one single-frame guide per chunk added to any it carried.
+    """
+    import node_helpers
+
+    held = list((positive[0][1] if positive else {}).get("minimax_keyframes", []))
+    for row in range(0, int(rows), CHUNK_ROWS):
+        held.append({"resolved_frame_index": frames_of(row),
+                     "latent": video[:, :, row:row + 1].clone()})
+    return node_helpers.conditioning_set_values(positive, {"minimax_keyframes": held})
 
 
 def tiling_settings(choice: dict) -> tuple:

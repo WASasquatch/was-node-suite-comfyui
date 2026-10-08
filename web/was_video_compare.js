@@ -26,6 +26,7 @@ const NODES = [
   "WASVideoRetime",
   "WASVideoSeamlessLoop",
   "WASVideoReframe",
+  "WASH3UpscaleVideo",
 ];
 
 const UI_WIDGET_NAME = "was_video_compare_ui";

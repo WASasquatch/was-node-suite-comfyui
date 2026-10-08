@@ -6,7 +6,7 @@ from comfy_api.latest import io
 
 from ...modules.compat.types import DICT
 from ...modules.interface import preview, run_result
-from ...modules.latent import affine
+from ...modules.latent import affine, h3_extend
 from ...modules.latent import affine_patterns as patterns
 from ...modules.sampling.affine import ACTS_ON, AffineSpec, patch_sampler
 from ..latent.latent_affine import (
@@ -443,9 +443,11 @@ class KSamplerAffineAdvanced(io.ComfyNode):
                 io.Conditioning.Input("negative", tooltip="What it should avoid."),
                 io.Latent.Input(
                     "latent_image",
+                    display_name="latent",
                     tooltip=(
-                        "The latent to denoise. Image, video and packed audio and video "
-                        "latents are all handled."
+                        "The latent to denoise: an image, a video, or MiniMax H3 audio and "
+                        "video. A video-only H3 latent is sampled beside held silence and "
+                        "comes back video only."
                     ),
                 ),
                 io.Boolean.Input(
@@ -614,6 +616,9 @@ class KSamplerAffineAdvanced(io.ComfyNode):
             )
 
         latent = dict(latent_image)
+        video_only = h3_extend.samples_sound(model) and h3_extend.is_video_only(latent)
+        if video_only:
+            latent = h3_extend.with_held_audio(latent)
         samples = comfy.sample.fix_empty_latent_channels(
             model,
             latent["samples"],
@@ -642,7 +647,9 @@ class KSamplerAffineAdvanced(io.ComfyNode):
                 sigmas[-1] = 0
         if first >= (len(sigmas) - 1):
             out = _without_ratios(latent)
-            return io.NodeOutput(out, affine.mask_like(samples))
+            if video_only:
+                out = h3_extend.video_half(out, latent_image)
+            return io.NodeOutput(out, affine.mask_like(out["samples"]))
         sigmas = sigmas[first:]
 
         if add_noise:
@@ -675,6 +682,8 @@ class KSamplerAffineAdvanced(io.ComfyNode):
 
         out = _without_ratios(latent)
         out["samples"] = result
+        if video_only:
+            out = h3_extend.video_half(out, latent_image)
         report(spec, holder, str(sampler_name))
         mask = holder.get("mask")
         return io.NodeOutput(out, mask if mask is not None else affine.mask_like(result))
@@ -718,9 +727,11 @@ class CustomSamplerAffineAdvanced(io.ComfyNode):
                 ),
                 io.Latent.Input(
                     "latent_image",
+                    display_name="latent",
                     tooltip=(
-                        "The latent to denoise. Image, video and packed audio and video "
-                        "latents are all handled."
+                        "The latent to denoise: an image, a video, or MiniMax H3 audio and "
+                        "video. A video-only H3 latent is sampled beside held silence and "
+                        "comes back video only."
                     ),
                 ),
                 *AFFINE_INPUTS,
@@ -780,6 +791,10 @@ class CustomSamplerAffineAdvanced(io.ComfyNode):
             )
 
         latent = dict(latent_image)
+        video_only = (h3_extend.samples_sound(guider.model_patcher)
+                      and h3_extend.is_video_only(latent))
+        if video_only:
+            latent = h3_extend.with_held_audio(latent)
         samples = comfy.sample.fix_empty_latent_channels(
             guider.model_patcher,
             latent["samples"],
@@ -821,6 +836,9 @@ class CustomSamplerAffineAdvanced(io.ComfyNode):
             denoised["samples"] = guider.model_patcher.model.process_latent_out(x0.cpu())
         else:
             denoised = out
+        if video_only:
+            out = h3_extend.video_half(out, latent_image)
+            denoised = h3_extend.video_half(denoised, latent_image)
 
         report(spec, holder, name)
         mask = holder.get("mask")

@@ -30,18 +30,19 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "UNETLoader",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "UNETLoader"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "kandinsky6_pro_distill_5s_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "kandinsky6_lite_distill_5s.safetensors",
+        "unet_name": "kandinsky6_pro_distill_5s_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -71,11 +72,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "DualCLIPLoader",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "DualCLIPLoader"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "qwen_2.5_vl_7b_fp8_scaled.safetensors",
@@ -116,11 +118,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAELoader",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "VAELoader"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "hunyuan_video_vae_bf16.safetensors"
@@ -155,11 +158,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASKandinsky6AudioVAELoader",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASKandinsky6AudioVAELoader"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "kandinsky6_audio_vae.safetensors"
@@ -211,11 +215,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASEmptyKandinsky6Latent",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASEmptyKandinsky6Latent"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         864,
@@ -264,19 +269,20 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASKandinsky6TextEncode",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASKandinsky6TextEncode"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
-        "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\nAudio: Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music.",
-        "ambient street noises and outside noises"
+        "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\nAudio: ",
+        "Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music."
       ],
       "widgets_values_named": {
-        "video_prompt": "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\nAudio: Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music.",
-        "audio_prompt": "ambient street noises and outside noises"
+        "video_prompt": "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\nAudio: ",
+        "audio_prompt": "Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music."
       }
     },
     {
@@ -292,7 +298,7 @@
       ],
       "flags": {},
       "order": 6,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "clip",
@@ -311,17 +317,18 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "CLIPTextEncode",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "CLIPTextEncode"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
-        "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\nAudio: Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music.\n\n<AUDCAP>ambient street noises and outside noises<ENDAUDCAP>"
+        "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\n<AUDCAP>Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music.<ENDAUDCAP>"
       ],
       "widgets_values_named": {
-        "text": "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\nAudio: Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music.\n\n<AUDCAP>ambient street noises and outside noises<ENDAUDCAP>"
+        "text": "Cinematic continuous tracking shot of an adult woman walking casually along a city sidewalk. She wears a fitted halter top, short shorts, and black leather boots. The camera follows her at a constant walking speed, maintaining a fixed three-quarter frontal angle and consistent full-body framing throughout the shot. The camera remains at approximately waist height, moving smoothly backward as she walks forward, without changing its distance, orientation, or elevation.\n\nThe sidewalk stretches into the distance, with shop windows, boutique storefronts, and building entrances lining the RIGHT side of the frame. The LEFT side of the frame shows the adjacent city street, parked cars, and occasional passing traffic. The woman walks naturally between the storefronts and the roadway, with realistic alternating footsteps, subtle arm swings, and gentle movement of her clothing and hair.\n\nPhotorealistic live-action cinematography, natural afternoon daylight, soft directional shadows, detailed urban architecture, realistic skin texture, balanced exposure, 35mm lens, smooth stabilized tracking, continuous unbroken shot.\n\n<AUDCAP>Natural footsteps on concrete, distant city traffic, faint conversations from pedestrians, soft urban ambience. No dialogue or music.<ENDAUDCAP>"
       }
     },
     {
@@ -371,11 +378,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "KSampler",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "KSampler"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         42,
@@ -432,11 +440,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAEDecodeTiled",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "VAEDecodeTiled"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         512,
@@ -487,11 +496,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "VAEDecodeAudio"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       }
     },
     {
@@ -531,11 +541,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "CreateVideo",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "CreateVideo"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         24,
@@ -579,11 +590,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "SaveVideo",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "SaveVideo"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "kandinsky6/pro_distill_k6_text_encode",
@@ -592,7 +604,7 @@
         "auto"
       ],
       "widgets_values_named": {
-        "filename_prefix": "kandinsky6/normed_k6encode",
+        "filename_prefix": "kandinsky6/pro_distill_k6_text_encode",
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
@@ -611,7 +623,7 @@
       ],
       "flags": {},
       "order": 11,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "model",
@@ -645,11 +657,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "KSampler",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "KSampler"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         42,
@@ -683,7 +696,7 @@
       ],
       "flags": {},
       "order": 14,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "samples",
@@ -706,11 +719,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAEDecodeTiled",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "VAEDecodeTiled"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         512,
@@ -738,7 +752,7 @@
       ],
       "flags": {},
       "order": 15,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "samples",
@@ -761,11 +775,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "VAEDecodeAudio"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       }
     },
     {
@@ -781,7 +796,7 @@
       ],
       "flags": {},
       "order": 17,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "images",
@@ -805,11 +820,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "CreateVideo",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "CreateVideo"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         24,
@@ -837,7 +853,7 @@
       ],
       "flags": {},
       "order": 19,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "video",
@@ -853,11 +869,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "SaveVideo",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "SaveVideo"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "kandinsky6/pro_distill_clip_text_encode",
@@ -866,7 +883,7 @@
         "auto"
       ],
       "widgets_values_named": {
-        "filename_prefix": "kandinsky6/normed_cliptextencode",
+        "filename_prefix": "kandinsky6/pro_distill_clip_text_encode",
         "format": "auto",
         "format.codec": "auto",
         "codec": "auto"
@@ -903,11 +920,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "ConditioningZeroOut"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       }
     },
     {
@@ -923,7 +941,7 @@
       ],
       "flags": {},
       "order": 9,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
           "name": "conditioning",
@@ -941,11 +959,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "ConditioningZeroOut"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       }
     },
     {
@@ -980,11 +999,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "ResolutionSelector",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "ResolutionSelector"
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
       },
       "widgets_values": [
         "16:9 (Widescreen)",
@@ -1072,14 +1092,6 @@
       "AUDIO"
     ],
     [
-      11,
-      13,
-      0,
-      14,
-      0,
-      "VIDEO"
-    ],
-    [
       12,
       1,
       0,
@@ -1152,14 +1164,6 @@
       "AUDIO"
     ],
     [
-      22,
-      18,
-      0,
-      19,
-      0,
-      "VIDEO"
-    ],
-    [
       23,
       2,
       0,
@@ -1222,19 +1226,41 @@
       5,
       1,
       "INT"
+    ],
+    [
+      11,
+      13,
+      0,
+      14,
+      0,
+      "VIDEO"
+    ],
+    [
+      22,
+      18,
+      0,
+      19,
+      0,
+      "VIDEO"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8052550000000038,
+      "scale": 1.4265583530550079,
       "offset": [
-        1009.0951739134129,
-        387.96584938396563
+        241.25520753678688,
+        346.1908445395234
       ]
     },
-    "frontendVersion": "1.53.6"
+    "frontendVersion": "1.53.6",
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }

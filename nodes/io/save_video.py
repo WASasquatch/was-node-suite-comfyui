@@ -123,23 +123,27 @@ class SaveVideo(io.ComfyNode):
                 io.Combo.Input(
                     "container",
                     options=containers(),
-                    default="auto",
+                    default="mp4",
                     tooltip=(
-                        "File container, read only on the two ComfyUI codecs. auto writes "
-                        "mp4. The other codecs each bring their own: mkv for FFV1 and H264, "
-                        "mov for PRORES, webm for VP90, mp4 for the rest."
+                        "File container, read only on the two ComfyUI codecs: `mp4`, or "
+                        "`auto`, which also writes mp4. The other codecs each bring their own: "
+                        "mkv for FFV1 and H264, mov for PRORES, webm for VP90, mp4 for the rest."
                     ),
                 ),
                 io.Combo.Input(
                     "codec",
                     options=codecs(),
-                    default="ComfyUI Auto",
+                    default="ComfyUI H264",
                     tooltip=(
-                        "How the video is encoded. 'ComfyUI Auto' copies a wired video "
-                        "through without re-encoding it, so nothing is lost; 'ComfyUI H264' "
-                        "re-encodes to mp4. The rest are the pack's own: FFV1 and PRORES are "
-                        "lossless, AV01 and VP90 make the smallest files, AVC1 and H265 play "
-                        "everywhere."
+                        "How the video is encoded. 'ComfyUI H264' writes H.264, copying a "
+                        "wired H.264 video through untouched and re-encoding anything else; "
+                        "'ComfyUI Auto' copies a wired video through in whatever codec it "
+                        "already has. The rest are the pack's own: AVC1 is H.264 in mp4 and "
+                        "H264 the same in mkv; FFV1 and PRORES are lossless, AV01 and VP90 make the smallest files and play in Chrome "
+                        "and Firefox up to 8K. H.264 (AVC1 and ComfyUI H264) plays in every "
+                        "browser up to 4096x2304; larger frames play in Chrome but show "
+                        "nothing in Firefox on Windows. H265 is smaller than AVC1, and many "
+                        "browsers will not play it."
                     ),
                 ),
                 io.Float.Input(
@@ -185,7 +189,7 @@ class SaveVideo(io.ComfyNode):
     def execute(
         cls, images=None, video=None, audio=None, fps=24.0, root=rooted.DEFAULT,
         filename_prefix="ComfyUI", filename_delimiter="_", filename_number_padding=4,
-        container="auto", codec="auto", crf=0.0, overwrite=False,
+        container="mp4", codec="ComfyUI H264", crf=0.0, overwrite=False,
     ) -> io.NodeOutput:
         """Write the file and answer where it went.
 

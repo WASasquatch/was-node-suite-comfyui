@@ -38,7 +38,10 @@ class H3DecodeVideo(io.ComfyNode):
             inputs=[
                 io.Latent.Input(
                     "latent",
-                    tooltip="The finished clip, from the loop H3 Extend Append builds.",
+                    tooltip=(
+                        "The finished clip, from the loop H3 Extend Append builds or any H3 "
+                        "sampler. A video-only latent decodes silent."
+                    ),
                 ),
                 io.Vae.Input("vae", tooltip="The H3 video VAE."),
                 io.Combo.Input(
@@ -69,13 +72,40 @@ class H3DecodeVideo(io.ComfyNode):
                 io.Vae.Input(
                     "audio_vae",
                     optional=True,
-                    tooltip="The H3 audio VAE, for the clip's sound. Left empty, the clip is silent.",
+                    tooltip=(
+                        "The H3 audio VAE, for decoding the latent's audio half. Left empty, "
+                        "with no sound on audio, the clip is silent."
+                    ),
+                ),
+                io.Float.Input(
+                    "frame_rate",
+                    default=24.0,
+                    min=1.0,
+                    max=240.0,
+                    step=0.001,
+                    round=0.001,
+                    tooltip=(
+                        "Frames per second the clip plays at, as `24`, the rate H3 renders at, "
+                        "or `23.976` or `30`. The sound keeps its own length at any rate."
+                    ),
+                ),
+                io.Audio.Input(
+                    "audio",
+                    optional=True,
+                    tooltip=(
+                        "The clip's own sound, such as Load Video's audio, laid under the "
+                        "frames as it is in place of the latent's audio half. Empty because "
+                        "the file is silent, the latent's audio half is used."
+                    ),
                 ),
             ],
             outputs=[
                 io.Video.Output(
                     display_name="video",
-                    tooltip="The decoded clip at 24 fps, read from disk by Save Video a frame at a time.",
+                    tooltip=(
+                        "The decoded clip at frame_rate, read from disk by Save Video a frame "
+                        "at a time."
+                    ),
                 ),
                 io.Int.Output(display_name="frames", tooltip="Frames decoded."),
                 io.String.Output(
@@ -93,12 +123,12 @@ class H3DecodeVideo(io.ComfyNode):
     @classmethod
     def execute(
         cls, latent, vae, root=rooted.TEMP, name="frame_cache/h3", delete_after_save=False,
-        audio_vae=None,
+        audio_vae=None, frame_rate=24.0, audio=None,
     ) -> io.NodeOutput:
         """Decode every scene into a new cache and lay the sound under it.
 
         Raises:
-            ValueError: The latent is not an H3 video and audio latent.
+            ValueError: The latent is not an H3 latent.
             PathNotAllowed: root and name settle outside every permitted write folder.
         """
         import comfy.model_management
@@ -107,15 +137,22 @@ class H3DecodeVideo(io.ComfyNode):
         from ...modules.media import clip as clips
         from ...modules.media import frame_cache
 
-        video, audio = h3_extend.split(latent)
+        if h3_extend.is_video_only(latent):
+            video, half = latent["samples"], None
+        else:
+            video, half = h3_extend.split(latent)
+        sound = audio if isinstance(audio, dict) and audio.get("waveform") is not None else None
+        if sound is None and (audio_vae is None or half is None):
+            audio_vae = None
         spans = h3_decode.scenes(latent)
         below, _, leaf = (name or "").replace("\\", "/").rpartition("/")
         parent = rooted.destination(root, below)
-        cache = frame_cache.FrameCache.create(str(parent), leaf.strip() or "h3", h3_extend.FPS)
+        rate = float(frame_rate) if frame_rate and float(frame_rate) > 0 else h3_extend.FPS
+        cache = frame_cache.FrameCache.create(str(parent), leaf.strip() or "h3", rate)
         pieces = sum(
             -(-(stop - start) // (h3_decode.PIECE_CLIPS * h3_extend.CLIP_TOKENS)) for start, stop in spans
         )
-        step = clips.progress(pieces + (1 if audio_vae is not None else 0))
+        step = clips.progress(pieces + (1 if sound is not None or audio_vae is not None else 0))
         device = comfy.model_management.get_torch_device()
         lines = []
         try:
@@ -133,8 +170,11 @@ class H3DecodeVideo(io.ComfyNode):
                     f"scene {number}: frames {opening} to {cache.frames - 1} "
                     f"({cache.frames - opening} frames, tokens {start} to {stop - 1})"
                 )
-            if audio_vae is not None:
-                cache.add_audio(h3_decode.decode_audio(audio_vae, audio))
+            if sound is not None:
+                cache.add_audio(sound)
+                step(1)
+            elif audio_vae is not None:
+                cache.add_audio(h3_decode.decode_audio(audio_vae, half))
                 step(1)
         except BaseException:
             cache.delete()

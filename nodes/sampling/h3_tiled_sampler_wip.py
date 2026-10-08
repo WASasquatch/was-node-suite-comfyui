@@ -9,112 +9,13 @@ from comfy_api.latest import io
 
 from ...modules.interface import preview as published
 from ...modules.interface import run_result
-from ...modules.latent import h3_derope, h3_extend
+from ...modules.latent import h3_extend, h3_references
 from ...modules.model import h3_tiles_wip as h3_tiles
 from ...modules.sampling import preview
 
 
-def _with_audio(latent: dict, audio) -> dict:
-    """A video-only H3 latent joined with an audio half that sampling holds as it is."""
-    import torch
-
-    video = latent["samples"]
-    span = h3_extend.audio_span(h3_extend.frames_for(int(video.shape[2])))
-    sound = audio.get("samples") if isinstance(audio, dict) else None
-    if getattr(sound, "tensors", None) is not None:
-        sound = sound.tensors[-1]
-    if not isinstance(sound, torch.Tensor) or sound.ndim != 4:
-        sound = torch.zeros([video.shape[0], 32, 2, span], dtype=video.dtype, device=video.device)
-    sound = sound[..., :span].to(video)
-    if sound.shape[-1] < span:
-        sound = torch.nn.functional.pad(sound, (0, span - sound.shape[-1]))
-    joined = dict(latent)
-    joined.update(h3_extend.join(video, sound))
-    joined["noise_mask"] = h3_derope.audio_row_strength(0.0, video, sound)
-    return joined
-
-
 #: Choices for when tiles are guided by latent_image.
 ANCHOR_MODES = ("auto", "on", "off")
-
-
-def _start_sigmas(model, scheduler: str, steps: int, strength: float):
-    """The scheduler's sigmas for ``steps`` steps starting nearest ``strength``.
-
-    Args:
-        model: The model patcher sampling.
-        scheduler: Scheduler name.
-        steps: Steps to run.
-        strength: Noise level to start from, ``0`` to ``1``.
-
-    Returns:
-        ``steps + 1`` sigmas, the last ``0``.
-    """
-    import torch
-
-    sampling = model.get_model_object("model_sampling")
-    steps = max(1, int(steps))
-    if strength >= 0.9999:
-        return comfy.samplers.calculate_sigmas(sampling, scheduler, steps)
-
-    def tail(total):
-        return comfy.samplers.calculate_sigmas(sampling, scheduler, total)[-(steps + 1):]
-
-    seen = {}
-
-    def miss(total):
-        if total not in seen:
-            seen[total] = float(tail(total)[0])
-        return abs(seen[total] - strength)
-
-    totals = sorted({min(steps * 1000, int(round(steps * 1.15 ** k))) for k in range(0, 50)} | {steps})
-    best = min(totals, key=miss)
-    low, high = max(steps, int(best / 1.15)), int(best * 1.15) + 1
-    while high - low > 1:
-        middle = (low + high) // 2
-        if miss(middle) < miss(best):
-            best = middle
-        if seen[middle] > strength:
-            low = middle
-        else:
-            high = middle
-    best = min((low, high, best), key=miss)
-    sigmas = tail(best)
-    sigmas = sigmas if isinstance(sigmas, torch.Tensor) else torch.tensor(sigmas)
-    if abs(float(sigmas[0]) - strength) > 0.02 and scheduler in ("karras", "exponential", "kl_optimal"):
-        import comfy.k_diffusion.sampling as k_sampling
-
-        builders = {"karras": k_sampling.get_sigmas_karras,
-                    "exponential": k_sampling.get_sigmas_exponential,
-                    "kl_optimal": comfy.samplers.kl_optimal_scheduler}
-        low = float(sampling.sigma_min)
-        sigmas = builders[scheduler](n=steps, sigma_min=low, sigma_max=max(low * 1.01, strength))
-    return sigmas
-
-
-def _anchored(positive, video, rows: int):
-    """``positive`` with the first frame of every chunk of ``video`` held as a guide.
-
-    Args:
-        positive: Positive conditioning.
-        video: The H3 video latent ``[B, 24, rows, H, W]`` the run refines.
-        rows: Latent rows of the clip.
-
-    Returns:
-        The conditioning, with one single-frame guide per chunk added to any it carried.
-    """
-    import node_helpers
-
-    held = list((positive[0][1] if positive else {}).get("minimax_keyframes", []))
-    for row in range(0, int(rows), h3_tiles.CHUNK_ROWS):
-        held.append({"resolved_frame_index": _frames(row),
-                     "latent": video[:, :, row:row + 1].clone()})
-    return node_helpers.conditioning_set_values(positive, {"minimax_keyframes": held})
-
-
-def _frames(rows: int) -> int:
-    """Video frames ``rows`` latent rows cover from the start of a chunk."""
-    return sum(h3_tiles.ROW_FRAMES[k % h3_tiles.CHUNK_ROWS] for k in range(int(rows)))
 
 
 def _publish(plan, rows: int, height: int, width: int, start, anchored: bool,
@@ -138,9 +39,9 @@ def _publish(plan, rows: int, height: int, width: int, start, anchored: bool,
         window = max(b - a for a, b in plan.rows)
         shared = max((plan.rows[i][1] - plan.rows[i + 1][0] for i in range(len(plan.rows) - 1)),
                      default=0)
-        counts = {"windows": len(plan.rows), "tiles across": across, "frames a window": _frames(window)}
+        counts = {"windows": len(plan.rows), "tiles across": across, "frames a window": h3_tiles.frames_of(window)}
         if shared:
-            counts["frames shared"] = _frames(shared)
+            counts["frames shared"] = h3_tiles.frames_of(shared)
         cuts = len(h3_tiles.scene_spans(starts, rows)) - 1
         if cuts:
             counts["cuts"] = cuts
@@ -280,17 +181,22 @@ class H3TiledSamplerWIP(io.ComfyNode):
                             "tiling of one window fits or the clip runs past 362 frames; `manual` sets tile "
                             "and window sizes. Added windows never cross a cut the latent records.",
                 ),
-                io.Latent.Input(
-                    "audio", optional=True,
-                    tooltip="The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, "
-                            "held as it is beside a video-only latent_image. Left empty, silence "
-                            "is held.",
+                io.MultiType.Input(
+                    "audio", [io.Latent, io.Audio], optional=True,
+                    tooltip="The clip's sound, held as it is beside a video-only latent_image: an "
+                            "audio latent from VAE Encode Audio with the H3 audio VAE, or a sound "
+                            "such as Load Video's audio with audio_vae wired. Left empty, or "
+                            "empty because the file is silent, silence is held.",
                 ),
                 io.Combo.Input(
                     "anchor", options=list(ANCHOR_MODES), default="auto",
                     tooltip="Guides each tile with its own part of latent_image at the first frame "
                             "of every 17: `auto` when tiles split the frame, `on` always, `off` "
                             "never.",
+                ),
+                io.Vae.Input(
+                    "audio_vae", optional=True,
+                    tooltip="The H3 audio VAE, for encoding a sound wired into audio.",
                 ),
             ],
             outputs=[io.Latent.Output(
@@ -301,7 +207,8 @@ class H3TiledSamplerWIP(io.ComfyNode):
 
     @classmethod
     def execute(cls, model, seed, steps, cfg, sampler_name, scheduler, positive, negative,
-                latent_image, strength, tiling, audio=None, anchor="auto") -> io.NodeOutput:
+                latent_image, strength, tiling, audio=None, anchor="auto",
+                audio_vae=None) -> io.NodeOutput:
         """Sample the latent over tiles.
 
         Args:
@@ -316,14 +223,15 @@ class H3TiledSamplerWIP(io.ComfyNode):
             latent_image: The latent to refine.
             strength: Noise level the run starts from.
             tiling: The tiling widget's value.
-            audio: An H3 audio latent held beside a video-only latent, or None.
+            audio: An H3 audio latent or a sound held beside a video-only latent, or None.
             anchor: A value of :data:`ANCHOR_MODES`.
+            audio_vae: The H3 audio VAE that encodes a sound, or None.
 
         Returns:
             The refined latent, with a picture of the tiles.
 
         Raises:
-            ValueError: The latent holds no video.
+            ValueError: The latent holds no video, or a sound came with no audio_vae.
         """
         latent = latent_image
         shape = _video_shape(latent["samples"])
@@ -349,10 +257,11 @@ class H3TiledSamplerWIP(io.ComfyNode):
         anchored = anchor == "on" or (anchor == "auto" and split)
         if anchored:
             video = (getattr(latent["samples"], "tensors", None) or [latent["samples"]])[0]
-            positive = _anchored(positive, video, rows)
+            positive = h3_tiles.anchored(positive, video, rows)
         video_only = getattr(latent["samples"], "tensors", None) is None
         if video_only:
-            latent = _with_audio(latent, audio)
+            latent = h3_extend.with_held_audio(
+                latent, h3_references.sound_latent(audio, audio_vae, "H3 Tiled Sampler [WIP]"))
         tiled = h3_tiles.tiled_model(model, settings, starts)
         samples = comfy.sample.fix_empty_latent_channels(
             tiled, latent["samples"],
@@ -360,7 +269,7 @@ class H3TiledSamplerWIP(io.ComfyNode):
             latent.get("downscale_ratio_temporal", None),
         )
         noise = comfy.sample.prepare_noise(samples, seed, latent.get("batch_index"))
-        sigmas = _start_sigmas(tiled, scheduler, steps, float(strength))
+        sigmas = h3_tiles.start_sigmas(tiled, scheduler, steps, float(strength))
         callback = preview.prepare_callback(tiled, steps)
         result = comfy.sample.sample(
             tiled, noise, steps, cfg, sampler_name, scheduler, positive, negative, samples,
@@ -372,8 +281,7 @@ class H3TiledSamplerWIP(io.ComfyNode):
         out.pop("downscale_ratio_temporal", None)
         out["samples"] = result
         if video_only:
-            out.pop("noise_mask", None)
-            out["samples"] = h3_extend.split(out)[0]
+            out = h3_extend.video_half(out, latent_image)
         plan, start = h3_tiles.last_run(tiled)
         _publish(plan or planned, rows, even_h, even_w, start, anchored, starts)
         return io.NodeOutput(out)

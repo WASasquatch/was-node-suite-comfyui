@@ -31,8 +31,12 @@ __all__ = [
     "extension_tokens",
     "floor_overlap",
     "frames_for",
+    "is_video_only",
     "nearest_clips",
     "join",
+    "samples_sound",
+    "video_half",
+    "with_held_audio",
     "masked_window",
     "reference_canvas",
     "SEGMENT_GAIN",
@@ -893,6 +897,92 @@ def join(video, audio) -> dict:
     import comfy.nested_tensor
 
     return {"samples": comfy.nested_tensor.NestedTensor((video, audio))}
+
+
+def samples_sound(model) -> bool:
+    """Whether a model is MiniMax H3, which samples an audio half beside every video.
+
+    Args:
+        model: A model patcher.
+
+    Returns:
+        ``True`` for an H3 model.
+    """
+    try:
+        latent_format = model.get_model_object("latent_format")
+    except (AttributeError, KeyError):
+        return False
+    return type(latent_format).__name__ == "MiniMaxH3AV"
+
+
+def is_video_only(latent: dict) -> bool:
+    """Whether a latent holds an H3 video ``[B, 24, T, H, W]`` and no audio half.
+
+    Args:
+        latent: A latent dictionary.
+
+    Returns:
+        ``True`` for a bare H3 video tensor.
+    """
+    samples = latent.get("samples") if isinstance(latent, dict) else None
+    return (getattr(samples, "tensors", None) is None and getattr(samples, "ndim", 0) == 5
+            and int(samples.shape[1]) == 24)
+
+
+def with_held_audio(latent: dict, audio=None) -> dict:
+    """A video-only H3 latent joined with an audio half that sampling holds as it is.
+
+    Args:
+        latent: A latent whose ``samples`` is an H3 video ``[B, 24, T, H, W]``.
+        audio: An H3 audio latent, or ``None`` for silence.
+
+    Returns:
+        A shallow copy holding the joint pair, its noise mask freeing the video (or keeping
+        the video mask the latent carried) and holding every audio row.
+    """
+    import torch
+
+    video = latent["samples"]
+    span = audio_span(frames_for(int(video.shape[2])))
+    sound = audio.get("samples") if isinstance(audio, dict) else None
+    if getattr(sound, "tensors", None) is not None:
+        sound = sound.tensors[-1]
+    if not isinstance(sound, torch.Tensor) or sound.ndim != 4:
+        sound = torch.zeros([video.shape[0], 32, 2, span], dtype=video.dtype, device=video.device)
+    sound = sound[..., :span].to(video)
+    if sound.shape[-1] < span:
+        sound = torch.nn.functional.pad(sound, (0, span - sound.shape[-1]))
+    shape = [video.shape[0], 1, *video.shape[2:]]
+    carried = latent.get("noise_mask")
+    if (isinstance(carried, torch.Tensor) and carried.ndim == 5
+            and tuple(carried.shape[2:]) == tuple(video.shape[2:])):
+        video_mask = carried[:, :1].to(device=video.device, dtype=torch.float32).expand(shape)
+    else:
+        video_mask = torch.ones(shape, dtype=torch.float32, device=video.device)
+    audio_mask = torch.zeros([sound.shape[0], 1, *sound.shape[2:]], dtype=torch.float32,
+                             device=sound.device)
+    joined = dict(latent)
+    joined.update(join(video, sound))
+    joined["noise_mask"] = join(video_mask, audio_mask)["samples"]
+    return joined
+
+
+def video_half(latent: dict, source: dict) -> dict:
+    """The video half of a latent :func:`with_held_audio` joined, as ``source`` came in.
+
+    Args:
+        latent: The sampled joint latent.
+        source: The video-only latent before joining.
+
+    Returns:
+        A shallow copy holding the video tensor and the noise mask ``source`` carried, if any.
+    """
+    out = dict(latent)
+    out["samples"] = split(latent)[0]
+    out.pop("noise_mask", None)
+    if isinstance(source, dict) and "noise_mask" in source:
+        out["noise_mask"] = source["noise_mask"]
+    return out
 
 
 def tail(latent: dict, overlap: int):

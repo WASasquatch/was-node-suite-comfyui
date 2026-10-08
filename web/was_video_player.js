@@ -281,6 +281,28 @@ function findDescriptor(target, name) {
   return null;
 }
 
+// The root tag the file menu's labels end in, as `clip.mp4 [input]`.
+const TAGGED = /\s\[(input|output|temp)\]$/;
+
+/**
+ * Give a bare file name the input tag the menu's labels carry, as the upload button stores one.
+ *
+ * @param {object} widget - The file widget.
+ * @returns {boolean} True where the value was rewritten.
+ */
+function tagUpload(widget) {
+  const value = widget?.value;
+  const values = widget?.options?.values;
+  if (typeof value !== "string" || !value || TAGGED.test(value) || !Array.isArray(values)) return false;
+  if (!values.some((entry) => typeof entry === "string" && TAGGED.test(entry))) return false;
+  const label = `${value} [input]`;
+  const bare = values.indexOf(value);
+  if (bare >= 0) values.splice(bare, 1);
+  if (!values.includes(label)) values.push(label);
+  widget.value = label;
+  return true;
+}
+
 /**
  * Call back whenever a widget's value is written, however it was written.
  *
@@ -1337,9 +1359,15 @@ function attachVideoPlayer(node) {
   appendInterfaceWidget(node, player, { name: UI_WIDGET_NAME, type: UI_WIDGET_TYPE });
 
   for (const name of WATCHED) {
-    watchValue(findWidget(node, name), () => {
-      if (name === FILE_WIDGET) player.handleFileChanged();
-      else player.handleRangeChanged();
+    const widget = findWidget(node, name);
+    watchValue(widget, () => {
+      if (name !== FILE_WIDGET) {
+        player.handleRangeChanged();
+        return;
+      }
+      // A rewritten value lands here again, already tagged.
+      if (tagUpload(widget)) return;
+      player.handleFileChanged();
     });
   }
 

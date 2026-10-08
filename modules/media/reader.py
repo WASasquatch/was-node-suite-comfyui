@@ -24,6 +24,7 @@ from ..util import file_listing, sandbox
 from . import sampling
 
 __all__ = [
+    "BatchTooLarge",
     "Clip",
     "VIDEO_EXTENSIONS",
     "DEFAULT_RATE",
@@ -110,6 +111,20 @@ class Metadata(NamedTuple):
     duration: float
     has_audio: bool
     bit_depth: int = DEFAULT_BIT_DEPTH
+
+
+class BatchTooLarge(ValueError):
+    """A read whose frames would not fit in one batch.
+
+    Attributes:
+        frames: Frames the read would answer.
+        target: ``(width, height)`` every one of them is brought to.
+    """
+
+    def __init__(self, message: str, frames: int, target: tuple[int, int]):
+        super().__init__(message)
+        self.frames = int(frames)
+        self.target = tuple(target)
 
 
 class Clip(NamedTuple):
@@ -543,17 +558,18 @@ def _affordable(frames: int, target: tuple[int, int]) -> None:
         target: ``(width, height)`` every one of them is brought to.
 
     Raises:
-        ValueError: The batch would hold more than :data:`MAX_BATCH_PIXELS` pixels.
+        BatchTooLarge: The batch would hold more than :data:`MAX_BATCH_PIXELS` pixels.
     """
     pixels = frames * target[0] * target[1]
     if pixels <= MAX_BATCH_PIXELS:
         return
     allowed = max(1, MAX_BATCH_PIXELS // (target[0] * target[1]))
-    raise ValueError(
+    raise BatchTooLarge(
         f"{frames} frame(s) at {target[0]}x{target[1]} come to about "
         f"{pixels * 12 / 1024 ** 3:.1f} GiB as one batch, which is more than one load will "
         f"hold in memory. Set num_frames to {allowed} or fewer, lower target_fps, or bring "
-        f"the frames down with max_size, width and height"
+        f"the frames down with max_size, width and height",
+        frames, target,
     )
 
 

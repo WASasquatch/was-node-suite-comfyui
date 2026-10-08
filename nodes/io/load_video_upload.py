@@ -50,6 +50,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "num_frames",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=reader.MAX_FRAMES,
@@ -62,6 +63,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "strategy",
+                    advanced=True,
                     options=list(sampling.STRATEGIES),
                     default="uniform",
                     tooltip=(
@@ -73,6 +75,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "nth",
+                    advanced=True,
                     default=1,
                     min=1,
                     max=limits.max_resolution(),
@@ -84,6 +87,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "seed",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
@@ -97,6 +101,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Float.Input(
                     "target_fps",
+                    advanced=True,
                     default=0.0,
                     min=0.0,
                     max=reader.MAX_RATE,
@@ -110,6 +115,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "start",
+                    advanced=True,
                     default=0,
                     min=-limits.max_resolution(),
                     max=limits.max_resolution(),
@@ -122,6 +128,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "end",
+                    advanced=True,
                     default=-1,
                     min=-limits.max_resolution(),
                     max=limits.max_resolution(),
@@ -133,6 +140,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "resize_mode",
+                    advanced=True,
                     options=list(sizing.MODES),
                     default=sizing.FIT_AND_PAD,
                     tooltip=(
@@ -144,6 +152,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "width",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=limits.max_resolution(),
@@ -155,6 +164,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "height",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=limits.max_resolution(),
@@ -166,7 +176,8 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "max_size",
-                    default=1024,
+                    advanced=True,
+                    default=0,
                     min=0,
                     max=limits.max_resolution(),
                     step=8,
@@ -179,6 +190,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "interpolation",
+                    advanced=True,
                     options=list(sizing.FILTER_NAMES),
                     default=sizing.DEFAULT_FILTER,
                     optional=True,
@@ -186,6 +198,7 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "align",
+                    advanced=True,
                     options=list(sizing.ALIGNMENT_NAMES),
                     default=sizing.DEFAULT_ALIGNMENT,
                     optional=True,
@@ -196,12 +209,14 @@ class LoadVideoUpload(io.ComfyNode):
                 ),
                 io.String.Input(
                     "pad_color",
+                    advanced=True,
                     default="#000000",
                     optional=True,
                     tooltip="Fill for space a frame does not cover. Any Pillow colour.",
                 ),
                 io.Combo.Input(
                     "channels",
+                    advanced=True,
                     options=list(sizing.CHANNELS),
                     default="RGB",
                     optional=True,
@@ -217,14 +232,16 @@ class LoadVideoUpload(io.ComfyNode):
                     display_name="video",
                     tooltip=(
                         "The frames that were kept, with their sound, as a video at the rate "
-                        "below. Wire it into Save Video, or into any node taking a VIDEO."
+                        "below. A whole clip too long for one batch is read from the file as "
+                        "it is used. Wire it into Save Video, or into any node taking a VIDEO."
                     ),
                 ),
                 io.Image.Output(
                     display_name="images",
                     tooltip=(
                         "The same frames as one image batch, in playback order, every one at "
-                        "the same size."
+                        "the same size. Blocked where they would not fit in memory; set "
+                        "num_frames or max_size in the advanced inputs to bring them down."
                     ),
                 ),
                 io.Audio.Output(
@@ -250,7 +267,7 @@ class LoadVideoUpload(io.ComfyNode):
     @classmethod
     def fingerprint_inputs(
         cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
-        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
+        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=0,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
     ):
@@ -279,7 +296,7 @@ class LoadVideoUpload(io.ComfyNode):
     @classmethod
     def execute(
         cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
-        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
+        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=0,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
     ) -> io.NodeOutput:

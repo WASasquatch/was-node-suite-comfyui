@@ -16,6 +16,76 @@ from ...modules.util import sandbox
 logger = log.get_logger("nodes.io")
 
 
+def _streamed(path: str, start: int, end: int, num_frames: int, target_fps: float, width: int,
+              height: int, max_size: int, channels: str, refusal: str) -> io.NodeOutput | None:
+    """The four outputs of a read too large for one batch, where it keeps whole frames of the file.
+
+    Args:
+        path: The video file.
+        start: First frame to consider.
+        end: Last frame to consider, inclusive.
+        num_frames: Frames asked for, 0 for every frame in the range.
+        target_fps: Rate asked for, 0 for the file's own.
+        width: Width asked for, 0 for the file's own.
+        height: Height asked for, 0 for the file's own.
+        max_size: Longest edge asked for, 0 for none.
+        channels: ``"RGB"`` or ``"RGBA"``.
+        refusal: Why the frames could not be loaded as one batch.
+
+    Returns:
+        The file as a video read as it plays, a blocked frame batch, the sound and the figures,
+        or ``None`` where the read trims, retimes or resizes the frames.
+    """
+    from comfy_api.latest import InputImpl
+    from comfy_execution.graph_utils import ExecutionBlocker
+
+    source = reader.probe(path)
+    first, stop = sampling.slice_bounds(source.frame_count, start, end)
+    count = stop - first
+    whole = (
+        (not num_frames or num_frames >= count)
+        and (not target_fps or abs(float(target_fps) - source.fps) < 1e-3)
+        and not width and not height
+        and (not max_size or max_size >= max(source.width, source.height))
+        and channels == "RGB" and source.fps > 0 and count > 0
+    )
+    if not whole:
+        return None
+    begin = first / source.fps
+    seconds = count / source.fps
+    trimmed = first > 0 or stop < source.frame_count
+    video = InputImpl.VideoFromFile(path, start_time=begin, duration=seconds if trimmed else 0)
+    audio = reader.audio_span(path, begin, seconds) if source.has_audio else None
+    blocked = ExecutionBlocker(
+        f"{refusal}. The video output carries every frame, read from the file as it is used."
+    )
+    logger.info(
+        "%s holds %d frame(s) at %dx%d, too many for one batch; the video output reads them "
+        "from the file and the images output is blocked",
+        os.path.basename(path), count, source.width, source.height,
+    )
+    return io.NodeOutput(
+        video,
+        blocked,
+        audio,
+        {
+            "fps": float(source.fps),
+            "frame_count": count,
+            "duration": float(seconds),
+            "width": int(source.width),
+            "height": int(source.height),
+            "has_audio": audio is not None,
+            "bit_depth": int(source.bit_depth),
+            "source_fps": float(source.fps),
+            "source_frame_count": int(source.frame_count),
+            "source_duration": float(source.duration),
+            "source_width": int(source.width),
+            "source_height": int(source.height),
+            "filename": os.path.basename(path),
+        },
+    )
+
+
 def load(
     path: str,
     num_frames: int = 0,
@@ -28,7 +98,7 @@ def load(
     height: int = 0,
     start: int = 0,
     end: int = -1,
-    max_size: int = 1024,
+    max_size: int = 0,
     interpolation: str = sizing.DEFAULT_FILTER,
     align: str = sizing.DEFAULT_ALIGNMENT,
     pad_color: str = "#000000",
@@ -60,26 +130,33 @@ def load(
     Raises:
         DependencyError: PyAV is not installed.
         ValueError: The file holds no video stream, no frame could be decoded, or the frames
-            asked for do not fit in memory.
+            asked for do not fit in memory and are trimmed, retimed or resized.
     """
-    clip = reader.read(
-        path,
-        start=start,
-        end=end,
-        num_frames=num_frames,
-        strategy=strategy,
-        nth=nth,
-        seed=seed,
-        target_fps=target_fps,
-        resize_mode=resize_mode,
-        width=width,
-        height=height,
-        max_size=max_size,
-        interpolation=interpolation,
-        align=align,
-        pad_color=pad_color,
-        channels=channels,
-    )
+    try:
+        clip = reader.read(
+            path,
+            start=start,
+            end=end,
+            num_frames=num_frames,
+            strategy=strategy,
+            nth=nth,
+            seed=seed,
+            target_fps=target_fps,
+            resize_mode=resize_mode,
+            width=width,
+            height=height,
+            max_size=max_size,
+            interpolation=interpolation,
+            align=align,
+            pad_color=pad_color,
+            channels=channels,
+        )
+    except reader.BatchTooLarge as refusal:
+        streamed = _streamed(path, start, end, num_frames, target_fps, width, height, max_size,
+                             channels, str(refusal))
+        if streamed is None:
+            raise
+        return streamed
 
     images = clip.images
     frames = int(images.shape[0])
@@ -155,6 +232,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "num_frames",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=reader.MAX_FRAMES,
@@ -167,6 +245,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "strategy",
+                    advanced=True,
                     options=list(sampling.STRATEGIES),
                     default="uniform",
                     tooltip=(
@@ -178,6 +257,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "nth",
+                    advanced=True,
                     default=1,
                     min=1,
                     max=limits.max_resolution(),
@@ -189,6 +269,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "seed",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
@@ -202,6 +283,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Float.Input(
                     "target_fps",
+                    advanced=True,
                     default=0.0,
                     min=0.0,
                     max=reader.MAX_RATE,
@@ -215,6 +297,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "start",
+                    advanced=True,
                     default=0,
                     min=-limits.max_resolution(),
                     max=limits.max_resolution(),
@@ -227,6 +310,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "end",
+                    advanced=True,
                     default=-1,
                     min=-limits.max_resolution(),
                     max=limits.max_resolution(),
@@ -238,6 +322,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "resize_mode",
+                    advanced=True,
                     options=list(sizing.MODES),
                     default=sizing.FIT_AND_PAD,
                     tooltip=(
@@ -249,6 +334,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "width",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=limits.max_resolution(),
@@ -260,6 +346,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "height",
+                    advanced=True,
                     default=0,
                     min=0,
                     max=limits.max_resolution(),
@@ -271,7 +358,8 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "max_size",
-                    default=1024,
+                    advanced=True,
+                    default=0,
                     min=0,
                     max=limits.max_resolution(),
                     step=8,
@@ -284,6 +372,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "interpolation",
+                    advanced=True,
                     options=list(sizing.FILTER_NAMES),
                     default=sizing.DEFAULT_FILTER,
                     optional=True,
@@ -291,6 +380,7 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.Combo.Input(
                     "align",
+                    advanced=True,
                     options=list(sizing.ALIGNMENT_NAMES),
                     default=sizing.DEFAULT_ALIGNMENT,
                     optional=True,
@@ -301,12 +391,14 @@ class LoadVideo(io.ComfyNode):
                 ),
                 io.String.Input(
                     "pad_color",
+                    advanced=True,
                     default="#000000",
                     optional=True,
                     tooltip="Fill for space a frame does not cover. Any Pillow colour.",
                 ),
                 io.Combo.Input(
                     "channels",
+                    advanced=True,
                     options=list(sizing.CHANNELS),
                     default="RGB",
                     optional=True,
@@ -322,14 +414,16 @@ class LoadVideo(io.ComfyNode):
                     display_name="video",
                     tooltip=(
                         "The frames that were kept, with their sound, as a video at the rate "
-                        "below. Wire it into Save Video, or into any node taking a VIDEO."
+                        "below. A whole clip too long for one batch is read from the file as "
+                        "it is used. Wire it into Save Video, or into any node taking a VIDEO."
                     ),
                 ),
                 io.Image.Output(
                     display_name="images",
                     tooltip=(
                         "The same frames as one image batch, in playback order, every one at "
-                        "the same size."
+                        "the same size. Blocked where they would not fit in memory; set "
+                        "num_frames or max_size in the advanced inputs to bring them down."
                     ),
                 ),
                 io.Audio.Output(
@@ -355,7 +449,7 @@ class LoadVideo(io.ComfyNode):
     @classmethod
     def fingerprint_inputs(
         cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
-        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
+        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=0,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
     ):
@@ -386,7 +480,7 @@ class LoadVideo(io.ComfyNode):
     @classmethod
     def execute(
         cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
-        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=1024,
+        resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=0,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
         pad_color="#000000", channels="RGB",
     ) -> io.NodeOutput:

@@ -26,13 +26,13 @@ def scenes(latent: dict) -> list[tuple[int, int]]:
     """The token span of every fresh scene in a joined clip.
 
     Args:
-        latent: An H3 joint latent, from H3 Extend Append or a sampler.
+        latent: An H3 joint or video-only latent, from H3 Extend Append or a sampler.
 
     Returns:
         ``(start, stop)`` token spans in order, covering the whole clip. A clip with no
         record of its scenes is one span, unless its segment ends show where cuts trimmed it.
     """
-    video, _ = h3_extend.split(latent)
+    video = latent["samples"] if h3_extend.is_video_only(latent) else h3_extend.split(latent)[0]
     total = int(video.shape[2])
     starts = h3_extend.scene_starts(latent)
     if starts is None:
@@ -52,20 +52,25 @@ def _frames(vae, video) -> torch.Tensor:
     return images.reshape(-1, *images.shape[-3:])
 
 
-def decode_scene(vae, video, start: int, stop: int, emit, clips: int = PIECE_CLIPS) -> int:
+def decode_scene(vae, video, start: int, stop: int, emit, clips: int = PIECE_CLIPS,
+                 first: int | None = None, last: int | None = None) -> int:
     """Decode one scene a piece at a time, handing each piece's frames on in order.
 
     Args:
         vae: The H3 video VAE.
         video: The clip's video half, ``[B, 24, T, H, W]``.
-        start: The scene's first token, on the clip grid.
-        stop: The token after its last.
+        start: The first token decoded, on the clip grid.
+        stop: The token after the last decoded.
         emit: Callable taking ``(frames, height, width, 3)`` for each piece.
         clips: Clips decoded together at most.
+        first: The scene's first token where the span starts inside it; ``start`` when None.
+        last: The token after the scene's last where the span ends inside it; ``stop`` when None.
 
     Returns:
         Frames handed on.
     """
+    first = start if first is None else int(first)
+    last = stop if last is None else int(last)
     step = max(1, int(clips)) * h3_extend.CLIP_TOKENS
     handed = 0
     piece = start
@@ -73,8 +78,8 @@ def decode_scene(vae, video, start: int, stop: int, emit, clips: int = PIECE_CLI
         end = min(piece + step, stop)
         if stop - end < h3_extend.CLIP_TOKENS:
             end = stop
-        lead = LEAD_IN if piece > start else 0
-        ahead = LOOKAHEAD if end < stop else 0
+        lead = LEAD_IN if piece > first else 0
+        ahead = LOOKAHEAD if end < last else 0
         frames = _frames(vae, video[:, :, piece - lead:end + ahead])
         first = h3_extend.CLIP_FRAMES if lead else 0
         if ahead:

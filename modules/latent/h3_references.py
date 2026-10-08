@@ -37,6 +37,7 @@ __all__ = [
     "image_canvas",
     "image_name",
     "room",
+    "sound_latent",
     "soundtrack_name",
     "video_name",
 ]
@@ -271,6 +272,33 @@ def audio_latent(audio_vae, audio: dict):
         waveform = torch.nn.functional.pad(waveform, (0, short))
     latent = audio_vae.encode(waveform.movedim(1, -1))
     return latent, int(latent.shape[-1])
+
+
+def sound_latent(audio, audio_vae, node: str):
+    """The H3 audio latent to hold: a latent as it came, a sound encoded, or None.
+
+    Args:
+        audio: An audio latent, a ComfyUI sound, or None.
+        audio_vae: The H3 audio VAE, or None.
+        node: The node asking, for the message.
+
+    Returns:
+        A latent dictionary, or None for silence.
+
+    Raises:
+        ValueError: A sound came with no audio_vae.
+    """
+    if not (isinstance(audio, dict) and "waveform" in audio):
+        return audio
+    if audio.get("waveform") is None:
+        return None
+    if audio_vae is None:
+        raise ValueError(
+            f"{node} has a sound and no audio_vae to encode it with. Wire the H3 audio VAE "
+            "into audio_vae, or unwire the sound"
+        )
+    latent, _ = audio_latent(audio_vae, audio)
+    return {"samples": latent}
 
 
 def _seconds(audio: dict) -> float:
