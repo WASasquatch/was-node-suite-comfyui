@@ -96,10 +96,9 @@ class ImageNovaFilter(io.ComfyNode):
                     max=100.0,
                     step=0.001,
                     tooltip=(
-                        "How many bands the wave lays across the brightness range. 0.0 gives a "
-                        "black image, 1.0 gives one broad sweep, 3.14 gives a handful of bands, "
-                        "and large values give many fine ones. It is capped at half the image "
-                        "width, beyond which the bands are finer than the pixels."
+                        "How many bands the wave lays across the brightness range. 0.0 = a "
+                        "black image; 1.0 = one broad sweep; 3.14 = a handful of bands; larger "
+                        "= many fine ones. Capped at half the image width."
                     ),
                 ),
             ],

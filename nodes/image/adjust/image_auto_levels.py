@@ -29,11 +29,10 @@ class ImageAutoLevels(io.ComfyNode):
             ],
             category="WAS Suite/Image/Adjustment",
             description=(
-                "Find where a frame's tones actually start and stop and stretch them to fill "
-                "the range. A flat render, a hazy plate or a washed-out scan gains contrast "
-                "with nothing to set by hand, and `per channel` also pulls a colour cast out "
-                "by stretching red, green and blue on their own. Image Levels Adjustment does "
-                "the same job with the two points typed in; this measures them."
+                "Stretch a frame's tones so its darkest pixels reach black and its lightest "
+                "reach white, giving a flat render, hazy plate or washed-out scan its contrast "
+                "back with nothing set by hand. `per channel` also pulls out a colour cast. "
+                "Hands on the stretched frames and the black and white points it found."
             ),
             inputs=[
                 io.Image.Input(

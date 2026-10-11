@@ -45,11 +45,9 @@ class TensorBatchToImage(io.ComfyNode):
                     max=limits.max_resolution(),
                     step=1,
                     tooltip=(
-                        "Which image to take, counting from 0, so 0 is the first and 2 is "
-                        "the third. A number past the end of the batch returns the last "
-                        "image and prints the index and the batch length to the console, "
-                        "rather than failing the prompt, so a sequence that came back "
-                        "shorter than expected still produces a frame."
+                        "Which image to take, counting from 0: 0 = the first; 2 = the third. "
+                        "A number past the end returns the last image and logs the index and "
+                        "batch length to the console."
                     ),
                 ),
             ],

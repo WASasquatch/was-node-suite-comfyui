@@ -30,10 +30,8 @@ class ImageDirectionalBlur(io.ComfyNode):
             category="WAS Suite/Image/Filter",
             description=(
                 "Smear the frame along a path instead of spreading it evenly. `linear` is "
-                "the streak a moving camera or a moving subject leaves; `zoom` rushes out of "
-                "a point, which reads as speed towards the viewer; `spin` sweeps round one, "
-                "which reads as rotation. A gaussian blur softens everything the same way in "
-                "every direction and cannot do any of the three."
+                "the streak a moving camera or subject leaves; `zoom` rushes out of a point, "
+                "for speed towards the viewer; `spin` sweeps round one, for rotation."
             ),
             inputs=[
                 io.Image.Input(

@@ -34,10 +34,9 @@ class LayerGlow(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Spread light off one layer in a stack. An outer glow sits behind the "
-                "layer's own pixels as a halo, which is what separates a title or a "
-                "cut-out subject from a busy plate; an inner glow burns in from the edge "
-                "and reads as a rim light. An outer glow grows that layer's picture and "
-                "shifts it back, so the layer stays where it was on the canvas."
+                "layer as a halo that separates a title or cut-out subject from a busy "
+                "plate; an inner glow burns in from the edge as a rim light. The layer keeps "
+                "its place on the canvas."
             ),
             inputs=[
                 io.Layers.Input(

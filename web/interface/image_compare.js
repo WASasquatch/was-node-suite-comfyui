@@ -1,18 +1,20 @@
 /**
  * Two images under a divider, drawn on the node that received them.
  *
- * The panel is a canvas sized to the surface it is drawn on. A batch is compared pair by pair,
- * one tab per pair along the top.
+ * A canvas sized to its surface, one tab per pair of a batch, drawn from the files the node's
+ * run output names.
  */
 
 import { app } from "../../../scripts/app.js";
+import { api } from "../../../scripts/api.js";
 import { createMetricsSection } from "./metrics_panel.js";
 import { captureWheel, wheelPixels } from "./pointer.js";
-import { PREVIEW_STATE, fetchInputPreview } from "./preview.js";
+import { executionId, nodeLocator, ownOutput } from "./preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
 import { createFrameTabs, readableBytes } from "./report_panel.js";
 import { onThemeChange, readTheme, themeVar } from "./theme.js";
+import { graphLoading, keepOnNode } from "./widget.js";
 
 const LOG_NAME = "WASNodeSuite.ImageCompare";
 
@@ -34,8 +36,49 @@ const PANEL_GAP = 3;
 // the figures, the histogram and its legend. The picture gets everything above this.
 const METRICS_MIN = 104;
 
-const SLOT_A = "image_a";
-const SLOT_B = "image_b";
+// The run output keys the node names each side's written frames under.
+const OUTPUT_A = "a_images";
+const OUTPUT_B = "b_images";
+
+// Where the last pair of written sides is kept. `properties` is serialised with the node and no
+// python reads it.
+const REMEMBERED_KEY = "was_compare_images";
+
+/**
+ * The address a written frame is served from.
+ *
+ * @param {object} entry - A frame's filename, subfolder and type.
+ * @returns {string} The view address, or an empty string.
+ */
+function addressOf(entry) {
+  if (!entry?.filename) return "";
+  const parts = new URLSearchParams({
+    filename: entry.filename,
+    subfolder: entry.subfolder ?? "",
+    type: entry.type ?? "temp",
+  });
+  return `/api/view?${parts.toString()}`;
+}
+
+/**
+ * Decode one written frame.
+ *
+ * @param {string} address - Where it is served from.
+ * @returns {Promise<HTMLImageElement|null>} The image, or null when it could not be loaded,
+ *   which is what a frame cleared from the temp folder by a restart answers.
+ */
+function loadImage(address) {
+  return new Promise((resolve) => {
+    if (!address) {
+      resolve(null);
+      return;
+    }
+    const picture = new Image();
+    picture.onload = () => resolve(picture);
+    picture.onerror = () => resolve(null);
+    picture.src = address;
+  });
+}
 
 /**
  * Build the panel one Image Compare node draws in.
@@ -99,9 +142,12 @@ export function createImageComparePanel(node) {
   let pairs = 1;
   let current = 0;
   let held = { a: null, b: null };
-  // How many frames each side last reported holding, which is what the fallback for a shorter
-  // batch is measured against.
-  let counts = { [SLOT_A]: 0, [SLOT_B]: 0 };
+  // The frames each side was written as, in batch order.
+  let sides = { a: [], b: [] };
+  // Address -> the decoding of it, for the frames of the pair of sides on show.
+  const decoded = new Map();
+  // Counts every read, so an answer that lands after a newer read began is dropped.
+  let reading = 0;
   let disposed = false;
   let dragging = false;
 
@@ -209,23 +255,24 @@ export function createImageComparePanel(node) {
   /**
    * One side of a pair, held at its last frame once the tab is past the end of it.
    *
-   * @param {string} slot - Which input to read.
+   * @param {object[]} frames - The side's written frames.
    * @param {number} index - The pair on show, counting from 0.
-   * @returns {Promise<object>} What `fetchInputPreview` resolved to.
+   * @returns {Promise<object>} The image and what the frame says about the picture it was
+   *   written from: `sourceWidth`, `sourceHeight`, `mode`, `bytes` and `frameCount`.
    */
-  const readSide = async (slot, index) => {
-    const known = counts[slot];
-    let answer = await fetchInputPreview(node, slot, known > 0 ? Math.min(index, known - 1) : index);
-    if (answer.frameCount) counts[slot] = answer.frameCount;
-    if (!answer.image && index > 0) {
-      // The stored batch is shorter than the count this panel was holding.
-      const head = await fetchInputPreview(node, slot, 0);
-      counts[slot] = head.frameCount || 0;
-      answer = counts[slot] > 1
-        ? await fetchInputPreview(node, slot, counts[slot] - 1)
-        : head;
-    }
-    return answer;
+  const readSide = async (frames, index) => {
+    if (!frames.length) return { image: null, frameCount: 0 };
+    const entry = frames[Math.min(index, frames.length - 1)];
+    const address = addressOf(entry);
+    if (!decoded.has(address)) decoded.set(address, loadImage(address));
+    return {
+      image: await decoded.get(address),
+      sourceWidth: Number(entry.width) || 0,
+      sourceHeight: Number(entry.height) || 0,
+      mode: String(entry.mode ?? ""),
+      bytes: Number(entry.bytes) || 0,
+      frameCount: frames.length,
+    };
   };
 
   /**
@@ -236,26 +283,18 @@ export function createImageComparePanel(node) {
    */
   const show = async (index) => {
     if (disposed) return;
-    current = Math.max(0, Math.min(index, Math.max(0, pairs - 1)));
+    const read = ++reading;
+    pairs = Math.max(sides.a.length, sides.b.length, 1);
+    current = Math.max(0, Math.min(index, pairs - 1));
     try {
-      const [a, b] = await Promise.all([
-        readSide(SLOT_A, current),
-        readSide(SLOT_B, current),
-      ]);
-      if (disposed) return;
+      const [a, b] = await Promise.all([readSide(sides.a, current), readSide(sides.b, current)]);
+      if (disposed || read !== reading) return;
       held = { a: a.image, b: b.image };
-      pairs = Math.max(a.frameCount || 1, b.frameCount || 1);
-      // A batch that came back shorter than the last one leaves the tab past its end, so the
-      // pair on show is the last one there is rather than a number no side holds.
-      current = Math.max(0, Math.min(current, pairs - 1));
       const standing = {
-        a: Boolean(a.image) && current > (counts[SLOT_A] || 1) - 1,
-        b: Boolean(b.image) && current > (counts[SLOT_B] || 1) - 1,
+        a: Boolean(a.image) && current > sides.a.length - 1,
+        b: Boolean(b.image) && current > sides.b.length - 1,
       };
-      const ready = a.state === PREVIEW_STATE.READY || b.state === PREVIEW_STATE.READY;
-      footer.textContent = ready
-        ? describe(a, b, current, pairs, standing)
-        : (a.label || b.label || "");
+      footer.textContent = a.image || b.image ? describe(a, b, current, pairs, standing) : "";
       drawStrip();
       sizeCanvas();
       metrics.update(a.image, b.image, {
@@ -268,7 +307,87 @@ export function createImageComparePanel(node) {
     }
   };
 
-  const refresh = () => { show(current); };
+  /**
+   * The written frames a run output names, when this workflow's run wrote them.
+   *
+   * @param {object} output - A node's run output, or nothing.
+   * @returns {{a: object[], b: object[]}|null} Both sides, or null when the output names no
+   *   frame or names one another workflow's run wrote.
+   */
+  const sidesOf = (output) => {
+    const a = Array.isArray(output?.[OUTPUT_A]) ? output[OUTPUT_A] : [];
+    const b = Array.isArray(output?.[OUTPUT_B]) ? output[OUTPUT_B] : [];
+    if (!a.length && !b.length) return null;
+    return [...a, ...b].every(ownOutput) ? { a, b } : null;
+  };
+
+  /**
+   * Show a pair of written sides and keep it on the node.
+   *
+   * @param {{a: object[], b: object[]}} next - Both sides.
+   * @param {boolean} keep - Whether to write it into the node's properties.
+   * @returns {void}
+   */
+  const take = (next, keep) => {
+    const before = `${sides.a.map(addressOf).join()}|${sides.b.map(addressOf).join()}`;
+    const after = `${next.a.map(addressOf).join()}|${next.b.map(addressOf).join()}`;
+    sides = { a: next.a, b: next.b };
+    if (before !== after) {
+      const wanted = new Set([...sides.a, ...sides.b].map(addressOf));
+      for (const address of [...decoded.keys()]) if (!wanted.has(address)) decoded.delete(address);
+    }
+    const kept = node.properties?.[REMEMBERED_KEY];
+    if (keep && JSON.stringify(kept) !== JSON.stringify({ a: sides.a, b: sides.b })) {
+      keepOnNode(node, REMEMBERED_KEY, { a: sides.a, b: sides.b });
+    }
+    show(current);
+  };
+
+  /**
+   * Read whatever the last run of this workflow wrote, or the pair kept on the node.
+   *
+   * @returns {void}
+   */
+  const refresh = () => {
+    try {
+      const store = app?.nodeOutputs ?? {};
+      const output = store[nodeLocator(node)] ?? store[executionId(node)] ?? store[String(node.id)];
+      const fresh = sidesOf(output);
+      if (fresh) {
+        take(fresh, true);
+        return;
+      }
+      const kept = node.properties?.[REMEMBERED_KEY];
+      take({
+        a: Array.isArray(kept?.a) ? kept.a : [],
+        b: Array.isArray(kept?.b) ? kept.b : [],
+      }, false);
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to read the written sides:`, error);
+    }
+  };
+
+  // The node's own report of what it wrote, read as it arrives rather than from the store.
+  const onExecuted = (event) => {
+    try {
+      const detail = event?.detail;
+      const shown = String(detail?.display_node ?? detail?.node ?? "");
+      if (!shown || shown !== executionId(node)) return;
+      const fresh = sidesOf(detail?.output);
+      if (fresh) take(fresh, true);
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to read the node's report:`, error);
+    }
+  };
+  api.addEventListener("executed", onExecuted);
+
+  // A pasted node reads its kept pair here; a loaded graph is read once its outputs are back.
+  const originalOnConfigure = node.onConfigure;
+  node.onConfigure = function (...args) {
+    const configured = originalOnConfigure?.apply(this, args);
+    if (!graphLoading()) refresh();
+    return configured;
+  };
 
   // The backing store is sized from the stage, which is laid out by flex and so has no size at
   // all until the panel is on the page. Two things change it: the graph's zoom, which
@@ -323,8 +442,7 @@ export function createImageComparePanel(node) {
     return strip.scrollLeft !== before;
   });
 
-  // A run replaces what the node published, so the panel asks again rather than holding a
-  // picture from a graph that has since changed.
+  // The store is read again whenever a run ends, however it ended.
   const stopWatchingRuns = onRunEnded(() => refresh());
 
   // The divider is drawn into a canvas, where a custom property means nothing, so the palette
@@ -347,6 +465,8 @@ export function createImageComparePanel(node) {
       releaseWheel();
       try {
         if (typeof stopWatchingRuns === "function") stopWatchingRuns();
+        api.removeEventListener?.("executed", onExecuted);
+        decoded.clear();
         metrics.dispose();
         observer?.disconnect();
         stopWatching?.();
@@ -361,7 +481,7 @@ export function createImageComparePanel(node) {
 /**
  * One picture as its size, its channel mode and the bytes it encoded to.
  *
- * @param {object} answer - What `fetchInputPreview` resolved to.
+ * @param {object} answer - What `readSide` answered for one side.
  * @param {boolean} standing - Whether this is the side's last frame drawn for a pair the side
  *   does not reach.
  * @returns {string} A phrase such as `1856x2254 RGB 3.4 MB`, or `none` for no picture.

@@ -35,11 +35,10 @@ class BoundingBoxesFilter(io.ComfyNode):
             ],
             category="WAS Suite/Image/Bound",
             description=(
-                "Reduce a detector's regions to the ones worth acting on: drop the ones too "
-                "small to matter, merge the duplicates it found over the same subject, pad "
-                "them out for a crop with room around the subject, put them in a set order "
-                "and keep the first few. A detector answers everything it saw at one "
-                "confidence, so this is what turns that into the shortlist a graph works on."
+                "Reduce a detector's regions to a shortlist: drop the ones too small to "
+                "matter and the duplicates over one subject, pad them out for a crop, put them "
+                "in order and keep the first few. Hands on the regions kept, with counts of "
+                "what was kept and dropped."
             ),
             inputs=[
                 io.MultiType.Input(
@@ -55,10 +54,9 @@ class BoundingBoxesFilter(io.ComfyNode):
                     "order",
                     options=list(boxes.ORDERS),
                     tooltip=(
-                        "What order the regions come out in. `area, largest first` puts the "
-                        "main subject at index 0, which is what an index switch reads; "
-                        "`left to right` and `top to bottom` suit a row of faces or a "
-                        "contact sheet; `as found` leaves the detector's own order."
+                        "`as found` = the detector's own order; `area, largest first` = the "
+                        "main subject at index 0, for an index switch; `left to right` and "
+                        "`top to bottom` = a row of faces or a contact sheet."
                     ),
                 ),
                 io.Int.Input(

@@ -34,11 +34,10 @@ class LatentNoiseInjection(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How much noise to add, as the standard deviation of the random "
-                        "values. 0.0 adds nothing and passes the latent straight through; "
-                        "0.1 is a light dusting that a low-denoise resample can turn into "
-                        "extra detail; 1.0 is about as strong as the latent itself and "
-                        "leaves little of the original."
+                        "Standard deviation of the added noise: 0.0 = none, latent passed "
+                        "through; 0.1 = a light dusting a low-denoise resample turns into "
+                        "detail; 1.0 = as strong as the latent itself, leaving little of the "
+                        "original."
                     ),
                 ),
             ],

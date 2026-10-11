@@ -50,13 +50,10 @@ class ThreeEnvironment(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Light the scene from all around rather than from lamps alone, which is what "
-                "gives metal and glass something to reflect. Without one a polished dark "
-                "material renders almost black, since there is nothing in the world for it to "
-                "mirror. 'studio room' builds a small lit room and needs no file. 'image' "
-                "takes an equirectangular picture off the wire. 'file' reads a .hdr or .exr, "
-                "which carries real intensities and lights a scene far better than an "
-                "ordinary picture. Wire the result into Three Scene."
+                "Light the scene from all around, which gives metal and glass something to "
+                "reflect; without it a polished dark material renders almost black. Build a lit "
+                "studio room, wrap a picture from the graph around the scene, or read a .hdr or "
+                ".exr file, then wire the result into Three Scene."
             ),
             inputs=[
                 io.Combo.Input(

@@ -175,10 +175,9 @@ class BundleLatentVAEEncode(io.ComfyNode):
                     "tiled",
                     default=False,
                     tooltip=(
-                        "Whether the image is encoded a tile at a time instead of all at "
-                        "once. Tiling holds far less in VRAM, which is what makes a very "
-                        "large image encodable on a small card, at the cost of being "
-                        "slower and of faint seams where tiles meet."
+                        "`false` = the image is encoded all at once; `true` = a tile at a "
+                        "time, holding far less in VRAM so a very large image fits a small "
+                        "card, but slower and with faint seams where tiles meet."
                     ),
                 ),
                 io.Int.Input(
@@ -197,21 +196,18 @@ class BundleLatentVAEEncode(io.ComfyNode):
                     "store_or_load_latent",
                     default=True,
                     tooltip=(
-                        "Whether the workflow is used as the latent's home. On, the node "
-                        "reads a latent already bundled in the workflow rather than "
-                        "encoding, and writes the one it encodes back into it so the next "
-                        "save carries it. Off, the node is an ordinary VAE encode and "
-                        "touches nothing."
+                        "`false` = an ordinary VAE encode that touches nothing; `true` = reads "
+                        "a latent already bundled in the workflow instead of encoding, and "
+                        "writes the one it encodes back so the next save carries it."
                     ),
                 ),
                 io.Boolean.Input(
                     "remove_latent_on_load",
                     default=True,
                     tooltip=(
-                        "Whether a bundled latent is taken out of the workflow once it has "
-                        "been read. On, it is used once and the saved file is left clean, "
-                        "which suits carrying a starting point into a run. Off, it stays in "
-                        "the workflow and every later save keeps carrying it."
+                        "`true` = a bundled latent is used once and taken out of the workflow, "
+                        "leaving the saved file clean; `false` = it stays and every later "
+                        "save keeps carrying it."
                     ),
                 ),
                 io.Boolean.Input(

@@ -87,10 +87,9 @@ class DictionaryItems(io.ComfyNode):
                     options=SORTS,
                     default=NONE,
                     tooltip=(
-                        "Order both lists come out in. `none` = the order the entries were "
-                        "added; `key` = A to Z by name; `value` = A to Z by the value as "
-                        "text. Case is ignored, so 'Apple' sits beside 'apple', and digits "
-                        "sort as text: '10' before '9'."
+                        "Order of both lists. `none` = the order the entries were added; "
+                        "`key` = A to Z by name; `value` = A to Z by the value as text. "
+                        "Case is ignored and digits sort as text: '10' before '9'."
                     ),
                 ),
             ],

@@ -47,10 +47,8 @@ class BoundingBoxesToBounds(io.ComfyNode):
             category="WAS Suite/Image/Bound",
             description=(
                 "Turn bounding boxes into bounds, so a region found by a detector reaches "
-                "the cropping, blending and masking nodes in this pack. Anything on a "
-                "BOUNDING_BOX or BOUNDING_BOXES wire is read: one box, a list of them, or "
-                "the per-frame lists a detector emits. Each box becomes one bounds row with "
-                "every edge inclusive, which is the same rectangle counted the other way."
+                "the cropping, blending and masking nodes in this pack. Reads one box, a list "
+                "of them, or a detector's per-frame lists, and hands on one bounds row per box."
             ),
             inputs=[
                 io.MultiType.Input(

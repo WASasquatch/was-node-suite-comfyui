@@ -38,10 +38,9 @@ class ImageTileShuffle(io.ComfyNode):
                 io.Int.Input(
                     "max_tiles", default=4, min=2, max=64, step=2,
                     tooltip=(
-                        "How many tiles the picture is cut into. The grid is the squarest "
-                        "arrangement of that many: 4 gives 2 by 2, 12 gives 3 by 4. Rows and "
-                        "columns divide the picture exactly, so any leftover pixels on the "
-                        "right and bottom edges are dropped."
+                        "How many tiles the picture is cut into, in the squarest grid of that "
+                        "many: 4 = 2 by 2; 12 = 3 by 4. Leftover pixels on the right and "
+                        "bottom edges are dropped."
                     ),
                 ),
                 io.Int.Input(

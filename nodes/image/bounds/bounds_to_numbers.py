@@ -32,12 +32,10 @@ class BoundsToNumbers(io.ComfyNode):
             ],
             category="WAS Suite/Image/Bound",
             description=(
-                "Open a bounds rectangle into the numbers a graph can wire: the top left "
-                "corner, the width and height, the far edges, and the same rectangle as "
-                "text. A bounds value travels as one piece, so this is how a region "
-                "measured by Mask to Bounds reaches an x and y input such as Mask Rect "
-                "Area, or the four edges of Image Crop Location. Bounds carry a row per "
-                "image and index says which row is read."
+                "Open one bounds rectangle into numbers a graph can wire: the top left "
+                "corner, the width and height, the far edges, and the rectangle as text. Use "
+                "it to feed a measured region into an x and y input or the four edges of a "
+                "crop."
             ),
             inputs=[
                 IMAGE_BOUNDS.Input(

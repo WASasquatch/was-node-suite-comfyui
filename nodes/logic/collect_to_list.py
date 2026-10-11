@@ -74,14 +74,10 @@ class CollectToList(io.ComfyNode):
             ],
             category="WAS Suite/Logic/Loop",
             description=(
-                "Gather everything a fan-out produced back onto one wire. A node that emits "
-                "a list, Load Text Files From Zip, Zip Open, Number Range or Number Easing, "
-                "makes every node after it run once per entry, and nothing further down can "
-                "see more than one of those runs at a time. Wire the last node of the series "
-                "in here and the whole run arrives as one value: images, masks and latents "
-                "join into a single batch ready for a video encoder or one save, and "
-                "anything else arrives as a list. count says how many were gathered, and "
-                "joined writes them out as one string."
+                "Gather every run of a fan-out, such as Number Range, Zip Open or Load Text "
+                "Files From Zip, back onto one wire. Images, masks and latents join into one "
+                "batch for a video encoder or a single save; anything else arrives as a list. "
+                "count says how many were gathered and joined writes them as one string."
             ),
             inputs=[
                 io.MatchType.Input(
@@ -89,9 +85,8 @@ class CollectToList(io.ComfyNode):
                     template=template,
                     tooltip=(
                         "The last node of the fan-out, wired here once. Whatever connects, "
-                        "IMAGE, LATENT, STRING or a model, decides the type of the node, and "
-                        "the value output carries that same type. A source that ran only "
-                        "once gathers into a collection of one rather than failing."
+                        "IMAGE, LATENT, STRING or a model, sets the type the value output "
+                        "carries. A source that ran once gathers into a collection of one."
                     ),
                 ),
                 io.String.Input(
@@ -118,9 +113,9 @@ class CollectToList(io.ComfyNode):
                 io.Int.Output(
                     display_name="count",
                     tooltip=(
-                        "How many are in value; INT. 5 runs of one image = 5; 5 runs of a 4 "
-                        "frame batch = 20, since those joined into one 20 frame batch; 5 "
-                        "runs of text = 5. Feed it to a batch index or an iteration count."
+                        "How many are in value. 5 runs of one image = 5; 5 runs of a 4 frame "
+                        "batch = 20, joined into one batch; 5 runs of text = 5. Feed it to a "
+                        "batch index or an iteration count."
                     ),
                 ),
                 io.String.Output(

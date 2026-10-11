@@ -108,14 +108,10 @@ class VideoInfo(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "Measure a video and read its figures as numbers: how wide and tall the "
-                "frames are, how long it runs, how many frames it holds, the rate it plays "
-                "at, the bits per colour it carries and whether there is sound. It reads "
-                "anything on a VIDEO wire, whatever produced it, and it works from the "
-                "header rather than the frames, so a feature-length file costs about the "
-                "same as a two second one. Reach for it to size a resize, to tell a sampler "
-                "how many frames are coming, or to check for sound before wiring an audio "
-                "socket."
+                "Measure any VIDEO and hand on its width, height, duration, frame count, "
+                "frame rate, bit depth and whether it has sound. Use it to size a resize, "
+                "tell a sampler how many frames are coming, or check for sound before wiring "
+                "audio. A long file measures as fast as a short one."
             ),
             inputs=[
                 io.Video.Input(

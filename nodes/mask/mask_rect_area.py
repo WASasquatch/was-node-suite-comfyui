@@ -102,11 +102,10 @@ class MaskRectArea(io.ComfyNode):
                     default=drawn.DEFAULT_COMBINE,
                     optional=True,
                     tooltip=(
-                        "How the painting joins the rectangle. union keeps whichever of the two "
-                        "is brighter at each pixel, subtract takes the painting away from the "
-                        "rectangle, intersect keeps whichever is darker, and off ignores the "
-                        "painting without deleting it. The painting is resized to the mask when "
-                        "the two differ."
+                        "How the painting joins the rectangle, resized to it if they differ. "
+                        "`union` = the brighter of the two at each pixel; `subtract` = the "
+                        "painting taken away; `intersect` = the darker; `off` = ignored, not "
+                        "deleted."
                     ),
                 ),
             ],

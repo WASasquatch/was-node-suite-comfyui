@@ -34,12 +34,9 @@ class LinearLight(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Convert between the sRGB curve a picture is stored with and the light it "
-                "stands for, and adjust exposure in stops on the way. Every node that works "
-                "in light rather than in codes wants linear on its input: EXR Save, DNG "
-                "Save, and any blend or blur that should behave the way light does. Coming "
-                "back the other way is what makes linear light viewable, since a preview "
-                "reads its numbers as sRGB."
+                "Convert between the sRGB curve a picture is stored with and the linear light "
+                "it stands for, adjusting exposure in stops on the way. Use it to feed nodes "
+                "that work in light, such as EXR Save, and to bring light back for viewing."
             ),
             inputs=[
                 io.Image.Input(
@@ -53,10 +50,10 @@ class LinearLight(io.ComfyNode):
                     "direction",
                     options=list(DIRECTIONS),
                     tooltip=(
-                        "'sRGB to linear' = for a picture that came out of a PNG, a JPEG or "
-                        "a sampler, on its way into EXR Save, DNG Save or a light-linear "
-                        "blend; 'linear to sRGB' = for light on its way to a preview, a "
-                        "save or any node that expects ordinary picture codes."
+                        "'sRGB to linear' = a PNG, JPEG or sampler picture on its way into EXR "
+                        "Save, DNG Save or a light-linear blend; 'linear to sRGB' = light on "
+                        "its way to a preview, a save or any node expecting ordinary picture "
+                        "codes."
                     ),
                 ),
                 io.Float.Input(

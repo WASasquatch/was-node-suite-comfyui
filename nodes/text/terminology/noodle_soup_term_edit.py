@@ -70,11 +70,10 @@ class NoodleSoupTermEdit(io.ComfyNode):
                     "action",
                     options=list(ACTIONS),
                     tooltip=(
-                        "`add entries` stores the words below that the term does not "
-                        "already hold; `remove entries` takes them out and no refresh puts "
-                        "them back; `replace entries` leaves the term holding exactly what "
-                        "is typed; `create the term` makes an empty one; `delete the term` "
-                        "removes it and everything in it."
+                        "`add entries` = store the new words below; `remove entries` = take "
+                        "them out for good; `replace entries` = hold exactly what is typed; "
+                        "`create the term` = make an empty one; `delete the term` = remove "
+                        "it and all its words."
                     ),
                 ),
                 io.String.Input(

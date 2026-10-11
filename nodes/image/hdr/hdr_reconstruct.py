@@ -97,11 +97,10 @@ class HDRReconstruct(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Rebuild the light a clipped highlight lost, answering linear light with "
-                "everything above one kept. A blown sky, a lamp or a specular hit comes "
-                "back as a gradient rather than one flat white, so a sun and its glow stay "
-                "apart under a grade or in a 32-bit EXR. Every frame of a batch is "
-                "reconstructed, and the largest value reached is answered beside the image."
+                "Rebuild the light a clipped highlight lost, handing on linear light with "
+                "everything above one kept. A blown sky, a lamp or a specular hit comes back "
+                "as a gradient rather than flat white, ready for a grade or a 32-bit EXR, with "
+                "the peak value beside the image."
             ),
             inputs=[
                 io.Image.Input(

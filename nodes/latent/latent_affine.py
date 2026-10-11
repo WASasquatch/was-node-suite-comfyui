@@ -12,19 +12,17 @@ from ...modules.latent import affine_patterns as patterns
 
 #: What every affine node says about its mask pattern.
 PATTERN_HINT = (
-    "Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' "
-    "and the coloured noises are grain of different coarseness; 'perlin', 'checker', "
-    "'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', "
-    "'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; "
-    "'external_mask' uses the mask wired in."
+    "Which mask the affine lands through. 'solid' = everywhere; 'white_noise' and the "
+    "coloured noises = grain of varying coarseness; 'perlin', 'checker', 'bayer', "
+    "'worley_edges' and the rest = shapes; 'detail_region', 'smooth_region', 'edges_sobel', "
+    "'edges_laplacian' = read off the latent; 'external_mask' = the mask wired in."
 )
 
 #: What every affine node says about its frame handling.
 TEMPORAL_HINT = (
-    "How a video latent's mask varies over time. 'static' = one mask on every frame, in the "
-    "same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask "
-    "slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine "
-    "Options. The content-aware patterns ignore this, and so does an image latent."
+    "Video latents only: 'static' = one mask on every frame; 'per_frame' = a new mask each "
+    "frame; 'drift' = one mask sliding across the frame, set by drift_speed, drift_angle_deg "
+    "and drift_renew on Affine Options. Content-aware patterns ignore it."
 )
 
 #: What every affine node says about its seed.
@@ -110,10 +108,9 @@ class LatentAffine(io.ComfyNode):
             category="WAS Suite/Latent/Transform",
             description=(
                 "Multiply a latent and add an offset to it, but only where a mask says to. "
-                "The mask can be procedural grain, a repeating shape, a reading of the "
-                "latent's own detail or edges, or one wired in. Small moves either side of "
-                "1.0 change texture and contrast before a second sampling pass; the same "
-                "transform applied during sampling is what the Affine samplers do."
+                "The mask can be procedural grain, a repeating shape, the latent's own "
+                "detail or edges, or one wired in. Small moves either side of 1.0 change "
+                "texture and contrast before a second sampling pass."
             ),
             inputs=[
                 io.Latent.Input(

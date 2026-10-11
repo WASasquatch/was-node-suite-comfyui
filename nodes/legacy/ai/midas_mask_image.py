@@ -67,14 +67,9 @@ class MidasMaskImage(io.ComfyNode):
             is_deprecated=True,
             description=(
                 "Deprecated: use Image Remove Background, CLIPSeg Masking or SAM Image Mask "
-                "instead. Splits an image by distance from the camera using a MiDaS depth "
-                "map, keeping the near or the far half on transparency or on a flat colour, "
-                "with the same split on a mask. Depth knows nothing about objects, so "
-                "anything level with the kept half is kept with it and the edge comes out as "
-                "a gradient rather than a cutline until threshold is on, which is why those "
-                "three suit a cutout better. It still fits fading a background by distance, "
-                "matting in fog or driving a depth composite. Enable features.midas to load "
-                "this node."
+                "for cutouts. Keeps the near or far part of an image by MiDaS depth, on "
+                "transparency or a flat colour, with a matching mask, for fading a "
+                "background by distance or matting in fog. Needs features.midas enabled."
             ),
             inputs=[
                 io.Image.Input(

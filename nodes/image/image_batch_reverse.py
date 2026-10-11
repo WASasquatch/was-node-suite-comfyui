@@ -77,10 +77,8 @@ class ImageBatchReverse(io.ComfyNode):
             category="WAS Suite/Image",
             description=(
                 "Play a batch of frames backwards, or append the reverse so a short clip "
-                "runs out and back and loops on itself. 'ping-pong' shows the first and "
-                "last frames twice at the joins, which reads as a pause; 'ping-pong "
-                "trimmed' leaves them out, so the loop runs at an even pace. The frame "
-                "count comes out beside the images, ready for a video save."
+                "runs out and back and loops on itself. Hands on the reordered frames and "
+                "their count, ready for a video save."
             ),
             inputs=[
                 io.Image.Input(
@@ -97,10 +95,9 @@ class ImageBatchReverse(io.ComfyNode):
                     options=["reverse", "ping-pong", "ping-pong trimmed"],
                     default="reverse",
                     tooltip=(
-                        "How the frames are laid out. Given 8 frames: `reverse` = 8 frames, "
-                        "played 8 to 1; `ping-pong` = 16, 1 to 8 then 8 to 1, holding on "
-                        "frames 8 and 1 for two; `ping-pong trimmed` = 14, 1 to 8 then 7 to "
-                        "2, which is the one that loops without a stutter."
+                        "Given 8 frames: `reverse` = 8, played 8 to 1; `ping-pong` = 16, 1 to 8 "
+                        "then 8 to 1, pausing on 8 and 1; `ping-pong trimmed` = 14, 1 to 8 then "
+                        "7 to 2, looping without a stutter."
                     ),
                 ),
             ],

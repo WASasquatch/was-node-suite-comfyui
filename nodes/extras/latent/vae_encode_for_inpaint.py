@@ -57,15 +57,9 @@ class VAEEncodeForInpaintWAS(io.ComfyNode):
             ],
             category="WAS Suite/Latent",
             description=(
-                "Encode an image into a latent for inpainting, with control over how far "
-                "the mask grows or shrinks first. The masked pixels are flattened to mid "
-                "grey before encoding so the sampler is not led by what was there, and the "
-                "adjusted mask travels with the latent as its noise mask, which is what "
-                "tells a KSampler which part to repaint. A positive mask_offset grows the "
-                "painted area, so 6 reaches six pixels past what was drawn and hides the seam "
-                "where new and old meet, which suits removing an object. A negative offset "
-                "shrinks it, keeping more of the original, which suits touching up the middle "
-                "of a region without disturbing its outline."
+                "Encode an image into a latent for inpainting, growing or shrinking the mask "
+                "first. The masked pixels are greyed out and the adjusted mask travels with "
+                "the latent, so a KSampler repaints only that part."
             ),
             inputs=[
                 io.Image.Input(
@@ -100,8 +94,10 @@ class VAEEncodeForInpaintWAS(io.ComfyNode):
                     max=128,
                     step=1,
                     tooltip=(
-                        "How far the painted area grows or shrinks before encoding, in "
-                        "pixels of the input image. 0 uses the mask exactly as drawn."
+                        "Pixels the painted area grows or shrinks before encoding: 0 = mask as "
+                        "drawn; 6 = six pixels past it, hiding the seam when removing an "
+                        "object; negative = shrinks it, keeping the outline when touching up "
+                        "the middle."
                     ),
                 ),
             ],

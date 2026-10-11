@@ -34,13 +34,10 @@ class MaskStatistics(io.ComfyNode):
             ],
             category="WAS Suite/Image/Masking",
             description=(
-                "Measure what a mask covers rather than change it: the fraction of pixels "
-                "above the threshold, how many pixels that is, the value range, and "
-                "whether the mask found anything at all. A CLIPSeg prompt that matched "
-                "nothing, a SAM click that missed and a threshold set too high all answer "
-                "a mask of pure black, and nothing downstream says so. Wire is_empty into "
-                "a gate or a switch to skip the inpaint, the crop or the save when that "
-                "happens. Measure the whole batch at once, or one mask of it by index."
+                "Measure what a mask covers: the fraction and count of pixels above the "
+                "threshold, the value range, and whether it found anything at all. Wire "
+                "is_empty into a gate or a switch to skip an inpaint, a crop or a save when "
+                "a segmenter matched nothing."
             ),
             inputs=[
                 io.Mask.Input(

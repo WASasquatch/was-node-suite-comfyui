@@ -27,11 +27,9 @@ class ThreeBasicMaterial(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A surface that ignores every light and draws its colour flat. Nothing shades "
-                "it, so a sphere reads as a circle, which is what makes it right for a "
-                "background card, a UI panel, a wireframe overlay or a texture that must arrive "
-                "unaltered. It also renders in a scene with no light at all, where a standard "
-                "material would be black."
+                "A surface that ignores every light and draws its colour flat, so a sphere reads "
+                "as a circle. Right for a background card, a UI panel, a wireframe overlay or a "
+                "texture that must arrive unaltered, and it shows even in a scene with no light."
             ),
             inputs=[
                 io.String.Input(

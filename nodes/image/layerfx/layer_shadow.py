@@ -33,10 +33,9 @@ class LayerShadow(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Cast a shadow off one layer in a stack. A drop shadow sits behind the "
-                "layer's own pixels and lifts a cut-out subject off the plate below it; an "
-                "inner shadow sits inside the edge and sinks the layer into it. A drop "
-                "shadow grows that layer's picture and shifts it back, so the layer stays "
-                "where it was on the canvas."
+                "layer and lifts a cut-out subject off the plate below it; an inner shadow "
+                "sits inside the edge and sinks the layer into it. The layer keeps its place "
+                "on the canvas."
             ),
             inputs=[
                 io.Layers.Input(

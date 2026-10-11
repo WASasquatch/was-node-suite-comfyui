@@ -51,11 +51,9 @@ class PowerLoraMergerOptions(io.ComfyNode):
                     max=4096,
                     step=1,
                     tooltip=(
-                        "How much detail the merged LoRA keeps, for the modes that "
-                        "recompress it. Higher keeps more of the sources and makes a bigger "
-                        "file: 32 suits most merges, 64 to 128 holds a complicated one "
-                        "together. Set it to 0 to let each part of the model choose its own "
-                        "rank from auto_rank_threshold instead."
+                        "Detail the merged LoRA keeps in the modes that recompress it: 0 = each "
+                        "part of the model picks its own rank from auto_rank_threshold; 32 = "
+                        "most merges; 64 to 128 = a complicated one, bigger file."
                     ),
                 ),
                 io.Float.Input(

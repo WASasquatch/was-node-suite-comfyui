@@ -29,10 +29,9 @@ class ThreeSphereGeometry(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A sphere, centred on its own origin. The two angle pairs cut it: leaving phi "
-                "at 0 to 360 and theta at 0 to 180 gives a whole sphere, while a shorter theta "
-                "length gives a dome and a shorter phi length gives a wedge. Segment counts set "
-                "how round it looks, and 32 by 16 is smooth at normal sizes."
+                "A sphere centred on its own origin, for Three Mesh. A shorter theta length "
+                "gives a dome and a shorter phi length gives a wedge; 32 by 16 segments is "
+                "smooth at normal sizes."
             ),
             inputs=[
                 io.Float.Input(

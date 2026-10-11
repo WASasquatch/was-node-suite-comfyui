@@ -21,11 +21,10 @@ class ThreeScene(io.ComfyNode):
             search_aliases=["WASThreeScene", "Three Scene", "scene", "background", "fog"],
             category="WAS Suite/Three",
             description=(
-                "Everything that gets drawn, plus what sits behind it. Wire one object into "
+                "Everything that gets drawn, plus what sits behind it: wire one object into "
                 "root, usually a Three Group holding the meshes and the lights. Fog fades "
-                "objects toward the fog colour with distance, which reads as depth and hides "
-                "the far edge of a ground plane. A transparent background renders no backdrop "
-                "at all, so the page shows through."
+                "distant objects toward its colour and hides the far edge of a ground plane. A "
+                "transparent background lets the page show through."
             ),
             inputs=[
                 THREE_OBJECT.Input(

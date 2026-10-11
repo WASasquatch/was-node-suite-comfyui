@@ -22,11 +22,8 @@ class ImageCropLocation(io.ComfyNode):
             category="WAS Suite/Image/Process",
             description=(
                 "Crop a rectangle given by its four edges, and pass on the crop window so "
-                "the result can be pasted back later. Rounding the crop with divisible_by "
-                "saves a sampler rounding the size itself: 8 suits most latent models, and "
-                "16, 32 or 64 the ones that ask for a coarser step. 1 rounds nothing. A "
-                "side shorter than divisible_by is taken up to one whole step rather than "
-                "down to nothing."
+                "the result can be pasted back later. The size can be rounded to a multiple "
+                "a sampler accepts."
             ),
             inputs=[
                 io.Image.Input(
@@ -83,8 +80,8 @@ class ImageCropLocation(io.ComfyNode):
                     step=1,
                     tooltip=(
                         "Rounds the crop down to a multiple of this on both axes, which "
-                        "resamples it. 8 suits most latent models; 1 takes the exact rectangle "
-                        "away untouched."
+                        "resamples it. 1 = the exact rectangle, untouched; 8 = most latent "
+                        "models; 16, 32 or 64 = models asking for a coarser step."
                     ),
                 ),
             ],

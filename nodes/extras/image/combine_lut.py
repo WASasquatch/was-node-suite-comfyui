@@ -26,17 +26,9 @@ class CombineLUT(io.ComfyNode):
             ],
             category="WAS Suite/Image/LUT",
             description=(
-                "Mix two colour lookup tables into one, in whichever colour space suits the "
-                "pair. Use it to dial a strong film look back towards neutral, to cross-fade "
-                "between two grades, or to stack a corrective table under a creative one. "
-                "Both tables are resampled to a common size first, so a 17-point table and a "
-                "65-point one mix without trouble. 'linear' is a straight average, 'cosine' "
-                "and 'smoothstep' ease that mix, 'slerp' turns hue the short way round the "
-                "wheel instead of through grey, 'lab' and 'oklab' mix in a perceptual space "
-                "which keeps midway grades believable, 'hsv' mixes hue, saturation and "
-                "brightness separately, 'auto' picks 'slerp' where the two colours differ a "
-                "lot and 'linear' where they agree, and 'multiply' darkens, 'screen' "
-                "brightens and 'overlay' does both."
+                "Mix two colour lookup tables into one, to dial a strong film look back "
+                "towards neutral, cross-fade between two grades, or stack a corrective table "
+                "under a creative one. A 17-point and a 65-point table mix without trouble."
             ),
             inputs=[
                 LUT.Input(
@@ -57,9 +49,11 @@ class CombineLUT(io.ComfyNode):
                 io.Combo.Input(
                     "mode", options=list(BLEND_MODES),
                     tooltip=(
-                        "How the two tables are mixed. 'linear' is a straight average and "
-                        "the place to start; other modes ease it, mix perceptually, or "
-                        "combine the tables like layers."
+                        "'linear' = straight average; 'cosine', 'smoothstep' = eased; 'slerp' "
+                        "= hue the short way, not through grey; 'lab', 'oklab' = perceptual; "
+                        "'hsv' = hue, saturation, value apart; 'auto' = slerp where colours "
+                        "differ, else linear; 'multiply' = darkens; 'screen' = brightens; "
+                        "'overlay' = both."
                     ),
                 ),
                 io.Float.Input(

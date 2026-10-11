@@ -111,14 +111,8 @@ class CreateMorphImageFromPath(io.ComfyNode):
             ],
             category="WAS Suite/Animation",
             description=(
-                "Fade through every image in a folder and save the result as an animated GIF "
-                "or APNG. A few older viewers show an APNG as a single still frame. `WEBP` "
-                "gives full colour and alpha at a fraction of the size, and `WEBP_LOSSLESS` "
-                "keeps every pixel exact for a larger file that is still usually smaller than "
-                "the .gif. With palette_mode `per_frame` each frame looks its best, but a "
-                "still background can shift colour as the palette changes under it, seen as "
-                "flicker when the animation plays; `global` holds a still area put at the "
-                "cost of some accuracy in any single frame."
+                "Fade through every image in a folder and save the result as an animated GIF, "
+                "APNG or WEBP slideshow, handing on the path of the written file."
             ),
             inputs=[
                 io.Int.Input(
@@ -174,7 +168,9 @@ class CreateMorphImageFromPath(io.ComfyNode):
                     max=1280,
                     step=1,
                     tooltip=(
-                        "Longest edge of the animation, in pixels. The canvas is otherwise as large as the largest source, so 512 holds a 4000x3000 photograph down to 512x384 and cuts the file and the memory with it. A source already smaller than this is left alone."
+                        "Longest edge of the animation, in pixels: 512 holds a 4000x3000 "
+                        "photograph down to 512x384, cutting file size and memory. A source "
+                        "already smaller than this is left alone."
                     ),
                 ),
                 io.Combo.Input(
@@ -240,18 +236,18 @@ class CreateMorphImageFromPath(io.ComfyNode):
                     "filetype",
                     options=["GIF", "APNG", "WEBP", "WEBP_LOSSLESS"],
                     tooltip=(
-                        "Which format to write. `GIF` plays anywhere but bands gradients at "
-                        "256 colours; `APNG`, `WEBP` and `WEBP_LOSSLESS` keep full colour and "
-                        "alpha."
+                        "`GIF` = plays anywhere, bands gradients at 256 colours; `APNG` = full "
+                        "colour and alpha; `WEBP` = full colour and alpha, far smaller; "
+                        "`WEBP_LOSSLESS` = every pixel exact."
                     ),
                 ),
                 io.Combo.Input(
                     "palette_mode",
                     options=["per_frame", "global"],
                     tooltip=(
-                        "How the palette is chosen when colours are reduced. `per_frame` fits "
-                        "one per frame, `global` one to the whole animation, so a still area "
-                        "stays put."
+                        "How the palette is chosen when colours are reduced: `per_frame` = best "
+                        "colour in each frame, a still background can flicker; `global` = one "
+                        "palette for the whole animation, so a still area stays put."
                     ),
                 ),
                 io.Int.Input(
@@ -261,11 +257,9 @@ class CreateMorphImageFromPath(io.ComfyNode):
                     max=256,
                     step=1,
                     tooltip=(
-                        "How many colours the palette holds. 256 is the most a .gif can "
-                        "carry. Lower values shrink the file and give a flatter, posterised "
-                        "look, and below about 64 the choice of palette_mode starts to show. "
-                        "The full-colour formats ignore this at 256 and honour it below that, "
-                        "so it doubles as a posterise control for them."
+                        "Colours in the palette: 256 = the most a .gif holds; lower = smaller "
+                        "file and a flatter, posterised look, with palette_mode showing below "
+                        "about 64. The full-colour formats ignore 256 and posterise below it."
                     ),
                 ),
                 io.Boolean.Input(

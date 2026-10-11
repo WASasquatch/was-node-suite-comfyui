@@ -57,10 +57,9 @@ class ImageToNoise(io.ComfyNode):
                     max=20,
                     step=1,
                     tooltip=(
-                        "How many passes of random black pixels are laid over the noise. "
-                        "Each pass blacks out about half of what is left, so 1 is a coarse "
-                        "half-and-half speckle and 4 is nearly black. 0 adds none. Every "
-                        "pass draws once per pixel, so high values on a large image are slow."
+                        "Passes of random black pixels laid over the noise, each blacking out "
+                        "about half of what is left. 0 = none; 1 = a coarse half-and-half "
+                        "speckle; 4 = nearly black. High values on a large image are slow."
                     ),
                 ),
                 io.Float.Input(

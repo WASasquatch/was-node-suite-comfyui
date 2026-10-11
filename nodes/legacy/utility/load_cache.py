@@ -53,10 +53,9 @@ class LoadCache(io.ComfyNode):
             search_aliases=["Load Cache", "load latent", "cache"],
             category="WAS Suite/IO",
             description=(
-                "Deprecated. Nothing replaces it directly: it reads back a latent, image "
-                "batch or conditioning that Cache Node wrote to a file in an earlier prompt. "
-                "Off by default: enable legacy.cache to load it. A cache file holds tensor "
-                "data only, and one holding anything else is refused."
+                "Deprecated, with no direct replacement. Reads back a latent, image batch or "
+                "conditioning that Cache Node wrote in an earlier prompt; a file holding "
+                "anything but tensor data is refused. Enable legacy.cache to load it."
             ),
             inputs=[
                 io.Combo.Input(

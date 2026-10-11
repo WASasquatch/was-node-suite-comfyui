@@ -35,10 +35,9 @@ class MaskErodeRegion(io.ComfyNode):
                     max=64,
                     step=1,
                     tooltip=(
-                        "How many passes of shrinkage to run. Each pass pulls the mask in by "
-                        "about one pixel on every side, so the default 5 narrows it by roughly "
-                        "5 pixels and erases anything thinner than about 10 pixels. The widget "
-                        "stops at 1; 0 on a wire shrinks until nothing changes, erasing the mask."
+                        "Passes of shrinkage, each about one pixel on every side. 0 on a wire = "
+                        "shrinks until nothing changes, erasing the mask; 5 = about 5 pixels "
+                        "narrower, erasing anything thinner than about 10 pixels."
                     ),
                 ),
                 io.Float.Input(
@@ -50,9 +49,8 @@ class MaskErodeRegion(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "Soften the edge after the shape is settled, as a blur radius in "
-                        "pixels. 0 leaves the hard binary edge. A few pixels is what an "
-                        "inpaint or a composite wants so the seam does not show. Fractions "
-                        "are dropped, so 0.5 blurs the same as 0."
+                        "pixels; fractions are dropped. 0 or 0.5 = the hard binary edge; a few "
+                        "pixels hide the seam of an inpaint or a composite."
                     ),
                 ),
             ],

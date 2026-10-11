@@ -59,11 +59,10 @@ class KSamplerSequence(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Run the sampler once per loop and stack the results into one latent "
-                "batch, switching prompt as the frame schedule from CLIP Text Encode "
-                "Sequence (Advanced) says to. Each loop starts from the previous loop's "
-                "latent at a lower denoise, so the run reads as a moving picture rather "
-                "than as unrelated images. Decode the batch and save it as frames."
+                "Run the sampler once per loop and stack the results into one latent batch, "
+                "switching prompt on the frame schedule from CLIP Text Encode Sequence "
+                "(Advanced). Each loop starts from the previous latent at a lower denoise, so "
+                "the batch reads as a moving picture."
             ),
             inputs=[
                 io.Model.Input(
@@ -85,22 +84,18 @@ class KSamplerSequence(io.ComfyNode):
                     "seed_mode_seq",
                     options=SEED_MODES,
                     tooltip=(
-                        "How the seed moves from loop to loop. 'increment' and 'decrement' "
-                        "step it by one, which keeps consecutive frames close and the run "
-                        "smooth; 'random' picks a fresh seed each loop, which makes every "
-                        "frame its own image; 'fixed' holds one seed for the whole run, so "
-                        "only the prompt and the denoise change anything."
+                        "'fixed' = one seed for the run, only prompt and denoise change; "
+                        "'increment', 'decrement' = step by one, keeping consecutive frames "
+                        "close; 'random' = a fresh seed each loop, every frame its own image."
                     ),
                 ),
                 io.Boolean.Input(
                     "alternate_values",
                     default=True,
                     tooltip=(
-                        "Whether every other loop runs on a second seed that drifts away "
-                        "from the first instead of on the stepped one. It gives the run a "
-                        "slight back-and-forth flicker between two looks, which reads as "
-                        "movement in a short sequence. Turn it off for a single steady "
-                        "progression."
+                        "`false` = one steady progression; `true` = every other loop runs on a "
+                        "second seed drifting away from the first, a slight back-and-forth "
+                        "flicker that reads as movement in a short sequence."
                     ),
                 ),
                 io.Int.Input(
@@ -222,11 +217,10 @@ class KSamplerSequence(io.ComfyNode):
                     "latent_interpolation_mode",
                     options=LATENT_INTERPOLATION_MODES,
                     tooltip=(
-                        "How the previous frame is mixed in. 'Blend' is a straight average; "
-                        "'Slerp' travels along the arc between the two latents and holds "
-                        "contrast better; 'Cosine Interp' is a blend that eases in and out, "
-                        "so each frame is held a little longer. Ignored while "
-                        "use_latent_interpolation is off."
+                        "'Blend' = straight average; 'Slerp' = along the arc between the "
+                        "latents, holds contrast better; 'Cosine Interp' = eased blend, each "
+                        "frame held a little longer. Ignored while use_latent_interpolation "
+                        "is off."
                     ),
                 ),
                 io.Float.Input(

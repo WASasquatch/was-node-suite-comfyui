@@ -34,10 +34,8 @@ class LayerMask(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Give one layer a mask, combine one with the mask it already has, soften its "
-                "edge or take it away. Layer Edit changes a layer's placement and blending "
-                "and never touches its mask, so this is the only way to cut a layer to shape "
-                "once it is in a stack. Every mask here is white where the layer paints, "
-                "which is what the rest of the pack answers."
+                "edge or take it away, to cut a layer to shape once it is in a stack. Masks "
+                "are white where the layer paints."
             ),
             inputs=[
                 io.Layers.Input(

@@ -26,13 +26,10 @@ class SaveTextFile(io.ComfyNode):
             search_aliases=["Save Text File", "write text", "text file"],
             category="WAS Suite/IO",
             description=(
-                "Write text to a numbered file in a folder the pack may write to. A "
-                "relative path is taken from the folder ComfyUI was started in, and one "
-                "beginning 'ComfyUI/' from ComfyUI's own folder, so the default works "
-                "either way. It has to land inside ComfyUI's output or temp folder, the "
-                "pack's own folder, or a folder listed under paths.allow_write in "
-                "config.yaml; anywhere else is refused, the input folder included. Leave "
-                "the path empty, or set it to 'none' or '.', for the output folder itself."
+                "Write text to a numbered file in the folder picked with root, named from "
+                "filename_prefix, the number and an optional suffix. Tokens in the prefix "
+                "expand, so a date can name a subfolder or the file. Padding 0 writes the "
+                "same file every run."
             ),
             inputs=[
                 io.String.Input(

@@ -28,10 +28,8 @@ class ThreeOrthographicCamera(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "A camera with no perspective, so parallel lines stay parallel and an object "
-                "is the same size however far away it is. This is the view an elevation "
-                "drawing or an isometric game uses. View height sets how much of the scene "
-                "fits vertically, and the width follows the viewer's shape. Distance no longer "
-                "changes size, so framing is done with view height rather than by moving closer."
+                "is the same size at any distance, as in an elevation drawing or an isometric "
+                "game. Framing is set with view height rather than by moving closer."
             ),
             inputs=[
                 io.Float.Input(
@@ -40,7 +38,10 @@ class ThreeOrthographicCamera(io.ComfyNode):
                     min=0.0001,
                     max=1000000.0,
                     step=0.01,
-                    tooltip="How many scene units fit top to bottom. 6.0 frames a unit cube with room around it.",
+                    tooltip=(
+                        "How many scene units fit top to bottom; the width follows the "
+                        "viewer's shape. 6.0 frames a unit cube with room around it."
+                    ),
                 ),
                 io.Float.Input(
                     "near",

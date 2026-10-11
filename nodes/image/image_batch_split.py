@@ -73,12 +73,9 @@ class ImageBatchSplit(io.ComfyNode):
             ],
             category="WAS Suite/Image",
             description=(
-                "Cut an image batch in two at a frame number: the frames before the cut come "
-                "out on head, and the cut frame with everything after it on tail. The cut "
-                "frame belongs to the tail, so head and tail joined back together are the "
-                "batch that went in. Counting runs from 0 and a negative counts back from the "
-                "end, so a cut at -1 holds the last frame back on its own, which is what "
-                "dropping an overlapping frame before stitching a continuation on needs."
+                "Cut an image batch in two at a frame number: frames before the cut come out "
+                "on head, the cut frame and everything after on tail. A cut at -1 holds back "
+                "the last frame, for dropping an overlap before stitching on a continuation."
             ),
             inputs=[
                 io.Image.Input(
@@ -99,10 +96,9 @@ class ImageBatchSplit(io.ComfyNode):
                     ),
                     [io.Int, NUMBER, io.Float],
                     tooltip=(
-                        "Where to cut, counting frames from 0. That frame starts the tail: "
-                        "with 8 frames, at 3 gives head 0 to 2 and tail 3 to 7. Negative "
-                        "counts back from the end, so -1 holds the last frame back on its "
-                        "own. A decimal is truncated: 2.7 = 2."
+                        "Where to cut, counting frames from 0; that frame starts the tail. With "
+                        "8 frames: 3 = head 0 to 2, tail 3 to 7; -1 = the last frame alone on "
+                        "tail. A decimal is truncated: 2.7 = 2."
                     ),
                 ),
                 io.Combo.Input(

@@ -30,14 +30,10 @@ class ThreePathTraceViewer(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Trace the scene on this node and keep adding samples to the same picture, so it "
-                "starts noisy and cleans up in place while nothing is touched. Moving the camera "
-                "starts it over, which is how the framing for a Three Path Trace Render is found "
-                "without waiting on a render each time. The animation is held still to begin "
-                "with, since a moving scene starts every frame over and never settles; Play runs "
-                "it anyway and the picture stays grainy. Drag inside to orbit, wheel to zoom, "
-                "middle-drag or hold shift to pan. Nothing is rendered on the server and no "
-                "image comes out of this node."
+                "Trace the scene on this node, adding samples so the picture cleans up in place, "
+                "to find the framing for Three Path Trace Render without waiting on a render. "
+                "Moving the camera starts it over; the animation stays held until Play. Drag to "
+                "orbit, wheel to zoom, middle-drag or hold shift to pan."
             ),
             is_output_node=True,
             inputs=[

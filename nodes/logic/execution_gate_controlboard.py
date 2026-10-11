@@ -26,10 +26,9 @@ class ExecutionGateControlboard(io.ComfyNode):
             category="WAS Suite/Logic",
             description=(
                 "List every Execution Gate and Any Gate in the graph, subgraphs included, "
-                "each with a switch that opens or closes it. One place to turn whole branches "
-                "of a workflow on and off. A switch sets whatever decides the gate: its own "
-                "open, the subgraph input open is wired to, or a Boolean node feeding it, so "
-                "it survives a save, an undo and a copy."
+                "each with a switch, to turn whole branches on and off from one place. A "
+                "switch sets whatever decides the gate, so it survives a save, an undo and a "
+                "copy."
             ),
             inputs=[],
             outputs=[],

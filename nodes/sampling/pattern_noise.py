@@ -28,12 +28,9 @@ class AffinePatternNoise(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Starting noise with an affine mask laid over it: the draw is multiplied by "
-                "max_scale and offset by max_bias wherever the pattern is white, so the "
-                "noise carries the pattern's structure instead of being flat. Wire it into "
-                "the noise socket of any custom sampler in place of RandomNoise. The four "
-                "patterns read off a picture are not offered, since a starting draw has no "
-                "picture to read."
+                "Starting noise that carries a pattern's structure: the draw is multiplied by "
+                "max_scale and offset by max_bias wherever the mask is white. Wire it into the "
+                "noise socket of any custom sampler in place of RandomNoise."
             ),
             inputs=[
                 io.Combo.Input(

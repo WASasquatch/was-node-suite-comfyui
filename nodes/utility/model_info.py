@@ -287,13 +287,10 @@ class ModelInfo(io.ComfyNode):
             ],
             category="WAS Suite/Utilities",
             description=(
-                "Say which model is on a wire and how big it is. Answers the class behind "
-                "the loader, as `SDXL` or `AutoencoderKL`, the precision the weights are "
-                "held at, the device they run on, and the parameter count both as a whole "
-                "number and in millions. Takes MODEL, VAE, CLIP, CLIP_VISION, CONTROL_NET, "
-                "UPSCALE_MODEL, STYLE_MODEL and the other loader types on one socket, "
-                "reads them without loading or changing anything, and answers empty text "
-                "for a fact it cannot reach rather than stopping the run."
+                "Say which model is on a wire and how big it is: its class, as `SDXL` or "
+                "`AutoencoderKL`, the precision and device of its weights, and its parameter "
+                "count. Takes MODEL, VAE, CLIP, CONTROL_NET and the other loader types on one "
+                "socket, changes nothing, and answers empty text for a fact it cannot reach."
             ),
             inputs=[
                 io.MatchType.Input(

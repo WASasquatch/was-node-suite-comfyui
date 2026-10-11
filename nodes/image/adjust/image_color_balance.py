@@ -29,12 +29,10 @@ class ImageColorBalance(io.ComfyNode):
             ],
             category="WAS Suite/Image/Adjustment",
             description=(
-                "Move colour in the dark, middle and bright parts of a frame on their own, "
-                "the way a colourist's three wheels do. Cool shadows against warm highlights "
-                "is most of what makes a render look graded rather than rendered, and it is "
-                "the shape a cast is corrected in as well: push the opposite way in whichever "
-                "range carries it. Image White Balance neutralises one cast over the whole "
-                "frame; this works per range."
+                "Move colour in the shadows, midtones and highlights of a frame separately, "
+                "the way a colourist's three wheels do. Use it for a graded look, such as cool "
+                "shadows against warm highlights, or to correct a cast by pushing the opposite "
+                "way in whichever range carries it."
             ),
             inputs=[
                 io.Image.Input(

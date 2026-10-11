@@ -217,15 +217,10 @@ class DirectoryListing(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "List what is in a folder: every full path on one wire, every name on "
-                "another, and the count beside them, so a For Loop can take one file per "
-                "iteration. Files of any kind, picked with a glob such as '*.png' or "
-                "'frame_*', optionally descending into subfolders, ordered by name, by "
-                "number, by date or by size. 'natural' order reads digit runs as numbers, "
-                "so frame_2 comes before frame_10 rather than after it. 'input', 'output' "
-                "and 'temp' name ComfyUI's own folders. A folder that is not there stops "
-                "the prompt; a folder holding nothing the pattern picks answers empty "
-                "lists and a count of 0."
+                "List what is in a folder as full paths, names and a count, so a For Loop "
+                "can take one file per iteration. Entries are picked with a glob, optionally "
+                "from subfolders, and sorted by name, number, date or size. A missing folder "
+                "stops the prompt; a pattern matching nothing gives empty lists and 0."
             ),
             inputs=[
                 io.Combo.Input(
@@ -243,11 +238,10 @@ class DirectoryListing(io.ComfyNode):
                     default="*",
                     multiline=False,
                     tooltip=(
-                        "Which entries to list, as a glob. `*` takes everything, `*.png` "
-                        "only PNGs, `frame_*.png` one numbered run. A name starting with a "
-                        "dot is matched only by a pattern starting with one. Matching is "
-                        "inside the folder: a drive, a leading slash or a '..' segment is "
-                        "refused."
+                        "Which entries to list, as a glob. `*` = everything; `*.png` = only "
+                        "PNGs; `frame_*.png` = one numbered run. A name starting with a dot "
+                        "needs a pattern starting with one. A drive, leading slash or '..' "
+                        "is refused."
                     ),
                 ),
                 io.Boolean.Input(

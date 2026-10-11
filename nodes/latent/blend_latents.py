@@ -153,14 +153,8 @@ class BlendLatents(io.ComfyNode):
             search_aliases=["Blend Latents", "latent blend", "mix latents", "latent math"],
             category="WAS Suite/Latent",
             description=(
-                "Blend two latents with an arithmetic or photographic mix operation. "
-                "The result is renormalised to 0.0-1.0. `add`, `multiply`, `divide` and "
-                "`subtract` are plain arithmetic on the weighted pair. `overlay`, "
-                "`hard_light` and `soft_light` keep dark areas dark and light areas light "
-                "with increasing gentleness; `screen` and `linear_dodge` only brighten; "
-                "`difference` and `exclusion` keep whatever the two disagree about and "
-                "cancel out what they share; `random` mixes them through freshly drawn "
-                "noise."
+                "Blend two latents with an arithmetic or photographic mix, such as `overlay` "
+                "or `screen`. The result is rescaled so its values run from 0.0 to 1.0."
             ),
             inputs=[
                 io.Latent.Input(
@@ -182,9 +176,11 @@ class BlendLatents(io.ComfyNode):
                     "operation",
                     options=OPERATIONS,
                     tooltip=(
-                        "How the two latents are combined, from plain arithmetic to "
-                        "photographic mixes such as `overlay` and `screen`. `random` mixes "
-                        "through fresh noise, differently on every run."
+                        "`add`, `multiply`, `divide`, `subtract` = weighted arithmetic; "
+                        "`overlay`, `hard_light`, `soft_light` = darks stay dark and lights "
+                        "light, each gentler than the last; `screen`, `linear_dodge` = brighten "
+                        "only; `difference`, `exclusion` = keep what the two disagree on; "
+                        "`random` = mix through fresh noise each run."
                     ),
                 ),
                 io.Float.Input(
@@ -194,11 +190,9 @@ class BlendLatents(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How much weight latent_a carries. On `add`, `multiply`, `divide` "
-                        "and `subtract`, latent_b gets the rest: 0.5 is an even mix and 1.0 "
-                        "leaves latent_b out altogether. Every other operation scales both "
-                        "latents by this value instead, so it acts as an overall strength "
-                        "rather than a balance."
+                        "Weight of latent_a. On `add`, `multiply`, `divide` and `subtract`, "
+                        "latent_b gets the rest: 0.5 = even mix; 1.0 = latent_a only. Every "
+                        "other operation scales both latents by it, as an overall strength."
                     ),
                 ),
             ],

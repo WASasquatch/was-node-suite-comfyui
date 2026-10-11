@@ -38,9 +38,8 @@ class MaskSmoothRegion(io.ComfyNode):
                     step=0.1,
                     tooltip=(
                         "How far the mask is blurred, in pixels, before it is turned back into "
-                        "hard black and white. Larger values round corners off more and swallow "
-                        "small specks; 20 or more visibly reshapes the mask. Even 0 still hardens "
-                        "the edges, because the mask is re-thresholded either way."
+                        "hard black and white. 0 = edges hardened only; 20 or more = visibly "
+                        "reshapes the mask. Larger values round corners and swallow small specks."
                     ),
                 ),
             ],

@@ -32,16 +32,9 @@ class ThreePathTraceRender(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "Render the scene by following light as it bounces, so soft shadows, colour "
-                "bleeding between surfaces, mirror reflections and refracting glass come out of "
-                "the geometry itself rather than being approximated. Every pixel averages "
-                "`samples` traced paths and noise falls as that number rises, so this trades "
-                "time for cleanliness where Three Render trades nothing. Light comes from "
-                "Three Environment, from an emissive material and from directional, point and "
-                "spot lights; an ambient or hemisphere light is not traced, and a scene lit "
-                "only by one comes out black. The effect chain, antialias and supersample "
-                "settings are not used. The "
-                "drawing happens in an open ComfyUI tab, so a tab has to be open and the "
-                "graph queued from it; a headless run says so rather than hanging."
+                "bleeding, reflections and glass come out of the geometry, handing on frames, "
+                "depth and normals. Ambient and hemisphere lights and Three App's effects are "
+                "not used. It draws in an open ComfyUI tab, so queue the graph from one."
             ),
             inputs=[
                 THREE_APP.Input(

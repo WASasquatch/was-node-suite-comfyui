@@ -127,17 +127,10 @@ class WASConditioningBlend(io.ComfyNode):
             ],
             category="WAS Suite/Conditioning",
             description=(
-                "Mix encoded prompts into one, by a choice of twelve formulas rather than a "
-                "single average. Blending prompts produces a subject that is genuinely "
-                "between them instead of a picture containing both, which is what the "
-                "concatenating nodes give. Each further slot is blended onto the result of "
-                "the ones before it. Every prompt must come from a text encoder that "
-                "produces a pooled output, such as SDXL's or Flux's. `lerp`, `bislerp` and "
-                "`slerp` are the same straight mix, `cosine interp` and `cuberp` are that "
-                "mix with the ends held longer, `add` balances the pair, `inject` layers the "
-                "newer prompt on top, `difference` and `exclusion` keep only what the pair "
-                "disagree on and so push the result away from both, and `random` varies the "
-                "mix per element and is the only mode the seed changes."
+                "Mix any number of encoded prompts into one by a choice of twelve formulas, "
+                "giving a subject genuinely between them rather than a picture containing "
+                "both. Each further slot blends onto the result so far. Every prompt needs a "
+                "pooled output, such as SDXL's or Flux's."
             ),
             inputs=[
                 io.Conditioning.Input(
@@ -159,9 +152,10 @@ class WASConditioningBlend(io.ComfyNode):
                     "blending_mode",
                     options=BLENDING_MODES,
                     tooltip=(
-                        "Which formula combines a prompt with the result so far. `lerp` is "
-                        "the straight mix to reach for first; other modes layer, balance or "
-                        "subtract the pair instead."
+                        "`lerp`, `slerp`, `bislerp` = straight mix; `cosine interp`, `cuberp` "
+                        "= ends held longer; `add` = balances the pair; `inject` = newer "
+                        "prompt on top; `difference`, `exclusion` = only what they disagree "
+                        "on; `random` = varies per element, uses seed."
                     ),
                 ),
                 io.Float.Input(
@@ -171,11 +165,9 @@ class WASConditioningBlend(io.ComfyNode):
                     max=10.0,
                     step=0.001,
                     tooltip=(
-                        "How strongly each blend leans, which every mode reads its own way. "
-                        "0.5 is an even mix. With `lerp` and the other straight mixes, 0.0 "
-                        "takes the next prompt and 1.0 keeps the result so far; `add` and "
-                        "`cosine interp` run the other way round. Values outside 0 to 1 push "
-                        "past either prompt."
+                        "How far each blend leans: 0.5 = even mix; with `lerp` and the straight "
+                        "mixes, 0.0 = the next prompt, 1.0 = the result so far, reversed for "
+                        "`add` and `cosine interp`. Outside 0 to 1 pushes past either prompt."
                     ),
                 ),
                 io.Int.Input(

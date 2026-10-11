@@ -43,11 +43,9 @@ class MaskFeather(io.ComfyNode):
             category="WAS Suite/Image/Masking",
             description=(
                 "Fade a mask to black over a run of pixels at each of its four edges, one "
-                "distance per edge, so a composite or an inpaint has no hard seam to show. "
-                "The band on the node reports the coverage before and after, what was "
-                "cleared and the box the mask fills, so a fade wide enough to eat the whole "
-                "mask reads off the node instead of arriving as a missing subject further "
-                "down the graph."
+                "distance per edge, so a composite or an inpaint shows no hard seam. The node "
+                "reports the coverage before and after, so a fade that ate the whole mask "
+                "shows at once."
             ),
             inputs=[
                 io.Mask.Input(

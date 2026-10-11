@@ -134,10 +134,9 @@ class LoadImagesFromZip(io.ComfyNode):
                     max=limits.max_resolution(),
                     step=1,
                     tooltip=(
-                        "How tall every image in the batch comes out, in pixels. Together with "
-                        "width this is also what decides how many images fit in one batch: the "
-                        "node loads as many as 32 megapixels holds, which is 128 at 512 by 512 "
-                        "and 32 at 1024 by 1024, and says in the log when there are more."
+                        "How tall every image comes out, in pixels. With width it sets how many "
+                        "fit in one batch, 32 megapixels' worth: 128 at 512 by 512, 32 at 1024 "
+                        "by 1024. The log says when there are more."
                     ),
                 ),
                 io.Combo.Input(
@@ -217,10 +216,10 @@ class LoadImagesFromZip(io.ComfyNode):
                 LIST.Output(
                     display_name="names",
                     tooltip=(
-                        "The name each image came from, on one wire and in batch order, such "
-                        "as 'frames/cat.png'. The folders inside the archive are kept, so two "
-                        "files called cat.png in different folders stay apart. Read one out "
-                        "with Text List Get, using the same index as the image."
+                        "The name each image came from, in batch order, such as "
+                        "'frames/cat.png'. Folders inside the archive are kept, so two cat.png "
+                        "files in different folders stay apart. Read one with Text List Get at "
+                        "the image's index."
                     ),
                 ),
                 io.Int.Output(

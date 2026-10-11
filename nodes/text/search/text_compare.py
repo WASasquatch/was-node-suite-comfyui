@@ -18,15 +18,10 @@ class TextCompare(io.ComfyNode):
             search_aliases=["Text Compare", "similarity", "difference", "levenshtein", "diff"],
             category="WAS Suite/Text/Search",
             description=(
-                "Compare two strings. Both texts pass through unchanged, alongside an "
-                "exact equality flag, a similarity or difference score, and the words that "
-                "score was built from. `similarity` scores 1.0 for identical text and "
-                "falls toward 0.0 as the two diverge, and COMPARISON_TEXT lists the words "
-                "they have in common. `difference` lists the parts of text_a that changed "
-                "and scores on a separate scale that is not capped at 1.0, where identical "
-                "text comes out a little over 1.0. tolerance only widens the words "
-                "collected in `similarity` mode: it never changes any score, `difference` "
-                "mode ignores it, and a setting between 0.0 and 1.0 behaves like 0.0."
+                "Compare two strings, passing both through unchanged with an exact-match "
+                "flag, a score, and the words behind that score. `similarity` scores 1.0 for "
+                "identical text, falling toward 0.0, and lists the shared words; `difference` "
+                "lists the parts of text_a that changed, on its own scale that can pass 1.0."
             ),
             inputs=[
                 io.String.Input(
@@ -62,9 +57,10 @@ class TextCompare(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How loosely a word counts as shared in COMPARISON_TEXT. 0.0 keeps "
-                        "only words appearing in both texts; 1.0 also keeps words one "
-                        "character apart, so 'colour' matches 'color'."
+                        "How loosely a word counts as shared in COMPARISON_TEXT, in "
+                        "`similarity` mode only; no score changes. 0.0 to 0.99 = only words "
+                        "in both texts; 1.0 = also words one character apart, so 'colour' "
+                        "matches 'color'."
                     ),
                 ),
             ],

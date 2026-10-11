@@ -64,16 +64,9 @@ class LoadDocument(io.ComfyNode):
             description=(
                 (
                     "Open one document from disk and put it on a DOC wire, with its markup, "
-                    "its metadata and every file embedded in it. The file menu lists every "
-                    "document in ComfyUI's input, output and temp folders and any folder added "
-                    "under paths.allow_read, subfolders included. A "
-                    ".wasdoc is the container Save DOC writes and arrives exactly as the file "
-                    "holds it. A .docx and an .odt open too, converted rather than copied: "
-                    "the writing, tables, links and pictures come across, page geometry, "
-                    "headers, footnotes, comments and tracked changes do not. Those two read "
-                    "through python-docx and odfdo, named in the error when either is "
-                    "missing, and features.document_export can refuse them. A .pdf is never "
-                    "read. The document is read again whenever the file changes."
+                    "metadata and embedded files. A .wasdoc arrives exactly as saved; a .docx "
+                    "or .odt is converted, keeping the writing, tables, links and pictures but "
+                    "not page layout, headers, footnotes or comments."
                 )
             ),
             inputs=[
@@ -81,21 +74,18 @@ class LoadDocument(io.ComfyNode):
                     "file",
                     options=options(),
                     tooltip=(
-                        "Which document to open. The menu lists every .wasdoc, .docx and "
-                        ".odt in ComfyUI's input, output and temp folders, tagged '[input]', "
-                        "'[output]' or '[temp]'. A folder added under paths.allow_read in "
-                        "config.yaml appears under its own name."
+                        "Which document to open: every .wasdoc, .docx and .odt in ComfyUI's "
+                        "input, output and temp folders, subfolders included, tagged '[input]', "
+                        "'[output]' or '[temp]'. A folder added under paths.allow_read appears "
+                        "under its own name."
                     ),
                 ),
             ],
             outputs=[
                 DOC.Output(
                     tooltip=(
-                        "The whole document on one wire: its markup, its metadata and its "
-                        "embedded files. A .wasdoc arrives exactly as the file holds it; a "
-                        ".docx or .odt arrives converted, its writing and pictures kept and "
-                        "its page layout dropped. Wire it into View DOC Metadata, Convert "
-                        "DOC to Plaintext, or Save DOC."
+                        "The whole document on one wire: its markup, metadata and embedded "
+                        "files, for View DOC Metadata, Convert DOC to Plaintext or Save DOC."
                     ),
                 ),
             ],

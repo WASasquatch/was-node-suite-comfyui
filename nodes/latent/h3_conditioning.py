@@ -11,11 +11,9 @@ from ...modules.interface import segment_preview
 from ...modules.latent import h3_assets, h3_conditioning, h3_extend, h3_references
 
 MODE_HINT = (
-    "The task to condition for. `t2va` = prompt only; `i2va` = opens on first_frame; "
-    "`fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = every "
-    "segment between a neighbouring pair of images; `ref2va` = every segment built on the "
-    "ref inputs, named `<Picture 1>`, `<Video 1>`, `<Audio 1>` in the prompt. Assets "
-    "wired into assets add to any mode."
+    "`t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, "
+    "closes on last_frame; `fl2va_batched` = each segment between two neighbouring images; "
+    "`ref2va` = every segment built on the ref inputs. Assets add to any mode."
 )
 
 REF_IMAGE_HINT = (
@@ -40,10 +38,9 @@ REF_AUDIO_HINT = (
 )
 
 REF_SIZE_HINT = (
-    "How large each reference picture is encoded, for every row. `match` = scaled down to "
-    "the clip's area; `256` to `2048` = longest side at most that; `max` = up to a 2048 "
-    "pixel short edge, the closest likeness and the heaviest. Always 256 to 5760 pixels a "
-    "side. Read by `ref2va` and by reference assets."
+    "Size each reference picture is encoded at. `match` = scaled down to the clip's area; "
+    "`256` to `2048` = longest side at most that; `max` = up to a 2048 pixel short edge, "
+    "closest likeness, heaviest. Read by `ref2va` and reference assets."
 )
 
 MODEL_FL2VA_HINT = (
@@ -60,9 +57,9 @@ MODEL_REF2VA_HINT = (
 )
 
 ASSETS_HINT = (
-    "The pictures, clips and sounds of a chain of MiniMax H3 Asset nodes. Each names the "
-    "segment it belongs to and whether it opens or closes it, is pinned at a frame of it, "
-    "or is referenced by its prompt. Wire the last asset of the chain here."
+    "Pictures, clips and sounds from a chain of MiniMax H3 Asset nodes, each placed in its "
+    "segment as an opening, closing or pinned frame, or a prompt reference. Wire the last "
+    "asset of the chain here."
 )
 
 #: The inputs `ref2va` reads, drawn only in that mode.
@@ -103,10 +100,10 @@ REFERENCE_INPUTS = [
 ]
 
 PROMPT_HEADER_HINT = (
-    "Text put before every segment's prompt, as `subject_definitions:` and the wardrobe "
-    "lines that hold for the whole run. Blank adds nothing, and a blank line separates it "
-    "from the row's own prompt. A section a row writes itself, as `visual_style:`, "
-    "replaces the one here for that row. A `<d>` line here is spoken in every segment."
+    "Text put before every segment's prompt, as `subject_definitions:` and wardrobe lines "
+    "for the whole run. Blank adds nothing. A section a row writes itself, as "
+    "`visual_style:`, replaces the header's for that row. A `<d>` line here is spoken in "
+    "every segment."
 )
 
 PROMPT_FOOTER_HINT = (
@@ -140,17 +137,15 @@ SEGMENT_PROMPT_HINT = (
 )
 
 SEGMENT_DURATION_HINT = (
-    "How long this segment runs, carried frames included, matching its "
-    "`duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, "
-    "`7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states "
-    "the frames each segment came to."
+    "Seconds this segment runs, carried frames included, matching its `duration_seconds` "
+    "line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to "
+    "8.71. The report states each segment's frames."
 )
 
 SEGMENT_SOURCE_HINT = (
-    "Which segment this one continues from: `-1` = the one before, `-2` = the one before "
-    "that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the "
-    "scene back up where it was left, with fresh sound; the new frames still join the "
-    "clip's end. Ignored on segment 1."
+    "Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = "
+    "Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames "
+    "still join the clip's end. Ignored on segment 1."
 )
 
 SEGMENT_WRAP_HINT = (
@@ -160,18 +155,15 @@ SEGMENT_WRAP_HINT = (
 )
 
 SEGMENT_CONTINUITY_HINT = (
-    "How this segment follows the last. `carry` = one "
-    "shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = "
-    "cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; "
-    "`carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, "
-    "sound and cast kept."
+    "`carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set "
+    "kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference "
+    "(sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept."
 )
 
 SEGMENT_OVERLAP_HINT = (
-    "Frames of the previous segment this one continues from, as `22` for a scene carrying "
-    "on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both "
-    "sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first "
-    "segment."
+    "Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the "
+    "scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole "
+    "clips, `17` for about 0.7s. Ignored on segment 1."
 )
 
 SEGMENT_STRENGTH_HINT = (
@@ -192,10 +184,10 @@ SEGMENT_SEED_HINT = (
 )
 
 SEGMENT_MODEL_HINT = (
-    "Which wired model samples this segment, answered on H3 Extend Window's model output. "
-    "`auto` = ref2va where the segment references anything and fl2va otherwise, or "
-    "whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames "
-    "exactly; `ref2va` = model_ref2va. Ignored where no model is wired."
+    "Which wired model samples this segment, sent out on H3 Extend Window's model output. "
+    "`auto` = ref2va where the segment references anything, else fl2va, or the one model "
+    "wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. "
+    "Ignored with no model wired."
 )
 
 
@@ -224,17 +216,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Prompt every segment of a MiniMax H3 video on one node. Each row is one "
-                "segment with its own prompt, length, overlap and continuity, so a scene "
-                "can carry on, cut somewhere new, or cut and keep its cast. `ref2va` builds "
-                "every segment on shared reference pictures, clips and audio. A chain of "
-                "MiniMax H3 Asset nodes wired into assets gives a segment its own opening "
-                "frame, closing frame, keyframe at any frame, or references, and with both "
-                "models wired in each row picks the one it samples with. The Prompt Timeline "
-                "button opens a window that writes these rows and places the assets. A loop "
-                "sampling one row per iteration builds the whole video, with every prompt "
-                "encoded before sampling starts. Send segments to a While Loop's count and "
-                "prompts to H3 Extend Window."
+                "Prompt every segment of a MiniMax H3 video on one node, each row with its "
+                "own prompt, length, continuity, assets and model. Its Prompt Timeline window "
+                "writes the rows and places the assets. Send segments to a While Loop's count "
+                "and prompts to H3 Extend Window to sample one row per iteration."
             ),
             inputs=[
                 io.Clip.Input(
@@ -1597,8 +1582,11 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     conditioning = node_helpers.conditioning_set_values(
                         conditioning, {"minimax_keyframes": blocks}
                     )
+                # A transition that adds references in the window is sampled as referenced.
+                adds = not opening and h3_extend.resolved(
+                    choice, sounds[index])[0] in h3_extend.REFERENCING_PICTURES
                 model, kind = h3_conditioning.pick_model(
-                    choices[index], model_fl2va, model_ref2va, references is not None
+                    choices[index], model_fl2va, model_ref2va, references is not None or adds
                 )
                 if opening:
                     own_latent, length = h3_conditioning.empty_latent(width, height, count)

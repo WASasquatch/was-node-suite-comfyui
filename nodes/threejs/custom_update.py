@@ -29,13 +29,9 @@ class ThreeCustomUpdate(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Run a short JavaScript body on an object once per drawn frame, for motion "
-                "Three Animate Transform cannot express. In scope are `object`, `time` in "
-                "seconds since the viewer started, `delta` in seconds since the last frame, "
-                "`THREE`, and `ctx` for anything to be kept between frames. Scaling by `delta` "
-                "keeps the motion the same speed whatever the frame rate. The code runs in your "
-                "browser, so only run a workflow carrying custom JavaScript if you trust where "
-                "it came from."
+                "Run a short JavaScript body on an object every drawn frame, for motion Three "
+                "Animate Transform cannot express. The code runs in the browser with the reach "
+                "of any extension, so only load a workflow carrying it from a trusted source."
             ),
             inputs=[
                 THREE_OBJECT.Input(
@@ -48,7 +44,9 @@ class ThreeCustomUpdate(io.ComfyNode):
                     multiline=True,
                     tooltip=(
                         "A body run each frame, as `object.position.y = Math.sin(time) * 0.5;`. "
-                        "Nothing is returned."
+                        "In scope: `object`; `time`, seconds since start; `delta`, seconds "
+                        "since the last frame; `THREE`; `ctx`, kept between frames. Nothing is "
+                        "returned."
                     ),
                 ),
             ],

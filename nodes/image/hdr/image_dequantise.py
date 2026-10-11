@@ -34,11 +34,10 @@ class ImageDequantise(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Rebuild the levels an 8-bit file threw away. A band stored as one flat "
-                "value comes back as the ramp it was cut from, and no sample moves further "
-                "than half a code. Reach for it where a sky, a soft shadow or a vignette "
-                "has banded, and before grading, tone mapping or an HDR pass on a picture "
-                "that came out of a PNG or a JPEG."
+                "Rebuild the levels an 8-bit file threw away, so a band stored as one flat "
+                "value comes back as the ramp it was cut from. Use it where a sky, soft shadow "
+                "or vignette has banded, and before grading, tone mapping or an HDR pass on a "
+                "PNG or JPEG."
             ),
             inputs=[
                 io.Image.Input(

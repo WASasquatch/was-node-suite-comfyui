@@ -93,13 +93,10 @@ class H3TiledSampler(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across "
-                "the frame and overlapping windows along the clip, blended at every step so the "
-                "tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each "
-                "fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip "
-                "joined by H3 Extend Append keeps its cuts: where it takes several time windows, "
-                "each stays inside one scene. The panel shows where the tiles sit and marks "
-                "each cut."
+                "Refine a long or upscaled MiniMax H3 clip with KSampler's settings, in "
+                "overlapping tiles across the frame and windows along the clip that each fit the "
+                "card, blended at every step into one clip. It does no upscaling itself. Each "
+                "time window stays inside one scene, and the panel shows where the tiles sit."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),

@@ -69,11 +69,9 @@ class ZipManage(io.ComfyNode):
                     default="",
                     multiline=True,
                     tooltip=(
-                        "Entry names, one per line, spelled as the archive carries them, "
-                        "folders included. Read only when selection is 'the entries box'. "
-                        "With action 'keep the chosen' these are the entries kept; with "
-                        "'remove the chosen' they are the ones dropped. A '#' line is a "
-                        "comment. Eg: chapters/one.html"
+                        "Entry names, one per line, folders included, read only when selection "
+                        "is 'the entries box'. 'keep the chosen' keeps these; 'remove the "
+                        "chosen' drops them. A '#' line is a comment. Eg: chapters/one.html"
                     ),
                 ),
                 io.Combo.Input(
@@ -81,11 +79,9 @@ class ZipManage(io.ComfyNode):
                     options=list(SELECTIONS),
                     default=PICK,
                     tooltip=(
-                        "'pick on the node' holds the run and lists what the archive holds "
-                        "so the entries can be ticked, and the ticked ones are the ones "
-                        "kept. With no browser connected it reads the entries box instead, "
-                        "so a headless run never waits. 'the entries box' always reads the "
-                        "names typed below and never holds the run."
+                        "'the entries box' = reads the names typed in entries, never holds the "
+                        "run; 'pick on the node' = holds the run and keeps the entries ticked "
+                        "on the node, or reads the entries box when no browser is connected."
                     ),
                 ),
                 io.Combo.Input(

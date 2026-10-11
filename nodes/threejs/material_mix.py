@@ -29,12 +29,9 @@ class ThreeMaterialMix(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "Paint one material over another through a mask, the way a texturing tool "
-                "stacks layers. The mask is read in UV space: black keeps the base, white "
-                "shows the top, and grey mixes them. Every channel is mixed, so colour, "
-                "roughness, metalness, normals, emission, ambient occlusion, bump and "
-                "displacement all follow the same mask, and a channel only one side textures "
-                "is mixed against the other's plain setting. The answer is a normal material, "
-                "so feeding it back in as the base stacks a third layer, and a fourth."
+                "stacks layers: black keeps the base, white shows the top, grey mixes them. "
+                "Every channel follows the same mask, and the result is a normal material, so "
+                "feeding it back in as the base stacks another layer."
             ),
             inputs=[
                 THREE_MATERIAL.Input(

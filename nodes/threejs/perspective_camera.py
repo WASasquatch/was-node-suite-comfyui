@@ -28,10 +28,8 @@ class ThreePerspectiveCamera(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "A camera with perspective, so distant things are smaller. Position places it "
-                "and target is the point it looks at, which is also the point orbit control "
-                "turns around. These are the starting values: dragging in the viewer moves the "
-                "camera from here, and Reset Camera puts it back. For a view with no "
-                "convergence, as in an elevation drawing, use Three Orthographic Camera."
+                "and target is the point it looks at and orbits around; dragging in the viewer "
+                "starts from here and Reset Camera returns here."
             ),
             inputs=[
                 io.Float.Input(

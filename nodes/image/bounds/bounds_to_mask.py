@@ -92,8 +92,7 @@ class BoundsToMask(io.ComfyNode):
                     tooltip=(
                         "Width of the mask in pixels, read only when neither image nor mask "
                         "is connected. 0 = take it from the connected picture; 1872 = an "
-                        "1872px frame. Type the width of the picture the bounds were "
-                        "measured on, or the rectangles land in the wrong place."
+                        "1872px frame. Use the width the bounds were measured on."
                     ),
                 ),
                 io.Int.Input(

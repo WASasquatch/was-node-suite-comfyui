@@ -10,6 +10,7 @@ import contextlib
 import os
 
 from .. import log
+from ..interface.channel import executing_workflow_id
 from ..util import sandbox
 
 logger = log.get_logger("media.temp_video")
@@ -175,8 +176,8 @@ def to_temp(video, prefix: str) -> dict | None:
         prefix: What to name the file, such as ``"was.compare.a"``.
 
     Returns:
-        ``filename``, ``subfolder`` and ``type`` for the written file, or None where none of
-        :data:`CODECS` encoded it.
+        ``filename``, ``subfolder`` and ``type`` for the written file and the ``workflow`` the
+        run was queued from, or None where none of :data:`CODECS` encoded it.
     """
     try:
         import folder_paths
@@ -194,6 +195,7 @@ def to_temp(video, prefix: str) -> dict | None:
         )
         file = f"{name}_{counter:05}_.{VideoContainer.get_extension(CONTAINER)}"
         target = os.path.join(folder, file)
+        workflow = executing_workflow_id() or ""
     except Exception as error:  # noqa: BLE001
         logger.warning("a video could not be prepared for playback (%s)", error)
         return None
@@ -201,7 +203,7 @@ def to_temp(video, prefix: str) -> dict | None:
     if size is not None:
         try:
             _smaller(video, target, size)
-            return {"filename": file, "subfolder": subfolder, "type": "temp"}
+            return {"filename": file, "subfolder": subfolder, "type": "temp", "workflow": workflow}
         except Exception as error:  # noqa: BLE001
             logger.warning(
                 "the %dx%d clip could not be made smaller for playback (%s)", width, height, error
@@ -217,7 +219,7 @@ def to_temp(video, prefix: str) -> dict | None:
                     format=VideoContainer(CONTAINER),
                     codec=VideoCodec(codec),
                 )
-            return {"filename": file, "subfolder": subfolder, "type": "temp"}
+            return {"filename": file, "subfolder": subfolder, "type": "temp", "workflow": workflow}
         except Exception as error:  # noqa: BLE001
             logger.debug("codec %s did not encode the clip (%s)", codec, error)
     logger.warning(

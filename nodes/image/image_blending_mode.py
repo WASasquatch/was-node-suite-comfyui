@@ -33,15 +33,9 @@ class ImageBlendingMode(io.ComfyNode):
             ],
             category="WAS Suite/Image",
             description=(
-                "Combine two images with any of the 26 blending modes a layer stack names, "
-                "then fade the result back towards image_a. The output is the size of "
-                "image_a, and image_b is resampled to match it. `normal` lays image_b over "
-                "image_a and `add` sums the two, `multiply` darkens, `screen` lightens, "
-                "`overlay`, `soft_light`, `hard_light`, `vivid_light` and `linear_light` "
-                "raise contrast, `darken` and `lighten` keep the darker or lighter pixel, "
-                "`difference`, `exclusion`, `subtract` and `grain_extract` show where the "
-                "two disagree, and `hue`, `saturation`, `color` and `luminosity` take one "
-                "part of image_b and keep the rest of image_a."
+                "Combine two images with any of 26 layer blending modes, such as multiply, "
+                "screen and overlay, then fade the result back towards image_a. The output is "
+                "the size of image_a, with image_b resampled to match."
             ),
             inputs=[
                 io.Image.Input(
@@ -90,10 +84,10 @@ class ImageBlendingMode(io.ComfyNode):
                         "luminosity",
                     ],
                     tooltip=(
-                        "How the two layers are combined. `normal` lays image_b over "
-                        "image_a; `add` sums them; `multiply` darkens; `screen` lightens; "
-                        "`overlay` raises contrast; `hue` takes colour from image_b while "
-                        "keeping the shading of image_a."
+                        "`normal` = image_b over image_a; `add` = sums them; `multiply` = "
+                        "darkens; `screen` = lightens; `overlay`, `soft_light` = more contrast; "
+                        "`difference` = where the two disagree; `hue`, `saturation`, `color`, "
+                        "`luminosity` = that part from image_b, the rest from image_a."
                     ),
                 ),
                 io.Float.Input(

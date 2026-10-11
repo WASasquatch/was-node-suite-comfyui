@@ -38,12 +38,9 @@ class LayersCanvas(io.ComfyNode):
             ],
             category="WAS Suite/Image/Layers",
             description=(
-                "Give a layer stack a canvas of its own size rather than letting it take the "
-                "size its layers happen to reach. Without one the drawn picture grows the "
-                "moment a stroke, glow or shadow reaches past an edge, so a plate composited "
-                "at 640 by 1137 comes back larger than the plate. Setting the canvas holds "
-                "the picture at the size it is meant to be and lets the effects run off the "
-                "edge the way they would in an image editor."
+                "Give a layer stack a fixed canvas size instead of the size its layers happen "
+                "to reach. Strokes, glows and shadows then run off the edge as they would in "
+                "an image editor, and the picture stays at the size it is meant to be."
             ),
             inputs=[
                 io.Layers.Input(

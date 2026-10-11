@@ -28,13 +28,10 @@ class TemporalNoiseHoldNode(io.ComfyNode):
             category="WAS Suite/Sampling",
             description=(
                 "Starting noise whose pattern carries over from one video frame to the "
-                "next instead of being redrawn each time. The further it carries, the "
-                "denser and more detailed the scene comes back. Wire it into the noise "
-                "socket of any custom sampler in place of RandomNoise. Only the first "
-                "draw is shaped, so a sampler that draws fresh noise at every step "
-                "overwrites it: the ancestral and SDE families, and any sampler whose "
-                "eta is above 0, which several default to. euler, heun, dpm_2, dpmpp_2m "
-                "and the ode variants keep it."
+                "next, so the scene comes back denser and more detailed. Wire it into the "
+                "noise socket of any custom sampler in place of RandomNoise. Samplers that "
+                "redraw noise each step (ancestral, SDE, or eta above 0) overwrite it; euler, "
+                "heun, dpm_2 and dpmpp_2m keep it."
             ),
             inputs=[
                 io.Int.Input(
@@ -56,11 +53,10 @@ class TemporalNoiseHoldNode(io.ComfyNode):
                     step=0.1,
                     round=0.01,
                     tooltip=(
-                        "How many latent frames the noise pattern carries over. 0.0 draws "
-                        "ordinary noise and matches RandomNoise exactly. Higher values "
-                        "cut the frame-to-frame change: 2.0 to 0.63 of ordinary noise, "
-                        "8.0 to 0.34, 25.0 to 0.20, 64.0 to 0.12, 128.0 to 0.09. One latent "
-                        "frame is about 3.4 output frames on MiniMax H3, 4 on Wan and 8 on LTX."
+                        "Latent frames the noise carries over: 0.0 = ordinary noise, as "
+                        "RandomNoise; 2.0 = 0.63 of ordinary frame-to-frame change; 8.0 = 0.34; "
+                        "25.0 = 0.20; 128.0 = 0.09. A latent frame is about 3.4 output frames on "
+                        "MiniMax H3, 4 on Wan, 8 on LTX."
                     ),
                 ),
             ],

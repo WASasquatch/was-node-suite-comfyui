@@ -27,12 +27,10 @@ class ThreeStandardMaterial(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A physically based surface, lit by the lights in the scene. Colour, roughness "
-                "and metalness set the look on their own, and a texture wired into any of the "
-                "map sockets overrides that channel per pixel. Metals take their colour from the "
-                "map or the colour swatch and reflect their surroundings; a metalness of 0 with "
-                "a roughness near 0.5 is the usual starting point for plastic, paint and cloth. "
-                "For clearcoat, transmission or sheen use Three Physical Material."
+                "A physically based surface lit by the scene's lights, set by colour, roughness "
+                "and metalness, with any wired map overriding its channel per pixel. Metalness 0 "
+                "and roughness near 0.5 suit plastic, paint and cloth; for clearcoat, "
+                "transmission or sheen use Three Physical Material."
             ),
             inputs=[
                 io.String.Input(

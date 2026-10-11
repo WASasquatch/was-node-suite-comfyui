@@ -62,22 +62,10 @@ class NumberEasing(io.ComfyNode):
             ],
             category="WAS Suite/Number/Operations",
             description=(
-                (
-                    (
-                        "Convert numbers from one range to another through an easing curve. "
-                        "One number or a whole list, typed into the value box or wired in, and "
-                        "every value comes out as a list, so the graph below runs once per "
-                        "number. The linear curve is a plain range remap; any other also "
-                        "shapes how the values accelerate. A wire is read instead of the box, "
-                        "so Number Range's LIST converts a whole series at once. A value "
-                        "outside the input range is pulled to the nearest end first, the "
-                        "curves being defined only between them. Past the far end `back` "
-                        "travels about a tenth of the span and `elastic` almost a whole one, "
-                        "so leave clamp on where the result feeds a hard limit such as a "
-                        "denoise. On unreadable, `zero` keeps an entry's position, and as do "
-                        "nan and infinity. The ints output cuts off rather than rounding."
-                    )
-                )
+                "Convert numbers from one range to another through an easing curve. Type one "
+                "number or a list, or wire in a list such as Number Range's, and every value "
+                "comes out as a list, so the graph below runs once per number. `linear` is a "
+                "plain remap; the others also shape how values accelerate."
             ),
             inputs=[
                 io.MultiType.Input(
@@ -98,12 +86,10 @@ class NumberEasing(io.ComfyNode):
                     "easing",
                     options=list(EASING_NAMES),
                     tooltip=(
-                        "The curve applied to every value once it has been normalised. "
-                        "`linear` leaves it alone, which turns this node into a plain range "
-                        "conversion. `ease_in` starts slow, `ease_out` finishes slow, "
-                        "`ease_in_out` does both. The `back` and `elastic` families leave the "
-                        "output range on purpose, and `bounce` settles onto it in decreasing "
-                        "hops without ever leaving it."
+                        "`linear` = a plain range conversion; `ease_in` = starts slow; "
+                        "`ease_out` = finishes slow; `ease_in_out` = both; `back`, `elastic` = "
+                        "overshoot the output range; `bounce` = settles in shrinking hops, "
+                        "never leaving it."
                     ),
                 ),
                 io.Float.Input(
@@ -113,10 +99,10 @@ class NumberEasing(io.ComfyNode):
                     max=1e9,
                     step=0.01,
                     tooltip=(
-                        "The value that counts as the start of the input range, and the same "
-                        "range is used for every value converted. Set this and input_max to "
-                        "the range the source actually produces, 0 and 23 for a 24-frame "
-                        "counter, or the start and stop of the Number Range feeding it."
+                        "Start of the input range, shared by every value; values outside it "
+                        "are pulled to the nearest end. Match the source: 0 and 23 for a "
+                        "24-frame counter, or the start and stop of the Number Range feeding "
+                        "it."
                     ),
                 ),
                 io.Float.Input(
@@ -155,17 +141,18 @@ class NumberEasing(io.ComfyNode):
                     "clamp",
                     default=True,
                     tooltip=(
-                        "Whether each result is held inside the output range. On by default; "
-                        "turn it off where the overshoot of `back` or `elastic` is the point."
+                        "On = each result held inside the output range; off = `back` "
+                        "overshoots about a tenth of the span and `elastic` almost a whole "
+                        "one. Keep it on where the result feeds a hard limit such as denoise."
                     ),
                 ),
                 io.Combo.Input(
                     "unreadable",
                     options=list(UNREADABLE),
                     tooltip=(
-                        "What an entry that is not a number does. `skip` leaves it out, "
-                        "`zero` puts 0 in its place, and `error` stops the prompt and names "
-                        "the entry."
+                        "What an entry that is not a number does. `skip` = left out; `zero` = "
+                        "0 in its place, keeping every position; `error` = stops the prompt "
+                        "and names the entry."
                     ),
                 ),
             ],

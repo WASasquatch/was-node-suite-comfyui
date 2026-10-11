@@ -25,11 +25,8 @@ class ImageGenerateGradient(io.ComfyNode):
             category="WAS Suite/Image/Generate",
             description=(
                 "Generate a horizontal or vertical colour gradient from a list of colour "
-                "stops, for backgrounds, sky ramps and gradient maps. The lowest stop's "
-                "colour fills everything before it and the highest stop's colour "
-                "everything after it, so a stop at 75 leaves the last quarter flat. A line "
-                "of gradient_stops that cannot be read is skipped, and a box with no "
-                "readable stop in it at all reports that instead of guessing a gradient."
+                "stops, for backgrounds, sky ramps and gradient maps. Raise tolerance for a "
+                "banded, posterised ramp."
             ),
             inputs=[
                 io.Int.Input(
@@ -75,8 +72,8 @@ class ImageGenerateGradient(io.ComfyNode):
                     multiline=True,
                     tooltip=(
                         "One stop per line as position:red,green,blue, so '0:255,0,0' puts "
-                        "pure red at the start. Positions run 0 to 100 across the image, "
-                        "channels 0 to 255."
+                        "pure red at the start. Positions run 0 to 100, channels 0 to 255. "
+                        "Colour holds flat beyond the end stops; an unreadable line is skipped."
                     ),
                 ),
             ],

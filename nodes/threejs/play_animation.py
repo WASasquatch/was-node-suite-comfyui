@@ -34,17 +34,10 @@ class ThreePlayAnimation(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Play a clip that was saved inside a model file, including a skinned one, so a "
-                "rigged character walks rather than standing in its bind pose. It reads the "
-                "clips a .glb, .gltf, .dae or .fbx carries; an .obj, .stl, .ply or .3mf "
-                "carries none. With units on "
-                "'per second' the clip runs at the speed it was authored at. With 'per capture' "
-                "one pass through the clip is spread across the whole render, so a walk cycle "
-                "fills the batch whatever its frame count. With 'per timeline' it is spread "
-                "across Three App's loop_seconds instead, and the render then captures a window "
-                "out of that, which is how a strip on Three Render picks part of a long walk "
-                "rather than refitting the whole of it. The pose is worked out from the moment "
-                "alone, so a frame drawn twice comes out the same both times."
+                "Play a clip saved inside a .glb, .gltf, .dae or .fbx model, so a rigged "
+                "character walks rather than standing in its bind pose. The clip runs at its "
+                "authored speed, across the captured frames, or across Three App's "
+                "loop_seconds, as `units` chooses."
             ),
             inputs=[
                 THREE_OBJECT.Input(

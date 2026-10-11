@@ -38,11 +38,17 @@ export const AUDIO_CARRY = "carry (audio only)";
 /** A cut to new picture referencing the clip's last frames, with the soundtrack carried across. */
 export const AUDIO_REFERENCE = "carry (audio) + reference (video)";
 
+/** A carried shot that also references stills sampled across the scene it continues. */
+export const CARRY_REFERENCE = "carry + reference (sample)";
+
 /** How a segment continues from the one before it, in menu order. */
 export const CONTINUITY = Object.freeze([
   "carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut", AUDIO_CARRY,
-  AUDIO_REFERENCE,
+  AUDIO_REFERENCE, CARRY_REFERENCE,
 ]);
+
+/** Picture transitions that hold the last frames of the shot they continue. */
+export const CARRIED_PICTURES = Object.freeze(["carry", "refresh", CARRY_REFERENCE]);
 
 /** Continuities that carry the soundtrack across a cut to new picture. */
 export const BRIDGING = Object.freeze([AUDIO_CARRY, AUDIO_REFERENCE]);
@@ -64,7 +70,7 @@ export const CUT_PICTURES = Object.freeze(["cut", "handoff", REFERENCE_VIDEO, RE
 export function resolvedTransition(continuity, sound = "auto") {
   const named = continuity === "reference" ? REFERENCE_VIDEO : String(continuity);
   const picture = named === AUDIO_CARRY ? "cut" : named === AUDIO_REFERENCE ? REFERENCE_VIDEO : named;
-  if (sound === "fresh") return { picture, bridged: false, fresh: picture === "carry" || picture === "refresh" };
+  if (sound === "fresh") return { picture, bridged: false, fresh: CARRIED_PICTURES.includes(picture) };
   const bridged = BRIDGING.includes(named) || (sound === "carry" && CUT_PICTURES.includes(picture));
   return { picture, bridged, fresh: false };
 }

@@ -99,11 +99,10 @@ class PowerLoraLoader(io.ComfyNode):
                     default=False,
                     optional=True,
                     tooltip=(
-                        "Combine every row into one patch before applying, instead of "
-                        "patching once per row. Cheaper on a long stack. The joined factors "
-                        "match applying the rows in turn to within float rounding, so a "
-                        "sampled image is near-identical rather than pixel for pixel. A row "
-                        "whose format cannot be joined is carried through."
+                        "`false` = one patch per row; `true` = every row joined into one "
+                        "patch, cheaper on a long stack, near-identical results within float "
+                        "rounding. A row whose format cannot be joined is carried through, "
+                        "scaled."
                     ),
                 ),
                 io.Float.Input(

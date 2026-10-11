@@ -28,11 +28,8 @@ class AffineOptions(io.ComfyNode):
             category="WAS Suite/Latent/Transform",
             description=(
                 "Set the pattern an affine masks through and the parameters that shape it, "
-                "then wire the result into Latent Affine or any of the Affine samplers. "
-                "Only the chosen pattern's own settings are drawn, so the node stays short "
-                "whichever one is picked. The pattern set here is the one the affine uses, "
-                "and content_gate holds it back to the flat areas, the detail or the edges "
-                "of the picture."
+                "then wire the result into Latent Affine or any Affine sampler, where its "
+                "pattern replaces theirs. Only the chosen pattern's own settings are drawn."
             ),
             inputs=[
                 io.Combo.Input("pattern", options=patterns.PATTERNS, default="white_noise", tooltip=PATTERN_HINT),
@@ -306,11 +303,10 @@ class AffineOptions(io.ComfyNode):
                 io.Combo.Input(
                     "content_gate", options=affine.CONTENT_GATES, default="off",
                     tooltip=(
-                        "Hold a generated pattern back to where the picture allows it. 'off' "
-                        "lets it cover the frame; 'smooth_region' keeps it to flat areas and "
-                        "off detail; 'detail_region' does the opposite; 'edges_sobel' and "
-                        "'edges_laplacian' keep it to edges. Read off each frame, so the "
-                        "grain follows the subject. content_window sets how wide it reads."
+                        "Keeps a generated pattern to part of each frame, so the grain follows "
+                        "the subject. 'off' = whole frame; 'smooth_region' = flat areas; "
+                        "'detail_region' = detailed areas; 'edges_sobel' and 'edges_laplacian' "
+                        "= edges. content_window sets how wide it reads."
                     ),
                 ),
             ],

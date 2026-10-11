@@ -228,10 +228,9 @@ class ApplyReweightedLoRA(io.ComfyNode):
                 DICT.Output(
                     display_name="stats",
                     tooltip=(
-                        "What the run did: which naming scheme was detected, how many blocks "
-                        "were found, how many tensors were scaled, dropped and kept, where "
-                        "the copy was saved with its SHA-256, and whether the round-trip "
-                        "check passed. Feed it to a debug node to see why a reweighting had "
+                        "What the run did: the naming scheme detected, blocks found, tensors "
+                        "scaled, dropped and kept, where the copy was saved with its SHA-256, "
+                        "and whether the round-trip check passed. Shows why a reweighting had "
                         "no effect."
                     ),
                 ),

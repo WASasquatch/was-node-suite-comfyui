@@ -32,10 +32,9 @@ class CropDataToNumbers(io.ComfyNode):
             category="WAS Suite/Image/Bound",
             description=(
                 "Open the crop window a crop node recorded into plain numbers: the size the "
-                "crop came out at, where its rectangle starts in the source image, and how "
-                "far it runs. Use it to drive a resize, place a paste or a label at the same "
-                "spot, or write a window out as text. Crop Data to Bounds converts the same "
-                "window into a bounds row instead."
+                "crop came out at, where it starts in the source image, and how far it runs. "
+                "Use it to drive a resize, place a paste or label at the same spot, or write "
+                "the window out as text."
             ),
             inputs=[
                 CROP_DATA.Input(
@@ -52,10 +51,10 @@ class CropDataToNumbers(io.ComfyNode):
                 io.Int.Output(
                     display_name="crop_width",
                     tooltip=(
-                        "Width of the picture the crop node emitted, in pixels. It matches "
-                        "width for every crop node but Image Crop Face and Image Crop Face "
-                        "(YuNet), which square their window up: a 480x460 window comes out "
-                        "480x480. Wire it wherever a resize has to match what was cut."
+                        "Width of the picture the crop node emitted, in pixels. Matches width "
+                        "except for Image Crop Face and Image Crop Face (YuNet), which square "
+                        "their window: 480x460 comes out 480x480. Wire it wherever a resize "
+                        "has to match the cut."
                     ),
                 ),
                 io.Int.Output(

@@ -198,11 +198,9 @@ class ImageDirectOcclusion(io.ComfyNode):
                     default=128,
                     step=1,
                     tooltip=(
-                        "How dark a pixel has to be to join the area the light source is looked "
-                        "for in. It is read against the inverted image, so 128 takes everything "
-                        "darker than mid grey and a higher value such as 200 narrows the search "
-                        "to the darkest pixels only. It decides the fourth output alone, not the "
-                        "lighting."
+                        "How dark a pixel must be to join the area the light source is looked "
+                        "for in. 128 = everything darker than mid grey; 200 = the darkest pixels "
+                        "only. Decides the fourth output alone, not the lighting."
                     ),
                 ),
                 io.Boolean.Input(

@@ -29,10 +29,9 @@ class ExecutionGate(io.ComfyNode):
             ],
             category="WAS Suite/Logic",
             description=(
-                "Pass a value on only while a switch is on. Switched off, the branch "
-                "feeding the gate is never evaluated and every node after it stops, so an "
-                "expensive sampler upstream and a save downstream both go unrun. Takes any "
-                "type. Turn bypass_downstream on to draw those nodes as bypassed instead."
+                "Pass a value of any type on only while a switch is on. Switched off, the "
+                "branch feeding the gate never runs and every node after it stops; "
+                "bypass_downstream draws those nodes as bypassed instead."
             ),
             inputs=[
                 io.Boolean.Input(
@@ -59,9 +58,9 @@ class ExecutionGate(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "`true` = every node after the gate is drawn bypassed while open is "
-                        "off, and never runs; `false` = they stay as they are. Read only "
-                        "when open is set on the gate itself: with open wired, the gate "
-                        "stops them during the run and the first shows as failed."
+                        "off; `false` = they stay as they are. Read only when open is set on "
+                        "the gate: with open wired, the run stops them and the first shows "
+                        "as failed."
                     ),
                 ),
                 io.String.Input(

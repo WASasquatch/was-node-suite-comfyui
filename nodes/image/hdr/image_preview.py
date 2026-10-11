@@ -133,12 +133,9 @@ class ImagePreview(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Show a batch the way it will really look, and hand it on unchanged. A "
-                "preview reads whatever it is given as ordinary sRGB codes, so light-linear "
-                "frames out of HDR Reconstruct or EXR Load are drawn far too dark and a "
-                "workflow tuned against that view comes out wrong. Say what the numbers "
-                "mean, dial exposure to bring a highlight into view, and mark every sample "
-                "that will not fit."
+                "Show a batch the way it will really look, and hand it on unchanged. Set "
+                "`linear light` for frames from HDR Reconstruct or EXR Load, dial exposure to "
+                "bring a highlight into view, and mark every sample that will not fit."
             ),
             inputs=[
                 io.Image.Input(
@@ -174,11 +171,9 @@ class ImagePreview(io.ComfyNode):
                     "profile",
                     optional=True,
                     tooltip=(
-                        "A colour profile from Image Load. It only changes the picture where "
-                        "the loader was set to keep the file's own space, in which case the "
-                        "numbers are read through that profile so the view matches the file. "
-                        "A profile from a converted load is already sRGB and draws the same "
-                        "either way."
+                        "A colour profile from Image Load. Changes the picture only where the "
+                        "loader kept the file's own space, so the view matches the file; a "
+                        "profile from a converted load is already sRGB and draws the same."
                     ),
                 ),
                 io.Boolean.Input(

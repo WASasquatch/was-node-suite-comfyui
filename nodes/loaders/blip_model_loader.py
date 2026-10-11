@@ -36,22 +36,20 @@ class BlipModelLoader(io.ComfyNode):
                     "blip_model",
                     default="Salesforce/blip-image-captioning-base",
                     tooltip=(
-                        "Hugging Face repository of the captioning model, used by BLIP "
-                        "Analyze Image in caption mode. 'Salesforce/blip-image-captioning-"
-                        "large' is the heavier, more detailed alternative to the default. "
-                        "A repository name is all this takes: a folder path is refused, and "
-                        "a local checkpoint is picked up from ComfyUI's models directory."
+                        "Hugging Face repository of the captioning model for caption mode. "
+                        "'Salesforce/blip-image-captioning-large' = heavier and more detailed "
+                        "than the default. Repository names only: a folder path is refused, "
+                        "and a local checkpoint in ComfyUI's models directory is picked up."
                     ),
                 ),
                 io.String.Input(
                     "vqa_model_id",
                     default="Salesforce/blip-vqa-base",
                     tooltip=(
-                        "Hugging Face repository of the question answering model, used by "
-                        "BLIP Analyze Image in interrogate mode. It has to be a BLIP VQA "
-                        "model; a captioning model cannot answer a question. A repository "
-                        "name is all this takes: a folder path is refused, and a local "
-                        "checkpoint is picked up from ComfyUI's models directory."
+                        "Hugging Face repository of the question answering model for "
+                        "interrogate mode; it must be a BLIP VQA model. Repository names "
+                        "only: a folder path is refused, and a local checkpoint in ComfyUI's "
+                        "models directory is picked up."
                     ),
                 ),
                 io.Combo.Input(

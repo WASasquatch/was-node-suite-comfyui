@@ -728,13 +728,9 @@ class LatentUpscaleHybrid(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Transform",
             description=(
-                "Enlarge a latent and decide where to be smooth by looking at the picture "
-                "it decodes to. Edges found in that picture are grown and feathered into a "
-                "mask; where the mask is white the enlargement is interpolated, and "
-                "everywhere else it keeps the crisp block-copied version. Flat areas "
-                "therefore stay sharp while outlines avoid the stair-stepping that a plain "
-                "enlargement leaves. Handles video latents, with tiled decoding to keep "
-                "VRAM in check."
+                "Enlarge an image or video latent, keeping flat areas crisp and smoothing "
+                "only along the edges found in the picture it decodes to, so outlines avoid "
+                "stair-stepping. Hands on the latent and the edge mask it used."
             ),
             inputs=[
                 io.Latent.Input(
@@ -784,10 +780,9 @@ class LatentUpscaleHybrid(io.ComfyNode):
                     max=1000,
                     step=1,
                     tooltip=(
-                        "The lower of the two edge-detection levels, on a 0-255 scale. A "
-                        "faint edge is kept only when it joins a strong one, and this is "
-                        "how faint it may be. Lower values trace more of an outline; raise "
-                        "it if speckles appear in flat areas."
+                        "The lower edge-detection level, on a 0-255 scale: how faint an edge "
+                        "may be and still be kept when it joins a strong one. Lower traces "
+                        "more outline; raise it if flat areas speckle."
                     ),
                 ),
                 io.Int.Input(
@@ -937,10 +932,9 @@ class LatentUpscaleHybrid(io.ComfyNode):
                     "donor_latent",
                     optional=True,
                     tooltip=(
-                        "Where the smooth half of the blend comes from. Leave it "
-                        "unconnected and the node interpolates the input latent. Connect a "
-                        "second latent of the same batch and channel shape, a version "
-                        "sampled at a higher resolution, say, and its detail is what gets "
+                        "Where the smooth half of the blend comes from. Unconnected = the input "
+                        "latent interpolated; connected = a latent of the same batch and "
+                        "channel shape, such as a higher-resolution sample, whose detail is "
                         "laid into the edges."
                     ),
                 ),

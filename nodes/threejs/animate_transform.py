@@ -32,15 +32,10 @@ class ThreeAnimateTransform(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Move an object continuously. Rotate turns it on each axis, bob slides it up "
-                "and down, and pulse breathes its scale. With units on 'per second' the "
-                "amounts are rates. With 'per capture' they are spread across the whole run "
-                "instead, so 180 degrees over 180 frames needs no arithmetic: set rotate_y to "
-                "180 and num_frames to 180. With 'per timeline' they are spread across Three "
-                "App's loop_seconds, and a render then captures a window out of that longer "
-                "animation, which is what lets the strip on Three Render pick a part of the "
-                "motion rather than refit the whole of it. Leaving every amount at 0.0 leaves "
-                "the object still."
+                "Keep an object moving: rotate turns it on each axis, bob slides it up and "
+                "down, and pulse breathes its scale. Amounts are rates, totals over the "
+                "captured frames, or totals over Three App's loop_seconds, as `units` "
+                "chooses. Every amount at 0.0 leaves the object still."
             ),
             inputs=[
                 THREE_OBJECT.Input(
@@ -52,11 +47,10 @@ class ThreeAnimateTransform(io.ComfyNode):
                     options=list(UNITS),
                     default="per timeline",
                     tooltip=(
-                        "'per timeline' spreads the amounts across Three App's loop_seconds, so "
-                        "`180` is 180 degrees per loop and the frame rate only samples it. 'per "
-                        "second' reads them as rates instead, so `90` is a quarter turn a "
-                        "second. 'per capture' spreads them across the frames actually taken, "
-                        "so the same `180` runs end to end whatever the frame count."
+                        "`per second` = rates, so `90` is a quarter turn a second; `per "
+                        "capture` = totals across the frames taken, whatever their count; `per "
+                        "timeline` = totals across Three App's loop_seconds, so `180` is 180 "
+                        "degrees per loop."
                     ),
                 ),
                 io.Float.Input(
@@ -65,7 +59,10 @@ class ThreeAnimateTransform(io.ComfyNode):
                     min=-36000.0,
                     max=36000.0,
                     step=1.0,
-                    tooltip="Degrees per second around X. 0.0 is still, 90.0 is a quarter turn a second.",
+                    tooltip=(
+                        "Degrees around X: per second, per capture or per loop, as `units` "
+                        "reads it. 0.0 is still, 90.0 a quarter turn."
+                    ),
                 ),
                 io.Float.Input(
                     "rotate_y",
@@ -73,7 +70,11 @@ class ThreeAnimateTransform(io.ComfyNode):
                     min=-36000.0,
                     max=36000.0,
                     step=1.0,
-                    tooltip="Degrees per second around Y. 30.0 is a slow turntable, negative reverses it.",
+                    tooltip=(
+                        "Degrees around Y: per second, per capture or per loop, as `units` "
+                        "reads it. 360.0 is one full turn, which loops cleanly on `per "
+                        "timeline`; negative reverses it."
+                    ),
                 ),
                 io.Float.Input(
                     "rotate_z",
@@ -81,7 +82,10 @@ class ThreeAnimateTransform(io.ComfyNode):
                     min=-36000.0,
                     max=36000.0,
                     step=1.0,
-                    tooltip="Degrees per second around Z. 0.0 is still, 90.0 is a quarter turn a second.",
+                    tooltip=(
+                        "Degrees around Z: per second, per capture or per loop, as `units` "
+                        "reads it. 0.0 is still, 90.0 a quarter turn."
+                    ),
                 ),
                 io.Float.Input(
                     "bob_amplitude",
@@ -97,7 +101,10 @@ class ThreeAnimateTransform(io.ComfyNode):
                     min=0.0,
                     max=1000.0,
                     step=0.01,
-                    tooltip="Bobs per second. 1.0 is one rise and fall a second, 0.25 is languid.",
+                    tooltip=(
+                        "Bobs per second, per capture or per loop, as `units` reads it. 1.0 is "
+                        "one rise and fall, 0.25 is languid."
+                    ),
                 ),
                 io.Float.Input(
                     "pulse_amplitude",
@@ -113,7 +120,10 @@ class ThreeAnimateTransform(io.ComfyNode):
                     min=0.0,
                     max=1000.0,
                     step=0.01,
-                    tooltip="Pulses per second. 1.0 is one breath a second, 2.0 is twice as quick.",
+                    tooltip=(
+                        "Pulses per second, per capture or per loop, as `units` reads it. 1.0 "
+                        "is one breath, 2.0 is twice as quick."
+                    ),
                 ),
                 io.Float.Input(
                     "phase",
@@ -122,8 +132,8 @@ class ThreeAnimateTransform(io.ComfyNode):
                     max=100000.0,
                     step=0.01,
                     tooltip=(
-                        "Offset into the cycle, in seconds. Give copies 0.0, 0.5 and 1.0 so "
-                        "they do not move in step."
+                        "Offset into the bob and pulse cycles, in radians: 3.14 is half a "
+                        "cycle. Give copies 0.0, 0.5 and 1.0 so they do not move in step."
                     ),
                 ),
             ],

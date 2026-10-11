@@ -23,11 +23,9 @@ class ImageToLatentMask(io.ComfyNode):
             search_aliases=["Image to Latent Mask", "image to mask", "channel to mask"],
             category="WAS Suite/Image/Masking",
             description="Deprecated: use core ImageToMask instead, or ImageColorToMask to "
-            "key on a colour. Takes one channel of an image as a mask, one mask per image "
-            "in the batch. `alpha` uses transparency, which is fully opaque everywhere for "
-            "an image that has none and so gives a solid white mask; `red`, `green` and "
-            "`blue` each use one colour channel, which is how a mask painted in a single "
-            "colour is picked up.",
+            "key on a colour. Takes one channel of each image in a batch as a mask: "
+            "`alpha` for transparency (solid white for an opaque image), or `red`, `green` "
+            "or `blue` for a mask painted in one colour.",
             inputs=[
                 io.Image.Input(
                     "images",

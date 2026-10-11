@@ -35,10 +35,8 @@ class LayersFromImageBatch(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Build a layer stack from a batch: one layer per frame, lowest first. Wire "
-                "bounds in and each frame lands where its rectangle says, so a batch that "
-                "Layers to Image Batch took apart goes back together, and so does a set of "
-                "crops a detector found. Add Layer takes one picture at a time and puts "
-                "every frame of a batch at the same spot."
+                "bounds in to place each frame at its rectangle, so a batch that Layers to "
+                "Image Batch took apart, or a set of detector crops, goes back together."
             ),
             inputs=[
                 io.Image.Input(

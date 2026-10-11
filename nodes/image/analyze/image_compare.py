@@ -6,13 +6,13 @@ from comfy_api.latest import io
 
 from ....modules.interface import preview
 
-#: The slots the two inputs are published under, which the interface asks for by name.
-SLOT_A = "image_a"
-SLOT_B = "image_b"
+#: What each side's frames are written under in the temp folder.
+PREFIX_A = "was.compare.image.a"
+PREFIX_B = "was.compare.image.b"
 
 
 class ImageCompare(io.ComfyNode):
-    """Publish two images so the node's own interface can draw one over the other."""
+    """Write two images so the node's own interface can draw one over the other."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
@@ -72,7 +72,7 @@ class ImageCompare(io.ComfyNode):
 
     @classmethod
     def execute(cls, image_a, image_b) -> io.NodeOutput:
-        """Publish both inputs for the interface and pass them through.
+        """Write both inputs for the interface and pass them through.
 
         Raises:
             ValueError: Either input holds no image.
@@ -86,14 +86,9 @@ class ImageCompare(io.ComfyNode):
                 "both inputs."
             )
 
-        # Publishing does nothing at all until a panel on this node is open, so a headless run
-        # pays for neither the encoding nor the memory. The id is left to the channel, which
-        # reads the executing node from the run: `cls.hidden` is None wherever a body is called
-        # outside a prompt, and reaching through it would raise there.
-        #
-        # Two slots published back to back, each with its own byte budget, so the second holds
-        # as many frames as the first rather than whatever the first left over. Both outputs
-        # are their inputs unchanged, so there is no output side to publish.
-        preview.publish_frames(image_a, slot=SLOT_A)
-        preview.publish_frames(image_b, slot=SLOT_B)
-        return io.NodeOutput(image_a, image_b, max(count_a, count_b))
+        # Each side is written with its own byte budget.
+        sides = {
+            "a_images": preview.write_frames(image_a, PREFIX_A),
+            "b_images": preview.write_frames(image_b, PREFIX_B),
+        }
+        return io.NodeOutput(image_a, image_b, max(count_a, count_b), ui=sides)

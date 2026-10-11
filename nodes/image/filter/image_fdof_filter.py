@@ -75,11 +75,9 @@ class ImageFDOFFilter(io.ComfyNode):
                 io.Image.Input(
                     "depth",
                     tooltip=(
-                        "The depth map deciding what stays sharp: white areas keep full detail, "
-                        "black areas get the full blur, greys blend between the two. It is "
-                        "resized to the image, so it need not match its size. A batch shorter "
-                        "than the image batch repeats its last entry for the images left "
-                        "over."
+                        "The depth map deciding what stays sharp: white = full detail; black = "
+                        "full blur; greys blend. Resized to the image. A batch shorter than the "
+                        "image batch repeats its last entry."
                     ),
                 ),
                 io.Combo.Input(

@@ -82,12 +82,9 @@ class TextFileHistoryLoader(io.ComfyNode):
             search_aliases=["Text File History Loader", "recent text files", "history"],
             category="WAS Suite/History",
             description=(
-                "Reload one of the text files the suite has recently read or written. The "
-                "menu holds whatever this pack's text loading and saving nodes have "
-                "touched, up to the limit in the pack's config. A file that has since been "
-                "deleted gives empty text rather than failing the prompt, and one in a "
-                "folder this pack may no longer read stops the prompt with that folder "
-                "named."
+                "Reload one of the text files the suite's text loading and saving nodes have "
+                "recently touched. A file deleted since gives empty text, and one in a "
+                "folder the pack may no longer read stops the prompt with that folder named."
             ),
             inputs=[
                 io.Combo.Input(

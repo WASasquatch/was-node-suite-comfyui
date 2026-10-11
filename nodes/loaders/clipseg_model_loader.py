@@ -33,11 +33,11 @@ class ClipsegModelLoader(io.ComfyNode):
                     default="CIDAS/clipseg-rd64-refined",
                     multiline=False,
                     tooltip=(
-                        "Hugging Face repository of the CLIPSeg model. The default is the "
-                        "refined 64-dimension model, which is the one CLIPSeg ships for "
-                        "general use; 'CIDAS/clipseg-rd16' is smaller and coarser. A "
-                        "repository name is all this takes: a folder path is refused, and a "
-                        "local checkpoint is picked up from ComfyUI's models directory."
+                        "Hugging Face repository of the CLIPSeg model. "
+                        "'CIDAS/clipseg-rd64-refined' = the general-use default; "
+                        "'CIDAS/clipseg-rd16' = smaller and coarser. Repository names only: a "
+                        "folder path is refused, and a local checkpoint in ComfyUI's models "
+                        "directory is picked up."
                     ),
                 ),
             ],

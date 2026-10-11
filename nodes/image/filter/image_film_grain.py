@@ -119,10 +119,9 @@ class ImageFilmGrain(io.ComfyNode):
                     max=8,
                     step=1,
                     tooltip=(
-                        "How much larger the grain is drawn before being scaled down, which "
-                        "decides how fine it is. 1 gives coarse one-pixel grain, 4 is a fine "
-                        "realistic grain, 8 is finer still. Cost grows with the square of this, "
-                        "so 8 is 64 times the work of 1."
+                        "How much larger the grain is drawn before scaling down. 1 = coarse "
+                        "one-pixel grain; 4 = fine realistic grain; 8 = finer still. Cost grows "
+                        "with the square: 8 is 64 times the work of 1."
                     ),
                 ),
             ],

@@ -32,13 +32,10 @@ class ThreeScriptModule(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Build several named resources in one place and hand them out through Three "
-                "Import Material, Three Import Geometry and Three Import Object. The body "
-                "returns an object whose keys are the names, and it runs once per viewer load, "
-                "so a palette of materials shared across many meshes is built once rather than "
-                "per node. The code runs in your browser, with the same reach as any frontend "
-                "extension, so only run a workflow carrying custom JavaScript if you trust "
-                "where it came from."
+                "Build several named resources in one place, once per viewer load, and hand them "
+                "out through the Three Import nodes, such as one palette of materials shared by "
+                "many meshes. The code runs in the browser with the reach of any extension, so "
+                "only load a workflow carrying it from a trusted source."
             ),
             inputs=[
                 io.String.Input(

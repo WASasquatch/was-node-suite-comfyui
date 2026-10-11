@@ -45,11 +45,10 @@ class BoundedImageCropWithMask(io.ComfyNode):
                 io.Mask.Input(
                     "mask",
                     tooltip=(
-                        "Marks the area to keep. The box is the tightest rectangle around "
-                        "everything non-black in it. An entirely black mask marks nothing, and "
-                        "that frame falls back to its whole picture with a note in the console "
-                        "rather than stopping the run. One mask per image crops each one "
-                        "separately; any other count uses the first mask for every image."
+                        "Marks the area to keep; the box is the tightest rectangle around "
+                        "everything non-black. An all-black mask keeps that frame whole, with a "
+                        "console note. One mask per image crops each separately; any other "
+                        "count uses the first mask for every image."
                     ),
                 ),
                 io.Int.Input(

@@ -47,12 +47,9 @@ class ExportAPI(io.ComfyNode):
             search_aliases=["Export API", "prompt json", "export prompt"],
             category="WAS Suite/Debug",
             description=(
-                "Deprecated: use ComfyUI's own Workflow > Export (API) menu item instead, "
-                "which saves the same document without a node in the graph. Writes the "
-                "prompt API JSON of the running workflow to a numbered file. The folder has "
-                "to be one this pack may write to: ComfyUI's output and temp folders, the "
-                "pack's own folder, or a folder listed under paths.allow_write in "
-                "config.yaml."
+                "Deprecated: use ComfyUI's Workflow > Export (API) menu item instead. Writes "
+                "the running workflow's prompt API JSON to a numbered file in a folder the "
+                "pack may write to."
             ),
             inputs=[
                 io.Combo.Input(

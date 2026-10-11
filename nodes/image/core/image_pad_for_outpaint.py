@@ -64,12 +64,9 @@ class ImagePadForOutpaint(io.ComfyNode):
             ],
             category="WAS Suite/Image/Process",
             description=(
-                "Set a picture on a larger canvas of mid grey and answer the mask covering "
-                "everything that was added, ready for an outpainting pass. The band on the "
-                "node draws the frame that went in inside the canvas that came out, at one "
-                "scale, with both sizes, the margins and the feather beside them, so four "
-                "numbers typed into empty boxes are read off the node rather than queued to "
-                "find out."
+                "Set a picture on a larger mid-grey canvas and hand on the mask covering "
+                "everything added, ready for an outpainting pass. The node draws the original "
+                "inside the new canvas with both sizes, the margins and the feather."
             ),
             inputs=[
                 io.Image.Input(
@@ -134,10 +131,9 @@ class ImagePadForOutpaint(io.ComfyNode):
                     max=limits.max_resolution(),
                     step=1,
                     tooltip=(
-                        "Pixels the mask fades over on the inside of each seam; INT. 0 = a "
-                        "hard edge, 40 = a 40px falloff that lets a sampler blend the new "
-                        "canvas into the frame, 128 = a wide blend that repaints more of the "
-                        "original. Ignored where twice this reaches across the frame."
+                        "Pixels the mask fades over inside each seam; INT. 0 = a hard edge; 40 "
+                        "= a falloff a sampler blends across; 128 = a wide blend that repaints "
+                        "more of the original. Ignored where twice this spans the frame."
                     ),
                 ),
             ],

@@ -35,11 +35,9 @@ class LayerAlign(io.ComfyNode):
             ],
             category="WAS Suite/Image/Layers",
             description=(
-                "Put a layer where you want it by naming a corner rather than working out "
-                "coordinates: centred on the canvas, flush to an edge, or lined up with "
-                "another layer. A turned layer is aligned by the box it actually draws in, so "
-                "a rotated title still sits flush. Layer Edit sets x and y by hand, which "
-                "means measuring both the canvas and the layer first."
+                "Place a layer by naming a position instead of typing coordinates: centred "
+                "on the canvas, flush to an edge, or lined up with another layer. A rotated "
+                "layer is aligned by the box it draws in, so a turned title still sits flush."
             ),
             inputs=[
                 io.Layers.Input(

@@ -73,12 +73,10 @@ class EXRSave(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Write every image in the batch as an OpenEXR file of linear light, one "
-                "file per frame, numbered in sequence, at 16 or 32 bits per channel. "
-                "Values above one are kept, so recovered highlights reach a grading or "
-                "compositing program at their real brightness. A mask on alpha is written "
-                "as a fourth channel. Files land under ComfyUI's output directory, and the "
-                "prefix may name a subfolder."
+                "Write every image in the batch as a numbered OpenEXR file of linear light, at "
+                "16 or 32 bits per channel, with values above one kept. Recovered highlights "
+                "reach a grading or compositing program at their real brightness, and a mask "
+                "on alpha becomes a fourth channel."
             ),
             inputs=[
                 io.Image.Input(

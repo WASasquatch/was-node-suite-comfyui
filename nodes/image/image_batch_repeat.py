@@ -77,12 +77,10 @@ class ImageBatchRepeat(io.ComfyNode):
             ],
             category="WAS Suite/Image",
             description=(
-                "Repeat an image batch into a longer one: a set number of times, or up to an "
-                "exact frame count. 'to length' cuts the last repeat short so the answer is "
-                "exactly the length asked for, which is how a short clip is extended to the "
-                "81 frames a video model wants. Turn each_frame on and every frame is "
-                "repeated where it stands instead, so a single image becomes a still run and "
-                "a clip is slowed down evenly."
+                "Repeat an image batch into a longer one, a set number of times or to an exact "
+                "frame count, such as the 81 frames a video model wants. With each_frame on, "
+                "every frame repeats in place instead, so a single image becomes a still run "
+                "and a clip slows evenly."
             ),
             inputs=[
                 io.Image.Input(
@@ -125,10 +123,9 @@ class ImageBatchRepeat(io.ComfyNode):
                     "each_frame",
                     default=False,
                     tooltip=(
-                        "Repeat each frame in place rather than the whole run. A B C at "
-                        "times 2: false = A B C A B C; true = A A B B C C. On `to length` "
-                        "each frame is held an even share: 3 frames to length 7 = A A A B B "
-                        "C C."
+                        "A B C at times 2: `false` = ABCABC, the whole run repeated; `true` = "
+                        "AABBCC, each frame held in place. On `to length` each frame gets an "
+                        "even share: 3 frames to length 7 = AAABBCC."
                     ),
                 ),
             ],

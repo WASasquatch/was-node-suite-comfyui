@@ -35,12 +35,10 @@ class TextParseNoodleSoupPrompts(io.ComfyNode):
                     "mode",
                     options=["Noodle Soup Prompts", "Wildcards"],
                     tooltip=(
-                        "Where the replacements come from. `Noodle Soup Prompts` draws from "
-                        "the shared terminology pantry, a published list of subjects, styles "
-                        "and materials that is downloaded once and then cached. `Wildcards` "
-                        "draws one random line from the matching text file in the wildcards "
-                        "directory, where a subfolder is part of the name: "
-                        "__animals/birds__ reads animals/birds.txt."
+                        "Where the replacements come from. `Wildcards` = one random line from "
+                        "the matching file in the wildcards directory, so __animals/birds__ "
+                        "reads animals/birds.txt; `Noodle Soup Prompts` = the shared pantry "
+                        "of subjects, styles and materials, downloaded once and cached."
                     ),
                 ),
                 io.String.Input(

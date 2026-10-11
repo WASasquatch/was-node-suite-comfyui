@@ -77,21 +77,19 @@ class ImageCropFaceYuNet(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How sure the detector has to be before a region counts as a face. "
-                        "Lower finds more faces and more false positives: drop towards 0.3 "
-                        "for a small, blurred or heavily stylised face, raise towards 0.9 "
-                        "when a busy background is producing detections that are not faces."
+                        "How sure the detector must be that a region is a face. Lower finds "
+                        "more faces and more false positives: 0.3 = catches small, blurred or "
+                        "stylised faces; 0.9 = rejects false detections on a busy background."
                     ),
                 ),
                 io.Combo.Input(
                     "select",
                     options=["largest", "highest confidence", "leftmost", "rightmost"],
                     tooltip=(
-                        "Which face to crop when several are found. `largest` takes the one "
-                        "filling the most pixels, which is usually the subject. `highest "
-                        "confidence` takes the one the detector is surest of, which suits a "
-                        "crowd where the subject is not the nearest. `leftmost` and "
-                        "`rightmost` pick by position, for a framing you already know."
+                        "Which face to crop when several are found. `largest` = the most "
+                        "pixels, usually the subject; `highest confidence` = the one the "
+                        "detector is surest of, for a crowd; `leftmost`, `rightmost` = by "
+                        "position."
                     ),
                 ),
             ],

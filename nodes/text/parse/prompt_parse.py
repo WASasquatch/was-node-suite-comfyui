@@ -43,22 +43,20 @@ class PromptParse(io.ComfyNode):
                     "text",
                     multiline=True,
                     tooltip=(
-                        "The prompt, in any of three markups. __term__ draws a phrase from "
-                        "the terminology pantry or a line from a wildcard file; <a|b|c> "
-                        "picks one of the alternatives; $|a stormy sky|$ captures the phrase "
-                        "as $1 so it can be repeated by number later in the prompt."
+                        "The prompt, in any of three markups: __term__ = a phrase from the "
+                        "terminology pantry or a line from a wildcard file; <a|b|c> = one of "
+                        "the alternatives; $|a stormy sky|$ = a phrase captured as $1 to "
+                        "repeat later."
                     ),
                 ),
                 io.Combo.Input(
                     "mode",
                     options=["Noodle Soup Prompts", "Wildcards", "none"],
                     tooltip=(
-                        "What __terms__ are replaced with. `Noodle Soup Prompts` draws from "
-                        "the shared terminology pantry, downloaded once and then cached. "
-                        "`Wildcards` draws a random line from the matching file in the "
-                        "wildcards directory, where a subfolder is part of the name, so "
-                        "__animals/birds__ reads animals/birds.txt. `none` leaves __terms__ "
-                        "alone, for a prompt that only uses the groups and variables below."
+                        "What __terms__ are replaced with. `none` = left alone; `Wildcards` = "
+                        "a random line from the matching file in the wildcards directory, so "
+                        "__animals/birds__ reads animals/birds.txt; `Noodle Soup Prompts` = a "
+                        "phrase from the shared terminology pantry, downloaded once."
                     ),
                 ),
                 io.String.Input(
@@ -77,11 +75,9 @@ class PromptParse(io.ComfyNode):
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
                     tooltip=(
-                        "Which words get drawn. Any value other than 0 makes the whole parse "
-                        "repeatable, so the same seed and the same prompt always give the "
-                        "same text. 0 is the exception the term draw treats as unseeded, so "
-                        "__terms__ come out different every run while the <a|b|c> groups "
-                        "stay fixed."
+                        "Which words get drawn. 0 = __terms__ differ every run while <a|b|c> "
+                        "groups stay fixed; any other value = the same seed and prompt always "
+                        "give the same text."
                     ),
                 ),
                 io.Boolean.Input(
@@ -97,10 +93,9 @@ class PromptParse(io.ComfyNode):
                     "prompt_variables",
                     default=True,
                     tooltip=(
-                        "Whether $|phrase|$ captures are expanded. A capture is numbered in "
-                        "the order it appears and replaced by $1, $2 and so on, and every "
-                        "reference to that number anywhere in the prompt then becomes the "
-                        "phrase, which is how one long description is written once and "
+                        "Whether $|phrase|$ captures are expanded. Each capture is numbered "
+                        "$1, $2 and so on in order, and every reference to that number "
+                        "becomes the phrase, so one long description is written once and "
                         "repeated."
                     ),
                 ),

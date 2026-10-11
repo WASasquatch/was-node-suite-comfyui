@@ -21,6 +21,108 @@ let measuredChrome = null;
 // Widget -> what its node, the zoom and its host's box were when its panel was last fitted.
 const reconciled = new WeakMap();
 
+// Every panel on a node in a graph, as `{node, panel}`, so a finished graph load can ask each
+// one to read its node again.
+const mounted = new Set();
+
+// True from the moment a graph load starts until it has finished and restored its outputs.
+let loading = false;
+
+/**
+ * Whether a graph is being loaded, which is every workflow switch, undo, redo and page load.
+ *
+ * @returns {boolean} True between `beginGraphLoad` and `endGraphLoad`.
+ */
+export function graphLoading() {
+  return loading;
+}
+
+/**
+ * Mark a graph load as started.
+ *
+ * @returns {void}
+ */
+export function beginGraphLoad() {
+  loading = true;
+}
+
+// How long a value written onto a node waits before the workflow is told it changed, and how
+// many times that is tried while a graph load still holds the workflow's state shut.
+const KEEP_SETTLE_MS = 500;
+const KEEP_ATTEMPTS = 12;
+
+/**
+ * Whether the open workflow's saved state carries a value on a node.
+ *
+ * @param {object} node - The node the value was written on.
+ * @param {string} key - The property name.
+ * @param {*} value - The value written.
+ * @returns {boolean} True when a node of that id in the saved state, at the root or in a
+ *   subgraph definition, holds the same value.
+ */
+function stateCarries(node, key, value) {
+  const state = app?.extensionManager?.workflow?.activeWorkflow?.activeState;
+  if (!state) return false;
+  const wanted = JSON.stringify(value);
+  const nodes = [
+    ...(state.nodes ?? []),
+    ...(state.definitions?.subgraphs ?? []).flatMap((graph) => graph?.nodes ?? []),
+  ];
+  return nodes.some((saved) => String(saved?.id) === String(node.id)
+    && JSON.stringify(saved?.properties?.[key]) === wanted);
+}
+
+/**
+ * Write a value onto a node's properties and have the open workflow's saved state take it.
+ *
+ * @param {object} node - The node to write on.
+ * @param {string} key - The property name.
+ * @param {*} value - A JSON value.
+ * @returns {void}
+ */
+export function keepOnNode(node, key, value) {
+  node.properties ??= {};
+  node.properties[key] = value;
+  // Compared as text: the frontend hands a stored object back wrapped in a proxy.
+  const written = JSON.stringify(value);
+  let attempts = 0;
+  const settle = () => {
+    attempts += 1;
+    if (!node.graph || JSON.stringify(node.properties?.[key]) !== written) return;
+    try {
+      app?.canvas?.emitBeforeChange?.();
+      app?.canvas?.emitAfterChange?.();
+    } catch (error) {
+      console.error("[WASNodeSuite.Interface] Failed to mark the workflow changed:", error);
+      return;
+    }
+    if (!stateCarries(node, key, value) && attempts < KEEP_ATTEMPTS) {
+      setTimeout(settle, KEEP_SETTLE_MS);
+    }
+  };
+  setTimeout(settle, KEEP_SETTLE_MS);
+}
+
+/**
+ * Mark a graph load as finished and have every panel on the new graph read its node again.
+ *
+ * @returns {number} How many panels were asked.
+ */
+export function endGraphLoad() {
+  loading = false;
+  let asked = 0;
+  for (const entry of [...mounted]) {
+    if (!entry.node?.graph) continue;
+    try {
+      entry.panel.refresh?.();
+      asked += 1;
+    } catch (error) {
+      console.error("[WASNodeSuite.Interface] A panel failed to read its node after a load:", error);
+    }
+  }
+  return asked;
+}
+
 /**
  * The room the frontend adds to a widget's minimum width when it sizes a node.
  *
@@ -179,10 +281,13 @@ export function appendInterfaceWidget(node, panel, names) {
   // this point its id is still a placeholder, the entry to drop cannot be found, and the id the
   // channel is asked to publish under is not the one this node will run as.
   let release = null;
+  const entry = { node, panel };
+  mounted.add(entry);
   const originalOnAdded = node.onAdded;
   node.onAdded = function (...args) {
     const added = originalOnAdded?.apply(this, args);
     dropForeignOutputs(this);
+    mounted.add(entry);
     try {
       release?.();
       release = watchPreviews(this);
@@ -193,8 +298,10 @@ export function appendInterfaceWidget(node, panel, names) {
   };
   const originalOnRemoved = node.onRemoved;
   node.onRemoved = function (...args) {
+    mounted.delete(entry);
     try {
-      release?.();
+      // A load clears the graph it replaces; that workflow's runs still publish.
+      release?.({ keepRegistration: loading });
       release = null;
     } catch (error) {
       console.error("[WASNodeSuite.Interface] Failed to release this node's pictures:", error);
@@ -297,13 +404,6 @@ const TEXT_WIDGET_TYPE = "customtext";
 export const TEXT_BOX_CEILING = 160;
 
 /**
- * Give every multiline box on a node the same ceiling, so an interface beside them can grow.
- *
- * @param {object} node - The node holding the boxes.
- * @param {number} [ceiling] - The most a box grows to, in node units.
- * @returns {number} How many boxes were bounded.
- */
-/**
  * Run something after a widget's own callback, whenever that widget changes.
  *
  * @param {object} node - The node holding the widget.
@@ -328,6 +428,13 @@ export function chainWidgetCallback(node, name, onChange, logName = "WASNodeSuit
   };
 }
 
+/**
+ * Give every multiline box on a node the same ceiling, so an interface beside them can grow.
+ *
+ * @param {object} node - The node holding the boxes.
+ * @param {number} [ceiling] - The most a box grows to, in node units.
+ * @returns {number} How many boxes were bounded.
+ */
 export function boundTextBoxes(node, ceiling = TEXT_BOX_CEILING) {
   // The frontend divides a node's spare room between every widget whose maximum is above its
   // minimum, and a multiline string widget declares no maximum at all. Left alone the boxes take

@@ -229,14 +229,11 @@ class ImageLoad(io.ComfyNode):
             search_aliases=["Image Load", "load image from path", "open image"],
             category="WAS Suite/IO",
             description=(
-                "Load an image chosen from a menu of every picture in ComfyUI's input, "
-                "output and temp folders, and any folder listed under paths.allow_read in "
-                "config.yaml. Upload one with the button and it is selected. A file tagged "
-                "with a colour profile is converted to sRGB as it is read, or kept in "
-                "its own space, and either way the profile comes out on its own socket. Anything "
-                "that cannot be read gives a black 512x512 image so the rest of the "
-                "workflow still runs. A 16-bit PNG loads at full precision, and one marked "
-                "linear is loaded with no curve applied."
+                "Load an image picked from ComfyUI's input, output and temp folders, or a "
+                "folder under paths.allow_read in config.yaml, with its mask, filename and "
+                "colour profile. Tagged files can be converted to sRGB or kept in their own "
+                "space, and 16-bit PNGs load at full precision. An unreadable file gives a "
+                "black 512x512 image."
             ),
             inputs=[
                 io.Combo.Input(
@@ -244,11 +241,10 @@ class ImageLoad(io.ComfyNode):
                     options=image_labels(),
                     upload=io.UploadType.image,
                     tooltip=(
-                        "Which picture to read. A file in ComfyUI's input folder is listed "
-                        "by name; anything else carries the folder it sits in, as "
-                        "`render.png [output]` or `scratch.png [temp]`. A folder added under "
-                        "paths.allow_read appears under its own name. The button below "
-                        "uploads one into input and selects it."
+                        "Which picture to read. Input files are listed by name, others with "
+                        "their folder, as `render.png [output]` or `scratch.png [temp]`; "
+                        "paths.allow_read folders appear under their own names. The button "
+                        "uploads into input and selects it."
                     ),
                 ),
                 io.Boolean.Input(
@@ -277,11 +273,10 @@ class ImageLoad(io.ComfyNode):
                     default="sRGB",
                     optional=True,
                     tooltip=(
-                        "Which colour space the picture comes out in. \"the file's own\" "
-                        "leaves a tagged file exactly as it was written, for post work that "
-                        "stays there. 'sRGB' is what a sampler, a filter and a LUT expect. "
-                        "The rest, such as 'Adobe RGB (1998)' and 'Display P3', are for a "
-                        "photograph that goes back out in its own space."
+                        "The colour space the picture comes out in. \"the file's own\" = a "
+                        "tagged file left as written; 'sRGB' = what samplers, filters "
+                        "and LUTs expect; 'Adobe RGB (1998)', 'Display P3' and the rest = for "
+                        "a photograph going back out in its own space."
                     ),
                 ),
                 io.Combo.Input(
@@ -289,11 +284,10 @@ class ImageLoad(io.ComfyNode):
                     options=list(colour_profile.MODES),
                     optional=True,
                     tooltip=(
-                        "What to do with the space above. 'convert' changes the numbers so "
-                        "the colour stays put, which is what a photograph wants. 'assign' "
-                        "leaves the numbers alone and says they were in that space all "
-                        "along, which is how an untagged file that is really Display P3 is "
-                        "put right. Ignored for \"the file's own\"."
+                        "'convert' = the numbers change so the colour stays put, for a "
+                        "photograph; 'assign' = the numbers are kept and declared to be in "
+                        "that space, to fix an untagged file that is really Display P3. "
+                        "Ignored for \"the file's own\"."
                     ),
                 ),
             ],

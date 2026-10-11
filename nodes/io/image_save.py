@@ -64,12 +64,10 @@ class ImageSave(io.ComfyNode):
             hidden=[io.Hidden.prompt, io.Hidden.extra_pnginfo],
             category="WAS Suite/IO",
             description=(
-                "Save images with a token-expanded path, a numbered filename and a choice "
-                "of format. root chooses which folder they land in, and filename_prefix "
-                "straight into ComfyUI's output directory; a full path writes to that "
-                "folder instead, as long as it lands inside ComfyUI's output or temp "
-                "folder, the pack's own folder, or a folder listed under paths.allow_write "
-                "in config.yaml. Anywhere else is refused, the input folder included."
+                "Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, "
+                "gif or exr. root picks the folder and filename_prefix names the subfolders "
+                "and file below it, with tokens expanded. The images pass through unchanged, "
+                "with the written paths on files."
             ),
             inputs=[
                 io.Image.Input(
@@ -131,11 +129,10 @@ class ImageSave(io.ComfyNode):
                     "extension",
                     options=["png", "jpg", "jpeg", "gif", "tiff", "webp", "bmp", "exr"],
                     tooltip=(
-                        "The file format. `png` is lossless, carries the workflow and takes "
-                        "16 bits a channel; `exr` holds unclipped linear light at 16 or 32 "
-                        "bit; `jpg` and `jpeg` are small and lossy; `webp` is small and can "
-                        "be either; `tiff` and `bmp` are large and lossless; `gif` is "
-                        "limited to 256 colours."
+                        "`png` = lossless, up to 16-bit, carries the workflow; `exr` = "
+                        "unclipped linear light at 16 or 32 bit; `jpg`/`jpeg` = small, lossy; "
+                        "`webp` = small, lossy or lossless; `tiff`/`bmp` = large, lossless; "
+                        "`gif` = 256 colours."
                     ),
                 ),
                 io.Int.Input(
@@ -228,11 +225,10 @@ class ImageSave(io.ComfyNode):
                     "bit_depth",
                     options=list(depths.OPTIONS),
                     tooltip=(
-                        "How finely each channel is stored. `8-bit` is 256 levels and is "
-                        "what every format takes; `16-bit` is 65536 and needs `png`, which "
-                        "keeps a gradient banding-free through further grading; `32-bit "
-                        "float` needs `exr` and stores light above 1.0 rather than clipping "
-                        "it. A depth the chosen format cannot hold fails the prompt."
+                        "`8-bit` = 256 levels, every format but `exr`; `16-bit` = 65536 "
+                        "levels, `png` or `exr`, keeps gradients banding-free through grading; "
+                        "`32-bit float` = `exr` only, keeps light above 1.0. A depth the "
+                        "format cannot hold fails the prompt."
                     ),
                 ),
                 WAS_COLOUR_PROFILE.Input(

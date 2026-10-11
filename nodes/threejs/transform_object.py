@@ -30,11 +30,9 @@ class ThreeTransformObject(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Place an object in the scene. The object wired in is not altered: it is put "
-                "inside a parent that carries the position, rotation and scale, so the same "
-                "mesh can be placed in several spots at once from one node. Rotation is in "
-                "degrees, applied X then Y then Z. Turning a plane by -90 on X lays it flat as "
-                "a floor."
+                "Place an object in the scene by wrapping it in a parent that carries position, "
+                "rotation and scale, so one mesh can be placed in several spots. Rotation is in "
+                "degrees, X then Y then Z; -90 on X lays a plane flat as a floor."
             ),
             inputs=[
                 THREE_OBJECT.Input(

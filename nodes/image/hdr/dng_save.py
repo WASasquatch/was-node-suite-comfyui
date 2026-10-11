@@ -70,12 +70,10 @@ class DNGSave(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Write every image in the batch as a DNG, the raw file Lightroom, Camera "
-                "Raw, darktable and RawTherapee open with their raw controls. Readings are "
-                "16 bit and linear, so a recovered highlight arrives with room to pull back "
-                "and a rebuilt gradient arrives without its 8-bit steps. The images are read "
-                "as linear light, which is what HDR Reconstruct, EXR Load and Linear Light "
-                "answer with."
+                "Write every image in the batch as a 16-bit linear DNG, the raw file "
+                "Lightroom, Camera Raw, darktable and RawTherapee open with their raw "
+                "controls, so recovered highlights keep room to pull back. Feed it linear "
+                "light, from HDR Reconstruct, EXR Load or Linear Light."
             ),
             inputs=[
                 io.Image.Input(

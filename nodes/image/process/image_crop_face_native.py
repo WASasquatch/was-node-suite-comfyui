@@ -34,14 +34,8 @@ class ImageCropFaceNative(io.ComfyNode):
             category="WAS Suite/Image/Process",
             description=(
                 "Find a face in the image and crop a square around it, together with the "
-                "crop window Image Paste Face needs to put it back. Where a classifier finds "
-                "more than one face, the largest is the one cropped. The classifiers run in "
-                "torch on the device ComfyUI is using, so nothing has to be installed. Among "
-                "them, 'default' is the fastest of the 'frontalface' set and 'alt2' and "
-                "'alt_tree' are progressively stricter, 'profileface' finds a head turned to "
-                "the side, 'upperbody' frames head and shoulders, and 'eye' finds a single "
-                "eye. The fallback runs the face classifiers in the order the menu lists "
-                "them, and the eye one is only ever used when it is the choice."
+                "crop window Image Paste Face needs to put it back. Where several faces are "
+                "found, the largest is cropped. Needs nothing extra installed."
             ),
             inputs=[
                 io.Image.Input(
@@ -68,9 +62,11 @@ class ImageCropFaceNative(io.ComfyNode):
                     "cascade",
                     options=list(face.CASCADES),
                     tooltip=(
-                        "Which classifier to try first. 'lbpcascade_animeface' is for drawn "
-                        "and anime faces, the 'frontalface' set for photographs. If it finds "
-                        "nothing, the others are tried."
+                        "Which classifier to try first; if it finds nothing, the others follow "
+                        "in menu order. 'lbpcascade_animeface' = drawn faces; 'frontalface' = "
+                        "photographs, 'default' fastest, 'alt2' and 'alt_tree' stricter; "
+                        "'profileface' = turned heads; 'upperbody' = head and shoulders; "
+                        "'eye' = one eye, never a fallback."
                     ),
                 ),
             ],

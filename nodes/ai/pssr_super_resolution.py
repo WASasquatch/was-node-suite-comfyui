@@ -38,11 +38,10 @@ class PSSRSuperResolution(io.ComfyNode):
             ],
             category="WAS Suite/Image/Process",
             description=(
-                "Raise a video's resolution with PS-SR, which resamples to the target size and "
-                "then puts detail back with a diffusion pass, twice: once for a steady result "
-                "and once for a sharp one, blended by frequency. Weights are placed by hand and "
-                "never downloaded. Long clips are covered by sliding windows, so memory depends "
-                "on the window rather than the length."
+                "Raise a video's resolution and restore the fine detail a plain resize cannot, "
+                "handing on the frames at the new size. Its PS-SR weights are placed by hand, "
+                "never downloaded. Long clips run in overlapping windows, so memory depends on "
+                "window_frames rather than the clip's length."
             ),
             inputs=[
                 io.Model.Input(

@@ -58,10 +58,9 @@ class LayersArrange(io.ComfyNode):
                     default="{}",
                     tooltip=(
                         "Where each layer goes, as JSON keyed on its index from the bottom: "
-                        '{"0": {"x": 64, "y": 0, "z_index": 2, "visible": false}}. Keys are '
-                        "x, y, w, h in pixels, rotation in degrees, opacity 0.0 to 1.0, "
-                        "visible and z_index, all optional. Anything left out stays as it "
-                        "arrived. The panel writes this."
+                        '{"0": {"x": 64, "z_index": 2}}. Optional keys: x, y, w, h in '
+                        "pixels, rotation in degrees, opacity 0.0 to 1.0, visible, z_index; "
+                        "omitted keys are unchanged. The panel writes this."
                     ),
                 ),
             ],

@@ -32,13 +32,9 @@ class ThreeTrack(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "Aim a camera at an object, carry the camera along with it, or both, so a "
-                "moving subject stays framed without the camera's numbers being worked out by "
-                "hand. Wire the object in and the result into a camera's track socket. The "
-                "object itself is not copied: the tracker finds the one already in the scene, "
-                "so wire the same object into a group as well and there is still only one of "
-                "it. It follows the object as it is at that moment, so an object being spun by "
-                "Three Animate Transform or walked by Three Play Animation is tracked through "
-                "the motion."
+                "moving subject stays framed. Wire the object in and the result into a camera's "
+                "track socket; it follows the object already in the scene, motion included, "
+                "without copying it."
             ),
             inputs=[
                 THREE_OBJECT.Input(

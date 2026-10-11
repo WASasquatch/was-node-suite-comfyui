@@ -31,11 +31,9 @@ class ImageCropRegion(io.ComfyNode):
             category="WAS Suite/Image/Process",
             description=(
                 "Cut a rectangle out of a picture, given its width, its height and the "
-                "corner it starts at. The band on the node draws the frame that went in "
-                "around the frame that came out, at one scale, with both sizes and the "
-                "pixel count beside them, so a rectangle that ran off the right or bottom "
-                "edge reads as a smaller answer than the one asked for instead of being "
-                "found later by a sampler."
+                "corner it starts at. The node draws the crop inside the original frame with "
+                "both sizes, so a rectangle that ran off an edge and came back smaller shows "
+                "at once."
             ),
             inputs=[
                 io.Image.Input(

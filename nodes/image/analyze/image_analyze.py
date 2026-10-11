@@ -83,10 +83,9 @@ class ImageAnalyze(io.ComfyNode):
                     "mode",
                     options=["Black White Levels", "RGB Levels"],
                     tooltip=(
-                        "Which chart to draw. `Black White Levels` plots one histogram of "
-                        "overall brightness with the darkest and lightest tones present marked "
-                        "in red, which is how clipping is spotted. `RGB Levels` plots the red, "
-                        "green and blue channels as three graphs side by side, which shows a "
+                        "`Black White Levels` = one brightness histogram with the darkest and "
+                        "lightest tones marked in red, for spotting clipping; `RGB Levels` = "
+                        "red, green and blue as three graphs side by side, for spotting a "
                         "colour cast."
                     ),
                 ),

@@ -18,9 +18,7 @@ class TextMultilineRaw(io.ComfyNode):
             description=(
                 "A multiline text box for code, JSON, YAML or anything else that has to "
                 "arrive exactly as typed. Every line is kept, including one starting with "
-                "'#', and a {red|blue} alternation is passed through as written. Text "
-                "Multiline drops # lines and reads braces as a prompt alternation, so this "
-                "is the box to reach for whenever those two characters mean something."
+                "'#', and a {red|blue} alternation is passed through as written."
             ),
             inputs=[
                 io.String.Input(

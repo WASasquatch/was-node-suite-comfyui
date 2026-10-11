@@ -80,12 +80,11 @@ class PathExists(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "Ask whether a file or folder is already on disk before anything reads or "
-                "writes it, and get back what is there: file or folder, how many bytes, and "
-                "when it last changed. A folder batch can skip the frames it has already "
-                "rendered, and a cache can be compared against the file it was built from. "
-                "A path outside the folders this pack may read is answered as not existing, "
-                "with the refusal on 'resolved', so a probe never stops the prompt."
+                "Check whether a file or folder is on disk before anything reads or writes "
+                "it, with its kind, size in bytes and last change time. Use it to skip frames "
+                "already rendered or to test a cache against its source. A path outside the "
+                "folders the pack may read answers not existing, with the refusal on "
+                "'resolved'."
             ),
             inputs=[
                 io.String.Input(

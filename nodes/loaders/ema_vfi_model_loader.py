@@ -44,10 +44,10 @@ class EMAVFIModelLoader(io.ComfyNode):
                     "checkpoint",
                     options=found or [NO_CHECKPOINT],
                     tooltip=(
-                        "Which EMA-VFI weights to build. The 'small' files are faster and "
-                        "less accurate; the '_t' files can land anywhere between two frames "
-                        "and are the ones a multiplier above 2 needs. A name not yet on disk "
-                        "is fetched on the first run that needs it."
+                        "Which EMA-VFI weights to build. 'small' files = faster, less "
+                        "accurate; '_t' files = can land anywhere between two frames, needed "
+                        "for a multiplier above 2. A name not on disk is fetched on the "
+                        "first run that needs it."
                     ),
                 ),
             ],

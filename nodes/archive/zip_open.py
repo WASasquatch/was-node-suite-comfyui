@@ -50,17 +50,10 @@ class ZipOpen(io.ComfyNode):
             category="WAS Suite/Archive",
             description=(
                 (
-                    "Open a zip archive and report what is in it: a line per file with its "
-                    "kind and size, on the node and on the listing output. Nothing is "
-                    "unpacked, so a large archive costs what a small one costs. The zip "
-                    "output feeds ZIP Add, ZIP Manage, Zip Extract and the Load ... from "
-                    "ZIP nodes. The file menu reaches every "
-                    "subfolder and picks up a dropped file within about five seconds. The "
-                    "temp folder is emptied on restart, so a '[temp]' entry will not be there "
-                    "next session. Unsafe entries are named and skipped, the rest still read: "
-                    "one landing outside its folder, a symbolic link, a name holding a null "
-                    "byte, or one claiming to unpack past a quarter of a gigabyte. A file that "
-                    "is not a zip, or is damaged, stops the run saying which."
+                    "Open a zip archive and list what is in it, a line per file with its kind "
+                    "and size, on the node and on the listing output. Nothing is unpacked. The "
+                    "zip output feeds ZIP Add, ZIP Manage, Zip Extract and the Load ... from "
+                    "ZIP nodes."
                 )
             ),
             inputs=[
@@ -68,9 +61,9 @@ class ZipOpen(io.ComfyNode):
                     "file",
                     options=options(),
                     tooltip=(
-                        "Which archive to open. The menu lists every .zip in ComfyUI's "
-                        "input, output and temp folders and in any folder added under "
-                        "paths.allow_read, each tagged with where it sits."
+                        "Which archive to open: every .zip in ComfyUI's input, output and temp "
+                        "folders, subfolders included, and in any folder under "
+                        "paths.allow_read. A '[temp]' entry is gone after a restart."
                     ),
                 ),
             ],
@@ -86,9 +79,8 @@ class ZipOpen(io.ComfyNode):
                     display_name="names",
                     tooltip=(
                         "Every readable entry name on one wire, folders inside the archive "
-                        "included, for Text List Slice, Text List Get, Text List Length and "
-                        "Text List to Strings. Empty for an archive holding nothing readable, "
-                        "which is a list the list nodes handle. Refused entries are absent."
+                        "included, for Text List Get, Slice and Length. Empty for an archive "
+                        "holding nothing readable. Refused entries are absent."
                     ),
                 ),
                 io.String.Output(
@@ -112,19 +104,16 @@ class ZipOpen(io.ComfyNode):
                 io.String.Output(
                     display_name="listing",
                     tooltip=(
-                        "The report shown on the node, as text: what the archive holds, a line "
-                        "per file with its kind and size, and a line per refused entry saying "
-                        "why it was refused. Wire it into Text to Console or Save Text File to "
-                        "keep a record of what an archive held."
+                        "The report shown on the node, as text: a line per file with its kind "
+                        "and size, and a line per refused entry saying why. Wire it into Save "
+                        "Text File to keep a record."
                     ),
                 ),
                 io.String.Output(
                     display_name="zip_path",
                     tooltip=(
-                        "The full path of the archive that was opened, which is what the Load "
-                        "Images from ZIP, Load Text Files from ZIP and Load Documents from ZIP "
-                        "nodes take. Wire this into their zip_path input to pick an archive "
-                        "from the menu here and read it there."
+                        "The full path of the archive that was opened, as text. The Load ... "
+                        "from ZIP nodes take the zip output instead."
                     ),
                 ),
             ],

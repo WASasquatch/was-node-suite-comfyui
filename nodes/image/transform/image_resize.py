@@ -115,13 +115,9 @@ class ImageResize(io.ComfyNode):
             search_aliases=["Image Resize", "Image Rescale", "scale", "upscale", "resize"],
             category="WAS Suite/Image/Transform",
             description=(
-                "Scale every image in the batch, either by a multiplier or to an exact "
-                "width and height. Rescale mode holds the source proportions. Resize mode "
-                "goes to the two sides given, each rounded up to the next multiple of 8, so "
-                "a requested 1001 is delivered as 1008, and resize_mode decides how the "
-                "picture meets them: padded, cropped, stretched, or left unresampled. "
-                "Neither mode goes below one pixel on a side. The whole batch is resampled "
-                "on the GPU at full precision, so values above 1.0 survive."
+                "Scale every image in the batch by a multiplier, keeping its proportions, or "
+                "to an exact width and height, padding, cropping or stretching to meet them. "
+                "Values above 1.0 survive."
             ),
             inputs=[
                 io.Image.Input(
@@ -198,11 +194,10 @@ class ImageResize(io.ComfyNode):
                     default=sizing.STRETCH,
                     optional=True,
                     tooltip=(
-                        "How the picture meets the requested size in `resize` mode. "
-                        "`stretch` takes both sides exactly and distorts, which is what this "
-                        "node has always done. `fit and pad`: the whole picture inside "
-                        "pad_color bars. `fill and crop`: fills the size, the overhang is "
-                        "cut. `crop or pad`: no resampling at all. Ignored in `rescale`."
+                        "How the picture meets the size in `resize` mode; ignored in "
+                        "`rescale`. `stretch` = both sides exactly, distorting; `fit and pad` "
+                        "= the whole picture inside pad_color bars; `fill and crop` = fills "
+                        "the size, overhang cut; `crop or pad` = no resampling."
                     ),
                 ),
                 io.Combo.Input(

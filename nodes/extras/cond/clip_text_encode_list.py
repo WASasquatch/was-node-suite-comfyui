@@ -81,10 +81,9 @@ class WASCLIPTextEncodeList(io.ComfyNode):
                     multiline=True,
                     default=DEFAULT_SCHEDULE,
                     tooltip=(
-                        "One prompt per line, each written as 'frame:prompt', for example "
-                        "'0:a rosebud'. The number is the loop the prompt takes over on, "
-                        "counting from zero, and it stays in force until the next numbered "
-                        "line. A line with no number in front of a colon is ignored."
+                        "One prompt per line as 'frame:prompt', such as '0:a rosebud'. The "
+                        "number is the loop it takes over on, counting from 0, and it holds "
+                        "until the next numbered line. Lines without a number are ignored."
                     ),
                 ),
             ],

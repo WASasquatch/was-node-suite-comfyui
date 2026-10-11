@@ -50,11 +50,10 @@ class TextStringTruncate(io.ComfyNode):
                     max=99999999,
                     step=1,
                     tooltip=(
-                        "How much to keep, counted in characters or words. A negative value "
-                        "measures what to remove instead: with truncate_from `end`, -10 "
-                        "keeps everything except the last 10, and with `beginning`, -10 "
-                        "keeps only the last 10. Zero with `end` keeps everything, and zero "
-                        "with `beginning` empties the text."
+                        "How much to keep, in characters or words. A negative value counts "
+                        "what to remove: -10 with `end` keeps all but the last 10; with "
+                        "`beginning`, only the last 10. 0 with `end` keeps everything; with "
+                        "`beginning`, nothing."
                     ),
                 ),
                 io.String.Input(

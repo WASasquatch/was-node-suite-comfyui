@@ -64,14 +64,10 @@ class DisplayAny(io.ComfyNode):
             ],
             category="WAS Suite/Utilities",
             description=(
-                "Write whatever is connected onto the node, the value itself filling the "
-                "panel and what it is sitting under it. Text and numbers appear as they are, "
-                "a list or dictionary as the data it holds, and an image, mask or latent as its "
-                "shape, type, device and value range. A socket carrying several values gives "
-                "each one a box of its own, holding that value and nothing else, so any of "
-                "them can be selected and copied as it stands. The value passes through "
-                "unchanged, so the node can be dropped into a chain rather than hung off the "
-                "side of one."
+                "Show whatever is connected on the node: text and numbers as they are, a list "
+                "or dictionary as its data, and an image, mask or latent as its shape, type, "
+                "device and value range. Several values on one socket each get a box to "
+                "select and copy. The value passes through unchanged."
             ),
             inputs=[
                 io.MatchType.Input(

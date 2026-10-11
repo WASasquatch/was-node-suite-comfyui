@@ -1,13 +1,14 @@
 """The pictures a node held, as thumbnails its interface can fetch.
 
-``GET /was/interface/api/preview?node_id=<id>&slot=<name>&side=<input|output>`` answers PNG
-bytes, or 204. Pictures are held in memory per ``(node, side, slot)``, bounded in bytes
-before the encode and in frames after it.
+``GET /was/interface/api/preview?node_id=<id>&slot=<name>&side=<input|output>&workflow=<id>``
+answers PNG bytes, or 204. Pictures are held in memory per ``(workflow, node, side, slot)``,
+bounded in bytes before the encode and in frames after it.
 """
 
 from __future__ import annotations
 
 import math
+import os
 import re
 import threading
 from pathlib import Path
@@ -24,6 +25,7 @@ from .channel import (
     clear_subscriptions,
     executing_node_id,
     executing_prompt_id,
+    executing_workflow_id,
     node_key,
     subscribe,
     unsubscribe,
@@ -71,6 +73,7 @@ __all__ = [
     "register_routes",
     "thumbnail",
     "watching",
+    "write_frames",
 ]
 
 logger = log.get_logger("interface.preview")
@@ -149,8 +152,9 @@ DISCARD_ROUTE = "/was/interface/api/preview/discard"
 CLIPSPACE_NAME = re.compile(r"^clipspace-(mask|paint|painted|painted-masked)-\d{6,}\.png$")
 
 #: The one route serving what was published, keyed by a ``node_id`` query parameter, an optional
-#: ``slot`` naming one picture of a node holding more than one, an optional ``frame``, and an
-#: optional ``side`` of ``input`` or ``output``.
+#: ``slot`` naming one picture of a node holding more than one, an optional ``frame``, an
+#: optional ``side`` of ``input`` or ``output``, and an optional ``workflow`` naming the
+#: workflow the reading page has open.
 ROUTE = "/was/interface/api/preview"
 
 #: Where a panel registers the node it is open on, so publishing for that node is worth the
@@ -230,6 +234,15 @@ class _Held(NamedTuple):
 #: so an interface writing absolute pixels into a widget can map a gesture on a reduced
 #: picture back onto the source.
 _thumbnails: OrderedDict[str, OrderedDict[tuple[str, str], _Held]] = OrderedDict()
+
+#: Node id to the store key it last published under, for a reader that names no workflow.
+_latest: dict[str, str] = {}
+
+#: What joins a workflow id to a node id in a store key.
+_SCOPE = "\x00"
+
+#: The longest workflow id a request may name. The browser's are 36 character UUIDs.
+MAX_WORKFLOW_ID = 128
 
 #: The slot a node with one picture publishes under, and the one a request naming no slot
 #: reads. A name is stripped of surrounding space, so a blank one is this.
@@ -420,9 +433,9 @@ def _publish(tensor, node_id, slot, side, kind, first_only) -> int:
                 key, side, kind, name,
             )
             return 0
-        _store(key, (side, name), _Held(
+        _store(_scoped(key, executing_workflow_id()), (side, name), _Held(
             tuple(pictures), total, sum(len(one.data) for one in pictures),
-        ))
+        ), node=key)
         return len(pictures)
     except Exception as error:
         logger.warning(
@@ -431,6 +444,64 @@ def _publish(tensor, node_id, slot, side, kind, first_only) -> int:
         )
         logger.debug("the %s preview for node %s could not be stored", side, node_id, exc_info=True)
         return 0
+
+
+def write_frames(images, prefix: str, kind: str = IMAGE_KIND) -> list[dict]:
+    """Write a batch's frames to the temp folder, for the executing node to name in its ``ui``.
+
+    Args:
+        images: An ``IMAGE`` or ``MASK`` tensor, bounded as :func:`publish_frames` describes.
+        prefix: The file name prefix in the temp folder, such as ``"was.compare.image.a"``.
+        kind: :data:`IMAGE_KIND` or :data:`MASK_KIND`.
+
+    Returns:
+        One entry per written frame: ``filename``, ``subfolder`` and ``type`` as ComfyUI's
+        view route reads them, the ``width``, ``height`` and ``mode`` of the picture the node
+        held, the file's ``bytes``, the batch length as ``total`` and the ``workflow`` the run
+        was queued from. Empty when no panel is open on the node or nothing could be written.
+    """
+    if not watching():
+        return []
+    key = node_key(executing_node_id())
+    if key is None:
+        return []
+    if not wanted(key):
+        return []
+    try:
+        import folder_paths
+
+        from ..util import sandbox
+
+        pictures, total = _encode_frames(images, kind, first_only=False)
+        workflow = executing_workflow_id() or ""
+        folder, name, counter, subfolder, _ = sandbox.save_image_path(
+            prefix, folder_paths.get_temp_directory(),
+        )
+        entries = []
+        for offset, picture in enumerate(pictures):
+            file = f"{name}_{counter + offset:05}_.png"
+            with open(os.path.join(folder, file), "wb") as handle:
+                handle.write(picture.data)
+            entries.append({
+                "filename": file,
+                "subfolder": subfolder,
+                "type": "temp",
+                "width": picture.width,
+                "height": picture.height,
+                "mode": picture.mode,
+                "bytes": len(picture.data),
+                "total": total,
+                "workflow": workflow,
+            })
+        return entries
+    except Exception as error:
+        logger.warning(
+            "no %s frames were written under %r for the node's panel (%s: %s), so it draws "
+            "nothing",
+            kind, prefix, type(error).__name__, error,
+        )
+        logger.debug("frames under %r could not be written", prefix, exc_info=True)
+        return []
 
 
 def _idle() -> bool:
@@ -447,6 +518,7 @@ def _idle() -> bool:
     with _lock:
         held = len(_thumbnails)
         _thumbnails.clear()
+        _latest.clear()
     if held or released:
         logger.debug(
             "no browser is attached, so %d node(s) of pictures and %d registration(s) were "
@@ -456,13 +528,14 @@ def _idle() -> bool:
     return True
 
 
-def _store(key, inner, held) -> None:
+def _store(key, inner, held, node=None) -> None:
     """Put one key's frames in the store, ageing out the oldest node and key.
 
     Args:
-        key: The publishing node's store key.
+        key: The store key, as :func:`_scoped` builds it.
         inner: The ``(side, slot)`` pair the frames are filed under.
         held: The frames, the batch length and the encoded bytes.
+        node: The publishing node's own id. Left out, ``key``.
     """
     with _lock:
         # Reinserted rather than assigned, at both levels, so publishing again makes
@@ -475,11 +548,68 @@ def _store(key, inner, held) -> None:
         while len(slots) > MAX_SLOTS:
             slots.popitem(last=False)
         _thumbnails[key] = slots
+        _latest[node or key] = key
         while len(_thumbnails) > MAX_ENTRIES:
-            _thumbnails.popitem(last=False)
+            evicted, _ = _thumbnails.popitem(last=False)
+            for name in [name for name, held_key in _latest.items() if held_key == evicted]:
+                del _latest[name]
 
 
-def thumbnail(node_id, slot=None, frame=0, side=INPUT) -> Picture | None:
+def _scoped(key, workflow) -> str:
+    """The store key one node publishes under in one workflow.
+
+    Args:
+        key: The node's id, as :func:`node_key` reads it.
+        workflow: The workflow id the run was queued from, or None.
+
+    Returns:
+        The workflow and node ids joined by :data:`_SCOPE`, or ``key`` alone without a workflow.
+    """
+    return f"{workflow}{_SCOPE}{key}" if workflow else key
+
+
+def _workflow(value) -> str | None:
+    """A workflow id from a request, or None when it names none.
+
+    Args:
+        value: The raw query value.
+
+    Returns:
+        The id stripped of surrounding space, or None when it is empty, longer than
+        :data:`MAX_WORKFLOW_ID` or carries the scope separator.
+    """
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text or len(text) > MAX_WORKFLOW_ID or _SCOPE in text:
+        return None
+    return text
+
+
+def _resolve(key, workflow) -> str | None:
+    """The store key a read lands on. Called with :data:`_lock` held.
+
+    Args:
+        key: The node's id, as :func:`node_key` reads it.
+        workflow: The workflow the reader belongs to, or None.
+
+    Returns:
+        With a workflow, that workflow's key, else the key of a publish made outside any
+        workflow; never another workflow's. Without one, whatever the node published last.
+        None when nothing matches.
+    """
+    if workflow:
+        scoped = _scoped(key, workflow)
+        if scoped in _thumbnails:
+            return scoped
+        return key if key in _thumbnails else None
+    held_key = _latest.get(key)
+    if held_key in _thumbnails:
+        return held_key
+    return key if key in _thumbnails else None
+
+
+def thumbnail(node_id, slot=None, frame=0, side=INPUT, workflow=None) -> Picture | None:
     """One thumbnail a node published, with the size of the picture it came from.
 
     Args:
@@ -491,48 +621,52 @@ def thumbnail(node_id, slot=None, frame=0, side=INPUT) -> Picture | None:
         frame: Which frame of that slot to read, for a slot holding a whole batch. Out of
             range answers None.
         side: :data:`INPUT` or :data:`OUTPUT`. Anything else answers None.
+        workflow: The workflow id to read for, as :func:`_resolve` reads it. Left out, the
+            node's latest publish from any workflow.
 
     Returns:
         A :class:`Picture`, or None when that node published nothing under that key. Its
         size is the picture the node held, not the reduced one in ``data``.
     """
-    record, _, _ = _read(node_id, slot, side, frame)
+    record, _, _ = _read(node_id, slot, side, frame, workflow)
     return record
 
 
-def frames(node_id, slot=None, side=INPUT) -> list | None:
+def frames(node_id, slot=None, side=INPUT, workflow=None) -> list | None:
     """Every frame a node published under one slot of one side, in order.
 
     Args:
         node_id: A node's graph id, as a string or an integer.
         slot: Which of that node's pictures to read, named as it was published.
         side: :data:`INPUT` or :data:`OUTPUT`. Anything else answers None.
+        workflow: The workflow id to read for, as :func:`thumbnail` takes it.
 
     Returns:
         A list of :class:`Picture`, or None when that node published nothing under that
         key. The list is a copy, so the store going on changing does not alter it.
     """
-    held = _held(node_id, slot, side)
+    held = _held(node_id, slot, side, workflow)
     return None if held is None else list(held.pictures)
 
 
-def frame_total(node_id, slot=None, side=INPUT) -> int:
+def frame_total(node_id, slot=None, side=INPUT, workflow=None) -> int:
     """How many frames the batch behind one slot held before the bounds took their share.
 
     Args:
         node_id: A node's graph id, as a string or an integer.
         slot: Which of that node's pictures to read, named as it was published.
         side: :data:`INPUT` or :data:`OUTPUT`.
+        workflow: The workflow id to read for, as :func:`thumbnail` takes it.
 
     Returns:
         The batch length, or 0 when that node published nothing under that key. Never below
         the number of frames actually held.
     """
-    held = _held(node_id, slot, side)
+    held = _held(node_id, slot, side, workflow)
     return 0 if held is None else held.total
 
 
-def held_bytes(node_id=None, slot=None, side=None) -> int:
+def held_bytes(node_id=None, slot=None, side=None, workflow=None) -> int:
     """How many encoded bytes the store holds, for one key, one node, or all of it.
 
     Args:
@@ -540,6 +674,7 @@ def held_bytes(node_id=None, slot=None, side=None) -> int:
         slot: Which of that node's pictures to count, read only when ``side`` is given.
         side: :data:`INPUT` or :data:`OUTPUT` to count one key alone. Left out, every key
             of the node is counted.
+        workflow: The workflow id to read for, as :func:`thumbnail` takes it.
 
     Returns:
         The encoded length of every picture counted, which is the figure
@@ -547,25 +682,26 @@ def held_bytes(node_id=None, slot=None, side=None) -> int:
         store itself.
     """
     if node_id is not None and side is not None:
-        held = _held(node_id, slot, side)
+        held = _held(node_id, slot, side, workflow)
         return 0 if held is None else held.cost
     key = None if node_id is None else node_key(node_id)
     if node_id is not None and key is None:
         return 0
     with _lock:
         if key is not None:
-            slots = _thumbnails.get(key)
+            slots = _thumbnails.get(_resolve(key, _workflow(workflow)))
             return 0 if slots is None else sum(one.cost for one in slots.values())
         return sum(one.cost for slots in _thumbnails.values() for one in slots.values())
 
 
-def _held(node_id, slot, side) -> _Held | None:
+def _held(node_id, slot, side, workflow=None) -> _Held | None:
     """One key's whole record, or None.
 
     Args:
         node_id: A node's graph id.
         slot: The slot name, as :func:`_slot` reads it.
         side: :data:`INPUT` or :data:`OUTPUT`.
+        workflow: The workflow id to read for, as :func:`_resolve` reads it.
 
     Returns:
         The stored :class:`_Held`, or None when that key holds nothing.
@@ -576,17 +712,18 @@ def _held(node_id, slot, side) -> _Held | None:
     if key is None or name is None or which is None:
         return None
     with _lock:
-        slots = _thumbnails.get(key)
+        store_key = _resolve(key, _workflow(workflow))
+        slots = _thumbnails.get(store_key)
         if slots is None:
             return None
         held = slots.get((which, name))
         if held is not None:
             slots.move_to_end((which, name))
-            _thumbnails.move_to_end(key)
+            _thumbnails.move_to_end(store_key)
         return held
 
 
-def _read(node_id, slot, side, frame) -> tuple[Picture | None, int, int]:
+def _read(node_id, slot, side, frame, workflow=None) -> tuple[Picture | None, int, int]:
     """One frame, how many the key holds and how many the batch had, under one lock.
 
     Args:
@@ -594,6 +731,7 @@ def _read(node_id, slot, side, frame) -> tuple[Picture | None, int, int]:
         slot: The slot name, as :func:`_slot` reads it.
         side: :data:`INPUT` or :data:`OUTPUT`.
         frame: Which frame to read, counting from 0.
+        workflow: The workflow id to read for, as :func:`_resolve` reads it.
 
     Returns:
         ``(picture, frames held, batch length)``. The picture is None when the key holds
@@ -606,14 +744,15 @@ def _read(node_id, slot, side, frame) -> tuple[Picture | None, int, int]:
     if key is None or name is None or which is None:
         return None, 0, 0
     with _lock:
-        slots = _thumbnails.get(key)
+        store_key = _resolve(key, _workflow(workflow))
+        slots = _thumbnails.get(store_key)
         if slots is None:
             return None, 0, 0
         held = slots.get((which, name))
         if held is None:
             return None, 0, 0
         slots.move_to_end((which, name))
-        _thumbnails.move_to_end(key)
+        _thumbnails.move_to_end(store_key)
         count = len(held.pictures)
         total = held.total
         try:
@@ -648,12 +787,15 @@ def register_routes() -> bool:
             slot = request.query.get("slot")
             node = request.query.get("node_id")
             side = request.query.get("side")
+            workflow = request.query.get("workflow")
             record, count, total = None, 0, 0
             try:
                 # Asking is a panel saying it is open. A page that outlives a server restart
                 # keeps its registration this way, without the panel having to notice.
                 subscribe(node)
-                record, count, total = _read(node, slot, side, request.query.get("frame", 0))
+                record, count, total = _read(
+                    node, slot, side, request.query.get("frame", 0), workflow,
+                )
             except Exception as error:
                 logger.debug("a preview request could not be answered (%s)", error)
             if record is None:

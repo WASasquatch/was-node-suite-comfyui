@@ -34,9 +34,9 @@ class ImageRemoveBackground(io.ComfyNode):
                     options=["background", "foreground"],
                     tooltip=(
                         "Which part of the image to clear, decided on brightness alone. "
-                        "`background` clears every pixel at or below the threshold, so a dark "
-                        "backdrop goes and the light part is kept. `foreground` clears every "
-                        "pixel at or above it, so a white studio sweep goes instead."
+                        "`background` = every pixel at or below the threshold, so a dark "
+                        "backdrop goes; `foreground` = every pixel at or above it, so a white "
+                        "studio sweep goes."
                     ),
                 ),
                 io.Int.Input(
@@ -46,10 +46,9 @@ class ImageRemoveBackground(io.ComfyNode):
                     max=255,
                     step=1,
                     tooltip=(
-                        "Brightness the cut is made at, 0 for black and 255 for white; 127 cuts "
-                        "at mid grey. In `background` mode everything this dark or darker is "
-                        "cleared, so raising it clears more of the image; in `foreground` mode "
-                        "everything this bright or brighter is cleared, so raising it clears less."
+                        "Brightness the cut is made at: 0 = black; 127 = mid grey; 255 = white. "
+                        "Raising it clears more in `background` mode and less in `foreground` "
+                        "mode."
                     ),
                 ),
                 io.Int.Input(

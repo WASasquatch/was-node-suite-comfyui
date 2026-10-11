@@ -90,10 +90,10 @@ class ResolutionSelector(io.ComfyNode):
                     min=1,
                     max=256,
                     tooltip=(
-                        "Step both sides land on. 8 is the least a latent will take, and 64 "
-                        "is what most model families were trained on. A step moves a side by "
-                        "up to half of itself, so the shape you get back can differ slightly "
-                        "from the one you asked for; the ratio output says what it came to."
+                        "Step both sides land on. 8 = the least a latent takes; 64 = what most "
+                        "model families were trained on. Snapping moves a side by up to half "
+                        "a step, so the ratio output may differ slightly from the one asked "
+                        "for."
                     ),
                 ),
             ],

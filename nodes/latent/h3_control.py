@@ -61,13 +61,10 @@ class H3Control(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Drive each segment of a MiniMax H3 extend loop with its own stretch of one "
-                "control video: pose, depth, canny, lines or any other map the H3 Fun "
-                "ControlNet-Union patch takes. Wire the whole video's control frames once; "
-                "every pass reads the frames that land on its window, carried frames "
-                "included, so each scene follows the video in step. A mask and source video "
-                "add inpainting, regenerating inside the mask and keeping the rest. Place it "
-                "between H3 Extend Window's model output and the guider."
+                "Steer each segment of a MiniMax H3 extend loop with its own stretch of one "
+                "control video: pose, depth, canny, lines or any map the H3 Fun "
+                "ControlNet-Union patch takes. A mask and source video add inpainting inside "
+                "the mask. Place it between H3 Extend Window's model output and the guider."
             ),
             inputs=[
                 io.Model.Input(

@@ -29,11 +29,10 @@ class H3DecodeVideo(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Decode a MiniMax H3 clip built by an extend loop one scene at a time, writing "
-                "the frames to a cache on disk, so a long multi-scene run never has to fit in "
-                "memory as one batch. Each scene that opens on a cut is decoded on its own, so "
-                "its first frames carry nothing of the scene before. Save Video writes the "
-                "clip straight from disk."
+                "Decode a MiniMax H3 clip from an extend loop one scene at a time into a frame "
+                "cache on disk, so a long run never has to fit in memory. Scenes that open on a "
+                "cut decode on their own, carrying nothing of the scene before. Save Video "
+                "writes the clip straight from disk."
             ),
             inputs=[
                 io.Latent.Input(

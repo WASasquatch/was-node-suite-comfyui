@@ -66,10 +66,9 @@ class BoundedImageBlend(io.ComfyNode):
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
                     tooltip=(
-                        "Width of the fade around the pasted region, in pixels. 0 pastes a "
-                        "hard rectangle; 16 softens the join. It has to stay under half the "
-                        "width and half the height of the bounds, or there is nothing left to "
-                        "fade and the node raises an error."
+                        "Width of the fade around the pasted region, in pixels. 0 = a hard "
+                        "rectangle; 16 = a soft join. Must stay under half the bounds' width "
+                        "and height, or the node raises an error."
                     ),
                 ),
             ],

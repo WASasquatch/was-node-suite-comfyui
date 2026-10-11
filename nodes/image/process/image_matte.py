@@ -35,12 +35,9 @@ class ImageMatte(io.ComfyNode):
             ],
             category="WAS Suite/Image/Process",
             description=(
-                "Turn a rough mask into a matte that holds hair, fur, smoke and motion blur. "
-                "The band between the certain foreground and the certain background is "
-                "solved against the picture's own colours, so a hard cut-out from a "
-                "segmenter or a threshold comes back with a soft, correct edge. The "
-                "foreground output is the subject's colour with the background unmixed out "
-                "of it, which is what stops a green or a white fringe following a cut-out "
+                "Turn a rough mask into a matte that holds hair, fur, smoke and motion blur, "
+                "so a hard cut-out gets a soft, correct edge. The foreground output has the "
+                "old background unmixed out, so no green or white fringe follows the subject "
                 "onto a new plate."
             ),
             inputs=[

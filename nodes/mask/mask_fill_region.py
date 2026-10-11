@@ -38,10 +38,9 @@ class MaskFillHoles(io.ComfyNode):
                     optional=True,
                     socketless=True,
                     tooltip=(
-                        "The mask painted on the node, written by the interface and saved with "
-                        "the workflow. Empty means nothing was painted, and the node then "
-                        "produces the filled mask alone. The node has to have run once before "
-                        "there is a mask to paint on. Clear the field to remove the painting."
+                        "The mask painted on the node, saved with the workflow. Empty = nothing "
+                        "painted, so the node gives the filled mask alone. Run the node once "
+                        "to get a mask to paint on; clear the field to remove the painting."
                     ),
                 ),
                 io.Combo.Input(
@@ -50,11 +49,10 @@ class MaskFillHoles(io.ComfyNode):
                     default=drawn.DEFAULT_COMBINE,
                     optional=True,
                     tooltip=(
-                        "How the painting joins the mask this node produced. union keeps "
-                        "whichever of the two is brighter at each pixel, subtract takes the "
-                        "painting away from the mask, intersect keeps whichever is darker, and "
-                        "off ignores the painting without deleting it. The painting is resized "
-                        "to the mask when the two differ."
+                        "How the painting joins the mask this node produced, resized to it if "
+                        "they differ. `union` = the brighter of the two at each pixel; "
+                        "`subtract` = the painting taken away; `intersect` = the darker; `off` "
+                        "= ignored, not deleted."
                     ),
                 ),
             ],
@@ -62,10 +60,9 @@ class MaskFillHoles(io.ComfyNode):
                 io.Mask.Output(
                     display_name="MASKS",
                     tooltip=(
-                        "The mask with every fully surrounded gap filled in. The result is hard "
-                        "black and white, so soft edges are lost, and a gap that reaches the "
-                        "image border is not surrounded and stays open. Anything painted on the "
-                        "node is joined in afterwards and keeps its own levels."
+                        "The mask with every fully surrounded gap filled, as hard black and "
+                        "white; a gap touching the image border stays open. Anything painted on "
+                        "the node is joined in afterwards with its own levels."
                     ),
                 )
             ],

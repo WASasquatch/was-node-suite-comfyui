@@ -177,11 +177,9 @@ class ChannelWaveform(io.ComfyNode):
             category="WAS Suite/Image/Analyze",
             description=(
                 "Plot the red, green and blue channels of each picture as broadcast waveform "
-                "scopes, and the three together as an RGB parade. Each column of the plot is "
-                "a column of the picture, so it shows where in the frame the brightness sits "
-                "and whether the channels agree: a colour cast reads as three traces at "
-                "different heights, clipping as a trace pinned to the top of the grid. Min, "
-                "max, mean, deviation and median are printed underneath."
+                "scopes, and the three together as an RGB parade, with min, max, mean, "
+                "deviation and median underneath. A colour cast reads as three traces at "
+                "different heights, clipping as a trace pinned to the top of the grid."
             ),
             inputs=[
                 io.Image.Input(

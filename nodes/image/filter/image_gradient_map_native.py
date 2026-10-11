@@ -70,11 +70,9 @@ class ImageGradientMapNative(io.ComfyNode):
                     "gradient_image",
                     optional=True,
                     tooltip=(
-                        "A gradient to read instead of the stops, for one that already "
-                        "exists as a picture. Whichever of its two axes travels furthest is "
-                        "the one read, averaged along the other, so a gradient running top "
-                        "to bottom works as well as one running left to right. A batch is "
-                        "paired with the image batch frame by frame."
+                        "A gradient picture to read instead of the stops. The axis along which "
+                        "colour changes most is read, so top to bottom works as well as left to "
+                        "right. A batch pairs with the image batch frame by frame."
                     ),
                 ),
             ],

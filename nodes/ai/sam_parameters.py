@@ -48,10 +48,9 @@ class SamParameters(io.ComfyNode):
                     default="[128, 128]; [0, 0]",
                     multiline=False,
                     tooltip=(
-                        "The points to segment from, written as x and y pixel coordinates "
-                        "and separated by semicolons: '[128, 128]; [0, 0]' is two points, "
-                        "one 128 pixels in from the top left corner and one on the corner "
-                        "itself. Coordinates count from the top left of the image."
+                        "The points to segment from, as x and y pixels from the top left, "
+                        "separated by semicolons: '[128, 128]; [0, 0]' is two points, one "
+                        "128 pixels in from the corner and one on the corner itself."
                     ),
                 ),
                 io.String.Input(

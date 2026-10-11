@@ -128,10 +128,9 @@ class ComboSelector(io.ComfyNode):
             ],
             category="WAS Suite/Logic",
             description=(
-                "Pick a checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or scheduler "
-                "from one node, and send it to another node's dropdown. Choose the kind first "
-                "and the list below it fills with what is installed. Convert the target node's "
-                "dropdown to an input and connect combo to it. Also answers the choice as text."
+                "Pick an installed checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or "
+                "scheduler and send it to another node's dropdown, and as text. Convert the "
+                "target node's dropdown to an input and connect combo to it."
             ),
             inputs=[
                 io.DynamicCombo.Input(

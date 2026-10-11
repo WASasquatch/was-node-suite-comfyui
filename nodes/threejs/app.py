@@ -31,10 +31,9 @@ class ThreeApp(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "Bring a scene and a camera together with the settings the renderer runs under, "
-                "and hand the result to Three Viewer. Tone mapping decides how brightness above "
-                "1.0 is brought into a displayable range: 'aces' is the filmic default, 'none' "
-                "shows the raw values and clips them. Orbit control lets the viewer be dragged; "
-                "with it off the camera stays exactly where the camera node put it."
+                "for Three Viewer, the Three render nodes and Three Compile. Tone mapping, "
+                "exposure, shadows, orbit dragging, effects and the animation's loop length are "
+                "set here."
             ),
             inputs=[
                 THREE_SCENE.Input(
@@ -109,11 +108,10 @@ class ThreeApp(io.ComfyNode):
                     max=3600.0,
                     step=0.1,
                     tooltip=(
-                        "How long the whole animation lasts, in seconds. 4.0 is a steady "
-                        "turntable, 20.0 a long move a render takes a few seconds out of. It "
-                        "is the length the viewer loops over, the axis the strip on Three "
-                        "Render is drawn against, and the span every `per timeline` motion is "
-                        "spread across."
+                        "How long the whole animation lasts, in seconds. 4.0 = a steady "
+                        "turntable; 20.0 = a long move a render captures part of. The viewer "
+                        "loops over it, Three Render's strip spans it and `per timeline` "
+                        "motion spreads across it."
                     ),
                 ),
                 io.Float.Input(

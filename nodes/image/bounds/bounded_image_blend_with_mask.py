@@ -43,11 +43,9 @@ class BoundedImageBlendWithMask(io.ComfyNode):
                 io.Mask.Input(
                     "target_mask",
                     tooltip=(
-                        "Where the source is allowed to show: white lets it through, black "
-                        "keeps the target. It may be the size of the whole target or of the "
-                        "bounds alone, in which case it is positioned at the bounds. One mask "
-                        "per source image pairs them up; any other count uses the first for "
-                        "all of them."
+                        "White lets the source through; black keeps the target. Sized to the "
+                        "whole target, or to the bounds alone and placed at them. One mask per "
+                        "source image pairs them up; any other count uses the first for all."
                     ),
                 ),
                 IMAGE_BOUNDS.Input(

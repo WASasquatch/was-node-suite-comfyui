@@ -41,10 +41,10 @@ FILE_HINT = (
 )
 
 ROLE_HINT = (
-    "What this does for its segment. `first frame` = the segment opens on it; `last frame` "
-    "= closes on it; `keyframe` = pinned at `frame`, as a still, a clip, a sound, or a clip "
-    "with its sound; `reference picture`, `reference clip` and `reference audio` = named "
-    "`<Picture N>`, `<Video N>` and `<Audio N>` in that segment's prompt."
+    "`first frame` = the segment opens on it; `last frame` = closes on it; `keyframe` = "
+    "pinned at `frame` (still, clip, sound, or clip with sound); `reference picture`, "
+    "`reference clip`, `reference audio` = named `<Picture N>`, `<Video N>`, `<Audio N>` in "
+    "the segment's prompt."
 )
 
 SEGMENT_HINT = (
@@ -248,14 +248,10 @@ class MiniMaxH3Asset(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "One picture, clip or sound for a MiniMax H3 run, with the segment it belongs "
-                "to and the part it plays there: the frame a segment opens or closes on, a "
-                "keyframe pinned at any frame of it, or a picture, clip or sound its prompt "
-                "references as `<Picture N>`, `<Video N>` or `<Audio N>`. Pick a file from "
-                "ComfyUI's folders, or wire an image, a video or an audio in. Chain as many as "
-                "the run needs, each into the next one's assets, and wire the last into assets "
-                "on MiniMax H3 Conditioning. The Prompt Timeline window on that node places "
-                "them for you."
+                "One picture, clip or sound for a MiniMax H3 segment: a frame it opens on, "
+                "closes on or pins, or a reference its prompt names. Chain as many as the run "
+                "needs into assets on MiniMax H3 Conditioning, whose Prompt Timeline window "
+                "places them."
             ),
             inputs=[
                 H3_ASSETS.Input("assets", optional=True, tooltip=ASSETS_HINT),

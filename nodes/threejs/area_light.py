@@ -31,17 +31,10 @@ class ThreeAreaLight(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Light the scene from a panel with a size rather than from a point, so shadows "
-                "soften with the width and height given and highlights read as a window or a "
-                "softbox rather than a pinprick. Three Path Trace Render aims samples straight "
-                "at it, so it renders cleaner than an emissive material at the same sample "
-                "count, and the smaller the panel the wider that gap. The panel throws light "
-                "from one face, the one facing the target. It does not appear in the picture "
-                "itself, though a mirror reflects it, so pair it with an emissive Three "
-                "Standard Material where "
-                "the fitting has to be seen. Three Render lights Three Standard Material and "
-                "Three Physical Material with it and casts no shadow from it; a traced render "
-                "shadows and shapes it in full."
+                "Light the scene from a panel rather than a point, so shadows soften and "
+                "highlights read as a window or softbox. The panel shines from the face toward "
+                "its target and is invisible itself; pair it with an emissive material where "
+                "the fitting must show. Only a path traced render casts its shadow."
             ),
             inputs=[
                 io.String.Input(

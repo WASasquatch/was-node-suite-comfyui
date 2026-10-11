@@ -18,16 +18,9 @@ class ImageBlank(io.ComfyNode):
             search_aliases=["Image Blank", "solid colour", "blank canvas", "fill"],
             category="WAS Suite/Image/Generate",
             description=(
-                "Make a new image filled with a single colour, for use as a background, a "
-                "matte, or a base to composite onto. The colour is set from the wheel on the "
-                "node or by typing the three levels. Both sides are rounded down to a "
-                "multiple of divisible_by, which saves a sampler rounding the size itself, "
-                "so 513 becomes 512 at the default of 8. Use 16, 32 "
-                "or 64 for a model that asks for a coarser step, and 1 for a matte that has "
-                "to line up with something else exactly. A side shorter than divisible_by is "
-                "taken up to one whole step rather than down to nothing. batch_size repeats "
-                "the fill, for matching a batch of frames. alpha_channel adds a fourth "
-                "channel at the level alpha, for an RGBA fill."
+                "Make a new image filled with a single colour, for a background, a matte or a "
+                "base to composite onto. Set the colour from the wheel on the node or by "
+                "typing the three levels."
             ),
             inputs=[
                 io.Int.Input(
@@ -86,8 +79,9 @@ class ImageBlank(io.ComfyNode):
                     min=1,
                     step=1,
                     tooltip=(
-                        "Rounds width and height down to a multiple of this. 8 suits most "
-                        "latent models; set it to 1 to get the exact canvas asked for."
+                        "Rounds width and height down to a multiple of this; a shorter side "
+                        "becomes one whole step. 1 = the exact size asked for; 8 = most latent "
+                        "models; 16, 32 or 64 = a model wanting a coarser step."
                     ),
                 ),
                 io.Int.Input(

@@ -9,7 +9,7 @@ from ...modules.latent import h3_assets, h3_conditioning, h3_decode, h3_extend, 
 
 START_HINT = (
     "Where the repair starts, as `3.0` seconds. Widened back to the start of its 17 frame "
-    "block, so `3.0` opens on frame 68 (2.83 s)."
+    "block, so `3.0` opens on frame 68 (2.83 s). A span crossing a scene cut is refused."
 )
 
 END_HINT = (
@@ -79,15 +79,10 @@ class H3RepairWindow(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Open part of a finished MiniMax H3 clip for a sampler to redraw. The stretch "
-                "from start_seconds to end_seconds widens to whole 17 frame blocks, and the "
-                "window around it carries context_frames of the clip either side, held as they "
-                "are. picture_strength and sound_strength set how much of the stretch's picture "
-                "and sound is drawn again: `1.0` from fresh noise, `0.5` half way from what is "
-                "there, `0.0` kept. Wire MiniMax H3 Conditioning's prompts to reuse a segment's "
-                "prompt, references, keyframes and model; a wired positive replaces the prompt. "
-                "Sample the window at denoise 1.0, then hand the result and the clip to H3 "
-                "Repair Splice. A stretch crossing a scene cut is refused."
+                "Open part of a finished MiniMax H3 clip for a sampler to redraw its picture, "
+                "its sound or both. Wire MiniMax H3 Conditioning's prompts to reuse the "
+                "segment's prompt, references and model. Sample the window at denoise 1.0, "
+                "then hand the result and the clip to H3 Repair Splice."
             ),
             inputs=[
                 io.Latent.Input(

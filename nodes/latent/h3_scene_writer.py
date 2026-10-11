@@ -80,10 +80,10 @@ class H3SceneWriter(io.ComfyNode):
             category="WAS Suite/Latent/Video",
             description=(
                 "Writes a whole MiniMax H3 video from an idea: a language model outlines the "
-                "story, casts each scene from the reference pictures in an asset chain, writes "
-                "every scene's prompt and the shared header and footer under a system prompt of "
-                "rules, then reads the scenes back to choose the cuts and carries between them. "
-                "The Prompt Timeline's Write scenes runs it and fills the rows."
+                "story, casts each scene from the asset chain's reference pictures, writes every "
+                "scene's prompt and the shared header and footer, then picks the cuts and "
+                "carries between scenes. The Prompt Timeline's Write scenes runs it and fills "
+                "the rows."
             ),
             inputs=[
                 io.Clip.Input(

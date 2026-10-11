@@ -37,11 +37,10 @@ class ImageRotate(io.ComfyNode):
                     "mode",
                     options=["transpose", "internal"],
                     tooltip=(
-                        "`transpose` turns the image by moving whole pixels, so a portrait "
-                        "image becomes landscape and nothing is lost. `internal` rotates "
-                        "inside the original frame instead, which keeps the width and "
-                        "height as they were and crops the corners off a quarter turn of a "
-                        "non-square image."
+                        "`transpose` = turns by whole pixels, so a portrait becomes landscape "
+                        "and nothing is lost; `internal` = rotates inside the original frame, "
+                        "keeping width and height and cropping the corners off a quarter turn "
+                        "of a non-square image."
                     ),
                 ),
                 io.Int.Input(

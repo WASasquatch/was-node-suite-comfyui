@@ -31,12 +31,10 @@ class TextListSlice(io.ComfyNode):
             ],
             category="WAS Suite/Text/List",
             description=(
-                "Take a run of entries out of a list, from one position to another with both "
-                "ends included, optionally every second or third one. The run comes out twice: "
-                "as one LIST, and as a STRING list that runs everything downstream once per "
-                "entry. An end of -1, the default, takes everything from start onwards, and "
-                "an end past the last entry stops there. An end before start selects nothing "
-                "and stops the prompt, since the graph below cannot be run zero times."
+                "Take a run of entries out of a list, from start to end with both ends "
+                "included, optionally every second or third one. The run comes out as one "
+                "LIST and as a STRING list that runs everything downstream once per entry. "
+                "A range that selects nothing stops the prompt."
             ),
             inputs=[
                 LIST.Input(
@@ -68,7 +66,8 @@ class TextListSlice(io.ComfyNode):
                     step=1,
                     tooltip=(
                         "The last entry taken, and it is taken as well: start 9 and end 19 "
-                        "give 11 entries, the 10th to the 20th. -1 is the last entry."
+                        "give 11 entries, the 10th to the 20th. -1 = the last entry; an end "
+                        "past the list stops at its last entry."
                     ),
                 ),
                 io.Int.Input(
@@ -95,10 +94,9 @@ class TextListSlice(io.ComfyNode):
                     display_name="strings",
                     is_output_list=True,
                     tooltip=(
-                        "The same entries as a STRING list. Because this is a list, a node "
-                        "reading it runs once per entry and produces one result per entry, "
-                        "wire it into a sampler's prompt to render every line of a range in "
-                        "turn. An entry that is not text is converted to it."
+                        "The same entries as a STRING list: a node reading it runs once per "
+                        "entry, so wired into a sampler's prompt it renders every line of the "
+                        "range in turn. An entry that is not text is converted to it."
                     ),
                 ),
                 io.Int.Output(

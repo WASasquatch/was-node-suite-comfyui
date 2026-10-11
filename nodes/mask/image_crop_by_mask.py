@@ -52,22 +52,9 @@ class ImageCropByMask(io.ComfyNode):
             ],
             category="WAS Suite/Image/Masking",
             description=(
-                (
-                    (
-                        "Crop each image to the area its mask marks, padded and clamped to the "
-                        "picture, and pass on the crop window so the result can be pasted back "
-                        "at full size. Every crop comes out the same size, which is what lets "
-                        "one window describe a whole batch. One mask per image boxes each "
-                        "image on its own; any other count boxes the first mask and crops "
-                        "every image to it. A frame whose mask marks nothing is cropped whole "
-                        "and named in the console, which a threshold of 1.0 does to every "
-                        "frame. 'per_frame' resizes every crop to the widest box's width by "
-                        "the tallest box's height, a size no single box need have. "
-                        "divisible_by rounds the result, 8 suiting most models and 1 rounding "
-                        "nothing. The window and bounds are measured before that rounding, so "
-                        "Image Paste Crop scales back to the rectangle cut from."
-                    )
-                )
+                "Crop each image to the area its mask marks, padded and clamped to the "
+                "picture, and pass on the crop window so the result can be pasted back at "
+                "full size. Every crop comes out the same size, so the batch travels on as one."
             ),
             inputs=[
                 io.Image.Input(
@@ -82,9 +69,9 @@ class ImageCropByMask(io.ComfyNode):
                 io.Mask.Input(
                     "mask",
                     tooltip=(
-                        "Marks the area to keep. The tightest box around everything above "
-                        "threshold decides where the crop sits. A blank mask crops that "
-                        "frame whole."
+                        "Marks the area to keep: the tightest box around everything above "
+                        "threshold sets the crop, and a blank mask crops that frame whole. With "
+                        "a different count from the images, the first mask is used for all."
                     ),
                 ),
                 io.Combo.Input(
@@ -93,7 +80,8 @@ class ImageCropByMask(io.ComfyNode):
                     tooltip=(
                         "Which box a batch of masks is cropped to. 'union' uses one "
                         "rectangle covering every mask; 'per_frame' gives each image its "
-                        "own, following a subject that moves."
+                        "own, following a subject that moves, resized to the widest box's "
+                        "width by the tallest box's height."
                     ),
                 ),
                 io.Int.Input(
@@ -118,7 +106,7 @@ class ImageCropByMask(io.ComfyNode):
                     tooltip=(
                         "How bright a mask pixel must be, from 0.0 to 1.0, to count as "
                         "marked. 0.5 boxes a mask's solid core; 0.0 takes its whole "
-                        "feathered edge in."
+                        "feathered edge in; 1.0 marks nothing, so every frame is cropped whole."
                     ),
                 ),
                 io.Int.Input(
@@ -129,8 +117,8 @@ class ImageCropByMask(io.ComfyNode):
                     step=1,
                     tooltip=(
                         "Rounds both sides of the crop down to a multiple of this and "
-                        "resizes to match, which saves a sampler rounding it. 1 leaves the "
-                        "crop as cut."
+                        "resizes to match. 1 = the crop as cut; 8 = suits most models. The "
+                        "window and bounds are measured before rounding."
                     ),
                 ),
             ],
@@ -148,9 +136,7 @@ class ImageCropByMask(io.ComfyNode):
                     tooltip=(
                         "The crop window, for Image Paste Crop to put the finished region "
                         "back in the right place at its original size. In per_frame mode it "
-                        "holds the union rectangle, so a paste stretches every crop across "
-                        "that whole rectangle and lands exactly only where every mask shared "
-                        "a box."
+                        "holds the union rectangle, so a paste stretches every crop across it."
                     ),
                 ),
                 IMAGE_BOUNDS.Output(

@@ -32,11 +32,9 @@ class LoadVideoUpload(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "Load a video and hand on everything in it at once: the video itself, its "
-                "frames as an image batch, its sound, and how long it is. Upload a file with "
-                "the button on the node and play it back there. Frames are chosen and sized "
-                "exactly as Load Video beside it does them, 16 of them unless told "
-                "otherwise."
+                "Load a video and hand on the video itself, its frames as an image batch, its "
+                "sound and how long it is. Upload with the button and play it back on the "
+                "node. Frames can be thinned by count and strategy and brought to one size."
             ),
             inputs=[
                 io.Combo.Input(
@@ -55,10 +53,9 @@ class LoadVideoUpload(io.ComfyNode):
                     min=0,
                     max=reader.MAX_FRAMES,
                     tooltip=(
-                        f"How many frames to keep, chosen by the strategy below. `0` = the "
-                        f"whole clip, up to the {reader.MAX_FRAMES} ceiling; `16` = a short "
-                        f"sample. A batch is one tensor, so a long clip at full size stops "
-                        f"with the count to set rather than running out of memory."
+                        f"How many frames to keep, chosen by strategy. `0` = the whole clip, "
+                        f"up to the {reader.MAX_FRAMES} ceiling; `16` = a short sample. A clip "
+                        f"too long to fit in memory stops with the count to set."
                     ),
                 ),
                 io.Combo.Input(

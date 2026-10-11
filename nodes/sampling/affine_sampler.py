@@ -33,10 +33,9 @@ SPACE_HINT = (
 
 #: What every Affine sampler says about what the multiplier reaches.
 ACTS_ON_HINT = (
-    "What max_scale multiplies. 'content' = only the picture the model has resolved, so "
-    "the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies "
-    "that noise as well and prints it as fixed grain on a model that holds noise for most "
-    "of its run."
+    "What max_scale multiplies: 'content' = only the picture the model has resolved, "
+    "leaving the sampler's noise alone; 'latent' = the whole latent, noise included, which "
+    "prints as fixed grain on a model that holds noise for most of its run."
 )
 
 #: What every Affine sampler says about its debug switch.
@@ -86,10 +85,9 @@ AFFINE_INPUTS = [
         max=2.0,
         step=0.001,
         tooltip=(
-            "What the latent is multiplied by at the peak of the schedule, compounding "
-            "over every step it lands on. 1.0 = no change, 1.02 adds visible texture over "
-            "a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 "
-            "softens instead."
+            "What the latent is multiplied by at the schedule's peak, compounding over "
+            "every step it lands on: below 1.0 = softer; 1.0 = no change; 1.02 = visible "
+            "texture over a 20 step run; 1.05 = strong; past 1.08 = breaks up."
         ),
     ),
     io.Float.Input(

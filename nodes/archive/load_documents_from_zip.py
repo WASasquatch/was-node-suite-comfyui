@@ -54,17 +54,9 @@ class LoadDocumentsFromZip(io.ComfyNode):
             ],
             category="WAS Suite/Archive",
             description=(
-                "Read the documents inside a zip archive. Every document comes out twice: "
-                "as one LIST, and as a DOC list that runs everything downstream once per "
-                "document, with the names alongside so each keeps the name it arrived "
-                "under. A '/' in the pattern anchors it at the top of the archive, so "
-                "'drafts/*' reads that one folder and 'drafts/**/*' reads it and "
-                "everything under it; case is ignored, and only .wasdoc entries are read. "
-                "An archive that is missing, is a folder, is not a readable zip, or holds "
-                "no document the pattern picks stops the prompt and says which. Whatever "
-                "is not read is counted on 'skipped' and named in the log: not a .wasdoc, "
-                "an unsafe name, a symbolic link, encrypted, repeated, too large, damaged, "
-                "or not a document after all."
+                "Read the .wasdoc documents inside a zip archive, both as one LIST and as a DOC "
+                "list that runs everything downstream once per document, each with the name "
+                "it arrived under."
             ),
             inputs=[
                 io.Combo.Input(
@@ -91,9 +83,9 @@ class LoadDocumentsFromZip(io.ComfyNode):
                     default="*",
                     multiline=False,
                     tooltip=(
-                        "Which entries inside the archive to read. '*' takes every document "
-                        "at any depth, and 'report_*' every document named that way in any "
-                        "folder."
+                        "Which entries to read, case ignored: '*' = every document at any "
+                        "depth; 'report_*' = documents named so, in any folder; 'drafts/*' = "
+                        "that folder only; 'drafts/**/*' = it and everything under it."
                     ),
                 ),
             ],
@@ -140,9 +132,9 @@ class LoadDocumentsFromZip(io.ComfyNode):
                 io.Int.Output(
                     display_name="skipped",
                     tooltip=(
-                        "How many entries the archive holds that were not read: one that is "
-                        "not a .wasdoc, one unsafe to unpack, one damaged. The log names "
-                        "every one."
+                        "How many entries were not read: not a .wasdoc, an unsafe name, a "
+                        "symbolic link, encrypted, repeated, too large, damaged or not a "
+                        "document. The log names every one."
                     ),
                 ),
             ],

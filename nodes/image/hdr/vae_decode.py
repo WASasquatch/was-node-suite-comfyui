@@ -38,13 +38,10 @@ class HDRVAEDecode(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Decode a latent to an image and keep the values the decoder put above white "
-                "and below black, which the standard VAE Decode holds at 1.0 and 0.0. A "
-                "bright sky, a specular hit or a light source comes out with its shape "
-                "intact instead of a flat white shelf, ready for EXR Save, DNG Save, a tone "
-                "map, or an exposure pull with Linear Light. Exposure, ceiling and negatives "
-                "set what reaches the output, and the panel reports the peak and how much of "
-                "the picture is above white."
+                "Decode a latent to an image, keeping the values the decoder put above white "
+                "and below black. A bright sky, specular hit or light source keeps its shape "
+                "instead of a flat white shelf, ready for EXR Save, DNG Save, a tone map or "
+                "Linear Light. The node reports the peak and the share above white."
             ),
             inputs=[
                 io.Latent.Input("samples", tooltip="The latent to decode."),

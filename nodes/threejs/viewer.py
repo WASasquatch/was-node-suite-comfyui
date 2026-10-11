@@ -29,13 +29,10 @@ class ThreeViewer(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Draw the scene on this node and keep drawing it. The picture is built in the "
-                "browser on a WebGL surface, so nothing is rendered on the server and no image "
-                "comes out of this node. Drag inside it to orbit, wheel to zoom, middle-drag or "
-                "hold shift to pan, all of which need orbit control on in Three App. Pause "
-                "stops the animation without stopping the camera, and Reset Camera returns to "
-                "the values the camera node holds. The view fills the node, so drag the node's "
-                "corner to make it bigger."
+                "Draw the scene live on this node, in the browser, with no image output. Drag to "
+                "orbit, wheel to zoom, middle-drag or hold shift to pan while Three App's orbit "
+                "control is on; Pause stops the animation and Reset Camera returns to the camera "
+                "node's values."
             ),
             is_output_node=True,
             inputs=[

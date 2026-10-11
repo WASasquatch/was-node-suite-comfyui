@@ -60,11 +60,10 @@ class LayersLoad(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Read a Photoshop document or a layered TIFF into a layer stack, so work "
-                "done in an image editor carries on in a graph. Every layer arrives with "
-                "its name, its place on the canvas, its opacity, its blend mode and "
-                "whether it was hidden. Layers inside a group arrive as ordinary layers, "
-                "and adjustment, text and shape layers arrive as the pixels the file "
-                "stored for them."
+                "done in an image editor carries on in a graph. Each layer keeps its name, "
+                "placement, opacity, blend mode and visibility. Grouped layers arrive "
+                "ungrouped, and adjustment, text and shape layers arrive as their stored "
+                "pixels."
             ),
             inputs=[
                 io.Combo.Input(

@@ -28,14 +28,10 @@ class ThreePhysicalMaterial(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Three Standard Material with the effects glass, car paint and soap bubbles "
-                "need. Transmission makes the surface see-through by refracting light rather "
-                "than by going transparent, and wants a thickness and an index of refraction "
-                "to read as a solid, and an attenuation colour to read as tinted. Clearcoat "
-                "adds a second glossy layer over the base, as on lacquer. Sheen adds the soft "
-                "rim velvet has. Iridescence shifts hue with viewing angle. Emissive gives off "
-                "light, which Three Path Trace Render treats as a light in its own right. "
-                "Everything at 0.0 behaves exactly like a standard material, at a higher cost."
+                "Three Standard Material with the extra layers glass, car paint, velvet and soap "
+                "bubbles need: transmission, clearcoat, sheen and iridescence. Emission counts as "
+                "a light in Three Path Trace Render. With every extra at 0.0 it looks exactly "
+                "like a standard material, at a higher cost."
             ),
             inputs=[
                 io.String.Input(
@@ -82,7 +78,11 @@ class ThreePhysicalMaterial(io.ComfyNode):
                     min=0.0,
                     max=1.0,
                     step=0.01,
-                    tooltip="How much light passes through. 0.0 is solid, 1.0 is clear glass.",
+                    tooltip=(
+                        "How much light passes through, by refraction. 0.0 is solid, 1.0 is "
+                        "clear glass; set thickness and ior for a solid block, "
+                        "attenuation_color for a tint."
+                    ),
                 ),
                 io.Float.Input(
                     "thickness",

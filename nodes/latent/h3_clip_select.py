@@ -30,11 +30,9 @@ class ThreeH3ClipSelect(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Take one clip out of a MiniMax H3 run: its prompt, and the empty latent "
-                "it samples into. Every clip has a latent of its own, so a loop wrapped "
-                "round this samples each one from fresh and nothing passes between them. "
-                "Send the latent to a sampler and the sampled result to a decode inside "
-                "the loop, so each clip arrives as its own frames."
+                "Take one clip out of a MiniMax H3 run: its prompt, its model and its own "
+                "empty latent. Inside a loop each clip samples from fresh with nothing passing "
+                "between them, and a decode in the loop hands on each clip as its own frames."
             ),
             inputs=[
                 H3_PROMPTS.Input(

@@ -119,11 +119,10 @@ class PromptTagCleanup(io.ComfyNode):
                     "sort",
                     options=["none", "a-z", "z-a", "shortest first", "longest first"],
                     tooltip=(
-                        "How the surviving tags are ordered. `none` keeps the order they "
-                        "were written in, which is what preserves the weight early tags "
-                        "carry in most encoders. The alphabetical orders make two prompts "
-                        "comparable by eye; `longest first` puts the descriptive phrases "
-                        "ahead of the single words."
+                        "How the surviving tags are ordered. `none` = as written, keeping the "
+                        "weight early tags carry in most encoders; `a-z` and `z-a` = "
+                        "alphabetical, for comparing prompts by eye; `longest first` = "
+                        "phrases ahead of single words; `shortest first` = the reverse."
                     ),
                 ),
                 io.Int.Input(
@@ -156,10 +155,9 @@ class PromptTagCleanup(io.ComfyNode):
                     is_output_list=True,
                     tooltip=(
                         "The same tags as a STRING list, so a node reading this runs once "
-                        "per tag, one render per tag, for instance. A prompt that tidies "
-                        "down to no tags leaves nothing to run on, so the nodes reading "
-                        "this socket stop and say so; the text output is still delivered, "
-                        "since an empty prompt is a valid one."
+                        "per tag, such as one render per tag. A prompt that tidies down to "
+                        "no tags stops the nodes reading this socket; the text output is "
+                        "still delivered."
                     ),
                 ),
                 io.Int.Output(

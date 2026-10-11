@@ -18,7 +18,10 @@ __all__ = [
     "append",
     "AUDIO_REFERENCE",
     "BRIDGING",
+    "CARRIED_PICTURES",
+    "CARRY_REFERENCE",
     "CONTINUITY",
+    "REFERENCING_PICTURES",
     "audio_carry",
     "audio_lands_whole",
     "audio_lead",
@@ -126,9 +129,18 @@ AUDIO_CARRY = "carry (audio only)"
 #: A cut to new picture referencing the clip's last frames, with the soundtrack carried across.
 AUDIO_REFERENCE = "carry (audio) + reference (video)"
 
+#: A carried shot that also references stills sampled across the scene it continues.
+CARRY_REFERENCE = "carry + reference (sample)"
+
 #: How a segment continues from the one before it.
 CONTINUITY = ("carry", "refresh", "handoff", REFERENCE_VIDEO, REFERENCE_SAMPLE, "cut", AUDIO_CARRY,
-              AUDIO_REFERENCE)
+              AUDIO_REFERENCE, CARRY_REFERENCE)
+
+#: Picture transitions that hold the last frames of the shot they continue.
+CARRIED_PICTURES = ("carry", "refresh", CARRY_REFERENCE)
+
+#: Picture transitions whose window adds references to the segment's prompt.
+REFERENCING_PICTURES = (REFERENCE_VIDEO, REFERENCE_SAMPLE, CARRY_REFERENCE)
 
 #: Continuities that carry the soundtrack across a cut to new picture.
 BRIDGING = (AUDIO_CARRY, AUDIO_REFERENCE)
@@ -764,7 +776,7 @@ def resolved(continuity: str, sound: str = "auto") -> tuple[str, bool, bool]:
     picture = {AUDIO_CARRY: "cut", AUDIO_REFERENCE: REFERENCE_VIDEO}.get(named, named)
     bridged = named in BRIDGING
     if sound == "fresh":
-        return picture, False, picture in ("carry", "refresh")
+        return picture, False, picture in CARRIED_PICTURES
     if sound == "carry" and picture in CUT_PICTURES:
         bridged = True
     return picture, bridged, False

@@ -33,10 +33,9 @@ class LayerTrim(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Cut the empty band off a layer's picture and move x and y in by the same "
-                "amount, so nothing appears to shift. A cut-out that arrived on a full frame "
-                "of transparency becomes a layer the size of the subject, which is what makes "
-                "Layer Align centre the subject rather than the frame it came on, and what "
-                "stops an effect spending its radius on empty pixels."
+                "amount, so nothing appears to shift. A cut-out on a full transparent frame "
+                "becomes a layer the size of the subject, so Layer Align centres the subject "
+                "and effects skip the empty pixels."
             ),
             inputs=[
                 io.Layers.Input(

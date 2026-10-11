@@ -32,11 +32,10 @@ class LayerFit(io.ComfyNode):
             ],
             category="WAS Suite/Image/Layers",
             description=(
-                "Scale a layer to reach the canvas, a size you type, or another layer, and "
-                "put it where the anchor says. Only the drawn size is written, so the layer "
-                "keeps its full-resolution picture and Create Layered Image resamples it once "
-                "at the end. That is what a plate needs to cover a frame, and what a badge "
-                "needs to sit at a fixed height whatever it arrived as."
+                "Scale a layer to the canvas, a typed size or another layer, and place it at "
+                "the anchor, so a plate covers a frame or a badge sits at a fixed height. "
+                "The layer keeps its full-resolution picture until Create Layered Image "
+                "flattens the stack."
             ),
             inputs=[
                 io.Layers.Input(

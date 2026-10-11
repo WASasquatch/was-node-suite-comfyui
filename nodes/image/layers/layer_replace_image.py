@@ -34,10 +34,8 @@ class LayerReplaceImage(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Replace one layer's picture with another, leaving its placement, angle, "
-                "opacity, blend mode and name alone. This is the way back into a stack: take "
-                "a layer out with Layers to Image Batch, put it through any filter in the "
-                "pack, and drop the result back where it came from. Add Layer cannot do it, "
-                "because it appends a new layer at the end instead."
+                "opacity, blend mode and name alone. Take a layer out with Layers to Image "
+                "Batch, filter it, and put the result back where it came from."
             ),
             inputs=[
                 io.Layers.Input(
@@ -78,10 +76,10 @@ class LayerReplaceImage(io.ComfyNode):
                     "size",
                     options=list(SIZES),
                     tooltip=(
-                        "What the layer is drawn at afterwards. `keep the drawn size` holds "
-                        "the box it already filled, so a filter that changed the resolution "
-                        "still lands in the same place; `take the new picture's size` draws "
-                        "it at its own pixels, growing or shrinking the layer."
+                        "What the layer is drawn at afterwards. `keep the drawn size` = the "
+                        "box it already filled, so a resized picture lands in the same place; "
+                        "`take the new picture's size` = its own pixels, growing or shrinking "
+                        "the layer."
                     ),
                 ),
                 io.Mask.Input(

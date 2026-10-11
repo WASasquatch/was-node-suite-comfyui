@@ -28,11 +28,9 @@ class ThreeTextureImage(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Carry an image into any of a material's map sockets. Only the first frame of a "
-                "batch is used, since a material takes one texture. Colour space matters: a "
-                "colour map such as albedo or emission is 'srgb', while a map read as numbers, "
-                "meaning normal, roughness, metalness or alpha, is 'linear-srgb' and will look "
-                "wrong tagged as colour. Repeat and offset tile the image across the surface."
+                "Carry the first frame of an image batch into any of a material's map sockets, "
+                "tiled by repeat and offset. Tag colour maps 'srgb' and data maps such as normal "
+                "or roughness 'linear-srgb', or they look wrong."
             ),
             inputs=[
                 io.Image.Input(

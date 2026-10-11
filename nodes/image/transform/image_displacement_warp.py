@@ -50,14 +50,10 @@ class ImageDisplacementWarp(io.ComfyNode):
             search_aliases=["Image Displacement Warp", "displace", "distort", "warp"],
             category="WAS Suite/Image/Transform",
             description=(
-                "Bend an image by a second, greyscale image. Bright areas of the map pull "
-                "pixels diagonally down and right, dark areas leave them where they are, "
-                "which turns any texture into a ripple, smear or melt. Each pixel is read "
-                "one at a time, so a large image takes a while. A displacement map is scaled "
-                "to cover the image and centre-cropped, and where the map batch is shorter "
-                "than the image batch the last map is reused for the rest. Smooth maps such "
-                "as clouds or a blurred gradient give flowing results, and sharp ones tear "
-                "the image."
+                "Bend an image by a greyscale map: bright areas push pixels diagonally down "
+                "and right, dark areas leave them in place, turning any texture into a "
+                "ripple, smear or melt. Smooth maps such as clouds give flowing results; "
+                "sharp ones tear the image."
             ),
             inputs=[
                 io.Image.Input(
@@ -73,7 +69,8 @@ class ImageDisplacementWarp(io.ComfyNode):
                     tooltip=(
                         "The map that says how far to push each pixel, read as brightness: "
                         "black does not move, white moves by the full amplitude. Any size is "
-                        "accepted."
+                        "scaled to cover the image and centre-cropped; a shorter batch reuses "
+                        "its last map."
                     ),
                 ),
                 io.Float.Input(
@@ -83,10 +80,9 @@ class ImageDisplacementWarp(io.ComfyNode):
                     max=4096,
                     step=0.1,
                     tooltip=(
-                        "How far a fully white area of the map moves a pixel, in pixels, on "
-                        "both axes at once. 25 gives a gentle ripple, 200 a heavy smear, 0 "
-                        "leaves the image alone, and a negative value pushes up and left. "
-                        "Values past the image's own width or height read outside it and "
+                        "How far a white area of the map moves a pixel, in pixels, on both "
+                        "axes. 0 = no change; 25 = a gentle ripple; 200 = a heavy smear; "
+                        "negative pushes up and left. Values past the image's width or height "
                         "raise an error."
                     ),
                 ),

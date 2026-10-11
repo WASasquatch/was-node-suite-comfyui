@@ -84,10 +84,8 @@ class ImageStatistics(io.ComfyNode):
                     is_output_list=True,
                     tooltip=(
                         "How much fine detail the picture holds, from the spread of its edge "
-                        "response. Has no fixed scale. It rises with resolution and with "
-                        "how much texture the subject has, so compare it between frames of "
-                        "one sequence to find the soft ones rather than against a number "
-                        "taken from another workflow."
+                        "response. No fixed scale: it rises with resolution and texture, so "
+                        "compare frames of one sequence to find the soft ones."
                     ),
                 ),
                 io.Float.Output(

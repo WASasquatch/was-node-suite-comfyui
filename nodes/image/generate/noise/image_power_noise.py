@@ -87,23 +87,20 @@ class ImagePowerNoise(io.ComfyNode):
                     max=10.0,
                     step=0.01,
                     tooltip=(
-                        "Spread of the random draw the grey, pink, blue, green and mix types "
-                        "are built from. The result is stretched to fill black-to-white "
-                        "afterwards, so this changes the character of the grain rather than "
-                        "its brightness. 0.0 leaves nothing to stretch and gives a blank "
-                        "image; `white` ignores it."
+                        "Spread of the random draw behind `grey`, `pink`, `blue`, `green` and "
+                        "`mix`. The result is stretched to black-to-white, so this changes the "
+                        "grain's character, not its brightness. 0.0 = a blank image; `white` "
+                        "ignores it."
                     ),
                 ),
                 io.Combo.Input(
                     "noise_type",
                     options=["grey", "white", "pink", "blue", "green", "mix"],
                     tooltip=(
-                        "Which distribution to draw. `white` and `grey` are even, per-pixel "
-                        "static, uniform and bell-curved respectively; `pink` is weighted "
-                        "towards large soft blobs; `blue` towards fine grain, which dithers "
-                        "without visible clumps; `green` sits between the two; `mix` "
-                        "composites white, grey and pink through blue noise masks for a "
-                        "cloudier, patchier result."
+                        "`white` = uniform per-pixel static; `grey` = bell-curved per-pixel "
+                        "static; `pink` = large soft blobs; `blue` = fine grain that dithers "
+                        "without clumps; `green` = between pink and blue; `mix` = white, grey "
+                        "and pink through blue noise masks, cloudier and patchier."
                     ),
                 ),
                 io.Int.Input(

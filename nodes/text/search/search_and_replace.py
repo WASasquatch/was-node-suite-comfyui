@@ -53,10 +53,9 @@ LAST_PAIR = EXTRA_PAIRS + 1
 MORE_FIND_HINT = "Another pattern to look for"
 MORE_REPLACE_HINT = "What that pattern becomes"
 MORE_FIND_TIP = (
-    "Another pattern, searched in the same single pass as the first. Every pattern is tried "
-    "against the text as it arrived, so a replacement is never matched again by a later "
-    "pattern and two patterns can swap. Where two patterns match at the same place, the "
-    "earlier box wins."
+    "Another pattern, searched in the same pass as the first. Every pattern reads the text "
+    "as it arrived, so a replacement is never matched again and two patterns can swap; "
+    "where two match at one place, the earlier box wins."
 )
 MORE_REPLACE_TIP = (
     "What the pattern in the box above becomes. Leave it empty to delete what that pattern "

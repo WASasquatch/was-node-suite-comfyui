@@ -234,23 +234,20 @@ class AdaptiveDifferenceLatentUpscale(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="WASNSAdaptiveDifferenceLatentUpscale",
-            display_name="WAS Adaptive Difference Latent Upscale (Damped)",
+            display_name="Adaptive Difference Latent Upscale (Damped)",
             search_aliases=[
                 "WASNSAdaptiveDifferenceLatentUpscale",
-                "WAS Adaptive Difference Latent Upscale (Damped)",
+                "Adaptive Difference Latent Upscale (Damped)",
                 "adaptive latent upscale",
                 "latent upscale",
                 "damped upscale",
             ],
             category="WAS Suite/Latent/Transform",
             description=(
-                "Enlarge a latent twice, once by copying the nearest block, once by "
-                "interpolating, and take the smooth version only where the two disagree. "
-                "Flat areas keep the crispness of the blocky enlargement while edges and "
-                "texture get the smooth one, which is what stops a plain latent upscale "
-                "either going soft everywhere or ringing along every boundary. Works on "
-                "video latents as well as single images, and reports the maps it used so "
-                "the settings can be seen rather than guessed at."
+                "Enlarge an image or video latent so flat areas stay crisp while edges and "
+                "texture get a smooth enlargement, then damp the halo along hard edges. Hands "
+                "on the latent, ready for a sampler, with the map it worked from as a mask "
+                "and a preview."
             ),
             inputs=[
                 io.Latent.Input(
@@ -354,9 +351,9 @@ class AdaptiveDifferenceLatentUpscale(io.ComfyNode):
                     step=0.01,
                     tooltip=(
                         "How much each frame of a video latent carries over from the frames "
-                        "before it, which stops the blend map flickering. 0.0 treats every "
-                        "frame on its own; 0.5 is a light smoothing; 0.9 is heavy and can "
-                        "smear the map behind fast motion. Ignored on a single image."
+                        "before it, steadying the blend map: 0.0 = every frame alone; 0.5 = "
+                        "light; 0.9 = heavy, can smear behind fast motion. Ignored on a "
+                        "single image."
                     ),
                 ),
                 io.Boolean.Input(
@@ -561,7 +558,7 @@ class AdaptiveDifferenceLatentUpscale(io.ComfyNode):
 
         require_input(
             latent,
-            "WAS Adaptive Difference Latent Upscale (Damped)",
+            "Adaptive Difference Latent Upscale (Damped)",
             "latent",
             "latent",
             "latent source such as Empty Latent Image or VAE Encode",

@@ -53,10 +53,9 @@ class SaveVideo(io.ComfyNode):
             category="WAS Suite/IO",
             is_output_node=True,
             description=(
-                "Write a video file from an image batch, from a video, or from either with a "
-                "sound track alongside. The name follows the same prefix, delimiter and "
-                "numbering as Image Save, and the pack's tokens resolve in it. Core's Save "
-                "Video takes a video only and has no audio input."
+                "Write a video file from an image batch or a video, with an optional sound "
+                "track. The name follows the same prefix, delimiter and numbering as Image "
+                "Save, and the pack's tokens resolve in it."
             ),
             inputs=[
                 io.Image.Input(
@@ -135,15 +134,11 @@ class SaveVideo(io.ComfyNode):
                     options=codecs(),
                     default="ComfyUI H264",
                     tooltip=(
-                        "How the video is encoded. 'ComfyUI H264' writes H.264, copying a "
-                        "wired H.264 video through untouched and re-encoding anything else; "
-                        "'ComfyUI Auto' copies a wired video through in whatever codec it "
-                        "already has. The rest are the pack's own: AVC1 is H.264 in mp4 and "
-                        "H264 the same in mkv; FFV1 and PRORES are lossless, AV01 and VP90 make the smallest files and play in Chrome "
-                        "and Firefox up to 8K. H.264 (AVC1 and ComfyUI H264) plays in every "
-                        "browser up to 4096x2304; larger frames play in Chrome but show "
-                        "nothing in Firefox on Windows. H265 is smaller than AVC1, and many "
-                        "browsers will not play it."
+                        "`ComfyUI H264` = H.264, copying H.264 video; `ComfyUI Auto` = any "
+                        "wired video copied as is; `AVC1`/`H264` = H.264 in mp4/mkv; `MP4V` = "
+                        "MPEG-4; `FFV1` = lossless; `PRORES` = 10-bit; `AV01`/`VP90` = "
+                        "smallest; `H265`/`HEVC` = small, rare in browsers. Firefox shows no "
+                        "H.264 above 4096x2304."
                     ),
                 ),
                 io.Float.Input(

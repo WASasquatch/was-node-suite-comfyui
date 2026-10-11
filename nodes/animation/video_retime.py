@@ -41,10 +41,10 @@ class VideoRetime(io.ComfyNode):
             category="WAS Suite/Animation",
             is_output_node=True,
             description=(
-                "Slow a clip down or speed it up, at one speed or along a speed curve, at the "
-                "clip's own frame rate. New frames between the ones it has are drawn by "
-                "EMA-VFI, mixed, or held, and never across a cut. The audio follows with its "
-                "pitch kept. Follow with Video Motion Blur for the streaks a sped-up shot has."
+                "Slow a clip down or speed it up, at one speed or along a speed curve, keeping "
+                "its frame rate and its audio's pitch. New frames are drawn, blended or held, "
+                "never across a cut. Follow with Video Motion Blur for the streaks a sped-up "
+                "shot has."
             ),
             inputs=[
                 io.Video.Input("video", tooltip="The clip to retime, at least two frames."),
@@ -61,10 +61,10 @@ class VideoRetime(io.ComfyNode):
                     options=list(retime.MODES),
                     default="interpolate",
                     tooltip=(
-                        "How a frame between two is made: 'interpolate' draws it with EMA-VFI, "
-                        "which needs ema_vfi_model; 'blend' mixes the two; 'hold' repeats the "
-                        "nearer one; 'auto' draws with EMA-VFI only where the motion accounts "
-                        "for the change, such as a body moving rather than a mouth changing shape."
+                        "'hold' = repeats the nearer frame; 'blend' = mixes the two; "
+                        "'interpolate' = draws it with EMA-VFI, needs ema_vfi_model; 'auto' = "
+                        "draws only where motion explains the change, such as a body moving "
+                        "rather than a mouth changing shape, and holds elsewhere."
                     ),
                 ),
                 io.Combo.Input(

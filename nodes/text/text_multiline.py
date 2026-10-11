@@ -17,11 +17,10 @@ class TextMultiline(io.ComfyNode):
             search_aliases=["Text Multiline", "prompt", "text box"],
             category="WAS Suite/Text",
             description=(
-                "A multiline text box. Lines starting with # are dropped, and tokens such "
-                "as [time] and [user] are substituted. A {red|blue} alternation picks one "
-                "option at random unless dynamic_prompts is switched off, which keeps a "
-                "literal brace intact. Text whose # lines have to survive as well, such as "
-                "code, belongs in Text Multiline (Code Compatible)."
+                "A multiline text box. Lines starting with # are dropped, tokens such as "
+                "[time] and [user] are substituted, and a {red|blue} alternation picks one "
+                "option at random unless dynamic_prompts is off. Text whose # lines must "
+                "survive, such as code, belongs in Text Multiline (Code Compatible)."
             ),
             inputs=[
                 io.String.Input(
@@ -31,22 +30,19 @@ class TextMultiline(io.ComfyNode):
                     dynamic_prompts=True,
                     tooltip=(
                         "The text to emit. A line whose first non-blank character is # is "
-                        "left out, so part of a prompt can be parked instead of deleted. "
-                        "Tokens such as [time], [user] and [hostname] are replaced with "
-                        "their values, and a {red|blue} alternation picks one of the "
-                        "options at random unless dynamic_prompts is off."
+                        "left out, so part of a prompt can be parked; tokens such as [time], "
+                        "[user] and [hostname] are replaced; {red|blue} picks one option at "
+                        "random unless dynamic_prompts is off."
                     ),
                 ),
                 io.Boolean.Input(
                     "dynamic_prompts",
                     default=True,
                     tooltip=(
-                        "Whether a {red|blue} alternation picks one option at random. `on` "
-                        "is the prompt behaviour; `off` keeps every brace as typed, which is "
-                        "what JSON needs. Lines starting with # are dropped either way, so "
-                        "code belongs in Text Multiline (Code Compatible). The choice is "
-                        "made on the canvas: text sent straight to the API is never "
-                        "rewritten."
+                        "Whether a {red|blue} alternation picks one option at random. `on` = "
+                        "prompt behaviour; `off` = braces kept as typed, as JSON needs. # "
+                        "lines are dropped either way; code belongs in Text Multiline (Code "
+                        "Compatible). Text sent straight to the API is never rewritten."
                     ),
                 ),
             ],

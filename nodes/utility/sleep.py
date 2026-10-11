@@ -69,11 +69,9 @@ class Sleep(io.ComfyNode):
             category="WAS Suite/Utilities",
             description=(
                 "Wait a set number of seconds, then hand whatever is wired in straight back "
-                "out. Put it in front of anything that needs pacing: a web service with a "
-                "rate limit, a folder another program is still writing to, a loop that would "
-                "otherwise hammer a device. Cancel stops the wait within a twentieth of a "
-                "second. The wait is taken on every queue rather than cached, so everything "
-                "below it runs again as well."
+                "out, to pace a rate-limited web service, a folder still being written or a "
+                "busy loop. It runs on every queue, so everything below it runs again too; "
+                "Cancel stops the wait within a twentieth of a second."
             ),
             inputs=[
                 io.MatchType.Input(
@@ -81,10 +79,9 @@ class Sleep(io.ComfyNode):
                     template=template,
                     optional=True,
                     tooltip=(
-                        "Anything at all: an image, a model, text, a number. It comes back "
-                        "out unchanged once the wait is over, which is what puts the delay "
-                        "in the middle of a chain rather than off to one side. Leave it "
-                        "unwired to wait on its own."
+                        "Anything: an image, a model, text, a number. It comes back out "
+                        "unchanged once the wait is over, putting the delay in the middle of "
+                        "a chain. Leave it unwired to wait on its own."
                     ),
                 ),
                 io.Float.Input(

@@ -56,11 +56,9 @@ class LatentScaleToMaxDimension(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Transform",
             description=(
-                "Resize a latent so that the picture it decodes to has its longest side at "
-                "a chosen number of pixels, with the aspect ratio kept. The size is worked "
-                "out in latent space, so nothing is decoded and re-encoded and no detail is "
-                "lost on the way. The resulting pixel width and height come out alongside "
-                "the latent, ready to drive whatever needs to know the size."
+                "Resize a latent so the picture it decodes to has its longest side at a chosen "
+                "number of pixels, aspect ratio kept, with no decode or re-encode. The new "
+                "pixel width and height come out alongside the latent."
             ),
             inputs=[
                 io.Latent.Input(
@@ -75,12 +73,9 @@ class LatentScaleToMaxDimension(io.ComfyNode):
                     options=UPSCALE_METHODS,
                     default="bislerp",
                     tooltip=(
-                        "How values in between the existing ones are worked out. `bislerp` "
-                        "interpolates along the shape of the latent rather than straight "
-                        "through it and is the safest choice for a latent; `bilinear` and "
-                        "`bicubic` are the ordinary smooth options; `area` averages the "
-                        "source region and suits shrinking; `nearest-exact` copies the "
-                        "closest value and stays blocky."
+                        "`nearest-exact` = copies the closest value, blocky; `area` = averages, "
+                        "suits shrinking; `bilinear`, `bicubic` = ordinary smooth; `bislerp` = "
+                        "follows the latent's shape, safest for a latent."
                     ),
                 ),
                 io.Int.Input(
@@ -101,11 +96,9 @@ class LatentScaleToMaxDimension(io.ComfyNode):
                     options=SCALE_MODES,
                     default="always",
                     tooltip=(
-                        "Which direction the resize is allowed to go. `always` hits the "
-                        "target from either side. `downscale_only` treats largest_size as a "
-                        "ceiling and leaves anything already smaller alone, which is what "
-                        "suits capping mixed input sizes. `upscale_only` is the reverse: it "
-                        "brings small latents up and leaves large ones untouched."
+                        "`always` = hits the target from either side; `downscale_only` = "
+                        "largest_size is a ceiling, smaller latents left alone; `upscale_only` "
+                        "= brings small latents up, large ones left alone."
                     ),
                 ),
                 io.Int.Input(
@@ -115,10 +108,9 @@ class LatentScaleToMaxDimension(io.ComfyNode):
                     max=64,
                     step=1,
                     tooltip=(
-                        "How many pixels one latent unit becomes on the VAE that will "
-                        "decode this: 8 for SD, SDXL, Flux and Wan 2.1, 16 for Wan 2.2 "
-                        "TI2V, 32 for Hunyuan Image. Getting it wrong scales the result by "
-                        "the ratio of the two numbers. Ignored when a vae is connected."
+                        "Pixels per latent unit on the decoding VAE: 8 = SD, SDXL, Flux, Wan "
+                        "2.1; 16 = Wan 2.2 TI2V; 32 = Hunyuan Image. A wrong value scales the "
+                        "result by the ratio. Ignored when vae is connected."
                     ),
                 ),
                 io.Vae.Input(

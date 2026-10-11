@@ -38,14 +38,11 @@ class ThreeCompile(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Write the scene out as a zip holding a web page that runs on its own. Unpack "
-                "it and open index.html: the scene draws, and the camera can be orbited, with "
-                "no ComfyUI and nothing fetched over the network. Three.js, the scene "
-                "description and every texture go in the archive, and each texture address is "
-                "rewritten to point at its copy. A scene using Three Custom Geometry, Custom "
-                "Material, Custom Object, Custom Update or Script Module carries that "
-                "JavaScript into the page, so the archive is code as well as data, and is "
-                "refused unless threejs.allow_scripts is on in config.yaml."
+                "Write the scene out as a zip holding a web page that runs on its own: unpack "
+                "it, open index.html, and the scene draws and orbits with no ComfyUI and nothing "
+                "fetched over the network. A scene carrying code from a Three Custom node or "
+                "Three Script Module is refused unless threejs.allow_scripts is on in "
+                "config.yaml."
             ),
             is_output_node=True,
             inputs=[

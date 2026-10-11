@@ -28,17 +28,10 @@ class ThreeRender(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Draw the scene at a size you choose and hand it on as an IMAGE, so a Three.js "
-                "scene can be saved, composited or fed to a sampler. Every frame comes back "
-                "three ways, picture, depth and normals, so one render feeds a preview and a "
-                "ControlNet at once. Three App's loop_seconds is how long the "
-                "animation runs before it repeats, and fps and num_frames only sample it, so "
-                "fps times loop_seconds is one whole loop and changing fps alone changes "
-                "smoothness rather than speed. Each batch is in time order, and the fps output "
-                "feeds a video saver's own fps. The scene is wound forward through the run, so "
-                "motion that adds up frame by frame lands where it would. The drawing happens "
-                "in an open ComfyUI tab, so one has to be open and the graph queued from it; a "
-                "headless run says so rather than hanging."
+                "Draw the scene at a chosen size as an IMAGE batch with matching depth and normal "
+                "maps, to save, composite or feed a sampler and a ControlNet. Its fps and "
+                "num_frames sample Three App's loop_seconds, so fps alone changes smoothness, not "
+                "speed. It draws in an open ComfyUI tab, so queue the graph from one."
             ),
             inputs=[
                 THREE_APP.Input(

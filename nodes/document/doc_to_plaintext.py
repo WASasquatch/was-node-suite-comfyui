@@ -30,27 +30,17 @@ class DocToPlaintext(io.ComfyNode):
             ],
             category="WAS Suite/Document",
             description=(
-                "Turn a document into plain text, keeping the shape a reader needs: a "
-                "blank line between paragraphs, headings underlined, list items marked and "
-                "indented, tables in columns that line up, quotations prefixed '> ' and "
-                "preformatted blocks as written. Markup, styling and comments are gone, "
-                "and an entity such as &amp; arrives as the character it stands for. "
-                "Wrapping counts the indent inside line_width, so a list item wraps to its "
-                "own column, and a long word is never broken, so a line holding one web "
-                "address stays over it; tables and preformatted blocks are never wrapped. "
-                "In a table a row is one line, so a break inside a cell becomes a space "
-                "and a cell spanning two columns leaves the second empty. A picture with "
-                "no description of its own stands in as '[image]'."
+                "Turn a document into plain text that keeps its shape: paragraphs, underlined "
+                "headings, indented lists, aligned tables and quotations, with markup and "
+                "styling removed. Hands on a string for a prompt or a text file."
             ),
             inputs=[
                 DOC.Input(
                     "doc",
                     tooltip=(
                         "The document to convert, from any node with a DOC output. Only its "
-                        "content is read: the title, the author and the rest of the "
-                        "metadata are not part of the text, and neither is an embedded "
-                        "picture, since a picture cannot be drawn in text. Nothing is "
-                        "opened from disk."
+                        "content is read: the metadata and embedded pictures are not part of "
+                        "the text."
                     ),
                 ),
                 io.Int.Input(
@@ -60,9 +50,9 @@ class DocToPlaintext(io.ComfyNode):
                     max=1024,
                     step=1,
                     tooltip=(
-                        "How many characters a line may hold before it wraps. 0 leaves each "
-                        "paragraph on one long line, for a prompt; 72 or 80 suits a text "
-                        "file read on its own."
+                        "Characters per line before wrapping: 0 = each paragraph on one line, "
+                        "for a prompt; 72 or 80 = a text file read on its own. Long words, "
+                        "tables and preformatted blocks never wrap."
                     ),
                 ),
                 io.Combo.Input(
@@ -79,8 +69,8 @@ class DocToPlaintext(io.ComfyNode):
                     options=list(plaintext.IMAGE_MODES),
                     tooltip=(
                         "What stands in for a picture. 'alt text' writes its description in "
-                        "square brackets, '[A grey cat]'; 'alt text and source' adds the "
-                        "file it comes from; 'skip' leaves nothing at all."
+                        "square brackets, '[A grey cat]', or '[image]' where it has none; 'alt "
+                        "text and source' adds the file it comes from; 'skip' leaves nothing."
                     ),
                 ),
                 io.Combo.Input(

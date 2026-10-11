@@ -27,10 +27,8 @@ class ImageStitch(io.ComfyNode):
             category="WAS Suite/Image/Transform",
             description=(
                 "Put image_b against one edge of image_a on a single canvas, fading the two "
-                "together across the join. The images overlap by the feathering width, so "
-                "the canvas is that much shorter than the two laid end to end. The canvas "
-                "takes its other side from image_a alone, which leaves black where a "
-                "smaller image_b does not reach and crops a larger one."
+                "together across the join. The canvas takes its other side from image_a, "
+                "leaving black where a smaller image_b falls short and cropping a larger one."
             ),
             inputs=[
                 io.Image.Input(
@@ -59,11 +57,9 @@ class ImageStitch(io.ComfyNode):
                     max=2048,
                     step=1,
                     tooltip=(
-                        "Width of the blended overlap in pixels. 0 butts the images "
-                        "together with a hard edge; 50 fades them over 50 pixels, which "
-                        "hides the seam between two views of the same scene. The seam is cut "
-                        "out of the pair, so a feather wider than a slot narrows the result, "
-                        "and stitching many slots that way narrows it further."
+                        "Width of the blended overlap in pixels; the images overlap by it, so "
+                        "the canvas is that much shorter. 0 = a hard edge; 50 = a 50 pixel "
+                        "fade, which hides the seam between two views of one scene."
                     ),
                 ),
                 io.Image.Input(

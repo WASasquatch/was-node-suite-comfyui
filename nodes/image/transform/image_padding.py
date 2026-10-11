@@ -132,10 +132,7 @@ class ImagePadding(io.ComfyNode):
             description=(
                 "Put an image on a larger empty canvas and fade its edges out, then return "
                 "the canvas and a mask of everything that was added. Feed both to an "
-                "inpainting pass to fill the new space. A larger feathering gives that fill "
-                "more of a run-up and eats further into the original: 120 fades most of a 512 "
-                "pixel image and wipes out anything smaller than about 480 pixels altogether, "
-                "so keep it under a quarter of the image's shorter side."
+                "inpainting pass to fill the new space."
             ),
             inputs=[
                 io.Image.Input(
@@ -149,8 +146,9 @@ class ImagePadding(io.ComfyNode):
                     max=2048,
                     step=1,
                     tooltip=(
-                        "How far the image's own edges fade out, in pixels. 0 leaves a hard "
-                        "edge, and the fade reaches roughly three times this far in."
+                        "How far the image's own edges fade out, in pixels; the fade reaches "
+                        "about three times this far in. 0 = a hard edge; 120 = fades most of a "
+                        "512 pixel image. Keep it under a quarter of the shorter side."
                     ),
                 ),
                 io.Boolean.Input(

@@ -145,10 +145,10 @@ class ThreeModuleObject(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Take one Object3D out of a Three Script Module by name and put it on a normal "
-                "object wire, so a group or a scene can hold it without knowing it came from "
-                "JavaScript. The name has to match a key the module returned, and the value it "
-                "holds has to be an object or the viewer reports it by name."
+                "Take one object out of a Three Script Module by name and put it on a normal "
+                "object wire, for Three Group or Three Scene. The name has to match a key the "
+                "module returned, and a value that is not an object is reported by name in the "
+                "viewer."
             ),
             inputs=[
                 THREE_MODULE.Input("module", tooltip=MODULE_TOOLTIP),

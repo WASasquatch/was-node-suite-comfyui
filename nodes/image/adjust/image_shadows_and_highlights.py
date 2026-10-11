@@ -66,10 +66,9 @@ class ImageShadowsAndHighlights(io.ComfyNode):
                     max=255.0,
                     step=0.1,
                     tooltip=(
-                        "Blur radius in pixels applied to the shadow selection, which feathers "
-                        "the edge of the adjustment so it does not show a hard outline. The "
-                        "blur runs twice, so the softening is wider than the number suggests: "
-                        "0.25 is a hairline, 8 is a broad fade."
+                        "Blur radius in pixels feathering the edge of the shadow selection. The "
+                        "blur runs twice, so the fade is wider than the number: 0.25 = a "
+                        "hairline; 8 = a broad fade."
                     ),
                 ),
                 io.Float.Input(

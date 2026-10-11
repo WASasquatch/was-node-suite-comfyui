@@ -166,14 +166,10 @@ class LoadImageBatch(io.ComfyNode):
             hidden=[io.Hidden.unique_id],
             category="WAS Suite/IO",
             description=(
-                "Load one image from a folder by index, in sequence, or at random, or "
-                "read the whole folder at once. Queue a prompt repeatedly on "
-                "`incremental_image` to walk a folder image by image; take `all_images` to "
-                "get every match in one run, as image_list and filename_list. The folder is "
-                "picked as a root and a path below it, so it always lands inside ComfyUI's "
-                "input, output or temp folder or one listed under paths.allow_read in "
-                "config.yaml. A folder that is not there fails the prompt. A 16-bit PNG loads "
-                "at full precision."
+                "Load one image from a folder by index, in sequence or at random, or every "
+                "image at once as image_list and filename_list. Queue repeatedly on "
+                "`incremental_image` to walk the folder one image per run. A missing folder "
+                "fails the prompt."
             ),
             inputs=[
                 io.Combo.Input(
@@ -204,11 +200,10 @@ class LoadImageBatch(io.ComfyNode):
                     max=150000,
                     step=1,
                     tooltip=(
-                        "Which image to load in `single_image` mode, counting from 0 through "
-                        "the matching files sorted by path. Past the last file the prompt "
-                        "fails. `incremental_image` writes the image it just read back here, "
-                        "so `single_image` carries on from there. The panel says the same, "
-                        "as `index 5 of 0 to 363`."
+                        "Which image `single_image` loads, counting from 0 through the "
+                        "matching files sorted by path; past the last one the prompt fails. "
+                        "`incremental_image` writes the image it read back here. The panel "
+                        "shows it as `index 5 of 0 to 363`."
                     ),
                 ),
                 io.Combo.Input(

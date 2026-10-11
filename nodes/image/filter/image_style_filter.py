@@ -75,18 +75,9 @@ class ImageStyleFilter(io.ComfyNode):
             ],
             category="WAS Suite/Image/Filter",
             description=(
-                "Recolour an image with one of the familiar photo-app looks or one of "
-                "the ten modern grades beside them. Most finish by bleeding the "
-                "highlights into the pixels around them, the halation a lens gives a "
-                "bright light, and several shade or tint away from the centre, so the "
-                "result follows the frame's size and shape. `inkwell` and `moon` are "
-                "black and white and `film noir` a cold-toned one, `kelvin`, `toaster` "
-                "and `golden hour` the warm ones, `bleach bypass`, `brannan` and `clean "
-                "punch` the hardest, `reyes`, `stinson` and `faded film` pale with "
-                "their blacks lifted, and `teal and orange`, `moody blue`, `neon night` "
-                "and `cross process` the colour-shifted ones. `fairy "
-                "tale` is not a colour grade at all: it adds bloom and two layers of "
-                "random coloured glitter, so it gives a different result every run."
+                "Recolour an image with one of 37 looks, from familiar photo-app filters to "
+                "modern grades such as `teal and orange` and `bleach bypass`. A contact sheet "
+                "on the node shows every look over the picture, and a click on a tile picks it."
             ),
             inputs=[
                 io.Image.Input(
@@ -97,11 +88,10 @@ class ImageStyleFilter(io.ComfyNode):
                     "style",
                     options=STYLES,
                     tooltip=(
-                        "Which of the 37 looks to apply. Tick `contact_sheet` to draw every "
-                        "one of them over this picture and click a tile to pick it. "
-                        "`inkwell` and `moon` are black and white, `kelvin` and `golden "
-                        "hour` the warmest, `moody blue` the coolest, `bleach bypass` the "
-                        "hardest, and `fairy tale` adds glitter instead of a grade."
+                        "Which of the 37 looks to apply. `inkwell`, `moon` = black and white; "
+                        "`kelvin`, `golden hour` = warmest; `moody blue` = coolest; `bleach "
+                        "bypass` = hardest; `fairy tale` = random glitter, not a grade, "
+                        "different every run."
                     ),
                 ),
                 io.Float.Input(
@@ -129,10 +119,9 @@ class ImageStyleFilter(io.ComfyNode):
                     "use_gpu",
                     default=True,
                     tooltip=(
-                        "`true` grades on the graphics card, which is around six times "
-                        "quicker on a 3840 by 2160 frame and around twice as quick at 512 "
-                        "by 512. `false` keeps it on the processor. A card that refuses the "
-                        "work falls back to the processor either way."
+                        "`true` = grades on the graphics card, several times quicker on a large "
+                        "frame; `false` = on the processor. A card that refuses the work falls "
+                        "back to the processor."
                     ),
                 ),
             ],

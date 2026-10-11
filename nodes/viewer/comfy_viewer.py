@@ -178,15 +178,11 @@ class WASComfyViewer(io.ComfyNode):
             ],
             category="WAS Suite/View",
             description=(
-                "Display anything wired in, in an embedded frame, and pass it on unchanged: "
-                "Markdown with Mermaid diagrams and KaTeX maths, HTML, SVG, documents on a "
-                "DOC wire, syntax-highlighted code, collapsible JSON and YAML, CSV tables, "
-                "coloured terminal logs, an image canvas with layers, brushes and blend "
-                "modes, and an inspector for tensors. The view is picked from the content, "
-                "and the dropdown beside it changes to any other. An edit made in the node "
-                "is saved with the workflow and goes downstream, and a list arrives as "
-                "numbered panes with a tick box each, so entries can be dropped before they "
-                "go on."
+                "Display anything wired in and pass it on unchanged: Markdown with diagrams "
+                "and maths, HTML, SVG, documents, code, JSON, YAML, CSV tables, terminal "
+                "logs, a layered image canvas and a tensor inspector. The view is picked from "
+                "the content and can be switched. Edits are saved with the workflow and go "
+                "downstream."
             ),
             inputs=[
                 # A wildcard socket carries no widget, so it is link-only already and takes
@@ -195,10 +191,10 @@ class WASComfyViewer(io.ComfyNode):
                     "content",
                     optional=True,
                     tooltip=(
-                        "Whatever should be displayed. Text, a list of strings, a parsed "
-                        "object or an image batch all work: the view that recognises the "
-                        "content is the one that draws it. A list arrives as one numbered "
-                        "container per item, each with its own tick box and copy button."
+                        "What to display: text, a list of strings, a parsed object or an "
+                        "image batch; the view that recognises it draws it. A list arrives as "
+                        "numbered panes, each with a tick box that keeps or drops it and a "
+                        "copy button."
                     ),
                 ),
                 # The three below carry state the viewer's own frontend writes and reads

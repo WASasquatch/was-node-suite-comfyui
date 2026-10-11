@@ -222,10 +222,9 @@ class ImageAmbientOcclusion(io.ComfyNode):
                     default=64,
                     step=0.1,
                     tooltip=(
-                        "How far the map is extruded, in pixels, from black to white. This "
-                        "against radius is what sets the depth of the shading: 64 with a radius "
-                        "of 30 gives steep relief and heavy occlusion, 16 gives a gentle "
-                        "emboss. 0 flattens the map and the shading disappears."
+                        "How far the map is extruded from black to white, in pixels. Against "
+                        "radius it sets the shading depth: 0 = flat, no shading; 16 = a gentle "
+                        "emboss; 64 with radius 30 = steep relief, heavy occlusion."
                     ),
                 ),
                 io.Int.Input(
@@ -261,10 +260,10 @@ class ImageAmbientOcclusion(io.ComfyNode):
                     default=0.15,
                     step=0.005,
                     tooltip=(
-                        "How steep a ridge has to be before it shades, as rise over run. "
-                        "`0.15` = clears the rings an 8 bit height map shades on flat ground; "
-                        "`0.3` = for rings that survive a larger height_scale; `0` = for a "
-                        "smooth floating point height map."
+                        "How steep a ridge must be to shade, as rise over run. `0` = for a "
+                        "smooth floating point height map; `0.15` = clears the rings an 8 bit "
+                        "map shades on flat ground; `0.3` = for rings a larger height_scale "
+                        "leaves."
                     ),
                 ),
                 io.Float.Input(
@@ -286,11 +285,10 @@ class ImageAmbientOcclusion(io.ComfyNode):
                     default=200,
                     step=1,
                     tooltip=(
-                        "How bright a pixel has to be, on a 0-255 scale, to count as a "
-                        "highlight that should not be shaded. 200 protects only genuine "
-                        "highlights; 25 protects everything that is not nearly black and leaves "
-                        "the shading doing nothing. Only read when enable_specular_masking is "
-                        "on, but it always decides the third output."
+                        "Brightness, 0 to 255, at which a pixel counts as a highlight left "
+                        "unshaded. 25 = everything not nearly black, so almost nothing shades; "
+                        "200 = only genuine highlights. Read only with enable_specular_masking "
+                        "on, but always decides the third output."
                     ),
                 ),
                 io.Boolean.Input(
@@ -307,11 +305,10 @@ class ImageAmbientOcclusion(io.ComfyNode):
                     options=list(occlusion.PRECISIONS),
                     default="32 bit float",
                     tooltip=(
-                        "How finely the three outputs are stepped. `32 bit float` = every "
-                        "value kept, for EXR Save and DNG Save; `16 bit` = steps of 1/65535, "
-                        "smooth enough to grade; `8 bit` = steps of 1/255, what a PNG holds, "
-                        "and bands a soft gradient. Nothing above 1.0 is clipped at any "
-                        "setting."
+                        "How finely the outputs are stepped. `8 bit` = 1/255, bands a soft "
+                        "gradient; `16 bit` = 1/65535, smooth enough to grade; `32 bit float` = "
+                        "every value kept, for EXR Save and DNG Save. Nothing above 1.0 is "
+                        "clipped."
                     ),
                 ),
             ],

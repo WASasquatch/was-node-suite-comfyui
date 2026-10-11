@@ -20,11 +20,8 @@ class NumberInputSwitch(io.ComfyNode):
             search_aliases=["Number Input Switch", "number switch", "boolean switch"],
             category="WAS Suite/Logic/Switch",
             description=(
-                "Deprecated: use Any Input Switch instead. It takes the type of whatever is "
-                "connected and skips the branch it does not select. This node passes one of two "
-                "numbers on, chosen by a boolean: number_a when the boolean is true, number_b "
-                "when it is false. The selected value also leaves as a float and as a whole "
-                "number."
+                "Deprecated: use Any Input Switch instead. Passes number_a on when boolean is "
+                "true and number_b when it is false, also as a float and a whole number."
             ),
             inputs=[
                 io.MultiType.Input(

@@ -30,13 +30,9 @@ class NumberCounter(io.ComfyNode):
             search_aliases=["Number Counter", "counter", "increment", "decrement", "index"],
             category="WAS Suite/Number",
             description=(
-                "Emit a number that moves on every prompt, which is how a batch gets "
-                "numbered or a setting gets swept over a run of images. Each copy of the "
-                "node counts on its own, and every count starts over when ComfyUI does. "
-                "`increment` and `decrement` ignore stop. The '_to_stop' modes freeze on "
-                "the first value that reaches stop, so start 0, step 3, stop 10 counts 3, "
-                "6, 9, 12 and then holds at 12; `reset_after_stop` jumps back to start + "
-                "step instead of freezing."
+                "Emit a number that moves on every prompt, to number a batch or sweep a "
+                "setting over a run of images. Each copy counts on its own, can freeze or "
+                "loop at a limit, and starts over when ComfyUI restarts."
             ),
             inputs=[
                 io.Combo.Input(
@@ -58,9 +54,9 @@ class NumberCounter(io.ComfyNode):
                         "reset_after_stop",
                     ],
                     tooltip=(
-                        "Which way the count moves, and whether it ends. `increment` and "
-                        "`decrement` run on forever; the '_to_stop' modes freeze at stop, "
-                        "and `reset_after_stop` loops back instead."
+                        "`increment`/`decrement` = run on forever; '_to_stop' modes = freeze "
+                        "on the first value reaching stop, so start 0, step 3, stop 10 holds "
+                        "at 12; `reset_after_stop` = jumps back to start + step."
                     ),
                 ),
                 io.Float.Input(

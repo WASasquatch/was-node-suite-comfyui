@@ -47,14 +47,9 @@ class ThreeShaderMaterial(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A surface whose look is written in GLSL rather than set by widgets. Lights do "
-                "not touch it: the fragment shader decides every pixel. Uniforms are typed JSON "
-                "entries, each `{\"type\": ..., \"value\": ...}` with a type of float, color, "
-                "vec2, vec3 or vec4. Four names are filled in every frame, so an animated "
-                "shader needs no wiring: `time` is elapsed seconds, `progress` runs 0 to 1 "
-                "across the capture, `timeline` runs 0 to 1 across the app's `loop_seconds`, "
-                "and `resolution` is the frame size in pixels. `uTime`, `uProgress`, "
-                "`uTimeline` and `uResolution` name the same four."
+                "A surface whose look is written in GLSL rather than set by widgets, untouched "
+                "by lights. Time, capture progress, loop position and frame size are filled into "
+                "its uniforms every frame, so an animated shader needs no wiring."
             ),
             inputs=[
                 io.String.Input(
@@ -80,11 +75,10 @@ class ThreeShaderMaterial(io.ComfyNode):
                     default=DEFAULT_UNIFORMS,
                     multiline=True,
                     tooltip=(
-                        "Typed values the shader reads, as "
-                        "`{\"time\": {\"type\": \"float\", \"value\": 0}}`. Types are float, "
-                        "color, vec2, vec3 and vec4. `time`, `progress`, `timeline` and "
-                        "`resolution` are filled in each frame, and so are `uTime`, "
-                        "`uProgress`, `uTimeline` and `uResolution`."
+                        "Typed values, as `{\"time\": {\"type\": \"float\", \"value\": 0}}`; "
+                        "types: float, color, vec2, vec3, vec4. Filled each frame, also "
+                        "prefixed `u` as in `uTime`: `time` in seconds; `progress` 0 to 1 over "
+                        "the capture; `timeline` 0 to 1 over the loop; `resolution` in pixels."
                     ),
                 ),
                 io.Boolean.Input(

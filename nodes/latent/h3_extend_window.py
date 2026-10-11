@@ -10,8 +10,8 @@ from ...modules.latent import (
 )
 
 PROMPTS_HINT = (
-    "Every pass's prompt from MiniMax H3 Conditioning. Wired in, it supplies this pass's "
-    "prompt and its frame count, and extension_frames is not read."
+    "Every pass's prompt from MiniMax H3 Conditioning. Wired in, its row sets this pass's "
+    "prompt, frame count, overlap, continuity and source, replacing those widgets."
 )
 
 PASS_INDEX_HINT = (
@@ -20,19 +20,16 @@ PASS_INDEX_HINT = (
 )
 
 OVERLAP_HINT = (
-    "Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. "
-    "Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. "
-    "Longer gives the new frames more of the "
-    "scene to continue from. `reference (video)` reads at least `56`; both sound carries "
-    "take whole clips of sound, `17` for about 0.7s."
+    "Frames of the clip carried into the new pass, as `5`, `22` or `39`, snapped to the "
+    "17k+5 grid, so `16` carries `22`. Longer gives more scene to continue from. "
+    "`reference (video)` reads at least `56`; sound carries take whole clips, `17` for "
+    "about 0.7s."
 )
 
 CONTINUITY_HINT = (
-    "`carry` = one shot; `refresh` = re-noised; "
-    "`handoff` = cut on last frame; `reference (video)` = cut, cast kept; "
-    "`reference (sample)` = cut, cast from stills; `cut` = new scene; "
-    "`carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, "
-    "sound and cast kept. A prompt row overrides it. References and handoff need vae."
+    "`carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set "
+    "kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference "
+    "(sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept."
 )
 
 DRIFT_HINT = (
@@ -48,16 +45,14 @@ RELEASE_HINT = (
 )
 
 SOURCE_HINT = (
-    "Which segment this pass continues from: `-1` = the one before, `-2` = the one before "
-    "that, `2` = segment 2. From an earlier segment the picture carries and the sound "
-    "starts fresh; the new frames still join the clip's end. Both sound carries always "
-    "read the segment before. A row's own source replaces this where prompts is wired."
+    "Which segment this pass continues from: `-1` = the one before; `-2` = two back; `2` = "
+    "segment 2. From an earlier segment the picture carries with fresh sound; new frames "
+    "still join the clip's end. Sound carries always read the segment before."
 )
 
 SAMPLES_HINT = (
-    "Stills `reference (sample)` takes from the clip so far, spread evenly from its first "
-    "frame to its last, as `4`, or `6` for a long clip with many scenes. Read by "
-    "`reference (sample)`."
+    "Stills `reference (sample)` and `carry + reference (sample)` take, spread evenly across "
+    "sample_span, as `4`, or `6` for a long clip with many scenes."
 )
 
 RENEWAL_HINT = (
@@ -90,12 +85,13 @@ REENCODE_HINT = (
     "segment. `false` = they are attached as they are."
 )
 
-#: Where `reference (sample)` takes its stills from.
+#: Where sampled stills come from.
 SAMPLE_SPANS = ("source scene", "whole clip")
 
 SAMPLE_SPAN_HINT = (
-    "Where `reference (sample)` takes its stills: `source scene` = spread across the scene "
-    "this segment continues from, `whole clip` = spread from the first frame to the last."
+    "Where sampled stills come from: `source scene` = spread across the scene this segment "
+    "continues from; `whole clip` = from the first frame to the last. Read by both "
+    "`reference (sample)` continuities."
 )
 
 SEED_HINT = (
@@ -127,15 +123,9 @@ class ThreeH3ExtendWindow(io.ComfyNode):
             category="WAS Suite/Latent/Video",
             description=(
                 "Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples "
-                "the empty latent it is handed. Each later segment picks up from the clip "
-                "so far: `carry` holds its last frames and their sound and generates what "
-                "follows, `refresh` carries them with fresh noise, `handoff` opens on their "
-                "last frame, `reference (video)` hands them over as a reference, and "
-                "`reference (sample)` references stills from the whole clip. `carry (audio "
-                "only)` cuts to new picture under the carried sound, and `carry (audio) + "
-                "reference (video)` also references the last frames. `cut`, or an overlap "
-                "of `0` under `carry` or `refresh`, starts a fresh scene. Send the latent "
-                "to a sampler and its result to H3 Extend Append."
+                "the empty latent it is handed; each later one continues the clip so far, "
+                "carrying its last frames, its sound, a reference or nothing, as continuity "
+                "chooses. Send the window to a sampler and its result to H3 Extend Append."
             ),
             inputs=[
                 io.Conditioning.Input(
@@ -281,7 +271,8 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         )
 
     @classmethod
-    def stills(cls, latent, vae, count, named, positive, first_row=0, last_row=None):
+    def stills(cls, latent, vae, count, named, positive, first_row=0, last_row=None,
+               asking=h3_extend.REFERENCE_SAMPLE, instead="cut"):
         """Stills sampled evenly across rows of the clip, encoded as picture references.
 
         Args:
@@ -292,6 +283,8 @@ class ThreeH3ExtendWindow(io.ComfyNode):
             positive: The prompt the stills join, checked for space.
             first_row: The first latent row the stills come from.
             last_row: The row after the last, or ``None`` for the clip's end.
+            asking: The continuity asking, for the errors.
+            instead: The continuity the errors offer in its place.
 
         Returns:
             ``(blocks, items, taken, size)``: the references, their text encoder entries, when
@@ -302,16 +295,16 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         """
         if vae is None:
             raise ValueError(
-                "H3 Extend Window is set to `reference (sample)`, which decodes stills "
-                "from the finished clip and encodes them again as pictures. Wire the H3 "
-                "video VAE into vae, or set continuity to `cut`"
+                f"H3 Extend Window is set to `{asking}`, which decodes stills from the finished "
+                f"clip and encodes them again as pictures. Wire the H3 video VAE into vae, or "
+                f"set continuity to `{instead}`"
             )
         free = h3_references.room(positive, "image")
         if free < 1:
             raise ValueError(
-                f"{named} is set to `reference (sample)` and its prompt already carries "
+                f"{named} is set to `{asking}` and its prompt already carries "
                 f"{h3_references.MOST_IMAGES} pictures, the most a MiniMax H3 prompt takes. "
-                f"Take a picture reference off this segment, or set continuity to `cut`"
+                f"Take a picture reference off this segment, or set continuity to `{instead}`"
             )
         video, _ = h3_extend.split(latent)
         end = video.shape[2] if last_row is None else max(1, min(int(last_row), video.shape[2]))
@@ -777,8 +770,8 @@ class ThreeH3ExtendWindow(io.ComfyNode):
             # A closing frame moves onto the last frame the next segment's cut keeps.
             positive = h3_assets.closing_moved(positive, h3_extend.CLIP_LEAD)
         # A segment the window adds references to is sampled by ref2va where its row says auto.
-        referenced = moments or (int(pass_index) > 0 and picture in (
-            h3_extend.REFERENCE_VIDEO, h3_extend.REFERENCE_SAMPLE))
+        referenced = moments or (int(pass_index) > 0
+                                 and picture in h3_extend.REFERENCING_PICTURES)
         model = h3_conditioning.model_or_blocker(
             prompts, pass_index, "H3 Extend Window", referenced or None)
         kind = h3_conditioning.model_of(prompts, pass_index, referenced or None)[1] if prompts else ""
@@ -802,6 +795,7 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         continuity = picture
         earlier = False
         seen = 0
+        whole = latent
         if int(pass_index) > 0:
             if picked != int(pass_index) - 1:
                 ends = h3_extend.segment_ends(latent) or []
@@ -896,6 +890,14 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         carried["noise_mask"] = mask["samples"]
         if earlier:
             carried[h3_extend.REJOIN_KEY] = int(skip)
+        if continuity == h3_extend.CARRY_REFERENCE:
+            blocks, items, taken, size = cls.stills(
+                whole, vae, reference_samples, named, positive, *sample_rows,
+                asking=h3_extend.CARRY_REFERENCE, instead="carry")
+            positive, encoded = cls.with_references(prompts, pass_index, positive, blocks, items,
+                                                    reencode=bool(reencode_prompt))
+            detail += (f"; referencing {len(blocks)} stills at {size} sampled at "
+                       f"{', '.join(taken)}{encoded}")
 
         held = h3_extend.frames_for(video.shape[2])
         lead = h3_extend.audio_lead(overlap)

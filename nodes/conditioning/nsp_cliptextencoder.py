@@ -77,10 +77,9 @@ class NSPCLIPTextEncoder(io.ComfyNode):
                     "text",
                     multiline=True,
                     tooltip=(
-                        "The prompt, written with any of three markups: __term__ for a "
-                        "pantry phrase or a wildcard line, <a|b|c> to pick one of the "
-                        "alternatives at random, and $|a stormy sky|$ to capture a phrase "
-                        "as $1, $2 and so on so it can be repeated by number."
+                        "The prompt, with three markups: __term__ = a pantry phrase or "
+                        "wildcard line; <a|b|c> = one alternative at random; $|a stormy sky|$ "
+                        "= a phrase captured as $1, $2 and so on, to repeat by number."
                     ),
                 ),
                 io.Clip.Input(

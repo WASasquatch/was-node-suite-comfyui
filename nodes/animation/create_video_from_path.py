@@ -31,13 +31,8 @@ class CreateVideoFromPath(io.ComfyNode):
             ],
             category="WAS Suite/Animation",
             description=(
-                "Turn a folder of images into a video, holding each image and cross-fading "
-                "into the next. The codec decides how the file is compressed and what "
-                "extension it gets: 'AVC1' and 'H264' are the same widely playable codec in "
-                "an .mp4 and an .mkv, 'MP4V' is older and larger but always available, 'FFV1' "
-                "is lossless so the file is very large, 'H265', 'HEVC' and 'AV01' make "
-                "smaller files and take longer to encode, 'VP90' writes a .webm and 'PRORES' "
-                "a .mov for editing."
+                "Turn a folder of images into a slideshow video, holding each image and "
+                "cross-fading into the next, and hand on the path of the written file."
             ),
             inputs=[
                 io.Int.Input(
@@ -140,9 +135,10 @@ class CreateVideoFromPath(io.ComfyNode):
                     "codec",
                     options=video.codec_options(),
                     tooltip=(
-                        "How the video is compressed, which also picks the file extension. A "
-                        "codec this machine cannot encode is reported before anything is "
-                        "written."
+                        "`AVC1` = .mp4, plays anywhere; `H264` = the same in .mkv; `MP4V` = "
+                        "older, larger, always available; `FFV1` = lossless .mkv, very large; "
+                        "`H265`, `HEVC`, `AV01` = smaller, slower; `VP90` = .webm; `PRORES` = "
+                        ".mov for editing. One this machine lacks is refused."
                     ),
                 ),
             ],

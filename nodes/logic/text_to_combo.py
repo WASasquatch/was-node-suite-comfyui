@@ -23,11 +23,9 @@ class TextToCombo(io.ComfyNode):
             ],
             category="WAS Suite/Logic",
             description=(
-                "Answer text on a wire any dropdown takes, so a choice normally picked by hand "
-                "can be worked out while the graph runs. Convert a node's dropdown to an input "
-                "and connect this to it, and the checkpoint, LoRA, sampler or scheduler it uses "
-                "can come from a loop, a switch or a text node. A plain STRING is refused by a "
-                "dropdown; this is the wire that is not."
+                "Put text on a wire any dropdown takes, so a checkpoint, LoRA, sampler or "
+                "scheduler can come from a loop, a switch or a text node. Convert the target "
+                "node's dropdown to an input and connect combo to it."
             ),
             inputs=[
                 io.String.Input(

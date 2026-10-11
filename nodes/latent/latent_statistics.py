@@ -36,12 +36,10 @@ class LatentStatistics(io.ComfyNode):
             ],
             category="WAS Suite/Latent",
             description=(
-                "Measure the values inside a latent rather than its size: the mean, the "
-                "spread, the range, and whether anything in it is nan or inf. A sampler "
-                "that diverges answers a latent of nan or of huge values, which decodes to "
-                "a black, grey or garbled picture with nothing saying why. Wire is_finite "
-                "into a gate to catch that before the VAE decode. Measure the whole batch "
-                "at once, or one latent of it by index."
+                "Measure the values inside a latent: the mean, the spread, the range, and "
+                "whether anything is nan or inf. A diverged sampler hands on nan or huge values "
+                "that decode to a black, grey or garbled picture; wire is_finite into a gate to "
+                "catch it before the decode."
             ),
             inputs=[
                 io.Latent.Input(

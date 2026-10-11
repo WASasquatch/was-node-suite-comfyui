@@ -55,11 +55,10 @@ class DocToHTML(io.ComfyNode):
                     options=list(WRAPPING),
                     default=FRAGMENT,
                     tooltip=(
-                        "'content only' answers the markup the document stores, which is "
-                        "what Rich Text Editor takes. 'whole page' wraps it in a file with "
-                        "a doctype and a head carrying the title, the author and the rest "
-                        "of the metadata. Markup that already opens a page is answered as "
-                        "it stands either way."
+                        "'content only' = the markup the document stores, as Rich Text Editor "
+                        "takes it; 'whole page' = wrapped in a file with a doctype and a head "
+                        "carrying the metadata. Markup that already opens a page is left as it "
+                        "stands."
                     ),
                 ),
             ],

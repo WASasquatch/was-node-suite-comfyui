@@ -49,11 +49,10 @@ class ImageWhiteBalance(io.ComfyNode):
                     "estimator",
                     list(white_balance.ESTIMATORS),
                     tooltip=(
-                        "How the colour of the light is guessed; COMBO. 'grey world' assumes "
-                        "the average of the scene is grey, 'white patch' that the brightest "
-                        "point is white, 'shades of grey' sits between them, and 'grey edge' "
-                        "averages the edges instead, which a large block of one colour barely "
-                        "moves."
+                        "How the light's colour is guessed. 'grey world' = the scene averages "
+                        "grey; 'white patch' = the brightest point is white; 'shades of grey' = "
+                        "between those two; 'grey edge' = the edges average grey, which one "
+                        "large block of colour barely moves."
                     ),
                 ),
                 io.Float.Input(

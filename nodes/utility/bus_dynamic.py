@@ -102,20 +102,18 @@ class BusNodeDynamic(io.ComfyNode):
                     max=MAX_SLOTS - 1,
                     step=1,
                     tooltip=(
-                        "Which extra comes out on the slot output, counted from 0 over the "
-                        "names in slot_names. A number past the end gives nothing rather "
-                        "than stopping the prompt, so a bus that has not been filled yet "
-                        "still runs. Chain another of these nodes to take a second extra off."
+                        "Which extra comes out on slot, counted from 0 over slot_names; past "
+                        "the end gives nothing. Chain another of these nodes to take a second "
+                        "extra off."
                     ),
                 ),
                 io.Autogrow.Input(
                     "slots",
                     template=template,
                     tooltip=(
-                        "Extra values to put on the bus, named slot0, slot1 and so on. A "
-                        "slot replaces an extra of the same name already on the bus, so a "
-                        "value can be updated part way along a chain the way the five "
-                        f"standard members can. Up to {MAX_SLOTS} slots."
+                        "Extra values to put on the bus, named slot0, slot1 and so on. A slot "
+                        "replaces an extra of the same name already on the bus, so it can be "
+                        f"updated part way along a chain. Up to {MAX_SLOTS} slots."
                     ),
                 ),
             ],

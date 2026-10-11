@@ -31,22 +31,8 @@ class ImageDrawText(io.ComfyNode):
             ],
             category="WAS Suite/Image/Process",
             description=(
-                (
-                    (
-                        "Draw text over an image, with wrapping, alignment, an outline and a "
-                        "background panel. Returns the picture and the text as a mask. The "
-                        "font list is built from disk: drop .ttf, .otf or .ttc files into the "
-                        "fonts folder beside config.yaml, at "
-                        "ComfyUI/user/was-node-suite/fonts, and they appear in the menu named "
-                        "after the file. Put them there rather than inside the pack, which an "
-                        "update overwrites. The DejaVu faces cover the most ground and are the "
-                        "safe choice for text not known in advance; the Liberation faces match "
-                        "Arial, Times New Roman and Courier New width for width, so a caption "
-                        "composed against one of those breaks its lines in the same places. A "
-                        "font that cannot be opened falls back to the picked one, then to a "
-                        "small built-in bitmap face that ignores font_size."
-                    )
-                )
+                "Draw text over an image, with wrapping, alignment, an outline and a "
+                "background panel. Hands on the picture and the text's coverage as a mask."
             ),
             inputs=[
                 io.Image.Input(
@@ -216,9 +202,11 @@ class ImageDrawText(io.ComfyNode):
                     options=list(paths.font_names()),
                     optional=True,
                     tooltip=(
-                        "Which typeface to draw with. The DejaVu faces cover the most ground; "
-                        "`Mono` gives every character the same width, which stops a frame "
-                        "counter jittering."
+                        "Which typeface to draw with; .ttf, .otf and .ttc files in "
+                        "ComfyUI/user/was-node-suite/fonts are listed by name. DejaVu covers "
+                        "the most ground; Liberation matches Arial, Times New Roman and "
+                        "Courier New widths; `Mono` gives every character one width, for "
+                        "frame counters."
                     ),
                 ),
             ],

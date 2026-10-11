@@ -24,12 +24,10 @@ class ThreeH3ExtendAppend(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Join a sampled segment onto the clip so far. The opening segment becomes "
-                "the clip; a continued segment arrives with the clip's own last frames at "
-                "its head, so only the frames past them are added and every earlier frame "
-                "is carried through untouched. A cut adds the whole new scene after the "
-                "clip's last full 17 frame block, trimming the 5 frames past it. Decode "
-                "once, after the last segment."
+                "Join a sampled segment onto the clip so far and hand on the longer clip. A "
+                "continued segment adds only the frames past the carried ones; a cut adds the "
+                "whole new scene after the clip's last full 17 frame block. Decode once, after "
+                "the last segment."
             ),
             inputs=[
                 io.Latent.Input(

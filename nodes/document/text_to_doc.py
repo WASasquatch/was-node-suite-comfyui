@@ -41,13 +41,9 @@ class TextToDoc(io.ComfyNode):
             ],
             category="WAS Suite/Document",
             description=(
-                "Turn a string into a document carrying the title, description, copyright "
-                "and the rest of the metadata a document holds. text_format reads the string "
-                "as plain text, which wraps it into paragraphs, or as HTML, which is used as "
-                "the document's own markup. Runs of spaces and indentation collapse either "
-                "way. The language tag decides which dictionary an export is spell checked "
-                "against and how words are hyphenated. An empty text gives a document "
-                "carrying its metadata and no content."
+                "Turn a string of plain text or HTML into a document carrying a title, "
+                "description, author, copyright, language and keywords, ready for Save DOC or "
+                "any other document node."
             ),
             inputs=[
                 io.String.Input(
@@ -60,8 +56,8 @@ class TextToDoc(io.ComfyNode):
                     ),
                     tooltip=(
                         "What the document says. On text_format 'plain text' a blank line "
-                        "starts a new paragraph; on 'html' it is used as the document's markup "
-                        "exactly as written."
+                        "starts a new paragraph; on 'html' it is the document's markup. Runs "
+                        "of spaces and indentation collapse either way."
                     ),
                 ),
                 io.Combo.Input(
@@ -79,11 +75,9 @@ class TextToDoc(io.ComfyNode):
                     default="",
                     optional=True,
                     tooltip=(
-                        "What the document is called, such as 'Shot list, scene 4'. It is "
-                        "carried inside the document and is the title a document viewer, a "
-                        "file manager column and an exported file all show. Left empty, the "
-                        "document carries no title and whatever opens it falls back to the "
-                        "file name."
+                        "What the document is called, such as 'Shot list, scene 4', shown by a "
+                        "document viewer, a file manager and an exported file. Empty = no "
+                        "title, and viewers fall back to the file name."
                     ),
                 ),
                 io.String.Input(
@@ -112,11 +106,9 @@ class TextToDoc(io.ComfyNode):
                     default="",
                     optional=True,
                     tooltip=(
-                        "The rights statement to carry with the document, such as '(c) 2026 "
-                        "A. Name, CC BY 4.0'. Free text rather than a licence code, so a full "
-                        "sentence and a licence name are both fine. Worth filling in before a "
-                        "document leaves the machine, because this is the part that travels "
-                        "with it."
+                        "The rights statement carried with the document, as free text, such as "
+                        "'(c) 2026 A. Name, CC BY 4.0'. A full sentence and a licence name are "
+                        "both fine."
                     ),
                 ),
                 io.String.Input(
@@ -125,7 +117,8 @@ class TextToDoc(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "The language the text is written in, as a tag: 'en', 'en-GB', 'ja', "
-                        "'pt-BR'. Empty by default, so the document claims no language."
+                        "'pt-BR'. Sets an export's spell-check dictionary and hyphenation. "
+                        "Empty = no language claimed."
                     ),
                 ),
                 io.String.Input(
@@ -133,11 +126,9 @@ class TextToDoc(io.ComfyNode):
                     default="",
                     optional=True,
                     tooltip=(
-                        "Search terms for the document, separated by commas, such as 'concept "
-                        "art, dragon, shot 12'. Spaces around a comma are trimmed and an empty "
-                        "entry is dropped. This is the one metadata field a desktop search "
-                        "engine reads, so it is what makes a document findable again months "
-                        "later."
+                        "Search terms, separated by commas, such as 'concept art, dragon, shot "
+                        "12'. Spaces around a comma are trimmed and empty entries dropped. "
+                        "Desktop search engines read this field."
                     ),
                 ),
                 DICT.Input(
@@ -153,10 +144,8 @@ class TextToDoc(io.ComfyNode):
                 DOC.Output(
                     tooltip=(
                         "The whole document on one wire: its markup, the metadata filled in "
-                        "here, and the word and character counts taken from the text. Nothing "
-                        "has been written to disk, so this wire is what every document node "
-                        "reads, starting with View DOC Metadata for a look at what the "
-                        "document ended up carrying."
+                        "here, and word and character counts. Nothing is written to disk; wire "
+                        "it into View DOC Metadata or Save DOC."
                     ),
                 ),
             ],

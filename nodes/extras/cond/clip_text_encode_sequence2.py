@@ -121,11 +121,9 @@ class WASCLIPTextEncodeSequence2(io.ComfyNode):
                     "cond_keyframes_type",
                     options=KEYFRAME_TYPES,
                     tooltip=(
-                        "How the changeovers are spaced. `linear` gives every prompt an equal "
-                        "share of the run. The sinus shapes bunch them up at one end or the "
-                        "other, so the sequence lingers on the opening prompts and races "
-                        "through the rest, or the reverse, useful when the first shot needs "
-                        "to be held and the last few are only a flourish."
+                        "How the changeovers are spaced: `linear` = an equal share of the run "
+                        "per prompt; the sinus shapes = bunched at one end, lingering on the "
+                        "opening prompts and racing through the rest, or the reverse."
                     ),
                 ),
                 io.Int.Input(

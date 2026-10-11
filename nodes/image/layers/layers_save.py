@@ -46,11 +46,9 @@ class LayersSave(io.ComfyNode):
             ],
             category="WAS Suite/Image/Layers",
             description=(
-                "Write a layer stack to a file an image editor opens with its layers "
-                "intact. Every layer keeps its name, its place on the canvas, its "
-                "opacity, its blend mode and whether it was hidden, so the composite can "
-                "be taken apart and reworked in Photoshop, Affinity Photo, GIMP or Krita. "
-                "A stack whose layers carry a batch is written as one file per frame."
+                "Write a layer stack to a file that Photoshop, Affinity Photo, GIMP or Krita "
+                "opens with its layers intact, each keeping its name, placement, opacity, "
+                "blend mode and visibility. A batch is written as one file per frame."
             ),
             inputs=[
                 io.Layers.Input(
@@ -92,10 +90,10 @@ class LayersSave(io.ComfyNode):
                     options=list(psd.DEPTHS),
                     default=psd.DEPTHS[0],
                     tooltip=(
-                        "'8 bit' = 256 levels a channel, the smallest file and what every "
-                        "editor expects; '16 bit' = 65536 levels, which keeps a graded "
-                        "plate off a banded gradient; '32 bit float' = the exact values on "
-                        "the wire, keeping anything above white for further grading."
+                        "'8 bit' = 256 levels a channel, the smallest file, read by every "
+                        "editor; '16 bit' = 65536 levels, keeps a graded gradient from "
+                        "banding; '32 bit float' = the exact values on the wire, keeping "
+                        "anything above white."
                     ),
                 ),
                 io.Combo.Input(

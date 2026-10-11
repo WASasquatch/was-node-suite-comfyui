@@ -132,10 +132,8 @@ class ImageCompositeMasked(io.ComfyNode):
             category="WAS Suite/Image/Process",
             description=(
                 "Lay one picture over another at a pixel position, showing it only where a "
-                "mask allows. The band on the node draws the destination beside the result "
-                "with the source that went between them, and measures the difference, so a "
-                "source dropped off the edge or a mask the wrong way round shows on the node "
-                "rather than after a preview is wired up."
+                "mask allows. The node shows the destination beside the result, with the "
+                "source between them, so a misplaced source or an inverted mask shows at once."
             ),
             inputs=[
                 io.Image.Input(

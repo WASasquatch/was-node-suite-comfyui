@@ -29,13 +29,11 @@ class ThreeCustomObject(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Build any Object3D from a short JavaScript body, for what wiring cannot "
-                "express: scattering a hundred copies, an InstancedMesh, a Points cloud, "
-                "LineSegments. `THREE` is in scope and whatever is wired in arrives as "
-                "`geometry1`, `geometry2`, `material1`, `material2`, `object1` and `object2`. "
-                "The code runs in your browser when the viewer loads, with the same reach as "
-                "any frontend extension, so only run a workflow carrying custom JavaScript if "
-                "you trust where it came from."
+                "Build an object from a short JavaScript body for what wiring cannot express, "
+                "such as a hundred scattered copies, an instanced crowd or a point cloud. Wired "
+                "inputs arrive in the code by socket name. The code runs in the browser with the "
+                "reach of any extension, so only load a workflow carrying it from a trusted "
+                "source."
             ),
             inputs=[
                 io.String.Input(
@@ -44,7 +42,8 @@ class ThreeCustomObject(io.ComfyNode):
                     multiline=True,
                     tooltip=(
                         "A body returning an Object3D, as "
-                        "`return new THREE.InstancedMesh(geometry1, material1, 100);`."
+                        "`return new THREE.InstancedMesh(geometry1, material1, 100);`. `THREE` "
+                        "is in scope."
                     ),
                 ),
                 THREE_GEOMETRY.Input(

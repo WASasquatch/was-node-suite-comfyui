@@ -98,11 +98,9 @@ class ImageHistoryLoader(io.ComfyNode):
             search_aliases=["Image History Loader", "recent images", "history"],
             category="WAS Suite/History",
             description=(
-                "Reload one of the images the suite has recently loaded or saved. The menu "
-                "holds whatever this pack's loading and saving nodes have touched, up to "
-                "the limit in the pack's config. An entry whose file has since been deleted "
-                "gives a black 512x512 image, and one in a folder this pack may no longer "
-                "read stops the prompt with that folder named."
+                "Reload one of the images the suite's loading and saving nodes have recently "
+                "touched. A file deleted since gives a black 512x512 image, and one in a "
+                "folder the pack may no longer read stops the prompt with that folder named."
             ),
             inputs=[
                 io.Combo.Input(

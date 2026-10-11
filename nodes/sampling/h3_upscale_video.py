@@ -111,11 +111,10 @@ class H3UpscaleVideo(io.ComfyNode):
             category="WAS Suite/Sampling",
             is_output_node=True,
             description=(
-                "Upscale a video of any length with MiniMax H3: the clip is enlarged in the "
-                "latent and refined a chunk at a time, each chunk continuing from the frames the "
-                "one before refined, so a long clip fits one card without a seam. Frames are "
-                "written to disk as each chunk settles, with the clip's own sound under them, "
-                "and the panel plays the source beside the result."
+                "Upscale a video of any length with MiniMax H3, enlarging it in the latent and "
+                "refining it a chunk at a time, each chunk continuing from the last so the clip "
+                "has no seam. Frames are written to disk with the clip's own sound, and the panel "
+                "plays the source beside the result."
             ),
             inputs=[
                 io.MultiType.Input(

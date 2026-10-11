@@ -36,13 +36,10 @@ class LoadTextLine(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "Read a text file picked from a menu: the whole file, the line at an index, "
-                "or a line drawn from a seed, with every line also given as a list. The menu "
-                "lists the text files in ComfyUI's input and output folders, subfolders "
-                "included, and in every folder under paths.allow_read in config.yaml, each "
-                "tagged with its folder's name. A folder added there appears after a ComfyUI "
-                "restart and a page reload. A file since deleted or renamed gives empty text "
-                "and a line in the log."
+                "Read a text file picked from a menu as the whole file, the line at an index, "
+                "or a line drawn from a seed, with every line also handed on as a list. The "
+                "menu covers input, output and the folders under paths.allow_read in "
+                "config.yaml. A file deleted or renamed since gives empty text."
             ),
             inputs=[
                 io.Combo.Input(
@@ -59,12 +56,10 @@ class LoadTextLine(io.ComfyNode):
                     "mode",
                     options=["file", "index", "random"],
                     tooltip=(
-                        "What the 'line' output carries. 'file' gives the whole file, every "
-                        "line joined back together, which is what feeds a prompt written "
-                        "across several lines. 'index' gives the single line at 'index', for "
-                        "stepping through a list with a counter. 'random' gives one line "
-                        "drawn by 'seed'. The 'lines' and 'text' outputs are the same in all "
-                        "three."
+                        "What 'line' carries. 'file' = the whole file, for a prompt written "
+                        "across several lines; 'index' = the line at 'index', for stepping "
+                        "through a list; 'random' = one line drawn by 'seed'. 'lines' and "
+                        "'text' are the same in all three."
                     ),
                 ),
                 io.Int.Input(
@@ -103,11 +98,10 @@ class LoadTextLine(io.ComfyNode):
                     min=0,
                     max=0xFFFFFFFFFFFFFFFF,
                     tooltip=(
-                        "Which line 'random' mode draws. The same seed and the same file "
-                        "always give the same line; change it to draw a different one. The "
-                        "seed pins a position rather than a line, so adding or removing a "
-                        "line in the file, or changing skip_comment_lines, makes the same "
-                        "seed produce different text. Read only in 'random' mode."
+                        "Which line 'random' mode draws; the same seed and file always give "
+                        "the same line. The seed pins a position, so editing the file or "
+                        "skip_comment_lines changes the line it gives. Read only in 'random' "
+                        "mode."
                     ),
                 ),
             ],

@@ -35,13 +35,7 @@ class NumberRange(io.ComfyNode):
             description=(
                 "Generate a series of numbers between two values, by count or by step, shaped "
                 "by an easing curve. Every value comes out as a list, so the graph below runs "
-                "once per number. A step's sign is taken from the direction start to stop, so "
-                "0.1 and -0.1 behave the same, and a step that divides the span exactly ends "
-                "the series on stop while one that does not ends it on the last whole step "
-                "before stop. On easing, the `ease_in` curves start slow and accelerate, "
-                "`ease_out` the reverse, and `ease_in_out` does both, which is what makes a "
-                "camera move or a strength ramp look deliberate rather than mechanical, while "
-                "`back` and `elastic` overshoot past start and stop on purpose."
+                "once per number, for a camera move, a strength ramp or a frame sweep."
             ),
             inputs=[
                 io.MultiType.Input(
@@ -61,11 +55,9 @@ class NumberRange(io.ComfyNode):
                     "mode",
                     options=["count", "step"],
                     tooltip=(
-                        "What decides the values. `count` produces exactly that many, spread "
-                        "across the whole span, the mode to use when the number of frames "
-                        "is what is fixed. `step` walks from start towards stop by a fixed "
-                        "amount and produces however many values fit, for a series where the "
-                        "spacing is what matters."
+                        "`count` = exactly that many values spread across the span, when the "
+                        "frame count is fixed; `step` = walks start towards stop by a fixed "
+                        "gap, as many as fit, when the spacing matters."
                     ),
                 ),
                 io.Int.Input(
@@ -87,17 +79,18 @@ class NumberRange(io.ComfyNode):
                     max=1e9,
                     step=0.01,
                     tooltip=(
-                        "The gap between one value and the next, read in `step` mode. A step "
-                        "of 0 stops with an error."
+                        "The gap between values in `step` mode; its sign follows start to "
+                        "stop, so 0.1 and -0.1 match. The series ends on stop or the last "
+                        "whole step before it. 0 stops with an error."
                     ),
                 ),
                 io.Combo.Input(
                     "easing",
                     options=list(EASING_NAMES),
                     tooltip=(
-                        "How the values are distributed across the span, in `count` mode. "
-                        "`linear` spaces them evenly. Not read in `step` mode, where the "
-                        "spacing is fixed."
+                        "In `count` mode only. `linear` = even spacing; `ease_in` = starts "
+                        "slow, accelerates; `ease_out` = the reverse; `ease_in_out` = both; "
+                        "`back`, `elastic` = overshoot past start and stop."
                     ),
                 ),
                 io.Boolean.Input(

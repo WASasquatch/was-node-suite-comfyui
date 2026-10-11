@@ -61,16 +61,9 @@ class SaveDoc(io.ComfyNode):
             category="WAS Suite/Document",
             description=(
                 (
-                    "Write a document to a file. `doc` takes a DOC or plain text from any "
-                    "string output. file_format decides what lands on disk: '.wasdoc' is the "
-                    "container itself, the only format keeping the metadata and embedded "
-                    "files; '.html' writes a whole page with the metadata in its head; '.txt' "
-                    "and friends write the text alone with tags removed; '.docx', '.odt' and "
-                    "'.pdf' lay the document out, a conversion rather than a copy, so some "
-                    "styling does not survive. Those three each "
-                    "need a library, named in the error, and features.document_export can "
-                    "refuse them. Files are numbered unless filename_number_padding is 0, and "
-                    "the path has to be one the pack may write to."
+                    "Write a document, or plain text from any string output, to a file: a "
+                    ".wasdoc that keeps everything, an HTML page, plain text, or a laid-out "
+                    ".docx, .odt or .pdf."
                 )
             ),
             inputs=[
@@ -92,9 +85,10 @@ class SaveDoc(io.ComfyNode):
                     options=list(formats.FORMATS) + list(export.FORMATS),
                     default=formats.CONTAINER,
                     tooltip=(
-                        "What the file holds, and the extension it gets. '.wasdoc' loses "
-                        "nothing, the plain formats write the text alone, and '.docx', "
-                        "'.odt' and '.pdf' are laid out from the markup."
+                        "'.wasdoc' = loses nothing, the only format keeping metadata and "
+                        "embedded files; '.html' = a whole page, metadata in its head; plain "
+                        "formats = the text alone, tags removed; '.docx', '.odt', '.pdf' = "
+                        "laid out, some styling lost."
                     ),
                 ),
                 io.Combo.Input(

@@ -21,6 +21,7 @@ __all__ = [
     "executing_class_type",
     "executing_node_id",
     "executing_prompt_id",
+    "executing_workflow_id",
     "node_key",
     "subscribe",
     "subscriptions",
@@ -211,6 +212,35 @@ def executing_prompt_id() -> str | None:
     except Exception as error:
         logger.debug("the executing prompt id could not be read (%s)", error)
         return None
+
+
+def executing_workflow_id() -> str | None:
+    """The id of the workflow the running prompt was queued from.
+
+    Returns:
+        The ``id`` of the workflow the browser saved into the prompt, the same value as
+        ``app.rootGraph.id`` in the page that queued it. None when no prompt is running, when
+        the prompt carries no workflow, as one posted straight to the API does not, and when
+        the queue cannot be read.
+    """
+    prompt_id = executing_prompt_id()
+    if not prompt_id:
+        return None
+    try:
+        from server import PromptServer
+
+        running, _ = PromptServer.instance.prompt_queue.get_current_queue_volatile()
+        for item in running:
+            if len(item) < 4 or item[1] != prompt_id:
+                continue
+            extra = item[3] if isinstance(item[3], dict) else {}
+            workflow = (extra.get("extra_pnginfo") or {}).get("workflow")
+            identity = workflow.get("id") if isinstance(workflow, dict) else None
+            text = str(identity).strip() if isinstance(identity, (str, int)) else ""
+            return text or None
+    except Exception as error:
+        logger.debug("the executing workflow id could not be read (%s)", error)
+    return None
 
 
 def executing_class_type(node_id=None) -> str | None:

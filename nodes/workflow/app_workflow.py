@@ -18,9 +18,8 @@ SLOTS = 4
 
 IN_TIP = (
     "Value for the {ordinal} input the workflow exposes, replacing what it saved; any type. "
-    "Choosing a workflow renames this socket to the input it feeds, such as red_offset, and "
-    "narrows it to that input's own type. An input that names a file takes an IMAGE here "
-    "instead, and the file is not read."
+    "Choosing a workflow renames this socket to that input, such as red_offset, and narrows "
+    "its type to match. A file input takes an IMAGE here instead of reading the file."
 )
 OUT_TIP = (
     "The {ordinal} result the workflow presents; any type. It carries whatever feeds that "

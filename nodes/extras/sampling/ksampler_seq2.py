@@ -107,13 +107,10 @@ class KSamplerSequence2(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Run the sampler once per frame and stack the results into one latent "
-                "batch, stepping to the next prompt whenever the frame is one of the "
-                "keyframes. Built to be driven by CLIP Text Encode Sequence (v2), which "
-                "produces the prompt list, the keyframe schedule and the frame count "
-                "together. "
-                "Noise injection, a swinging denoise and a keyed seed are all here to keep "
-                "a long run moving instead of settling on one image."
+                "Run the sampler once per frame and stack the results into one latent batch, "
+                "stepping to the next prompt at each keyframe. Driven by CLIP Text Encode "
+                "Sequence (v2), with noise injection, a swinging denoise and a keyed seed to "
+                "keep a long run moving."
             ),
             inputs=[
                 io.Model.Input(
@@ -145,11 +142,9 @@ class KSamplerSequence2(io.ComfyNode):
                     "alternate_values",
                     default=True,
                     tooltip=(
-                        "Whether every other loop runs on a second seed that drifts away "
-                        "from the first instead of on the scheduled one. It gives the run a "
-                        "slight back-and-forth flicker between two looks, which reads as "
-                        "movement in a short sequence. Off, seed_keying and seed_mode decide "
-                        "every frame's seed."
+                        "`false` = seed_keying and seed_mode decide every frame's seed; `true` "
+                        "= every other loop runs on a second seed drifting away from the "
+                        "first, a slight back-and-forth flicker that reads as movement."
                     ),
                 ),
                 io.Int.Input(
@@ -379,10 +374,9 @@ class KSamplerSequence2(io.ComfyNode):
                     "seed_keying",
                     default=True,
                     tooltip=(
-                        "Whether the seed follows a pattern tied to the frame number instead "
-                        "of only stepping. A pattern that repeats brings back seeds the run "
-                        "has already used, which is how a sequence comes back round to a look "
-                        "rather than drifting away from it for good."
+                        "`false` = the seed only steps; `true` = it follows a pattern tied to "
+                        "the frame number, and a repeating pattern brings back used seeds so "
+                        "the sequence returns to a look rather than drifting away."
                     ),
                 ),
                 io.Combo.Input(

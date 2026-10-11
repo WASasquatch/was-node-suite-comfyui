@@ -49,11 +49,10 @@ class ConstantNumber(io.ComfyNode):
                     optional=True,
                     placeholder="exact digits, eg 9007199254740993",
                     tooltip=(
-                        "The number in digits, used instead of the widget above. `integer` "
-                        "keeps every digit, past what the widget holds: 9007199254740993. "
-                        "`float` also takes a point or an exponent: -12.5, .5, 1e6. `bool` "
-                        "takes a word: true, 1, yes, on, or false, 0, no, off. Digits, not a "
-                        "sum: 2^53+1 is refused. Use Number Expression for a sum."
+                        "Digits used instead of the widget. `integer` keeps every digit: "
+                        "9007199254740993; `float` also takes -12.5, .5 or 1e6; `bool` takes "
+                        "true, 1, yes, on or false, 0, no, off. A sum such as 2^53+1 is "
+                        "refused; use Number Expression."
                     ),
                 ),
             ],

@@ -33,12 +33,10 @@ class ThreeLight(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "One light, wired into a group or straight into the scene. A standard or "
-                "physical material is black without one. 'directional' is sunlight, parallel "
-                "rays from the direction its position points; 'point' is a bulb that falls off "
-                "with distance; 'spot' is a cone; 'ambient' lifts everything evenly and casts "
-                "nothing; 'hemisphere' fades sky colour to ground colour. Only directional, "
-                "point and spot can cast shadows."
+                "One light, wired into a group or straight into the scene; a standard or "
+                "physical material is black without one. Choose sunlight, a bulb, a spotlight "
+                "cone, an even ambient lift or a sky-to-ground fade; only the sun, bulb and "
+                "spot cast shadows."
             ),
             inputs=[
                 io.Combo.Input(
@@ -47,7 +45,8 @@ class ThreeLight(io.ComfyNode):
                     default="directional",
                     tooltip=(
                         "Which kind of light. 'directional' is sun, 'point' a bulb, 'spot' a "
-                        "cone, 'ambient' a flat lift."
+                        "cone, 'ambient' a flat lift, 'hemisphere' a sky colour fading to "
+                        "ground_color."
                     ),
                 ),
                 io.String.Input(

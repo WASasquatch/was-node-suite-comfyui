@@ -60,12 +60,10 @@ class CacheNode(io.ComfyNode):
             search_aliases=["Cache Node", "cache latent", "save latent"],
             category="WAS Suite/IO",
             description=(
-                "Deprecated. Nothing replaces it directly: it writes a latent, image batch "
-                "or conditioning to a file between prompts, and Load Cache reads it back. "
-                "Off by default: enable legacy.cache to load it. Each suffix defaults to a "
-                "fresh random number followed by '_cache', so two Cache Nodes do not "
-                "overwrite each other; set one by hand to write a predictable name a Load "
-                "Cache node can be pointed at."
+                "Deprecated, with no direct replacement. Writes a latent, image batch or "
+                "conditioning to a file between prompts for Load Cache to read back. Enable "
+                "legacy.cache to load it; set a suffix by hand to give Load Cache a "
+                "predictable name."
             ),
             inputs=[
                 io.String.Input(

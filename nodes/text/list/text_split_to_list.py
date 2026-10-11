@@ -34,13 +34,10 @@ class TextSplitToList(io.ComfyNode):
             ],
             category="WAS Suite/Text/List",
             description=(
-                "Split text into a list, on a delimiter, on line breaks, on whitespace or "
-                "on a regular expression. The pieces come out twice: as one LIST, and as a "
-                "STRING list that runs everything downstream once per piece. `delimiter` "
-                "cuts on the exact text in the delimiter field, which is how a "
-                "comma-separated prompt becomes one entry per tag, while `regex` reads that "
-                "field as a pattern, so `[,;]` cuts on either mark. `characters` ignores "
-                "the delimiter field."
+                "Split text into a list on a delimiter, line breaks, whitespace, a regular "
+                "expression or every character, such as one entry per tag of a "
+                "comma-separated prompt. The pieces come out as one LIST and as a STRING "
+                "list that runs everything downstream once per piece."
             ),
             inputs=[
                 io.String.Input(
@@ -55,9 +52,10 @@ class TextSplitToList(io.ComfyNode):
                     "split_by",
                     options=["delimiter", "lines", "whitespace", "regex", "characters"],
                     tooltip=(
-                        "Where the cuts go. `delimiter` and `regex` read the delimiter "
-                        "field; `lines` cuts on line breaks, `whitespace` on runs of space, "
-                        "`characters` on every character."
+                        "Where the cuts go. `delimiter` = the exact text in the delimiter "
+                        "field; `regex` = that field as a pattern, so `[,;]` cuts on either "
+                        "mark; `lines` = line breaks; `whitespace` = runs of space; "
+                        "`characters` = every character."
                     ),
                 ),
                 io.String.Input(
@@ -102,11 +100,9 @@ class TextSplitToList(io.ComfyNode):
                     display_name="strings",
                     is_output_list=True,
                     tooltip=(
-                        "The same pieces as a STRING list. Because this is a list, a node "
-                        "reading it runs once per piece and produces one result per piece, "
-                        "wire it into a sampler's prompt to render every entry in turn. "
-                        "Text that splits into nothing stops the prompt, because a graph "
-                        "cannot be run zero times."
+                        "The same pieces as a STRING list: a node reading it runs once per "
+                        "piece, so wired into a sampler's prompt it renders every entry in "
+                        "turn. Text that splits into nothing stops the prompt."
                     ),
                 ),
                 io.Int.Output(

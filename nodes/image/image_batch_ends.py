@@ -26,12 +26,10 @@ class ImageBatchEnds(io.ComfyNode):
             ],
             category="WAS Suite/Image",
             description=(
-                "Take the ends off an image batch. It answers the opening frame, the closing "
-                "frame, the opening and closing 'count' frames, the batch with its first frame "
-                "dropped, the batch with its last frame dropped, and how many frames arrived. "
-                "Every image output is a batch, so a single frame comes out as a batch of one. "
-                "Extending a clip by inference wants 'last' as the seed and 'without_first' on "
-                "what comes back, so the seeded frame is not repeated where the two are joined."
+                "Take the ends off an image batch: the first and last frames, the first and "
+                "last `count` frames, the batch without its first or last frame, and the frame "
+                "count. Use `last` to seed a clip extension and `without_first` on what comes "
+                "back, so the join has no repeated frame."
             ),
             inputs=[
                 io.Image.Input(

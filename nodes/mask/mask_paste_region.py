@@ -56,10 +56,10 @@ class MaskPasteRegion(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How wide the soft band along each pasted edge is, as a fraction of the "
-                        "crop. 0.0 gives a hard seam, 0.25 fades the outer quarter of each edge, "
-                        "1.0 fades right across the crop. An edge sitting flush against the image "
-                        "border is never feathered."
+                        "Width of the soft band along each pasted edge, as a fraction of the "
+                        "crop. 0.0 = a hard seam; 0.25 = the outer quarter of each edge; 1.0 = "
+                        "right across the crop. Edges flush with the image border are never "
+                        "feathered."
                     ),
                 ),
                 io.Int.Input(

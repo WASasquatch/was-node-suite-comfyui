@@ -29,11 +29,9 @@ class ImageLensDistortion(io.ComfyNode):
             ],
             category="WAS Suite/Image/Transform",
             description=(
-                "Bow the frame outwards or pinch it inwards, and split the colour channels "
-                "apart across the radius. Negative k1 barrels, which is what a wide lens or "
-                "an action camera does; positive k1 pincushions, which takes that bow out of "
-                "footage that already has it. Image Chromatic Aberration splits the channels "
-                "without moving the geometry; this does both at once, as a real lens does."
+                "Bow the frame outwards or pinch it inwards and split the colour channels "
+                "apart across the radius, as a real lens does. Adds a wide-lens barrel to a "
+                "render, or takes one out of footage that has it."
             ),
             inputs=[
                 io.Image.Input(

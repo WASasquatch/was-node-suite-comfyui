@@ -33,12 +33,10 @@ class LayersMerge(io.ComfyNode):
             ],
             category="WAS Suite/Image/Layers",
             description=(
-                "Flatten a run of layers into one, drawn with each layer's own opacity, blend "
-                "mode, mask, placement, size, angle and mirroring baked in. The merged layer "
-                "takes the lowest place in the run and is drawn normally at full opacity, and "
-                "the picture comes out on the image and mask sockets as well. Left at 0 and "
-                "-1 it flattens the whole document; a hidden layer in the run is not drawn and "
-                "does not survive it."
+                "Flatten a run of layers into one, baking in each layer's opacity, blend mode, "
+                "mask, placement, size, angle and mirroring. The merged layer takes the lowest "
+                "place in the run at full opacity, and its picture also comes out on the image "
+                "and mask sockets. Hidden layers in the run are dropped."
             ),
             inputs=[
                 io.Layers.Input(

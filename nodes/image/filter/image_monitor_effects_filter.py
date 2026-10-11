@@ -41,11 +41,10 @@ class ImageMonitorEffectsFilter(io.ComfyNode):
                     "mode",
                     options=["Digital Distortion", "Signal Distortion", "TV Distortion"],
                     tooltip=(
-                        "Which artefact to apply. `Digital Distortion` shears the columns along "
-                        "a wave and punches shuffled scan lines through the result; 'Signal "
-                        "Distortion' tears each row sideways by a random amount; 'TV "
-                        "Distortion' tears the rows and adds a crossed interference pattern and "
-                        "noise over a desaturated copy, for a worn-videotape look."
+                        "`Signal Distortion` = each row torn sideways by a random amount; "
+                        "`Digital Distortion` = columns sheared along a wave, shuffled scan "
+                        "lines punched through; `TV Distortion` = torn rows, crossed "
+                        "interference and noise over a desaturated copy, a worn-videotape look."
                     ),
                 ),
                 io.Int.Input(
@@ -55,11 +54,9 @@ class ImageMonitorEffectsFilter(io.ComfyNode):
                     max=255,
                     step=1,
                     tooltip=(
-                        "How violent the effect is, in pixels of displacement. 1 is barely "
-                        "visible and 50 is severe. TV Distortion reads it the other way round, "
-                        "there it divides the image height, so larger values give smaller "
-                        "tears, and a value above the image height leaves nothing to divide and "
-                        "fails."
+                        "Pixels of displacement: 1 = barely visible; 50 = severe. `TV "
+                        "Distortion` divides the image height by it instead, so larger values "
+                        "give smaller tears, and a value above the height fails."
                     ),
                 ),
                 io.Int.Input(

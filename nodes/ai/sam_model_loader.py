@@ -29,10 +29,9 @@ class SamModelLoader(io.ComfyNode):
                     "model_size",
                     options=["ViT-H", "ViT-L", "ViT-B"],
                     tooltip=(
-                        "Which size of Segment Anything to load. `ViT-H` is the most "
-                        "accurate and the largest at around 2.4 GB, `ViT-L` sits in the "
-                        "middle, and `ViT-B` is roughly 375 MB and the fastest. All three "
-                        "take the same points and produce a mask the same way."
+                        "Which size of Segment Anything to load: `ViT-B` = about 375 MB, "
+                        "fastest; `ViT-L` = middle size; `ViT-H` = about 2.4 GB, most "
+                        "accurate. All three take the same points."
                     ),
                 ),
             ],

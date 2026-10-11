@@ -118,12 +118,10 @@ class TextLoadLineFromFile(io.ComfyNode):
             search_aliases=["Text Load Line From File", "text batch", "prompt list"],
             category="WAS Suite/Text",
             description=(
-                "Read one line of a text file per prompt, or one line by index. The "
-                "second output holds every line, keyed by the dictionary name. The file has "
-                "to sit in a folder this pack may read: ComfyUI's input, output or temp "
-                "folder, the pack's own folder, or one listed under paths.allow_read in "
-                "config.yaml. With no path and nothing connected the node logs an error and "
-                "emits an empty line."
+                "Read one line of a text file per prompt, or one line by index, to walk a "
+                "list of prompts one per generation. The second output holds every line, "
+                "keyed by the dictionary name. With no file and nothing connected the node "
+                "logs an error and emits an empty line."
             ),
             inputs=[
                 io.Combo.Input(
@@ -151,11 +149,10 @@ class TextLoadLineFromFile(io.ComfyNode):
                     default="TextBatch",
                     multiline=False,
                     tooltip=(
-                        "Name this batch's read position is remembered under, and the "
-                        "position survives a restart. Two nodes sharing a label share one "
-                        "position and take turns; giving them different labels lets two "
-                        "lists advance independently. Pointing a label at a different file "
-                        "starts it over at the first line."
+                        "Name this batch's read position is remembered under, surviving a "
+                        "restart. Nodes sharing a label share one position and take turns; "
+                        "different labels advance independently. Pointing a label at a "
+                        "different file starts it over at the first line."
                     ),
                 ),
                 io.Combo.Input(

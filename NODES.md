@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **513** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **515** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-506 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+508 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 391 |
+| [Always loaded](#always-loaded) | always on | 393 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-391 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+393 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -63,7 +63,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (20)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (21)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (3)
 - [WAS Suite/Logic](#was-suitelogic) (5)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (14)
+- [WAS Suite/Sampling](#was-suitesampling) (15)
 - [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -145,7 +145,7 @@ Play two videos on the node under a divider that drags left and right, so one ru
 <details>
 <summary><b>Create Morph Image</b></summary>
 
-Fade one image into another and save the result as an animated GIF or APNG. A few older viewers show an APNG as a single still frame. `WEBP` gives full colour and alpha at a fraction of the size, and `WEBP_LOSSLESS` keeps every pixel exact for a larger file that is still usually smaller than the .gif. With palette_mode `per_frame` each frame looks its best, but a still background can shift colour as the palette changes under it, seen as flicker when the animation plays; `global` holds a still area put at the cost of some accuracy in any single frame.
+Fade one image into another and save the result as an animated GIF, APNG or WEBP. Both images pass through unchanged, with the path of the written file. A batch on image_a makes one a-to-b pair per frame, all in one animation.
 
 | | |
 |---|---|
@@ -161,12 +161,12 @@ Fade one image into another and save the result as an animated GIF or APNG. A fe
 | `still_image_delay_ms` | `FLOAT` | Yes | 2500.0 |  | How long each of the two images is held before it starts to fade, in milliseconds. 2500 holds it for two and a half seconds. |
 | `duration_ms` | `FLOAT` | Yes | 0.1 |  | How long each blended frame is shown, in milliseconds. The default 0.1 asks for the shortest frame the format allows, which most players round up to about 10ms; raise it to slow the fade down. |
 | `loops` | `INT` | Yes | 0 |  | How many times the animation plays before it stops. 0 means play forever, which is what most viewers expect from a GIF. |
-| `max_size` | `INT` | Yes | 512 |  | Longest edge of the animation, in pixels. The canvas is otherwise as large as the largest source, so 512 holds a 4000x3000 photograph down to 512x384 and cuts the file and the memory with it. A source already smaller than this is left alone. |
+| `max_size` | `INT` | Yes | 512 |  | Longest edge of the animation, in pixels: 512 holds a 4000x3000 photograph down to 512x384, cutting file size and memory. A source already smaller than this is left alone. |
 | `root` | `COMBO` | Yes |  |  | Which folder the file lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename names the part below it, so '[time(%Y-%m-%d)]/clip' files each day's under a dated folder. |
 | `filename` | `STRING` | Yes | morph |  | Name of the file, without an extension, the format below adds one. Tokens are expanded here too, so '[time(%H-%M-%S)]_morph' gives every run its own file instead of overwriting the last one. |
-| `filetype` | `COMBO` | Yes |  | `GIF`, `APNG`, `WEBP`, `WEBP_LOSSLESS` | Which format to write. `GIF` plays anywhere but bands gradients at 256 colours; `APNG`, `WEBP` and `WEBP_LOSSLESS` keep full colour and alpha. |
-| `palette_mode` | `COMBO` | Yes |  | `per_frame`, `global` | How the palette is chosen when colours are reduced. `per_frame` fits one per frame, `global` one to the whole animation, so a still area stays put. |
-| `max_colors` | `INT` | Yes | 256 |  | How many colours the palette holds. 256 is the most a .gif can carry. Lower values shrink the file and give a flatter, posterised look, and below about 64 the choice of palette_mode starts to show. The full-colour formats ignore this at 256 and honour it below that, so it doubles as a posterise control for them. |
+| `filetype` | `COMBO` | Yes |  | `GIF`, `APNG`, `WEBP`, `WEBP_LOSSLESS` | `GIF` = plays anywhere, bands gradients at 256 colours; `APNG` = full colour and alpha; `WEBP` = full colour and alpha, far smaller; `WEBP_LOSSLESS` = every pixel exact. |
+| `palette_mode` | `COMBO` | Yes |  | `per_frame`, `global` | How the palette is chosen when colours are reduced: `per_frame` = best colour in each frame, a still background can flicker; `global` = one palette for the whole animation, so a still area stays put. |
+| `max_colors` | `INT` | Yes | 256 |  | Colours in the palette: 256 = the most a .gif holds; lower = smaller file and a flatter, posterised look, with palette_mode showing below about 64. The full-colour formats ignore 256 and posterise below it. |
 | `dither` | `BOOLEAN` | Yes | True |  | Scatter the rounding error between neighbouring pixels so a gradient stays smooth instead of breaking into bands. Turn it off for flat, poster-like colour, which also compresses smaller. |
 
 **Outputs**
@@ -184,7 +184,7 @@ Fade one image into another and save the result as an animated GIF or APNG. A fe
 <details>
 <summary><b>Create Morph Image from Path</b></summary>
 
-Fade through every image in a folder and save the result as an animated GIF or APNG. A few older viewers show an APNG as a single still frame. `WEBP` gives full colour and alpha at a fraction of the size, and `WEBP_LOSSLESS` keeps every pixel exact for a larger file that is still usually smaller than the .gif. With palette_mode `per_frame` each frame looks its best, but a still background can shift colour as the palette changes under it, seen as flicker when the animation plays; `global` holds a still area put at the cost of some accuracy in any single frame.
+Fade through every image in a folder and save the result as an animated GIF, APNG or WEBP slideshow, handing on the path of the written file.
 
 | | |
 |---|---|
@@ -198,16 +198,16 @@ Fade through every image in a folder and save the result as an animated GIF or A
 | `still_image_delay_ms` | `FLOAT` | Yes | 2500.0 |  | How long each source image is held before it starts to fade, in milliseconds. 2500 holds it for two and a half seconds. |
 | `duration_ms` | `FLOAT` | Yes | 0.1 |  | How long each blended frame is shown, in milliseconds. The default 0.1 asks for the shortest frame the format allows, which most players round up to about 10ms; raise it to slow the fade down. |
 | `loops` | `INT` | Yes | 0 |  | How many times the animation plays before it stops. 0 means play forever, which is what most viewers expect from a GIF. |
-| `max_size` | `INT` | Yes | 512 |  | Longest edge of the animation, in pixels. The canvas is otherwise as large as the largest source, so 512 holds a 4000x3000 photograph down to 512x384 and cuts the file and the memory with it. A source already smaller than this is left alone. |
+| `max_size` | `INT` | Yes | 512 |  | Longest edge of the animation, in pixels: 512 holds a 4000x3000 photograph down to 512x384, cutting file size and memory. A source already smaller than this is left alone. |
 | `input_root` | `COMBO` | Yes |  |  | Which folder the source images are in: ComfyUI's own 'input', 'output' or 'temp', or any folder added under paths.allow_read in config.yaml, listed by its own name. input_folder names the part below it. |
 | `input_folder` | `STRING` | Yes |  |  | Folder below the input root holding the frames, such as 'plates/shot_01'. Empty reads the root itself. |
 | `input_pattern` | `STRING` | Yes | * |  | Which names in that folder to take. '*' takes every image, 'frame_*.png' only the PNGs whose name starts with 'frame_'. Subfolders are not searched, and files that are not images are ignored whatever the pattern says. |
 | `output_root` | `COMBO` | Yes |  |  | Which folder the animation lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. output_folder names the part below it. |
 | `output_folder` | `STRING` | Yes |  |  | Folder below the output root the animation is written to, created if it is not there. Tokens expand, so '[time(%Y-%m-%d)]' files each day's under a dated folder. |
 | `filename` | `STRING` | Yes | morph |  | Name of the file, without an extension, the format below adds one. Tokens are expanded here too, so '[time(%H-%M-%S)]_morph' gives every run its own file instead of overwriting the last one. |
-| `filetype` | `COMBO` | Yes |  | `GIF`, `APNG`, `WEBP`, `WEBP_LOSSLESS` | Which format to write. `GIF` plays anywhere but bands gradients at 256 colours; `APNG`, `WEBP` and `WEBP_LOSSLESS` keep full colour and alpha. |
-| `palette_mode` | `COMBO` | Yes |  | `per_frame`, `global` | How the palette is chosen when colours are reduced. `per_frame` fits one per frame, `global` one to the whole animation, so a still area stays put. |
-| `max_colors` | `INT` | Yes | 256 |  | How many colours the palette holds. 256 is the most a .gif can carry. Lower values shrink the file and give a flatter, posterised look, and below about 64 the choice of palette_mode starts to show. The full-colour formats ignore this at 256 and honour it below that, so it doubles as a posterise control for them. |
+| `filetype` | `COMBO` | Yes |  | `GIF`, `APNG`, `WEBP`, `WEBP_LOSSLESS` | `GIF` = plays anywhere, bands gradients at 256 colours; `APNG` = full colour and alpha; `WEBP` = full colour and alpha, far smaller; `WEBP_LOSSLESS` = every pixel exact. |
+| `palette_mode` | `COMBO` | Yes |  | `per_frame`, `global` | How the palette is chosen when colours are reduced: `per_frame` = best colour in each frame, a still background can flicker; `global` = one palette for the whole animation, so a still area stays put. |
+| `max_colors` | `INT` | Yes | 256 |  | Colours in the palette: 256 = the most a .gif holds; lower = smaller file and a flatter, posterised look, with palette_mode showing below about 64. The full-colour formats ignore 256 and posterise below it. |
 | `dither` | `BOOLEAN` | Yes | True |  | Scatter the rounding error between neighbouring pixels so a gradient stays smooth instead of breaking into bands. Turn it off for flat, poster-like colour, which also compresses smaller. |
 
 **Outputs**
@@ -223,7 +223,7 @@ Fade through every image in a folder and save the result as an animated GIF or A
 <details>
 <summary><b>Create Video from Path</b></summary>
 
-Turn a folder of images into a video, holding each image and cross-fading into the next. The codec decides how the file is compressed and what extension it gets: 'AVC1' and 'H264' are the same widely playable codec in an .mp4 and an .mkv, 'MP4V' is older and larger but always available, 'FFV1' is lossless so the file is very large, 'H265', 'HEVC' and 'AV01' make smaller files and take longer to encode, 'VP90' writes a .webm and 'PRORES' a .mov for editing.
+Turn a folder of images into a slideshow video, holding each image and cross-fading into the next, and hand on the path of the written file.
 
 | | |
 |---|---|
@@ -242,7 +242,7 @@ Turn a folder of images into a video, holding each image and cross-fading into t
 | `output_root` | `COMBO` | Yes |  |  | Which folder the file lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. output_folder names the part below it. |
 | `output_folder` | `STRING` | Yes |  |  | Folder below the output root the file is written to, created if it is not there. Tokens expand, so '[time(%Y-%m-%d)]' files each day's under a dated folder. |
 | `filename` | `STRING` | Yes | comfy_video |  | Name of the video, without an extension, the codec picks one, such as '.mp4' or '.mkv'. An existing file with the same name is overwritten, so put a token such as [time(%H-%M-%S)] in the name to keep every run. |
-| `codec` | `COMBO` | Yes |  |  | How the video is compressed, which also picks the file extension. A codec this machine cannot encode is reported before anything is written. |
+| `codec` | `COMBO` | Yes |  |  | `AVC1` = .mp4, plays anywhere; `H264` = the same in .mkv; `MP4V` = older, larger, always available; `FFV1` = lossless .mkv, very large; `H265`, `HEVC`, `AV01` = smaller, slower; `VP90` = .webm; `PRORES` = .mov for editing. One this machine lacks is refused. |
 
 **Outputs**
 
@@ -600,7 +600,7 @@ Crop a clip to another aspect, such as 9:16 for a phone, with the window followi
 <details>
 <summary><b>Video Retime</b></summary>
 
-Slow a clip down or speed it up, at one speed or along a speed curve, at the clip's own frame rate. New frames between the ones it has are drawn by EMA-VFI, mixed, or held, and never across a cut. The audio follows with its pitch kept. Follow with Video Motion Blur for the streaks a sped-up shot has.
+Slow a clip down or speed it up, at one speed or along a speed curve, keeping its frame rate and its audio's pitch. New frames are drawn, blended or held, never across a cut. Follow with Video Motion Blur for the streaks a sped-up shot has.
 
 | | |
 |---|---|
@@ -613,7 +613,7 @@ Slow a clip down or speed it up, at one speed or along a speed curve, at the cli
 |---|---|---|---|---|---|
 | `video` | `VIDEO` | Yes |  |  | The clip to retime, at least two frames. |
 | `speed` | `FLOAT` | Yes | 0.5 |  | 0.5 = half speed, twice as long; 1 = unchanged; 2 = double speed, half as long. |
-| `new_frames` | `COMBO` | Yes | interpolate | `interpolate`, `blend`, `hold`, `auto` | How a frame between two is made: 'interpolate' draws it with EMA-VFI, which needs ema_vfi_model; 'blend' mixes the two; 'hold' repeats the nearer one; 'auto' draws with EMA-VFI only where the motion accounts for the change, such as a body moving rather than a mouth changing shape. |
+| `new_frames` | `COMBO` | Yes | interpolate | `interpolate`, `blend`, `hold`, `auto` | 'hold' = repeats the nearer frame; 'blend' = mixes the two; 'interpolate' = draws it with EMA-VFI, needs ema_vfi_model; 'auto' = draws only where motion explains the change, such as a body moving rather than a mouth changing shape, and holds elsewhere. |
 | `audio` | `COMBO` | Yes | keep pitch | `keep pitch`, `drop` | 'keep pitch' stretches the audio along the new timing at its own pitch; 'drop' leaves it out. |
 | `ema_vfi_model` | `EMA_VFI_MODEL` | No |  |  | The interpolation network from EMA-VFI Video Model Loader, for 'interpolate'. Any speed but 0.5 needs an 'ours_t' checkpoint. |
 | `speed_curve` | `ARRAY` | No |  |  | Speed across the source clip for a ramp, such as the values of Curve to Numbers: [1, 0.25, 1] slows to a quarter mid-clip. Stretched over the clip; replaces speed. |
@@ -782,7 +782,7 @@ Stop an effect applied frame by frame from flickering: a style filter, a grade o
 <details>
 <summary><b>Video Temporal Upscale</b></summary>
 
-Upscale a clip with an upscale model without the added detail flickering, as what the model adds to each frame is carried along the clip's own motion. It can also change the frame rate, with EMA-VFI drawing new frames where they fall between two and the audio kept in sync. The clip is written to a file as it is made, so a long clip at 4x never has to fit in memory.
+Upscale a clip with an upscale model, holding the added detail steady along its motion so it does not flicker. It can also change the frame rate, keeping the audio in sync. The video is written as it is made, so a long clip at 4x never has to fit in memory.
 
 | | |
 |---|---|
@@ -796,7 +796,7 @@ Upscale a clip with an upscale model without the added detail flickering, as wha
 | `source` | `VIDEO,IMAGE` | Yes |  |  | The clip to upscale, as a VIDEO or IMAGE frames. A VIDEO gives the result its frame rate and audio; frames play at 24 fps with none. |
 | `upscale_model` | `UPSCALE_MODEL` | Yes |  |  | The upscale model, from Load Upscale Model. A 4x model can make a 2x result. |
 | `upscale_factor` | `FLOAT` | Yes | 4.0 |  | Final size against the source: 2.0 = double; 4.0 = four times. Sides are rounded to even numbers of pixels. |
-| `strength` | `FLOAT` | Yes | 0.8 |  | How much of each frame's detail comes from its neighbours: 0 = each frame upscaled on its own; 0.8 = default; 1.0 = holds the detail until a surface changes, or on a clip too large to hold at once, until the next block of frames. |
+| `strength` | `FLOAT` | Yes | 0.8 |  | Share of each frame's detail taken from its neighbours: 0 = each frame upscaled alone; 0.8 = default; 1.0 = detail held until a surface changes (or the next block of frames, on a clip too large to hold at once). |
 | `frame_rate` | `FLOAT` | Yes | 0.0 |  | Frames per second of the result: 0 = the source's; 30 = 30 fps. The length is kept, so the audio stays in sync. |
 | `tile_size` | `INT` | Yes | 512 |  | Tile edge in source pixels: 256 and 512 suit most cards. If the card runs out, the tile is halved and the frame retried. |
 | `overlap` | `INT` | Yes | 32 |  | How far neighbouring tiles overlap, in source pixels: 0 = hard joins; 32 to 64 hides them on most models. |
@@ -804,7 +804,7 @@ Upscale a clip with an upscale model without the added detail flickering, as wha
 | `motion_model` | `WAS_MOTION_MODEL` | No |  |  | A flow network from Video Motion Model Loader, which the motion is measured with. Left empty, the built-in texture flow measures it. |
 | `ema_vfi_model` | `EMA_VFI_MODEL` | No |  |  | The interpolation network from EMA-VFI Video Model Loader, which draws frames between two when frame_rate changes. Left empty, the nearer frame repeats. Any rate but double needs an 'ours_t' checkpoint. |
 | `precision` | `COMBO` | No | auto | `auto`, `32 bit float`, `16 bit float`, `bfloat16` | What the upscale model runs in: 'auto' = half precision where the model declares it safe; '32 bit float' = every model's safest. |
-| `new_frames` | `COMBO` | No | auto | `interpolate`, `blend`, `hold`, `auto` | How a frame between two source frames is made when frame_rate changes: 'auto' = EMA-VFI where the motion accounts for the change, the nearer frame where it does not, such as a mouth changing shape; 'interpolate' = EMA-VFI always; 'blend' = the two mixed; 'hold' = the nearer frame. |
+| `new_frames` | `COMBO` | No | auto | `interpolate`, `blend`, `hold`, `auto` | How new frames are made when frame_rate changes: 'hold' = the nearer frame; 'blend' = the two mixed; 'interpolate' = EMA-VFI always; 'auto' = EMA-VFI where motion explains the change, the nearer frame where it does not, such as a mouth changing shape. |
 
 **Outputs**
 
@@ -852,7 +852,7 @@ Append the images to an animated GIF that keeps growing across prompts, fading i
 <details>
 <summary><b>Write to Video</b></summary>
 
-Append the images to a video that keeps growing across prompts, fading in from the last frame already in the file. The codec decides how the file is compressed and what extension it gets: 'AVC1' and 'H264' are the same widely playable codec in an .mp4 and an .mkv, 'MP4V' is older and larger but always available, 'FFV1' is lossless so the file is very large, 'H265', 'HEVC' and 'AV01' make smaller files and take longer to encode, 'VP90' writes a .webm and 'PRORES' a .mov for editing.
+Append the images to a video that keeps growing across prompts, fading in from the last frame already in the file. The images pass through unchanged, with the path of the video.
 
 | | |
 |---|---|
@@ -869,7 +869,7 @@ Append the images to a video that keeps growing across prompts, fading in from t
 | `max_size` | `INT` | Yes | 512 |  | Longest edge, in pixels, each image is scaled to before it is encoded. 512 turns a 1024x768 image into 512x384. Frame size is fixed by the first image, so later images are fitted to it. |
 | `root` | `COMBO` | Yes |  |  | Which folder the file lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename names the part below it, so '[time(%Y-%m-%d)]/clip' files each day's under a dated folder. |
 | `filename` | `STRING` | Yes | comfy_writer |  | Name of the video, without an extension, the codec picks one, such as '.mp4' or '.mkv'. Every prompt using the same name appends to the same file, so change the name, or put a token such as [time(%Y-%m-%d)] in it, to start a new clip. |
-| `codec` | `COMBO` | Yes |  |  | How the video is compressed, which also picks the file extension. A codec this machine cannot encode is reported before anything is written. |
+| `codec` | `COMBO` | Yes |  |  | `AVC1` = .mp4, plays anywhere; `H264` = the same in .mkv; `MP4V` = older, larger, always available; `FFV1` = lossless .mkv, very large; `H265`, `HEVC`, `AV01` = smaller, slower; `VP90` = .webm; `PRORES` = .mov for editing. One this machine lacks is refused. |
 
 **Outputs**
 
@@ -887,7 +887,7 @@ Append the images to a video that keeps growing across prompts, fading in from t
 <details>
 <summary><b>Load Documents from ZIP</b></summary>
 
-Read the documents inside a zip archive. Every document comes out twice: as one LIST, and as a DOC list that runs everything downstream once per document, with the names alongside so each keeps the name it arrived under. A '/' in the pattern anchors it at the top of the archive, so 'drafts/*' reads that one folder and 'drafts/**/*' reads it and everything under it; case is ignored, and only .wasdoc entries are read. An archive that is missing, is a folder, is not a readable zip, or holds no document the pattern picks stops the prompt and says which. Whatever is not read is counted on 'skipped' and named in the log: not a .wasdoc, an unsafe name, a symbolic link, encrypted, repeated, too large, damaged, or not a document after all.
+Read the .wasdoc documents inside a zip archive, both as one LIST and as a DOC list that runs everything downstream once per document, each with the name it arrived under.
 
 | | |
 |---|---|
@@ -898,7 +898,7 @@ Read the documents inside a zip archive. Every document comes out twice: as one 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. |
-| `pattern` | `STRING` | Yes | * |  | Which entries inside the archive to read. '*' takes every document at any depth, and 'report_*' every document named that way in any folder. |
+| `pattern` | `STRING` | Yes | * |  | Which entries to read, case ignored: '*' = every document at any depth; 'report_*' = documents named so, in any folder; 'drafts/*' = that folder only; 'drafts/**/*' = it and everything under it. |
 | `zip` | `ZIP` | No |  |  | The archive to read, from Open ZIP. Connected, it is used and the menu is ignored, so the archive is opened and indexed once however many nodes read it. |
 
 **Outputs**
@@ -910,7 +910,7 @@ Read the documents inside a zip archive. Every document comes out twice: as one 
 | `doc` | `DOC` | The same documents as a DOC list, so the graph below runs once per document: wire it into View DOC Metadata, Convert DOC to Plaintext or Save DOC. |
 | `name` | `STRING` | The file name that goes with each run of the 'doc' output, so a converted or exported copy can carry the name it came in under. Wire it into Save DOC's filename_prefix beside the matching document. |
 | `count` | `INT` | How many documents were read, which is the length of both lists. |
-| `skipped` | `INT` | How many entries the archive holds that were not read: one that is not a .wasdoc, one unsafe to unpack, one damaged. The log names every one. |
+| `skipped` | `INT` | How many entries were not read: not a .wasdoc, an unsafe name, a symbolic link, encrypted, repeated, too large, damaged or not a document. The log names every one. |
 
 </details>
 
@@ -932,7 +932,7 @@ Read the images inside a zip archive as one batch. A batch is a single tensor, s
 | `pattern` | `STRING` | Yes | * |  | Which entries to read; STRING. No '/' matches the file name at any depth; a '/' anchors at the archive root. Case is ignored, and non-images are always skipped. Eg: *, *.png, frames/**/*.png |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How mixed sizes reach width by height, since one batch holds one size. `fit and pad`: whole image, pad_color bars. `fill and crop`: fills the frame, ends cut. `stretch`: distorts. `crop or pad`: no resampling, original pixels kept. |
 | `width` | `INT` | Yes | 512 |  | How wide every image in the batch comes out, in pixels. Every mode delivers exactly this width, so the batch is this wide whatever the archive held. A multiple of 8 suits a sampler; 512 or 1024 matches most models. |
-| `height` | `INT` | Yes | 512 |  | How tall every image in the batch comes out, in pixels. Together with width this is also what decides how many images fit in one batch: the node loads as many as 32 megapixels holds, which is 128 at 512 by 512 and 32 at 1024 by 1024, and says in the log when there are more. |
+| `height` | `INT` | Yes | 512 |  | How tall every image comes out, in pixels. With width it sets how many fit in one batch, 32 megapixels' worth: 128 at 512 by 512, 32 at 1024 by 1024. The log says when there are more. |
 | `interpolation` | `COMBO` | Yes | lanczos | `lanczos`, `nearest`, `bilinear`, `bicubic` | Scaling filter. `lanczos` is sharpest and slowest; `bicubic` and `bilinear` are softer and quicker; `nearest` invents no colour, for pixel art and label maps. Ignored in `crop or pad`. |
 | `align` | `COMBO` | Yes | middle center | `top left`, `top center`, `top right`, `middle left`, `middle center`, `middle right`, `bottom left`, `bottom center`, `bottom right` | Which part survives a crop, and which side takes the wider pad bar. `top center` suits portraits, where a centred crop takes the forehead off. Ignored in `stretch`. |
 | `pad_color` | `STRING` | Yes | #000000 |  | Fill for space the image does not cover; STRING. Any Pillow colour: `#RRGGBB`, a name, or `#RRGGBBAA`. Empty is transparent, which only shows while channels is RGBA. Eg: white |
@@ -946,7 +946,7 @@ Read the images inside a zip archive as one batch. A batch is a single tensor, s
 | Name | Type | What it is |
 |---|---|---|
 | `images` | `IMAGE` | Every image that was read, as one batch, all at width by height and all with the same channel count. In the order the names sort, so two runs of the same archive produce the same batch. |
-| `names` | `ARRAY` | The name each image came from, on one wire and in batch order, such as 'frames/cat.png'. The folders inside the archive are kept, so two files called cat.png in different folders stay apart. Read one out with Text List Get, using the same index as the image. |
+| `names` | `ARRAY` | The name each image came from, in batch order, such as 'frames/cat.png'. Folders inside the archive are kept, so two cat.png files in different folders stay apart. Read one with Text List Get at the image's index. |
 | `count` | `INT` | How many images are in the batch, which is the length of the names list. Never 0: an archive that yields no image stops the prompt instead, because an image batch cannot be empty. |
 | `skipped` | `INT` | How many entries did not reach the batch: not an image, an unsafe name, a symlink, encrypted, a repeated name, damaged, or holding something other than its extension says. The log names each one. Images left out by start or limit are not counted. |
 
@@ -956,7 +956,7 @@ Read the images inside a zip archive as one batch. A batch is a single tensor, s
 <details>
 <summary><b>Load Text Files from ZIP</b></summary>
 
-Read the text files inside a zip archive. Every file comes out twice: as one LIST, and as a STRING list that runs everything downstream once per file, with the names alongside so a caption keeps the name it arrived under. A '/' in the pattern anchors it at the top of the archive, so 'captions/*.txt' reads that one folder and 'captions/**/*.txt' reads it and everything under it; case is ignored. An archive that is missing, is a folder, is not a readable zip, or holds nothing the pattern picks stops the prompt and says which. Whatever is not read is counted on 'skipped' and named in the log: wrong kind, an unsafe name, a symbolic link, encrypted, repeated, too large, damaged, or not UTF-8 text. Files left by the unpack total are not counted there, nothing being wrong with them.
+Read the text files inside a zip archive, both as one LIST and as a STRING list that runs everything downstream once per file, each with the name it arrived under. Useful for rendering a folder of captions or prompts.
 
 | | |
 |---|---|
@@ -967,7 +967,7 @@ Read the text files inside a zip archive. Every file comes out twice: as one LIS
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. |
-| `pattern` | `STRING` | Yes | * |  | Which entries inside the archive to read. '*' takes every text file at any depth, '*.txt' every .txt in any folder, and 'cat_*.txt' only those named that way. |
+| `pattern` | `STRING` | Yes | * |  | Which entries to read, case ignored: '*' = every text file at any depth; '*.txt' = every .txt in any folder; 'captions/*.txt' = that folder only; 'captions/**/*.txt' = it and everything under it. |
 | `zip` | `ZIP` | No |  |  | The archive to read, from Open ZIP. Connected, it is used and the menu is ignored, so the archive is opened and indexed once however many nodes read it. |
 
 **Outputs**
@@ -979,7 +979,7 @@ Read the text files inside a zip archive. Every file comes out twice: as one LIS
 | `text` | `STRING` | The same texts as a STRING list, so the graph below runs once per file: wire it into a sampler's prompt to render every caption in the archive. |
 | `name` | `STRING` | The file name that goes with each run of the 'text' output, so a saved image can carry the name of the caption that made it. Wire it into Image Save's filename_prefix beside the matching text. |
 | `count` | `INT` | How many files were read, which is the length of both lists. |
-| `skipped` | `INT` | How many entries the archive holds that were not read: a kind this node does not read, one unsafe to unpack, one damaged. The log names every one. |
+| `skipped` | `INT` | How many entries were not read: wrong kind, an unsafe name, a symbolic link, encrypted, repeated, too large, damaged or not UTF-8 text. Files past the unpack total are not counted. The log names every one. |
 
 </details>
 
@@ -987,7 +987,7 @@ Read the text files inside a zip archive. Every file comes out twice: as one LIS
 <details>
 <summary><b>Open ZIP</b></summary>
 
-Open a zip archive and report what is in it: a line per file with its kind and size, on the node and on the listing output. Nothing is unpacked, so a large archive costs what a small one costs. The zip output feeds ZIP Add, ZIP Manage, Zip Extract and the Load ... from ZIP nodes. The file menu reaches every subfolder and picks up a dropped file within about five seconds. The temp folder is emptied on restart, so a '[temp]' entry will not be there next session. Unsafe entries are named and skipped, the rest still read: one landing outside its folder, a symbolic link, a name holding a null byte, or one claiming to unpack past a quarter of a gigabyte. A file that is not a zip, or is damaged, stops the run saying which.
+Open a zip archive and list what is in it, a line per file with its kind and size, on the node and on the listing output. Nothing is unpacked. The zip output feeds ZIP Add, ZIP Manage, Zip Extract and the Load ... from ZIP nodes.
 
 | | |
 |---|---|
@@ -998,18 +998,18 @@ Open a zip archive and report what is in it: a line per file with its kind and s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which archive to open. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. |
+| `file` | `COMBO` | Yes |  |  | Which archive to open: every .zip in ComfyUI's input, output and temp folders, subfolders included, and in any folder under paths.allow_read. A '[temp]' entry is gone after a restart. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `zip` | `ZIP` | The opened archive: its entry list, each entry's size and where the file sits, for a node that reads files out of one. |
-| `names` | `ARRAY` | Every readable entry name on one wire, folders inside the archive included, for Text List Slice, Text List Get, Text List Length and Text List to Strings. Empty for an archive holding nothing readable, which is a list the list nodes handle. Refused entries are absent. |
+| `names` | `ARRAY` | Every readable entry name on one wire, folders inside the archive included, for Text List Get, Slice and Length. Empty for an archive holding nothing readable. Refused entries are absent. |
 | `entry_names` | `STRING` | The same names, one per run, so the nodes after this one run once for each entry in the archive. An archive holding nothing readable stops the nodes reading this output with a message, and leaves the other four outputs working. |
 | `entry_count` | `INT` | How many readable files the archive holds. Folder entries are not counted, and two entries under one name count once, which is how many files a reader can get out. |
-| `listing` | `STRING` | The report shown on the node, as text: what the archive holds, a line per file with its kind and size, and a line per refused entry saying why it was refused. Wire it into Text to Console or Save Text File to keep a record of what an archive held. |
-| `zip_path` | `STRING` | The full path of the archive that was opened, which is what the Load Images from ZIP, Load Text Files from ZIP and Load Documents from ZIP nodes take. Wire this into their zip_path input to pick an archive from the menu here and read it there. |
+| `listing` | `STRING` | The report shown on the node, as text: a line per file with its kind and size, and a line per refused entry saying why. Wire it into Save Text File to keep a record. |
+| `zip_path` | `STRING` | The full path of the archive that was opened, as text. The Load ... from ZIP nodes take the zip output instead. |
 
 </details>
 
@@ -1078,7 +1078,7 @@ Add a picture, mask, string or DOC to an archive held on a wire. A picture or ma
 <details>
 <summary><b>Zip Extract</b></summary>
 
-Unpack the files an archive holds into a folder, picking them with a glob. Wire Zip Open's archive output into this node: everything Zip Open refuses is refused here too, so nothing lands outside the folder chosen. Every written file comes out as a path, on one wire and one per run, so the graph below can load, caption or resave each one. Files of any kind are written, not only the ones this pack can load, which is what makes it the way to get a model, a JSON sidecar or a config out of a dataset zip. A clash with a file already in the folder is settled by 'existing', and two entries that reach the same name inside one run are always numbered apart so neither is lost.
+Unpack files of any kind from an archive opened by Zip Open into a folder, picked by a glob. Every written file's path comes out as one list and one per run, so the graph below can load, caption or resave each one.
 
 | | |
 |---|---|
@@ -1094,7 +1094,7 @@ Unpack the files an archive holds into a folder, picking them with a glob. Wire 
 | `root` | `COMBO` | Yes |  |  | Which folder the entries are written into: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. folder names the part below it. |
 | `folder` | `STRING` | Yes | extracted |  | Folder below the root the files land in, created if it is not there. Tokens expand, so 'extracted/[time(%Y-%m-%d)]' files each day's unpacking under its own dated folder. Empty writes into the root itself. |
 | `entry_paths` | `COMBO` | Yes | keep folders | `keep folders`, `file name only` | What the files are called on disk. `keep folders` rebuilds the folders inside the archive, so 'frames/cat.png' becomes a 'frames' folder; `file name only` drops them and writes 'cat.png' straight into the chosen folder. |
-| `existing` | `COMBO` | Yes | overwrite | `overwrite`, `skip`, `number apart` | What happens where the folder already holds that name. `overwrite` replaces it, `skip` leaves it alone and names it in the report, and `number apart` writes 'cat_2.png' beside it. |
+| `existing` | `COMBO` | Yes | overwrite | `overwrite`, `skip`, `number apart` | Where the folder already holds that name: `overwrite` = replaces it; `skip` = leaves it, named in the report; `number apart` = writes 'cat_2.png' beside it. Two entries reaching one name in a run are always numbered apart. |
 
 **Outputs**
 
@@ -1102,7 +1102,7 @@ Unpack the files an archive holds into a folder, picking them with a glob. Wire 
 |---|---|---|
 | `paths` | `ARRAY` | Every written file's full path on one wire, in name order, for Text List Get, Text List Slice and Text List Length. Entry 3 here is the path of name 3 in the 'names' output. |
 | `names` | `ARRAY` | The archive name each file came from, on one wire and in the same order, folders inside the archive included, so a file numbered apart on disk can still be traced to the entry it held. |
-| `file_path` | `STRING` | The same paths one per run, so the nodes below run once for each file written: wire it into Load Image Batch, Load Text File or Path Exists. A run that wrote nothing stops the nodes reading this output with a message, and leaves the other four working. |
+| `file_path` | `STRING` | The same paths one per run, so the nodes below run once per file: wire it into Load Image Batch, Load Text File or Path Exists. A run that wrote nothing stops only the nodes reading this output. |
 | `file_count` | `INT` | How many files were written. Lower than the number the pattern picked where an entry was passed over, which the report names. |
 | `folder` | `STRING` | The full path of the folder the files were written into, tokens expanded and created if it was not there. Wire it into Directory Listing to read the folder back, or into Text to Console to record where a run put its files. |
 | `report` | `STRING` | The report shown on the node, as text: where the files went, a line per file with its size, and a line per entry that was passed over. Wire it into Save Text File to keep a record of what an archive gave up. |
@@ -1124,8 +1124,8 @@ Choose which of an archive's entries carry on, and answer a new archive holding 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `zip` | `ZIP` | Yes |  |  | The archive to filter, from Open ZIP, ZIP Add or another ZIP Manage. |
-| `entries` | `STRING` | Yes |  |  | Entry names, one per line, spelled as the archive carries them, folders included. Read only when selection is 'the entries box'. With action 'keep the chosen' these are the entries kept; with 'remove the chosen' they are the ones dropped. A '#' line is a comment. Eg: chapters/one.html |
-| `selection` | `COMBO` | Yes | pick on the node | `pick on the node`, `the entries box` | 'pick on the node' holds the run and lists what the archive holds so the entries can be ticked, and the ticked ones are the ones kept. With no browser connected it reads the entries box instead, so a headless run never waits. 'the entries box' always reads the names typed below and never holds the run. |
+| `entries` | `STRING` | Yes |  |  | Entry names, one per line, folders included, read only when selection is 'the entries box'. 'keep the chosen' keeps these; 'remove the chosen' drops them. A '#' line is a comment. Eg: chapters/one.html |
+| `selection` | `COMBO` | Yes | pick on the node | `pick on the node`, `the entries box` | 'the entries box' = reads the names typed in entries, never holds the run; 'pick on the node' = holds the run and keeps the entries ticked on the node, or reads the entries box when no browser is connected. |
 | `action` | `COMBO` | Yes |  | `keep the chosen`, `remove the chosen` | 'keep the chosen' answers an archive of the named entries alone. 'remove the chosen' answers everything except them. |
 | `hold_timeout` | `INT` | Yes | 600 |  | Seconds to hold the run while waiting for the ticks, so 600 gives ten minutes and 0 waits with no limit. A hold that runs out keeps every entry and says so. |
 | `compression` | `COMBO` | Yes |  |  | 'deflate' shrinks entries that compress; 'store' writes them as they are, which suits pictures that are compressed already. |
@@ -1144,7 +1144,7 @@ Choose which of an archive's entries carry on, and answer a new archive holding 
 <details>
 <summary><b>Zip Save</b></summary>
 
-Put files from ComfyUI's input, output and temp folders into one zip archive. Pick them in the browser on the node, or type them into 'files' one per line: a menu label such as 'renders/cat.png [output]', whose bracketed tag says which folder it came from so two files of one name stay apart, or a full path the pack may read. Line order is archive order, blank lines are ignored, a '#' line is a comment, and a file named twice goes in once. 'paths' takes the same from a link, after the typed lines. 'file name only' numbers a clash apart as 'cat_2.png'; 'source folder and relative path' gives 'output/batch/cat.png'. Archives are numbered unless filename_number_padding is 0. A file deleted since it was chosen is reported and skipped, and with nothing left the node says so rather than writing an empty archive.
+Put files from ComfyUI's input, output and temp folders into one zip archive, picked in the browser on the node or typed one per line, and hand on the path of the archive written.
 
 | | |
 |---|---|
@@ -1155,15 +1155,15 @@ Put files from ComfyUI's input, output and temp folders into one zip archive. Pi
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `files` | `STRING` | Yes |  |  | The files going into the archive, one per line, in that order. A line is a menu label such as 'renders/cat.png [output]', or a full path to a file. |
-| `entry_paths` | `COMBO` | Yes | relative path | `relative path`, `source folder and relative path`, `file name only` | What each file is called inside the archive: its path below input, output or temp, that path with the source folder in front, or the file name alone. |
+| `files` | `STRING` | Yes |  |  | The files going into the archive, one per line, in archive order: a menu label such as 'renders/cat.png [output]', or a full path. Blank lines are ignored, '#' lines are comments, and a file named twice goes in once. |
+| `entry_paths` | `COMBO` | Yes | relative path | `relative path`, `source folder and relative path`, `file name only` | Names inside the archive: `relative path` = its path below input, output or temp; `source folder and relative path` = 'output/batch/cat.png'; `file name only` = 'cat.png', a clash numbered 'cat_2.png'. |
 | `compression` | `COMBO` | Yes | deflate |  | How the files are packed. 'deflate' makes text, JSON and documents much smaller; 'store' packs them unchanged, which is faster and suits PNGs and JPEGs, compressed already. |
 | `root` | `COMBO` | Yes |  |  | Which folder the file lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename_prefix names the part below it, so '[time(%Y-%m-%d)]/notes' files each day's under a dated folder. |
 | `filename_prefix` | `STRING` | Yes | ComfyUI |  | The name part of the archive, before the number. Tokens are expanded here too, so a date or a custom token can go in the name rather than the folder. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_0001.zip' with the default, 'ComfyUI0001.zip' if cleared. |
 | `filename_number_padding` | `INT` | Yes | 4 |  | How many digits the number is padded to with leading zeros: 4 gives '_0001', 1 gives '_1'. 0 drops the number and rewrites the same file every run. |
 | `filename_suffix` | `STRING` | No |  |  | Extra text placed after the number and before the extension, so a suffix of '_renders' gives 'ComfyUI_0001_renders.zip'. Empty by default. |
-| `paths` | `ARRAY,STRING` | No |  |  | More files to archive, from a link rather than the box above: this socket takes a connection. A string holding several lines is read as several files. |
+| `paths` | `ARRAY,STRING` | No |  |  | More files to archive, from a link, added after the typed lines. A string holding several lines is read as several files. |
 
 **Outputs**
 
@@ -1194,7 +1194,7 @@ Encode a prompt with CLIP after substituting Noodle Soup Prompts terminology or 
 | `mode` | `COMBO` | Yes |  | `Noodle Soup Prompts`, `Wildcards` | Which substitution to run first. `Noodle Soup Prompts` swaps each __term__ for a phrase from the pack's built-in pantry of terminology; `Wildcards` swaps it for a random line from the matching file in the pack's wildcards directory, so __colors__ reads a line from colors.txt. |
 | `noodle_key` | `STRING` | Yes | __ |  | The marker that wraps a term to be substituted. With the default '__', the prompt writes __subject__; changing it to '$$' would make that $$subject$$ instead. |
 | `seed` | `INT` | Yes | 0 |  | Seed for the random choices, so the same seed always picks the same phrases and lines. 0 is the exception: it leaves the __term__ draw unseeded, so those come out different on every run while the <a\|b\|c> groups stay fixed. |
-| `text` | `STRING` | Yes |  |  | The prompt, written with any of three markups: __term__ for a pantry phrase or a wildcard line, <a\|b\|c> to pick one of the alternatives at random, and $\|a stormy sky\|$ to capture a phrase as $1, $2 and so on so it can be repeated by number. |
+| `text` | `STRING` | Yes |  |  | The prompt, with three markups: __term__ = a pantry phrase or wildcard line; <a\|b\|c> = one alternative at random; $\|a stormy sky\|$ = a phrase captured as $1, $2 and so on, to repeat by number. |
 | `clip` | `CLIP` | Yes |  |  | The text encoder that turns the finished prompt into conditioning, normally the CLIP output of a checkpoint loader. |
 
 **Outputs**
@@ -1331,7 +1331,7 @@ Put a document's markup on a string socket, as the fragment the document stores 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `doc` | `DOC` | Yes |  |  | The document to read, from any node with a DOC output. Nothing is opened from disk and the document is not changed. |
-| `wrap` | `COMBO` | Yes | content only | `content only`, `whole page` | 'content only' answers the markup the document stores, which is what Rich Text Editor takes. 'whole page' wraps it in a file with a doctype and a head carrying the title, the author and the rest of the metadata. Markup that already opens a page is answered as it stands either way. |
+| `wrap` | `COMBO` | Yes | content only | `content only`, `whole page` | 'content only' = the markup the document stores, as Rich Text Editor takes it; 'whole page' = wrapped in a file with a doctype and a head carrying the metadata. Markup that already opens a page is left as it stands. |
 
 **Outputs**
 
@@ -1345,7 +1345,7 @@ Put a document's markup on a string socket, as the fragment the document stores 
 <details>
 <summary><b>Convert DOC to Plaintext</b></summary>
 
-Turn a document into plain text, keeping the shape a reader needs: a blank line between paragraphs, headings underlined, list items marked and indented, tables in columns that line up, quotations prefixed '> ' and preformatted blocks as written. Markup, styling and comments are gone, and an entity such as &amp; arrives as the character it stands for. Wrapping counts the indent inside line_width, so a list item wraps to its own column, and a long word is never broken, so a line holding one web address stays over it; tables and preformatted blocks are never wrapped. In a table a row is one line, so a break inside a cell becomes a space and a cell spanning two columns leaves the second empty. A picture with no description of its own stands in as '[image]'.
+Turn a document into plain text that keeps its shape: paragraphs, underlined headings, indented lists, aligned tables and quotations, with markup and styling removed. Hands on a string for a prompt or a text file.
 
 | | |
 |---|---|
@@ -1356,10 +1356,10 @@ Turn a document into plain text, keeping the shape a reader needs: a blank line 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `doc` | `DOC` | Yes |  |  | The document to convert, from any node with a DOC output. Only its content is read: the title, the author and the rest of the metadata are not part of the text, and neither is an embedded picture, since a picture cannot be drawn in text. Nothing is opened from disk. |
-| `line_width` | `INT` | Yes | 0 |  | How many characters a line may hold before it wraps. 0 leaves each paragraph on one long line, for a prompt; 72 or 80 suits a text file read on its own. |
+| `doc` | `DOC` | Yes |  |  | The document to convert, from any node with a DOC output. Only its content is read: the metadata and embedded pictures are not part of the text. |
+| `line_width` | `INT` | Yes | 0 |  | Characters per line before wrapping: 0 = each paragraph on one line, for a prompt; 72 or 80 = a text file read on its own. Long words, tables and preformatted blocks never wrap. |
 | `links` | `COMBO` | Yes |  | `text and url`, `text only`, `footnotes` | What happens to the address behind a link. 'text and url' writes it in brackets, 'Site (https://example.org)'; 'text only' drops it; 'footnotes' numbers it, 'Site[1]', and lists them at the end. |
-| `images` | `COMBO` | Yes |  | `alt text`, `alt text and source`, `skip` | What stands in for a picture. 'alt text' writes its description in square brackets, '[A grey cat]'; 'alt text and source' adds the file it comes from; 'skip' leaves nothing at all. |
+| `images` | `COMBO` | Yes |  | `alt text`, `alt text and source`, `skip` | What stands in for a picture. 'alt text' writes its description in square brackets, '[A grey cat]', or '[image]' where it has none; 'alt text and source' adds the file it comes from; 'skip' leaves nothing. |
 | `tables` | `COMBO` | Yes |  | `aligned columns`, `tab separated` | How a table is written. 'aligned columns' pads cells with spaces so the columns line up under a rule below the header row; 'tab separated' pads nothing, for pasting into a spreadsheet. |
 
 **Outputs**
@@ -1374,7 +1374,7 @@ Turn a document into plain text, keeping the shape a reader needs: a blank line 
 <details>
 <summary><b>Load Document</b></summary>
 
-Open one document from disk and put it on a DOC wire, with its markup, its metadata and every file embedded in it. The file menu lists every document in ComfyUI's input, output and temp folders and any folder added under paths.allow_read, subfolders included. A .wasdoc is the container Save DOC writes and arrives exactly as the file holds it. A .docx and an .odt open too, converted rather than copied: the writing, tables, links and pictures come across, page geometry, headers, footnotes, comments and tracked changes do not. Those two read through python-docx and odfdo, named in the error when either is missing, and features.document_export can refuse them. A .pdf is never read. The document is read again whenever the file changes.
+Open one document from disk and put it on a DOC wire, with its markup, metadata and embedded files. A .wasdoc arrives exactly as saved; a .docx or .odt is converted, keeping the writing, tables, links and pictures but not page layout, headers, footnotes or comments.
 
 | | |
 |---|---|
@@ -1384,13 +1384,13 @@ Open one document from disk and put it on a DOC wire, with its markup, its metad
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which document to open. The menu lists every .wasdoc, .docx and .odt in ComfyUI's input, output and temp folders, tagged '[input]', '[output]' or '[temp]'. A folder added under paths.allow_read in config.yaml appears under its own name. |
+| `file` | `COMBO` | Yes |  |  | Which document to open: every .wasdoc, .docx and .odt in ComfyUI's input, output and temp folders, subfolders included, tagged '[input]', '[output]' or '[temp]'. A folder added under paths.allow_read appears under its own name. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `DOC` | The whole document on one wire: its markup, its metadata and its embedded files. A .wasdoc arrives exactly as the file holds it; a .docx or .odt arrives converted, its writing and pictures kept and its page layout dropped. Wire it into View DOC Metadata, Convert DOC to Plaintext, or Save DOC. |
+| `<output0>` | `DOC` | The whole document on one wire: its markup, metadata and embedded files, for View DOC Metadata, Convert DOC to Plaintext or Save DOC. |
 
 </details>
 
@@ -1398,7 +1398,7 @@ Open one document from disk and put it on a DOC wire, with its markup, its metad
 <details>
 <summary><b>Save DOC</b></summary>
 
-Write a document to a file. `doc` takes a DOC or plain text from any string output. file_format decides what lands on disk: '.wasdoc' is the container itself, the only format keeping the metadata and embedded files; '.html' writes a whole page with the metadata in its head; '.txt' and friends write the text alone with tags removed; '.docx', '.odt' and '.pdf' lay the document out, a conversion rather than a copy, so some styling does not survive. Those three each need a library, named in the error, and features.document_export can refuse them. Files are numbered unless filename_number_padding is 0, and the path has to be one the pack may write to.
+Write a document, or plain text from any string output, to a file: a .wasdoc that keeps everything, an HTML page, plain text, or a laid-out .docx, .odt or .pdf.
 
 | | |
 |---|---|
@@ -1410,7 +1410,7 @@ Write a document to a file. `doc` takes a DOC or plain text from any string outp
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `doc` | `DOC,STRING` | Yes |  |  | What to write. A DOC carries its markup, its metadata and every embedded file; a string is written through unchanged, which suits generated code. This socket takes a connection. |
-| `file_format` | `COMBO` | Yes | .wasdoc | `.wasdoc`, `.html`, `.txt`, `.md`, `.css`, `.js`, `.py`, `.json`, `.docx`, `.odt`, `.pdf` | What the file holds, and the extension it gets. '.wasdoc' loses nothing, the plain formats write the text alone, and '.docx', '.odt' and '.pdf' are laid out from the markup. |
+| `file_format` | `COMBO` | Yes | .wasdoc | `.wasdoc`, `.html`, `.txt`, `.md`, `.css`, `.js`, `.py`, `.json`, `.docx`, `.odt`, `.pdf` | '.wasdoc' = loses nothing, the only format keeping metadata and embedded files; '.html' = a whole page, metadata in its head; plain formats = the text alone, tags removed; '.docx', '.odt', '.pdf' = laid out, some styling lost. |
 | `root` | `COMBO` | Yes |  |  | Which folder the file lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename_prefix names the part below it, so '[time(%Y-%m-%d)]/notes' files each day's under a dated folder. |
 | `filename_prefix` | `STRING` | Yes | ComfyUI |  | The name part of each file, before the number. Tokens are expanded here too, so a date or a custom token can go in the name rather than the folder. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_0001.wasdoc' with the default, 'ComfyUI0001.wasdoc' if cleared. |
@@ -1432,7 +1432,7 @@ Write a document to a file. `doc` takes a DOC or plain text from any string outp
 <details>
 <summary><b>Text to DOC</b></summary>
 
-Turn a string into a document carrying the title, description, copyright and the rest of the metadata a document holds. text_format reads the string as plain text, which wraps it into paragraphs, or as HTML, which is used as the document's own markup. Runs of spaces and indentation collapse either way. The language tag decides which dictionary an export is spell checked against and how words are hyphenated. An empty text gives a document carrying its metadata and no content.
+Turn a string of plain text or HTML into a document carrying a title, description, author, copyright, language and keywords, ready for Save DOC or any other document node.
 
 | | |
 |---|---|
@@ -1442,21 +1442,21 @@ Turn a string into a document carrying the title, description, copyright and the
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `text` | `STRING` | Yes |  |  | What the document says. On text_format 'plain text' a blank line starts a new paragraph; on 'html' it is used as the document's markup exactly as written. |
+| `text` | `STRING` | Yes |  |  | What the document says. On text_format 'plain text' a blank line starts a new paragraph; on 'html' it is the document's markup. Runs of spaces and indentation collapse either way. |
 | `text_format` | `COMBO` | Yes | plain text | `plain text`, `html` | How the text is read. 'plain text' is for prose and shows any tag as written; 'html' is for markup, keeping headings, lists, tables, links and images. |
-| `title` | `STRING` | No |  |  | What the document is called, such as 'Shot list, scene 4'. It is carried inside the document and is the title a document viewer, a file manager column and an exported file all show. Left empty, the document carries no title and whatever opens it falls back to the file name. |
+| `title` | `STRING` | No |  |  | What the document is called, such as 'Shot list, scene 4', shown by a document viewer, a file manager and an exported file. Empty = no title, and viewers fall back to the file name. |
 | `description` | `STRING` | No |  |  | A sentence or two saying what the document is, for the reader who finds it in six months. It is the field a document properties panel and a search result show under the title. Left empty, the document describes itself only by its title. |
 | `author` | `STRING` | No |  |  | Who wrote the document, as a name rather than an account: 'A. Name' or 'Studio Name'. It travels inside the document, so a copy passed on still says who made it. Left empty, the document names nobody. |
-| `copyright` | `STRING` | No |  |  | The rights statement to carry with the document, such as '(c) 2026 A. Name, CC BY 4.0'. Free text rather than a licence code, so a full sentence and a licence name are both fine. Worth filling in before a document leaves the machine, because this is the part that travels with it. |
-| `language` | `STRING` | No |  |  | The language the text is written in, as a tag: 'en', 'en-GB', 'ja', 'pt-BR'. Empty by default, so the document claims no language. |
-| `keywords` | `STRING` | No |  |  | Search terms for the document, separated by commas, such as 'concept art, dragon, shot 12'. Spaces around a comma are trimmed and an empty entry is dropped. This is the one metadata field a desktop search engine reads, so it is what makes a document findable again months later. |
+| `copyright` | `STRING` | No |  |  | The rights statement carried with the document, as free text, such as '(c) 2026 A. Name, CC BY 4.0'. A full sentence and a licence name are both fine. |
+| `language` | `STRING` | No |  |  | The language the text is written in, as a tag: 'en', 'en-GB', 'ja', 'pt-BR'. Sets an export's spell-check dictionary and hyphenation. Empty = no language claimed. |
+| `keywords` | `STRING` | No |  |  | Search terms, separated by commas, such as 'concept art, dragon, shot 12'. Spaces around a comma are trimmed and empty entries dropped. Desktop search engines read this field. |
 | `custom_metadata` | `DICT` | No |  |  | Further pairs of your own to carry in the document, from Text Dictionary New or any other node with a DICT output. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `DOC` | The whole document on one wire: its markup, the metadata filled in here, and the word and character counts taken from the text. Nothing has been written to disk, so this wire is what every document node reads, starting with View DOC Metadata for a look at what the document ended up carrying. |
+| `<output0>` | `DOC` | The whole document on one wire: its markup, the metadata filled in here, and word and character counts. Nothing is written to disk; wire it into View DOC Metadata or Save DOC. |
 
 </details>
 
@@ -1464,7 +1464,7 @@ Turn a string into a document carrying the title, description, copyright and the
 <details>
 <summary><b>View DOC Metadata</b></summary>
 
-Read what a document says about itself and put every field on its own socket: the title, description, author, copyright statement, language and keywords, when it was created and last changed, what wrote it, the author's own custom pairs, the word and character counts, and the files embedded in it. The whole reading is shown on the node as well, and emitted as one block of text. A field the document does not carry comes out empty rather than invented, so an older document with no language tag reports an empty language and not a guessed one. The two counts are worked out from the document's content every run, so a document whose stored counts are out of date is reported as its content actually reads.
+Read a document's metadata onto one socket per field: title, description, author, copyright, language, keywords, timestamps, custom pairs, word and character counts and embedded files. The reading is also shown on the node and handed on as one block of text. A field the document does not carry comes out empty.
 
 | | |
 |---|---|
@@ -1475,29 +1475,29 @@ Read what a document says about itself and put every field on its own socket: th
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `doc` | `DOC` | Yes |  |  | The document to read, from any node with a DOC output. Nothing is opened from disk here: what is reported is what the document on this wire carries, so a document loaded from a file reports what that file holds and one just built reports what has been set on it so far. |
+| `doc` | `DOC` | Yes |  |  | The document to read, from any node with a DOC output. What is reported is what this wire carries; nothing is opened from disk. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `title` | `STRING` | What the document is called. Empty when it has none, which is how a document made from plain text starts out. This is the title an exported file carries and the one a file manager shows in its title column. |
-| `description` | `STRING` | The sentence or two saying what the document is. Empty when nothing was written. Every document format a DOC can be exported to has this field, so it is worth filling in before a save. |
+| `description` | `STRING` | The sentence or two saying what the document is. Empty when nothing was written. Every format a DOC exports to carries it. |
 | `author` | `STRING` | Who wrote the document, as free text. Empty when the document names nobody. |
-| `copyright` | `STRING` | The rights statement, such as '(c) 2026 A. Name, CC BY 4.0'. Free text rather than a licence code, because a document may carry either. Empty when the document makes no claim, which is worth checking before publishing what a workflow produced. |
-| `language` | `STRING` | The language tag the document is written in, such as 'en' or 'pt-BR'. It decides hyphenation and spell checking in an exported file and the voice a screen reader picks. Empty when the document carries no tag, which is the case for every document written before the field was filled in. |
+| `copyright` | `STRING` | The rights statement as free text, such as '(c) 2026 A. Name, CC BY 4.0'. Empty when the document makes no claim. |
+| `language` | `STRING` | The language tag the document is written in, such as 'en' or 'pt-BR', which sets hyphenation and spell checking in an exported file. Empty when the document carries no tag. |
 | `keywords` | `STRING` | The keywords joined with commas, which is how the document formats and desktop search engines spell the field. Empty when the document has none. Use the keywords_list output instead to reach one keyword at a time. |
 | `keywords_list` | `ARRAY` | The same keywords as a list, in the order they were given, for Text List Get, Text List Length and Text List Slice. A document with no keywords gives an empty list, which those nodes report as a length of zero rather than failing. |
 | `created` | `STRING` | When the document was first made, as UTC in the form '2026-01-02T03:04:05Z', which sorts correctly as text. Empty when the document carries no stamp: the time it was read is never reported as the time it was written. |
-| `modified` | `STRING` | When the document's content last changed, in the same form as created. Editing a document's text or its embedded files stamps this; changing only its metadata does not, because this field reports on the content. Empty when the document carries no stamp. |
+| `modified` | `STRING` | When the document's content last changed, in the same form as created. Editing its text or embedded files stamps this; changing only its metadata does not. Empty when the document carries no stamp. |
 | `generator` | `STRING` | What produced the document, 'WAS Node Suite' for one this pack wrote. Empty for a container built by hand or by another tool that did not fill the field in. |
-| `custom` | `DICT` | The author's own pairs of text, in the order the document holds them, for Text Dictionary Get, Text Dictionary Keys and Dictionary to Console. This is where anything the standard fields have no room for is carried, and all three export formats keep such pairs. An empty dictionary when the document has none. |
-| `word_count` | `INT` | How many words the document's text holds, with the markup stripped first, so bold text inside a word does not split it. Counted from the content on this run rather than read from the document, so it is right even where the file's own figure is out of date. Zero for an empty document. |
-| `character_count` | `INT` | How many characters that same text holds: spaces between words count, each line break counts as one, and the indentation between tags counts for nothing. Counted from the content on this run. Wire it into a condition node to catch a document that came out empty. |
-| `asset_count` | `INT` | How many files are embedded in the document, such as the pictures in it. Zero for a document that carries none, and an entry naming a place outside the document is not counted, because it is refused when the document is read. |
+| `custom` | `DICT` | The author's own pairs of text, in document order, for Text Dictionary Get, Text Dictionary Keys and Dictionary to Console. All three export formats keep them. Empty when the document has none. |
+| `word_count` | `INT` | How many words the document's text holds, markup stripped first. Counted from the content on every run, never read from the file. 0 for an empty document. |
+| `character_count` | `INT` | How many characters that same text holds: spaces between words count, each line break counts as one, indentation between tags counts for nothing. 0 = the document came out empty. |
+| `asset_count` | `INT` | How many files are embedded in the document, such as its pictures. 0 for a document that carries none. An entry naming a place outside the document is not counted. |
 | `assets` | `ARRAY` | The names of those files, sorted, each one relative to the document's own assets folder and spelled with '/' whatever machine the document was written on. An empty list when there are none. |
-| `has_metadata` | `BOOLEAN` | True when the document says anything about itself: any of title, description, author, copyright, language or keywords holds something. The timestamps and the generator are not counted, because this pack writes all three on every document it saves. Wire it into a switch to fill the fields in before an export rather than shipping a file that describes nothing. |
-| `summary` | `STRING` | The whole reading as one block of text, a field to a line, labelled with the name of the socket beside it, with '(not set)' where a field is empty. The same text is shown on the node. Send it to Text to Console or Save Text File to keep a record of what a run produced. |
+| `has_metadata` | `BOOLEAN` | True when any of title, description, author, copyright, language or keywords holds something; the timestamps and generator do not count. Wire it into a switch to fill the fields in before an export. |
+| `summary` | `STRING` | The whole reading as text, a field to a line labelled with its socket's name, '(not set)' where empty. The same text shows on the node; send it to Save Text File to keep a record. |
 
 </details>
 
@@ -1507,7 +1507,7 @@ Read what a document says about itself and put every field on its own socket: th
 <details>
 <summary><b>Image History Loader</b></summary>
 
-Reload one of the images the suite has recently loaded or saved. The menu holds whatever this pack's loading and saving nodes have touched, up to the limit in the pack's config. An entry whose file has since been deleted gives a black 512x512 image, and one in a folder this pack may no longer read stops the prompt with that folder named.
+Reload one of the images the suite's loading and saving nodes have recently touched. A file deleted since gives a black 512x512 image, and one in a folder the pack may no longer read stops the prompt with that folder named.
 
 | | |
 |---|---|
@@ -1532,7 +1532,7 @@ Reload one of the images the suite has recently loaded or saved. The menu holds 
 <details>
 <summary><b>Text File History Loader</b></summary>
 
-Reload one of the text files the suite has recently read or written. The menu holds whatever this pack's text loading and saving nodes have touched, up to the limit in the pack's config. A file that has since been deleted gives empty text rather than failing the prompt, and one in a folder this pack may no longer read stops the prompt with that folder named.
+Reload one of the text files the suite's text loading and saving nodes have recently touched. A file deleted since gives empty text, and one in a folder the pack may no longer read stops the prompt with that folder named.
 
 | | |
 |---|---|
@@ -1560,7 +1560,7 @@ Reload one of the text files the suite has recently read or written. The menu ho
 <details>
 <summary><b>Audio Metadata</b></summary>
 
-Read what an AUDIO is carrying: how long it plays for, the rate it was sampled at, how many channels and samples each clip holds, how many clips are stacked in it, and how loud it is as a peak and an average level. The whole reading is drawn on the node and emitted as one line of text. A load that found no sound, or handed over something unreadable, answers zeroes and is_silent true rather than stopping the run, so a graph can branch on the silence before it reaches an encoder.
+Read how long an AUDIO plays, its sample rate, channels, samples, clip count and peak and average level, as separate numbers and one line of text drawn on the node. Missing or unreadable sound reads as zeroes with is_silent true, so a graph can branch on silence before an encoder.
 
 | | |
 |---|---|
@@ -1572,7 +1572,7 @@ Read what an AUDIO is carrying: how long it plays for, the rate it was sampled a
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `audio` | `AUDIO` | Yes |  |  | The sound to measure, from Load Video (Advanced), Load Video (Upload) or any node with an AUDIO output. A file with no sound track answers nothing on that socket, which reads here as zeroes rather than an error. |
-| `silence_threshold` | `FLOAT` | Yes | 0.0 |  | How loud the loudest sample may be and still count as silence. 0.0 = only a track that is silent to the last bit; 0.001 is about -60 dBFS and also catches a noise floor or a tail of dither. Sample values run 0.0 to 1.0. |
+| `silence_threshold` | `FLOAT` | Yes | 0.0 |  | Loudest sample that still counts as silence, on a 0.0 to 1.0 scale. 0.0 = only a track silent to the last bit; 0.001 = about -60 dBFS, which also catches a noise floor or a dither tail. |
 
 **Outputs**
 
@@ -1594,7 +1594,7 @@ Read what an AUDIO is carrying: how long it plays for, the rate it was sampled a
 <details>
 <summary><b>Directory Listing</b></summary>
 
-List what is in a folder: every full path on one wire, every name on another, and the count beside them, so a For Loop can take one file per iteration. Files of any kind, picked with a glob such as '*.png' or 'frame_*', optionally descending into subfolders, ordered by name, by number, by date or by size. 'natural' order reads digit runs as numbers, so frame_2 comes before frame_10 rather than after it. 'input', 'output' and 'temp' name ComfyUI's own folders. A folder that is not there stops the prompt; a folder holding nothing the pattern picks answers empty lists and a count of 0.
+List what is in a folder as full paths, names and a count, so a For Loop can take one file per iteration. Entries are picked with a glob, optionally from subfolders, and sorted by name, number, date or size. A missing folder stops the prompt; a pattern matching nothing gives empty lists and 0.
 
 | | |
 |---|---|
@@ -1605,7 +1605,7 @@ List what is in a folder: every full path on one wire, every name on another, an
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
-| `pattern` | `STRING` | Yes | * |  | Which entries to list, as a glob. `*` takes everything, `*.png` only PNGs, `frame_*.png` one numbered run. A name starting with a dot is matched only by a pattern starting with one. Matching is inside the folder: a drive, a leading slash or a '..' segment is refused. |
+| `pattern` | `STRING` | Yes | * |  | Which entries to list, as a glob. `*` = everything; `*.png` = only PNGs; `frame_*.png` = one numbered run. A name starting with a dot needs a pattern starting with one. A drive, leading slash or '..' is refused. |
 | `recursive` | `BOOLEAN` | Yes | False |  | Whether subfolders are listed too. false lists only what sits directly in the folder; true applies the pattern at every depth, so `*.png` also finds 'shot_a/frame_0.png', and every name below the top carries its subfolder. |
 | `include` | `COMBO` | Yes | files | `files`, `directories`, `both` | What is listed. `files` = files alone, which is what a loop over images wants; `directories` = folders alone, for walking a set of shot folders; `both` = the two together in one order. |
 | `sort` | `COMBO` | Yes | natural | `name`, `natural`, `modified`, `size` | The order entries come out in. `name` = plain alphabetical, where frame_10 lands before frame_2; `natural` = digits read as numbers, so frame_2 comes first; `modified` = oldest first; `size` = smallest first. |
@@ -1658,7 +1658,7 @@ Write a batch of images as one looping animated WebP, as core Save Animated WEBP
 <details>
 <summary><b>Image Load</b></summary>
 
-Load an image chosen from a menu of every picture in ComfyUI's input, output and temp folders, and any folder listed under paths.allow_read in config.yaml. Upload one with the button and it is selected. A file tagged with a colour profile is converted to sRGB as it is read, or kept in its own space, and either way the profile comes out on its own socket. Anything that cannot be read gives a black 512x512 image so the rest of the workflow still runs. A 16-bit PNG loads at full precision, and one marked linear is loaded with no curve applied.
+Load an image picked from ComfyUI's input, output and temp folders, or a folder under paths.allow_read in config.yaml, with its mask, filename and colour profile. Tagged files can be converted to sRGB or kept in their own space, and 16-bit PNGs load at full precision. An unreadable file gives a black 512x512 image.
 
 | | |
 |---|---|
@@ -1668,11 +1668,11 @@ Load an image chosen from a menu of every picture in ComfyUI's input, output and
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `image` | `COMBO` | Yes |  |  | Which picture to read. A file in ComfyUI's input folder is listed by name; anything else carries the folder it sits in, as `render.png [output]` or `scratch.png [temp]`. A folder added under paths.allow_read appears under its own name. The button below uploads one into input and selects it. |
+| `image` | `COMBO` | Yes |  |  | Which picture to read. Input files are listed by name, others with their folder, as `render.png [output]` or `scratch.png [temp]`; paths.allow_read folders appear under their own names. The button uploads into input and selects it. |
 | `RGBA` | `BOOLEAN` | Yes | False |  | `off` discards any transparency and hands on a plain colour image, which is what samplers and most nodes expect; `on` keeps the transparency channel in the image itself. The mask output is produced either way. |
 | `filename_text_extension` | `BOOLEAN` | No | True |  | Whether the filename_text output keeps the extension. On = 'cat.png', off = 'cat'. Handy when the name is being reused as a caption or as a save prefix. |
-| `colour_space` | `COMBO` | No | sRGB |  | Which colour space the picture comes out in. "the file's own" leaves a tagged file exactly as it was written, for post work that stays there. 'sRGB' is what a sampler, a filter and a LUT expect. The rest, such as 'Adobe RGB (1998)' and 'Display P3', are for a photograph that goes back out in its own space. |
-| `icc_mode` | `COMBO` | No |  | `convert`, `assign` | What to do with the space above. 'convert' changes the numbers so the colour stays put, which is what a photograph wants. 'assign' leaves the numbers alone and says they were in that space all along, which is how an untagged file that is really Display P3 is put right. Ignored for "the file's own". |
+| `colour_space` | `COMBO` | No | sRGB |  | The colour space the picture comes out in. "the file's own" = a tagged file left as written; 'sRGB' = what samplers, filters and LUTs expect; 'Adobe RGB (1998)', 'Display P3' and the rest = for a photograph going back out in its own space. |
+| `icc_mode` | `COMBO` | No |  | `convert`, `assign` | 'convert' = the numbers change so the colour stays put, for a photograph; 'assign' = the numbers are kept and declared to be in that space, to fix an untagged file that is really Display P3. Ignored for "the file's own". |
 
 **Outputs**
 
@@ -1689,7 +1689,7 @@ Load an image chosen from a menu of every picture in ComfyUI's input, output and
 <details>
 <summary><b>Image Save</b></summary>
 
-Save images with a token-expanded path, a numbered filename and a choice of format. root chooses which folder they land in, and filename_prefix straight into ComfyUI's output directory; a full path writes to that folder instead, as long as it lands inside ComfyUI's output or temp folder, the pack's own folder, or a folder listed under paths.allow_write in config.yaml. Anywhere else is refused, the input folder included.
+Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif or exr. root picks the folder and filename_prefix names the subfolders and file below it, with tokens expanded. The images pass through unchanged, with the written paths on files.
 
 | | |
 |---|---|
@@ -1706,7 +1706,7 @@ Save images with a token-expanded path, a numbered filename and a choice of form
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_00001.png' with the default, 'ComfyUI-00001.png' with '-'. |
 | `filename_number_padding` | `INT` | Yes | 4 |  | How many digits the number is padded to with leading zeros. 4 gives '_0001', 1 gives '_1'. The count keeps rising past the padding, so too few digits sorts the files oddly rather than failing. |
 | `filename_number_start` | `BOOLEAN` | Yes | False |  | Where the number goes. Off = last, 'ComfyUI_0001.png'; on = first, '0001_ComfyUI.png', which sorts the files by number rather than by name. |
-| `extension` | `COMBO` | Yes |  | `png`, `jpg`, `jpeg`, `gif`, `tiff`, `webp`, `bmp`, `exr` | The file format. `png` is lossless, carries the workflow and takes 16 bits a channel; `exr` holds unclipped linear light at 16 or 32 bit; `jpg` and `jpeg` are small and lossy; `webp` is small and can be either; `tiff` and `bmp` are large and lossless; `gif` is limited to 256 colours. |
+| `extension` | `COMBO` | Yes |  | `png`, `jpg`, `jpeg`, `gif`, `tiff`, `webp`, `bmp`, `exr` | `png` = lossless, up to 16-bit, carries the workflow; `exr` = unclipped linear light at 16 or 32 bit; `jpg`/`jpeg` = small, lossy; `webp` = small, lossy or lossless; `tiff`/`bmp` = large, lossless; `gif` = 256 colours. |
 | `dpi` | `INT` | Yes | 300 |  | Print resolution recorded in the file, in dots per inch. It does not resize anything, it only tells a printer or a layout program how large to place the image. Written for png, jpg and jpeg only. |
 | `quality` | `INT` | Yes | 100 |  | How much detail is kept when the format throws some away: 100 is the best the format offers, 80 is a common balance, 1 is heavily degraded. Applies to jpg, jpeg, webp and tiff; png, bmp and gif ignore it. |
 | `optimize_image` | `BOOLEAN` | Yes | True |  | Whether to spend extra time packing the file smaller without changing how it looks. Every format except webp and bmp uses it. |
@@ -1716,7 +1716,7 @@ Save images with a token-expanded path, a numbered filename and a choice of form
 | `show_history_by_prefix` | `BOOLEAN` | Yes | True |  | Narrows the history preview to files in the same folder whose names start with the same prefix. Only has an effect when show_history is on. |
 | `embed_workflow` | `BOOLEAN` | Yes | True |  | Whether to store the workflow inside the file, so dragging the image back into ComfyUI rebuilds the graph. Only png and webp can carry it, and nothing is stored if ComfyUI was started with --disable-metadata. |
 | `show_previews` | `BOOLEAN` | Yes | True |  | Whether the saved images appear on the node. `off` still writes the files and keeps the node small, which suits a long batch. |
-| `bit_depth` | `COMBO` | Yes |  | `8-bit`, `16-bit`, `32-bit float` | How finely each channel is stored. `8-bit` is 256 levels and is what every format takes; `16-bit` is 65536 and needs `png`, which keeps a gradient banding-free through further grading; `32-bit float` needs `exr` and stores light above 1.0 rather than clipping it. A depth the chosen format cannot hold fails the prompt. |
+| `bit_depth` | `COMBO` | Yes |  | `8-bit`, `16-bit`, `32-bit float` | `8-bit` = 256 levels, every format but `exr`; `16-bit` = 65536 levels, `png` or `exr`, keeps gradients banding-free through grading; `32-bit float` = `exr` only, keeps light above 1.0. A depth the format cannot hold fails the prompt. |
 | `profile` | `WAS_COLOUR_PROFILE` | No |  |  | A colour profile from Image Load. The images are converted from sRGB into that space and the file is written carrying it, so a photograph goes out tagged the way it came in. Left unconnected, the file is written in sRGB and carries no profile. |
 
 **Outputs**
@@ -1732,7 +1732,7 @@ Save images with a token-expanded path, a numbered filename and a choice of form
 <details>
 <summary><b>Load Image Batch</b></summary>
 
-Load one image from a folder by index, in sequence, or at random, or read the whole folder at once. Queue a prompt repeatedly on `incremental_image` to walk a folder image by image; take `all_images` to get every match in one run, as image_list and filename_list. The folder is picked as a root and a path below it, so it always lands inside ComfyUI's input, output or temp folder or one listed under paths.allow_read in config.yaml. A folder that is not there fails the prompt. A 16-bit PNG loads at full precision.
+Load one image from a folder by index, in sequence or at random, or every image at once as image_list and filename_list. Queue repeatedly on `incremental_image` to walk the folder one image per run. A missing folder fails the prompt.
 
 | | |
 |---|---|
@@ -1744,7 +1744,7 @@ Load one image from a folder by index, in sequence, or at random, or read the wh
 |---|---|---|---|---|---|
 | `mode` | `COMBO` | Yes |  | `single_image`, `incremental_image`, `random`, `all_images` | Which image of the folder to load. `single_image` takes the one at index; `incremental_image` takes the next one each run and remembers where it stopped, wrapping round; `random` picks one using seed; `all_images` reads every match into image_list and filename_list at once, up to 4096. |
 | `seed` | `INT` | Yes | 0 |  | Chooses the image in `random` mode; the same seed always picks the same one. Ignored by the other two modes. |
-| `index` | `INT` | Yes | 0 |  | Which image to load in `single_image` mode, counting from 0 through the matching files sorted by path. Past the last file the prompt fails. `incremental_image` writes the image it just read back here, so `single_image` carries on from there. The panel says the same, as `index 5 of 0 to 363`. |
+| `index` | `INT` | Yes | 0 |  | Which image `single_image` loads, counting from 0 through the matching files sorted by path; past the last one the prompt fails. `incremental_image` writes the image it read back here. The panel shows it as `index 5 of 0 to 363`. |
 | `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
 | `pattern` | `STRING` | Yes | * |  | Which files in the folder to consider. '*' takes them all, 'cat_*.png' only those named that way, and '**/*' also descends into subfolders. Files whose format this pack cannot read are skipped whatever the pattern says. |
 | `allow_RGBA_output` | `BOOLEAN` | Yes | False |  | `off` discards any transparency and hands on a plain colour image, which is what samplers and most nodes expect; `on` keeps the transparency channel. |
@@ -1765,7 +1765,7 @@ Load one image from a folder by index, in sequence, or at random, or read the wh
 <details>
 <summary><b>Load Image Sequence</b></summary>
 
-Load a numbered sequence from a folder as one batch, in filename order, with the same range and strategy controls the frame samplers use. It takes every frame unless num_frames says otherwise. Load Image Batch beside it serves one frame per run; this serves the run of frames a video pipeline takes, opening only the files it keeps. 16-bit PNGs load and resize at full precision.
+Load a numbered image sequence from a folder as one batch, in filename order, ready for a video pipeline. Pick how many frames to keep and how they spread across the range; only the kept files are opened. 16-bit PNGs keep full precision.
 
 | | |
 |---|---|
@@ -1777,8 +1777,8 @@ Load a numbered sequence from a folder as one batch, in filename order, with the
 |---|---|---|---|---|---|
 | `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
 | `pattern` | `STRING` | Yes | * |  | Which files to take, as a glob. `*` takes every image in the folder, `frame_*.png` takes one numbered run out of a folder holding several. Matching is inside the folder only. |
-| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by the strategy below. `0` = every file in the range, up to the 4096 ceiling; `16` = a short sample. A batch is one tensor, so a long run at full size stops with the count to set rather than running out of memory. |
-| `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. Only the chosen files are opened, so sampling a long capture costs the frames you keep rather than all of them. |
+| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by strategy. `0` = every file in the range, up to the 4096 ceiling; `16` = a short sample. A run too long to fit in memory stops with the count to set. |
+| `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. Only the chosen files are opened. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
 | `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. Left on `fixed`, a re-run is served from the cache instead of the file being read again. |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How each frame meets the size below, so a folder of mixed sizes still stacks. `fit and pad` keeps the whole frame and pads the rest, `fill and crop` fills the size and trims the overhang, `stretch` distorts to fit, `crop or pad` never resamples. |
@@ -1808,7 +1808,7 @@ Load a numbered sequence from a folder as one batch, in filename order, with the
 <details>
 <summary><b>Load Text File</b></summary>
 
-Read a text file picked from a menu, dropping comment lines, as text and as a dictionary. The menu lists the text files, subfolders included, in ComfyUI's input, output and temp folders and in every folder under paths.allow_read in config.yaml, each tagged with its folder's name. A folder added there appears after a ComfyUI restart and a page reload. A file that cannot be read gives empty text and a line in the log.
+Read a text file picked from a menu, dropping comment lines, as text and as a dictionary. The menu covers input, output, temp and the folders under paths.allow_read in config.yaml. A file that cannot be read gives empty text.
 
 | | |
 |---|---|
@@ -1834,7 +1834,7 @@ Read a text file picked from a menu, dropping comment lines, as text and as a di
 <details>
 <summary><b>Load Text Line</b></summary>
 
-Read a text file picked from a menu: the whole file, the line at an index, or a line drawn from a seed, with every line also given as a list. The menu lists the text files in ComfyUI's input and output folders, subfolders included, and in every folder under paths.allow_read in config.yaml, each tagged with its folder's name. A folder added there appears after a ComfyUI restart and a page reload. A file since deleted or renamed gives empty text and a line in the log.
+Read a text file picked from a menu as the whole file, the line at an index, or a line drawn from a seed, with every line also handed on as a list. The menu covers input, output and the folders under paths.allow_read in config.yaml. A file deleted or renamed since gives empty text.
 
 | | |
 |---|---|
@@ -1845,11 +1845,11 @@ Read a text file picked from a menu: the whole file, the line at an index, or a 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | The .txt, .csv, .tsv, .json, .jsonl, .md, .yaml or .yml file to read, tagged with its folder: 'notes.txt [input]', 'notes.txt [output]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. |
-| `mode` | `COMBO` | Yes |  | `file`, `index`, `random` | What the 'line' output carries. 'file' gives the whole file, every line joined back together, which is what feeds a prompt written across several lines. 'index' gives the single line at 'index', for stepping through a list with a counter. 'random' gives one line drawn by 'seed'. The 'lines' and 'text' outputs are the same in all three. |
+| `mode` | `COMBO` | Yes |  | `file`, `index`, `random` | What 'line' carries. 'file' = the whole file, for a prompt written across several lines; 'index' = the line at 'index', for stepping through a list; 'random' = one line drawn by 'seed'. 'lines' and 'text' are the same in all three. |
 | `index` | `INT` | Yes | 0 |  | Which line 'index' mode takes, counting from 0, so 0 is the first line. -1 is the last line, -2 the one before it. Read only in 'index' mode. What happens past either end is 'out_of_range'. |
 | `out_of_range` | `COMBO` | Yes |  | `wrap`, `clamp`, `empty`, `error` | What an index past either end does: 'wrap' starts from the other end, 'clamp' sticks at the first or last line, 'empty' gives nothing, 'error' stops the prompt. |
 | `skip_comment_lines` | `BOOLEAN` | Yes | True |  | Whether lines whose first non-space character is '#' are dropped before anything is counted or numbered. On by default, so the indexes skip notes. |
-| `seed` | `INT` | Yes | 0 |  | Which line 'random' mode draws. The same seed and the same file always give the same line; change it to draw a different one. The seed pins a position rather than a line, so adding or removing a line in the file, or changing skip_comment_lines, makes the same seed produce different text. Read only in 'random' mode. |
+| `seed` | `INT` | Yes | 0 |  | Which line 'random' mode draws; the same seed and file always give the same line. The seed pins a position, so editing the file or skip_comment_lines changes the line it gives. Read only in 'random' mode. |
 
 **Outputs**
 
@@ -1867,7 +1867,7 @@ Read a text file picked from a menu: the whole file, the line at an index, or a 
 <details>
 <summary><b>Load Video (Advanced)</b></summary>
 
-Load a video from ComfyUI's input folder and hand on everything in it at once: the video itself, its frames as an image batch, its sound, and how long it is. Upload a file with the button on the node and play it back there. Frames are chosen with the same range and strategy controls the frame samplers use, and brought to one size the same way the image loaders do it. 16 frames are taken unless told otherwise, since a clip can hold thousands and a batch is one tensor in memory.
+Load a video and hand on the video itself, its frames as an image batch, its sound and how long it is. Upload with the button and play it back on the node. Frames can be thinned by count and strategy and brought to one size.
 
 | | |
 |---|---|
@@ -1878,7 +1878,7 @@ Load a video from ComfyUI's input folder and hand on everything in it at once: t
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which video to read. Each entry carries the folder it sits in: `clip.mp4 [input]`, `render.mp4 [output]`, `scratch.mp4 [temp]`. The button below uploads one into input and selects it, and the player shows what is selected. |
-| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by the strategy below. `0` = the whole clip, up to the 4096 ceiling; `16` = a short sample. A batch is one tensor, so a long clip at full size stops with the count to set rather than running out of memory. |
+| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by strategy. `0` = the whole clip, up to the 4096 ceiling; `16` = a short sample. A clip too long to fit in memory stops with the count to set. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. uniform gives a contact sheet of a whole clip, head gives a run that plays. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
 | `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. Left on `fixed`, a re-run is served from the cache instead of the file being read again. |
@@ -1888,7 +1888,7 @@ Load a video from ComfyUI's input folder and hand on everything in it at once: t
 | `height` | `INT` | Yes | 0 |  | Height every frame is brought to. 0 takes the height the file was encoded at. |
 | `start` | `INT` | No | 0 |  | First frame to consider, counting from 0 through the file's own frames. Negative counts back from the end, so -60 starts sixty frames before it. |
 | `end` | `INT` | No | -1 |  | Last frame to consider, inclusive. -1 is the final frame, which is the whole clip together with a start of 0. |
-| `max_size` | `INT` | No | 1024 |  | Longest edge the derived size is held to, keeping the aspect. Only read when width and height are 0, which is where a 4K clip would otherwise fill memory. 0 lifts the cap. |
+| `max_size` | `INT` | No | 0 |  | Longest edge the derived size is held to, keeping the aspect. Only read when width and height are 0, which is where a 4K clip would otherwise fill memory. 0 lifts the cap. |
 | `interpolation` | `COMBO` | No | lanczos | `lanczos`, `nearest`, `bilinear`, `bicubic` | Resampling filter. `lanczos` is the sharpest for a downscale. |
 | `align` | `COMBO` | No | middle center | `top left`, `top center`, `top right`, `middle left`, `middle center`, `middle right`, `bottom left`, `bottom center`, `bottom right` | Which part of a frame survives a crop, and which side carries the wider bar of a pad. |
 | `pad_color` | `STRING` | No | #000000 |  | Fill for space a frame does not cover. Any Pillow colour. |
@@ -1898,8 +1898,8 @@ Load a video from ComfyUI's input folder and hand on everything in it at once: t
 
 | Name | Type | What it is |
 |---|---|---|
-| `video` | `VIDEO` | The frames that were kept, with their sound, as a video at the rate below. Wire it into Save Video, or into any node taking a VIDEO. |
-| `images` | `IMAGE` | The same frames as one image batch, in playback order, every one at the same size. |
+| `video` | `VIDEO` | The frames that were kept, with their sound, as a video at the rate below. A whole clip too long for one batch is read from the file as it is used. Wire it into Save Video, or into any node taking a VIDEO. |
+| `images` | `IMAGE` | The same frames as one image batch, in playback order, every one at the same size. Blocked where they would not fit in memory; set num_frames or max_size in the advanced inputs to bring them down. |
 | `audio` | `AUDIO` | The sound playing under the frames that were kept, from where they start and for as long as they run. Empty when the file is silent, so read has_audio before wiring this into a save node. |
 | `metadata` | `WAS_VIDEO_METADATA` | What this read measured: the rate, the frame count, the size, the duration, the bit depth and whether there is sound, beside the same figures for the file itself. Wire it into Video Metadata to read any of them as a number. |
 
@@ -1909,7 +1909,7 @@ Load a video from ComfyUI's input folder and hand on everything in it at once: t
 <details>
 <summary><b>Load Video (Upload)</b></summary>
 
-Load a video and hand on everything in it at once: the video itself, its frames as an image batch, its sound, and how long it is. Upload a file with the button on the node and play it back there. Frames are chosen and sized exactly as Load Video beside it does them, 16 of them unless told otherwise.
+Load a video and hand on the video itself, its frames as an image batch, its sound and how long it is. Upload with the button and play it back on the node. Frames can be thinned by count and strategy and brought to one size.
 
 | | |
 |---|---|
@@ -1920,7 +1920,7 @@ Load a video and hand on everything in it at once: the video itself, its frames 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which video to read, from ComfyUI's input folder. The button below uploads one and selects it, and the player shows what is selected. |
-| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by the strategy below. `0` = the whole clip, up to the 4096 ceiling; `16` = a short sample. A batch is one tensor, so a long clip at full size stops with the count to set rather than running out of memory. |
+| `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by strategy. `0` = the whole clip, up to the 4096 ceiling; `16` = a short sample. A clip too long to fit in memory stops with the count to set. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. uniform gives a contact sheet of a whole clip, head gives a run that plays. |
 | `nth` | `INT` | Yes | 1 |  | Step between the frames the strategy may choose from. 1 uses every frame; 2 thins to every other one first, so `head` takes the opening of the clip on alternate frames. It applies to every strategy. |
 | `seed` | `INT` | Yes | 0 |  | Seed for random, so a re-run keeps the same frames. Ignored by the other strategies. Any whole number; `0` is as good a seed as any. Left on `fixed`, a re-run is served from the cache instead of the file being read again. |
@@ -1930,7 +1930,7 @@ Load a video and hand on everything in it at once: the video itself, its frames 
 | `height` | `INT` | Yes | 0 |  | Height every frame is brought to. 0 takes the height the file was encoded at. |
 | `start` | `INT` | No | 0 |  | First frame to consider, counting from 0 through the file's own frames. Negative counts back from the end, so -60 starts sixty frames before it. |
 | `end` | `INT` | No | -1 |  | Last frame to consider, inclusive. -1 is the final frame, which is the whole clip together with a start of 0. |
-| `max_size` | `INT` | No | 1024 |  | Longest edge the derived size is held to, keeping the aspect. Only read when width and height are 0, which is where a 4K clip would otherwise fill memory. 0 lifts the cap. |
+| `max_size` | `INT` | No | 0 |  | Longest edge the derived size is held to, keeping the aspect. Only read when width and height are 0, which is where a 4K clip would otherwise fill memory. 0 lifts the cap. |
 | `interpolation` | `COMBO` | No | lanczos | `lanczos`, `nearest`, `bilinear`, `bicubic` | Resampling filter. `lanczos` is the sharpest for a downscale. |
 | `align` | `COMBO` | No | middle center | `top left`, `top center`, `top right`, `middle left`, `middle center`, `middle right`, `bottom left`, `bottom center`, `bottom right` | Which part of a frame survives a crop, and which side carries the wider bar of a pad. |
 | `pad_color` | `STRING` | No | #000000 |  | Fill for space a frame does not cover. Any Pillow colour. |
@@ -1940,8 +1940,8 @@ Load a video and hand on everything in it at once: the video itself, its frames 
 
 | Name | Type | What it is |
 |---|---|---|
-| `video` | `VIDEO` | The frames that were kept, with their sound, as a video at the rate below. Wire it into Save Video, or into any node taking a VIDEO. |
-| `images` | `IMAGE` | The same frames as one image batch, in playback order, every one at the same size. |
+| `video` | `VIDEO` | The frames that were kept, with their sound, as a video at the rate below. A whole clip too long for one batch is read from the file as it is used. Wire it into Save Video, or into any node taking a VIDEO. |
+| `images` | `IMAGE` | The same frames as one image batch, in playback order, every one at the same size. Blocked where they would not fit in memory; set num_frames or max_size in the advanced inputs to bring them down. |
 | `audio` | `AUDIO` | The sound playing under the frames that were kept, from where they start and for as long as they run. Empty when the file is silent, so read has_audio before wiring this into a save node. |
 | `metadata` | `WAS_VIDEO_METADATA` | What this read measured: the rate, the frame count, the size, the duration, the bit depth and whether there is sound, beside the same figures for the file itself. Wire it into Video Metadata to read any of them as a number. |
 
@@ -1978,7 +1978,7 @@ Pick a frame cache written by Video Cache or H3 Decode Video and use it as a cli
 <details>
 <summary><b>Path Exists</b></summary>
 
-Ask whether a file or folder is already on disk before anything reads or writes it, and get back what is there: file or folder, how many bytes, and when it last changed. A folder batch can skip the frames it has already rendered, and a cache can be compared against the file it was built from. A path outside the folders this pack may read is answered as not existing, with the refusal on 'resolved', so a probe never stops the prompt.
+Check whether a file or folder is on disk before anything reads or writes it, with its kind, size in bytes and last change time. Use it to skip frames already rendered or to test a cache against its source. A path outside the folders the pack may read answers not existing, with the refusal on 'resolved'.
 
 | | |
 |---|---|
@@ -2008,7 +2008,7 @@ Ask whether a file or folder is already on disk before anything reads or writes 
 <details>
 <summary><b>Save Text File</b></summary>
 
-Write text to a numbered file in a folder the pack may write to. A relative path is taken from the folder ComfyUI was started in, and one beginning 'ComfyUI/' from ComfyUI's own folder, so the default works either way. It has to land inside ComfyUI's output or temp folder, the pack's own folder, or a folder listed under paths.allow_write in config.yaml; anywhere else is refused, the input folder included. Leave the path empty, or set it to 'none' or '.', for the output folder itself.
+Write text to a numbered file in the folder picked with root, named from filename_prefix, the number and an optional suffix. Tokens in the prefix expand, so a date can name a subfolder or the file. Padding 0 writes the same file every run.
 
 | | |
 |---|---|
@@ -2034,7 +2034,7 @@ Write text to a numbered file in a folder the pack may write to. A relative path
 <details>
 <summary><b>Save Video (Advanced)</b></summary>
 
-Write a video file from an image batch, from a video, or from either with a sound track alongside. The name follows the same prefix, delimiter and numbering as Image Save, and the pack's tokens resolve in it. Core's Save Video takes a video only and has no audio input.
+Write a video file from an image batch or a video, with an optional sound track. The name follows the same prefix, delimiter and numbering as Image Save, and the pack's tokens resolve in it.
 
 | | |
 |---|---|
@@ -2050,8 +2050,8 @@ Write a video file from an image batch, from a video, or from either with a soun
 | `filename_prefix` | `STRING` | Yes | ComfyUI |  | Text before the number. Tokens resolve here, so [time(%Y-%m-%d)] becomes the date and [hostname] the machine name. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What separates the prefix from the number: clip_0001.mp4. |
 | `filename_number_padding` | `INT` | Yes | 4 |  | Digits the number is padded to. 4 gives 0001. |
-| `container` | `COMBO` | Yes | auto |  | File container, read only on the two ComfyUI codecs. auto writes mp4. The other codecs each bring their own: mkv for FFV1 and H264, mov for PRORES, webm for VP90, mp4 for the rest. |
-| `codec` | `COMBO` | Yes | ComfyUI Auto |  | How the video is encoded. 'ComfyUI Auto' copies a wired video through without re-encoding it, so nothing is lost; 'ComfyUI H264' re-encodes to mp4. The rest are the pack's own: FFV1 and PRORES are lossless, AV01 and VP90 make the smallest files, AVC1 and H265 play everywhere. |
+| `container` | `COMBO` | Yes | mp4 |  | File container, read only on the two ComfyUI codecs: `mp4`, or `auto`, which also writes mp4. The other codecs each bring their own: mkv for FFV1 and H264, mov for PRORES, webm for VP90, mp4 for the rest. |
+| `codec` | `COMBO` | Yes | ComfyUI H264 |  | `ComfyUI H264` = H.264, copying H.264 video; `ComfyUI Auto` = any wired video copied as is; `AVC1`/`H264` = H.264 in mp4/mkv; `MP4V` = MPEG-4; `FFV1` = lossless; `PRORES` = 10-bit; `AV01`/`VP90` = smallest; `H265`/`HEVC` = small, rare in browsers. Firefox shows no H.264 above 4096x2304. |
 | `images` | `IMAGE` | No |  |  | Frames to encode, in order, at the rate below. Leave unconnected when a video is wired instead. |
 | `video` | `VIDEO` | No |  |  | A whole video to write out. Used in preference to images when both are wired. |
 | `audio` | `AUDIO` | No |  |  | Sound laid under the frames. Read only when images are encoded, since a video already carries its own. |
@@ -2104,7 +2104,7 @@ Keep frames on disk as a clip instead of holding them in memory, for a long rend
 <details>
 <summary><b>Video Info</b></summary>
 
-Measure a video and read its figures as numbers: how wide and tall the frames are, how long it runs, how many frames it holds, the rate it plays at, the bits per colour it carries and whether there is sound. It reads anything on a VIDEO wire, whatever produced it, and it works from the header rather than the frames, so a feature-length file costs about the same as a two second one. Reach for it to size a resize, to tell a sampler how many frames are coming, or to check for sound before wiring an audio socket.
+Measure any VIDEO and hand on its width, height, duration, frame count, frame rate, bit depth and whether it has sound. Use it to size a resize, tell a sampler how many frames are coming, or check for sound before wiring audio. A long file measures as fast as a short one.
 
 | | |
 |---|---|
@@ -2250,7 +2250,7 @@ Join any number of images into one batch, on a slot list that grows a socket eac
 <details>
 <summary><b>Image Batch Ends</b></summary>
 
-Take the ends off an image batch. It answers the opening frame, the closing frame, the opening and closing 'count' frames, the batch with its first frame dropped, the batch with its last frame dropped, and how many frames arrived. Every image output is a batch, so a single frame comes out as a batch of one. Extending a clip by inference wants 'last' as the seed and 'without_first' on what comes back, so the seeded frame is not repeated where the two are joined.
+Take the ends off an image batch: the first and last frames, the first and last `count` frames, the batch without its first or last frame, and the frame count. Use `last` to seed a clip extension and `without_first` on what comes back, so the join has no repeated frame.
 
 | | |
 |---|---|
@@ -2281,7 +2281,7 @@ Take the ends off an image batch. It answers the opening frame, the closing fram
 <details>
 <summary><b>Image Batch Repeat</b></summary>
 
-Repeat an image batch into a longer one: a set number of times, or up to an exact frame count. 'to length' cuts the last repeat short so the answer is exactly the length asked for, which is how a short clip is extended to the 81 frames a video model wants. Turn each_frame on and every frame is repeated where it stands instead, so a single image becomes a still run and a clip is slowed down evenly.
+Repeat an image batch into a longer one, a set number of times or to an exact frame count, such as the 81 frames a video model wants. With each_frame on, every frame repeats in place instead, so a single image becomes a still run and a clip slows evenly.
 
 | | |
 |---|---|
@@ -2295,7 +2295,7 @@ Repeat an image batch into a longer one: a set number of times, or up to an exac
 | `mode` | `COMBO` | Yes | times | `times`, `to length` | `times` = use the frames as many times as asked; `to length` = repeat until there are exactly length frames, cutting the last repeat short. `times` ignores length, `to length` ignores times. |
 | `times` | `INT` | Yes | 2 |  | How many times the frames are used, so 1 = unchanged and 3 = three copies. 4 frames at times 3 answer 12 frames. Ignored while mode is `to length`. |
 | `length` | `INT` | Yes | 16 |  | Exactly how many frames come out, eg 81 for a model that wants 81. 4 frames to length 10 answer A B C D A B C D A B. A length under the batch size trims it instead. Ignored while mode is `times`. |
-| `each_frame` | `BOOLEAN` | Yes | False |  | Repeat each frame in place rather than the whole run. A B C at times 2: false = A B C A B C; true = A A B B C C. On `to length` each frame is held an even share: 3 frames to length 7 = A A A B B C C. |
+| `each_frame` | `BOOLEAN` | Yes | False |  | A B C at times 2: `false` = ABCABC, the whole run repeated; `true` = AABBCC, each frame held in place. On `to length` each frame gets an even share: 3 frames to length 7 = AAABBCC. |
 
 **Outputs**
 
@@ -2310,7 +2310,7 @@ Repeat an image batch into a longer one: a set number of times, or up to an exac
 <details>
 <summary><b>Image Batch Reverse</b></summary>
 
-Play a batch of frames backwards, or append the reverse so a short clip runs out and back and loops on itself. 'ping-pong' shows the first and last frames twice at the joins, which reads as a pause; 'ping-pong trimmed' leaves them out, so the loop runs at an even pace. The frame count comes out beside the images, ready for a video save.
+Play a batch of frames backwards, or append the reverse so a short clip runs out and back and loops on itself. Hands on the reordered frames and their count, ready for a video save.
 
 | | |
 |---|---|
@@ -2321,7 +2321,7 @@ Play a batch of frames backwards, or append the reverse so a short clip runs out
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The frames to reorder, in the order they arrived. Feed it a video load, a sampler's frames, or any batch. A one-frame batch comes back as it went in, except on `ping-pong`, which shows that frame twice. |
-| `mode` | `COMBO` | Yes | reverse | `reverse`, `ping-pong`, `ping-pong trimmed` | How the frames are laid out. Given 8 frames: `reverse` = 8 frames, played 8 to 1; `ping-pong` = 16, 1 to 8 then 8 to 1, holding on frames 8 and 1 for two; `ping-pong trimmed` = 14, 1 to 8 then 7 to 2, which is the one that loops without a stutter. |
+| `mode` | `COMBO` | Yes | reverse | `reverse`, `ping-pong`, `ping-pong trimmed` | Given 8 frames: `reverse` = 8, played 8 to 1; `ping-pong` = 16, 1 to 8 then 8 to 1, pausing on 8 and 1; `ping-pong trimmed` = 14, 1 to 8 then 7 to 2, looping without a stutter. |
 
 **Outputs**
 
@@ -2336,7 +2336,7 @@ Play a batch of frames backwards, or append the reverse so a short clip runs out
 <details>
 <summary><b>Image Batch Split</b></summary>
 
-Cut an image batch in two at a frame number: the frames before the cut come out on head, and the cut frame with everything after it on tail. The cut frame belongs to the tail, so head and tail joined back together are the batch that went in. Counting runs from 0 and a negative counts back from the end, so a cut at -1 holds the last frame back on its own, which is what dropping an overlapping frame before stitching a continuation on needs.
+Cut an image batch in two at a frame number: frames before the cut come out on head, the cut frame and everything after on tail. A cut at -1 holds back the last frame, for dropping an overlap before stitching on a continuation.
 
 | | |
 |---|---|
@@ -2347,7 +2347,7 @@ Cut an image batch in two at a frame number: the frames before the cut come out 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The batch to cut. It needs at least 2 frames, and neither side is altered: head and tail joined back together are the batch that came in. |
-| `at` | `INT,NUMBER,FLOAT` | Yes | 1 |  | Where to cut, counting frames from 0. That frame starts the tail: with 8 frames, at 3 gives head 0 to 2 and tail 3 to 7. Negative counts back from the end, so -1 holds the last frame back on its own. A decimal is truncated: 2.7 = 2. |
+| `at` | `INT,NUMBER,FLOAT` | Yes | 1 |  | Where to cut, counting frames from 0; that frame starts the tail. With 8 frames: 3 = head 0 to 2, tail 3 to 7; -1 = the last frame alone on tail. A decimal is truncated: 2.7 = 2. |
 | `out_of_range` | `COMBO` | Yes | clamp | `wrap`, `clamp`, `error` | A cut outside 1..count-1, where both sides keep a frame. With 4 frames and at 5: `wrap` = 2, `clamp` = 3, `error` stops the prompt. An at of 0 is outside as well: `wrap` = 3, `clamp` = 1. |
 
 **Outputs**
@@ -2418,7 +2418,7 @@ Blend two images using a mask to say where, then fade the whole result back towa
 <details>
 <summary><b>Image Blending Mode</b></summary>
 
-Combine two images with any of the 26 blending modes a layer stack names, then fade the result back towards image_a. The output is the size of image_a, and image_b is resampled to match it. `normal` lays image_b over image_a and `add` sums the two, `multiply` darkens, `screen` lightens, `overlay`, `soft_light`, `hard_light`, `vivid_light` and `linear_light` raise contrast, `darken` and `lighten` keep the darker or lighter pixel, `difference`, `exclusion`, `subtract` and `grain_extract` show where the two disagree, and `hue`, `saturation`, `color` and `luminosity` take one part of image_b and keep the rest of image_a.
+Combine two images with any of 26 layer blending modes, such as multiply, screen and overlay, then fade the result back towards image_a. The output is the size of image_a, with image_b resampled to match.
 
 | | |
 |---|---|
@@ -2430,7 +2430,7 @@ Combine two images with any of the 26 blending modes a layer stack names, then f
 |---|---|---|---|---|---|
 | `image_a` | `IMAGE` | Yes |  |  | The base layer, and the one that sets the output size. Also what the result fades back to as blend_percentage drops. |
 | `image_b` | `IMAGE` | Yes |  |  | The layer blended on top of image_a. A batch here is paired with the image_a batch frame by frame, a single image is blended into every frame, and the result is as long as the longer of the two. |
-| `mode` | `COMBO` | Yes |  | `add`, `color`, `color_burn`, `color_dodge`, `darken`, `difference`, `exclusion`, `hard_light`, `hue`, `lighten`, `multiply`, `overlay` and 14 more | How the two layers are combined. `normal` lays image_b over image_a; `add` sums them; `multiply` darkens; `screen` lightens; `overlay` raises contrast; `hue` takes colour from image_b while keeping the shading of image_a. |
+| `mode` | `COMBO` | Yes |  | `add`, `color`, `color_burn`, `color_dodge`, `darken`, `difference`, `exclusion`, `hard_light`, `hue`, `lighten`, `multiply`, `overlay` and 14 more | `normal` = image_b over image_a; `add` = sums them; `multiply` = darkens; `screen` = lightens; `overlay`, `soft_light` = more contrast; `difference` = where the two disagree; `hue`, `saturation`, `color`, `luminosity` = that part from image_b, the rest from image_a. |
 | `blend_percentage` | `FLOAT` | Yes | 1.0 |  | How strongly the blended result is applied. 1.0 uses it as it is, 0.0 returns image_a untouched, 0.5 is an even mix of the two. |
 
 **Outputs**
@@ -2504,7 +2504,7 @@ Return one image from a batched IMAGE tensor. An index beyond the batch returns 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | A batch of images, such as the several images one sampler run produces, to pick a single one out of. |
-| `index` | `INT` | Yes | 0 |  | Which image to take, counting from 0, so 0 is the first and 2 is the third. A number past the end of the batch returns the last image and prints the index and the batch length to the console, rather than failing the prompt, so a sequence that came back shorter than expected still produces a frame. |
+| `index` | `INT` | Yes | 0 |  | Which image to take, counting from 0: 0 = the first; 2 = the third. A number past the end returns the last image and logs the index and batch length to the console. |
 
 **Outputs**
 
@@ -2520,7 +2520,7 @@ Return one image from a batched IMAGE tensor. An index beyond the batch returns 
 <details>
 <summary><b>Image Auto Levels</b></summary>
 
-Find where a frame's tones actually start and stop and stretch them to fill the range. A flat render, a hazy plate or a washed-out scan gains contrast with nothing to set by hand, and `per channel` also pulls a colour cast out by stretching red, green and blue on their own. Image Levels Adjustment does the same job with the two points typed in; this measures them.
+Stretch a frame's tones so its darkest pixels reach black and its lightest reach white, giving a flat render, hazy plate or washed-out scan its contrast back with nothing set by hand. `per channel` also pulls out a colour cast. Hands on the stretched frames and the black and white points it found.
 
 | | |
 |---|---|
@@ -2550,7 +2550,7 @@ Find where a frame's tones actually start and stop and stretch them to fill the 
 <details>
 <summary><b>Image Color Balance</b></summary>
 
-Move colour in the dark, middle and bright parts of a frame on their own, the way a colourist's three wheels do. Cool shadows against warm highlights is most of what makes a render look graded rather than rendered, and it is the shape a cast is corrected in as well: push the opposite way in whichever range carries it. Image White Balance neutralises one cast over the whole frame; this works per range.
+Move colour in the shadows, midtones and highlights of a frame separately, the way a colourist's three wheels do. Use it for a graded look, such as cool shadows against warm highlights, or to correct a cast by pushing the opposite way in whichever range carries it.
 
 | | |
 |---|---|
@@ -2614,7 +2614,7 @@ Match a batch's colour to one reference, in one fixed transform applied to every
 <details>
 <summary><b>Image Curves</b></summary>
 
-Photoshop-style curves. Drag control points on the node to bend the tonal response, together on the composite curve or one colour channel at a time. The curve runs through the points as a monotone spline, so it never overshoots into a halo the points do not ask for. ComfyUI's own Curve Editor can drive it too: wire that node's curve output into `curve` and it is applied to all three channels before this node's own curves.
+Photoshop-style curves for contrast and colour. Drag control points on the node to bend the tonal response, on the composite curve or one colour channel at a time, and hand on the adjusted image.
 
 | | |
 |---|---|
@@ -2668,7 +2668,7 @@ Photoshop-style levels. Choose which input brightness becomes black, which becom
 <details>
 <summary><b>Image Palette Map</b></summary>
 
-Repaint an image in a palette's colours, either by matching each pixel to its closest colour or by mapping brightness along the palette as a gradient. Matching is measured in Oklab and can be dithered. `Perceptual` keeps the picture's own hues as closely as the palette allows; `Luminance Ramp` throws the original colour away, which colourises a greyscale plate or grades a depth map, and reads the palette sorted dark to light. Several colours can share a palette line separated by commas, a comma inside brackets belongs to its colour, PIL's other spellings such as 'hsl(30, 100%, 50%)' read, and a line that is not a colour is skipped. On dither, `none` leaves flat bands, `FloydSteinberg` flickers on a sequence where `Bayer` stays put, and `Luminance Ramp` reads neither. Leave normalize off for anything animated, or an exposure change between frames shifts the colours.
+Repaint an image in a palette's colours, either snapping each pixel to its closest colour or mapping brightness along the palette as a gradient. Use it for a fixed set of inks, a duotone, or to colourise a greyscale plate or a depth map.
 
 | | |
 |---|---|
@@ -2679,13 +2679,13 @@ Repaint an image in a palette's colours, either by matching each pixel to its cl
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to repaint. Each one is handled on its own, so a sequence keeps a consistent look. |
-| `palette` | `STRING` | Yes | #10141f #2a4a5e #6f8f8c #c9b48a #f4ead8 |  | The palette, one colour per line: '#ff8800', '#f80', 'orange', 'rgb(255, 136, 0)'. Ignored when color_palettes is connected. |
-| `mode` | `COMBO` | Yes |  | `Perceptual`, `Luminance Ramp` | `Perceptual` snaps every pixel to its nearest palette colour, for a fixed set of inks. `Luminance Ramp` places pixels along the palette by brightness. |
-| `dither` | `COMBO` | Yes |  | `none`, `FloydSteinberg`, `Bayer` | How the error left by matching is spread, in `Perceptual` mode. `FloydSteinberg` gives a fine organic stipple; `Bayer` a fixed 8x8 crosshatch. |
-| `smooth` | `BOOLEAN` | Yes | True |  | Whether `Luminance Ramp` blends between neighbouring palette colours. On, the palette becomes a continuous gradient and shading survives. Off, every pixel snaps to one of the palette's colours, which posterises the picture into exactly that many bands, the poster or screen-print look. Not read by `Perceptual`. |
+| `palette` | `STRING` | Yes | #10141f #2a4a5e #6f8f8c #c9b48a #f4ead8 |  | The palette, one colour per line: '#ff8800', '#f80', 'orange', 'rgb(255, 136, 0)', 'hsl(30, 100%, 50%)'. Commas put several on one line; a line that is not a colour is skipped. Ignored when color_palettes is connected. |
+| `mode` | `COMBO` | Yes |  | `Perceptual`, `Luminance Ramp` | `Perceptual` = every pixel snaps to its nearest palette colour, keeping the picture's hues as far as the palette allows; `Luminance Ramp` = brightness mapped along the palette sorted dark to light, the original colour discarded. |
+| `dither` | `COMBO` | Yes |  | `none`, `FloydSteinberg`, `Bayer` | `none` = flat bands; `Bayer` = a fixed 8x8 crosshatch that holds still on a sequence; `FloydSteinberg` = a fine organic stipple that flickers on a sequence. Read by `Perceptual` only. |
+| `smooth` | `BOOLEAN` | Yes | True |  | `true` = the palette becomes a continuous gradient and shading survives; `false` = every pixel snaps to one palette colour, posterising into exactly that many bands, the screen-print look. Read by `Luminance Ramp` only. |
 | `normalize` | `BOOLEAN` | Yes | False |  | Whether `Luminance Ramp` stretches the palette across each image's darkest and lightest values. Off by default, which reads brightness absolutely and keeps a sequence stable. |
 | `reverse` | `BOOLEAN` | Yes | False |  | Whether the palette is read in the opposite direction. This flips a `Luminance Ramp` end to end, so a dark-to-light palette renders the picture as a negative. It changes nothing visible in `Perceptual` mode, where a colour is chosen by distance rather than by position. |
-| `blend` | `FLOAT` | Yes | 1.0 |  | How much of the repainted image replaces the original. 1.0 is the palette alone. Lower values let the original show through, which is how a colourised plate is tied back to its own hues, around 0.6 to 0.8 grades an image without it looking like a filter. |
+| `blend` | `FLOAT` | Yes | 1.0 |  | How much of the repainted image replaces the original. 0.0 = the original; 0.6 to 0.8 = a grade that ties a colourised plate back to its own hues; 1.0 = the palette alone. |
 | `color_palettes` | `ARRAY` | No |  |  | One palette per image, as Image Color Palette emits. Connected, it replaces the text box. Fewer palettes than images is fine: the list repeats, so one palette covers a whole batch. |
 
 **Outputs**
@@ -2738,7 +2738,7 @@ Lift or crush the dark parts of an image and the bright parts independently, the
 | `image` | `IMAGE` | Yes |  |  | The image to adjust. A batch is handled one image at a time. |
 | `shadow_threshold` | `FLOAT` | Yes | 75 |  | How dark a pixel has to be, on a 0-255 brightness scale, to count as shadow. 75 takes in the darker quarter of the range; raising it to 150 pulls in the midtones as well, and 0 selects nothing. |
 | `shadow_factor` | `FLOAT` | Yes | 1.5 |  | What the shadow area is multiplied by. 1.0 leaves it alone, 1.5 lifts it by half again to reveal detail, 0.5 darkens it further, and 0 makes it solid black. |
-| `shadow_smoothing` | `FLOAT` | Yes | 0.25 |  | Blur radius in pixels applied to the shadow selection, which feathers the edge of the adjustment so it does not show a hard outline. The blur runs twice, so the softening is wider than the number suggests: 0.25 is a hairline, 8 is a broad fade. |
+| `shadow_smoothing` | `FLOAT` | Yes | 0.25 |  | Blur radius in pixels feathering the edge of the shadow selection. The blur runs twice, so the fade is wider than the number: 0.25 = a hairline; 8 = a broad fade. |
 | `highlight_threshold` | `FLOAT` | Yes | 175 |  | How bright a pixel has to be, on a 0-255 brightness scale, to count as highlight. 175 takes in the brighter third of the range; 255 selects nothing. |
 | `highlight_factor` | `FLOAT` | Yes | 0.5 |  | What the highlight area is multiplied by. 1.0 leaves it alone, 0.5 halves it to pull back blown-out brights, and values above 1.0 push the highlights further towards white. |
 | `highlight_smoothing` | `FLOAT` | Yes | 0.25 |  | Blur radius in pixels applied to the highlight selection, feathering the edge of that adjustment. As with shadow_smoothing the blur runs twice, so the effective fade is wider than the radius. |
@@ -2796,7 +2796,7 @@ Remove a colour cast by working out what colour the light was and dividing it ba
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The image or sequence to balance; IMAGE. A batch is treated as frames in order when temporal_radius is above 0. |
-| `estimator` | `COMBO` | Yes |  | `grey world`, `white patch`, `shades of grey`, `grey edge` | How the colour of the light is guessed; COMBO. 'grey world' assumes the average of the scene is grey, 'white patch' that the brightest point is white, 'shades of grey' sits between them, and 'grey edge' averages the edges instead, which a large block of one colour barely moves. |
+| `estimator` | `COMBO` | Yes |  | `grey world`, `white patch`, `shades of grey`, `grey edge` | How the light's colour is guessed. 'grey world' = the scene averages grey; 'white patch' = the brightest point is white; 'shades of grey' = between those two; 'grey edge' = the edges average grey, which one large block of colour barely moves. |
 | `strength` | `FLOAT` | Yes | 1.0 |  | How much of the cast to remove; FLOAT, 0 to 1. Below 1 keeps some of the original warmth, for a look that is meant to be there. 0 leaves the image alone. |
 | `temporal_radius` | `INT` | Yes | 0 |  | Frames either side the guess is averaged over; INT. 0 balances every frame on its own, which wanders when the scene's contents change. Raise it for footage so the balance holds still. |
 
@@ -2880,7 +2880,7 @@ Render a histogram of an image's tones as a chart image, either overall brightne
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to measure. Only the first image of a batch is charted. |
-| `mode` | `COMBO` | Yes |  | `Black White Levels`, `RGB Levels` | Which chart to draw. `Black White Levels` plots one histogram of overall brightness with the darkest and lightest tones present marked in red, which is how clipping is spotted. `RGB Levels` plots the red, green and blue channels as three graphs side by side, which shows a colour cast. |
+| `mode` | `COMBO` | Yes |  | `Black White Levels`, `RGB Levels` | `Black White Levels` = one brightness histogram with the darkest and lightest tones marked in red, for spotting clipping; `RGB Levels` = red, green and blue as three graphs side by side, for spotting a colour cast. |
 
 **Outputs**
 
@@ -2921,7 +2921,7 @@ Measure brightness, contrast, sharpness, saturation, clipping and entropy for ev
 | `minimum` | `FLOAT` | Brightness of the darkest pixel, 0.0 to 1.0. |
 | `maximum` | `FLOAT` | Brightness of the brightest pixel, 0.0 to 1.0. |
 | `contrast` | `FLOAT` | Spread of brightness around the mean, 0.0 to about 0.5. Below roughly 0.1 is a flat, hazy picture; this is the number to test when deciding whether a frame needs a levels pass. |
-| `sharpness` | `FLOAT` | How much fine detail the picture holds, from the spread of its edge response. Has no fixed scale. It rises with resolution and with how much texture the subject has, so compare it between frames of one sequence to find the soft ones rather than against a number taken from another workflow. |
+| `sharpness` | `FLOAT` | How much fine detail the picture holds, from the spread of its edge response. No fixed scale: it rises with resolution and texture, so compare frames of one sequence to find the soft ones. |
 | `saturation` | `FLOAT` | Average colourfulness, 0.0 for greyscale and 1.0 for fully saturated. Useful for catching a render that has drifted grey, and for telling a black and white frame from a colour one. |
 | `clipped_shadows` | `FLOAT` | The fraction of pixels at pure black, 0.0 to 1.0. Detail there is gone rather than dark, so no amount of lifting brings it back. |
 | `clipped_highlights` | `FLOAT` | The fraction of pixels at pure white, 0.0 to 1.0. A few percent is normal for a picture with a light source in it; much more than that is an overexposed render. |
@@ -2951,7 +2951,7 @@ Put a source image back into the region of a target image its bounds describe, s
 | `target_bounds` | `IMAGE_BOUNDS` | Yes |  |  | Where in the target the source lands, normally the same bounds the region was cropped with. One row per source image pairs them up; any other count uses the first row for all of them. |
 | `source` | `IMAGE` | Yes |  |  | The image pasted in, stretched to the size of the bounds whatever its own size. The batch length here sets how many results come out. |
 | `blend_factor` | `FLOAT` | Yes | 1.0 |  | How opaque the pasted region is. 1.0 replaces the target inside the bounds, 0.0 leaves the target untouched, 0.5 mixes the two evenly. |
-| `feathering` | `INT` | Yes | 16 |  | Width of the fade around the pasted region, in pixels. 0 pastes a hard rectangle; 16 softens the join. It has to stay under half the width and half the height of the bounds, or there is nothing left to fade and the node raises an error. |
+| `feathering` | `INT` | Yes | 16 |  | Width of the fade around the pasted region, in pixels. 0 = a hard rectangle; 16 = a soft join. Must stay under half the bounds' width and height, or the node raises an error. |
 
 **Outputs**
 
@@ -2976,7 +2976,7 @@ Put a source image back into the region of a target image its bounds describe, l
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `target` | `IMAGE` | Yes |  |  | The image being pasted into. The result is this image's size. One target per source image pairs them up; any other count blends every source into the first target. |
-| `target_mask` | `MASK` | Yes |  |  | Where the source is allowed to show: white lets it through, black keeps the target. It may be the size of the whole target or of the bounds alone, in which case it is positioned at the bounds. One mask per source image pairs them up; any other count uses the first for all of them. |
+| `target_mask` | `MASK` | Yes |  |  | White lets the source through; black keeps the target. Sized to the whole target, or to the bounds alone and placed at them. One mask per source image pairs them up; any other count uses the first for all. |
 | `target_bounds` | `IMAGE_BOUNDS` | Yes |  |  | Where in the target the source lands, normally the same bounds the region was cropped with. One row per source image pairs them up; any other count uses the first row for all of them. |
 | `source` | `IMAGE` | Yes |  |  | The image pasted in, stretched to the size of the bounds whatever its own size. The batch length here sets how many results come out. |
 | `blend_factor` | `FLOAT` | Yes | 1.0 |  | How opaque the pasted region is where the mask allows it. 1.0 replaces the target, 0.0 leaves the target untouched, 0.5 mixes the two evenly. |
@@ -3030,7 +3030,7 @@ Find the smallest box holding everything the mask marks, grow it by the padding 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The images to cut down. The box is measured on the mask and then sliced straight out of the image, so an image that is not the same size as its mask crops in the wrong place. |
-| `mask` | `MASK` | Yes |  |  | Marks the area to keep. The box is the tightest rectangle around everything non-black in it. An entirely black mask marks nothing, and that frame falls back to its whole picture with a note in the console rather than stopping the run. One mask per image crops each one separately; any other count uses the first mask for every image. |
+| `mask` | `MASK` | Yes |  |  | Marks the area to keep; the box is the tightest rectangle around everything non-black. An all-black mask keeps that frame whole, with a console note. One mask per image crops each separately; any other count uses the first mask for every image. |
 | `padding_left` | `INT` | Yes | 64 |  | Extra pixels kept to the left of the marked area, stopping at the edge. 0 crops tight against the mask. |
 | `padding_right` | `INT` | Yes | 64 |  | Extra pixels kept to the right of the marked area. |
 | `padding_top` | `INT` | Yes | 64 |  | Extra pixels kept above the marked area. |
@@ -3050,7 +3050,7 @@ Find the smallest box holding everything the mask marks, grow it by the padding 
 <details>
 <summary><b>Bounding Boxes Filter</b></summary>
 
-Reduce a detector's regions to the ones worth acting on: drop the ones too small to matter, merge the duplicates it found over the same subject, pad them out for a crop with room around the subject, put them in a set order and keep the first few. A detector answers everything it saw at one confidence, so this is what turns that into the shortlist a graph works on.
+Reduce a detector's regions to a shortlist: drop the ones too small to matter and the duplicates over one subject, pad them out for a crop, put them in order and keep the first few. Hands on the regions kept, with counts of what was kept and dropped.
 
 | | |
 |---|---|
@@ -3061,7 +3061,7 @@ Reduce a detector's regions to the ones worth acting on: drop the ones too small
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `bounding_boxes` | `BOUNDING_BOX,BOUNDING_BOXES,STRING` | Yes |  |  | The regions to reduce. Wire in SAM3 Detect, Run Real-Time Detection, MediaPipe's landmarker or Bounds to Bounding Boxes. JSON text holding the same boxes is read too. |
-| `order` | `COMBO` | Yes |  | `as found`, `area, largest first`, `area, smallest first`, `left to right`, `top to bottom` | What order the regions come out in. `area, largest first` puts the main subject at index 0, which is what an index switch reads; `left to right` and `top to bottom` suit a row of faces or a contact sheet; `as found` leaves the detector's own order. |
+| `order` | `COMBO` | Yes |  | `as found`, `area, largest first`, `area, smallest first`, `left to right`, `top to bottom` | `as found` = the detector's own order; `area, largest first` = the main subject at index 0, for an index switch; `left to right` and `top to bottom` = a row of faces or a contact sheet. |
 | `keep` | `INT` | Yes | 0 |  | How many to keep after ordering. 0 = all, 1 = only the first, 5 = the first five. Set order first, since this counts from the top of that order. |
 | `overlap` | `FLOAT` | Yes | 1.0 |  | How much two regions may share before the smaller is dropped. 1.0 = keep everything, 0.5 = drop a region sharing half its area with a larger one, 0.0 = drop anything touching. Use it where a detector found the same subject twice. |
 | `min_width` | `INT` | Yes | 0 |  | Narrowest region kept, in pixels. 0 = keep every width, 64 = drop anything under 64 across, which clears the specks a low threshold picks up. |
@@ -3083,7 +3083,7 @@ Reduce a detector's regions to the ones worth acting on: drop the ones too small
 <details>
 <summary><b>Bounding Boxes to Bounds</b></summary>
 
-Turn bounding boxes into bounds, so a region found by a detector reaches the cropping, blending and masking nodes in this pack. Anything on a BOUNDING_BOX or BOUNDING_BOXES wire is read: one box, a list of them, or the per-frame lists a detector emits. Each box becomes one bounds row with every edge inclusive, which is the same rectangle counted the other way.
+Turn bounding boxes into bounds, so a region found by a detector reaches the cropping, blending and masking nodes in this pack. Reads one box, a list of them, or a detector's per-frame lists, and hands on one bounds row per box.
 
 | | |
 |---|---|
@@ -3170,7 +3170,7 @@ Paint every bounds rectangle as a white block on a black mask, which is how a me
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image_bounds` | `IMAGE_BOUNDS` | Yes |  |  | The rectangles to paint, from Image Bounds, Inset Image Bounds, Mask to Bounds or Image Crop by Mask. Each row becomes its own mask, so a bounds holding a row per image answers a mask per image. |
-| `width` | `INT` | Yes | 0 |  | Width of the mask in pixels, read only when neither image nor mask is connected. 0 = take it from the connected picture; 1872 = an 1872px frame. Type the width of the picture the bounds were measured on, or the rectangles land in the wrong place. |
+| `width` | `INT` | Yes | 0 |  | Width of the mask in pixels, read only when neither image nor mask is connected. 0 = take it from the connected picture; 1872 = an 1872px frame. Use the width the bounds were measured on. |
 | `height` | `INT` | Yes | 0 |  | Height of the mask in pixels, read only when neither image nor mask is connected. 0 = take it from the connected picture; 2272 = a 2272px frame. |
 | `image` | `IMAGE` | No |  |  | The picture the bounds were measured on. Its size becomes the mask size and width and height are then ignored. Wire the same image that fed Image Bounds or Image Crop by Mask. |
 | `mask` | `MASK` | No |  |  | A mask to take the frame from instead, for bounds measured by Mask to Bounds. Read when image is empty, and it has to cover the same area as the picture the bounds were measured on. |
@@ -3187,7 +3187,7 @@ Paint every bounds rectangle as a white block on a black mask, which is how a me
 <details>
 <summary><b>Bounds to Numbers</b></summary>
 
-Open a bounds rectangle into the numbers a graph can wire: the top left corner, the width and height, the far edges, and the same rectangle as text. A bounds value travels as one piece, so this is how a region measured by Mask to Bounds reaches an x and y input such as Mask Rect Area, or the four edges of Image Crop Location. Bounds carry a row per image and index says which row is read.
+Open one bounds rectangle into numbers a graph can wire: the top left corner, the width and height, the far edges, and the rectangle as text. Use it to feed a measured region into an x and y input or the four edges of a crop.
 
 | | |
 |---|---|
@@ -3246,7 +3246,7 @@ Turn the crop window a crop node recorded into a bounds row, so a region found b
 <details>
 <summary><b>Crop Data to Numbers</b></summary>
 
-Open the crop window a crop node recorded into plain numbers: the size the crop came out at, where its rectangle starts in the source image, and how far it runs. Use it to drive a resize, place a paste or a label at the same spot, or write a window out as text. Crop Data to Bounds converts the same window into a bounds row instead.
+Open the crop window a crop node recorded into plain numbers: the size the crop came out at, where it starts in the source image, and how far it runs. Use it to drive a resize, place a paste or label at the same spot, or write the window out as text.
 
 | | |
 |---|---|
@@ -3262,7 +3262,7 @@ Open the crop window a crop node recorded into plain numbers: the size the crop 
 
 | Name | Type | What it is |
 |---|---|---|
-| `crop_width` | `INT` | Width of the picture the crop node emitted, in pixels. It matches width for every crop node but Image Crop Face and Image Crop Face (YuNet), which square their window up: a 480x460 window comes out 480x480. Wire it wherever a resize has to match what was cut. |
+| `crop_width` | `INT` | Width of the picture the crop node emitted, in pixels. Matches width except for Image Crop Face and Image Crop Face (YuNet), which square their window: 480x460 comes out 480x480. Wire it wherever a resize has to match the cut. |
 | `crop_height` | `INT` | Height of the picture the crop node emitted, in pixels. It parts from height only for the two face crops, for the same reason crop_width does. Pair the two to resize a reworked region back before Image Paste Crop puts it home. |
 | `x` | `INT` | Left edge of the window in the source image, counting from 0. 100 = the window starts 100 pixels in from the left. Feed it to Image Crop Location's left, or to a draw node marking the same spot. |
 | `y` | `INT` | Top edge of the window in the source image, counting from 0. 40 = the window starts 40 pixels down. Pair it with x to place text, a paste or a mask exactly where the crop was taken from. |
@@ -3470,7 +3470,7 @@ Nudge the red, green and blue channels apart so edges pick up coloured fringes, 
 <details>
 <summary><b>Image Directional Blur</b></summary>
 
-Smear the frame along a path instead of spreading it evenly. `linear` is the streak a moving camera or a moving subject leaves; `zoom` rushes out of a point, which reads as speed towards the viewer; `spin` sweeps round one, which reads as rotation. A gaussian blur softens everything the same way in every direction and cannot do any of the three.
+Smear the frame along a path instead of spreading it evenly. `linear` is the streak a moving camera or subject leaves; `zoom` rushes out of a point, for speed towards the viewer; `spin` sweeps round one, for rotation.
 
 | | |
 |---|---|
@@ -3569,7 +3569,7 @@ Fake a shallow depth of field: keep the image sharp where a depth map is bright 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to defocus. A batch is handled one image at a time. |
-| `depth` | `IMAGE` | Yes |  |  | The depth map deciding what stays sharp: white areas keep full detail, black areas get the full blur, greys blend between the two. It is resized to the image, so it need not match its size. A batch shorter than the image batch repeats its last entry for the images left over. |
+| `depth` | `IMAGE` | Yes |  |  | The depth map deciding what stays sharp: white = full detail; black = full blur; greys blend. Resized to the image. A batch shorter than the image batch repeats its last entry. |
 | `mode` | `COMBO` | Yes |  | `mock`, `gaussian`, `box` | How the out-of-focus areas are blurred. `mock` smooths within areas but not across their edges, which keeps outlines clean and is the slowest; `gaussian` is an ordinary soft blur; `box` is a square blur that is faster and slightly harder-edged. |
 | `radius` | `INT` | Yes | 8 |  | How strong the blur is, in pixels. 8 is a mild defocus, 40 makes the background unreadable. In `mock` mode this also widens how far colours are allowed to mix, so it gets slow quickly. |
 | `samples` | `INT` | Yes | 1 |  | How many times the sharp image is composited back over the blurred one. 1 gives a smooth blend across the grey parts of the depth map; 2 and 3 pull those grey parts towards the blur, so only the brightest areas stay fully sharp. |
@@ -3600,7 +3600,7 @@ Lay photographic grain over an image, the speckle a film negative has. The grain
 | `density` | `FLOAT` | Yes | 1.0 |  | How much of the frame is speckled. 1.0 covers it evenly, 0.5 leaves gaps of untouched image between the grains, 0.01 gives sparse specks. |
 | `intensity` | `FLOAT` | Yes | 1.0 |  | How strongly the grain layer replaces the picture. 0.01 is barely there, 0.3 is a realistic amount, 1.0 discards the original colours and leaves the grey grain layer alone. |
 | `highlights` | `FLOAT` | Yes | 1.0 |  | Brightness multiplier applied at the end, to win back the light the grain absorbs. 1.0 leaves it alone, 1.2 lifts it slightly, and large values blow the image out to white. |
-| `supersample_factor` | `INT` | Yes | 4 |  | How much larger the grain is drawn before being scaled down, which decides how fine it is. 1 gives coarse one-pixel grain, 4 is a fine realistic grain, 8 is finer still. Cost grows with the square of this, so 8 is 64 times the work of 1. |
+| `supersample_factor` | `INT` | Yes | 4 |  | How much larger the grain is drawn before scaling down. 1 = coarse one-pixel grain; 4 = fine realistic grain; 8 = finer still. Cost grows with the square: 8 is 64 times the work of 1. |
 
 **Outputs**
 
@@ -3659,7 +3659,7 @@ Recolour an image by brightness: the darkest pixels take the first colour of a g
 | `image` | `IMAGE` | Yes |  |  | The image to recolour. Only its brightness is used, so its own colours are discarded. A batch is handled one image at a time. |
 | `flip_left_right` | `BOOLEAN` | Yes | False |  | `true` sends the ramp's last colour to the shadows and its first to the highlights. `false` reads the ramp from its first colour to its last. |
 | `gradient_stops` | `STRING` | Yes | 0:0,0,0 100:255,255,255 |  | One stop per line as position:red,green,blue, so '0:0,0,0' puts black in the shadows. Positions run 0 to 100 from shadows to highlights and channels 0 to 255. The editor below writes here, and this is what a run reads. Not used while gradient_image is connected. |
-| `gradient_image` | `IMAGE` | No |  |  | A gradient to read instead of the stops, for one that already exists as a picture. Whichever of its two axes travels furthest is the one read, averaged along the other, so a gradient running top to bottom works as well as one running left to right. A batch is paired with the image batch frame by frame. |
+| `gradient_image` | `IMAGE` | No |  |  | A gradient picture to read instead of the stops. The axis along which colour changes most is read, so top to bottom works as well as left to right. A batch pairs with the image batch frame by frame. |
 
 **Outputs**
 
@@ -3792,8 +3792,8 @@ Break an image up the way a bad screen or a worn tape does: torn rows, scan line
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to damage. A batch is handled one image at a time, and each image draws its own random damage. |
-| `mode` | `COMBO` | Yes |  | `Digital Distortion`, `Signal Distortion`, `TV Distortion` | Which artefact to apply. `Digital Distortion` shears the columns along a wave and punches shuffled scan lines through the result; 'Signal Distortion' tears each row sideways by a random amount; 'TV Distortion' tears the rows and adds a crossed interference pattern and noise over a desaturated copy, for a worn-videotape look. |
-| `amplitude` | `INT` | Yes | 5 |  | How violent the effect is, in pixels of displacement. 1 is barely visible and 50 is severe. TV Distortion reads it the other way round, there it divides the image height, so larger values give smaller tears, and a value above the image height leaves nothing to divide and fails. |
+| `mode` | `COMBO` | Yes |  | `Digital Distortion`, `Signal Distortion`, `TV Distortion` | `Signal Distortion` = each row torn sideways by a random amount; `Digital Distortion` = columns sheared along a wave, shuffled scan lines punched through; `TV Distortion` = torn rows, crossed interference and noise over a desaturated copy, a worn-videotape look. |
+| `amplitude` | `INT` | Yes | 5 |  | Pixels of displacement: 1 = barely visible; 50 = severe. `TV Distortion` divides the image height by it instead, so larger values give smaller tears, and a value above the height fails. |
 | `offset` | `INT` | Yes | 10 |  | Spacing of the scan lines, in rows: 10 replaces every tenth row, 1 replaces all of them. Only Digital Distortion uses this; the other two modes ignore it. |
 
 **Outputs**
@@ -3846,7 +3846,7 @@ Push an image's brightness through a sine wave, which turns smooth gradients int
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to remap. A batch is handled one image at a time. |
 | `amplitude` | `FLOAT` | Yes | 0.1 |  | How far the wave swings, where 1.0 is the whole black-to-white range. 0.0 gives a black image, 0.1 keeps the result dark with faint bands, 1.0 gives full-strength colour bands. |
-| `frequency` | `FLOAT` | Yes | 3.14 |  | How many bands the wave lays across the brightness range. 0.0 gives a black image, 1.0 gives one broad sweep, 3.14 gives a handful of bands, and large values give many fine ones. It is capped at half the image width, beyond which the bands are finer than the pixels. |
+| `frequency` | `FLOAT` | Yes | 3.14 |  | How many bands the wave lays across the brightness range. 0.0 = a black image; 1.0 = one broad sweep; 3.14 = a handful of bands; larger = many fine ones. Capped at half the image width. |
 
 **Outputs**
 
@@ -3900,14 +3900,14 @@ Shade an image as though its height map were real relief standing off the page. 
 | `height_maps` | `IMAGE` | Yes |  |  | The matching height map, where bright stands high and dark lies low. It is resized to the image, so it need not match its size. MiDaS Depth Approximation produces a suitable one. |
 | `strength` | `FLOAT` | Yes | 1.0 |  | How dark the shading goes. 1.0 is the measured amount, 0.5 is half as deep, 2.0 exaggerates it. 0.0 leaves the image exactly as it arrived. |
 | `radius` | `FLOAT` | Yes | 30 |  | How far each ray travels from its pixel, in pixels. 4 catches only the tight creases right at an edge; 30 gathers broad soft shading; 200 lets a distant ridge shade a whole valley. Cost does not grow with this, only with ray_count and step_count. |
-| `height_scale` | `FLOAT` | Yes | 64 |  | How far the map is extruded, in pixels, from black to white. This against radius is what sets the depth of the shading: 64 with a radius of 30 gives steep relief and heavy occlusion, 16 gives a gentle emboss. 0 flattens the map and the shading disappears. |
+| `height_scale` | `FLOAT` | Yes | 64 |  | How far the map is extruded from black to white, in pixels. Against radius it sets the shading depth: 0 = flat, no shading; 16 = a gentle emboss; 64 with radius 30 = steep relief, heavy occlusion. |
 | `ray_count` | `INT` | Yes | 16 |  | How many directions are traced around the circle. 8 is fast and can band on smooth gradients, 16 is clean for most images, 32 and above for large radii where the banding shows. Cost is directly this times step_count. |
 | `step_count` | `INT` | Yes | 16 |  | How many samples are taken along each ray. Too few for the radius and a narrow ridge is stepped straight over, so raise this when a large radius starts missing thin occluders. 16 suits a radius up to about 64; use 32 beyond that. |
-| `angle_bias` | `FLOAT` | Yes | 0.15 |  | How steep a ridge has to be before it shades, as rise over run. `0.15` = clears the rings an 8 bit height map shades on flat ground; `0.3` = for rings that survive a larger height_scale; `0` = for a smooth floating point height map. |
+| `angle_bias` | `FLOAT` | Yes | 0.15 |  | How steep a ridge must be to shade, as rise over run. `0` = for a smooth floating point height map; `0.15` = clears the rings an 8 bit map shades on flat ground; `0.3` = for rings a larger height_scale leaves. |
 | `ao_blur` | `FLOAT` | Yes | 2.5 |  | How much the shading is softened before it is applied, in pixels. 2.5 smooths away the sampling noise; 20 turns the shading into a broad gradient. 0 applies it exactly as traced. |
-| `specular_threshold` | `INT` | Yes | 200 |  | How bright a pixel has to be, on a 0-255 scale, to count as a highlight that should not be shaded. 200 protects only genuine highlights; 25 protects everything that is not nearly black and leaves the shading doing nothing. Only read when enable_specular_masking is on, but it always decides the third output. |
+| `specular_threshold` | `INT` | Yes | 200 |  | Brightness, 0 to 255, at which a pixel counts as a highlight left unshaded. 25 = everything not nearly black, so almost nothing shades; 200 = only genuine highlights. Read only with enable_specular_masking on, but always decides the third output. |
 | `enable_specular_masking` | `BOOLEAN` | Yes | False |  | Keep the bright areas picked out by specular_threshold free of shading. On protects highlights and light sources from being darkened; off shades the whole image from its relief alone. |
-| `precision` | `COMBO` | Yes | 32 bit float | `8 bit`, `16 bit`, `32 bit float` | How finely the three outputs are stepped. `32 bit float` = every value kept, for EXR Save and DNG Save; `16 bit` = steps of 1/65535, smooth enough to grade; `8 bit` = steps of 1/255, what a PNG holds, and bands a soft gradient. Nothing above 1.0 is clipped at any setting. |
+| `precision` | `COMBO` | Yes | 32 bit float | `8 bit`, `16 bit`, `32 bit float` | How finely the outputs are stepped. `8 bit` = 1/255, bands a soft gradient; `16 bit` = 1/65535, smooth enough to grade; `32 bit float` = every value kept, for EXR Save and DNG Save. Nothing above 1.0 is clipped. |
 
 **Outputs**
 
@@ -3937,7 +3937,7 @@ Relight an image from the brightest thing in it, using a depth map to work out w
 | `depth_images` | `IMAGE` | Yes |  |  | The matching depth map, where bright means near and dark means far. Unlike the ambient-occlusion node this one does not resize it, so it has to be the same size as the image. |
 | `strength` | `FLOAT` | Yes | 1.0 |  | How much of the bright end of the lighting is pushed to full white, as a percentage of the pixels. 0.0 keeps the whole range, 1.0 clips the brightest one percent, 5.0 clips the brightest five and gives a harder light. |
 | `radius` | `FLOAT` | Yes | 30 |  | How far around each pixel the depth is compared, in pixels. Small values such as 4 give a tight rim of light along edges; 30 spreads it broadly. Cost grows with the square of this, so large values are very slow. |
-| `specular_threshold` | `INT` | Yes | 128 |  | How dark a pixel has to be to join the area the light source is looked for in. It is read against the inverted image, so 128 takes everything darker than mid grey and a higher value such as 200 narrows the search to the darkest pixels only. It decides the fourth output alone, not the lighting. |
+| `specular_threshold` | `INT` | Yes | 128 |  | How dark a pixel must be to join the area the light source is looked for in. 128 = everything darker than mid grey; 200 = the darkest pixels only. Decides the fourth output alone, not the lighting. |
 | `colored_occlusion` | `BOOLEAN` | Yes | True |  | On carries the source colours into the lighting pass, tinting the relight with the scene; off keeps the pass neutral grey, so the shadows shade without shifting hue. |
 
 **Outputs**
@@ -3955,7 +3955,7 @@ Relight an image from the brightest thing in it, using a depth map to work out w
 <details>
 <summary><b>Image Style Filter</b></summary>
 
-Recolour an image with one of the familiar photo-app looks or one of the ten modern grades beside them. Most finish by bleeding the highlights into the pixels around them, the halation a lens gives a bright light, and several shade or tint away from the centre, so the result follows the frame's size and shape. `inkwell` and `moon` are black and white and `film noir` a cold-toned one, `kelvin`, `toaster` and `golden hour` the warm ones, `bleach bypass`, `brannan` and `clean punch` the hardest, `reyes`, `stinson` and `faded film` pale with their blacks lifted, and `teal and orange`, `moody blue`, `neon night` and `cross process` the colour-shifted ones. `fairy tale` is not a colour grade at all: it adds bloom and two layers of random coloured glitter, so it gives a different result every run.
+Recolour an image with one of 37 looks, from familiar photo-app filters to modern grades such as `teal and orange` and `bleach bypass`. A contact sheet on the node shows every look over the picture, and a click on a tile picks it.
 
 | | |
 |---|---|
@@ -3966,10 +3966,10 @@ Recolour an image with one of the familiar photo-app looks or one of the ten mod
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to treat. A batch is handled one image at a time. |
-| `style` | `COMBO` | Yes |  | `1977`, `aden`, `bleach bypass`, `brannan`, `brooklyn`, `clarendon`, `clean punch`, `cross process`, `earlybird`, `faded film`, `fairy tale`, `film noir` and 25 more | Which of the 37 looks to apply. Tick `contact_sheet` to draw every one of them over this picture and click a tile to pick it. `inkwell` and `moon` are black and white, `kelvin` and `golden hour` the warmest, `moody blue` the coolest, `bleach bypass` the hardest, and `fairy tale` adds glitter instead of a grade. |
+| `style` | `COMBO` | Yes |  | `1977`, `aden`, `bleach bypass`, `brannan`, `brooklyn`, `clarendon`, `clean punch`, `cross process`, `earlybird`, `faded film`, `fairy tale`, `film noir` and 25 more | Which of the 37 looks to apply. `inkwell`, `moon` = black and white; `kelvin`, `golden hour` = warmest; `moody blue` = coolest; `bleach bypass` = hardest; `fairy tale` = random glitter, not a grade, different every run. |
 | `strength` | `FLOAT` | Yes | 1.0 |  | How far towards the look the result sits. 1.0 is the whole look, 0.5 half of it, 0.0 the image unchanged. Ignored by `fairy tale`. |
 | `contact_sheet` | `BOOLEAN` | Yes | True |  | `true` draws every style over this picture on the node, so one run shows all 37 and a cell can be clicked to pick it. `false` draws the picture beside the graded result with the difference between them, which is quicker on a large frame. |
-| `use_gpu` | `BOOLEAN` | Yes | True |  | `true` grades on the graphics card, which is around six times quicker on a 3840 by 2160 frame and around twice as quick at 512 by 512. `false` keeps it on the processor. A card that refuses the work falls back to the processor either way. |
+| `use_gpu` | `BOOLEAN` | Yes | True |  | `true` = grades on the graphics card, several times quicker on a large frame; `false` = on the processor. A card that refuses the work falls back to the processor. |
 
 **Outputs**
 
@@ -3995,7 +3995,7 @@ Shuffle an image's pixels into noise that keeps its palette. Handy as a starting
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The image whose colours the noise is built from. A batch is scrambled frame by frame. |
 | `num_colors` | `INT` | Yes | 16 |  | How many colours the image is reduced to before its pixels are shuffled. 2 gives noise in two tones, 16 keeps the broad palette, 256 keeps almost every shade of the original. |
-| `black_mix` | `INT` | Yes | 0 |  | How many passes of random black pixels are laid over the noise. Each pass blacks out about half of what is left, so 1 is a coarse half-and-half speckle and 4 is nearly black. 0 adds none. Every pass draws once per pixel, so high values on a large image are slow. |
+| `black_mix` | `INT` | Yes | 0 |  | Passes of random black pixels laid over the noise, each blacking out about half of what is left. 0 = none; 1 = a coarse half-and-half speckle; 4 = nearly black. High values on a large image are slow. |
 | `gaussian_mix` | `FLOAT` | Yes | 0.0 |  | Radius of a blur mixed back into the noise, in pixels, which softens it into clumps instead of single dots. 0.0 skips it; 2.0 gives soft grain. Most of the original noise is kept whatever the radius. |
 | `brightness` | `FLOAT` | Yes | 1.0 |  | Brightness of the result. 1.0 leaves it as it is, 0.5 halves it, 0.0 is black and 2.0 is twice as bright. |
 | `output_mode` | `COMBO` | Yes |  | `batch`, `list` | `batch` emits one image holding every scrambled frame, which is what the image nodes expect. `list` emits the frames as a list on the same socket instead, for a downstream node that reads one. |
@@ -4045,7 +4045,7 @@ Fall the frame off towards its corners, the way a wide lens does, or the other w
 <details>
 <summary><b>Image Blank</b></summary>
 
-Make a new image filled with a single colour, for use as a background, a matte, or a base to composite onto. The colour is set from the wheel on the node or by typing the three levels. Both sides are rounded down to a multiple of divisible_by, which saves a sampler rounding the size itself, so 513 becomes 512 at the default of 8. Use 16, 32 or 64 for a model that asks for a coarser step, and 1 for a matte that has to line up with something else exactly. A side shorter than divisible_by is taken up to one whole step rather than down to nothing. batch_size repeats the fill, for matching a batch of frames. alpha_channel adds a fourth channel at the level alpha, for an RGBA fill.
+Make a new image filled with a single colour, for a background, a matte or a base to composite onto. Set the colour from the wheel on the node or by typing the three levels.
 
 | | |
 |---|---|
@@ -4060,7 +4060,7 @@ Make a new image filled with a single colour, for use as a background, a matte, 
 | `red` | `INT` | Yes | 255 |  | Red level of the fill colour. 0 is none, 255 is full. |
 | `green` | `INT` | Yes | 255 |  | Green level of the fill colour. 0 is none, 255 is full. |
 | `blue` | `INT` | Yes | 255 |  | Blue level of the fill colour. 0 is none, 255 is full. All three at 255 gives white, all three at 0 gives black. |
-| `divisible_by` | `INT` | Yes | 8 |  | Rounds width and height down to a multiple of this. 8 suits most latent models; set it to 1 to get the exact canvas asked for. |
+| `divisible_by` | `INT` | Yes | 8 |  | Rounds width and height down to a multiple of this; a shorter side becomes one whole step. 1 = the exact size asked for; 8 = most latent models; 16, 32 or 64 = a model wanting a coarser step. |
 | `batch_size` | `INT` | Yes | 1 |  | How many copies the batch holds. 1 = a single image; 16 = sixteen identical fills, for matching a batch of frames a sampler or a video node is working on. |
 | `alpha_channel` | `BOOLEAN` | Yes | False |  | `true` gives RGBA, with a fourth channel at the level alpha; `false` gives RGB. |
 | `alpha` | `FLOAT` | Yes | 1.0 |  | Level of the alpha channel when alpha_channel is on: `1.0` opaque, `0.5` half, `0.0` clear. |
@@ -4077,7 +4077,7 @@ Make a new image filled with a single colour, for use as a background, a matte, 
 <details>
 <summary><b>Image Generate Gradient</b></summary>
 
-Generate a horizontal or vertical colour gradient from a list of colour stops, for backgrounds, sky ramps and gradient maps. The lowest stop's colour fills everything before it and the highest stop's colour everything after it, so a stop at 75 leaves the last quarter flat. A line of gradient_stops that cannot be read is skipped, and a box with no readable stop in it at all reports that instead of guessing a gradient.
+Generate a horizontal or vertical colour gradient from a list of colour stops, for backgrounds, sky ramps and gradient maps. Raise tolerance for a banded, posterised ramp.
 
 | | |
 |---|---|
@@ -4091,7 +4091,7 @@ Generate a horizontal or vertical colour gradient from a list of colour stops, f
 | `height` | `INT` | Yes | 512 |  | Height of the generated image, in pixels. |
 | `direction` | `COMBO` | Yes |  | `horizontal`, `vertical` | Which way the colours run. `horizontal` puts the first stop at the left edge and the last at the right; `vertical` runs top to bottom. |
 | `tolerance` | `INT` | Yes | 0 |  | Rounds every colour channel to a multiple of this number, which turns the smooth ramp into visible bands. 0 leaves it smooth, 32 gives eight steps per channel, 64 gives four. A blur is applied afterwards, so the edges of the bands stay soft. |
-| `gradient_stops` | `STRING` | Yes | 0:255,0,0 25:255,255,255 50:0,255,0 75:0,0,255 |  | One stop per line as position:red,green,blue, so '0:255,0,0' puts pure red at the start. Positions run 0 to 100 across the image, channels 0 to 255. |
+| `gradient_stops` | `STRING` | Yes | 0:255,0,0 25:255,255,255 50:0,255,0 75:0,0,255 |  | One stop per line as position:red,green,blue, so '0:255,0,0' puts pure red at the start. Positions run 0 to 100, channels 0 to 255. Colour holds flat beyond the end stops; an unreadable line is skipped. |
 
 **Outputs**
 
@@ -4178,8 +4178,8 @@ Generate a noise image with a chosen grain size: flat white noise, soft pink noi
 | `width` | `INT` | Yes | 512 |  | Width of the generated image, in pixels. |
 | `height` | `INT` | Yes | 512 |  | Height of the generated image, in pixels. |
 | `frequency` | `FLOAT` | Yes | 0.5 |  | The frequency shaping is worked out from the image size alone, so changing this value does not change the image; use noise_type to choose the grain size. |
-| `attenuation` | `FLOAT` | Yes | 0.5 |  | Spread of the random draw the grey, pink, blue, green and mix types are built from. The result is stretched to fill black-to-white afterwards, so this changes the character of the grain rather than its brightness. 0.0 leaves nothing to stretch and gives a blank image; `white` ignores it. |
-| `noise_type` | `COMBO` | Yes |  | `grey`, `white`, `pink`, `blue`, `green`, `mix` | Which distribution to draw. `white` and `grey` are even, per-pixel static, uniform and bell-curved respectively; `pink` is weighted towards large soft blobs; `blue` towards fine grain, which dithers without visible clumps; `green` sits between the two; `mix` composites white, grey and pink through blue noise masks for a cloudier, patchier result. |
+| `attenuation` | `FLOAT` | Yes | 0.5 |  | Spread of the random draw behind `grey`, `pink`, `blue`, `green` and `mix`. The result is stretched to black-to-white, so this changes the grain's character, not its brightness. 0.0 = a blank image; `white` ignores it. |
+| `noise_type` | `COMBO` | Yes |  | `grey`, `white`, `pink`, `blue`, `green`, `mix` | `white` = uniform per-pixel static; `grey` = bell-curved per-pixel static; `pink` = large soft blobs; `blue` = fine grain that dithers without clumps; `green` = between pink and blue; `mix` = white, grey and pink through blue noise masks, cloudier and patchier. |
 | `seed` | `INT` | Yes | 0 |  | Which draw is used. The same seed always gives the same image, so change it for a different one. Values above 4294967294 are folded down into range and the log says what was used instead. |
 
 **Outputs**
@@ -4226,7 +4226,7 @@ Generate Voronoi (Worley) cellular noise: scattered points shaded by how far eac
 <details>
 <summary><b>DNG Save</b></summary>
 
-Write every image in the batch as a DNG, the raw file Lightroom, Camera Raw, darktable and RawTherapee open with their raw controls. Readings are 16 bit and linear, so a recovered highlight arrives with room to pull back and a rebuilt gradient arrives without its 8-bit steps. The images are read as linear light, which is what HDR Reconstruct, EXR Load and Linear Light answer with.
+Write every image in the batch as a 16-bit linear DNG, the raw file Lightroom, Camera Raw, darktable and RawTherapee open with their raw controls, so recovered highlights keep room to pull back. Feed it linear light, from HDR Reconstruct, EXR Load or Linear Light.
 
 | | |
 |---|---|
@@ -4255,7 +4255,7 @@ Write every image in the batch as a DNG, the raw file Lightroom, Camera Raw, dar
 <details>
 <summary><b>EXR Load</b></summary>
 
-Read an OpenEXR file as linear light, with everything above one kept, so a plate written by this pack or by a compositing program comes back into the graph at its real brightness. A fourth channel arrives as the alpha output. Uncompressed, ZIP, ZIPS and RLE files are read; a PIZ, DWA, B44 or PXR24 file is named in the message and refused.
+Read an OpenEXR file as linear light with everything above one kept, so a plate from this pack or a compositing program comes back at its real brightness. Hands on the image, its alpha and its peak value.
 
 | | |
 |---|---|
@@ -4265,7 +4265,7 @@ Read an OpenEXR file as linear light, with everything above one kept, so a plate
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which EXR to read. Each entry carries the folder it sits in: `plate_0001.exr [output]`, `shot.exr [input]`, `scratch.exr [temp]`. EXR Save writes into output, so a file it wrote is listed here. |
+| `file` | `COMBO` | Yes |  |  | Which EXR to read. Each entry carries the folder it sits in: `plate_0001.exr [output]`, `shot.exr [input]`, `scratch.exr [temp]`; EXR Save writes into output. Uncompressed, ZIP, ZIPS and RLE files read; PIZ, DWA, B44 and PXR24 are refused. |
 
 **Outputs**
 
@@ -4281,7 +4281,7 @@ Read an OpenEXR file as linear light, with everything above one kept, so a plate
 <details>
 <summary><b>EXR Save</b></summary>
 
-Write every image in the batch as an OpenEXR file of linear light, one file per frame, numbered in sequence, at 16 or 32 bits per channel. Values above one are kept, so recovered highlights reach a grading or compositing program at their real brightness. A mask on alpha is written as a fourth channel. Files land under ComfyUI's output directory, and the prefix may name a subfolder.
+Write every image in the batch as a numbered OpenEXR file of linear light, at 16 or 32 bits per channel, with values above one kept. Recovered highlights reach a grading or compositing program at their real brightness, and a mask on alpha becomes a fourth channel.
 
 | | |
 |---|---|
@@ -4310,7 +4310,7 @@ Write every image in the batch as an OpenEXR file of linear light, one file per 
 <details>
 <summary><b>HDR VAE Decode</b></summary>
 
-Decode a latent to an image and keep the values the decoder put above white and below black, which the standard VAE Decode holds at 1.0 and 0.0. A bright sky, a specular hit or a light source comes out with its shape intact instead of a flat white shelf, ready for EXR Save, DNG Save, a tone map, or an exposure pull with Linear Light. Exposure, ceiling and negatives set what reaches the output, and the panel reports the peak and how much of the picture is above white.
+Decode a latent to an image, keeping the values the decoder put above white and below black. A bright sky, specular hit or light source keeps its shape instead of a flat white shelf, ready for EXR Save, DNG Save, a tone map or Linear Light. The node reports the peak and the share above white.
 
 | | |
 |---|---|
@@ -4339,7 +4339,7 @@ Decode a latent to an image and keep the values the decoder put above white and 
 <details>
 <summary><b>Image Dequantise</b></summary>
 
-Rebuild the levels an 8-bit file threw away. A band stored as one flat value comes back as the ramp it was cut from, and no sample moves further than half a code. Reach for it where a sky, a soft shadow or a vignette has banded, and before grading, tone mapping or an HDR pass on a picture that came out of a PNG or a JPEG.
+Rebuild the levels an 8-bit file threw away, so a band stored as one flat value comes back as the ramp it was cut from. Use it where a sky, soft shadow or vignette has banded, and before grading, tone mapping or an HDR pass on a PNG or JPEG.
 
 | | |
 |---|---|
@@ -4366,7 +4366,7 @@ Rebuild the levels an 8-bit file threw away. A band stored as one flat value com
 <details>
 <summary><b>Image Preview</b></summary>
 
-Show a batch the way it will really look, and hand it on unchanged. A preview reads whatever it is given as ordinary sRGB codes, so light-linear frames out of HDR Reconstruct or EXR Load are drawn far too dark and a workflow tuned against that view comes out wrong. Say what the numbers mean, dial exposure to bring a highlight into view, and mark every sample that will not fit.
+Show a batch the way it will really look, and hand it on unchanged. Set `linear light` for frames from HDR Reconstruct or EXR Load, dial exposure to bring a highlight into view, and mark every sample that will not fit.
 
 | | |
 |---|---|
@@ -4381,7 +4381,7 @@ Show a batch the way it will really look, and hand it on unchanged. A preview re
 | `encoding` | `COMBO` | Yes |  | `sRGB`, `linear light` | 'sRGB' = ordinary picture codes, what a sampler and a PNG carry; 'linear light' = what HDR Reconstruct, EXR Load and Linear Light answer with. Reading light as sRGB is what makes a preview look too dark and too contrasty. |
 | `exposure` | `FLOAT` | Yes | 0.0 |  | Stops applied before the picture is drawn. 0.0 shows it as it is, -2.0 brings a highlight that reached 4.0 into view, +1.0 opens up a shadow. The images handed on are not changed by it. |
 | `mark_clipping` | `BOOLEAN` | Yes | False |  | 'true' paints every sample over white red and every sample under black blue, so the exposure can be dialled until nothing is marked; 'false' draws the picture alone. |
-| `profile` | `WAS_COLOUR_PROFILE` | No |  |  | A colour profile from Image Load. It only changes the picture where the loader was set to keep the file's own space, in which case the numbers are read through that profile so the view matches the file. A profile from a converted load is already sRGB and draws the same either way. |
+| `profile` | `WAS_COLOUR_PROFILE` | No |  |  | A colour profile from Image Load. Changes the picture only where the loader kept the file's own space, so the view matches the file; a profile from a converted load is already sRGB and draws the same. |
 
 **Outputs**
 
@@ -4395,7 +4395,7 @@ Show a batch the way it will really look, and hand it on unchanged. A preview re
 <details>
 <summary><b>Image Tone Map</b></summary>
 
-Roll highlights above white down into a range a screen can show, instead of clipping them flat. HDR Reconstruct, HDR VAE Decode and EXR Load all answer linear light with values far above 1.0, and every preview and every 8-bit save cuts those to white. `aces` and `hable` give the filmic shoulder a camera has, `reinhard` never clips at all, and `clip` is the cut this replaces, for comparison.
+Roll highlights above white down into a range a screen can show, instead of clipping them flat. Use it before a preview or an 8-bit save of linear light, such as HDR Reconstruct, HDR VAE Decode or EXR Load hand on.
 
 | | |
 |---|---|
@@ -4426,7 +4426,7 @@ Roll highlights above white down into a range a screen can show, instead of clip
 <details>
 <summary><b>Linear Light</b></summary>
 
-Convert between the sRGB curve a picture is stored with and the light it stands for, and adjust exposure in stops on the way. Every node that works in light rather than in codes wants linear on its input: EXR Save, DNG Save, and any blend or blur that should behave the way light does. Coming back the other way is what makes linear light viewable, since a preview reads its numbers as sRGB.
+Convert between the sRGB curve a picture is stored with and the linear light it stands for, adjusting exposure in stops on the way. Use it to feed nodes that work in light, such as EXR Save, and to bring light back for viewing.
 
 | | |
 |---|---|
@@ -4437,7 +4437,7 @@ Convert between the sRGB curve a picture is stored with and the light it stands 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to convert. Everything above 1.0 survives the trip to linear and is brought back into range by exposure on the way out. |
-| `direction` | `COMBO` | Yes |  | `sRGB to linear`, `linear to sRGB` | 'sRGB to linear' = for a picture that came out of a PNG, a JPEG or a sampler, on its way into EXR Save, DNG Save or a light-linear blend; 'linear to sRGB' = for light on its way to a preview, a save or any node that expects ordinary picture codes. |
+| `direction` | `COMBO` | Yes |  | `sRGB to linear`, `linear to sRGB` | 'sRGB to linear' = a PNG, JPEG or sampler picture on its way into EXR Save, DNG Save or a light-linear blend; 'linear to sRGB' = light on its way to a preview, a save or any node expecting ordinary picture codes. |
 | `exposure` | `FLOAT` | Yes | 0.0 |  | Stops of exposure applied to the light. 0.0 leaves it alone, -1.0 halves it, +1.0 doubles it. -2.0 brings a highlight that reached 4.0 back under white. |
 
 **Outputs**
@@ -4486,7 +4486,7 @@ Work out the colour grade that takes one image to another and bake it into a LUT
 <details>
 <summary><b>Layer Align</b></summary>
 
-Put a layer where you want it by naming a corner rather than working out coordinates: centred on the canvas, flush to an edge, or lined up with another layer. A turned layer is aligned by the box it actually draws in, so a rotated title still sits flush. Layer Edit sets x and y by hand, which means measuring both the canvas and the layer first.
+Place a layer by naming a position instead of typing coordinates: centred on the canvas, flush to an edge, or lined up with another layer. A rotated layer is aligned by the box it draws in, so a turned title still sits flush.
 
 | | |
 |---|---|
@@ -4521,7 +4521,7 @@ Put a layer where you want it by naming a corner rather than working out coordin
 <details>
 <summary><b>Layer Bevel</b></summary>
 
-Build a slope from the edge of one layer in a stack and light it, so the layer reads as raised off the plate or pressed into it. It gives a title, a badge or a cut-out subject a physical edge without any 3D. An outer bevel and an emboss grow that layer's picture and shift it back, so the layer stays where it was on the canvas.
+Build a slope from the edge of one layer in a stack and light it, so the layer reads as raised off the plate or pressed into it. Gives a title, a badge or a cut-out subject a physical edge, and the layer keeps its place on the canvas.
 
 | | |
 |---|---|
@@ -4631,7 +4631,7 @@ Change one layer of a stack: where it sits, the size and angle it is drawn at, i
 <details>
 <summary><b>Layer Fit</b></summary>
 
-Scale a layer to reach the canvas, a size you type, or another layer, and put it where the anchor says. Only the drawn size is written, so the layer keeps its full-resolution picture and Create Layered Image resamples it once at the end. That is what a plate needs to cover a frame, and what a badge needs to sit at a fixed height whatever it arrived as.
+Scale a layer to the canvas, a typed size or another layer, and place it at the anchor, so a plate covers a frame or a badge sits at a fixed height. The layer keeps its full-resolution picture until Create Layered Image flattens the stack.
 
 | | |
 |---|---|
@@ -4667,7 +4667,7 @@ Scale a layer to reach the canvas, a size you type, or another layer, and put it
 <details>
 <summary><b>Layer Glow</b></summary>
 
-Spread light off one layer in a stack. An outer glow sits behind the layer's own pixels as a halo, which is what separates a title or a cut-out subject from a busy plate; an inner glow burns in from the edge and reads as a rim light. An outer glow grows that layer's picture and shifts it back, so the layer stays where it was on the canvas.
+Spread light off one layer in a stack. An outer glow sits behind the layer as a halo that separates a title or cut-out subject from a busy plate; an inner glow burns in from the edge as a rim light. The layer keeps its place on the canvas.
 
 | | |
 |---|---|
@@ -4699,7 +4699,7 @@ Spread light off one layer in a stack. An outer glow sits behind the layer's own
 <details>
 <summary><b>Layer Mask</b></summary>
 
-Give one layer a mask, combine one with the mask it already has, soften its edge or take it away. Layer Edit changes a layer's placement and blending and never touches its mask, so this is the only way to cut a layer to shape once it is in a stack. Every mask here is white where the layer paints, which is what the rest of the pack answers.
+Give one layer a mask, combine one with the mask it already has, soften its edge or take it away, to cut a layer to shape once it is in a stack. Masks are white where the layer paints.
 
 | | |
 |---|---|
@@ -4822,7 +4822,7 @@ Drop the layers that match and keep the rest: a run of the stack by index, a nam
 <details>
 <summary><b>Layer Replace Image</b></summary>
 
-Replace one layer's picture with another, leaving its placement, angle, opacity, blend mode and name alone. This is the way back into a stack: take a layer out with Layers to Image Batch, put it through any filter in the pack, and drop the result back where it came from. Add Layer cannot do it, because it appends a new layer at the end instead.
+Replace one layer's picture with another, leaving its placement, angle, opacity, blend mode and name alone. Take a layer out with Layers to Image Batch, filter it, and put the result back where it came from.
 
 | | |
 |---|---|
@@ -4836,7 +4836,7 @@ Replace one layer's picture with another, leaving its placement, angle, opacity,
 | `image` | `IMAGE` | Yes |  |  | The picture that goes in. A batch is carried whole, so the layer draws one picture per frame the way Add Layer does. |
 | `index` | `INT` | Yes | -1 |  | Which layer is replaced, counting 0 from the back of the stack. -1 is the front layer. Ignored while layer_name names one. |
 | `layer_name` | `STRING` | Yes |  |  | Name of the layer to replace instead of index. Blank uses index. 'sky' finds a layer called Sky, and finds Sky Backdrop where nothing is called exactly Sky. |
-| `size` | `COMBO` | Yes |  | `keep the drawn size`, `take the new picture's size` | What the layer is drawn at afterwards. `keep the drawn size` holds the box it already filled, so a filter that changed the resolution still lands in the same place; `take the new picture's size` draws it at its own pixels, growing or shrinking the layer. |
+| `size` | `COMBO` | Yes |  | `keep the drawn size`, `take the new picture's size` | What the layer is drawn at afterwards. `keep the drawn size` = the box it already filled, so a resized picture lands in the same place; `take the new picture's size` = its own pixels, growing or shrinking the layer. |
 | `mask` | `MASK` | No |  |  | What the layer covers, white where it paints, as every mask in this pack reads. Left unwired the layer keeps the mask it already had; wire a fully white mask to clear one. |
 | `name` | `STRING` | No |  |  | What the layer is called afterwards. Blank keeps the name it has, so a later Layer Edit or Layer Select still finds it; 'sky graded' renames it. |
 
@@ -4884,7 +4884,7 @@ Keep only the layers that match, and drop the rest: a run of the stack by index,
 <details>
 <summary><b>Layer Shadow</b></summary>
 
-Cast a shadow off one layer in a stack. A drop shadow sits behind the layer's own pixels and lifts a cut-out subject off the plate below it; an inner shadow sits inside the edge and sinks the layer into it. A drop shadow grows that layer's picture and shifts it back, so the layer stays where it was on the canvas.
+Cast a shadow off one layer in a stack. A drop shadow sits behind the layer and lifts a cut-out subject off the plate below it; an inner shadow sits inside the edge and sinks the layer into it. The layer keeps its place on the canvas.
 
 | | |
 |---|---|
@@ -4949,7 +4949,7 @@ Draw an outline along the edge of one layer in a stack. The band follows what th
 <details>
 <summary><b>Layer Trim</b></summary>
 
-Cut the empty band off a layer's picture and move x and y in by the same amount, so nothing appears to shift. A cut-out that arrived on a full frame of transparency becomes a layer the size of the subject, which is what makes Layer Align centre the subject rather than the frame it came on, and what stops an effect spending its radius on empty pixels.
+Cut the empty band off a layer's picture and move x and y in by the same amount, so nothing appears to shift. A cut-out on a full transparent frame becomes a layer the size of the subject, so Layer Align centres the subject and effects skip the empty pixels.
 
 | | |
 |---|---|
@@ -4991,7 +4991,7 @@ Move, resize, reorder, hide and fade the layers of a stack, and pass the stack o
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `layers` | `LAYERS` | Yes |  |  | The stack to arrange. Wire in Add Layer, Layer Edit, Layers From Bounding Boxes or anything else answering a LAYERS document; layer 0 is the bottom of the stack. |
-| `arrangement` | `STRING` | Yes | {} |  | Where each layer goes, as JSON keyed on its index from the bottom: {"0": {"x": 64, "y": 0, "z_index": 2, "visible": false}}. Keys are x, y, w, h in pixels, rotation in degrees, opacity 0.0 to 1.0, visible and z_index, all optional. Anything left out stays as it arrived. The panel writes this. |
+| `arrangement` | `STRING` | Yes | {} |  | Where each layer goes, as JSON keyed on its index from the bottom: {"0": {"x": 64, "z_index": 2}}. Optional keys: x, y, w, h in pixels, rotation in degrees, opacity 0.0 to 1.0, visible, z_index; omitted keys are unchanged. The panel writes this. |
 
 **Outputs**
 
@@ -5005,7 +5005,7 @@ Move, resize, reorder, hide and fade the layers of a stack, and pass the stack o
 <details>
 <summary><b>Layers Canvas</b></summary>
 
-Give a layer stack a canvas of its own size rather than letting it take the size its layers happen to reach. Without one the drawn picture grows the moment a stroke, glow or shadow reaches past an edge, so a plate composited at 640 by 1137 comes back larger than the plate. Setting the canvas holds the picture at the size it is meant to be and lets the effects run off the edge the way they would in an image editor.
+Give a layer stack a fixed canvas size instead of the size its layers happen to reach. Strokes, glows and shadows then run off the edge as they would in an image editor, and the picture stays at the size it is meant to be.
 
 | | |
 |---|---|
@@ -5035,7 +5035,7 @@ Give a layer stack a canvas of its own size rather than letting it take the size
 <details>
 <summary><b>Layers from Image Batch</b></summary>
 
-Build a layer stack from a batch: one layer per frame, lowest first. Wire bounds in and each frame lands where its rectangle says, so a batch that Layers to Image Batch took apart goes back together, and so does a set of crops a detector found. Add Layer takes one picture at a time and puts every frame of a batch at the same spot.
+Build a layer stack from a batch: one layer per frame, lowest first. Wire bounds in to place each frame at its rectangle, so a batch that Layers to Image Batch took apart, or a set of detector crops, goes back together.
 
 | | |
 |---|---|
@@ -5070,7 +5070,7 @@ Build a layer stack from a batch: one layer per frame, lowest first. Wire bounds
 <details>
 <summary><b>Layers Info</b></summary>
 
-Read a layer stack out as plain data: the canvas it is drawn on, how many layers it holds and how many of those are visible, then a row per layer carrying its index, name, placement, size, angle, opacity, blend mode and whether it has a mask. The table is printed on the node, and the same figures come out as a dictionary and a list for a switch or a caption.
+Read a layer stack out as data: the canvas, the layer count and how many are visible, then a row per layer with its index, name, placement, size, angle, opacity, blend mode and mask. The table shows on the node and comes out as a dictionary and a list for a switch or a caption.
 
 | | |
 |---|---|
@@ -5099,7 +5099,7 @@ Read a layer stack out as plain data: the canvas it is drawn on, how many layers
 <details>
 <summary><b>Layers Merge</b></summary>
 
-Flatten a run of layers into one, drawn with each layer's own opacity, blend mode, mask, placement, size, angle and mirroring baked in. The merged layer takes the lowest place in the run and is drawn normally at full opacity, and the picture comes out on the image and mask sockets as well. Left at 0 and -1 it flattens the whole document; a hidden layer in the run is not drawn and does not survive it.
+Flatten a run of layers into one, baking in each layer's opacity, blend mode, mask, placement, size, angle and mirroring. The merged layer takes the lowest place in the run at full opacity, and its picture also comes out on the image and mask sockets. Hidden layers in the run are dropped.
 
 | | |
 |---|---|
@@ -5131,7 +5131,7 @@ Flatten a run of layers into one, drawn with each layer's own opacity, blend mod
 <details>
 <summary><b>Image Crop by Mask</b></summary>
 
-Crop each image to the area its mask marks, padded and clamped to the picture, and pass on the crop window so the result can be pasted back at full size. Every crop comes out the same size, which is what lets one window describe a whole batch. One mask per image boxes each image on its own; any other count boxes the first mask and crops every image to it. A frame whose mask marks nothing is cropped whole and named in the console, which a threshold of 1.0 does to every frame. 'per_frame' resizes every crop to the widest box's width by the tallest box's height, a size no single box need have. divisible_by rounds the result, 8 suiting most models and 1 rounding nothing. The window and bounds are measured before that rounding, so Image Paste Crop scales back to the rectangle cut from.
+Crop each image to the area its mask marks, padded and clamped to the picture, and pass on the crop window so the result can be pasted back at full size. Every crop comes out the same size, so the batch travels on as one.
 
 | | |
 |---|---|
@@ -5142,18 +5142,18 @@ Crop each image to the area its mask marks, padded and clamped to the picture, a
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The images to cut down. The box is measured on the mask and then sliced straight out of the image, so a mask that is not the same size as its image crops in the wrong place. A batch comes back the same length. |
-| `mask` | `MASK` | Yes |  |  | Marks the area to keep. The tightest box around everything above threshold decides where the crop sits. A blank mask crops that frame whole. |
-| `bbox_mode` | `COMBO` | Yes |  | `union`, `per_frame` | Which box a batch of masks is cropped to. 'union' uses one rectangle covering every mask; 'per_frame' gives each image its own, following a subject that moves. |
+| `mask` | `MASK` | Yes |  |  | Marks the area to keep: the tightest box around everything above threshold sets the crop, and a blank mask crops that frame whole. With a different count from the images, the first mask is used for all. |
+| `bbox_mode` | `COMBO` | Yes |  | `union`, `per_frame` | Which box a batch of masks is cropped to. 'union' uses one rectangle covering every mask; 'per_frame' gives each image its own, following a subject that moves, resized to the widest box's width by the tallest box's height. |
 | `padding` | `INT` | Yes | 0 |  | Extra pixels kept on all four sides of the marked area, trimmed where the box would run off the picture. 0 crops tight against the mask; 64 leaves an inpainting pass some of the surroundings to match against. |
-| `threshold` | `FLOAT` | Yes | 0.5 |  | How bright a mask pixel must be, from 0.0 to 1.0, to count as marked. 0.5 boxes a mask's solid core; 0.0 takes its whole feathered edge in. |
-| `divisible_by` | `INT` | Yes | 8 |  | Rounds both sides of the crop down to a multiple of this and resizes to match, which saves a sampler rounding it. 1 leaves the crop as cut. |
+| `threshold` | `FLOAT` | Yes | 0.5 |  | How bright a mask pixel must be, from 0.0 to 1.0, to count as marked. 0.5 boxes a mask's solid core; 0.0 takes its whole feathered edge in; 1.0 marks nothing, so every frame is cropped whole. |
+| `divisible_by` | `INT` | Yes | 8 |  | Rounds both sides of the crop down to a multiple of this and resizes to match. 1 = the crop as cut; 8 = suits most models. The window and bounds are measured before rounding. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `cropped_image` | `IMAGE` | The cropped regions, one per input image and all one size, so they travel on as a single batch. That size is a multiple of divisible_by. |
-| `crop_data` | `CROP_DATA` | The crop window, for Image Paste Crop to put the finished region back in the right place at its original size. In per_frame mode it holds the union rectangle, so a paste stretches every crop across that whole rectangle and lands exactly only where every mask shared a box. |
+| `crop_data` | `CROP_DATA` | The crop window, for Image Paste Crop to put the finished region back in the right place at its original size. In per_frame mode it holds the union rectangle, so a paste stretches every crop across it. |
 | `bounds` | `IMAGE_BOUNDS` | One row per image giving the rectangle it was cropped from, as top, bottom, left and right pixel positions, to wire into Draw Image Bounds. |
 | `cropped_mask` | `MASK` | The mask cut to the same rectangle as the crop and carried at the crop's own size, so an inpainting pass knows which pixels were marked. |
 
@@ -5174,7 +5174,7 @@ Clear the smallest connected region that is still at least size big and set ever
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to subtract a region from. A batch is handled one mask at a time, each losing its own region. |
-| `size` | `INT` | Yes | 256 |  | Smallest area a region may have to qualify, measured in ten-thousandths of the whole frame: 100 is 1% of the image, the default 256 is about 2.6%, and 10000 is the entire frame. Because it is relative, the same value picks comparable regions at any resolution. |
+| `size` | `INT` | Yes | 256 |  | Smallest area a region may have to qualify, in ten-thousandths of the frame, so it holds at any resolution. 100 = 1% of the image; 256 = about 2.6%; 10000 = the whole frame. |
 | `threshold` | `INT` | Yes | 128 |  | Brightness cut-off, on a 0-255 scale, above which a pixel counts as part of a region. 128 splits at mid-grey; lower it to take in faint areas, raise it to keep only near-white ones. |
 
 **Outputs**
@@ -5250,7 +5250,7 @@ Pick one mask out of a batch. An index past the end of the batch falls back to t
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The batch of masks to take one mask out of. A single unbatched mask counts as a batch of one, so index 0 returns it as it is. |
-| `index` | `INT` | Yes | 0 |  | Which mask to take, counting from zero: 0 is the first mask, 1 the second. An index past the end of the batch returns the last mask and prints the index and the batch length to the console, rather than failing the prompt, so a sequence that came back shorter than expected still produces a mask. |
+| `index` | `INT` | Yes | 0 |  | Which mask to take, counting from zero: 0 = the first; 1 = the second. An index past the end returns the last mask and prints the index and batch length to the console instead of failing. |
 
 **Outputs**
 
@@ -5305,7 +5305,7 @@ Crop the largest connected white region of a mask and centre it on a square canv
 
 | Name | Type | What it is |
 |---|---|---|
-| `MASKS` | `MASK` | The cropped region on a square canvas. Its side is the longer edge of the crop plus twice padding, so it is normally not the size of the input. One batch carries one size, so where the masks of a batch crop to different sizes each is centred on the size of the largest. |
+| `MASKS` | `MASK` | The cropped region on a square canvas whose side is the crop's longer edge plus twice padding. Where masks in a batch crop to different sizes, each is centred on the largest. |
 
 </details>
 
@@ -5330,7 +5330,7 @@ Crop the smallest connected white region of a mask and centre it on a square can
 
 | Name | Type | What it is |
 |---|---|---|
-| `MASKS` | `MASK` | The cropped region on a square canvas. Its side is the longer edge of the crop plus twice padding, so it is normally not the size of the input. One batch carries one size, so where the masks of a batch crop to different sizes each is centred on the size of the largest. |
+| `MASKS` | `MASK` | The cropped region on a square canvas whose side is the crop's longer edge plus twice padding. Where masks in a batch crop to different sizes, each is centred on the largest. |
 
 </details>
 
@@ -5382,8 +5382,8 @@ Grow the set area of a mask by binary dilation. Any non-zero pixel counts as set
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to grow. A batch is handled one mask at a time, all by the same amount. |
-| `iterations` | `INT` | Yes | 5 |  | How many passes of growth to run. Each pass expands the mask by about one pixel in every direction, so the default 5 widens it by roughly 5 pixels and closes gaps up to about 10 pixels wide. The widget stops at 1; 0 on a wire grows until nothing changes, filling the frame. |
-| `blur` | `FLOAT` | No | 0.0 |  | Soften the edge after the shape is settled, as a blur radius in pixels. 0 leaves the hard binary edge. A few pixels is what an inpaint or a composite wants so the seam does not show. Fractions are dropped, so 0.5 blurs the same as 0. |
+| `iterations` | `INT` | Yes | 5 |  | Passes of growth, each about one pixel in every direction. 0 on a wire = grows until nothing changes, filling the frame; 5 = about 5 pixels wider, closing gaps up to about 10 pixels. |
+| `blur` | `FLOAT` | No | 0.0 |  | Soften the edge after the shape is settled, as a blur radius in pixels; fractions are dropped. 0 or 0.5 = the hard binary edge; a few pixels hide the seam of an inpaint or a composite. |
 
 **Outputs**
 
@@ -5397,7 +5397,7 @@ Grow the set area of a mask by binary dilation. Any non-zero pixel counts as set
 <details>
 <summary><b>Mask Dominant Region</b></summary>
 
-Clear the largest connected region of a mask's unset area and set everything else. The mask is inverted before the regions are labelled and inverted again on the way out, so the region that is found is subtracted rather than kept: on a mask whose unset area is one connected region, the result is the input as hard black and white. A mask painted on the node joins the result in whichever way drawn_combine names.
+Clear the largest connected region of a mask's unset area and set everything else, so smaller unset pieces are filled. The result is hard black and white, and a mask painted on the node joins it.
 
 | | |
 |---|---|
@@ -5408,15 +5408,15 @@ Clear the largest connected region of a mask's unset area and set everything els
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to subtract a region from. A batch is handled one mask at a time, each losing its own largest unset region. |
-| `threshold` | `INT` | Yes | 128 |  | Brightness cut-off on a 0-255 scale. The mask is inverted before the regions are found, so a pixel joins the search when its own level is below 255 minus this value: at the default 128 that is everything dimmer than 127, and a higher value takes in less of the mask's unset area. |
-| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, written by the interface and saved with the workflow. Empty means nothing was painted, and the node then produces the region mask alone. The node has to have run once before there is a mask to paint on. Clear the field to remove the painting. |
-| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced. union keeps whichever of the two is brighter at each pixel, subtract takes the painting away from the mask, intersect keeps whichever is darker, and off ignores the painting without deleting it. The painting is resized to the mask when the two differ. |
+| `threshold` | `INT` | Yes | 128 |  | Brightness cut-off, 0 to 255: a pixel joins the search when its level is below 255 minus this. 128 = everything dimmer than 127; higher takes in less of the unset area. |
+| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, saved with the workflow. Empty = nothing painted, so the node gives the region mask alone. Run the node once to get a mask to paint on; clear the field to remove the painting. |
+| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced, resized to it if they differ. `union` = the brighter of the two at each pixel; `subtract` = the painting taken away; `intersect` = the darker; `off` = ignored, not deleted. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `MASKS` | `MASK` | Everything outside the largest connected region of the input's unset area, as hard black and white with no grey levels left. On a mask whose unset area is one connected region that is the input mask itself; where it is broken into pieces, all but the largest come back set. Anything painted on the node is joined in. |
+| `MASKS` | `MASK` | Everything outside the largest connected unset region is set, as hard black and white: an unset area in one piece comes back as it was, a broken one keeps only its largest piece. Anything painted on the node is joined in. |
 
 </details>
 
@@ -5435,8 +5435,8 @@ Shrink the set area of a mask by binary erosion. Any non-zero pixel counts as se
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to shrink. A batch is handled one mask at a time, all by the same amount. A set area running off the edge of the frame keeps its border there. |
-| `iterations` | `INT` | Yes | 5 |  | How many passes of shrinkage to run. Each pass pulls the mask in by about one pixel on every side, so the default 5 narrows it by roughly 5 pixels and erases anything thinner than about 10 pixels. The widget stops at 1; 0 on a wire shrinks until nothing changes, erasing the mask. |
-| `blur` | `FLOAT` | No | 0.0 |  | Soften the edge after the shape is settled, as a blur radius in pixels. 0 leaves the hard binary edge. A few pixels is what an inpaint or a composite wants so the seam does not show. Fractions are dropped, so 0.5 blurs the same as 0. |
+| `iterations` | `INT` | Yes | 5 |  | Passes of shrinkage, each about one pixel on every side. 0 on a wire = shrinks until nothing changes, erasing the mask; 5 = about 5 pixels narrower, erasing anything thinner than about 10 pixels. |
+| `blur` | `FLOAT` | No | 0.0 |  | Soften the edge after the shape is settled, as a blur radius in pixels; fractions are dropped. 0 or 0.5 = the hard binary edge; a few pixels hide the seam of an inpaint or a composite. |
 
 **Outputs**
 
@@ -5450,7 +5450,7 @@ Shrink the set area of a mask by binary erosion. Any non-zero pixel counts as se
 <details>
 <summary><b>Mask Feather</b></summary>
 
-Fade a mask to black over a run of pixels at each of its four edges, one distance per edge, so a composite or an inpaint has no hard seam to show. The band on the node reports the coverage before and after, what was cleared and the box the mask fills, so a fade wide enough to eat the whole mask reads off the node instead of arriving as a missing subject further down the graph.
+Fade a mask to black over a run of pixels at each of its four edges, one distance per edge, so a composite or an inpaint shows no hard seam. The node reports the coverage before and after, so a fade that ate the whole mask shows at once.
 
 | | |
 |---|---|
@@ -5489,14 +5489,14 @@ Fill the enclosed holes of a mask. A hole touching the image border is open rath
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to close up, such as an outline that should be a solid shape. A batch is handled one mask at a time. |
-| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, written by the interface and saved with the workflow. Empty means nothing was painted, and the node then produces the filled mask alone. The node has to have run once before there is a mask to paint on. Clear the field to remove the painting. |
-| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced. union keeps whichever of the two is brighter at each pixel, subtract takes the painting away from the mask, intersect keeps whichever is darker, and off ignores the painting without deleting it. The painting is resized to the mask when the two differ. |
+| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, saved with the workflow. Empty = nothing painted, so the node gives the filled mask alone. Run the node once to get a mask to paint on; clear the field to remove the painting. |
+| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced, resized to it if they differ. `union` = the brighter of the two at each pixel; `subtract` = the painting taken away; `intersect` = the darker; `off` = ignored, not deleted. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `MASKS` | `MASK` | The mask with every fully surrounded gap filled in. The result is hard black and white, so soft edges are lost, and a gap that reaches the image border is not surrounded and stays open. Anything painted on the node is joined in afterwards and keeps its own levels. |
+| `MASKS` | `MASK` | The mask with every fully surrounded gap filled, as hard black and white; a gap touching the image border stays open. Anything painted on the node is joined in afterwards with its own levels. |
 
 </details>
 
@@ -5553,7 +5553,7 @@ Feather a mask with a Gaussian blur. The radius is truncated to an integer, so 5
 <details>
 <summary><b>Mask Grow</b></summary>
 
-Move a mask's edge out or in by a number of pixels, keeping every grey level it already had, so a soft edge stays soft. The band on the node reports the coverage before and after, what was set and cleared, the connected regions and the box the mask fills, so an expand that swallowed the frame or a shrink that erased the mask reads off the node instead of arriving as a blank result further down the graph.
+Move a mask's edge out or in by a number of pixels, keeping every grey level it had, so a soft edge stays soft. The node reports the coverage before and after, so an expand that swallowed the frame or a shrink that erased the mask shows at once.
 
 | | |
 |---|---|
@@ -5564,7 +5564,7 @@ Move a mask's edge out or in by a number of pixels, keeping every grey level it 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `mask` | `MASK` | Yes |  |  | The mask to grow or shrink. A batch is handled one plane at a time, all by the same amount. |
-| `expand` | `INT` | Yes | 0 |  | Pixels the edge moves by; INT. 0 leaves the mask alone, 8 grows it 8 pixels in every direction and closes gaps up to 16 across, -8 pulls it in by 8 and erases anything thinner than 16. Each pixel is one pass, so a few hundred takes a while. |
+| `expand` | `INT` | Yes | 0 |  | Pixels the edge moves by; INT. 0 = no change; 8 = grows 8px every way, closing gaps up to 16 across; -8 = pulls in 8px, erasing anything thinner than 16. A few hundred takes a while. |
 | `tapered_corners` | `BOOLEAN` | Yes | True |  | Whether the four corners of the 3 by 3 step are left out. `true` rounds the shape off, `false` squares it and reaches a pixel further on the diagonals. |
 
 **Outputs**
@@ -5642,8 +5642,8 @@ Clear the smallest connected region of a mask and set everything else. The regio
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to subtract a region from. A batch is handled one mask at a time, each losing its own smallest region. |
 | `threshold` | `INT` | Yes | 128 |  | Brightness cut-off, on a 0-255 scale, above which a pixel counts as part of a region. 128 splits at mid-grey; lower it to take in faint areas, raise it to keep only near-white ones. |
-| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, written by the interface and saved with the workflow. Empty means nothing was painted, and the node then produces the region mask alone. The node has to have run once before there is a mask to paint on. Clear the field to remove the painting. |
-| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced. union keeps whichever of the two is brighter at each pixel, subtract takes the painting away from the mask, intersect keeps whichever is darker, and off ignores the painting without deleting it. The painting is resized to the mask when the two differ. |
+| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, saved with the workflow. Empty = nothing painted, so the node gives the region mask alone. Run the node once to get a mask to paint on; clear the field to remove the painting. |
+| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced, resized to it if they differ. `union` = the brighter of the two at each pixel; `subtract` = the painting taken away; `intersect` = the darker; `off` = ignored, not deleted. |
 
 **Outputs**
 
@@ -5670,7 +5670,7 @@ Paste crop_mask back into mask at the window crop_data records. The seam is feat
 | `mask` | `MASK` | Yes |  |  | The full-size mask to paste into, normally the same one the crop was taken from. A batch is pasted into one mask at a time. |
 | `crop_mask` | `MASK` | Yes |  |  | The cropped mask to paste back. It is resized to the size recorded in crop_data first, so it may return at a different resolution than it left at. A single crop is pasted into every mask of a batch. |
 | `crop_data` | `CROP_DATA` | Yes |  |  | The crop window from Mask Crop Region, which says where in mask the crop belongs. Nodes such as Image Crop Face emit False when they found nothing to crop, and that yields a black mask the size of mask. |
-| `crop_blending` | `FLOAT` | Yes | 0.25 |  | How wide the soft band along each pasted edge is, as a fraction of the crop. 0.0 gives a hard seam, 0.25 fades the outer quarter of each edge, 1.0 fades right across the crop. An edge sitting flush against the image border is never feathered. |
+| `crop_blending` | `FLOAT` | Yes | 0.25 |  | Width of the soft band along each pasted edge, as a fraction of the crop. 0.0 = a hard seam; 0.25 = the outer quarter of each edge; 1.0 = right across the crop. Edges flush with the image border are never feathered. |
 | `crop_sharpening` | `INT` | Yes | 0 |  | How many sharpening passes to run on the crop before pasting it, to undo softness introduced by resizing. 0 pastes it as it is; 3 is the maximum and tends to leave visible edge artefacts. |
 
 **Outputs**
@@ -5702,7 +5702,7 @@ Draw a rectangle on a 512x512 mask. Every coordinate is a percentage of that can
 | `height` | `INT` | Yes | 50 |  | How tall the rectangle is, as a percentage of the canvas. 100 spans the full height, 50 covers half of it, 0 produces nothing. Anything running past the bottom edge is cut off. |
 | `blur_radius` | `INT` | Yes | 0 |  | Softens the rectangle's edges, in pixels of the 512-pixel canvas. 0 keeps them hard; 32 gives a wide fade that also pulls the corners in. Large values are slow, because the blur window is twice this plus one across. |
 | `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, written by the interface and saved with the workflow. Empty means nothing was painted, and the node then produces the rectangle alone. Clear the field to remove the painting. |
-| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the rectangle. union keeps whichever of the two is brighter at each pixel, subtract takes the painting away from the rectangle, intersect keeps whichever is darker, and off ignores the painting without deleting it. The painting is resized to the mask when the two differ. |
+| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the rectangle, resized to it if they differ. `union` = the brighter of the two at each pixel; `subtract` = the painting taken away; `intersect` = the darker; `off` = ignored, not deleted. |
 
 **Outputs**
 
@@ -5734,7 +5734,7 @@ Draw a rectangle on a mask of image_width by image_height. Every coordinate is i
 | `image_height` | `INT` | Yes | 512 |  | Height of the mask itself, in pixels. Match it to the image the mask will be applied to, or the two will not line up. |
 | `blur_radius` | `INT` | Yes | 0 |  | Softens the rectangle's edges, in pixels. 0 keeps them hard; 32 gives a wide fade that also pulls the corners in. Large values are slow, because the blur window is twice this plus one across. |
 | `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, written by the interface and saved with the workflow. Empty means nothing was painted, and the node then produces the rectangle alone. Clear the field to remove the painting. |
-| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the rectangle. union keeps whichever of the two is brighter at each pixel, subtract takes the painting away from the rectangle, intersect keeps whichever is darker, and off ignores the painting without deleting it. The painting is resized to the mask when the two differ. |
+| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the rectangle, resized to it if they differ. `union` = the brighter of the two at each pixel; `subtract` = the painting taken away; `intersect` = the darker; `off` = ignored, not deleted. |
 
 **Outputs**
 
@@ -5759,7 +5759,7 @@ Blur a mask and re-threshold it at half the blurred maximum, which rounds off it
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `masks` | `MASK` | Yes |  |  | The mask to tidy up, such as one with jagged or stair-stepped edges. A batch is handled one mask at a time. |
-| `sigma` | `FLOAT` | Yes | 5.0 |  | How far the mask is blurred, in pixels, before it is turned back into hard black and white. Larger values round corners off more and swallow small specks; 20 or more visibly reshapes the mask. Even 0 still hardens the edges, because the mask is re-thresholded either way. |
+| `sigma` | `FLOAT` | Yes | 5.0 |  | How far the mask is blurred, in pixels, before it is turned back into hard black and white. 0 = edges hardened only; 20 or more = visibly reshapes the mask. Larger values round corners and swallow small specks. |
 
 **Outputs**
 
@@ -5773,7 +5773,7 @@ Blur a mask and re-threshold it at half the blurred maximum, which rounds off it
 <details>
 <summary><b>Mask Statistics</b></summary>
 
-Measure what a mask covers rather than change it: the fraction of pixels above the threshold, how many pixels that is, the value range, and whether the mask found anything at all. A CLIPSeg prompt that matched nothing, a SAM click that missed and a threshold set too high all answer a mask of pure black, and nothing downstream says so. Wire is_empty into a gate or a switch to skip the inpaint, the crop or the save when that happens. Measure the whole batch at once, or one mask of it by index.
+Measure what a mask covers: the fraction and count of pixels above the threshold, the value range, and whether it found anything at all. Wire is_empty into a gate or a switch to skip an inpaint, a crop or a save when a segmenter matched nothing.
 
 | | |
 |---|---|
@@ -5825,8 +5825,8 @@ Send every level below black_threshold to black and every level above white_thre
 | `masks` | `MASK` | Yes |  |  | The mask to clean up, such as a soft or noisy one that should be solid at both ends. A batch is handled one mask at a time. |
 | `black_threshold` | `INT` | Yes | 75 |  | Anything dimmer than this, on a 0-255 brightness scale, is forced to pure black. 75 wipes out faint haze; 0 clips nothing at the dark end. |
 | `white_threshold` | `INT` | Yes | 175 |  | Anything brighter than this, on a 0-255 brightness scale, is forced to pure white. 175 makes nearly-white areas solid; 255 clips nothing at the bright end. Set it below black_threshold and the mask becomes purely black and white, with no grey band left in between. |
-| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, written by the interface and saved with the workflow. Empty means nothing was painted, and the node then produces the thresholded mask alone. The node has to have run once before there is a mask to paint on. Clear the field to remove the painting. |
-| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced. union keeps whichever of the two is brighter at each pixel, subtract takes the painting away from the mask, intersect keeps whichever is darker, and off ignores the painting without deleting it. The painting is resized to the mask when the two differ. |
+| `drawn_mask` | `STRING` | No |  |  | The mask painted on the node, saved with the workflow. Empty = nothing painted, so the node gives the thresholded mask alone. Run the node once to get a mask to paint on; clear the field to remove the painting. |
+| `drawn_combine` | `COMBO` | No | union | `union`, `subtract`, `intersect`, `off` | How the painting joins the mask this node produced, resized to it if they differ. `union` = the brighter of the two at each pixel; `subtract` = the painting taken away; `intersect` = the darker; `off` = ignored, not deleted. |
 
 **Outputs**
 
@@ -6025,7 +6025,7 @@ Lay a batch of images out as a single grid image, for comparing a run of results
 <details>
 <summary><b>Image Composite Masked</b></summary>
 
-Lay one picture over another at a pixel position, showing it only where a mask allows. The band on the node draws the destination beside the result with the source that went between them, and measures the difference, so a source dropped off the edge or a mask the wrong way round shows on the node rather than after a preview is wired up.
+Lay one picture over another at a pixel position, showing it only where a mask allows. The node shows the destination beside the result, with the source between them, so a misplaced source or an inverted mask shows at once.
 
 | | |
 |---|---|
@@ -6054,7 +6054,7 @@ Lay one picture over another at a pixel position, showing it only where a mask a
 <details>
 <summary><b>Image Crop Face</b></summary>
 
-Find a face in the image and crop a square around it, together with the crop window Image Paste Face needs to put it back. Where a classifier finds more than one face, the largest is the one cropped. The classifiers run in torch on the device ComfyUI is using, so nothing has to be installed. Among them, 'default' is the fastest of the 'frontalface' set and 'alt2' and 'alt_tree' are progressively stricter, 'profileface' finds a head turned to the side, 'upperbody' frames head and shoulders, and 'eye' finds a single eye. The fallback runs the face classifiers in the order the menu lists them, and the eye one is only ever used when it is the choice.
+Find a face in the image and crop a square around it, together with the crop window Image Paste Face needs to put it back. Where several faces are found, the largest is cropped. Needs nothing extra installed.
 
 | | |
 |---|---|
@@ -6066,7 +6066,7 @@ Find a face in the image and crop a square around it, together with the crop win
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to search for a face in. A batch is searched on its first image and every image is then cut to that same window. |
 | `crop_padding_factor` | `FLOAT` | Yes | 0.25 |  | How much room to leave around the detected face, as a fraction of its size. 0.0 crops tight to the detection, 0.25 leaves a quarter of the face size as margin, and 2.0 pulls back far enough to include the shoulders. |
-| `cascade` | `COMBO` | Yes |  | `lbpcascade_animeface.xml`, `haarcascade_frontalface_default.xml`, `haarcascade_frontalface_alt.xml`, `haarcascade_frontalface_alt2.xml`, `haarcascade_frontalface_alt_tree.xml`, `haarcascade_profileface.xml`, `haarcascade_upperbody.xml`, `haarcascade_eye.xml` | Which classifier to try first. 'lbpcascade_animeface' is for drawn and anime faces, the 'frontalface' set for photographs. If it finds nothing, the others are tried. |
+| `cascade` | `COMBO` | Yes |  | `lbpcascade_animeface.xml`, `haarcascade_frontalface_default.xml`, `haarcascade_frontalface_alt.xml`, `haarcascade_frontalface_alt2.xml`, `haarcascade_frontalface_alt_tree.xml`, `haarcascade_profileface.xml`, `haarcascade_upperbody.xml`, `haarcascade_eye.xml` | Which classifier to try first; if it finds nothing, the others follow in menu order. 'lbpcascade_animeface' = drawn faces; 'frontalface' = photographs, 'default' fastest, 'alt2' and 'alt_tree' stricter; 'profileface' = turned heads; 'upperbody' = head and shoulders; 'eye' = one eye, never a fallback. |
 
 **Outputs**
 
@@ -6081,7 +6081,7 @@ Find a face in the image and crop a square around it, together with the crop win
 <details>
 <summary><b>Image Crop Location</b></summary>
 
-Crop a rectangle given by its four edges, and pass on the crop window so the result can be pasted back later. Rounding the crop with divisible_by saves a sampler rounding the size itself: 8 suits most latent models, and 16, 32 or 64 the ones that ask for a coarser step. 1 rounds nothing. A side shorter than divisible_by is taken up to one whole step rather than down to nothing.
+Crop a rectangle given by its four edges, and pass on the crop window so the result can be pasted back later. The size can be rounded to a multiple a sampler accepts.
 
 | | |
 |---|---|
@@ -6096,7 +6096,7 @@ Crop a rectangle given by its four edges, and pass on the crop window so the res
 | `left` | `INT` | Yes | 0 |  | Distance in pixels from the left of the image to the left of the crop. |
 | `right` | `INT` | Yes | 256 |  | Position of the crop's right edge, in pixels from the left of the image. left 0 with right 256 gives a crop 256 pixels wide. A value past the image edge is trimmed to it. |
 | `bottom` | `INT` | Yes | 256 |  | Position of the crop's bottom edge, in pixels from the top of the image. A value past the image edge is trimmed to it. |
-| `divisible_by` | `INT` | Yes | 8 |  | Rounds the crop down to a multiple of this on both axes, which resamples it. 8 suits most latent models; 1 takes the exact rectangle away untouched. |
+| `divisible_by` | `INT` | Yes | 8 |  | Rounds the crop down to a multiple of this on both axes, which resamples it. 1 = the exact rectangle, untouched; 8 = most latent models; 16, 32 or 64 = models asking for a coarser step. |
 
 **Outputs**
 
@@ -6111,7 +6111,7 @@ Crop a rectangle given by its four edges, and pass on the crop window so the res
 <details>
 <summary><b>Image Crop Region</b></summary>
 
-Cut a rectangle out of a picture, given its width, its height and the corner it starts at. The band on the node draws the frame that went in around the frame that came out, at one scale, with both sizes and the pixel count beside them, so a rectangle that ran off the right or bottom edge reads as a smaller answer than the one asked for instead of being found later by a sampler.
+Cut a rectangle out of a picture, given its width, its height and the corner it starts at. The node draws the crop inside the original frame with both sizes, so a rectangle that ran off an edge and came back smaller shows at once.
 
 | | |
 |---|---|
@@ -6139,7 +6139,7 @@ Cut a rectangle out of a picture, given its width, its height and the corner it 
 <details>
 <summary><b>Image Crop Square Location</b></summary>
 
-Crop a square region centred on a point, and pass on the crop window so the result can be pasted back later. Rounding the crop with divisible_by saves a sampler rounding the size itself: 8 suits most latent models, and 16, 32 or 64 the ones that ask for a coarser step. 1 rounds nothing. A side shorter than divisible_by is taken up to one whole step rather than down to nothing.
+Crop a square region centred on a point, and pass on the crop window so the result can be pasted back later. The size can be rounded to a multiple a sampler accepts.
 
 | | |
 |---|---|
@@ -6153,7 +6153,7 @@ Crop a square region centred on a point, and pass on the crop window so the resu
 | `x` | `INT` | Yes | 0 |  | Horizontal centre of the square, in pixels from the left of the image. |
 | `y` | `INT` | Yes | 0 |  | Vertical centre of the square, in pixels from the top of the image. With x, 0/0 asks for a square centred on the top-left corner, which slides down and right until it fits. |
 | `size` | `INT` | Yes | 256 |  | Length of each side of the square, in pixels. A size larger than the image gives the whole image instead. |
-| `divisible_by` | `INT` | Yes | 8 |  | Rounds the crop down to a multiple of this on both axes, which resamples it. 8 suits most latent models; 1 takes the exact square away untouched. |
+| `divisible_by` | `INT` | Yes | 8 |  | Rounds the crop down to a multiple of this on both axes, which resamples it. 1 = the exact square, untouched; 8 = most latent models; 16, 32 or 64 = models asking for a coarser step. |
 
 **Outputs**
 
@@ -6168,7 +6168,7 @@ Crop a square region centred on a point, and pass on the crop window so the resu
 <details>
 <summary><b>Image Draw Text</b></summary>
 
-Draw text over an image, with wrapping, alignment, an outline and a background panel. Returns the picture and the text as a mask. The font list is built from disk: drop .ttf, .otf or .ttc files into the fonts folder beside config.yaml, at ComfyUI/user/was-node-suite/fonts, and they appear in the menu named after the file. Put them there rather than inside the pack, which an update overwrites. The DejaVu faces cover the most ground and are the safe choice for text not known in advance; the Liberation faces match Arial, Times New Roman and Courier New width for width, so a caption composed against one of those breaks its lines in the same places. A font that cannot be opened falls back to the picked one, then to a small built-in bitmap face that ignores font_size.
+Draw text over an image, with wrapping, alignment, an outline and a background panel. Hands on the picture and the text's coverage as a mask.
 
 | | |
 |---|---|
@@ -6194,7 +6194,7 @@ Draw text over an image, with wrapping, alignment, an outline and a background p
 | `background_color` | `STRING` | Yes |  |  | Colour of a panel drawn behind the text. Empty draws no panel. A half-transparent #000000B4 is the usual subtitle treatment, and is more readable than an outline over a busy picture. |
 | `background_padding` | `INT` | Yes | 8 |  | How far the panel extends past the text on every side. Read only when background_color is set. |
 | `opacity` | `FLOAT` | Yes | 1.0 |  | How much of the finished text shows, 0.0 to 1.0. Applied to the text, its outline and its panel together, so a faint watermark stays consistent instead of the outline surviving the fade. |
-| `font` | `COMBO` | No |  |  | Which typeface to draw with. The DejaVu faces cover the most ground; `Mono` gives every character the same width, which stops a frame counter jittering. |
+| `font` | `COMBO` | No |  |  | Which typeface to draw with; .ttf, .otf and .ttc files in ComfyUI/user/was-node-suite/fonts are listed by name. DejaVu covers the most ground; Liberation matches Arial, Times New Roman and Courier New widths; `Mono` gives every character one width, for frame counters. |
 
 **Outputs**
 
@@ -6238,7 +6238,7 @@ Split two pictures into low and high frequencies and keep the low ones from the 
 <details>
 <summary><b>Image Matte</b></summary>
 
-Turn a rough mask into a matte that holds hair, fur, smoke and motion blur. The band between the certain foreground and the certain background is solved against the picture's own colours, so a hard cut-out from a segmenter or a threshold comes back with a soft, correct edge. The foreground output is the subject's colour with the background unmixed out of it, which is what stops a green or a white fringe following a cut-out onto a new plate.
+Turn a rough mask into a matte that holds hair, fur, smoke and motion blur, so a hard cut-out gets a soft, correct edge. The foreground output has the old background unmixed out, so no green or white fringe follows the subject onto a new plate.
 
 | | |
 |---|---|
@@ -6295,7 +6295,7 @@ Combine three greyscale images into one colour image, using their brightness as 
 <details>
 <summary><b>Image Pad for Outpaint</b></summary>
 
-Set a picture on a larger canvas of mid grey and answer the mask covering everything that was added, ready for an outpainting pass. The band on the node draws the frame that went in inside the canvas that came out, at one scale, with both sizes, the margins and the feather beside them, so four numbers typed into empty boxes are read off the node rather than queued to find out.
+Set a picture on a larger mid-grey canvas and hand on the mask covering everything added, ready for an outpainting pass. The node draws the original inside the new canvas with both sizes, the margins and the feather.
 
 | | |
 |---|---|
@@ -6310,7 +6310,7 @@ Set a picture on a larger canvas of mid grey and answer the mask covering everyt
 | `top` | `INT` | Yes | 0 |  | Pixels of new canvas added above; INT. 0 adds none, 256 adds a quarter of a 1024 tall frame. Multiples of 8 keep the padded size on a latent step. |
 | `right` | `INT` | Yes | 0 |  | Pixels of new canvas added on the right; INT. 0 adds none, 256 adds a quarter of a 1024 wide frame. Multiples of 8 keep the padded size on a latent step. |
 | `bottom` | `INT` | Yes | 0 |  | Pixels of new canvas added below; INT. 0 adds none, 256 adds a quarter of a 1024 tall frame. Multiples of 8 keep the padded size on a latent step. |
-| `feathering` | `INT` | Yes | 40 |  | Pixels the mask fades over on the inside of each seam; INT. 0 = a hard edge, 40 = a 40px falloff that lets a sampler blend the new canvas into the frame, 128 = a wide blend that repaints more of the original. Ignored where twice this reaches across the frame. |
+| `feathering` | `INT` | Yes | 40 |  | Pixels the mask fades over inside each seam; INT. 0 = a hard edge; 40 = a falloff a sampler blends across; 128 = a wide blend that repaints more of the original. Ignored where twice this spans the frame. |
 
 **Outputs**
 
@@ -6354,7 +6354,7 @@ Paste a cropped image back into the picture it was taken from, at the window a c
 <details>
 <summary><b>Image Paste Crop by Location</b></summary>
 
-Paste one image into a rectangle of another, stretching it to fit and softening the edge. A crop_blending of 1.0 blurs so far that little of the pasted image stays fully opaque. The fade is always measured from the rectangle's longer side, so on a long thin rectangle a high value leaves the whole paste faint rather than sharply cut. Lower it until the paste reads at the strength wanted.
+Paste one image into a rectangle of another, stretching it to fit and softening the edge.
 
 | | |
 |---|---|
@@ -6370,7 +6370,7 @@ Paste one image into a rectangle of another, stretching it to fit and softening 
 | `left` | `INT` | Yes | 0 |  | Distance in pixels from the left of the image to the left of the paste. |
 | `right` | `INT` | Yes | 256 |  | Position of the paste's right edge, in pixels from the left of the image. left 0 with right 256 pastes into a 256-pixel-wide area. Values past the image edge are trimmed to it. |
 | `bottom` | `INT` | Yes | 256 |  | Position of the paste's bottom edge, in pixels from the top of the image. Values past the image edge are trimmed to it. |
-| `crop_blending` | `FLOAT` | Yes | 0.25 |  | How soft the edge of the paste is. 0.0 gives a hard rectangle, and 0.25 blurs the edge over roughly an eighth of the rectangle's longer side. |
+| `crop_blending` | `FLOAT` | Yes | 0.25 |  | How soft the edge of the paste is, measured from the rectangle's longer side. 0.0 = a hard rectangle; 0.25 = an eighth of that side; 1.0 = little of the paste stays fully opaque. Lower it on a long, thin rectangle. |
 | `crop_sharpening` | `INT` | Yes | 0 |  | How many sharpening passes to run on the pasted image after it is stretched, to recover detail lost to the resize. 0 pastes it as it is; 3 is the strongest and tends to leave halos. |
 
 **Outputs**
@@ -6415,7 +6415,7 @@ Paste a face crop back into the picture Image Crop Face took it from, with a sof
 <details>
 <summary><b>Image Pixelate</b></summary>
 
-Turn an image into pixel art with large blocky pixels and a small number of colours, optionally dithered or remapped onto a supplied palette. color_palette_mode is ignored with no palette connected, and `Perceptual` is the only mode palette_dither works with. `Luminance Ramp` throws the original colour away and places each pixel along the palette by brightness; set init_mode to `none` with it, since reducing the colours first destroys the shading it reads. The four older modes compare raw channel numbers: `Brightness` takes the closest colour overall, `Tonal` matches brightness only so hues swap freely, `BrightnessAndTonal` weighs both, and `Linear` indexes the palette by the red value for a hard banded remap. palette_dither diffuses against the palette itself, unlike dither, which runs first and is then re-quantised; `Bayer` is the one for a sequence.
+Turn an image into pixel art with large blocky pixels and a small number of colours, optionally dithered or repainted in a supplied palette.
 
 | | |
 |---|---|
@@ -6433,9 +6433,9 @@ Turn an image into pixel art with large blocky pixels and a small number of colo
 | `dither` | `BOOLEAN` | Yes | False |  | `on` scatters the rounding error into neighbouring pixels, which trades flat bands of colour for a fine speckle and makes a small palette look richer; `off` leaves the flat areas flat. |
 | `dither_mode` | `COMBO` | Yes |  | `FloydSteinberg`, `Ordered` | Which dither to use when dither is on. `FloydSteinberg` gives a fine organic stipple; `Ordered` snaps to a power-of-two number of levels first, giving a coarser, more regular texture. |
 | `color_palettes` | `ARRAY` | No |  |  | One palette of '#rrggbb' lines per image, as Image Color Palette emits. Connect it to repaint the result in those colours instead of the ones found in the image. Leave it unconnected to keep the image's own colours. |
-| `color_palette_mode` | `COMBO` | No |  | `Brightness`, `BrightnessAndTonal`, `Linear`, `Tonal`, `Perceptual`, `Luminance Ramp` | How a pixel is matched to a palette colour. `Perceptual` picks the closest colour as the eye sees it, and is the one to reach for. |
+| `color_palette_mode` | `COMBO` | No |  | `Brightness`, `BrightnessAndTonal`, `Linear`, `Tonal`, `Perceptual`, `Luminance Ramp` | How pixels match the palette. `Perceptual` = closest to the eye, the usual choice; `Luminance Ramp` = pixels placed along the palette by brightness, with init_mode `none`; `Brightness` = closest overall; `Tonal` = brightness only; `BrightnessAndTonal` = both; `Linear` = indexed by red. |
 | `reverse_palette` | `BOOLEAN` | No | False |  | On flips the palette end to end before matching, which inverts a dark-to-light ramp. `Linear` and `Luminance Ramp` change visibly; the modes that match on colour rather than on position do not. |
-| `palette_dither` | `COMBO` | No |  | `none`, `FloydSteinberg`, `Bayer` | How the error left by palette matching is spread, in `Perceptual` mode. `FloydSteinberg` gives an organic stipple; `Bayer` a fixed 8x8 pattern that stays still. |
+| `palette_dither` | `COMBO` | No |  | `none`, `FloydSteinberg`, `Bayer` | How the error left by palette matching is spread, in `Perceptual` mode. `FloydSteinberg` gives an organic stipple; `Bayer` a fixed 8x8 pattern that stays still, the one for a sequence. |
 | `palette_smooth` | `BOOLEAN` | No | True |  | Whether `Luminance Ramp` blends between neighbouring palette colours. On, the palette reads as a continuous gradient and shading survives the mapping. Off, every pixel snaps to one palette colour, banding the picture into exactly that many tones, which is usually what pixel art wants. |
 | `palette_blend` | `FLOAT` | No | 1.0 |  | How much of the palette result replaces the colours under it, in the two perceptual modes. 1.0 is the palette alone; lower values let the reduced original show through, which softens a colourised plate back towards its own hues. |
 | `palette_normalize` | `BOOLEAN` | No | False |  | Whether `Luminance Ramp` stretches the palette across each image's darkest and lightest values. Off by default, which reads brightness absolutely and keeps a sequence steady. |
@@ -6463,8 +6463,8 @@ Make the brightest or darkest part of an image transparent, judged on brightness
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to cut out. Each is handled on its own. |
-| `mode` | `COMBO` | Yes |  | `background`, `foreground` | Which part of the image to clear, decided on brightness alone. `background` clears every pixel at or below the threshold, so a dark backdrop goes and the light part is kept. `foreground` clears every pixel at or above it, so a white studio sweep goes instead. |
-| `threshold` | `INT` | Yes | 127 |  | Brightness the cut is made at, 0 for black and 255 for white; 127 cuts at mid grey. In `background` mode everything this dark or darker is cleared, so raising it clears more of the image; in `foreground` mode everything this bright or brighter is cleared, so raising it clears less. |
+| `mode` | `COMBO` | Yes |  | `background`, `foreground` | Which part of the image to clear, decided on brightness alone. `background` = every pixel at or below the threshold, so a dark backdrop goes; `foreground` = every pixel at or above it, so a white studio sweep goes. |
+| `threshold` | `INT` | Yes | 127 |  | Brightness the cut is made at: 0 = black; 127 = mid grey; 255 = white. Raising it clears more in `background` mode and less in `foreground` mode. |
 | `threshold_tolerance` | `INT` | Yes | 2 |  | How much the brightness is blurred before the cut, in pixels. Small values follow the edge closely but keep speckles; larger values give a smoother outline that creeps in over fine detail such as hair. |
 
 **Outputs**
@@ -6521,7 +6521,7 @@ Turn an image into a seamlessly tiling texture by blending its opposite edges in
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to make tileable. Each one is processed separately. |
-| `blending` | `FLOAT` | Yes | 0.4 |  | How much of each side the cross-fade between edges spans, as a fraction. 0.0 answers the image unchanged; 0.4 fades the outer 40 percent, which suits most textures; 0.5 is the most the edges leave room for. The answer is smaller by this fraction on each side. |
+| `blending` | `FLOAT` | Yes | 0.4 |  | How much of each side the cross-fade between edges spans, as a fraction; the result shrinks by it on each side. 0.0 = unchanged; 0.4 = the outer 40 percent, suits most textures; 0.5 = the most possible. |
 | `tiled` | `BOOLEAN` | Yes | True |  | `on` = the tile repeated into a grid, which is how the join is checked; `off` = the single tile, which is what to feed onward. |
 | `tiles` | `INT` | Yes | 2 |  | How many copies along each side of the grid when tiled is on. 2 gives a 2x2 preview of four copies; 4 gives sixteen. Ignored when tiled is off. |
 
@@ -6640,7 +6640,7 @@ Cut an image into a grid of smaller tiles and hand them on as a batch, for proce
 <details>
 <summary><b>Layers to Image Batch</b></summary>
 
-Take a layer stack apart: one frame per layer, its coverage as a mask, where it sits as bounds, and its name. Create Layered Image flattens a stack into a single picture, so this is the way back out of one, and it puts every layer of a compositor document, a detector's regions or a pasted-together plate through the rest of the pack one frame at a time.
+Take a layer stack apart: one frame per layer, its coverage as a mask, where it sits as bounds, and its name. Every layer of a document or a detector's regions can then go through the rest of the pack one frame at a time.
 
 | | |
 |---|---|
@@ -6672,7 +6672,7 @@ Take a layer stack apart: one frame per layer, its coverage as a mask, where it 
 <details>
 <summary><b>Image Displacement Warp</b></summary>
 
-Bend an image by a second, greyscale image. Bright areas of the map pull pixels diagonally down and right, dark areas leave them where they are, which turns any texture into a ripple, smear or melt. Each pixel is read one at a time, so a large image takes a while. A displacement map is scaled to cover the image and centre-cropped, and where the map batch is shorter than the image batch the last map is reused for the rest. Smooth maps such as clouds or a blurred gradient give flowing results, and sharp ones tear the image.
+Bend an image by a greyscale map: bright areas push pixels diagonally down and right, dark areas leave them in place, turning any texture into a ripple, smear or melt. Smooth maps such as clouds give flowing results; sharp ones tear the image.
 
 | | |
 |---|---|
@@ -6683,8 +6683,8 @@ Bend an image by a second, greyscale image. Bright areas of the map pull pixels 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to bend. A batch is warped one image at a time and comes back the same length, and every image keeps the width and height it went in at. |
-| `displacement_maps` | `IMAGE` | Yes |  |  | The map that says how far to push each pixel, read as brightness: black does not move, white moves by the full amplitude. Any size is accepted. |
-| `amplitude` | `FLOAT` | Yes | 25.0 |  | How far a fully white area of the map moves a pixel, in pixels, on both axes at once. 25 gives a gentle ripple, 200 a heavy smear, 0 leaves the image alone, and a negative value pushes up and left. Values past the image's own width or height read outside it and raise an error. |
+| `displacement_maps` | `IMAGE` | Yes |  |  | The map that says how far to push each pixel, read as brightness: black does not move, white moves by the full amplitude. Any size is scaled to cover the image and centre-cropped; a shorter batch reuses its last map. |
+| `amplitude` | `FLOAT` | Yes | 25.0 |  | How far a white area of the map moves a pixel, in pixels, on both axes. 0 = no change; 25 = a gentle ripple; 200 = a heavy smear; negative pushes up and left. Values past the image's width or height raise an error. |
 
 **Outputs**
 
@@ -6723,7 +6723,7 @@ Mirror every image in the batch. The size does not change and no pixels are resa
 <details>
 <summary><b>Image Lens Distortion</b></summary>
 
-Bow the frame outwards or pinch it inwards, and split the colour channels apart across the radius. Negative k1 barrels, which is what a wide lens or an action camera does; positive k1 pincushions, which takes that bow out of footage that already has it. Image Chromatic Aberration splits the channels without moving the geometry; this does both at once, as a real lens does.
+Bow the frame outwards or pinch it inwards and split the colour channels apart across the radius, as a real lens does. Adds a wide-lens barrel to a render, or takes one out of footage that has it.
 
 | | |
 |---|---|
@@ -6752,7 +6752,7 @@ Bow the frame outwards or pinch it inwards, and split the colour channels apart 
 <details>
 <summary><b>Image Padding</b></summary>
 
-Put an image on a larger empty canvas and fade its edges out, then return the canvas and a mask of everything that was added. Feed both to an inpainting pass to fill the new space. A larger feathering gives that fill more of a run-up and eats further into the original: 120 fades most of a 512 pixel image and wipes out anything smaller than about 480 pixels altogether, so keep it under a quarter of the image's shorter side.
+Put an image on a larger empty canvas and fade its edges out, then return the canvas and a mask of everything that was added. Feed both to an inpainting pass to fill the new space.
 
 | | |
 |---|---|
@@ -6763,7 +6763,7 @@ Put an image on a larger empty canvas and fade its edges out, then return the ca
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The image to place on the larger canvas. |
-| `feathering` | `INT` | Yes | 120 |  | How far the image's own edges fade out, in pixels. 0 leaves a hard edge, and the fade reaches roughly three times this far in. |
+| `feathering` | `INT` | Yes | 120 |  | How far the image's own edges fade out, in pixels; the fade reaches about three times this far in. 0 = a hard edge; 120 = fades most of a 512 pixel image. Keep it under a quarter of the shorter side. |
 | `feather_second_pass` | `BOOLEAN` | Yes | True |  | `on` runs a second, narrower fade that restores the middle of the image to full opacity and keeps the softening near the edge. `off` applies the wide fade alone, which leaves the whole image noticeably lighter. |
 | `left_padding` | `INT` | Yes | 512 |  | Empty space added on the left, in pixels. |
 | `right_padding` | `INT` | Yes | 512 |  | Empty space added on the right, in pixels. |
@@ -6785,7 +6785,7 @@ Put an image on a larger empty canvas and fade its edges out, then return the ca
 <details>
 <summary><b>Image Perspective</b></summary>
 
-Drag each corner of the frame somewhere else and let the picture follow. That maps a flat render onto a surface seen at an angle: a poster onto a wall, a screen into a photograph, a label onto a box. It also takes a keystone back out of a plate shot off-axis. Image Displacement Warp bends the picture locally; this is the one straight-line mapping a camera makes.
+Drag each corner of the frame somewhere else and let the picture follow. Maps a flat render onto a surface seen at an angle, such as a poster onto a wall or a screen into a photograph, or takes a keystone out of a plate shot off-axis.
 
 | | |
 |---|---|
@@ -6821,7 +6821,7 @@ Drag each corner of the frame somewhere else and let the picture follow. That ma
 <details>
 <summary><b>Image Resize</b></summary>
 
-Scale every image in the batch, either by a multiplier or to an exact width and height. Rescale mode holds the source proportions. Resize mode goes to the two sides given, each rounded up to the next multiple of 8, so a requested 1001 is delivered as 1008, and resize_mode decides how the picture meets them: padded, cropped, stretched, or left unresampled. Neither mode goes below one pixel on a side. The whole batch is resampled on the GPU at full precision, so values above 1.0 survive.
+Scale every image in the batch by a multiplier, keeping its proportions, or to an exact width and height, padding, cropping or stretching to meet them. Values above 1.0 survive.
 
 | | |
 |---|---|
@@ -6838,7 +6838,7 @@ Scale every image in the batch, either by a multiplier or to an exact width and 
 | `rescale_factor` | `FLOAT` | Yes | 2 |  | Size multiplier used in rescale mode. 2.0 doubles both sides, 0.5 halves them, 1.0 leaves the size alone. |
 | `resize_width` | `INT` | Yes | 1024 |  | Target width in pixels for resize mode, rounded up to the next multiple of 8: 1000 gives 1000, 1001 gives 1008. |
 | `resize_height` | `INT` | Yes | 1536 |  | Target height in pixels for resize mode, rounded up to the next multiple of 8. Set it independently of the width; resize_mode decides what becomes of the aspect ratio. |
-| `resize_mode` | `COMBO` | No | stretch | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How the picture meets the requested size in `resize` mode. `stretch` takes both sides exactly and distorts, which is what this node has always done. `fit and pad`: the whole picture inside pad_color bars. `fill and crop`: fills the size, the overhang is cut. `crop or pad`: no resampling at all. Ignored in `rescale`. |
+| `resize_mode` | `COMBO` | No | stretch | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How the picture meets the size in `resize` mode; ignored in `rescale`. `stretch` = both sides exactly, distorting; `fit and pad` = the whole picture inside pad_color bars; `fill and crop` = fills the size, overhang cut; `crop or pad` = no resampling. |
 | `align` | `COMBO` | No | middle center | `top left`, `top center`, `top right`, `middle left`, `middle center`, `middle right`, `bottom left`, `bottom center`, `bottom right` | Which part of the picture survives a crop, and which side takes the wider pad bar. `top center` suits portraits, where a centred crop takes the forehead off. Ignored in `stretch` and in `rescale` mode. |
 | `pad_color` | `STRING` | No | #000000 |  | Fill for space the picture does not cover; STRING. Any Pillow colour: `#RRGGBB`, a name, or `#RRGGBBAA`. Empty is transparent, which only shows on a batch carrying alpha. Seen in `fit and pad` and `crop or pad`. Eg: white |
 | `multiple_of` | `INT` | No | 0 |  | Round both sides of a `resize` down to a multiple of this, which is how a size is made safe for a latent. 8 suits most models, 16 and 64 some others. 0 leaves the size alone. Ignored in `rescale`. |
@@ -6868,7 +6868,7 @@ Turn every image in the batch counter-clockwise by a multiple of 90 degrees. Any
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to turn. Every image in a batch gets the same rotation and comes back in the order it arrived, with its width and height swapped at 90 or 270 degrees in `transpose` mode. |
-| `mode` | `COMBO` | Yes |  | `transpose`, `internal` | `transpose` turns the image by moving whole pixels, so a portrait image becomes landscape and nothing is lost. `internal` rotates inside the original frame instead, which keeps the width and height as they were and crops the corners off a quarter turn of a non-square image. |
+| `mode` | `COMBO` | Yes |  | `transpose`, `internal` | `transpose` = turns by whole pixels, so a portrait becomes landscape and nothing is lost; `internal` = rotates inside the original frame, keeping width and height and cropping the corners off a quarter turn of a non-square image. |
 | `rotation` | `INT` | Yes | 0 |  | How far to turn, in degrees counter-clockwise. Only multiples of 90 are applied: 90, 180 and 270 turn, while 0 and 360 leave the image alone. |
 | `sampler` | `COMBO` | Yes |  | `nearest`, `bilinear`, `bicubic` | Filter used when pixels have to be interpolated. Quarter turns land on whole pixels, so this changes nothing at any rotation the node accepts; `nearest` is the cheapest of the three. |
 
@@ -6884,7 +6884,7 @@ Turn every image in the batch counter-clockwise by a multiple of 90 degrees. Any
 <details>
 <summary><b>Image Stitch (Advanced)</b></summary>
 
-Put image_b against one edge of image_a on a single canvas, fading the two together across the join. The images overlap by the feathering width, so the canvas is that much shorter than the two laid end to end. The canvas takes its other side from image_a alone, which leaves black where a smaller image_b does not reach and crops a larger one.
+Put image_b against one edge of image_a on a single canvas, fading the two together across the join. The canvas takes its other side from image_a, leaving black where a smaller image_b falls short and cropping a larger one.
 
 | | |
 |---|---|
@@ -6897,7 +6897,7 @@ Put image_b against one edge of image_a on a single canvas, fading the two toget
 | `image_a` | `IMAGE` | Yes |  |  | The image that stays in place, and the one whose other dimension sets the canvas size. |
 | `image_b` | `IMAGE` | Yes |  |  | The image placed against image_a. |
 | `stitch` | `COMBO` | Yes |  | `top`, `left`, `bottom`, `right` | Which side of image_a image_b goes on. `left` and `right` build a wide canvas, `top` and `bottom` a tall one. |
-| `feathering` | `INT` | Yes | 50 |  | Width of the blended overlap in pixels. 0 butts the images together with a hard edge; 50 fades them over 50 pixels, which hides the seam between two views of the same scene. The seam is cut out of the pair, so a feather wider than a slot narrows the result, and stitching many slots that way narrows it further. |
+| `feathering` | `INT` | Yes | 50 |  | Width of the blended overlap in pixels; the images overlap by it, so the canvas is that much shorter. 0 = a hard edge; 50 = a 50 pixel fade, which hides the seam between two views of one scene. |
 | `image_c` | `IMAGE` | No |  |  | A further image, stitched on after the one before it in the same direction. The interface reveals the next slot as this one is filled. |
 | `image_d` | `IMAGE` | No |  |  | A further image, stitched on after the one before it in the same direction. The interface reveals the next slot as this one is filled. |
 | `image_e` | `IMAGE` | No |  |  | A further image, stitched on after the one before it in the same direction. The interface reveals the next slot as this one is filled. |
@@ -6968,7 +6968,7 @@ Scale, rotate and paste image_overlay onto image, with an optional soft edge. Th
 <details>
 <summary><b>Blend Latents</b></summary>
 
-Blend two latents with an arithmetic or photographic mix operation. The result is renormalised to 0.0-1.0. `add`, `multiply`, `divide` and `subtract` are plain arithmetic on the weighted pair. `overlay`, `hard_light` and `soft_light` keep dark areas dark and light areas light with increasing gentleness; `screen` and `linear_dodge` only brighten; `difference` and `exclusion` keep whatever the two disagree about and cancel out what they share; `random` mixes them through freshly drawn noise.
+Blend two latents with an arithmetic or photographic mix, such as `overlay` or `screen`. The result is rescaled so its values run from 0.0 to 1.0.
 
 | | |
 |---|---|
@@ -6980,8 +6980,8 @@ Blend two latents with an arithmetic or photographic mix operation. The result i
 |---|---|---|---|---|---|
 | `latent_a` | `LATENT` | Yes |  |  | First latent. On the arithmetic operations this is the one blend weights; on subtract and divide it is the left-hand side. |
 | `latent_b` | `LATENT` | Yes |  |  | Second latent. On the arithmetic operations it takes the remaining weight, 1 - blend; on subtract and divide it is what latent_a is reduced by. |
-| `operation` | `COMBO` | Yes |  | `add`, `multiply`, `divide`, `subtract`, `overlay`, `hard_light`, `soft_light`, `screen`, `linear_dodge`, `difference`, `exclusion`, `random` | How the two latents are combined, from plain arithmetic to photographic mixes such as `overlay` and `screen`. `random` mixes through fresh noise, differently on every run. |
-| `blend` | `FLOAT` | Yes | 0.5 |  | How much weight latent_a carries. On `add`, `multiply`, `divide` and `subtract`, latent_b gets the rest: 0.5 is an even mix and 1.0 leaves latent_b out altogether. Every other operation scales both latents by this value instead, so it acts as an overall strength rather than a balance. |
+| `operation` | `COMBO` | Yes |  | `add`, `multiply`, `divide`, `subtract`, `overlay`, `hard_light`, `soft_light`, `screen`, `linear_dodge`, `difference`, `exclusion`, `random` | `add`, `multiply`, `divide`, `subtract` = weighted arithmetic; `overlay`, `hard_light`, `soft_light` = darks stay dark and lights light, each gentler than the last; `screen`, `linear_dodge` = brighten only; `difference`, `exclusion` = keep what the two disagree on; `random` = mix through fresh noise each run. |
+| `blend` | `FLOAT` | Yes | 0.5 |  | Weight of latent_a. On `add`, `multiply`, `divide` and `subtract`, latent_b gets the rest: 0.5 = even mix; 1.0 = latent_a only. Every other operation scales both latents by it, as an overall strength. |
 
 **Outputs**
 
@@ -7073,7 +7073,7 @@ Measure the amplitude and falloff of a latent's radial power spectrum, the two v
 <details>
 <summary><b>Latent Statistics</b></summary>
 
-Measure the values inside a latent rather than its size: the mean, the spread, the range, and whether anything in it is nan or inf. A sampler that diverges answers a latent of nan or of huge values, which decodes to a black, grey or garbled picture with nothing saying why. Wire is_finite into a gate to catch that before the VAE decode. Measure the whole batch at once, or one latent of it by index.
+Measure the values inside a latent: the mean, the spread, the range, and whether anything is nan or inf. A diverged sampler hands on nan or huge values that decode to a black, grey or garbled picture; wire is_finite into a gate to catch it before the decode.
 
 | | |
 |---|---|
@@ -7124,7 +7124,7 @@ A copy of the latent with random noise mixed in, so that resampling it brings ou
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `samples` | `LATENT` | Yes |  |  | The latent the noise is added to. It is left untouched itself. |
-| `noise_std` | `FLOAT` | Yes | 0.1 |  | How much noise to add, as the standard deviation of the random values. 0.0 adds nothing and passes the latent straight through; 0.1 is a light dusting that a low-denoise resample can turn into extra detail; 1.0 is about as strong as the latent itself and leaves little of the original. |
+| `noise_std` | `FLOAT` | Yes | 0.1 |  | Standard deviation of the added noise: 0.0 = none, latent passed through; 0.1 = a light dusting a low-denoise resample turns into detail; 1.0 = as strong as the latent itself, leaving little of the original. |
 
 **Outputs**
 
@@ -7140,7 +7140,7 @@ A copy of the latent with random noise mixed in, so that resampling it brings ou
 <details>
 <summary><b>Affine Options</b></summary>
 
-Set the pattern an affine masks through and the parameters that shape it, then wire the result into Latent Affine or any of the Affine samplers. Only the chosen pattern's own settings are drawn, so the node stays short whichever one is picked. The pattern set here is the one the affine uses, and content_gate holds it back to the flat areas, the detail or the edges of the picture.
+Set the pattern an affine masks through and the parameters that shape it, then wire the result into Latent Affine or any Affine sampler, where its pattern replaces theirs. Only the chosen pattern's own settings are drawn.
 
 | | |
 |---|---|
@@ -7150,7 +7150,7 @@ Set the pattern an affine masks through and the parameters that shape it, then w
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask the affine lands through. 'solid' = everywhere; 'white_noise' and the coloured noises = grain of varying coarseness; 'perlin', 'checker', 'bayer', 'worley_edges' and the rest = shapes; 'detail_region', 'smooth_region', 'edges_sobel', 'edges_laplacian' = read off the latent; 'external_mask' = the mask wired in. |
 | `green_center_frac` | `FLOAT` | Yes | 0.35 |  | Where the green noise band sits, as a share of the finest detail the latent can hold. 0.1 = coarse blotches, 0.35 = mid, 0.8 = fine. |
 | `green_bandwidth_frac` | `FLOAT` | Yes | 0.15 |  | How wide that band is. 0.05 = one grain size, 0.4 = a broad mix. |
 | `black_bins_per_kpx` | `INT` | Yes | 512 |  | How many frequencies black noise keeps alive, per thousand samples. 16 = a few standing ripples, 512 = a busy weave. |
@@ -7199,7 +7199,7 @@ Set the pattern an affine masks through and the parameters that shape it, then w
 | `drift_angle_deg` | `FLOAT` | Yes | 0.0 |  | Which way it slides, in degrees. 0 = right, 90 = down, 180 = left, 270 = up. |
 | `drift_renew` | `FLOAT` | Yes | 0.0 |  | How much of the mask is replaced each frame on 'drift', on top of the slide. 0.0 slides one mask unchanged, 0.15 lets it turn over as well, 1.0 matches 'per_frame'. |
 | `bias_field` | `COMBO` | Yes | constant | `constant`, `gaussian` | What the bias adds where the mask is white. 'constant' = one offset everywhere, which shifts colour and tone. 'gaussian' = a noise field, one value per latent element. On 'gaussian' a bias of 0.02 is gentle and 0.1 is strong. |
-| `content_gate` | `COMBO` | Yes | off | `off`, `detail_region`, `smooth_region`, `edges_sobel`, `edges_laplacian` | Hold a generated pattern back to where the picture allows it. 'off' lets it cover the frame; 'smooth_region' keeps it to flat areas and off detail; 'detail_region' does the opposite; 'edges_sobel' and 'edges_laplacian' keep it to edges. Read off each frame, so the grain follows the subject. content_window sets how wide it reads. |
+| `content_gate` | `COMBO` | Yes | off | `off`, `detail_region`, `smooth_region`, `edges_sobel`, `edges_laplacian` | Keeps a generated pattern to part of each frame, so the grain follows the subject. 'off' = whole frame; 'smooth_region' = flat areas; 'detail_region' = detailed areas; 'edges_sobel' and 'edges_laplacian' = edges. content_window sets how wide it reads. |
 
 **Outputs**
 
@@ -7213,7 +7213,7 @@ Set the pattern an affine masks through and the parameters that shape it, then w
 <details>
 <summary><b>Latent Affine</b></summary>
 
-Multiply a latent and add an offset to it, but only where a mask says to. The mask can be procedural grain, a repeating shape, a reading of the latent's own detail or edges, or one wired in. Small moves either side of 1.0 change texture and contrast before a second sampling pass; the same transform applied during sampling is what the Affine samplers do.
+Multiply a latent and add an offset to it, but only where a mask says to. The mask can be procedural grain, a repeating shape, the latent's own detail or edges, or one wired in. Small moves either side of 1.0 change texture and contrast before a second sampling pass.
 
 | | |
 |---|---|
@@ -7226,8 +7226,8 @@ Multiply a latent and add an offset to it, but only where a mask says to. The ma
 | `latent` | `LATENT` | Yes |  |  | The latent to transform. Image, video and packed audio and video latents are all handled. |
 | `scale` | `FLOAT` | Yes | 0.96 |  | What the latent is multiplied by where the mask is white. 1.0 = no change; 0.96 takes a little energy out, which softens; 1.2 pushes texture and contrast up. |
 | `bias` | `FLOAT` | Yes | 0.0 |  | What is added where the mask is white, beside scale rather than through it. 0.0 = no shift; 0.1 lifts, -0.1 drops. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
-| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
-| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask the affine lands through. 'solid' = everywhere; 'white_noise' and the coloured noises = grain of varying coarseness; 'perlin', 'checker', 'bayer', 'worley_edges' and the rest = shapes; 'detail_region', 'smooth_region', 'edges_sobel', 'edges_laplacian' = read off the latent; 'external_mask' = the mask wired in. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | Video latents only: 'static' = one mask on every frame; 'per_frame' = a new mask each frame; 'drift' = one mask sliding across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. Content-aware patterns ignore it. |
 | `seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
 | `streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
 | `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
@@ -7303,7 +7303,7 @@ Start a Kandinsky 6 text-to-video clip: empty video and sound of one duration, w
 <details>
 <summary><b>H3 Control</b></summary>
 
-Drive each segment of a MiniMax H3 extend loop with its own stretch of one control video: pose, depth, canny, lines or any other map the H3 Fun ControlNet-Union patch takes. Wire the whole video's control frames once; every pass reads the frames that land on its window, carried frames included, so each scene follows the video in step. A mask and source video add inpainting, regenerating inside the mask and keeping the rest. Place it between H3 Extend Window's model output and the guider.
+Steer each segment of a MiniMax H3 extend loop with its own stretch of one control video: pose, depth, canny, lines or any map the H3 Fun ControlNet-Union patch takes. A mask and source video add inpainting inside the mask. Place it between H3 Extend Window's model output and the guider.
 
 | | |
 |---|---|
@@ -7337,7 +7337,7 @@ Drive each segment of a MiniMax H3 extend loop with its own stretch of one contr
 <details>
 <summary><b>H3 De-RoPE Recover</b></summary>
 
-Take the frames H3 De-RoPE Stretch held back out of the decoded, refined clip, so it plays at its source length and speed, with the source audio beside it for Create Video. Audio decoded from the pass can be wired instead; it is sped back up with its pitch kept and comes back rough.
+Put a clip refined after H3 De-RoPE Stretch back on its source timing, with the source audio for Create Video. With the video VAE wired it also hands back an H3 latent, ready for H3 Extend Append in a loop.
 
 | | |
 |---|---|
@@ -7347,9 +7347,12 @@ Take the frames H3 De-RoPE Stretch held back out of the decoded, refined clip, s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `images` | `IMAGE` | Yes |  |  | The refined clip, decoded from the sampler's output. |
-| `derope` | `WAS_H3_DEROPE` | Yes |  |  | The derope output of H3 De-RoPE Stretch. |
+| `images` | `IMAGE` | No |  |  | The refined clip, decoded from the sampler's output. Leave empty to decode it from latent. |
+| `derope` | `WAS_H3_DEROPE` | No |  |  | The derope output of H3 De-RoPE Stretch. |
 | `audio` | `AUDIO` | No |  |  | Leave empty to pass out the source audio, which matches the recovered frames. Wired, audio decoded from the refining pass is sped back up to match and comes back rough. |
+| `latent` | `LATENT` | No |  |  | The sampler's output for the stretched latent. Decoded scene by scene with vae where images is empty. |
+| `vae` | `VAE` | No |  |  | The H3 video VAE. Decodes latent where images is empty, and encodes the recovered frames for the latent output. |
+| `pick` | `COMBO` | No | first | `first`, `nearest` | Which showing of each held frame is kept: `first` = the first showing; `nearest` = the one that looks most like the source frame, for a refine that drifted through its holds. |
 
 **Outputs**
 
@@ -7358,6 +7361,44 @@ Take the frames H3 De-RoPE Stretch held back out of the decoded, refined clip, s
 | `images` | `IMAGE` | One frame per source frame, at the source timing. |
 | `audio` | `AUDIO` | The pass's audio at the source timing, or the source audio when none is wired. Empty when neither exists. |
 | `report` | `STRING` | Frames in and frames out. |
+| `latent` | `LATENT` | The recovered frames as an H3 latent with the source's audio, for H3 Extend Append's sampled input or a decode. Empty without vae. |
+
+</details>
+
+<a id="node-wash3deroperefine"></a>
+<details>
+<summary><b>H3 De-RoPE Refine</b></summary>
+
+Refine the stretched latent from H3 De-RoPE Stretch window by window, each the length of a normal H3 pass and carrying the clip it shares with the one before, so a long stretch fits in memory and keeps its detail to the end. Send the result to H3 De-RoPE Recover.
+
+| | |
+|---|---|
+| Node id | `WASH3DeRopeRefine` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The H3 model, from H3 De-RoPE Stretch's model output. |
+| `positive` | `CONDITIONING` | Yes |  |  | The prompt, from H3 De-RoPE Stretch's positive output. |
+| `latent` | `LATENT` | Yes |  |  | The stretched latent, from H3 De-RoPE Stretch. |
+| `denoise` | `FLOAT` | Yes | 0.5 |  | Share of the schedule each window runs, as `0.5`. Wire H3 De-RoPE Stretch's denoise output here. |
+| `seed` | `INT` | Yes | 0 |  | Noise seed of the first window, as `20261003`; each later window adds its number. |
+| `steps` | `INT` | Yes | 4 |  | Steps each window runs, as `4` after an 8-step pass or `13` after 25. |
+| `cfg` | `FLOAT` | Yes | 1.0 |  | Guidance, `1` for turbo LoRAs and distilled models. |
+| `sampler_name` | `COMBO` | Yes | res_multistep |  | The solver each step runs, as `res_multistep` or `euler`. |
+| `scheduler` | `COMBO` | Yes | simple |  | How the noise level falls from step to step, as `simple`. |
+| `window_frames` | `INT` | Yes | 362 |  | Stretched frames one window holds at most: `362` = H3's longest, one pass for most segments; `243` = about 10 seconds; smaller saves memory, but a pinned last frame then shapes only the final window. |
+| `overlap_frames` | `INT` | Yes | 17 |  | Stretched frames each window carries from the one before, held as refined: `17` = one clip; `34` = two, a steadier join; `0` = none. |
+| `negative` | `CONDITIONING` | No |  |  | Negative prompt. Left empty, the positive zeroed, as at cfg `1`. |
+| `sampler` | `SAMPLER` | No |  |  | A SAMPLER run in place of sampler_name, as an affine-wrapped one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The refined stretched latent, for H3 De-RoPE Recover's latent. |
+| `report` | `STRING` | Each window's stretched frames, the frames it held and its time. |
 
 </details>
 
@@ -7365,7 +7406,7 @@ Take the frames H3 De-RoPE Stretch held back out of the decoded, refined clip, s
 <details>
 <summary><b>H3 De-RoPE Stretch</b></summary>
 
-Find where a MiniMax H3 clip moves too fast, show those frames several times over, and encode the result with its audio as the start latent for any sampler. The clip comes in as frames, as a latent, or both; for a clip generated from text, wire the finished output of its sampler. Sample it at the `denoise` output's strength, decode it, and H3 De-RoPE Recover puts the frames back on the clip's timing. A clip joined from several scenes keeps its cuts when its latent is wired: each scene is measured and held on its own, and the stretched latent records where each one opens. The GPU's models are released before and after its VAE work, so the samplers either side of it get the whole card. The strip shows the motion of each latent row, what was held and where the scenes cut.
+Slow down the fast parts of a MiniMax H3 clip so a refining sampler can redraw their smeared motion. Refine its latent with H3 De-RoPE Refine at the `denoise` output, then H3 De-RoPE Recover restores the clip's timing. Works on one clip or on each segment inside a Prompt Timeline loop.
 
 | | |
 |---|---|
@@ -7376,16 +7417,17 @@ Find where a MiniMax H3 clip moves too fast, show those frames several times ove
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE. |
-| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much of the clip is held. `balanced` holds the fastest quarter at 4, `wide` the fastest 30% at 4, `economy` the fastest 15% at 3. `manual` shows every setting. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much is held, each fast span joined to the next across up to 8 rows: `balanced` = fastest quarter at 4; `wide` = fastest 30% at 4; `economy` = fastest 15% at 3; `manual` = every setting. |
 | `strength` | `FLOAT` | Yes | 0.5 |  | Denoise for the sampler, passed out as `denoise`: `0.5` keeps the clip's motion and redraws the smear, `0.7` redraws more and re-times the action. Set the sampler's steps to the first pass's times this, as `4` after an 8-step pass or `13` after 25. |
 | `audio_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much of the audio the pass re-renders: `follow` 0.5, `loose` 0.7, `pin` keeps it, `fresh` replaces it. Needs audio and audio_vae. |
 | `images` | `IMAGE` | No |  |  | The clip's frames at 24 fps. Leave empty to decode them from latent. |
 | `audio` | `AUDIO` | No |  |  | The clip's soundtrack, from Get Video Components. Left empty, a joint H3 latent's own audio is used. Without either, held spans come back rushed. |
 | `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, for encoding the audio and decoding a latent's. |
 | `fps` | `FLOAT` | No | 24.0 |  | Frame rate of the clip, as `24`, for timing its audio. |
-| `latent` | `LATENT` | No |  |  | The clip's finished H3 latent, such as a sampler's output. Motion, audio and scene cuts are read from it instead of encoding the frames, and no hold crosses a cut. An early, unfinished estimate carries no motion to keep, and comes back fast-forwarded. |
-| `model` | `MODEL` | No |  |  | The H3 model the sampler uses. Passed out for the sampler's model. |
-| `low_vram` | `BOOLEAN` | No | True |  | `true` runs each model block over the stretched clip in slices of 8192 tokens and keeps only the weights that fit beside it on the card, streaming the rest, for the same output at a lower memory peak. Needs model. |
+| `latent` | `LATENT` | No |  |  | The clip's finished H3 latent, as a sampler's output. Motion, audio and scene cuts are read from it; rows its noise mask holds, as a segment's carried frames, stay as they are. An unfinished estimate comes back fast-forwarded. |
+| `model` | `MODEL` | No |  |  | The model to refine with. In a loop, wire H3 Extend Window's model output, so each scene is refined by the model it chose; for one clip, the loader's model. Passed out without the timeline's live previews. |
+| `low_vram` | `BOOLEAN` | No | True |  | `true` = each model block runs in 8192-token slices with only the weights that fit kept on the card; same output, lower memory peak. Needs model. |
+| `positive` | `CONDITIONING` | No |  |  | The prompt the clip was sampled with, from H3 Extend Window or the conditioning node. Its pinned frames, as a first or last frame, are moved to where those frames land in the stretched clip. |
 
 **Outputs**
 
@@ -7396,6 +7438,7 @@ Find where a MiniMax H3 clip moves too fast, show those frames several times ove
 | `denoise` | `FLOAT` | The strength, for the sampler's denoise. |
 | `report` | `STRING` | Frames in and out, frames held, the peak hold and the cuts kept out of the motion measure. |
 | `model` | `MODEL` | The model for the sampler, run in slices when low_vram is on. |
+| `positive` | `CONDITIONING` | The prompt with its pinned frames on the stretched clip, for the sampler's positive. Empty when positive is not wired. |
 
 </details>
 
@@ -7403,7 +7446,7 @@ Find where a MiniMax H3 clip moves too fast, show those frames several times ove
 <details>
 <summary><b>H3 Decode Video</b></summary>
 
-Decode a MiniMax H3 clip built by an extend loop one scene at a time, writing the frames to a cache on disk, so a long multi-scene run never has to fit in memory as one batch. Each scene that opens on a cut is decoded on its own, so its first frames carry nothing of the scene before. Save Video writes the clip straight from disk.
+Decode a MiniMax H3 clip from an extend loop one scene at a time into a frame cache on disk, so a long run never has to fit in memory. Scenes that open on a cut decode on their own, carrying nothing of the scene before. Save Video writes the clip straight from disk.
 
 | | |
 |---|---|
@@ -7413,18 +7456,20 @@ Decode a MiniMax H3 clip built by an extend loop one scene at a time, writing th
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `latent` | `LATENT` | Yes |  |  | The finished clip, from the loop H3 Extend Append builds. |
+| `latent` | `LATENT` | Yes |  |  | The finished clip, from the loop H3 Extend Append builds or any H3 sampler. A video-only latent decodes silent. |
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE. |
 | `root` | `COMBO` | Yes | temp |  | Which folder the cache lands in: 'temp' = cleared when ComfyUI restarts; 'output' = kept until deleted, for Load Video Cache. |
 | `name` | `STRING` | Yes | frame_cache/h3 |  | The cache's name below root, numbered on each run, as `frame_cache/episode` for `frame_cache/episode_00001`. |
 | `delete_after_save` | `BOOLEAN` | Yes | False |  | `true` = the cached frames are deleted once a save has written all of them, and the decode runs again on every queue; `false` = they are kept. |
-| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, for the clip's sound. Left empty, the clip is silent. |
+| `frame_rate` | `FLOAT` | Yes | 24.0 |  | Frames per second the clip plays at, as `24`, the rate H3 renders at, or `23.976` or `30`. The sound keeps its own length at any rate. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, for decoding the latent's audio half. Left empty, with no sound on audio, the clip is silent. |
+| `audio` | `AUDIO` | No |  |  | The clip's own sound, such as Load Video's audio, laid under the frames as it is in place of the latent's audio half. Empty because the file is silent, the latent's audio half is used. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `video` | `VIDEO` | The decoded clip at 24 fps, read from disk by Save Video a frame at a time. |
+| `video` | `VIDEO` | The decoded clip at frame_rate, read from disk by Save Video a frame at a time. |
 | `frames` | `INT` | Frames decoded. |
 | `report` | `STRING` | Each scene's frames and where it opens in the clip. |
 
@@ -7434,7 +7479,7 @@ Decode a MiniMax H3 clip built by an extend loop one scene at a time, writing th
 <details>
 <summary><b>H3 Extend Append</b></summary>
 
-Join a sampled segment onto the clip so far. The opening segment becomes the clip; a continued segment arrives with the clip's own last frames at its head, so only the frames past them are added and every earlier frame is carried through untouched. A cut adds the whole new scene after the clip's last full 17 frame block, trimming the 5 frames past it. Decode once, after the last segment.
+Join a sampled segment onto the clip so far and hand on the longer clip. A continued segment adds only the frames past the carried ones; a cut adds the whole new scene after the clip's last full 17 frame block. Decode once, after the last segment.
 
 | | |
 |---|---|
@@ -7463,7 +7508,7 @@ Join a sampled segment onto the clip so far. The opening segment becomes the cli
 <details>
 <summary><b>H3 Extend Window</b></summary>
 
-Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empty latent it is handed. Each later segment picks up from the clip so far: `carry` holds its last frames and their sound and generates what follows, `refresh` carries them with fresh noise, `handoff` opens on their last frame, `reference (video)` hands them over as a reference, and `reference (sample)` references stills from the whole clip. `carry (audio only)` cuts to new picture under the carried sound, and `carry (audio) + reference (video)` also references the last frames. `cut`, or an overlap of `0` under `carry` or `refresh`, starts a fresh scene. Send the latent to a sampler and its result to H3 Extend Append.
+Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empty latent it is handed; each later one continues the clip so far, carrying its last frames, its sound, a reference or nothing, as continuity chooses. Send the window to a sampler and its result to H3 Extend Append.
 
 | | |
 |---|---|
@@ -7474,23 +7519,23 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `latent` | `LATENT` | Yes |  |  | The finished H3 video and audio latent this pass continues. |
-| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, cast from stills; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. A prompt row overrides it. References and handoff need vae. |
+| `continuity` | `COMBO` | Yes | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
 | `extension_frames` | `INT` | Yes | 102 |  | New frames this pass adds, as `17` for about 0.7s or `102` for about 4.2s at 24 fps. Snapped to the nearest multiple of 17. |
-| `overlap_frames` | `INT` | Yes | 22 |  | Frames of the finished clip carried into the next pass, as `5`, `22` or `39`. Snapped to the nearest step of the model's 17k+5 grid, so `16` carries `22`. Longer gives the new frames more of the scene to continue from. `reference (video)` reads at least `56`; both sound carries take whole clips of sound, `17` for about 0.7s. |
+| `overlap_frames` | `INT` | Yes | 22 |  | Frames of the clip carried into the new pass, as `5`, `22` or `39`, snapped to the 17k+5 grid, so `16` carries `22`. Longer gives more scene to continue from. `reference (video)` reads at least `56`; sound carries take whole clips, `17` for about 0.7s. |
 | `positive` | `CONDITIONING` | No |  |  | Prompt for the new frames. A different prompt per pass moves the scene on. |
 | `vae` | `VAE` | No |  |  | The H3 video VAE. Needed by `handoff` and both references. |
-| `prompts` | `WAS_H3_PROMPTS` | No |  |  | Every pass's prompt from MiniMax H3 Conditioning. Wired in, it supplies this pass's prompt and its frame count, and extension_frames is not read. |
+| `prompts` | `WAS_H3_PROMPTS` | No |  |  | Every pass's prompt from MiniMax H3 Conditioning. Wired in, its row sets this pass's prompt, frame count, overlap, continuity and source, replacing those widgets. |
 | `pass_index` | `INT` | No | 0 |  | Which segment this is, from `0`. Wire a While Loop Open's index in to step through them one per iteration. |
 | `drift_control` | `FLOAT` | No | 0.0 |  | How much of the contrast and fine detail the carried frames have gained is taken back out, as `0.0` to carry them exactly as sampled, `0.5` for half or `1.0` for all of it. Measured against the clip's opening frames, and it only ever softens. |
 | `refresh_gain` | `FLOAT` | No | 1.15 |  | Fine detail a segment adds, which `handoff` softens the frame it opens on below so the pass lands back on the opening's reading. `1.15` suits most scenes, `1.0` softens to match the opening exactly. Read by `handoff`. |
 | `audio_release` | `INT` | No | 8 |  | Audio latent steps the held soundtrack opens back up over where it meets the new frames, as `8` for 0.2 seconds at 40 steps a second, `0` for a hard edge or `20` for half a second. Read by `carry`, `refresh` and both sound carries. |
 | `renewal` | `FLOAT` | No | 0.35 |  | Fresh noise `refresh` puts into the carried frames, as `0.0` to hold them as `carry` does, `0.35` to loosen them so the scene can evolve, or `1.0` to resample them with only the carried picture to start from. Read by `refresh`. |
-| `reference_samples` | `INT` | No | 4 |  | Stills `reference (sample)` takes from the clip so far, spread evenly from its first frame to its last, as `4`, or `6` for a long clip with many scenes. Read by `reference (sample)`. |
-| `source` | `INT` | No | -1 |  | Which segment this pass continues from: `-1` = the one before, `-2` = the one before that, `2` = segment 2. From an earlier segment the picture carries and the sound starts fresh; the new frames still join the clip's end. Both sound carries always read the segment before. A row's own source replaces this where prompts is wired. |
+| `reference_samples` | `INT` | No | 4 |  | Stills `reference (sample)` and `carry + reference (sample)` take, spread evenly across sample_span, as `4`, or `6` for a long clip with many scenes. |
+| `source` | `INT` | No | -1 |  | Which segment this pass continues from: `-1` = the one before; `-2` = two back; `2` = segment 2. From an earlier segment the picture carries with fresh sound; new frames still join the clip's end. Sound carries always read the segment before. |
 | `live_preview` | `BOOLEAN` | No | True |  | `true` = the Prompt Timeline draws this segment as it samples and keeps its last step, through the preview decoder in models/vae_approx whose name starts `taeh3`, as ComfyUI's own previews find theirs; `false` = no previews. Needs prompts. |
 | `reference_sound` | `BOOLEAN` | No | True |  | On, a clip the window references from the scene before carries that scene's sound under it, so voices and ambience follow the cast across the cut. Read by `reference (video)` and `carry (audio) + reference (video)`. |
 | `reencode_prompt` | `BOOLEAN` | No | True |  | `true` = a segment this window adds references or a handoff frame to has its prompt encoded again with them, as wired references are; one text encoder pass for that segment. `false` = they are attached as they are. |
-| `sample_span` | `COMBO` | No | source scene | `source scene`, `whole clip` | Where `reference (sample)` takes its stills: `source scene` = spread across the scene this segment continues from, `whole clip` = spread from the first frame to the last. |
+| `sample_span` | `COMBO` | No | source scene | `source scene`, `whole clip` | Where sampled stills come from: `source scene` = spread across the scene this segment continues from; `whole clip` = from the first frame to the last. Read by both `reference (sample)` continuities. |
 | `seed` | `INT` | No | 0 |  | The run's seed, as `42`. The seed output answers this plus the segment number, or the segment's own seed where its row names one. |
 
 **Outputs**
@@ -7510,7 +7555,7 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 <details>
 <summary><b>H3 Load Clip</b></summary>
 
-Read a MiniMax H3 clip H3 Save Clip wrote, whole or as it stood when any scene finished, with every record the extend loop keeps. Hand it to the loop as its starting clip and start the loop at next_index, and only the scenes after it are rendered again: change scene 3's prompt and run from scene 3 without sampling scenes 1 and 2.
+Read a MiniMax H3 clip that H3 Save Clip wrote, whole or as it stood when any scene finished. Hand it to an extend loop as its starting clip and start at next_index, so only later scenes render again: change scene 3's prompt without resampling scenes 1 and 2.
 
 | | |
 |---|---|
@@ -7537,7 +7582,7 @@ Read a MiniMax H3 clip H3 Save Clip wrote, whole or as it stood when any scene f
 <details>
 <summary><b>H3 Repair Splice</b></summary>
 
-Write a sampled H3 Repair Window back into the clip it was cut from. Only the frames and sound the window redrew are replaced; every other latent row and audio step of the clip is carried through unchanged, along with its record of segments and scene cuts. The report names the frames and seconds that changed. Decode the result as any finished clip, or repair another stretch of it.
+Write a sampled H3 Repair Window back into the clip it was cut from, replacing only the frames and sound it redrew; the rest, scene records included, is unchanged. Decode the result as any finished clip, or repair another stretch of it.
 
 | | |
 |---|---|
@@ -7563,7 +7608,7 @@ Write a sampled H3 Repair Window back into the clip it was cut from. Only the fr
 <details>
 <summary><b>H3 Repair Window</b></summary>
 
-Open part of a finished MiniMax H3 clip for a sampler to redraw. The stretch from start_seconds to end_seconds widens to whole 17 frame blocks, and the window around it carries context_frames of the clip either side, held as they are. picture_strength and sound_strength set how much of the stretch's picture and sound is drawn again: `1.0` from fresh noise, `0.5` half way from what is there, `0.0` kept. Wire MiniMax H3 Conditioning's prompts to reuse a segment's prompt, references, keyframes and model; a wired positive replaces the prompt. Sample the window at denoise 1.0, then hand the result and the clip to H3 Repair Splice. A stretch crossing a scene cut is refused.
+Open part of a finished MiniMax H3 clip for a sampler to redraw its picture, its sound or both. Wire MiniMax H3 Conditioning's prompts to reuse the segment's prompt, references and model. Sample the window at denoise 1.0, then hand the result and the clip to H3 Repair Splice.
 
 | | |
 |---|---|
@@ -7574,7 +7619,7 @@ Open part of a finished MiniMax H3 clip for a sampler to redraw. The stretch fro
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `latent` | `LATENT` | Yes |  |  | The finished H3 clip to repair, from H3 Extend Append or a sampler. |
-| `start_seconds` | `FLOAT` | Yes | 0.0 |  | Where the repair starts, as `3.0` seconds. Widened back to the start of its 17 frame block, so `3.0` opens on frame 68 (2.83 s). |
+| `start_seconds` | `FLOAT` | Yes | 0.0 |  | Where the repair starts, as `3.0` seconds. Widened back to the start of its 17 frame block, so `3.0` opens on frame 68 (2.83 s). A span crossing a scene cut is refused. |
 | `end_seconds` | `FLOAT` | Yes | 1.0 |  | Where the repair ends, as `4.9` seconds. Widened on to the end of its 17 frame block, so `4.9` closes after frame 118 (4.96 s). |
 | `picture_strength` | `FLOAT` | Yes | 1.0 |  | How much of the picture in the span is drawn again: `1.0` = from fresh noise, `0.6` = renewed from what is there, `0.0` = kept, for a sound-only repair. |
 | `sound_strength` | `FLOAT` | Yes | 0.0 |  | How much of the sound in the span is drawn again: `0.0` = kept, so the picture is redrawn in sync under it; `0.5` = renewed from what is there; `1.0` = from fresh noise. |
@@ -7629,7 +7674,7 @@ Save a finished MiniMax H3 clip to a file: its picture and sound, where each sce
 <details>
 <summary><b>H3 Soundtrack</b></summary>
 
-Lay one long soundtrack, a music bed or a recorded dialogue, under a whole MiniMax H3 video built a segment at a time. Place it between H3 Extend Window's window and the sampler: each segment samples its picture under its own slice of the same track, so the sound runs on unbroken across carries and cuts. `offset_seconds` sets where the track starts on the video, `strength` how firmly it is held, and `past_end` what plays once it runs out. Sound the window already carries from the clip so far stays as it was. The track is encoded once and every later segment reuses it.
+Lay one long soundtrack, a music bed or a recorded dialogue, under a MiniMax H3 video built a segment at a time. Place it between H3 Extend Window's window and the sampler; each segment samples under its own slice of the track, so the sound runs on unbroken across carries and cuts.
 
 | | |
 |---|---|
@@ -7639,7 +7684,7 @@ Lay one long soundtrack, a music bed or a recorded dialogue, under a whole MiniM
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `window` | `LATENT` | Yes |  |  | The window to sample, from H3 Extend Window's window output, or an Empty MiniMax H3 AV Latent for a single shot. Passed on to the sampler's latent input. |
+| `window` | `LATENT` | Yes |  |  | The window to sample, from H3 Extend Window's window output, or an Empty MiniMax H3 AV Latent for a single shot. Passed on to the sampler's latent input. Sound it already carries from the clip stays as it was. |
 | `audio` | `AUDIO` | Yes |  |  | The whole track, as Load Audio's output: a music bed or a recorded dialogue. Any sample rate; a mono track plays on both sides. The same track goes into every segment. |
 | `audio_vae` | `VAE` | Yes |  |  | The H3 audio VAE, as Load VAE set to `minimax_h3_audio_vae_fp32`. It encodes the track once and every later segment reuses that. |
 | `offset_seconds` | `FLOAT` | Yes | 0.0 |  | Where the track starts on the finished video, in seconds: `0` = with the first frame; `2.5` = 2.5 s in, with the model's own sound before it; `-10` = skips the track's first 10 s. |
@@ -7720,7 +7765,7 @@ Turn a Kandinsky 6 prompt into conditioning for KSampler, with what is seen and 
 <details>
 <summary><b>MiniMax H3 Asset</b></summary>
 
-One picture, clip or sound for a MiniMax H3 run, with the segment it belongs to and the part it plays there: the frame a segment opens or closes on, a keyframe pinned at any frame of it, or a picture, clip or sound its prompt references as `<Picture N>`, `<Video N>` or `<Audio N>`. Pick a file from ComfyUI's folders, or wire an image, a video or an audio in. Chain as many as the run needs, each into the next one's assets, and wire the last into assets on MiniMax H3 Conditioning. The Prompt Timeline window on that node places them for you.
+One picture, clip or sound for a MiniMax H3 segment: a frame it opens on, closes on or pins, or a reference its prompt names. Chain as many as the run needs into assets on MiniMax H3 Conditioning, whose Prompt Timeline window places them.
 
 | | |
 |---|---|
@@ -7731,7 +7776,7 @@ One picture, clip or sound for a MiniMax H3 run, with the segment it belongs to 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which picture, clip or sound to read, as `cast/alice.png [input]` or `takes/shot_03.mp4 [output]`. `(wired input)` reads the image, video and audio sockets instead, and a wired socket always wins over the file. |
-| `role` | `COMBO` | Yes | first frame | `first frame`, `last frame`, `keyframe`, `reference picture`, `reference clip`, `reference audio` | What this does for its segment. `first frame` = the segment opens on it; `last frame` = closes on it; `keyframe` = pinned at `frame`, as a still, a clip, a sound, or a clip with its sound; `reference picture`, `reference clip` and `reference audio` = named `<Picture N>`, `<Video N>` and `<Audio N>` in that segment's prompt. |
+| `role` | `COMBO` | Yes | first frame | `first frame`, `last frame`, `keyframe`, `reference picture`, `reference clip`, `reference audio` | `first frame` = the segment opens on it; `last frame` = closes on it; `keyframe` = pinned at `frame` (still, clip, sound, or clip with sound); `reference picture`, `reference clip`, `reference audio` = named `<Picture N>`, `<Video N>`, `<Audio N>` in the segment's prompt. |
 | `segment` | `INT` | Yes | 1 |  | Which segment it belongs to, as `1` for the opening segment or `3` for Segment 3. `0` = every segment, as a cast picture the whole run references. |
 | `frame` | `INT` | Yes | 0 |  | Where a `keyframe` lands, counted in the segment's new frames at 24 fps: `0` = its first new frame, `48` = two seconds in, `-1` = its last frame. With `(the video being made)`, the frame of the finished video to reference, as `120`. |
 | `assets` | `WAS_H3_ASSETS` | No |  |  | The assets before this one, from another MiniMax H3 Asset's assets output. This asset joins the end of that chain, so a run of any length is one wire into the next node. |
@@ -7756,7 +7801,7 @@ One picture, clip or sound for a MiniMax H3 run, with the segment it belongs to 
 <details>
 <summary><b>MiniMax H3 Clip Select</b></summary>
 
-Take one clip out of a MiniMax H3 run: its prompt, and the empty latent it samples into. Every clip has a latent of its own, so a loop wrapped round this samples each one from fresh and nothing passes between them. Send the latent to a sampler and the sampled result to a decode inside the loop, so each clip arrives as its own frames.
+Take one clip out of a MiniMax H3 run: its prompt, its model and its own empty latent. Inside a loop each clip samples from fresh with nothing passing between them, and a decode in the loop hands on each clip as its own frames.
 
 | | |
 |---|---|
@@ -7785,7 +7830,7 @@ Take one clip out of a MiniMax H3 run: its prompt, and the empty latent it sampl
 <details>
 <summary><b>MiniMax H3 Conditioning</b></summary>
 
-Prompt every segment of a MiniMax H3 video on one node. Each row is one segment with its own prompt, length, overlap and continuity, so a scene can carry on, cut somewhere new, or cut and keep its cast. `ref2va` builds every segment on shared reference pictures, clips and audio. A chain of MiniMax H3 Asset nodes wired into assets gives a segment its own opening frame, closing frame, keyframe at any frame, or references, and with both models wired in each row picks the one it samples with. The Prompt Timeline button opens a window that writes these rows and places the assets. A loop sampling one row per iteration builds the whole video, with every prompt encoded before sampling starts. Send segments to a While Loop's count and prompts to H3 Extend Window.
+Prompt every segment of a MiniMax H3 video on one node, each row with its own prompt, length, continuity, assets and model. Its Prompt Timeline window writes the rows and places the assets. Send segments to a While Loop's count and prompts to H3 Extend Window to sample one row per iteration.
 
 | | |
 |---|---|
@@ -7797,250 +7842,250 @@ Prompt every segment of a MiniMax H3 video on one node. Each row is one segment 
 |---|---|---|---|---|---|
 | `clip` | `CLIP` | Yes |  |  | A minimax CLIP, from Load CLIP with type `minimax`. |
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE, which encodes first_frame, last_frame, images and the reference pictures and clips. |
-| `mode` | `COMBO` | Yes | t2va | `t2va`, `i2va`, `fl2va`, `fl2va_batched`, `ref2va` | The task to condition for. `t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = every segment between a neighbouring pair of images; `ref2va` = every segment built on the ref inputs, named `<Picture 1>`, `<Video 1>`, `<Audio 1>` in the prompt. Assets wired into assets add to any mode. |
+| `mode` | `COMBO` | Yes | t2va | `t2va`, `i2va`, `fl2va`, `fl2va_batched`, `ref2va` | `t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = each segment between two neighbouring images; `ref2va` = every segment built on the ref inputs. Assets add to any mode. |
 | `aspect_ratio` | `COMBO` | Yes | custom | `custom`, `1:1`, `5:4`, `4:3`, `3:2`, `16:10`, `16:9`, `2:1`, `21:9`, `4:5`, `3:4`, `2:3` and 4 more | Canvas shape, as `16:9` or `9:16`. `custom` takes it from the first picture the mode reads, and 16:9 where it reads none. A width or height above `0` sets that side itself, so the shape is whatever those give. |
 | `megapixels` | `FLOAT` | Yes | 0.4 |  | Canvas area in millions of pixels, as `0.4` for 832x480 or `1.0` for 1344x736. Worked against aspect_ratio. Ignored when both width and height are set. |
 | `width` | `INT` | Yes | 0 |  | Canvas width in pixels, as `1024`. `0` works it out from megapixels. Rounded to a multiple of 32. |
 | `height` | `INT` | Yes | 0 |  | Canvas height in pixels, as `576`. `0` works it out from megapixels. Rounded to a multiple of 32. |
-| `prompt_header` | `STRING` | Yes |  |  | Text put before every segment's prompt, as `subject_definitions:` and the wardrobe lines that hold for the whole run. Blank adds nothing, and a blank line separates it from the row's own prompt. A section a row writes itself, as `visual_style:`, replaces the one here for that row. A `<d>` line here is spoken in every segment. |
+| `prompt_header` | `STRING` | Yes |  |  | Text put before every segment's prompt, as `subject_definitions:` and wardrobe lines for the whole run. Blank adds nothing. A section a row writes itself, as `visual_style:`, replaces the header's for that row. A `<d>` line here is spoken in every segment. |
 | `prompt_footer` | `STRING` | Yes |  |  | Text put after every segment's prompt, as `overall_soundscape:` and `non_diegetic_music:` for the whole run. Blank adds nothing. A section a row writes itself, as `overall_soundscape: Server hum.`, replaces the one here for that row. A `<d>` line here is spoken in every segment. |
 | `prompt_1` | `STRING` | Yes |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_1` | `FLOAT` | Yes | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_1` | `INT` | Yes | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_1` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_1` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_1` | `FLOAT` | Yes | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_1` | `INT` | Yes | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_1` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_1` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_1` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_1` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_1` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_1` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_1` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_1` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_2` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_2` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_2` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_2` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_2` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_2` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_2` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_2` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_2` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_2` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_2` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_2` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_2` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_2` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_2` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_3` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_3` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_3` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_3` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_3` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_3` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_3` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_3` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_3` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_3` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_3` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_3` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_3` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_3` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_3` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_4` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_4` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_4` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_4` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_4` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_4` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_4` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_4` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_4` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_4` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_4` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_4` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_4` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_4` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_4` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_5` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_5` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_5` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_5` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_5` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_5` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_5` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_5` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_5` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_5` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_5` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_5` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_5` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_5` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_5` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_6` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_6` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_6` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_6` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_6` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_6` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_6` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_6` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_6` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_6` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_6` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_6` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_6` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_6` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_6` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_7` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_7` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_7` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_7` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_7` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_7` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_7` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_7` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_7` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_7` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_7` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_7` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_7` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_7` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_7` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_8` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_8` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_8` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_8` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_8` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_8` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_8` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_8` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_8` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_8` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_8` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_8` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_8` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_8` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_8` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_9` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_9` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_9` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_9` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_9` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_9` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_9` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_9` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_9` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_9` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_9` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_9` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_9` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_9` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_9` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_10` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_10` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_10` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_10` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_10` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_10` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_10` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_10` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_10` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_10` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_10` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_10` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_10` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_10` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_10` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_11` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_11` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_11` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_11` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_11` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_11` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_11` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_11` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_11` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_11` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_11` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_11` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_11` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_11` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_11` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_12` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_12` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_12` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_12` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_12` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_12` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_12` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_12` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_12` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_12` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_12` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_12` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_12` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_12` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_12` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_13` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_13` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_13` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_13` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_13` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_13` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_13` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_13` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_13` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_13` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_13` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_13` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_13` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_13` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_13` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_14` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_14` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_14` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_14` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_14` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_14` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_14` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_14` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_14` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_14` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_14` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_14` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_14` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_14` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_14` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_15` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_15` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_15` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_15` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_15` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_15` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_15` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_15` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_15` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_15` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_15` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_15` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_15` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_15` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_15` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_16` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_16` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_16` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_16` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_16` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_16` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_16` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_16` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_16` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_16` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_16` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_16` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_16` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_16` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_16` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_17` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_17` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_17` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_17` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_17` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_17` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_17` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_17` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_17` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_17` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_17` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_17` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_17` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_17` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_17` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_18` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_18` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_18` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_18` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_18` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_18` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_18` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_18` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_18` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_18` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_18` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_18` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_18` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_18` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_18` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_19` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_19` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_19` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_19` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_19` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_19` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_19` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_19` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_19` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_19` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_19` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_19` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_19` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_19` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_19` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_20` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_20` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_20` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_20` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_20` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_20` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_20` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_20` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_20` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_20` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_20` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_20` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_20` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_20` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_20` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_21` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_21` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_21` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_21` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_21` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_21` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_21` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_21` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_21` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_21` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_21` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_21` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_21` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_21` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_21` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_22` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_22` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_22` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_22` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_22` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_22` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_22` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_22` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_22` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_22` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_22` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_22` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_22` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_22` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_22` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_23` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_23` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_23` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_23` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_23` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_23` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_23` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_23` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_23` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_23` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_23` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_23` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_23` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_23` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_23` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
 | `prompt_24` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. The first segment starts the clip and each one after it continues where the last left off. A blank row is skipped. |
-| `duration_24` | `FLOAT` | No | 5.2 |  | How long this segment runs, carried frames included, matching its `duration_seconds` line. The model makes 17k+5 frames at 24 fps, so `8.0` is exact, `7` snaps to 7.29 and `9` to 8.71, the nearest lengths it makes; the report states the frames each segment came to. |
-| `overlap_24` | `INT` | No | 22 |  | Frames of the previous segment this one continues from, as `22` for a scene carrying on or `0` for a cut to somewhere new. `39` and `56` hold the scene harder; both sound carries take whole clips of sound, `17` for about 0.7s. Ignored on the first segment. |
-| `continuity_24` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)` | How this segment follows the last. `carry` = one shot; `refresh` = re-noised; `handoff` = cut on last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, earlier cast; `cut` = new scene; `carry (audio only)` = cut, sound kept; `carry (audio) + reference (video)` = cut, sound and cast kept. |
-| `source_24` | `INT` | No | -1 |  | Which segment this one continues from: `-1` = the one before, `-2` = the one before that, `2` = Segment 2, `0` = the same as `-1`. After a cutaway, `carry` picks the scene back up where it was left, with fresh sound; the new frames still join the clip's end. Ignored on segment 1. |
+| `duration_24` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
+| `overlap_24` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
+| `continuity_24` | `COMBO` | No | carry | `carry`, `refresh`, `handoff`, `reference (video)`, `reference (sample)`, `cut`, `carry (audio only)`, `carry (audio) + reference (video)`, `carry + reference (sample)` | `carry` = one shot; `refresh` = re-noised; `carry + reference (sample)` = one shot, set kept; `handoff` = cut, last frame; `reference (video)` = cut, cast kept; `reference (sample)` = cut, stills kept; `cut` = new scene; the two audio carries = cut, sound kept. |
+| `source_24` | `INT` | No | -1 |  | Which segment to continue from: `-1` or `0` = the one before; `-2` = two back; `2` = Segment 2. After a cutaway, `carry` resumes the scene with fresh sound; new frames still join the clip's end. Ignored on segment 1. |
 | `header_footer_24` | `COMBO` | No | both | `both`, `header only`, `footer only`, `neither` | Which shared text this segment's prompt is wrapped in. `both` = prompt_header and prompt_footer; `header only`; `footer only` = for a cutaway that shares the run's sound but none of the cast the header defines; `neither` = the row's prompt alone. |
-| `model_24` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, answered on H3 Extend Window's model output. `auto` = ref2va where the segment references anything and fl2va otherwise, or whichever one model is wired; `fl2va` = model_fl2va, which holds pinned frames exactly; `ref2va` = model_ref2va. Ignored where no model is wired. |
+| `model_24` | `COMBO` | No | auto | `auto`, `fl2va`, `ref2va` | Which wired model samples this segment, sent out on H3 Extend Window's model output. `auto` = ref2va where the segment references anything, else fl2va, or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. Ignored with no model wired. |
 | `strength_24` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_24` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_24` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
@@ -8050,7 +8095,7 @@ Prompt every segment of a MiniMax H3 video on one node. Each row is one segment 
 | `last_frame` | `IMAGE` | No |  |  | The frame the clip closes on, cropped to cover the canvas. |
 | `images` | `IMAGE` | No |  |  | The pictures `fl2va_batched` runs between, in order. Segment 1 runs from picture 1 to picture 2, segment 2 from 2 to 3, and so on, so 5 pictures cover 4 segments. Read by `fl2va_batched` only. |
 | `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, which encodes the reference soundtracks and audio. Needed by `ref2va` when any audio is wired, and by any asset carrying sound. |
-| `ref_image_size` | `COMBO` | No | match | `match`, `256`, `512`, `768`, `1024`, `1536`, `2048`, `max` | How large each reference picture is encoded, for every row. `match` = scaled down to the clip's area; `256` to `2048` = longest side at most that; `max` = up to a 2048 pixel short edge, the closest likeness and the heaviest. Always 256 to 5760 pixels a side. Read by `ref2va` and by reference assets. |
+| `ref_image_size` | `COMBO` | No | match | `match`, `256`, `512`, `768`, `1024`, `1536`, `2048`, `max` | Size each reference picture is encoded at. `match` = scaled down to the clip's area; `256` to `2048` = longest side at most that; `max` = up to a 2048 pixel short edge, closest likeness, heaviest. Read by `ref2va` and reference assets. |
 | `ref_image_1` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
 | `ref_image_2` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
 | `ref_image_3` | `IMAGE` | No |  |  | A reference picture for `ref2va`, named `<Picture 1>`, `<Picture 2>` and on in the prompt, counting the wired ones in order, as `<Picture 1> steps out of the car`. The report lists every tag. |
@@ -8069,7 +8114,7 @@ Prompt every segment of a MiniMax H3 video on one node. Each row is one segment 
 | `ref_audio_1` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
 | `ref_audio_2` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
 | `ref_audio_3` | `AUDIO` | No |  |  | A reference audio for `ref2va`, as a voice or a score, named `<Audio N>` in the prompt, numbered after the video soundtracks. Needs audio_vae. |
-| `assets` | `WAS_H3_ASSETS` | No |  |  | The pictures, clips and sounds of a chain of MiniMax H3 Asset nodes. Each names the segment it belongs to and whether it opens or closes it, is pinned at a frame of it, or is referenced by its prompt. Wire the last asset of the chain here. |
+| `assets` | `WAS_H3_ASSETS` | No |  |  | Pictures, clips and sounds from a chain of MiniMax H3 Asset nodes, each placed in its segment as an opening, closing or pinned frame, or a prompt reference. Wire the last asset of the chain here. |
 | `loop` | `BOOLEAN` | No | False |  | `true` = the last segment closes on the video's first frame, so the video plays round as a loop; `false` = it ends where its prompt takes it. |
 | `vlm_clip` | `CLIP` | No |  |  | A language model from Load CLIP, as `qwen3vl_8b_fp8_scaled.safetensors`, for the Prompt Timeline's Write scenes. Never loaded by a render of this node. |
 
@@ -8162,7 +8207,7 @@ Rewrites one MiniMax H3 scene prompt with a language model so it follows a syste
 <details>
 <summary><b>MiniMax H3 Scene Writer</b></summary>
 
-Writes a whole MiniMax H3 video from an idea: a language model outlines the story, casts each scene from the reference pictures in an asset chain, writes every scene's prompt and the shared header and footer under a system prompt of rules, then reads the scenes back to choose the cuts and carries between them. The Prompt Timeline's Write scenes runs it and fills the rows.
+Writes a whole MiniMax H3 video from an idea: a language model outlines the story, casts each scene from the asset chain's reference pictures, writes every scene's prompt and the shared header and footer, then picks the cuts and carries between scenes. The Prompt Timeline's Write scenes runs it and fills the rows.
 
 | | |
 |---|---|
@@ -8220,7 +8265,7 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The diffusion model the LoRAs are applied to, in row order. |
 | `clip` | `CLIP` | No |  |  | The text encoder the LoRAs are applied to. Optional: left unconnected the model alone is patched, which is what a workflow encoding its prompt elsewhere wants. |
-| `fuse` | `BOOLEAN` | No | False |  | Combine every row into one patch before applying, instead of patching once per row. Cheaper on a long stack. The joined factors match applying the rows in turn to within float rounding, so a sampled image is near-identical rather than pixel for pixel. A row whose format cannot be joined is carried through. |
+| `fuse` | `BOOLEAN` | No | False |  | `false` = one patch per row; `true` = every row joined into one patch, cheaper on a long stack, near-identical results within float rounding. A row whose format cannot be joined is carried through, scaled. |
 | `strength` | `FLOAT` | No | 1.0 |  | Multiplies every row's own strength, so the whole stack is turned up or down together. 1.0 leaves each row as it is set. |
 | `lora_1_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_1` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
@@ -8353,7 +8398,7 @@ Build an EMA-VFI network for EMA-VFI Frame Interpolation. The network is kept fo
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `checkpoint` | `COMBO` | Yes |  |  | Which EMA-VFI weights to build. The 'small' files are faster and less accurate; the '_t' files can land anywhere between two frames and are the ones a multiplier above 2 needs. A name not yet on disk is fetched on the first run that needs it. |
+| `checkpoint` | `COMBO` | Yes |  |  | Which EMA-VFI weights to build. 'small' files = faster, less accurate; '_t' files = can land anywhere between two frames, needed for a multiplier above 2. A name not on disk is fetched on the first run that needs it. |
 
 **Outputs**
 
@@ -8418,7 +8463,7 @@ Build a SEA-RAFT or FlowSeek optical flow network for the motion_model input of 
 <details>
 <summary><b>Combo Selector</b></summary>
 
-Pick a checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or scheduler from one node, and send it to another node's dropdown. Choose the kind first and the list below it fills with what is installed. Convert the target node's dropdown to an input and connect combo to it. Also answers the choice as text.
+Pick an installed checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or scheduler and send it to another node's dropdown, and as text. Convert the target node's dropdown to an input and connect combo to it.
 
 | | |
 |---|---|
@@ -8444,7 +8489,7 @@ Pick a checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or scheduler fr
 <details>
 <summary><b>Execution Gate</b></summary>
 
-Pass a value on only while a switch is on. Switched off, the branch feeding the gate is never evaluated and every node after it stops, so an expensive sampler upstream and a save downstream both go unrun. Takes any type. Turn bypass_downstream on to draw those nodes as bypassed instead.
+Pass a value of any type on only while a switch is on. Switched off, the branch feeding the gate never runs and every node after it stops; bypass_downstream draws those nodes as bypassed instead.
 
 | | |
 |---|---|
@@ -8456,7 +8501,7 @@ Pass a value on only while a switch is on. Switched off, the branch feeding the 
 |---|---|---|---|---|---|
 | `open` | `BOOLEAN` | Yes | True |  | Whether the branch runs. `true` passes value on. `false` skips everything wired into value and stops every node after the gate. |
 | `value` | `COMFY_MATCHTYPE_V3` | No |  |  | What to pass on, of any type. The first connection fixes the type. Nothing wired here is evaluated while the gate is closed. |
-| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` = every node after the gate is drawn bypassed while open is off, and never runs; `false` = they stay as they are. Read only when open is set on the gate itself: with open wired, the gate stops them during the run and the first shows as failed. |
+| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` = every node after the gate is drawn bypassed while open is off; `false` = they stay as they are. Read only when open is set on the gate: with open wired, the run stops them and the first shows as failed. |
 | `closed_message` | `STRING` | No |  |  | Empty stops the run quietly. Any text, such as `no face found, nothing to upscale`, is drawn on the first blocked node as an error and raised as a notification. |
 
 **Outputs**
@@ -8471,7 +8516,7 @@ Pass a value on only while a switch is on. Switched off, the branch feeding the 
 <details>
 <summary><b>Execution Gate Controlboard</b></summary>
 
-List every Execution Gate and Any Gate in the graph, subgraphs included, each with a switch that opens or closes it. One place to turn whole branches of a workflow on and off. A switch sets whatever decides the gate: its own open, the subgraph input open is wired to, or a Boolean node feeding it, so it survives a save, an undo and a copy.
+List every Execution Gate and Any Gate in the graph, subgraphs included, each with a switch, to turn whole branches on and off from one place. A switch sets whatever decides the gate, so it survives a save, an undo and a copy.
 
 | | |
 |---|---|
@@ -8512,7 +8557,7 @@ Stop a run at this node and wait for Resume on the node itself. Everything above
 <details>
 <summary><b>Text to Combo</b></summary>
 
-Answer text on a wire any dropdown takes, so a choice normally picked by hand can be worked out while the graph runs. Convert a node's dropdown to an input and connect this to it, and the checkpoint, LoRA, sampler or scheduler it uses can come from a loop, a switch or a text node. A plain STRING is refused by a dropdown; this is the wire that is not.
+Put text on a wire any dropdown takes, so a checkpoint, LoRA, sampler or scheduler can come from a loop, a switch or a text node. Convert the target node's dropdown to an input and connect combo to it.
 
 | | |
 |---|---|
@@ -9007,7 +9052,7 @@ Name what is on a wire, so a graph can branch on it. Answers `IMAGE`, `MASK`, `L
 <details>
 <summary><b>Collect to List</b></summary>
 
-Gather everything a fan-out produced back onto one wire. A node that emits a list, Load Text Files From Zip, Zip Open, Number Range or Number Easing, makes every node after it run once per entry, and nothing further down can see more than one of those runs at a time. Wire the last node of the series in here and the whole run arrives as one value: images, masks and latents join into a single batch ready for a video encoder or one save, and anything else arrives as a list. count says how many were gathered, and joined writes them out as one string.
+Gather every run of a fan-out, such as Number Range, Zip Open or Load Text Files From Zip, back onto one wire. Images, masks and latents join into one batch for a video encoder or a single save; anything else arrives as a list. count says how many were gathered and joined writes them as one string.
 
 | | |
 |---|---|
@@ -9017,7 +9062,7 @@ Gather everything a fan-out produced back onto one wire. A node that emits a lis
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `value` | `COMFY_MATCHTYPE_V3` | Yes |  |  | The last node of the fan-out, wired here once. Whatever connects, IMAGE, LATENT, STRING or a model, decides the type of the node, and the value output carries that same type. A source that ran only once gathers into a collection of one rather than failing. |
+| `value` | `COMFY_MATCHTYPE_V3` | Yes |  |  | The last node of the fan-out, wired here once. Whatever connects, IMAGE, LATENT, STRING or a model, sets the type the value output carries. A source that ran once gathers into a collection of one. |
 | `delimiter` | `STRING` | Yes | , |  | Placed between the entries in joined. ', ' builds a comma-separated caption; \n puts each entry on its own line; empty runs them together with nothing between. It changes neither value nor count. |
 
 **Outputs**
@@ -9025,7 +9070,7 @@ Gather everything a fan-out produced back onto one wire. A node that emits a lis
 | Name | Type | What it is |
 |---|---|---|
 | `value` | `COMFY_MATCHTYPE_V3` | Everything gathered, as one value. Images, masks and latents join into a single batch, so 5 runs of one image give a 5 image batch; anything else arrives as a list of 5. The socket carries the type that was wired into value. |
-| `count` | `INT` | How many are in value; INT. 5 runs of one image = 5; 5 runs of a 4 frame batch = 20, since those joined into one 20 frame batch; 5 runs of text = 5. Feed it to a batch index or an iteration count. |
+| `count` | `INT` | How many are in value. 5 runs of one image = 5; 5 runs of a 4 frame batch = 20, joined into one batch; 5 runs of text = 5. Feed it to a batch index or an iteration count. |
 | `joined` | `STRING` | Every gathered value written out as text, separated by delimiter. Text and numbers appear as they are, an image, mask or latent as its kind and size, 'IMAGE 1x512x512x3'. Save it to log what a run gathered. |
 
 </details>
@@ -9480,7 +9525,7 @@ Pass one of two loaded models on, chosen by a boolean. A model here is anything 
 <details>
 <summary><b>Number Input Condition</b></summary>
 
-Test two numbers against each other and emit either 1/0 for the outcome or the number that won the test, so a value can be picked without a separate switch node. 'divisible by' and 'factor of' are the same test, whether B divides evenly by A, so an A of 0 stops with a division error. 'if A odd', 'if A even' and 'if A prime' look at number_a alone, and 1 and everything below it counts as not prime.
+Test two numbers against each other and emit either 1/0 for the outcome or the number that won the test, so a value can be picked without a separate switch node. Tests cover ordering, equality, and/or, divisibility, odd, even and prime.
 
 | | |
 |---|---|
@@ -9493,7 +9538,7 @@ Test two numbers against each other and emit either 1/0 for the outcome or the n
 | `number_a` | `NUMBER,INT,FLOAT` | Yes |  |  | The left-hand value, and the only one the 'if A' tests look at. When return_boolean is 'false' this is what comes out if the test holds. |
 | `number_b` | `NUMBER,INT,FLOAT` | Yes |  |  | The right-hand value. When return_boolean is 'false' this is what comes out if the test fails. The 'if A odd', 'if A even' and 'if A prime' tests ignore it. |
 | `return_boolean` | `COMBO` | Yes |  | `false`, `true` | What the outputs carry. 'false' passes number_a through when the test holds and number_b when it does not; 'true' reports the outcome itself as 1 or 0. |
-| `comparison` | `COMBO` | Yes |  | `and`, `or`, `greater-than`, `greater-than or equals`, `less-than`, `less-than or equals`, `equals`, `does not equal`, `divisible by`, `if A odd`, `if A even`, `if A prime` and 1 more | The test to apply. 'and' holds when neither number is 0, 'or' when at least one is not. The ordering tests compare A against B. |
+| `comparison` | `COMBO` | Yes |  | `and`, `or`, `greater-than`, `greater-than or equals`, `less-than`, `less-than or equals`, `equals`, `does not equal`, `divisible by`, `if A odd`, `if A even`, `if A prime` and 1 more | 'and' = neither number is 0; 'or' = at least one is not; ordering tests compare A against B; 'divisible by' and 'factor of' = B divides evenly by A, and an A of 0 stops the prompt; 1 or below is not prime. |
 
 **Outputs**
 
@@ -9602,7 +9647,7 @@ Emit a constant number. `integer` truncates the widget value, `float` keeps it, 
 |---|---|---|---|---|---|
 | `number_type` | `COMBO` | Yes |  | `integer`, `float`, `bool` | How the value is read. `integer` cuts off any fraction, so 8.7 becomes 8; `float` keeps it as typed; `bool` collapses it to 1 when it is above 0.5 and to 0 otherwise. |
 | `number` | `FLOAT` | Yes | 0 |  | The value to send on, before number_type is applied: 8.7 leaves as 8 in `integer` and 8.7 in `float`. Ignored while number_as_text holds anything. |
-| `number_as_text` | `STRING` | No |  |  | The number in digits, used instead of the widget above. `integer` keeps every digit, past what the widget holds: 9007199254740993. `float` also takes a point or an exponent: -12.5, .5, 1e6. `bool` takes a word: true, 1, yes, on, or false, 0, no, off. Digits, not a sum: 2^53+1 is refused. Use Number Expression for a sum. |
+| `number_as_text` | `STRING` | No |  |  | Digits used instead of the widget. `integer` keeps every digit: 9007199254740993; `float` also takes -12.5, .5 or 1e6; `bool` takes true, 1, yes, on or false, 0, no, off. A sum such as 2^53+1 is refused; use Number Expression. |
 
 **Outputs**
 
@@ -9618,7 +9663,7 @@ Emit a constant number. `integer` truncates the widget value, `float` keeps it, 
 <details>
 <summary><b>Number Counter</b></summary>
 
-Emit a number that moves on every prompt, which is how a batch gets numbered or a setting gets swept over a run of images. Each copy of the node counts on its own, and every count starts over when ComfyUI does. `increment` and `decrement` ignore stop. The '_to_stop' modes freeze on the first value that reaches stop, so start 0, step 3, stop 10 counts 3, 6, 9, 12 and then holds at 12; `reset_after_stop` jumps back to start + step instead of freezing.
+Emit a number that moves on every prompt, to number a batch or sweep a setting over a run of images. Each copy counts on its own, can freeze or loop at a limit, and starts over when ComfyUI restarts.
 
 | | |
 |---|---|
@@ -9629,7 +9674,7 @@ Emit a number that moves on every prompt, which is how a batch gets numbered or 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `number_type` | `COMBO` | Yes |  | `integer`, `float` | Whether the count is kept whole. `integer` begins at a whole start and emits whole numbers; `float` allows fractions, so a step of 0.25 counts 0.25, 0.5, 0.75. |
-| `mode` | `COMBO` | Yes |  | `increment`, `decrement`, `increment_to_stop`, `decrement_to_stop`, `reset_after_stop` | Which way the count moves, and whether it ends. `increment` and `decrement` run on forever; the '_to_stop' modes freeze at stop, and `reset_after_stop` loops back instead. |
+| `mode` | `COMBO` | Yes |  | `increment`, `decrement`, `increment_to_stop`, `decrement_to_stop`, `reset_after_stop` | `increment`/`decrement` = run on forever; '_to_stop' modes = freeze on the first value reaching stop, so start 0, step 3, stop 10 holds at 12; `reset_after_stop` = jumps back to start + step. |
 | `start` | `FLOAT` | Yes | 0 |  | Where the count begins, and where a reset sends it back to. The first prompt already applies one step, so an incrementing counter from a start of 0 with a step of 1 first emits 1 rather than 0. |
 | `stop` | `FLOAT` | Yes | 0 |  | The limit the '_to_stop' and `reset_after_stop` modes watch for; `increment` and `decrement` ignore it. Left at 0, an `increment_to_stop` counter is already at its limit and never moves. |
 | `step` | `FLOAT` | Yes | 1 |  | How far the count moves each prompt. 1 counts 1, 2, 3; 10 counts 10, 20, 30; 0 holds the count still. Always positive, `decrement` is what subtracts it. |
@@ -9678,7 +9723,7 @@ Draw a random number from a seed, for a value that should vary from run to run s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `number_type` | `COMBO` | Yes |  | `integer`, `float`, `bool` | What kind of number to draw. `integer` picks a whole number, both bounds included, cutting any fraction off the bounds first. `float` picks a decimal anywhere between them. `bool` ignores both bounds and picks a decimal from 0 up to 1, which the INT output rounds to 0 or 1 for a coin flip. |
+| `number_type` | `COMBO` | Yes |  | `integer`, `float`, `bool` | `integer` = a whole number, both bounds included, fractions cut off the bounds first; `float` = a decimal between them; `bool` = bounds ignored, a decimal from 0 to 1 that the INT output rounds to 0 or 1, a coin flip. |
 | `minimum` | `FLOAT` | Yes | 0 |  | The lowest value that can come out, itself included. Ignored in `bool` mode. Both bounds default to 0, which draws 0 every time until they are changed. |
 | `maximum` | `FLOAT` | Yes | 0 |  | The highest value that can come out, itself included. Ignored in `bool` mode, and in `integer` mode a maximum below minimum stops with an error. |
 | `seed` | `INT` | Yes | 0 |  | Seed for the draw. The same seed always gives the same number; change it for a different one. Only this node's draw is affected, sampling noise elsewhere in the prompt is left alone. Any whole number; `0` is as good a seed as any. |
@@ -9711,7 +9756,7 @@ Pick a shape and one measurement, and get the width and height that match. Size 
 | `orientation` | `COMBO` | Yes | landscape | `landscape`, `portrait`, `square` | Which way round the shape goes. `portrait` swaps the two sides, and `square` ignores the ratio entirely. |
 | `size_by` | `COMBO` | Yes | long edge | `long edge`, `short edge`, `width`, `height`, `megapixels` | Which measurement you are giving. `long edge` and `short edge` fix whichever side is longer or shorter; `width` and `height` fix that side whatever the orientation; `megapixels` fixes the area instead and reads the megapixels widget rather than size. |
 | `size` | `INT` | Yes | 1024 |  | The measurement in pixels, read by every option but `megapixels`. 1024 on the long edge of 16:9 is 1024 by 576. |
-| `multiple_of` | `INT` | Yes | 64 |  | Step both sides land on. 8 is the least a latent will take, and 64 is what most model families were trained on. A step moves a side by up to half of itself, so the shape you get back can differ slightly from the one you asked for; the ratio output says what it came to. |
+| `multiple_of` | `INT` | Yes | 64 |  | Step both sides land on. 8 = the least a latent takes; 64 = what most model families were trained on. Snapping moves a side by up to half a step, so the ratio output may differ slightly from the one asked for. |
 | `megapixels` | `FLOAT` | No | 1.0 |  | The area in millions of pixels, read only when size_by is `megapixels`. 1.0 at 16:9 is about 1344 by 768. |
 
 **Outputs**
@@ -9732,7 +9777,7 @@ Pick a shape and one measurement, and get the width and height that match. Size 
 <details>
 <summary><b>Curve to Numbers</b></summary>
 
-Read a curve as numbers, so a shape drawn by hand can drive a schedule. Drag the plot on the node to bend the curve, or write the same '0,0;128,200;255,255' shorthand, and this walks minimum to maximum by step and answers what the curve reads at every position along the way. The straight line gives an even ramp, a bent one redistributes the same range, which is what gives a strength ramp, a denoise schedule or a camera move its shape. Every value comes out on one wire and one per run, so it can feed a list node or step a For Loop.
+Read a hand-drawn curve as numbers, walking minimum to maximum by step, so its shape can drive a strength ramp, a denoise schedule or a camera move. Bend the plot on the node or type the points. Every value comes out on one wire and one per run, for a list node or a For Loop.
 
 | | |
 |---|---|
@@ -9743,7 +9788,7 @@ Read a curve as numbers, so a shape drawn by hand can drive a schedule. Drag the
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `curve_points` | `STRING` | Yes |  |  | The curve, written as '0,0;128,200;255,255' on a 0-255 scale, lowest input first. Drag the plot below to write it by hand, or paste the curve_points an Image Curves node holds, whose composite RGB curve is the one read. Empty is the straight line, which walks the range evenly. |
+| `curve_points` | `STRING` | Yes |  |  | The curve as '0,0;128,200;255,255' on a 0 to 255 scale, lowest input first. Drag the plot to draw it, or paste an Image Curves node's curve_points (its composite RGB curve is read). Empty = a straight line, an even ramp. |
 | `minimum` | `FLOAT,NUMBER,INT` | Yes | 0.0 |  | The bottom of the range, and the value the curve reads out at its lowest. 0.0 for a strength or a denoise, -1.0 with a maximum of 1.0 for a move either side of centre. |
 | `maximum` | `FLOAT,NUMBER,INT` | Yes | 1.0 |  | The top of the range, and the value the curve reads out at its highest. 1.0 for a blend factor, 255 for a colour level. Below minimum stops with an error. |
 | `step` | `FLOAT,NUMBER,INT` | Yes | 0.1 |  | The increment from one position to the next, which is what decides how many values there are. 0.1 over 0.0 to 1.0 gives 11 of them. Maximum is included only where the step divides the range exactly, so a step of 0.3 stops at 0.9. |
@@ -9904,7 +9949,7 @@ Read a latent's tensor width and height, on one pair of sockets per numeric type
 <details>
 <summary><b>Number Easing</b></summary>
 
-Convert numbers from one range to another through an easing curve. One number or a whole list, typed into the value box or wired in, and every value comes out as a list, so the graph below runs once per number. The linear curve is a plain range remap; any other also shapes how the values accelerate. A wire is read instead of the box, so Number Range's LIST converts a whole series at once. A value outside the input range is pulled to the nearest end first, the curves being defined only between them. Past the far end `back` travels about a tenth of the span and `elastic` almost a whole one, so leave clamp on where the result feeds a hard limit such as a denoise. On unreadable, `zero` keeps an entry's position, and as do nan and infinity. The ints output cuts off rather than rounding.
+Convert numbers from one range to another through an easing curve. Type one number or a list, or wire in a list such as Number Range's, and every value comes out as a list, so the graph below runs once per number. `linear` is a plain remap; the others also shape how values accelerate.
 
 | | |
 |---|---|
@@ -9915,13 +9960,13 @@ Convert numbers from one range to another through an easing curve. One number or
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `value` | `STRING,NUMBER,FLOAT,INT,ARRAY` | Yes |  |  | The numbers to convert, one to a line or separated by commas. A comma is a separator rather than a thousands mark, so 1,000 reads as two values. |
-| `easing` | `COMBO` | Yes |  |  | The curve applied to every value once it has been normalised. `linear` leaves it alone, which turns this node into a plain range conversion. `ease_in` starts slow, `ease_out` finishes slow, `ease_in_out` does both. The `back` and `elastic` families leave the output range on purpose, and `bounce` settles onto it in decreasing hops without ever leaving it. |
-| `input_min` | `FLOAT` | Yes | 0.0 |  | The value that counts as the start of the input range, and the same range is used for every value converted. Set this and input_max to the range the source actually produces, 0 and 23 for a 24-frame counter, or the start and stop of the Number Range feeding it. |
+| `easing` | `COMBO` | Yes |  |  | `linear` = a plain range conversion; `ease_in` = starts slow; `ease_out` = finishes slow; `ease_in_out` = both; `back`, `elastic` = overshoot the output range; `bounce` = settles in shrinking hops, never leaving it. |
+| `input_min` | `FLOAT` | Yes | 0.0 |  | Start of the input range, shared by every value; values outside it are pulled to the nearest end. Match the source: 0 and 23 for a 24-frame counter, or the start and stop of the Number Range feeding it. |
 | `input_max` | `FLOAT` | Yes | 1.0 |  | The value that counts as the end of the input range. Equal to input_min stops with an error, since a range of no width cannot say where a value sits in it. |
 | `output_min` | `FLOAT` | Yes | 0.0 |  | What the start of the input range becomes. Larger than output_max runs the result backwards, which is how a fade-out is written without touching the curve. |
 | `output_max` | `FLOAT` | Yes | 1.0 |  | What the end of the input range becomes. |
-| `clamp` | `BOOLEAN` | Yes | True |  | Whether each result is held inside the output range. On by default; turn it off where the overshoot of `back` or `elastic` is the point. |
-| `unreadable` | `COMBO` | Yes |  | `skip`, `zero`, `error` | What an entry that is not a number does. `skip` leaves it out, `zero` puts 0 in its place, and `error` stops the prompt and names the entry. |
+| `clamp` | `BOOLEAN` | Yes | True |  | On = each result held inside the output range; off = `back` overshoots about a tenth of the span and `elastic` almost a whole one. Keep it on where the result feeds a hard limit such as denoise. |
+| `unreadable` | `COMBO` | Yes |  | `skip`, `zero`, `error` | What an entry that is not a number does. `skip` = left out; `zero` = 0 in its place, keeping every position; `error` = stops the prompt and names the entry. |
 
 **Outputs**
 
@@ -9939,7 +9984,7 @@ Convert numbers from one range to another through an easing curve. One number or
 <details>
 <summary><b>Number Expression</b></summary>
 
-Work out a whole formula over up to 24 numbers in one node, such as `(a * b) / 2 + c`, `clamp(a, 0, 1)` or `round(a / b, 2)`. Rounding, clamping, interpolation, roots, logarithms and trigonometry are all there, with pi, e and tau as constants, and the expression box lists them. Comparisons and `and`, `or` work too, so `a if a > b else b` picks the larger and the boolean output carries the answer. Only arithmetic is read: a name, an attribute or a call that is not on the list is refused by name before anything runs. The box takes several lines, joined into one, and `#` starts a comment. Slots a to x are sockets taking a whole number, a decimal, a NUMBER or a true or false as 1 or 0; unwired counts as 0, so a fixed number goes in the formula.
+Work out a formula over up to 24 numbers, such as `(a * b) / 2 + c` or `clamp(a, 0, 1)`. Rounding, clamping, interpolation, roots, logarithms, trigonometry and comparisons are built in, and the box lists them. Unwired slots count as 0, so a fixed number goes in the formula.
 
 | | |
 |---|---|
@@ -9949,7 +9994,7 @@ Work out a whole formula over up to 24 numbers in one node, such as `(a * b) / 2
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `expression` | `STRING` | Yes | a + b |  | The formula, over `a` to `x`. Eg: `(a * b) / 2 + c`. Functions: min max abs round floor ceil sqrt clamp lerp sign log log2 log10 exp sin cos tan atan2 hypot degrees radians, plus pi, e and tau. `a > b` comes out as 1 or 0; `#` starts a comment. |
+| `expression` | `STRING` | Yes | a + b |  | The formula over `a` to `x`. Functions: min max abs round floor ceil sqrt clamp lerp sign log log2 log10 exp sin cos tan atan2 hypot degrees radians; constants pi, e, tau. `a > b` gives 1 or 0; `#` starts a comment. |
 | `a` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `a` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, `true` counts as `1`, and a slot the expression never names is ignored. |
 | `b` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `b` stands for. `a / b` with nothing wired to `b` divides by `0` and stops the run unless on_error is set to zero. |
 | `c` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `c` stands for. Handy as the offset in `(a * b) / 2 + c`. |
@@ -9993,7 +10038,7 @@ Work out a whole formula over up to 24 numbers in one node, such as `(a * b) / 2
 <details>
 <summary><b>Number List Statistics</b></summary>
 
-Measure a whole list of numbers at once: sum, mean, min, max, median and range, how many were read, and a summary line to preview. Feed it Number Range's LIST, a text list, or numbers typed one to a line. Divide each value by max to normalise a schedule against its own peak, or by sum to turn weights into shares. Every figure comes out as a single value rather than a list, so the graph below runs once however long the list is. An entry holding no number is left out, counted as 0, or stopped on.
+Measure a whole list of numbers at once: sum, mean, min, max, median, range, count and a summary line. Each figure is a single value, so the graph below runs once however long the list is. Divide by max to normalise a schedule, or by sum to turn weights into shares.
 
 | | |
 |---|---|
@@ -10081,7 +10126,7 @@ Combine two numbers with one operation. The seven arithmetic operations emit the
 <details>
 <summary><b>Number Range</b></summary>
 
-Generate a series of numbers between two values, by count or by step, shaped by an easing curve. Every value comes out as a list, so the graph below runs once per number. A step's sign is taken from the direction start to stop, so 0.1 and -0.1 behave the same, and a step that divides the span exactly ends the series on stop while one that does not ends it on the last whole step before stop. On easing, the `ease_in` curves start slow and accelerate, `ease_out` the reverse, and `ease_in_out` does both, which is what makes a camera move or a strength ramp look deliberate rather than mechanical, while `back` and `elastic` overshoot past start and stop on purpose.
+Generate a series of numbers between two values, by count or by step, shaped by an easing curve. Every value comes out as a list, so the graph below runs once per number, for a camera move, a strength ramp or a frame sweep.
 
 | | |
 |---|---|
@@ -10093,10 +10138,10 @@ Generate a series of numbers between two values, by count or by step, shaped by 
 |---|---|---|---|---|---|
 | `start` | `FLOAT,NUMBER,INT` | Yes | 0.0 |  | The first value of the series. |
 | `stop` | `FLOAT,NUMBER,INT` | Yes | 1.0 |  | The value the series runs to. Lower than start counts downwards, which is how a fade-out is written. |
-| `mode` | `COMBO` | Yes |  | `count`, `step` | What decides the values. `count` produces exactly that many, spread across the whole span, the mode to use when the number of frames is what is fixed. `step` walks from start towards stop by a fixed amount and produces however many values fit, for a series where the spacing is what matters. |
+| `mode` | `COMBO` | Yes |  | `count`, `step` | `count` = exactly that many values spread across the span, when the frame count is fixed; `step` = walks start towards stop by a fixed gap, as many as fit, when the spacing matters. |
 | `count` | `INT` | Yes | 10 |  | How many values to produce, read in `count` mode. A count of 1 gives start alone. Every node below this one runs this many times, so a large count is a large queue. |
-| `step` | `FLOAT` | Yes | 0.1 |  | The gap between one value and the next, read in `step` mode. A step of 0 stops with an error. |
-| `easing` | `COMBO` | Yes |  |  | How the values are distributed across the span, in `count` mode. `linear` spaces them evenly. Not read in `step` mode, where the spacing is fixed. |
+| `step` | `FLOAT` | Yes | 0.1 |  | The gap between values in `step` mode; its sign follows start to stop, so 0.1 and -0.1 match. The series ends on stop or the last whole step before it. 0 stops with an error. |
+| `easing` | `COMBO` | Yes |  |  | In `count` mode only. `linear` = even spacing; `ease_in` = starts slow, accelerates; `ease_out` = the reverse; `ease_in_out` = both; `back`, `elastic` = overshoot past start and stop. |
 | `endpoint` | `BOOLEAN` | Yes | True |  | Whether the last value is exactly stop, in `count` mode. Turn it off for a seamless loop: the final frame of a loop is the first frame of the next pass, so emitting both repeats it. |
 | `decimals` | `INT` | Yes | 6 |  | How many decimal places each value is rounded to. This is what keeps 0.30000000000000004 out of a filename or a log line. 0 rounds to whole numbers. |
 
@@ -10238,7 +10283,7 @@ Put a whole number, a decimal or a switch onto NUMBER, the wire this pack's own 
 <details>
 <summary><b>Affine Pattern Noise</b></summary>
 
-Starting noise with an affine mask laid over it: the draw is multiplied by max_scale and offset by max_bias wherever the pattern is white, so the noise carries the pattern's structure instead of being flat. Wire it into the noise socket of any custom sampler in place of RandomNoise. The four patterns read off a picture are not offered, since a starting draw has no picture to read.
+Starting noise that carries a pattern's structure: the draw is multiplied by max_scale and offset by max_bias wherever the mask is white. Wire it into the noise socket of any custom sampler in place of RandomNoise.
 
 | | |
 |---|---|
@@ -10253,7 +10298,7 @@ Starting noise with an affine mask laid over it: the draw is multiplied by max_s
 | `max_scale` | `FLOAT` | Yes | 1.1 |  | What the draw is multiplied by where the mask is white. 1.0 leaves the draw alone, 1.1 lifts it a tenth, 0.5 halves it. Away from the mask the draw is untouched. |
 | `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added where the mask is white. 0.0 adds nothing, 0.05 is a faint lift, 0.5 prints the pattern into the draw. |
 | `clamp_sigma` | `FLOAT` | Yes | 0.0 |  | Where the draw is cut off, in standard deviations. 0.0 leaves it uncut. 3.0 cuts the furthest 0.3 percent of values. |
-| `temporal_mode` | `COMBO` | No | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `temporal_mode` | `COMBO` | No | static | `static`, `per_frame`, `drift` | Video latents only: 'static' = one mask on every frame; 'per_frame' = a new mask each frame; 'drift' = one mask sliding across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. Content-aware patterns ignore it. |
 | `streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
 | `normalize` | `BOOLEAN` | No | True |  | `true` returns the draw at a spread of 1.0, which is the magnitude a sampler's schedule is built for. `false` returns whatever max_scale and max_bias worked out to. |
 | `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
@@ -10282,19 +10327,19 @@ Wrap a sampler so it scales and offsets the latent from inside its own denoising
 |---|---|---|---|---|---|
 | `sampler` | `SAMPLER` | Yes |  |  | The sampler to wrap, from KSamplerSelect or any other SAMPLER source. Every stock sampler carries the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which is reported in the console rather than failing the run. |
 | `affine_interval` | `INT` | Yes | 1 |  | Apply on every Nth step of the schedule. 1 = every step, 4 = every fourth, which leaves the sampler more room to settle between applications. |
-| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the peak of the schedule, compounding over every step it lands on. 1.0 = no change, 1.02 adds visible texture over a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 softens instead. |
+| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the schedule's peak, compounding over every step it lands on: below 1.0 = softer; 1.0 = no change; 1.02 = visible texture over a 20 step run; 1.05 = strong; past 1.08 = breaks up. |
 | `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added at the peak of the schedule, beside max_scale rather than through it. 0.0 = nothing, 0.005 = a gentle drift, 0.02 shifts the whole colour. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
-| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask the affine lands through. 'solid' = everywhere; 'white_noise' and the coloured noises = grain of varying coarseness; 'perlin', 'checker', 'bayer', 'worley_edges' and the rest = shapes; 'detail_region', 'smooth_region', 'edges_sobel', 'edges_laplacian' = read off the latent; 'external_mask' = the mask wired in. |
 | `affine_seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
 | `affine_seed_increment` | `BOOLEAN` | Yes | False |  | `true` advances the seed on every application, so the grain moves from step to step. `false` holds one mask for the whole run, which keeps the affine landing in the same places. |
-| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | Video latents only: 'static' = one mask on every frame; 'per_frame' = a new mask each frame; 'drift' = one mask sliding across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. Content-aware patterns ignore it. |
 | `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
 | `affine_streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
 | `affine_space` | `COMBO` | No | latent | `latent`, `model` | Which latent max_scale and max_bias are measured against. 'latent' = the same scale Latent Affine uses, so a value means the same thing in both places; 'model' = the sampler's own internal latent, which some models hold at a very different magnitude. |
 | `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
 | `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
 | `debug` | `BOOLEAN` | No | False |  | `true` logs every application to the console: the step, its sigma, the strength, the resolved scale and bias, and which streams were touched. `false` stays quiet. |
-| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies. 'content' = only the picture the model has resolved, so the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies that noise as well and prints it as fixed grain on a model that holds noise for most of its run. |
+| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies: 'content' = only the picture the model has resolved, leaving the sampler's noise alone; 'latent' = the whole latent, noise included, which prints as fixed grain on a model that holds noise for most of its run. |
 
 **Outputs**
 
@@ -10339,7 +10384,7 @@ Decide how strong an affine is at each step of a sampler run: where it starts, w
 <details>
 <summary><b>CNS Model Patch</b></summary>
 
-Make a stochastic sampler put its fresh noise where the image is still unfinished. Coarse shapes settle early and fine detail late, so white noise keeps disturbing what is already done; this moves that noise toward the detail still forming. Works with any model, and with any sampler that adds noise each step, such as `euler_ancestral`, `dpmpp_2m_sde`, `er_sde`, RES4LYF's samplers or `hfx_stochastic`; a sampler that adds none runs unchanged. It learns each model's progress from its own runs, so it gets closer from the second run of a model at a size.
+Make a stochastic sampler aim its fresh noise at the detail still forming rather than what has settled. Works with any model and any sampler that adds noise each step, such as `euler_ancestral` or `dpmpp_2m_sde`. It learns each model from its own runs, so it aims better from the second run at a size.
 
 | | |
 |---|---|
@@ -10385,21 +10430,21 @@ Run a guider over a sigma schedule while scaling and offsetting the latent from 
 | `guider` | `GUIDER` | Yes |  |  | What steers the denoising. |
 | `sampler` | `SAMPLER` | Yes |  |  | The sampler to wrap, from KSamplerSelect or any other SAMPLER source. Every stock sampler carries the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which is reported in the console rather than failing the run. |
 | `sigmas` | `SIGMAS` | Yes |  |  | The noise levels to step through. The affine curve is read over these, so one entry fewer than the length is the step count. |
-| `latent_image` | `LATENT` | Yes |  |  | The latent to denoise. Image, video and packed audio and video latents are all handled. |
+| `latent_image` | `LATENT` | Yes |  |  | The latent to denoise: an image, a video, or MiniMax H3 audio and video. A video-only H3 latent is sampled beside held silence and comes back video only. |
 | `affine_interval` | `INT` | Yes | 1 |  | Apply on every Nth step of the schedule. 1 = every step, 4 = every fourth, which leaves the sampler more room to settle between applications. |
-| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the peak of the schedule, compounding over every step it lands on. 1.0 = no change, 1.02 adds visible texture over a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 softens instead. |
+| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the schedule's peak, compounding over every step it lands on: below 1.0 = softer; 1.0 = no change; 1.02 = visible texture over a 20 step run; 1.05 = strong; past 1.08 = breaks up. |
 | `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added at the peak of the schedule, beside max_scale rather than through it. 0.0 = nothing, 0.005 = a gentle drift, 0.02 shifts the whole colour. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
-| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask the affine lands through. 'solid' = everywhere; 'white_noise' and the coloured noises = grain of varying coarseness; 'perlin', 'checker', 'bayer', 'worley_edges' and the rest = shapes; 'detail_region', 'smooth_region', 'edges_sobel', 'edges_laplacian' = read off the latent; 'external_mask' = the mask wired in. |
 | `affine_seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
 | `affine_seed_increment` | `BOOLEAN` | Yes | False |  | `true` advances the seed on every application, so the grain moves from step to step. `false` holds one mask for the whole run, which keeps the affine landing in the same places. |
-| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | Video latents only: 'static' = one mask on every frame; 'per_frame' = a new mask each frame; 'drift' = one mask sliding across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. Content-aware patterns ignore it. |
 | `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
 | `affine_streams` | `COMBO` | No | video | `video`, `audio`, `both` | Which streams of a packed audio and video latent the affine reaches. 'video' = stream 0, 'audio' = the rest, 'both' = all of them. An ordinary latent has only a video stream, so 'audio' does nothing to it. |
 | `affine_space` | `COMBO` | No | latent | `latent`, `model` | Which latent max_scale and max_bias are measured against. 'latent' = the same scale Latent Affine uses, so a value means the same thing in both places; 'model' = the sampler's own internal latent, which some models hold at a very different magnitude. |
 | `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
 | `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
 | `debug` | `BOOLEAN` | No | False |  | `true` logs every application to the console: the step, its sigma, the strength, the resolved scale and bias, and which streams were touched. `false` stays quiet. |
-| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies. 'content' = only the picture the model has resolved, so the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies that noise as well and prints it as fixed grain on a model that holds noise for most of its run. |
+| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies: 'content' = only the picture the model has resolved, leaving the sampler's noise alone; 'latent' = the whole latent, noise included, which prints as fixed grain on a model that holds noise for most of its run. |
 
 **Outputs**
 
@@ -10449,7 +10494,7 @@ Denoise a latent exactly as core KSampler does, with the live preview made cheap
 <details>
 <summary><b>H3 Low VRAM</b></summary>
 
-Set a MiniMax H3 model up to sample long clips in less VRAM, with the same result. Each block runs over the clip in token slices, and only the weights that fit beside the clip stay on the card while the rest stream in as each block runs. head_chunks and query_chunks split attention, the largest memory a block holds, into smaller calls, and the room they free keeps more weights on the card. The log names what was applied when sampling starts. Place it after the model loaders and any LoRA so every H3 sampler in the graph uses it.
+Set a MiniMax H3 model up to sample long clips in less VRAM, with the same result. Place it after the model loaders and any LoRA so every H3 sampler in the graph uses it. The log names what was applied when sampling starts.
 
 | | |
 |---|---|
@@ -10460,8 +10505,8 @@ Set a MiniMax H3 model up to sample long clips in less VRAM, with the same resul
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
-| `head_chunks` | `INT` | Yes | 0 |  | 0 = off; 4 = attention runs over 14 of the 56 heads at a time; 8 = 7 at a time. Every head is computed as before, so the result is unchanged. Frees roughly a third of the memory attention holds on a long clip. |
-| `query_chunks` | `INT` | Yes | 0 |  | 0 = off; 4 = attention answers the clip's tokens in 4 chunks against keys and values worked out once. Each token is computed as before, so the result is unchanged. Frees about half the memory attention holds, at the cost of one extra attention projection per block. Combines with head_chunks. |
+| `head_chunks` | `INT` | Yes | 0 |  | 0 = off; 4 = attention runs over 14 of the 56 heads at a time; 8 = 7 at a time. Same result; frees roughly a third of the memory attention holds on a long clip. |
+| `query_chunks` | `INT` | Yes | 0 |  | 0 = off; 4 = attention runs the clip's tokens in 4 chunks. Same result; frees about half the memory attention holds, for one extra attention projection per block. Combines with head_chunks. |
 | `token_slice` | `INT` | Yes | 8192 |  | 8192 = norms, projections and feed-forward run 8192 tokens at a time; 4096 holds about half the working memory there. The result matches up to float rounding. Lower it when memory is still short after head_chunks and query_chunks. |
 
 **Outputs**
@@ -10476,7 +10521,7 @@ Set a MiniMax H3 model up to sample long clips in less VRAM, with the same resul
 <details>
 <summary><b>H3 Tiled Sampler</b></summary>
 
-Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip joined by H3 Extend Append keeps its cuts: where it takes several time windows, each stays inside one scene. The panel shows where the tiles sit and marks each cut.
+Refine a long or upscaled MiniMax H3 clip with KSampler's settings, in overlapping tiles across the frame and windows along the clip that each fit the card, blended at every step into one clip. It does no upscaling itself. Each time window stays inside one scene, and the panel shows where the tiles sit.
 
 | | |
 |---|---|
@@ -10511,7 +10556,7 @@ Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across
 <details>
 <summary><b>H3 Tiled Sampler [WIP]</b></summary>
 
-Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across the frame and overlapping windows along the clip, blended at every step so the tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip joined by H3 Extend Append keeps its cuts: where it takes several time windows, each stays inside one scene. The panel shows where the tiles sit, marks each cut and gives the sigma the run started from.
+Work in progress. Refine a long or upscaled MiniMax H3 clip with KSampler's settings, in overlapping tiles that each fit the card, blended at every step into one clip. It does no upscaling itself; the panel shows the tiles, each cut and the sigma the run started from.
 
 | | |
 |---|---|
@@ -10531,9 +10576,10 @@ Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overla
 | `negative` | `CONDITIONING` | Yes |  |  | The clip's negative conditioning. |
 | `latent_image` | `LATENT` | Yes |  |  | The H3 latent to refine, such as an upscaled clip encoded again. A video-only latent has its audio held; a joined audio and video latent has both refined. |
 | `strength` | `FLOAT` | Yes | 0.45 |  | Noise level the refine starts from, on any scheduler: `0.3` keeps the clip and sharpens it, `0.5` adds detail, `0.8` redraws detail on the clip's own layout, `0.93` redraws nearly all of it, `1.0` from noise. |
-| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` keeps the whole clip in one time window and splits the frame into the fewest tiles under the token budget, adding time windows only where no tiling of one window fits or the clip runs past 362 frames; `manual` sets tile and window sizes. Added windows never cross a cut the latent records. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` = the whole clip in one time window, the frame split into the fewest tiles under max_tokens; time windows are added only where no tiling fits or past 362 frames. `manual` = set tile and window sizes. Added windows never cross a recorded cut. |
 | `anchor` | `COMBO` | Yes | auto | `auto`, `on`, `off` | Guides each tile with its own part of latent_image at the first frame of every 17: `auto` when tiles split the frame, `on` always, `off` never. |
-| `audio` | `LATENT` | No |  |  | The clip's audio latent, from VAE Encode Audio with the H3 audio VAE, held as it is beside a video-only latent_image. Left empty, silence is held. |
+| `audio` | `LATENT,AUDIO` | No |  |  | The clip's sound, held as it is beside a video-only latent_image: an audio latent from VAE Encode Audio with the H3 audio VAE, or a sound such as Load Video's audio with audio_vae wired. Left empty, or silent, it holds silence. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, for encoding a sound wired into audio. |
 
 **Outputs**
 
@@ -10547,7 +10593,7 @@ Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overla
 <details>
 <summary><b>H3 Tiles</b></summary>
 
-Run every MiniMax H3 model call in overlapping tiles across the frame and overlapping windows along the clip, blended where they meet at each step so the tiles stay one clip. Any sampler then refines a long or upscaled H3 latent in tiles that each fit the card, run as H3 Low VRAM runs them. Upscale the latent first, or decode, upscale and encode, and sample it at a partial denoise. Wire the clip's latent as well and, where it takes several time windows, each one stays inside one scene, so no blend crosses a cut.
+Run every MiniMax H3 model call in overlapping tiles across the frame and windows along the clip, blended at each step into one clip. Any sampler given the model can then refine a long or upscaled H3 latent at a partial denoise in tiles that each fit the card.
 
 | | |
 |---|---|
@@ -10570,6 +10616,48 @@ Run every MiniMax H3 model call in overlapping tiles across the frame and overla
 
 </details>
 
+<a id="node-wash3upscalevideo"></a>
+<details>
+<summary><b>H3 Upscale Video</b></summary>
+
+Upscale a video of any length with MiniMax H3, enlarging it in the latent and refining it a chunk at a time, each chunk continuing from the last so the clip has no seam. Frames are written to disk with the clip's own sound, and the panel plays the source beside the result.
+
+| | |
+|---|---|
+| Node id | `WASH3UpscaleVideo` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `source` | `VIDEO,IMAGE` | Yes |  |  | The clip to upscale, as a VIDEO or IMAGE frames. A VIDEO gives the result its frame rate and sound; frames play at 24 fps with none. A long clip comes from core Load Video, which reads frames as they are used. |
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+| `positive` | `CONDITIONING` | Yes |  |  | What the clip shows, or how to refine it, from CLIP Text Encode. |
+| `negative` | `CONDITIONING` | Yes |  |  | What to avoid, read only when cfg is above 1. |
+| `vae` | `VAE` | Yes |  |  | The H3 video VAE, for reading and writing the frames. |
+| `upscale_model` | `COMBO` | Yes |  |  | The learned upscaler, from ComfyUI/models/latent_upscale_models; `minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors` is fetched on first use with features.network on. `bicubic` resizes without one. |
+| `scale` | `FLOAT` | Yes | 2.0 |  | Size multiplier, sides rounded to 32 pixels: `1` = refine at the same size; `2` = 1216x672 to 2432x1344. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `light` starts each chunk at sigma 0.4 and sharpens; `creative` starts at sigma 0.75 and redraws more. `2` to `12 step` expect a turbo LoRA; `full 25 step` none. |
+| `color_transfer` | `BOOLEAN` | Yes | True |  | `true` = each frame's colour and brightness are corrected against its source frame, by color_method; `false` = frames are written as H3 decoded them. |
+| `color_method` | `COMBO` | Yes | wavelet | `wavelet`, `reinhard`, `mkl`, `histogram` | `wavelet` = colour and brightness at coarse scales from the source, fine detail from H3, fixing local drift too; `reinhard`, `mkl`, `histogram` = each frame's colour statistics matched to its source's. |
+| `seed` | `INT` | Yes | 0 |  | Noise seed of the first chunk, as `0` or `42`; each later chunk adds its number. |
+| `root` | `COMBO` | Yes | temp |  | Which folder the frames land in: 'temp' = cleared when ComfyUI restarts; 'output' = kept until deleted, for Load Video Cache. |
+| `name` | `STRING` | Yes | frame_cache/h3_upscale |  | The frames' folder below root, numbered on each run, as `frame_cache/h3_upscale` for `frame_cache/h3_upscale_00001`. |
+| `delete_after_save` | `BOOLEAN` | Yes | True |  | `true` = the frames are deleted once a save has written all of them, and the node runs again on every queue; `false` = they are kept. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, so each chunk is refined beside its own sound. Left empty, silence is held. The result carries the source's sound either way. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | The upscaled clip with the source's sound, read from disk by Save Video a frame at a time. |
+| `latent` | `LATENT` | The refined video latent of the whole clip, padded to an H3 length and before colour transfer, for H3 Decode Video or another pass. |
+| `frames` | `INT` | Frames written. |
+| `report` | `STRING` | The sizes, the chunks and how long each took. |
+
+</details>
+
 <a id="node-wasksampleraffineadvanced"></a>
 <details>
 <summary><b>KSampler Affine Advanced</b></summary>
@@ -10587,7 +10675,7 @@ Denoise a latent while scaling and offsetting it from inside the sampler's own l
 | `model` | `MODEL` | Yes |  |  | The model to denoise with. |
 | `positive` | `CONDITIONING` | Yes |  |  | What the image should contain. |
 | `negative` | `CONDITIONING` | Yes |  |  | What it should avoid. |
-| `latent_image` | `LATENT` | Yes |  |  | The latent to denoise. Image, video and packed audio and video latents are all handled. |
+| `latent_image` | `LATENT` | Yes |  |  | The latent to denoise: an image, a video, or MiniMax H3 audio and video. A video-only H3 latent is sampled beside held silence and comes back video only. |
 | `add_noise` | `BOOLEAN` | Yes | True |  | `true` adds fresh noise before the first step, which is what a run from an empty latent needs. `false` starts from the latent as it is, for the second half of a run another sampler began. |
 | `seed` | `INT` | Yes | 0 |  | Seeds the noise that is added. The same seed gives the same run; 0 is as good a seed as any. |
 | `steps` | `INT` | Yes | 20 |  | How many denoising steps to take. 20 suits most models, 8 for a turbo or lightning one, 40 where fine detail matters. |
@@ -10596,12 +10684,12 @@ Denoise a latent while scaling and offsetting it from inside the sampler's own l
 | `scheduler` | `COMBO` | Yes | normal |  | How the noise level falls across the steps. `normal` suits most models, `simple` and `beta` are common on flow-matching ones. |
 | `denoise` | `FLOAT` | Yes | 1.0 |  | How much of the latent is replaced. 1.0 = a fresh generation, 0.5 keeps the broad shape of what came in, 0.2 refines it only. |
 | `affine_interval` | `INT` | Yes | 1 |  | Apply on every Nth step of the schedule. 1 = every step, 4 = every fourth, which leaves the sampler more room to settle between applications. |
-| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the peak of the schedule, compounding over every step it lands on. 1.0 = no change, 1.02 adds visible texture over a 20 step run, 1.05 is strong, and past 1.08 the picture breaks up. Below 1.0 softens instead. |
+| `max_scale` | `FLOAT` | Yes | 1.02 |  | What the latent is multiplied by at the schedule's peak, compounding over every step it lands on: below 1.0 = softer; 1.0 = no change; 1.02 = visible texture over a 20 step run; 1.05 = strong; past 1.08 = breaks up. |
 | `max_bias` | `FLOAT` | Yes | 0.0 |  | What is added at the peak of the schedule, beside max_scale rather than through it. 0.0 = nothing, 0.005 = a gentle drift, 0.02 shifts the whole colour. bias_field on Affine Options decides whether that is one flat offset or a noise field. |
-| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask decides where the affine lands. 'solid' covers everything; 'white_noise' and the coloured noises are grain of different coarseness; 'perlin', 'checker', 'bayer', 'cross_hatch', 'worley_edges' and the rest are shapes; 'detail_region', 'smooth_region', 'edges_sobel' and 'edges_laplacian' are read off the latent itself; 'external_mask' uses the mask wired in. |
+| `pattern` | `COMBO` | Yes | white_noise | `white_noise`, `pink_noise`, `brown_noise`, `red_noise`, `blue_noise`, `violet_noise`, `purple_noise`, `green_noise`, `black_noise`, `cross_hatch`, `highpass_white`, `ring_noise` and 14 more | Which mask the affine lands through. 'solid' = everywhere; 'white_noise' and the coloured noises = grain of varying coarseness; 'perlin', 'checker', 'bayer', 'worley_edges' and the rest = shapes; 'detail_region', 'smooth_region', 'edges_sobel', 'edges_laplacian' = read off the latent; 'external_mask' = the mask wired in. |
 | `affine_seed` | `INT` | Yes | 0 |  | Seeds the mask. The same seed always draws the same mask, so change it to move the grain without changing anything else. Ignored by the content-aware patterns and by 'external_mask', which read what they are given. |
 | `affine_seed_increment` | `BOOLEAN` | Yes | False |  | `true` advances the seed on every application, so the grain moves from step to step. `false` holds one mask for the whole run, which keeps the affine landing in the same places. |
-| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | How a video latent's mask varies over time. 'static' = one mask on every frame, in the same place all clip. 'per_frame' = an unrelated mask each frame. 'drift' = one mask slid across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. The content-aware patterns ignore this, and so does an image latent. |
+| `temporal_mode` | `COMBO` | Yes | static | `static`, `per_frame`, `drift` | Video latents only: 'static' = one mask on every frame; 'per_frame' = a new mask each frame; 'drift' = one mask sliding across the frame, set by drift_speed, drift_angle_deg and drift_renew on Affine Options. Content-aware patterns ignore it. |
 | `start_at_step` | `INT` | No | 0 |  | First step to run. The affine curve is still read over the whole 'steps' range, so a slice of a run carries the part of the curve that belongs to it. |
 | `end_at_step` | `INT` | No | 10000 |  | Step to stop before. 10000 runs to the end; 12 on a 20 step run hands the rest to a second sampler. |
 | `return_with_leftover_noise` | `BOOLEAN` | No | False |  | `true` leaves the latent partly noisy so another sampler can pick the run up. `false` finishes the denoise, which is what a final pass wants. |
@@ -10611,7 +10699,7 @@ Denoise a latent while scaling and offsetting it from inside the sampler's own l
 | `external_mask` | `MASK` | No |  |  | A mask of your own, resized onto the latent. On pattern 'external_mask' it is the mask; on any other pattern it gates the generated one, so the affine reaches only where this is white. One mask covers every frame, or one per frame. |
 | `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
 | `debug` | `BOOLEAN` | No | False |  | `true` logs every application to the console: the step, its sigma, the strength, the resolved scale and bias, and which streams were touched. `false` stays quiet. |
-| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies. 'content' = only the picture the model has resolved, so the sampler's own noise is left alone. 'latent' = the whole latent, which amplifies that noise as well and prints it as fixed grain on a model that holds noise for most of its run. |
+| `affine_acts_on` | `COMBO` | No | content | `content`, `latent` | What max_scale multiplies: 'content' = only the picture the model has resolved, leaving the sampler's noise alone; 'latent' = the whole latent, noise included, which prints as fixed grain on a model that holds noise for most of its run. |
 
 **Outputs**
 
@@ -10646,7 +10734,7 @@ Sample a latent over several cycles, enlarging it between passes by an even shar
 | `negative` | `CONDITIONING` | Yes |  |  | Encoded prompt describing what to keep out of the image. |
 | `latent_image` | `LATENT` | Yes |  |  | The latent the first cycle works on: an empty one to generate from scratch, or an encoded image to work up from. Its size sets where the enlargement starts. |
 | `tiled_vae` | `COMBO` | Yes |  | `disable`, `enable` | `enable` converts between latent and pixels a tile at a time, which needs far less VRAM at large sizes and can leave faint seams. Only matters when latent_upscale is `disable`, since that is the only path that goes through pixels. |
-| `latent_upscale` | `COMBO` | Yes |  | `disable`, `nearest-exact`, `bilinear`, `area`, `bicubic`, `bislerp` | How the enlargement between cycles is done. `disable` takes the slower, sharper route through pixels, using vae, upscale_model, processor_model and scale_sampling. Any other entry stays in latent space and is much faster, ignoring all four; `nearest-exact` is the blockiest, `bilinear` and `bicubic` smoother, `area` averages, and `bislerp` is a blend built for latents. |
+| `latent_upscale` | `COMBO` | Yes |  | `disable`, `nearest-exact`, `bilinear`, `area`, `bicubic`, `bislerp` | `disable` = through pixels, slower and sharper, using vae, upscale_model, processor_model and scale_sampling. Any other entry stays in latent space, much faster, ignoring all four: `nearest-exact` = blockiest; `bilinear`, `bicubic` = smoother; `area` = averages; `bislerp` = a blend for latents. |
 | `upscale_factor` | `FLOAT` | Yes | 2.0 |  | Total enlargement across the whole run, not per cycle: 2.0 means the result is twice the size it started at, and the cycles share that growth evenly between them. |
 | `upscale_cycles` | `INT` | Yes | 2 |  | How many sample passes to run. Enlargement happens between passes, so 2 grows once and 4 grows three times in smaller jumps, which is gentler but slower. Capped at steps, since a pass needs at least one step. |
 | `starting_denoise` | `FLOAT` | Yes | 1.0 |  | How much of the first pass is redrawn. 1.0 ignores latent_image's content and generates from noise; around 0.5 keeps its composition and changes the detail; 0.0 changes nothing. |
@@ -10703,7 +10791,7 @@ Sample the early steps at a reduced resolution and grow the latent partway throu
 | `transform` | `COMBO` | Yes | dct | `dct`, `dwt`, `fft` | The basis the latent grows in. `dct` and `fft` handle any ratio between scales; `dwt` is cheaper but only ever doubles, so every step in the list has to be exactly twice the one before it. |
 | `delta` | `FLOAT` | Yes | 0.01 |  | How much leftover noise counts as burying a frequency. Larger values hold the small grid for more steps, saving more but leaving less of the schedule to resolve detail in. The default is conservative: it grows after about a sixth of the steps. |
 | `amplitude` | `FLOAT` | Yes | 203.615097 |  | The A of the model's power spectrum, eg 203.6 for FLUX.1-dev. Only meaningful alongside delta: a measured A runs larger than a published one, so take both from the same place. |
-| `beta` | `FLOAT` | Yes | 1.915461 |  | How fast the model's spectrum falls away with frequency. Unlike the amplitude this is a property of the model rather than of the scale its latents happen to be in, so a measured one is directly comparable to a published one. The default belongs to FLUX.1-dev. |
+| `beta` | `FLOAT` | Yes | 1.915461 |  | How fast the model's spectrum falls away with frequency, as `1.915461` for FLUX.1-dev. Unlike the amplitude it does not depend on latent scale, so measured and published values compare directly. |
 | `seed` | `INT` | Yes | 0 |  | Seeds the noise that fills the frequencies each transition adds. Changing it varies the fine detail without moving the composition. Any whole number; `0` is as good a seed as any. |
 | `manual_sigmas` | `STRING` | No |  |  | Sigmas to grow at, one per transition, decreasing. Leave this empty to have them worked out from the amplitude and beta instead, which is the usual way round. Setting them ignores delta, amplitude and beta. |
 
@@ -10719,7 +10807,7 @@ Sample the early steps at a reduced resolution and grow the latent partway throu
 <details>
 <summary><b>Temporal Noise Hold</b></summary>
 
-Starting noise whose pattern carries over from one video frame to the next instead of being redrawn each time. The further it carries, the denser and more detailed the scene comes back. Wire it into the noise socket of any custom sampler in place of RandomNoise. Only the first draw is shaped, so a sampler that draws fresh noise at every step overwrites it: the ancestral and SDE families, and any sampler whose eta is above 0, which several default to. euler, heun, dpm_2, dpmpp_2m and the ode variants keep it.
+Starting noise whose pattern carries over from one video frame to the next, so the scene comes back denser and more detailed. Wire it into the noise socket of any custom sampler in place of RandomNoise. Samplers that redraw noise each step (ancestral, SDE, or eta above 0) overwrite it; euler, heun, dpm_2 and dpmpp_2m keep it.
 
 | | |
 |---|---|
@@ -10730,7 +10818,7 @@ Starting noise whose pattern carries over from one video frame to the next inste
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `noise_seed` | `INT` | Yes | 0 |  | The seed the noise field is drawn from, as `0` or `12345`. The same seed and hold reproduce a clip exactly. |
-| `hold` | `FLOAT` | Yes | 2.0 |  | How many latent frames the noise pattern carries over. 0.0 draws ordinary noise and matches RandomNoise exactly. Higher values cut the frame-to-frame change: 2.0 to 0.63 of ordinary noise, 8.0 to 0.34, 25.0 to 0.20, 64.0 to 0.12, 128.0 to 0.09. One latent frame is about 3.4 output frames on MiniMax H3, 4 on Wan and 8 on LTX. |
+| `hold` | `FLOAT` | Yes | 2.0 |  | Latent frames the noise carries over: 0.0 = ordinary noise, as RandomNoise; 2.0 = 0.63 of ordinary frame-to-frame change; 8.0 = 0.34; 25.0 = 0.20; 128.0 = 0.09. A latent frame is about 3.4 output frames on MiniMax H3, 4 on Wan, 8 on LTX. |
 
 **Outputs**
 
@@ -10780,7 +10868,7 @@ Write text with the language model inside a loaded CLIP, as core Generate Text d
 <details>
 <summary><b>Rich Text Editor</b></summary>
 
-Write a document in a rich text editor drawn on the node and emit it as HTML. The document lives in the node's own text box, so a saved workflow reopens with it intact and a run from the API produces the same text with no browser involved. The box takes no link. Tokens such as [time] and [user] are replaced on the way out, and the box itself is never rewritten. With document.clean_html left on, which is the default, script and iframe elements, object and embed tags, on* handler attributes and javascript: URLs are removed from the output and named in the log; text, styling, images, tables and everything else come through as the box holds them. Setting document.clean_html to false in config.yaml emits the markup untouched.
+Write a document in a rich text editor drawn on the node, saved with the workflow, and emit it as HTML. Tokens such as [time] and [user] are replaced on the way out. Scripts and other active content are removed unless document.clean_html is set to false in config.yaml.
 
 | | |
 |---|---|
@@ -10853,7 +10941,7 @@ Join up to 24 text inputs with a delimiter, in socket order. Empty inputs are sk
 <details>
 <summary><b>Text Load Line From File</b></summary>
 
-Read one line of a text file per prompt, or one line by index. The second output holds every line, keyed by the dictionary name. The file has to sit in a folder this pack may read: ComfyUI's input, output or temp folder, the pack's own folder, or one listed under paths.allow_read in config.yaml. With no path and nothing connected the node logs an error and emits an empty line.
+Read one line of a text file per prompt, or one line by index, to walk a list of prompts one per generation. The second output holds every line, keyed by the dictionary name. With no file and nothing connected the node logs an error and emits an empty line.
 
 | | |
 |---|---|
@@ -10865,7 +10953,7 @@ Read one line of a text file per prompt, or one line by index. The second output
 |---|---|---|---|---|---|
 | `file` | `COMBO` | Yes |  |  | Which file to read, one prompt or phrase per line. The menu lists every text file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read. Ignored when multiline_text is connected. |
 | `dictionary_name` | `STRING` | Yes | [filename] |  | The key the list of every line is filed under in the dictionary output, so Text Dictionary Get can fetch it again by name. Used exactly as typed. |
-| `label` | `STRING` | Yes | TextBatch |  | Name this batch's read position is remembered under, and the position survives a restart. Two nodes sharing a label share one position and take turns; giving them different labels lets two lists advance independently. Pointing a label at a different file starts it over at the first line. |
+| `label` | `STRING` | Yes | TextBatch |  | Name this batch's read position is remembered under, surviving a restart. Nodes sharing a label share one position and take turns; different labels advance independently. Pointing a label at a different file starts it over at the first line. |
 | `mode` | `COMBO` | Yes |  | `automatic`, `index` | `automatic` hands out the next line on every run and wraps around at the end of the file, which is what walks a list of prompts one per generation. `index` returns the one line asked for and does not advance. |
 | `index` | `INT` | Yes | 0 |  | Which line to return in `index` mode, counting from 0 for the first line. Ignored in `automatic` mode. An index past the end of a file wraps around, so 12 in a 10-line file is line 2. |
 | `multiline_text` | `STRING` | No |  |  | Lines to read instead of file_path; STRING, one entry per line. Anything here overrides file_path. |
@@ -10883,7 +10971,7 @@ Read one line of a text file per prompt, or one line by index. The second output
 <details>
 <summary><b>Text Multiline</b></summary>
 
-A multiline text box. Lines starting with # are dropped, and tokens such as [time] and [user] are substituted. A {red\|blue} alternation picks one option at random unless dynamic_prompts is switched off, which keeps a literal brace intact. Text whose # lines have to survive as well, such as code, belongs in Text Multiline (Code Compatible).
+A multiline text box. Lines starting with # are dropped, tokens such as [time] and [user] are substituted, and a {red\|blue} alternation picks one option at random unless dynamic_prompts is off. Text whose # lines must survive, such as code, belongs in Text Multiline (Code Compatible).
 
 | | |
 |---|---|
@@ -10893,8 +10981,8 @@ A multiline text box. Lines starting with # are dropped, and tokens such as [tim
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `text` | `STRING` | Yes |  |  | The text to emit. A line whose first non-blank character is # is left out, so part of a prompt can be parked instead of deleted. Tokens such as [time], [user] and [hostname] are replaced with their values, and a {red\|blue} alternation picks one of the options at random unless dynamic_prompts is off. |
-| `dynamic_prompts` | `BOOLEAN` | Yes | True |  | Whether a {red\|blue} alternation picks one option at random. `on` is the prompt behaviour; `off` keeps every brace as typed, which is what JSON needs. Lines starting with # are dropped either way, so code belongs in Text Multiline (Code Compatible). The choice is made on the canvas: text sent straight to the API is never rewritten. |
+| `text` | `STRING` | Yes |  |  | The text to emit. A line whose first non-blank character is # is left out, so part of a prompt can be parked; tokens such as [time], [user] and [hostname] are replaced; {red\|blue} picks one option at random unless dynamic_prompts is off. |
+| `dynamic_prompts` | `BOOLEAN` | Yes | True |  | Whether a {red\|blue} alternation picks one option at random. `on` = prompt behaviour; `off` = braces kept as typed, as JSON needs. # lines are dropped either way; code belongs in Text Multiline (Code Compatible). Text sent straight to the API is never rewritten. |
 
 **Outputs**
 
@@ -10908,7 +10996,7 @@ A multiline text box. Lines starting with # are dropped, and tokens such as [tim
 <details>
 <summary><b>Text Multiline (Code Compatible)</b></summary>
 
-A multiline text box for code, JSON, YAML or anything else that has to arrive exactly as typed. Every line is kept, including one starting with '#', and a {red\|blue} alternation is passed through as written. Text Multiline drops # lines and reads braces as a prompt alternation, so this is the box to reach for whenever those two characters mean something.
+A multiline text box for code, JSON, YAML or anything else that has to arrive exactly as typed. Every line is kept, including one starting with '#', and a {red\|blue} alternation is passed through as written.
 
 | | |
 |---|---|
@@ -11090,7 +11178,7 @@ Open a dictionary into two lists that line up: the keys, and their values. Entry
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `dictionary` | `DICT` | Yes |  |  | The dictionary whose entries are wanted, keys and values both. |
-| `sort` | `COMBO` | Yes | none | `none`, `key`, `value` | Order both lists come out in. `none` = the order the entries were added; `key` = A to Z by name; `value` = A to Z by the value as text. Case is ignored, so 'Apple' sits beside 'apple', and digits sort as text: '10' before '9'. |
+| `sort` | `COMBO` | Yes | none | `none`, `key`, `value` | Order of both lists. `none` = the order the entries were added; `key` = A to Z by name; `value` = A to Z by the value as text. Case is ignored and digits sort as text: '10' before '9'. |
 
 **Outputs**
 
@@ -11370,7 +11458,7 @@ Join up to 24 lists end to end, in socket order. Unconnected inputs are skipped.
 <details>
 <summary><b>Text List Get</b></summary>
 
-Read one entry out of a list by position. Negative counts from the end, and an index past either end wraps, clamps, comes back empty or stops, whichever is chosen. `wrap` counts round again, so index 5 of a 3-entry list is entry 2, which is what cycles a list forever from a counter that only climbs. `error` suits a workflow where a missing entry means something is wrong upstream.
+Read one entry out of a list by position, with negative positions counting from the end. An index past either end wraps, clamps, comes back empty or stops, so a counter that only climbs can cycle a list forever. Hands on the entry as text, the position read and the list's length.
 
 | | |
 |---|---|
@@ -11425,7 +11513,7 @@ Count the entries in a list, as a NUMBER, an INT and a FLOAT. Also reports wheth
 <details>
 <summary><b>Text List Slice</b></summary>
 
-Take a run of entries out of a list, from one position to another with both ends included, optionally every second or third one. The run comes out twice: as one LIST, and as a STRING list that runs everything downstream once per entry. An end of -1, the default, takes everything from start onwards, and an end past the last entry stops there. An end before start selects nothing and stops the prompt, since the graph below cannot be run zero times.
+Take a run of entries out of a list, from start to end with both ends included, optionally every second or third one. The run comes out as one LIST and as a STRING list that runs everything downstream once per entry. A range that selects nothing stops the prompt.
 
 | | |
 |---|---|
@@ -11437,7 +11525,7 @@ Take a run of entries out of a list, from one position to another with both ends
 |---|---|---|---|---|---|
 | `text_list` | `ARRAY` | Yes |  |  | The list to take from, such as the lines output of Load Text Line or the LIST output of Text Split to List, Text List or Text Dictionary Keys. |
 | `start` | `INT` | Yes | 0 |  | The first entry taken, counting from 0, and it is taken. -1 is the last entry, -2 the one before it. A start before the beginning of the list begins at the first entry. |
-| `end` | `INT` | Yes | -1 |  | The last entry taken, and it is taken as well: start 9 and end 19 give 11 entries, the 10th to the 20th. -1 is the last entry. |
+| `end` | `INT` | Yes | -1 |  | The last entry taken, and it is taken as well: start 9 and end 19 give 11 entries, the 10th to the 20th. -1 = the last entry; an end past the list stops at its last entry. |
 | `step` | `INT` | Yes | 1 |  | How far to move between entries taken. 1 takes every entry, 2 takes every second one starting at start, 3 every third. The last entry is taken only when the stepping lands on it. |
 
 **Outputs**
@@ -11445,7 +11533,7 @@ Take a run of entries out of a list, from one position to another with both ends
 | Name | Type | What it is |
 |---|---|---|
 | `<output0>` | `ARRAY` | The entries taken, on one wire, for Text List Get, Text List Concatenate and Text List to Text. |
-| `strings` | `STRING` | The same entries as a STRING list. Because this is a list, a node reading it runs once per entry and produces one result per entry, wire it into a sampler's prompt to render every line of a range in turn. An entry that is not text is converted to it. |
+| `strings` | `STRING` | The same entries as a STRING list: a node reading it runs once per entry, so wired into a sampler's prompt it renders every line of the range in turn. An entry that is not text is converted to it. |
 | `count` | `INT` | How many entries the range took. |
 
 </details>
@@ -11454,7 +11542,7 @@ Take a run of entries out of a list, from one position to another with both ends
 <details>
 <summary><b>Text List to Numbers</b></summary>
 
-Read a LIST as numbers and emit them on the NUMBER, FLOAT and INT sockets as lists, so every node downstream runs once per value. `skip` suits a column with a heading on the first line, `zero` a schedule where entry 7 has to stay entry 7, and `error` names the entry it stopped on. An entry reading as nan or as infinity takes the same route as an unreadable one.
+Read a LIST as numbers and emit them on the NUMBER, FLOAT and INT sockets as lists, so every node downstream runs once per value. Entries that are not numbers, nan and infinity included, are skipped, zeroed or stop the prompt, as `unreadable` chooses.
 
 | | |
 |---|---|
@@ -11465,14 +11553,14 @@ Read a LIST as numbers and emit them on the NUMBER, FLOAT and INT sockets as lis
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `text_list` | `ARRAY` | Yes |  |  | The list to read. Entries may be numbers already or text holding one; surrounding space, a leading + or - and a decimal point are all read, so '  -1.5 ' arrives as -1.5. |
-| `unreadable` | `COMBO` | Yes |  | `skip`, `zero`, `error` | What an entry that is not a number does. `skip` leaves it out, `zero` keeps the position and puts 0 there, and `error` stops the prompt. |
+| `unreadable` | `COMBO` | Yes |  | `skip`, `zero`, `error` | What an entry that is not a number does. `skip` = left out, for a column with a heading; `zero` = 0 in its place, so entry 7 stays entry 7; `error` = stop the prompt, naming the entry. |
 | `round_to_int` | `BOOLEAN` | Yes | False |  | Whether the INT socket rounds to the nearest whole number instead of cutting the decimal off. Off, 1.9 arrives as 1; on, it arrives as 2. The NUMBER and FLOAT sockets keep the decimal either way. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `NUMBER` | One NUMBER per entry, for the maths and counter nodes. A node reading this runs once per value. If nothing in the list reads as a number the prompt stops, because a graph cannot be run zero times, set unreadable to `zero` to keep a value in every position. |
+| `<output0>` | `NUMBER` | One NUMBER per entry, for the maths and counter nodes; a node reading this runs once per value. A list with no readable number stops the prompt; set unreadable to `zero` to keep a value in every position. |
 | `floats` | `FLOAT` | The same values as decimals, one per run. |
 | `ints` | `INT` | The same values as whole numbers, one per run, for a step count or a seed. |
 | `count` | `INT` | How many values came through, which is how many times the graph below this node runs. |
@@ -11534,7 +11622,7 @@ Join a list into one string, separated by the delimiter. Type \n as the delimite
 <details>
 <summary><b>Text Split to List</b></summary>
 
-Split text into a list, on a delimiter, on line breaks, on whitespace or on a regular expression. The pieces come out twice: as one LIST, and as a STRING list that runs everything downstream once per piece. `delimiter` cuts on the exact text in the delimiter field, which is how a comma-separated prompt becomes one entry per tag, while `regex` reads that field as a pattern, so `[,;]` cuts on either mark. `characters` ignores the delimiter field.
+Split text into a list on a delimiter, line breaks, whitespace, a regular expression or every character, such as one entry per tag of a comma-separated prompt. The pieces come out as one LIST and as a STRING list that runs everything downstream once per piece.
 
 | | |
 |---|---|
@@ -11545,7 +11633,7 @@ Split text into a list, on a delimiter, on line breaks, on whitespace or on a re
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `text` | `STRING` | Yes |  |  | The text to cut up, as `cat, forest, sunset`. Typed here, or wired in from any node with a text output, such as a prompt built by Text Concatenate. |
-| `split_by` | `COMBO` | Yes |  | `delimiter`, `lines`, `whitespace`, `regex`, `characters` | Where the cuts go. `delimiter` and `regex` read the delimiter field; `lines` cuts on line breaks, `whitespace` on runs of space, `characters` on every character. |
+| `split_by` | `COMBO` | Yes |  | `delimiter`, `lines`, `whitespace`, `regex`, `characters` | Where the cuts go. `delimiter` = the exact text in the delimiter field; `regex` = that field as a pattern, so `[,;]` cuts on either mark; `lines` = line breaks; `whitespace` = runs of space; `characters` = every character. |
 | `delimiter` | `STRING` | Yes | , |  | What to cut on, read only by `delimiter` and `regex`. Type \n for a line break or \t for a tab. An unreadable regular expression stops with the error the pattern produced, naming the position in it that failed. |
 | `trim_whitespace` | `BOOLEAN` | Yes | True |  | Whether each piece has its surrounding space removed. On, 'a, b, c' gives 'a', 'b', 'c'; off it gives 'a', ' b', ' c', and the leading spaces travel into whatever reads the list. |
 | `remove_empty` | `BOOLEAN` | Yes | True |  | Whether pieces holding nothing are dropped. Two delimiters in a row produce an empty piece, which is what a trailing comma on a prompt leaves behind. Turn this off when the position of every entry matters and an empty slot has to stay a slot. |
@@ -11555,7 +11643,7 @@ Split text into a list, on a delimiter, on line breaks, on whitespace or on a re
 | Name | Type | What it is |
 |---|---|---|
 | `<output0>` | `ARRAY` | Every piece on one wire, for Text List Get, Text List Concatenate and Text List to Text. |
-| `strings` | `STRING` | The same pieces as a STRING list. Because this is a list, a node reading it runs once per piece and produces one result per piece, wire it into a sampler's prompt to render every entry in turn. Text that splits into nothing stops the prompt, because a graph cannot be run zero times. |
+| `strings` | `STRING` | The same pieces as a STRING list: a node reading it runs once per piece, so wired into a sampler's prompt it renders every entry in turn. Text that splits into nothing stops the prompt. |
 | `count` | `INT` | How many pieces the split produced. |
 
 </details>
@@ -11586,7 +11674,7 @@ Split a prompt into tags, drop the duplicates and the empty ones, optionally sor
 | `keep` | `COMBO` | Yes |  | `first`, `last` | Which of a set of duplicates survives. `first` keeps the earliest spelling, `last` the latest. Position is the first occurrence either way, so keeping the last spelling does not move the tag to the end of the prompt. |
 | `remove_empty` | `BOOLEAN` | Yes | True |  | Whether tags holding nothing are dropped. This is what clears the run of bare commas an unconnected input leaves behind, which otherwise reaches the text encoder as it stands. |
 | `collapse_whitespace` | `BOOLEAN` | Yes | True |  | Whether runs of spaces, tabs and line breaks inside a tag become a single space. This is what removes the line breaks a multi-line prompt box leaves in the middle of a tag. |
-| `sort` | `COMBO` | Yes |  | `none`, `a-z`, `z-a`, `shortest first`, `longest first` | How the surviving tags are ordered. `none` keeps the order they were written in, which is what preserves the weight early tags carry in most encoders. The alphabetical orders make two prompts comparable by eye; `longest first` puts the descriptive phrases ahead of the single words. |
+| `sort` | `COMBO` | Yes |  | `none`, `a-z`, `z-a`, `shortest first`, `longest first` | How the surviving tags are ordered. `none` = as written, keeping the weight early tags carry in most encoders; `a-z` and `z-a` = alphabetical, for comparing prompts by eye; `longest first` = phrases ahead of single words; `shortest first` = the reverse. |
 | `limit` | `INT` | Yes | 0 |  | Keep at most this many tags, counted after everything else has run. 0 keeps all of them. Useful for trimming a caption model's output to the few tags worth keeping. |
 
 **Outputs**
@@ -11595,7 +11683,7 @@ Split a prompt into tags, drop the duplicates and the empty ones, optionally sor
 |---|---|---|
 | `text` | `STRING` | The tidied prompt, joined back up with join_with. |
 | `tags` | `ARRAY` | The surviving tags as one LIST, for Text List Get and the other list nodes. |
-| `tag_strings` | `STRING` | The same tags as a STRING list, so a node reading this runs once per tag, one render per tag, for instance. A prompt that tidies down to no tags leaves nothing to run on, so the nodes reading this socket stop and say so; the text output is still delivered, since an empty prompt is a valid one. |
+| `tag_strings` | `STRING` | The same tags as a STRING list, so a node reading this runs once per tag, such as one render per tag. A prompt that tidies down to no tags stops the nodes reading this socket; the text output is still delivered. |
 | `count` | `INT` | How many tags survived. |
 | `removed` | `INT` | How many entries the tidy-up took out, counting duplicates, empties and anything past the limit. 0 means the prompt was already clean. |
 
@@ -11668,7 +11756,7 @@ Truncate up to four strings to a number of characters or words, keeping either t
 |---|---|---|---|---|---|
 | `truncate_by` | `COMBO` | Yes |  | `characters`, `words` | What truncate_to counts. `characters` counts single characters, spaces included. `words` counts whitespace-separated words and rejoins them with one space each, so line breaks and runs of spaces in the text collapse. |
 | `truncate_from` | `COMBO` | Yes |  | `end`, `beginning` | Which end of the text is kept. `end` keeps the tail and throws the start away, so 'a long prompt' truncated to 6 characters becomes 'prompt'. `beginning` keeps the head, giving 'a long'. |
-| `truncate_to` | `INT` | Yes | 10 |  | How much to keep, counted in characters or words. A negative value measures what to remove instead: with truncate_from `end`, -10 keeps everything except the last 10, and with `beginning`, -10 keeps only the last 10. Zero with `end` keeps everything, and zero with `beginning` empties the text. |
+| `truncate_to` | `INT` | Yes | 10 |  | How much to keep, in characters or words. A negative value counts what to remove: -10 with `end` keeps all but the last 10; with `beginning`, only the last 10. 0 with `end` keeps everything; with `beginning`, nothing. |
 | `text` | `STRING` | Yes |  |  | First text to shorten; STRING. Cut per truncate_by, truncate_from and truncate_to; leaves on TEXT. |
 | `text_b` | `STRING` | No |  |  | Second text; STRING. Same settings, leaves on TEXT_B. |
 | `text_c` | `STRING` | No |  |  | Third text; STRING. Same settings, leaves on TEXT_C. |
@@ -11793,12 +11881,12 @@ Expand __terms__, <a\|b\|c> groups and $\|phrase\|$ variables and return the fin
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `text` | `STRING` | Yes |  |  | The prompt, in any of three markups. __term__ draws a phrase from the terminology pantry or a line from a wildcard file; <a\|b\|c> picks one of the alternatives; $\|a stormy sky\|$ captures the phrase as $1 so it can be repeated by number later in the prompt. |
-| `mode` | `COMBO` | Yes |  | `Noodle Soup Prompts`, `Wildcards`, `none` | What __terms__ are replaced with. `Noodle Soup Prompts` draws from the shared terminology pantry, downloaded once and then cached. `Wildcards` draws a random line from the matching file in the wildcards directory, where a subfolder is part of the name, so __animals/birds__ reads animals/birds.txt. `none` leaves __terms__ alone, for a prompt that only uses the groups and variables below. |
+| `text` | `STRING` | Yes |  |  | The prompt, in any of three markups: __term__ = a phrase from the terminology pantry or a line from a wildcard file; <a\|b\|c> = one of the alternatives; $\|a stormy sky\|$ = a phrase captured as $1 to repeat later. |
+| `mode` | `COMBO` | Yes |  | `Noodle Soup Prompts`, `Wildcards`, `none` | What __terms__ are replaced with. `none` = left alone; `Wildcards` = a random line from the matching file in the wildcards directory, so __animals/birds__ reads animals/birds.txt; `Noodle Soup Prompts` = a phrase from the shared terminology pantry, downloaded once. |
 | `noodle_key` | `STRING` | Yes | __ |  | The marker put either side of a term to flag it for replacement. With the default '__', __animals__ is replaced and plain animals is not. |
-| `seed` | `INT` | Yes | 0 |  | Which words get drawn. Any value other than 0 makes the whole parse repeatable, so the same seed and the same prompt always give the same text. 0 is the exception the term draw treats as unseeded, so __terms__ come out different every run while the <a\|b\|c> groups stay fixed. |
+| `seed` | `INT` | Yes | 0 |  | Which words get drawn. 0 = __terms__ differ every run while <a\|b\|c> groups stay fixed; any other value = the same seed and prompt always give the same text. |
 | `dynamic_prompts` | `BOOLEAN` | Yes | True |  | Whether <a\|b\|c> groups are resolved to one of their options. Turn it off to keep the brackets in the text, which is what a prompt being passed on to another parser needs. |
-| `prompt_variables` | `BOOLEAN` | Yes | True |  | Whether $\|phrase\|$ captures are expanded. A capture is numbered in the order it appears and replaced by $1, $2 and so on, and every reference to that number anywhere in the prompt then becomes the phrase, which is how one long description is written once and repeated. |
+| `prompt_variables` | `BOOLEAN` | Yes | True |  | Whether $\|phrase\|$ captures are expanded. Each capture is numbered $1, $2 and so on in order, and every reference to that number becomes the phrase, so one long description is written once and repeated. |
 
 **Outputs**
 
@@ -11848,7 +11936,7 @@ Replace __terms__ in a prompt with random Noodle Soup Prompts terminology, or wi
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `mode` | `COMBO` | Yes |  | `Noodle Soup Prompts`, `Wildcards` | Where the replacements come from. `Noodle Soup Prompts` draws from the shared terminology pantry, a published list of subjects, styles and materials that is downloaded once and then cached. `Wildcards` draws one random line from the matching text file in the wildcards directory, where a subfolder is part of the name: __animals/birds__ reads animals/birds.txt. |
+| `mode` | `COMBO` | Yes |  | `Noodle Soup Prompts`, `Wildcards` | Where the replacements come from. `Wildcards` = one random line from the matching file in the wildcards directory, so __animals/birds__ reads animals/birds.txt; `Noodle Soup Prompts` = the shared pantry of subjects, styles and materials, downloaded once and cached. |
 | `noodle_key` | `STRING` | Yes | __ |  | The marker put either side of a term to flag it for replacement. With the default '__', __animals__ is replaced and plain animals is not. |
 | `seed` | `INT` | Yes | 0 |  | Which terms get drawn. Any value other than 0 makes the draw repeatable, so the same seed and the same prompt always give the same words. 0 draws differently every run and cannot be reproduced. |
 | `text` | `STRING` | Yes |  |  | Prompt with __terms__ to expand; STRING. Each occurrence is drawn separately. Eg: a __animals__ in a __location__ |
@@ -11867,7 +11955,7 @@ Replace __terms__ in a prompt with random Noodle Soup Prompts terminology, or wi
 <details>
 <summary><b>Text Compare</b></summary>
 
-Compare two strings. Both texts pass through unchanged, alongside an exact equality flag, a similarity or difference score, and the words that score was built from. `similarity` scores 1.0 for identical text and falls toward 0.0 as the two diverge, and COMPARISON_TEXT lists the words they have in common. `difference` lists the parts of text_a that changed and scores on a separate scale that is not capped at 1.0, where identical text comes out a little over 1.0. tolerance only widens the words collected in `similarity` mode: it never changes any score, `difference` mode ignores it, and a setting between 0.0 and 1.0 behaves like 0.0.
+Compare two strings, passing both through unchanged with an exact-match flag, a score, and the words behind that score. `similarity` scores 1.0 for identical text, falling toward 0.0, and lists the shared words; `difference` lists the parts of text_a that changed, on its own scale that can pass 1.0.
 
 | | |
 |---|---|
@@ -11880,7 +11968,7 @@ Compare two strings. Both texts pass through unchanged, alongside an exact equal
 | `text_a` | `STRING` | Yes |  |  | First text to compare; STRING. Empty boxes count as identical. |
 | `text_b` | `STRING` | Yes |  |  | Second text to compare; STRING. Both pass through unchanged on TEXT_A_PASS and TEXT_B_PASS. |
 | `mode` | `COMBO` | Yes |  | `similarity`, `difference` | Which measure to report. `similarity` scores how alike the two texts are and lists the words they share; `difference` lists the parts of text_a that changed. |
-| `tolerance` | `FLOAT` | Yes | 0.0 |  | How loosely a word counts as shared in COMPARISON_TEXT. 0.0 keeps only words appearing in both texts; 1.0 also keeps words one character apart, so 'colour' matches 'color'. |
+| `tolerance` | `FLOAT` | Yes | 0.0 |  | How loosely a word counts as shared in COMPARISON_TEXT, in `similarity` mode only; no score changes. 0.0 to 0.99 = only words in both texts; 1.0 = also words one character apart, so 'colour' matches 'color'. |
 
 **Outputs**
 
@@ -11939,19 +12027,19 @@ Replace every regular-expression match in the text and report how many replaceme
 | `text` | `STRING` | Yes |  |  | Text to search; STRING, as `a tabby cat`. Every filled find box is applied in one pass over it. |
 | `find` | `STRING,ARRAY` | Yes |  |  | A regular expression, so 'cat\|dog' matches either word and '\s+' matches whitespace. A backslash makes a special character literal. Left empty, nothing is replaced. |
 | `replace` | `STRING,ARRAY` | Yes |  |  | What each match becomes. Leave it empty to delete the matches. \1 and \2 stand for the first and second parenthesised group of the pattern, and a literal backslash has to be doubled. |
-| `find_2` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_2` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_2` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
-| `find_3` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_3` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_3` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
-| `find_4` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_4` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_4` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
-| `find_5` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_5` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_5` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
-| `find_6` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_6` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_6` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
-| `find_7` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_7` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_7` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
-| `find_8` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same single pass as the first. Every pattern is tried against the text as it arrived, so a replacement is never matched again by a later pattern and two patterns can swap. Where two patterns match at the same place, the earlier box wins. |
+| `find_8` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_8` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
 
 **Outputs**
@@ -12104,7 +12192,7 @@ Save a positive and negative prompt into the style library under a name, so Prom
 <details>
 <summary><b>Prompt Styles Export</b></summary>
 
-Write the whole style library out to a file, to share it or back it up. A name ending in .csv writes AUTOMATIC1111's name, prompt and negative_prompt columns; any other name writes JSON. Prompt Styles Import reads either back. A file already at that name is replaced.
+Write the whole style library out to a file, to share it or back it up, replacing any file already at that name. A name ending in .csv writes AUTOMATIC1111's name, prompt and negative_prompt columns; any other name writes JSON. Prompt Styles Import reads either back.
 
 | | |
 |---|---|
@@ -12215,7 +12303,7 @@ Write the stored Noodle Soup Prompts terminology out as a JSON file, to share it
 <details>
 <summary><b>Noodle Soup Pantry Import</b></summary>
 
-Read a Noodle Soup Prompts pantry file into the stored pantry, so a terminology list shared as a file can be used here. The file is a JSON object of terminology name to a list of words, which is what Noodle Soup Pantry Export writes. The file itself is left where it is, and everything read in counts as yours, so a refresh never removes it.
+Read a Noodle Soup Prompts pantry file into the stored pantry, so a terminology list shared as a file can be used here. The file is a JSON object of terminology names to word lists, as Noodle Soup Pantry Export writes; everything read in counts as yours and survives a refresh.
 
 | | |
 |---|---|
@@ -12243,7 +12331,7 @@ Read a Noodle Soup Prompts pantry file into the stored pantry, so a terminology 
 <details>
 <summary><b>Noodle Soup Pick</b></summary>
 
-Choose words out of the Noodle Soup Prompts pantry and answer them as a list, as text and as a count. The browser panel ticks them; the picked box holds one pick per line either way. With nothing picked the terminology names go out instead, which is how the pantry is read. The yours figure counts what was added from a node or brought in from a file, apart from what the published pantry supplied.
+Choose words out of the Noodle Soup Prompts pantry, ticked in the panel or typed one per line, and hand them on as a list, as text and as a count. With nothing picked the terminology names go out instead. The yours figure counts what came from a node or a file, not the published pantry.
 
 | | |
 |---|---|
@@ -12254,7 +12342,7 @@ Choose words out of the Noodle Soup Prompts pantry and answer them as a list, as
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `picked` | `STRING` | Yes |  |  | One pick per line, as `term: word`. `artist: Greg Rutkowski` takes one word, spelled as the pantry holds it; `artist: *` takes the whole terminology, and so does a line naming one on its own. Blank and `#` lines are ignored, a word named twice goes out once, and line order is output order. |
+| `picked` | `STRING` | Yes |  |  | One pick per line: `artist: Greg Rutkowski` = one word, spelled as the pantry holds it; `artist: *` or `artist` alone = the whole terminology. Blank and `#` lines are ignored, repeats go out once, and line order is output order. |
 | `limit` | `INT` | Yes | 0 |  | How many words go out at most, counting from the first. 0 = every one; 50 = the first 50. `artist` alone holds over 2000. |
 | `term` | `STRING` | No |  |  | One terminology taken whole, added to what is picked above, for wiring the term output of Noodle Soup Term Edit straight in. Eg: `my-animals`. Empty takes only what is picked. |
 
@@ -12285,7 +12373,7 @@ Add words to a Noodle Soup Prompts terminology, take words out of one, or make a
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `term` | `STRING` | Yes |  |  | The terminology name, written without the __ markers. Eg: my-animals, which a prompt then draws from as __my-animals__. A name the pantry does not have yet is created. |
-| `action` | `COMBO` | Yes |  | `add entries`, `remove entries`, `replace entries`, `create the term`, `delete the term` | `add entries` stores the words below that the term does not already hold; `remove entries` takes them out and no refresh puts them back; `replace entries` leaves the term holding exactly what is typed; `create the term` makes an empty one; `delete the term` removes it and everything in it. |
+| `action` | `COMBO` | Yes |  | `add entries`, `remove entries`, `replace entries`, `create the term`, `delete the term` | `add entries` = store the new words below; `remove entries` = take them out for good; `replace entries` = hold exactly what is typed; `create the term` = make an empty one; `delete the term` = remove it and all its words. |
 | `entries` | `STRING` | Yes |  |  | The words to add, remove or store, one per line. Blank lines are skipped. Eg: a line reading 'red fox asleep in long grass'. Ignored by `create the term` and `delete the term`. |
 
 **Outputs**
@@ -12326,7 +12414,7 @@ Define a single custom token from a linked name and a linked value, for Text Par
 <details>
 <summary><b>Text Add Tokens</b></summary>
 
-Define custom tokens, one 'name: value' pair per line, for Text Parse Tokens and every other node that expands [tokens]. Only the first colon splits a line, so a value may itself contain colons and drive letters, and a line with no colon, a blank one included, is skipped. The square brackets are convention: the name is matched exactly as written, so a name without them matches bare text anywhere in a prompt.
+Define custom tokens, one 'name: value' pair per line, for Text Parse Tokens and every other node that expands [tokens]. Only the first colon splits a line, and a line without one is skipped. The name is matched exactly as written, so the square brackets are a convention, not a requirement.
 
 | | |
 |---|---|
@@ -12416,8 +12504,8 @@ Bundle model, clip, vae, positive and negative onto one wire, along with any num
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `unpack_slot` | `INT` | Yes | 0 |  | Which extra comes out on the slot output, counted from 0 over the names in slot_names. A number past the end gives nothing rather than stopping the prompt, so a bus that has not been filled yet still runs. Chain another of these nodes to take a second extra off. |
-| `slots` | `COMFY_AUTOGROW_V3` | Yes |  |  | Extra values to put on the bus, named slot0, slot1 and so on. A slot replaces an extra of the same name already on the bus, so a value can be updated part way along a chain the way the five standard members can. Up to 16 slots. |
+| `unpack_slot` | `INT` | Yes | 0 |  | Which extra comes out on slot, counted from 0 over slot_names; past the end gives nothing. Chain another of these nodes to take a second extra off. |
+| `slots` | `COMFY_AUTOGROW_V3` | Yes |  |  | Extra values to put on the bus, named slot0, slot1 and so on. A slot replaces an extra of the same name already on the bus, so it can be updated part way along a chain. Up to 16 slots. |
 | `bus` | `BUS` | No |  |  | An incoming bundle from either bus node. Its five members and any extras it carries pass through unless something here replaces them. Leave it disconnected on the first node of a chain. |
 | `model` | `MODEL` | No |  |  | Diffusion model to put on the bus. Connected, it replaces whatever model arrived on the bus input; disconnected, the bus keeps its own. Unlike Bus Node, this node does not insist on one being present. |
 | `clip` | `CLIP` | No |  |  | Text encoder to put on the bus. Connected, it replaces whatever clip arrived on the bus input; disconnected, the bus keeps its own. |
@@ -12445,7 +12533,7 @@ Bundle model, clip, vae, positive and negative onto one wire, along with any num
 <details>
 <summary><b>Display Any</b></summary>
 
-Write whatever is connected onto the node, the value itself filling the panel and what it is sitting under it. Text and numbers appear as they are, a list or dictionary as the data it holds, and an image, mask or latent as its shape, type, device and value range. A socket carrying several values gives each one a box of its own, holding that value and nothing else, so any of them can be selected and copied as it stands. The value passes through unchanged, so the node can be dropped into a chain rather than hung off the side of one.
+Show whatever is connected on the node: text and numbers as they are, a list or dictionary as its data, and an image, mask or latent as its shape, type, device and value range. Several values on one socket each get a box to select and copy. The value passes through unchanged.
 
 | | |
 |---|---|
@@ -12482,7 +12570,7 @@ List every group in the graph, each with a switch that mutes or bypasses every n
 <details>
 <summary><b>Free Memory</b></summary>
 
-Hand memory back to the graphics card partway through a run. ComfyUI can only be asked to free memory from its own menu, which a running graph cannot reach, so a chain that loads, upscales and then encodes video can run out on the last stage while the first two are still resident. Wire the stage that has finished into passthrough and the stage that needs the room after it, and the freeing happens between the two. Reports what the device held before and after, so the effect is a number rather than a guess. It frees where something upstream ran, leaving a graph that has not changed on the cache; always_run frees on every queue instead. Harmless on a machine with no graphics card.
+Free graphics card memory partway through a run, between a stage that has finished and one that needs the room. Unloads models, empties the cache and collects garbage, and reports what the device held before and after. Harmless on a machine with no graphics card.
 
 | | |
 |---|---|
@@ -12494,11 +12582,11 @@ Hand memory back to the graphics card partway through a run. ComfyUI can only be
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `unload_models` | `BOOLEAN` | Yes | True |  | true hands every loaded checkpoint, VAE, CLIP and ControlNet back; false leaves them where they are. This is what frees the most. They load again by themselves when a node next asks for one, which costs the seconds that load took. |
-| `empty_cache` | `BOOLEAN` | Yes | True |  | true gives the driver back the blocks torch has reserved and is not using. Torch reuses those blocks itself, so this seldom changes what the next sampler can fit; reach for it when another program, or a library such as OpenCV, needs room on the card. |
+| `empty_cache` | `BOOLEAN` | Yes | True |  | `true` = reserved but unused card memory goes back to the driver; `false` = kept. It seldom changes what the next sampler fits; use it when another program needs room on the card. |
 | `collect_garbage` | `BOOLEAN` | Yes | True |  | true runs Python's collector before the cache is emptied, so anything the graph has finished with is actually handed back rather than only marked unused. It costs a few milliseconds and makes unload_models worth more. |
-| `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything at all: an image, a model, a latent, text. It comes back out unchanged once the freeing is done, which is what pins the free to a point in the chain instead of leaving it to happen whenever. Unwired, the node frees on its own and wants always_run. |
+| `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything: an image, a model, a latent, text. It comes back out unchanged once memory is freed, pinning the free to this point in the chain. Unwired, the node needs always_run. |
 | `release_fraction` | `FLOAT` | No | 0.0 |  | Move weights to system memory when less than this share of the card is free, as `0.5` before a VAE decode. `0` does nothing, and so does any share already free. The weights come back from memory rather than from disk, unlike unload_models. |
-| `always_run` | `BOOLEAN` | No | False |  | `false` = free only where something upstream ran, leaving an unchanged graph served from cache; `true` = free on every prompt, which also runs everything wired after passthrough again. A node with nothing wired into passthrough needs `true`, or it frees once and is served from cache from then on. |
+| `always_run` | `BOOLEAN` | No | False |  | `false` = free only where something upstream ran, an unchanged graph coming from cache; `true` = free on every prompt, rerunning everything after passthrough. With nothing wired into passthrough, use `true` or it frees only once. |
 
 **Outputs**
 
@@ -12555,7 +12643,7 @@ Convert a CSS hsl() or hsla() colour string into a hex colour string.
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `hsl_color` | `STRING` | Yes | hsl(0, 100%, 50%) |  | The colour to convert, as a CSS string: hue in degrees 0-359, then saturation and lightness as percentages, e.g. 'hsl(0, 100%, 50%)' for pure red. 'hsla(0, 100%, 50%, 0.5)' adds opacity from 0.0 to 1.0. The percent signs may be left out. A hue of exactly 360 falls in no sector and comes out black; use 0 for red. |
+| `hsl_color` | `STRING` | Yes | hsl(0, 100%, 50%) |  | A CSS colour: hue 0 to 359 degrees, then saturation and lightness as percentages. 'hsl(0, 100%, 50%)' = pure red; 'hsla(0, 100%, 50%, 0.5)' adds opacity, 0.0 to 1.0. Percent signs are optional. A hue of 360 comes out black; use 0. |
 
 **Outputs**
 
@@ -12569,7 +12657,7 @@ Convert a CSS hsl() or hsla() colour string into a hex colour string.
 <details>
 <summary><b>Model Info</b></summary>
 
-Say which model is on a wire and how big it is. Answers the class behind the loader, as `SDXL` or `AutoencoderKL`, the precision the weights are held at, the device they run on, and the parameter count both as a whole number and in millions. Takes MODEL, VAE, CLIP, CLIP_VISION, CONTROL_NET, UPSCALE_MODEL, STYLE_MODEL and the other loader types on one socket, reads them without loading or changing anything, and answers empty text for a fact it cannot reach rather than stopping the run.
+Say which model is on a wire and how big it is: its class, as `SDXL` or `AutoencoderKL`, the precision and device of its weights, and its parameter count. Takes MODEL, VAE, CLIP, CONTROL_NET and the other loader types on one socket, changes nothing, and answers empty text for a fact it cannot reach.
 
 | | |
 |---|---|
@@ -12598,7 +12686,7 @@ Say which model is on a wire and how big it is. Answers the class behind the loa
 <details>
 <summary><b>Sleep</b></summary>
 
-Wait a set number of seconds, then hand whatever is wired in straight back out. Put it in front of anything that needs pacing: a web service with a rate limit, a folder another program is still writing to, a loop that would otherwise hammer a device. Cancel stops the wait within a twentieth of a second. The wait is taken on every queue rather than cached, so everything below it runs again as well.
+Wait a set number of seconds, then hand whatever is wired in straight back out, to pace a rate-limited web service, a folder still being written or a busy loop. It runs on every queue, so everything below it runs again too; Cancel stops the wait within a twentieth of a second.
 
 | | |
 |---|---|
@@ -12609,7 +12697,7 @@ Wait a set number of seconds, then hand whatever is wired in straight back out. 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `seconds` | `FLOAT` | Yes | 1.0 |  | How long to wait. 0 = no wait; 0.5 = half a second; 60 = a minute; 3600 = an hour, the most on offer. Match it to the limit being respected, such as 1.2 for a service allowing 50 calls a minute. |
-| `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything at all: an image, a model, text, a number. It comes back out unchanged once the wait is over, which is what puts the delay in the middle of a chain rather than off to one side. Leave it unwired to wait on its own. |
+| `passthrough` | `COMFY_MATCHTYPE_V3` | No |  |  | Anything: an image, a model, text, a number. It comes back out unchanged once the wait is over, putting the delay in the middle of a chain. Leave it unwired to wait on its own. |
 
 **Outputs**
 
@@ -12624,7 +12712,7 @@ Wait a set number of seconds, then hand whatever is wired in straight back out. 
 <details>
 <summary><b>Widget to String</b></summary>
 
-Read one widget off another node in the graph and answer what it holds as text, so a filename, a caption or a log line can carry the seed, the sampler name, the steps or a prompt from wherever it is actually set. Nothing is wired to the node being read: give its id, the name of the widget, and optionally text to answer when either cannot be found.
+Read one widget off another node in the graph as text, so a filename, caption or log line can carry the seed, sampler, steps or prompt from where it is set. Give the node's id and the widget's name; nothing is wired to it.
 
 | | |
 |---|---|
@@ -12636,7 +12724,7 @@ Read one widget off another node in the graph and answer what it holds as text, 
 |---|---|---|---|---|---|
 | `node_id` | `STRING` | Yes |  |  | The id of the node to read, as ComfyUI draws it on the node's badge: 12. Turn the badge on under Settings if no number is showing. Inside a subgraph the local number is enough, and a full path such as 12:3 works too. |
 | `widget_name` | `STRING` | Yes |  |  | The widget to read, spelled exactly as its node spells it: seed, steps, cfg, sampler_name, ckpt_name, text. An input filled by a wire holds no widget value, and asking for one says which node feeds it. |
-| `default` | `STRING` | No |  |  | Text to answer when the node or the widget cannot be found, which keeps the prompt running and sets found to false. Left empty, a miss stops the prompt with a message naming what was looked for and which nodes do carry a widget of that name. |
+| `default` | `STRING` | No |  |  | Text to answer when the node or widget cannot be found, keeping the prompt running with found `false`. Empty = a miss stops the prompt, naming what was looked for and which nodes carry that widget. |
 
 **Outputs**
 
@@ -12665,10 +12753,10 @@ Run a workflow saved in app mode as a single node. Its exposed inputs become val
 |---|---|---|---|---|---|
 | `app` | `COMBO` | Yes |  |  | Which saved app workflow to run; a name ending .app.json from the workflows directory, such as upscale.app.json. |
 | `overrides` | `STRING` | Yes | {} |  | Values for the workflow's exposed inputs, as JSON keyed on the input name: {"steps": 30, "text": "a red car"}. Anything left out keeps the value the workflow was saved with, and the widgets below are sent through here. |
-| `input_1` | `*` | No |  |  | Value for the first input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to the input it feeds, such as red_offset, and narrows it to that input's own type. An input that names a file takes an IMAGE here instead, and the file is not read. |
-| `input_2` | `*` | No |  |  | Value for the second input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to the input it feeds, such as red_offset, and narrows it to that input's own type. An input that names a file takes an IMAGE here instead, and the file is not read. |
-| `input_3` | `*` | No |  |  | Value for the third input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to the input it feeds, such as red_offset, and narrows it to that input's own type. An input that names a file takes an IMAGE here instead, and the file is not read. |
-| `input_4` | `*` | No |  |  | Value for the fourth input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to the input it feeds, such as red_offset, and narrows it to that input's own type. An input that names a file takes an IMAGE here instead, and the file is not read. |
+| `input_1` | `*` | No |  |  | Value for the first input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to that input, such as red_offset, and narrows its type to match. A file input takes an IMAGE here instead of reading the file. |
+| `input_2` | `*` | No |  |  | Value for the second input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to that input, such as red_offset, and narrows its type to match. A file input takes an IMAGE here instead of reading the file. |
+| `input_3` | `*` | No |  |  | Value for the third input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to that input, such as red_offset, and narrows its type to match. A file input takes an IMAGE here instead of reading the file. |
+| `input_4` | `*` | No |  |  | Value for the fourth input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to that input, such as red_offset, and narrows its type to match. A file input takes an IMAGE here instead of reading the file. |
 
 **Outputs**
 
@@ -12694,7 +12782,7 @@ Run a workflow saved in app mode as a single node. Its exposed inputs become val
 <details>
 <summary><b>Video Super Resolution (PS-SR)</b></summary>
 
-Raise a video's resolution with PS-SR, which resamples to the target size and then puts detail back with a diffusion pass, twice: once for a steady result and once for a sharp one, blended by frequency. Weights are placed by hand and never downloaded. Long clips are covered by sliding windows, so memory depends on the window rather than the length.
+Raise a video's resolution and restore the fine detail a plain resize cannot, handing on the frames at the new size. Its PS-SR weights are placed by hand, never downloaded. Long clips run in overlapping windows, so memory depends on window_frames rather than the clip's length.
 
 | | |
 |---|---|
@@ -12738,7 +12826,7 @@ Raise a video's resolution with PS-SR, which resamples to the target size and th
 <details>
 <summary><b>Cache Node</b></summary>
 
-Deprecated. Nothing replaces it directly: it writes a latent, image batch or conditioning to a file between prompts, and Load Cache reads it back. Off by default: enable legacy.cache to load it. Each suffix defaults to a fresh random number followed by '_cache', so two Cache Nodes do not overwrite each other; set one by hand to write a predictable name a Load Cache node can be pointed at.
+Deprecated, with no direct replacement. Writes a latent, image batch or conditioning to a file between prompts for Load Cache to read back. Enable legacy.cache to load it; set a suffix by hand to give Load Cache a predictable name.
 
 | | |
 |---|---|
@@ -12773,7 +12861,7 @@ Deprecated. Nothing replaces it directly: it writes a latent, image batch or con
 <details>
 <summary><b>Load Cache</b></summary>
 
-Deprecated. Nothing replaces it directly: it reads back a latent, image batch or conditioning that Cache Node wrote to a file in an earlier prompt. Off by default: enable legacy.cache to load it. A cache file holds tensor data only, and one holding anything else is refused.
+Deprecated, with no direct replacement. Reads back a latent, image batch or conditioning that Cache Node wrote in an earlier prompt; a file holding anything but tensor data is refused. Enable legacy.cache to load it.
 
 | | |
 |---|---|
@@ -12810,7 +12898,7 @@ Deprecated. Nothing replaces it directly: it reads back a latent, image batch or
 <details>
 <summary><b>Export API</b></summary>
 
-Deprecated: use ComfyUI's own Workflow > Export (API) menu item instead, which saves the same document without a node in the graph. Writes the prompt API JSON of the running workflow to a numbered file. The folder has to be one this pack may write to: ComfyUI's output and temp folders, the pack's own folder, or a folder listed under paths.allow_write in config.yaml.
+Deprecated: use ComfyUI's Workflow > Export (API) menu item instead. Writes the running workflow's prompt API JSON to a numbered file in a folder the pack may write to.
 
 | | |
 |---|---|
@@ -12904,7 +12992,7 @@ Deprecated: use CLIPSeg Masking, which does the same job in one pass and also re
 <details>
 <summary><b>MiDaS Mask Image</b></summary>
 
-Deprecated: use Image Remove Background, CLIPSeg Masking or SAM Image Mask instead. Splits an image by distance from the camera using a MiDaS depth map, keeping the near or the far half on transparency or on a flat colour, with the same split on a mask. Depth knows nothing about objects, so anything level with the kept half is kept with it and the edge comes out as a gradient rather than a cutline until threshold is on, which is why those three suit a cutout better. It still fits fading a background by distance, matting in fog or driving a depth composite. Enable features.midas to load this node.
+Deprecated: use Image Remove Background, CLIPSeg Masking or SAM Image Mask for cutouts. Keeps the near or far part of an image by MiDaS depth, on transparency or a flat colour, with a matching mask, for fading a background by distance or matting in fog. Needs features.midas enabled.
 
 | | |
 |---|---|
@@ -12998,8 +13086,8 @@ Load the BLIP captioning and visual question answering models for BLIP Analyze I
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `blip_model` | `STRING` | Yes | Salesforce/blip-image-captioning-base |  | Hugging Face repository of the captioning model, used by BLIP Analyze Image in caption mode. 'Salesforce/blip-image-captioning-large' is the heavier, more detailed alternative to the default. A repository name is all this takes: a folder path is refused, and a local checkpoint is picked up from ComfyUI's models directory. |
-| `vqa_model_id` | `STRING` | Yes | Salesforce/blip-vqa-base |  | Hugging Face repository of the question answering model, used by BLIP Analyze Image in interrogate mode. It has to be a BLIP VQA model; a captioning model cannot answer a question. A repository name is all this takes: a folder path is refused, and a local checkpoint is picked up from ComfyUI's models directory. |
+| `blip_model` | `STRING` | Yes | Salesforce/blip-image-captioning-base |  | Hugging Face repository of the captioning model for caption mode. 'Salesforce/blip-image-captioning-large' = heavier and more detailed than the default. Repository names only: a folder path is refused, and a local checkpoint in ComfyUI's models directory is picked up. |
+| `vqa_model_id` | `STRING` | Yes | Salesforce/blip-vqa-base |  | Hugging Face repository of the question answering model for interrogate mode; it must be a BLIP VQA model. Repository names only: a folder path is refused, and a local checkpoint in ComfyUI's models directory is picked up. |
 | `device` | `COMBO` | Yes |  | `cuda`, `cpu` | Where the models are held. `cuda` is faster and costs VRAM for as long as they stay loaded; `cpu` keeps the GPU free. `cuda` on a machine with no CUDA device falls back to the CPU. |
 
 **Outputs**
@@ -13139,7 +13227,7 @@ Load a CLIPSeg model for the CLIPSeg masking nodes, which turn a text descriptio
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `STRING` | Yes | CIDAS/clipseg-rd64-refined |  | Hugging Face repository of the CLIPSeg model. The default is the refined 64-dimension model, which is the one CLIPSeg ships for general use; 'CIDAS/clipseg-rd16' is smaller and coarser. A repository name is all this takes: a folder path is refused, and a local checkpoint is picked up from ComfyUI's models directory. |
+| `model` | `STRING` | Yes | CIDAS/clipseg-rd64-refined |  | Hugging Face repository of the CLIPSeg model. 'CIDAS/clipseg-rd64-refined' = the general-use default; 'CIDAS/clipseg-rd16' = smaller and coarser. Repository names only: a folder path is refused, and a local checkpoint in ComfyUI's models directory is picked up. |
 
 **Outputs**
 
@@ -13226,7 +13314,7 @@ Load a diffusers-format model directory from models/diffusers and emit its name 
 <details>
 <summary><b>Camera Motion Trajectory from Images</b></summary>
 
-Move a virtual camera over a still picture and emit the result as a frame sequence: zoom, rotate, pan, tilt, dolly and fisheye, keyframed in JSON with easing between keys. Feed it a depth map and near parts of the scene move more than far ones, which turns a single image into a parallax shot ready for a video encoder or an image-to-video model. A keyframe takes any of zoom, center, angle, pan, tilt, dolly_strength, sphereize_strength and depth_strength, 'ease' on it shapes the run to the next keyframe, and 'loop': true wraps the last keyframe back round to the first. A property a later keyframe leaves out keeps moving at the '<name>_speed' the earlier one gave it.
+Move a virtual camera over a still picture and hand on the frames: zoom, rotate, pan, tilt, dolly and fisheye, keyframed in JSON with easing. With a depth map, near parts move more than far ones, turning one image into a parallax shot.
 
 | | |
 |---|---|
@@ -13239,13 +13327,13 @@ Move a virtual camera over a still picture and emit the result as a frame sequen
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The picture the camera moves over. A batch is read as source frames: when it holds exactly num_frames images each output frame uses its own, otherwise the batch is cycled. |
 | `num_frames` | `INT` | Yes | 60 |  | How many frames to render. At 24 frames per second, 60 frames is two and a half seconds. Keyframe numbers in the spec are held inside this range. |
-| `trajectory_spec` | `STRING` | Yes | {   "loop": false,   "default_ease": "linear",   "keyframes": [     {       "frame": 0,       "zoom": 1.0,       "center": [0.5, 0.5],       "angle": 0.0,       "pan": [0.0, 0.0],       "tilt": [0.0, 0.0],       "dolly_strength": 0.0,       "dolly_radius": [0.3, 0.3],       "dolly_feather": 0.5,       "dolly_mode": "radial",       "sphereize_strength": 0.0,       "sphereize_radius": [0.4, 0.4],       "sphereize_feather": 0.5,       "depth_strength": 0.0,       "ease": "ease_in_out"     },     {       "frame": 30,       "zoom": 1.5,       "center": [0.5, 0.5],       "angle": 90.0,       "pan": [0.0, 0.0],       "tilt": [0.0, 0.15],       "dolly_strength": 0.3,       "dolly_radius": [0.35, 0.35],       "dolly_feather": 0.5,       "dolly_mode": "radial",       "sphereize_strength": 0.0,       "sphereize_radius": [0.4, 0.4],       "sphereize_feather": 0.5,       "depth_strength": 0.0,       "ease": "ease_in_out"     },     {       "frame": 59,       "zoom": 2.0,       "center": [0.6, 0.4],       "angle": 360.0,       "pan": [0.1, 0.0],       "tilt": [0.0, 0.3],       "dolly_strength": 0.6,       "dolly_radius": [0.4, 0.4],       "dolly_feather": 0.5,       "dolly_mode": "radial",       "sphereize_strength": 0.0,       "sphereize_radius": [0.4, 0.4],       "sphereize_feather": 0.5,       "depth_strength": 0.0,       "ease": "linear"     }   ] } |  | The move, as JSON: a 'keyframes' list, each entry carrying a 'frame' number and the camera properties it sets there. Empty text holds the picture still. |
+| `trajectory_spec` | `STRING` | Yes | {   "loop": false,   "default_ease": "linear",   "keyframes": [     {       "frame": 0,       "zoom": 1.0,       "center": [0.5, 0.5],       "angle": 0.0,       "pan": [0.0, 0.0],       "tilt": [0.0, 0.0],       "dolly_strength": 0.0,       "dolly_radius": [0.3, 0.3],       "dolly_feather": 0.5,       "dolly_mode": "radial",       "sphereize_strength": 0.0,       "sphereize_radius": [0.4, 0.4],       "sphereize_feather": 0.5,       "depth_strength": 0.0,       "ease": "ease_in_out"     },     {       "frame": 30,       "zoom": 1.5,       "center": [0.5, 0.5],       "angle": 90.0,       "pan": [0.0, 0.0],       "tilt": [0.0, 0.15],       "dolly_strength": 0.3,       "dolly_radius": [0.35, 0.35],       "dolly_feather": 0.5,       "dolly_mode": "radial",       "sphereize_strength": 0.0,       "sphereize_radius": [0.4, 0.4],       "sphereize_feather": 0.5,       "depth_strength": 0.0,       "ease": "ease_in_out"     },     {       "frame": 59,       "zoom": 2.0,       "center": [0.6, 0.4],       "angle": 360.0,       "pan": [0.1, 0.0],       "tilt": [0.0, 0.3],       "dolly_strength": 0.6,       "dolly_radius": [0.4, 0.4],       "dolly_feather": 0.5,       "dolly_mode": "radial",       "sphereize_strength": 0.0,       "sphereize_radius": [0.4, 0.4],       "sphereize_feather": 0.5,       "depth_strength": 0.0,       "ease": "linear"     }   ] } |  | The move as JSON: a 'keyframes' list, each with a 'frame' and any of zoom, center, angle, pan, tilt, dolly_strength, sphereize_strength, depth_strength and 'ease'. 'loop': true wraps back to the first. An omitted property keeps moving at its '<name>_speed'. Empty holds still. |
 | `edge_mode` | `COMBO` | Yes | mirror | `border`, `mirror`, `wrap` | What fills the frame when the camera looks past the edge of the picture. `mirror` reflects the picture back, which is the least visible; `border` smears the edge pixels; `wrap` brings the opposite edge round, which suits a seamless texture. |
 | `enable_camera_shake` | `BOOLEAN` | Yes | False |  | Whether to add a handheld wobble on top of the keyframed move. Off gives a locked-off, tripod-steady result; on makes the shot feel operated by a person. |
 | `shake_position_amplitude` | `FLOAT` | Yes | 0.03 |  | How far the wobble drifts, as a share of the frame. 0.01 is a barely visible breath, 0.03 a natural handheld hold, 0.2 a running shot. Ignored while enable_camera_shake is off. |
 | `shake_rotation_amplitude` | `FLOAT` | Yes | 1.5 |  | How far the wobble rolls, in degrees. 1.5 reads as a steady hand, 10 as an unsteady one. Set to 0 for drift without any roll. Ignored while enable_camera_shake is off. |
 | `shake_seed` | `INT` | Yes | 0 |  | Seed for the wobble. The same seed always produces the same wobble, so a shot can be re-rendered identically; change it to try another take. |
-| `depth_map` | `IMAGE` | No |  |  | Optional depth map, white near and black far, at any size. With one connected, 'depth_strength' in the spec holds the far parts of the scene back while the near parts move fully, which is what makes the shot read as parallax. Leave it unconnected for a flat move. |
+| `depth_map` | `IMAGE` | No |  |  | Optional depth map, white near and black far, at any size. 'depth_strength' in the spec then holds far parts back while near parts move fully, for parallax. Unconnected = a flat move. |
 
 **Outputs**
 
@@ -13276,7 +13364,7 @@ Encode one prompt per line, each tagged with the frame it takes effect on, into 
 | `clip` | `CLIP` | Yes |  |  | The CLIP model the prompts are encoded with. Use the one belonging to the checkpoint that will sample them. |
 | `token_normalization` | `COMBO` | Yes |  | `none`, `mean`, `length`, `length+mean` | How token weights are evened out before encoding. Read only when a pack registering BNK_CLIPTextEncodeAdvanced is installed; without one this setting has no effect at all. 'none' leaves the weights alone, 'mean' recentres them, 'length' scales by prompt length, 'length+mean' does both. |
 | `weight_interpretation` | `COMBO` | Yes |  | `comfy`, `A1111`, `compel`, `comfy++` | Which prompt weighting dialect the '(word:1.2)' syntax is read in. Read only when a pack registering BNK_CLIPTextEncodeAdvanced is installed; without one this setting has no effect and the prompt is read the way ComfyUI's own CLIP Text Encode reads it. |
-| `text` | `STRING` | Yes | 0:A portrait of a rosebud 5:A portrait of a blooming rosebud 10:A portrait of a blooming rose 15:A portrait of a rose |  | One prompt per line, each written as 'frame:prompt', for example '0:a rosebud'. The number is the loop the prompt takes over on, counting from zero, and it stays in force until the next numbered line. A line with no number in front of a colon is ignored. |
+| `text` | `STRING` | Yes | 0:A portrait of a rosebud 5:A portrait of a blooming rosebud 10:A portrait of a blooming rose 15:A portrait of a rose |  | One prompt per line as 'frame:prompt', such as '0:a rosebud'. The number is the loop it takes over on, counting from 0, and it holds until the next numbered line. Lines without a number are ignored. |
 
 **Outputs**
 
@@ -13304,7 +13392,7 @@ Encode one prompt per line and work out the frame each one takes over on, spread
 | `clip` | `CLIP` | Yes |  |  | The CLIP model the prompts are encoded with. Use the one belonging to the checkpoint that will sample them. |
 | `token_normalization` | `COMBO` | Yes |  | `none`, `mean`, `length`, `length+mean` | How token weights are evened out before encoding. Read only when a pack registering BNK_CLIPTextEncodeAdvanced is installed; without one this setting has no effect at all. 'none' leaves the weights alone, 'mean' recentres them, 'length' scales by prompt length, 'length+mean' does both. |
 | `weight_interpretation` | `COMBO` | Yes |  | `comfy`, `A1111`, `compel`, `comfy++` | Which prompt weighting dialect the '(word:1.2)' syntax is read in. Read only when a pack registering BNK_CLIPTextEncodeAdvanced is installed; without one this setting has no effect and the prompt is read the way ComfyUI's own CLIP Text Encode reads it. |
-| `cond_keyframes_type` | `COMBO` | Yes |  | `linear`, `sinus`, `sinus_inverted`, `half_sinus`, `half_sinus_inverted` | How the changeovers are spaced. `linear` gives every prompt an equal share of the run. The sinus shapes bunch them up at one end or the other, so the sequence lingers on the opening prompts and races through the rest, or the reverse, useful when the first shot needs to be held and the last few are only a flourish. |
+| `cond_keyframes_type` | `COMBO` | Yes |  | `linear`, `sinus`, `sinus_inverted`, `half_sinus`, `half_sinus_inverted` | How the changeovers are spaced: `linear` = an equal share of the run per prompt; the sinus shapes = bunched at one end, lingering on the opening prompts and racing through the rest, or the reverse. |
 | `frame_count` | `INT` | Yes | 100 |  | How long the whole run is, in frames. The changeovers are spread across this many, so at 100 frames and four prompts each one holds for about 25. |
 | `text` | `STRING` | Yes | A portrait of a rosebud A portrait of a blooming rosebud A portrait of a blooming rose A portrait of a rose |  | One prompt per line, in the order the run works through them. No frame numbers: cond_keyframes_type and frame_count decide when each one takes over. A blank line is encoded as an empty prompt and takes its turn like any other. |
 
@@ -13322,7 +13410,7 @@ Encode one prompt per line and work out the frame each one takes over on, spread
 <details>
 <summary><b>Conditioning (Blend)</b></summary>
 
-Mix encoded prompts into one, by a choice of twelve formulas rather than a single average. Blending prompts produces a subject that is genuinely between them instead of a picture containing both, which is what the concatenating nodes give. Each further slot is blended onto the result of the ones before it. Every prompt must come from a text encoder that produces a pooled output, such as SDXL's or Flux's. `lerp`, `bislerp` and `slerp` are the same straight mix, `cosine interp` and `cuberp` are that mix with the ends held longer, `add` balances the pair, `inject` layers the newer prompt on top, `difference` and `exclusion` keep only what the pair disagree on and so push the result away from both, and `random` varies the mix per element and is the only mode the seed changes.
+Mix any number of encoded prompts into one by a choice of twelve formulas, giving a subject genuinely between them rather than a picture containing both. Each further slot blends onto the result so far. Every prompt needs a pooled output, such as SDXL's or Flux's.
 
 | | |
 |---|---|
@@ -13335,8 +13423,8 @@ Mix encoded prompts into one, by a choice of twelve formulas rather than a singl
 |---|---|---|---|---|---|
 | `conditioning_a` | `CONDITIONING` | Yes |  |  | The prompt blended away from. Only its first entry is read, so feed it a plain text encode rather than a combined or scheduled conditioning. |
 | `conditioning_b` | `CONDITIONING` | Yes |  |  | The prompt blended towards. Only its first entry is read, as with conditioning_a. |
-| `blending_mode` | `COMBO` | Yes |  | `add`, `bislerp`, `cosine interp`, `cuberp`, `difference`, `exclusion`, `hslerp`, `inject`, `lerp`, `random`, `slerp`, `subtract` | Which formula combines a prompt with the result so far. `lerp` is the straight mix to reach for first; other modes layer, balance or subtract the pair instead. |
-| `blending_strength` | `FLOAT` | Yes | 0.5 |  | How strongly each blend leans, which every mode reads its own way. 0.5 is an even mix. With `lerp` and the other straight mixes, 0.0 takes the next prompt and 1.0 keeps the result so far; `add` and `cosine interp` run the other way round. Values outside 0 to 1 push past either prompt. |
+| `blending_mode` | `COMBO` | Yes |  | `add`, `bislerp`, `cosine interp`, `cuberp`, `difference`, `exclusion`, `hslerp`, `inject`, `lerp`, `random`, `slerp`, `subtract` | `lerp`, `slerp`, `bislerp` = straight mix; `cosine interp`, `cuberp` = ends held longer; `add` = balances the pair; `inject` = newer prompt on top; `difference`, `exclusion` = only what they disagree on; `random` = varies per element, uses seed. |
+| `blending_strength` | `FLOAT` | Yes | 0.5 |  | How far each blend leans: 0.5 = even mix; with `lerp` and the straight mixes, 0.0 = the next prompt, 1.0 = the result so far, reversed for `add` and `cosine interp`. Outside 0 to 1 pushes past either prompt. |
 | `seed` | `INT` | Yes | 0 |  | Seed for the `random` blending mode, so a run can be repeated. 0 leaves the random source as it was, which makes `random` differ from run to run. Every other mode ignores this. |
 | `conditioning_c` | `CONDITIONING` | No |  |  | A further prompt, blended onto the result of the ones before it with the same mode and strength. The interface reveals the next slot as this one is filled. |
 | `conditioning_d` | `CONDITIONING` | No |  |  | A further prompt, blended onto the result of the ones before it with the same mode and strength. The interface reveals the next slot as this one is filled. |
@@ -13399,7 +13487,7 @@ Print whatever is connected to it to the console, and for anything that is not a
 <details>
 <summary><b>Image Waveform</b></summary>
 
-Plot the red, green and blue channels of each picture as broadcast waveform scopes, and the three together as an RGB parade. Each column of the plot is a column of the picture, so it shows where in the frame the brightness sits and whether the channels agree: a colour cast reads as three traces at different heights, clipping as a trace pinned to the top of the grid. Min, max, mean, deviation and median are printed underneath.
+Plot the red, green and blue channels of each picture as broadcast waveform scopes, and the three together as an RGB parade, with min, max, mean, deviation and median underneath. A colour cast reads as three traces at different heights, clipping as a trace pinned to the top of the grid.
 
 | | |
 |---|---|
@@ -13558,7 +13646,7 @@ Produce a colour lookup table to grade images with. Pick a .cube file from a mod
 <details>
 <summary><b>LUT Blender</b></summary>
 
-Mix two colour lookup tables into one, in whichever colour space suits the pair. Use it to dial a strong film look back towards neutral, to cross-fade between two grades, or to stack a corrective table under a creative one. Both tables are resampled to a common size first, so a 17-point table and a 65-point one mix without trouble. 'linear' is a straight average, 'cosine' and 'smoothstep' ease that mix, 'slerp' turns hue the short way round the wheel instead of through grey, 'lab' and 'oklab' mix in a perceptual space which keeps midway grades believable, 'hsv' mixes hue, saturation and brightness separately, 'auto' picks 'slerp' where the two colours differ a lot and 'linear' where they agree, and 'multiply' darkens, 'screen' brightens and 'overlay' does both.
+Mix two colour lookup tables into one, to dial a strong film look back towards neutral, cross-fade between two grades, or stack a corrective table under a creative one. A 17-point and a 65-point table mix without trouble.
 
 | | |
 |---|---|
@@ -13571,7 +13659,7 @@ Mix two colour lookup tables into one, in whichever colour space suits the pair.
 |---|---|---|---|---|---|
 | `lut_a` | `LUT` | Yes |  |  | The base table. At a strength of 0.0 this is what comes out unchanged. |
 | `lut_b` | `LUT` | Yes |  |  | The table mixed in. At a strength of 1.0 this is what comes out, except in the multiply, screen and overlay modes, which combine the two rather than replace one with the other. |
-| `mode` | `COMBO` | Yes |  | `linear`, `cosine`, `smoothstep`, `slerp`, `hsv`, `lab`, `oklab`, `auto`, `multiply`, `screen`, `overlay` | How the two tables are mixed. 'linear' is a straight average and the place to start; other modes ease it, mix perceptually, or combine the tables like layers. |
+| `mode` | `COMBO` | Yes |  | `linear`, `cosine`, `smoothstep`, `slerp`, `hsv`, `lab`, `oklab`, `auto`, `multiply`, `screen`, `overlay` | 'linear' = straight average; 'cosine', 'smoothstep' = eased; 'slerp' = hue the short way, not through grey; 'lab', 'oklab' = perceptual; 'hsv' = hue, saturation, value apart; 'auto' = slerp where colours differ, else linear; 'multiply' = darkens; 'screen' = brightens; 'overlay' = both. |
 | `strength` | `FLOAT` | Yes | 0.5 |  | How far the mix travels from lut_a to lut_b. 0.0 keeps lut_a, 0.5 is an even mix, 1.0 reaches lut_b. |
 | `output_size` | `INT` | Yes | 33 |  | Edge length of the resulting cube, in samples. Both inputs are resampled to it before mixing. 33 is the industry-standard size; raise it towards 65 only when banding shows on a steep grade. |
 
@@ -13704,7 +13792,7 @@ Cut each picture into a grid of equal tiles and lay them back down in a shuffled
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The pictures to cut up. Every frame of a batch is cut the same way and shuffled with the same seed, so a sequence stays consistent. |
-| `max_tiles` | `INT` | Yes | 4 |  | How many tiles the picture is cut into. The grid is the squarest arrangement of that many: 4 gives 2 by 2, 12 gives 3 by 4. Rows and columns divide the picture exactly, so any leftover pixels on the right and bottom edges are dropped. |
+| `max_tiles` | `INT` | Yes | 4 |  | How many tiles the picture is cut into, in the squarest grid of that many: 4 = 2 by 2; 12 = 3 by 4. Leftover pixels on the right and bottom edges are dropped. |
 | `seed` | `INT` | Yes | 0 |  | Seed for the shuffle. The same seed always produces the same tile order; change it to get a different arrangement of the same tiles. Any whole number; `0` is as good a seed as any. |
 | `border_width` | `INT` | Yes | 0 |  | Gap in pixels drawn between neighbouring tiles, in border_color. 0 butts the tiles together with no gap, which keeps the output the same size as the input. |
 | `border_color` | `STRING` | Yes | #FFFFFF |  | Colour of the gap between tiles, as a hex string such as #FFFFFF for white or #000000 for black. The leading # is optional, and an unreadable value falls back to white. |
@@ -13758,7 +13846,7 @@ Upscale pictures with a loaded upscale model, one overlapping tile at a time, so
 <details>
 <summary><b>Inpainting VAE Encode</b></summary>
 
-Encode an image into a latent for inpainting, with control over how far the mask grows or shrinks first. The masked pixels are flattened to mid grey before encoding so the sampler is not led by what was there, and the adjusted mask travels with the latent as its noise mask, which is what tells a KSampler which part to repaint. A positive mask_offset grows the painted area, so 6 reaches six pixels past what was drawn and hides the seam where new and old meet, which suits removing an object. A negative offset shrinks it, keeping more of the original, which suits touching up the middle of a region without disturbing its outline.
+Encode an image into a latent for inpainting, growing or shrinking the mask first. The masked pixels are greyed out and the adjusted mask travels with the latent, so a KSampler repaints only that part.
 
 | | |
 |---|---|
@@ -13772,13 +13860,52 @@ Encode an image into a latent for inpainting, with control over how far the mask
 | `pixels` | `IMAGE` | Yes |  |  | The image to inpaint. Its width and height are cropped to the nearest multiple of 8, taking the trim evenly from both sides. A latent addresses the image 8 pixels at a time. |
 | `vae` | `VAE` | Yes |  |  | The VAE that turns the prepared image into a latent. Use the one that belongs to the checkpoint the sampler runs, or the colours shift. |
 | `mask` | `MASK` | Yes |  |  | Which part is repainted. White is repainted, black is kept, and grey is rounded to one or the other. It is stretched to the image's size first, so a mask drawn at another resolution still lines up. |
-| `mask_offset` | `INT` | Yes | 6 |  | How far the painted area grows or shrinks before encoding, in pixels of the input image. 0 uses the mask exactly as drawn. |
+| `mask_offset` | `INT` | Yes | 6 |  | Pixels the painted area grows or shrinks before encoding: 0 = mask as drawn; 6 = six pixels past it, hiding the seam when removing an object; negative = shrinks it, keeping the outline when touching up the middle. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `<output0>` | `LATENT` | The encoded latent with the adjusted mask attached as its noise mask. Feed it to a KSampler, which will only replace the masked part. |
+
+</details>
+
+<a id="node-wasnslatentcontrastlimiteddetailboost"></a>
+<details>
+<summary><b>Latent Detail Boost</b></summary>
+
+Bring out fine texture in an image, video or MiniMax H3 latent before a second sampling pass or a decode, lifting smooth areas as much as busy ones without the dark outlines of a plain sharpen. An H3 latent's sound passes through untouched.
+
+| | |
+|---|---|
+| Node id | `WASNSLatentContrastLimitedDetailBoost` |
+| Turn off with | `features.extras: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The latent to enhance: image, video, or a packed audio and video latent such as MiniMax H3. Video is treated frame by frame; the audio half comes back unchanged. |
+| `sigma_small` | `FLOAT` | Yes | 0.6 |  | The fine end of the detail that is boosted, in latent blocks. Together with sigma_large it picks which size of feature is affected: 0.6 keeps the treatment on the smallest structures. Set to 0.0 to reach the very finest detail, including noise. |
+| `sigma_large` | `FLOAT` | Yes | 1.4 |  | The coarse end of the detail that is boosted, in latent blocks. Widening the gap between it and sigma_small treats larger features as well; 1.4 against 0.6 gives a narrow band that reads as texture. The two are swapped if entered the wrong way round. |
+| `gain` | `FLOAT` | Yes | 0.35 |  | How much of the isolated detail is added back. 0.0 leaves the latent alone, 0.35 is a gentle lift, and above about 1.0 the texture starts to dominate the picture. |
+| `limit` | `FLOAT` | Yes | 1.25 |  | How hard the detail is squashed before it is added, which is what stops a strong edge ringing. High values such as 4.0 flatten the strongest detail to a uniform level; 1.25 keeps most of the variation; 0.1 barely limits at all. |
+| `rms_sigma` | `FLOAT` | Yes | 1.2 |  | Area the local contrast is measured over, in latent blocks: 0.0 = the whole frame, sharpening everything equally; 1.2 = a smooth sky gains as much texture as a busy tree. |
+| `rms_floor` | `FLOAT` | Yes | 0.06 |  | A floor under that local measurement, which keeps genuinely flat areas from being amplified into noise. Raise it towards 0.2 if a clear sky or a plain wall comes out grainy; lower it towards 0.0 to treat flat areas as hard as everything else. |
+| `edge_protect` | `FLOAT` | Yes | 0.45 |  | How much the enhancement is held back on strong boundaries, which is what prevents dark outlines around objects. 0.0 turns the protection off and skips finding edges at all; 1.0 leaves boundaries completely untouched; 0.45 halves the effect there. |
+| `edge_sigma` | `FLOAT` | Yes | 0.8 |  | Blur applied before boundaries are looked for, in latent blocks. Raise it so that fine texture is not counted as an edge and protected from the very treatment it wants; 0.0 finds the finest boundaries. |
+| `edge_threshold` | `FLOAT` | Yes | 0.25 |  | How strong a boundary has to be to be protected, measured against the strongest one in the picture. 0.25 covers the clear outlines; lower values protect more and enhance less. |
+| `edge_softness` | `FLOAT` | Yes | 0.1 |  | How gradually the protection fades in around that threshold. Small values give a hard-edged protected strip that can be seen; 0.10 fades over a comfortable range. |
+| `preview_mask_scale` | `INT` | Yes | 8 |  | Preview pixels per latent block. 8 = the decoded size on most image VAEs; 16 = the decoded size of MiniMax H3; 1 = the raw map. Changes the preview image only, never the mask output. |
+| `preview_mode` | `COMBO` | Yes | detail_mask | `edge_mask`, `detail_mask` | Which map leaves the node. `detail_mask` shows where detail was added and how much, which is what to watch while setting gain. `edge_mask` shows the boundaries that were protected, which is what to watch while setting edge_threshold. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The enhanced latent, ready for a sampler or a decode. A packed audio and video latent stays packed. |
+| `mask` | `MASK` | The chosen map at latent resolution, one per image or frame, for driving another node from the same areas this one treated. |
+| `mask_preview` | `IMAGE` | The same map as a viewable image, enlarged by preview_mask_scale. |
 
 </details>
 
@@ -13798,10 +13925,10 @@ Encode an image to a latent and, if asked, keep a copy of that latent inside the
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `vae` | `VAE` | Yes |  |  | The VAE that turns the image into a latent. Use the one belonging to the checkpoint that will sample it. |
-| `tiled` | `BOOLEAN` | Yes | False |  | Whether the image is encoded a tile at a time instead of all at once. Tiling holds far less in VRAM, which is what makes a very large image encodable on a small card, at the cost of being slower and of faint seams where tiles meet. |
+| `tiled` | `BOOLEAN` | Yes | False |  | `false` = the image is encoded all at once; `true` = a tile at a time, holding far less in VRAM so a very large image fits a small card, but slower and with faint seams where tiles meet. |
 | `tile_size` | `INT` | Yes | 512 |  | Edge of one tile in pixels, read only when tiled is on. Smaller tiles use less VRAM and take longer: 512 is a safe starting point, and 1024 or more is worth trying if the card has room. |
-| `store_or_load_latent` | `BOOLEAN` | Yes | True |  | Whether the workflow is used as the latent's home. On, the node reads a latent already bundled in the workflow rather than encoding, and writes the one it encodes back into it so the next save carries it. Off, the node is an ordinary VAE encode and touches nothing. |
-| `remove_latent_on_load` | `BOOLEAN` | Yes | True |  | Whether a bundled latent is taken out of the workflow once it has been read. On, it is used once and the saved file is left clean, which suits carrying a starting point into a run. Off, it stays in the workflow and every later save keeps carrying it. |
+| `store_or_load_latent` | `BOOLEAN` | Yes | True |  | `false` = an ordinary VAE encode that touches nothing; `true` = reads a latent already bundled in the workflow instead of encoding, and writes the one it encodes back so the next save carries it. |
+| `remove_latent_on_load` | `BOOLEAN` | Yes | True |  | `true` = a bundled latent is used once and taken out of the workflow, leaving the saved file clean; `false` = it stays and every later save keeps carrying it. |
 | `delete_workflow_latent` | `BOOLEAN` | Yes | False |  | Turn on for one run to throw away whatever this node has bundled and encode the image again. That is the way out when the stored latent no longer matches the image, or when a shared workflow arrived with one that is not wanted. |
 | `image` | `IMAGE` | No |  |  | The image to encode. It can be left unconnected when the workflow already carries a bundled latent, which is what lets a workflow be reopened and run without the picture it started from. |
 
@@ -13813,128 +13940,13 @@ Encode an image to a latent and, if asked, keep a copy of that latent inside the
 
 </details>
 
-<a id="node-wasnslatentcontrastlimiteddetailboost"></a>
-<details>
-<summary><b>WAS Latent Detail Boost</b></summary>
-
-Bring out fine detail in a latent by isolating one band of detail, levelling it against the local amount of contrast and adding it back. The added detail is normalised and limited before it lands: a busy area and a smooth one gain the same amount, and the dark outlines and embossed look that come from sharpening a latent directly do not appear. Handles video latents as well as single images.
-
-| | |
-|---|---|
-| Node id | `WASNSLatentContrastLimitedDetailBoost` |
-| Turn off with | `features.extras: false` in `config.yaml` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `latent` | `LATENT` | Yes |  |  | The latent to enhance. A video latent with a time axis is handled frame by frame. |
-| `sigma_small` | `FLOAT` | Yes | 0.6 |  | The fine end of the detail that is boosted, in latent blocks. Together with sigma_large it picks which size of feature is affected: 0.6 keeps the treatment on the smallest structures. Set to 0.0 to reach the very finest detail, including noise. |
-| `sigma_large` | `FLOAT` | Yes | 1.4 |  | The coarse end of the detail that is boosted, in latent blocks. Widening the gap between it and sigma_small treats larger features as well; 1.4 against 0.6 gives a narrow band that reads as texture. The two are swapped if entered the wrong way round. |
-| `gain` | `FLOAT` | Yes | 0.35 |  | How much of the isolated detail is added back. 0.0 leaves the latent alone, 0.35 is a gentle lift, and above about 1.0 the texture starts to dominate the picture. |
-| `limit` | `FLOAT` | Yes | 1.25 |  | How hard the detail is squashed before it is added, which is what stops a strong edge ringing. High values such as 4.0 flatten the strongest detail to a uniform level; 1.25 keeps most of the variation; 0.1 barely limits at all. |
-| `rms_sigma` | `FLOAT` | Yes | 1.2 |  | How large an area the local amount of contrast is measured over, in latent blocks. It is what lets a smooth sky gain as much texture as a busy tree instead of being left behind. 0.0 measures over the whole frame instead, which restores the plain behaviour of sharpening everything by the same amount. |
-| `rms_floor` | `FLOAT` | Yes | 0.06 |  | A floor under that local measurement, which keeps genuinely flat areas from being amplified into noise. Raise it towards 0.2 if a clear sky or a plain wall comes out grainy; lower it towards 0.0 to treat flat areas as hard as everything else. |
-| `edge_protect` | `FLOAT` | Yes | 0.45 |  | How much the enhancement is held back on strong boundaries, which is what prevents dark outlines around objects. 0.0 turns the protection off and skips finding edges at all; 1.0 leaves boundaries completely untouched; 0.45 halves the effect there. |
-| `edge_sigma` | `FLOAT` | Yes | 0.8 |  | Blur applied before boundaries are looked for, in latent blocks. Raise it so that fine texture is not counted as an edge and protected from the very treatment it wants; 0.0 finds the finest boundaries. |
-| `edge_threshold` | `FLOAT` | Yes | 0.25 |  | How strong a boundary has to be to be protected, measured against the strongest one in the picture. 0.25 covers the clear outlines; lower values protect more and enhance less. |
-| `edge_softness` | `FLOAT` | Yes | 0.1 |  | How gradually the protection fades in around that threshold. Small values give a hard-edged protected strip that can be seen; 0.10 fades over a comfortable range. |
-| `preview_mask_scale` | `INT` | Yes | 8 |  | How many preview pixels each latent block becomes. 8 matches the size the latent decodes to on most VAEs, so the preview lines up with the finished picture; 1 gives the small raw map. This affects the preview image only, never the mask output. |
-| `preview_mode` | `COMBO` | Yes | detail_mask | `edge_mask`, `detail_mask` | Which map leaves the node. `detail_mask` shows where detail was added and how much, which is what to watch while setting gain. `edge_mask` shows the boundaries that were protected, which is what to watch while setting edge_threshold. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `latent` | `LATENT` | The enhanced latent, ready for a sampler or a decode. |
-| `mask` | `MASK` | The chosen map at latent resolution, useful for driving another node from the same areas this one treated. |
-| `mask_preview` | `IMAGE` | The same map as a viewable image, enlarged by preview_mask_scale. |
-
-</details>
-
 ### WAS Suite/Latent/Transform
-
-<a id="node-wasnslatentupscalehybrid"></a>
-<details>
-<summary><b>Latent Hybrid Upscale</b></summary>
-
-Enlarge a latent and decide where to be smooth by looking at the picture it decodes to. Edges found in that picture are grown and feathered into a mask; where the mask is white the enlargement is interpolated, and everywhere else it keeps the crisp block-copied version. Flat areas therefore stay sharp while outlines avoid the stair-stepping that a plain enlargement leaves. Handles video latents, with tiled decoding to keep VRAM in check.
-
-| | |
-|---|---|
-| Node id | `WASNSLatentUpscaleHybrid` |
-| Turn off with | `features.extras: false` in `config.yaml` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `latent` | `LATENT` | Yes |  |  | The latent to enlarge. A video latent with a time axis is handled frame by frame. |
-| `vae` | `VAE` | Yes |  |  | The VAE used to decode the latent so its edges can be found. It must be the one that matches the latent, or the edges will be found in the wrong places. It only reads the latent; the result is still built in latent space. |
-| `scale` | `FLOAT` | Yes | 2.0 |  | How much larger the result is. 2.0 doubles both sides, 1.5 adds half again. Sizes are rounded to whole latent blocks. |
-| `pre_blur_sigma_px` | `FLOAT` | Yes | 1.0 |  | Blur applied to the decoded picture before edges are looked for, in pixels. It keeps film grain and fine texture from registering as edges; 0.0 finds every last one, 2.0 or more keeps only the major outlines. |
-| `canny_threshold1` | `INT` | Yes | 25 |  | The lower of the two edge-detection levels, on a 0-255 scale. A faint edge is kept only when it joins a strong one, and this is how faint it may be. Lower values trace more of an outline; raise it if speckles appear in flat areas. |
-| `canny_threshold2` | `INT` | Yes | 155 |  | The upper of the two edge-detection levels, on a 0-255 scale. Anything this strong starts an edge on its own. Raise it to keep only bold outlines, lower it to catch soft ones. |
-| `canny_l2gradient` | `BOOLEAN` | Yes | True |  | How edge strength is measured. On, the true length of the gradient is used, which is slightly slower and more accurate on diagonals. Off, a cheaper approximation is used that reads diagonal edges as stronger than they are. |
-| `dilate_radius_px` | `INT` | Yes | 8 |  | How far the found edges are grown, in pixels. Edges are hairline by themselves, so growing them is what gives the smooth enlargement a band to work in: 8 covers a typical outline, 0 leaves the raw one-pixel lines. |
-| `feather_sigma_px` | `FLOAT` | Yes | 6.0 |  | How far the grown edge fades out, in pixels. Without it the band would have a visible border of its own; 6.0 gives a soft changeover, 0.0 leaves a hard-edged band. |
-| `mask_min` | `FLOAT` | Yes | 0.0 |  | Floor under the finished mask. Raise it above 0.0 to let a little of the smooth enlargement into areas with no edges at all, which takes the hard blockiness off the whole picture. |
-| `mask_max` | `FLOAT` | Yes | 1.0 |  | Ceiling over the finished mask. Lower it below 1.0 to keep some of the crisp enlargement even on the strongest edges, which is the way back when outlines come out too soft. |
-| `use_nearest_exact` | `BOOLEAN` | Yes | True |  | How the crisp half of the blend is enlarged. On, each output block takes the value of the source block whose centre is nearest, which keeps the picture from drifting half a block sideways. Off uses the older nearest-neighbour rule. |
-| `output_mask_resolution` | `COMBO` | Yes | image | `image`, `latent` | Which size the mask output comes out at. `image` gives it at the size the enlarged latent decodes to, ready to view or reuse against the finished picture. `latent` gives the small version that actually drove the blend. |
-| `video_decode_horizontal_tiles` | `INT` | Yes | 2 |  | How many columns a video latent is split into for the decode that finds edges. More tiles means less VRAM and more time. Ignored on an image latent. |
-| `video_decode_vertical_tiles` | `INT` | Yes | 2 |  | How many rows a video latent is split into for that decode. 2 rows and 2 columns is four tiles, each a quarter of the frame. Ignored on an image latent. |
-| `video_decode_overlap_latent` | `INT` | Yes | 4 |  | How far neighbouring tiles overlap, in latent units. The overlap is cross-faded, so raise it if seams show along the tile boundaries; 0 turns the fade off entirely. |
-| `video_decode_last_frame_fix` | `BOOLEAN` | Yes | False |  | Whether the final frame is duplicated before decoding and the extra output dropped afterwards. Turn it on when the last frames of a clip decode to something corrupt, which some video VAEs do. |
-| `video_decode_enable_cudnn` | `BOOLEAN` | Yes | True |  | Whether cuDNN is left on for the video decode. Turning it off is slower and avoids the large workspace allocations that make some cards run out of memory part way through a clip. |
-| `donor_latent` | `LATENT` | No |  |  | Where the smooth half of the blend comes from. Leave it unconnected and the node interpolates the input latent. Connect a second latent of the same batch and channel shape, a version sampled at a higher resolution, say, and its detail is what gets laid into the edges. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `latent` | `LATENT` | The enlarged latent, ready for a sampler or a decode. |
-| `edge_mask` | `MASK` | Where the smooth enlargement was used: white along the edges the node found, black elsewhere. Watch it while setting the two Canny levels, or reuse it to treat the same areas downstream. |
-
-</details>
-
-<a id="node-waslatentscaletomaxdimension"></a>
-<details>
-<summary><b>Scale Latent to Max Dimension</b></summary>
-
-Resize a latent so that the picture it decodes to has its longest side at a chosen number of pixels, with the aspect ratio kept. The size is worked out in latent space, so nothing is decoded and re-encoded and no detail is lost on the way. The resulting pixel width and height come out alongside the latent, ready to drive whatever needs to know the size.
-
-| | |
-|---|---|
-| Node id | `WASLatentScaleToMaxDimension` |
-| Turn off with | `features.extras: false` in `config.yaml` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `samples` | `LATENT` | Yes |  |  | The latent to resize. A video latent with a time axis is resized on its height and width only, and keeps every frame. |
-| `upscale_method` | `COMBO` | Yes | bislerp | `nearest-exact`, `bilinear`, `area`, `bicubic`, `bislerp` | How values in between the existing ones are worked out. `bislerp` interpolates along the shape of the latent rather than straight through it and is the safest choice for a latent; `bilinear` and `bicubic` are the ordinary smooth options; `area` averages the source region and suits shrinking; `nearest-exact` copies the closest value and stays blocky. |
-| `largest_size` | `INT` | Yes | 2048 |  | How long the longest side should be, in pixels of the decoded picture rather than in latent units. 2048 on a 3:2 latent gives 2048x1360. The target is rounded down to whole latent units, so the result never comes out larger than asked for. |
-| `scale_mode` | `COMBO` | Yes | always | `always`, `downscale_only`, `upscale_only` | Which direction the resize is allowed to go. `always` hits the target from either side. `downscale_only` treats largest_size as a ceiling and leaves anything already smaller alone, which is what suits capping mixed input sizes. `upscale_only` is the reverse: it brings small latents up and leaves large ones untouched. |
-| `spatial_compression` | `INT` | Yes | 8 |  | How many pixels one latent unit becomes on the VAE that will decode this: 8 for SD, SDXL, Flux and Wan 2.1, 16 for Wan 2.2 TI2V, 32 for Hunyuan Image. Getting it wrong scales the result by the ratio of the two numbers. Ignored when a vae is connected. |
-| `vae` | `VAE` | No |  |  | The VAE this latent will be decoded with. Connect it and the compression ratio is read straight off it, which removes the need to know the right spatial_compression for the model in use. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `samples` | `LATENT` | The resized latent. It is passed through untouched when scale_mode rules the resize out, or when it is already the right size. |
-| `width` | `INT` | Width the latent now decodes to, in pixels. Feed it to anything that has to be built at the same size, such as an empty image or a second resize. |
-| `height` | `INT` | Height the latent now decodes to, in pixels. |
-
-</details>
 
 <a id="node-wasnsadaptivedifferencelatentupscale"></a>
 <details>
-<summary><b>WAS Adaptive Difference Latent Upscale (Damped)</b></summary>
+<summary><b>Adaptive Difference Latent Upscale (Damped)</b></summary>
 
-Enlarge a latent twice, once by copying the nearest block, once by interpolating, and take the smooth version only where the two disagree. Flat areas keep the crispness of the blocky enlargement while edges and texture get the smooth one, which is what stops a plain latent upscale either going soft everywhere or ringing along every boundary. Works on video latents as well as single images, and reports the maps it used so the settings can be seen rather than guessed at.
+Enlarge an image or video latent so flat areas stay crisp while edges and texture get a smooth enlargement, then damp the halo along hard edges. Hands on the latent, ready for a sampler, with the map it worked from as a mask and a preview.
 
 | | |
 |---|---|
@@ -13953,7 +13965,7 @@ Enlarge a latent twice, once by copying the nearest block, once by interpolating
 | `softness` | `FLOAT` | Yes | 0.05 |  | How gradual the changeover at the threshold is. Small values such as 0.005 give a hard switch that can be seen as a rim; 0.05 fades between the two enlargements over a comfortable range. |
 | `weight_power` | `FLOAT` | Yes | 1.0 |  | Bends the blend map after it is built. Above 1.0 pulls it towards the blocky enlargement everywhere but the strongest edges; below 1.0 spreads the smooth enlargement into weaker detail. 1.0 leaves the map as measured. |
 | `weight_blur_sigma` | `FLOAT` | Yes | 0.0 |  | Softens the finished blend map, in latent blocks. Raise it when the treated areas have visible outlines of their own; 0.0 leaves the map alone. |
-| `temporal_ema` | `FLOAT` | Yes | 0.0 |  | How much each frame of a video latent carries over from the frames before it, which stops the blend map flickering. 0.0 treats every frame on its own; 0.5 is a light smoothing; 0.9 is heavy and can smear the map behind fast motion. Ignored on a single image. |
+| `temporal_ema` | `FLOAT` | Yes | 0.0 |  | How much each frame of a video latent carries over from the frames before it, steadying the blend map: 0.0 = every frame alone; 0.5 = light; 0.9 = heavy, can smear behind fast motion. Ignored on a single image. |
 | `enable_directional_damping` | `BOOLEAN` | Yes | True |  | Whether the second pass runs, which takes fine detail back out along strong boundaries. It is what removes the halo that an upscale leaves around hard edges. Turn it off to see the blend on its own, or when the source is already soft. |
 | `damping_strength` | `FLOAT` | Yes | 0.35 |  | How much fine detail is removed where the damping mask is fully on. 0.0 removes none and turns the pass off; 0.35 takes the edge off a halo; 1.0 flattens the detail there completely. |
 | `damping_gate_mode` | `COMBO` | Yes | weight_sqrt | `none`, `weight`, `weight_sqrt` | Where the damping is allowed to act. `none` lets it act on every boundary it finds. `weight` confines it to the areas the blend already treated. `weight_sqrt` is in between, allowing some damping in areas the blend touched only lightly. |
@@ -13974,6 +13986,82 @@ Enlarge a latent twice, once by copying the nearest block, once by interpolating
 | `latent` | `LATENT` | The enlarged latent, ready for a sampler or a decode. |
 | `mask` | `MASK` | The map the node worked from, at latent resolution: the damping map on `damp` and `both`, the blend map on `weight`. Useful for driving another node from the same areas this one treated. |
 | `mask_preview` | `IMAGE` | The same map as a viewable image, enlarged by output_mask_pixel_scale. On `both` the blend map is on the left and the damping map on the right. |
+
+</details>
+
+<a id="node-wasnslatentupscalehybrid"></a>
+<details>
+<summary><b>Latent Hybrid Upscale</b></summary>
+
+Enlarge an image or video latent, keeping flat areas crisp and smoothing only along the edges found in the picture it decodes to, so outlines avoid stair-stepping. Hands on the latent and the edge mask it used.
+
+| | |
+|---|---|
+| Node id | `WASNSLatentUpscaleHybrid` |
+| Turn off with | `features.extras: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The latent to enlarge. A video latent with a time axis is handled frame by frame. |
+| `vae` | `VAE` | Yes |  |  | The VAE used to decode the latent so its edges can be found. It must be the one that matches the latent, or the edges will be found in the wrong places. It only reads the latent; the result is still built in latent space. |
+| `scale` | `FLOAT` | Yes | 2.0 |  | How much larger the result is. 2.0 doubles both sides, 1.5 adds half again. Sizes are rounded to whole latent blocks. |
+| `pre_blur_sigma_px` | `FLOAT` | Yes | 1.0 |  | Blur applied to the decoded picture before edges are looked for, in pixels. It keeps film grain and fine texture from registering as edges; 0.0 finds every last one, 2.0 or more keeps only the major outlines. |
+| `canny_threshold1` | `INT` | Yes | 25 |  | The lower edge-detection level, on a 0-255 scale: how faint an edge may be and still be kept when it joins a strong one. Lower traces more outline; raise it if flat areas speckle. |
+| `canny_threshold2` | `INT` | Yes | 155 |  | The upper of the two edge-detection levels, on a 0-255 scale. Anything this strong starts an edge on its own. Raise it to keep only bold outlines, lower it to catch soft ones. |
+| `canny_l2gradient` | `BOOLEAN` | Yes | True |  | How edge strength is measured. On, the true length of the gradient is used, which is slightly slower and more accurate on diagonals. Off, a cheaper approximation is used that reads diagonal edges as stronger than they are. |
+| `dilate_radius_px` | `INT` | Yes | 8 |  | How far the found edges are grown, in pixels. Edges are hairline by themselves, so growing them is what gives the smooth enlargement a band to work in: 8 covers a typical outline, 0 leaves the raw one-pixel lines. |
+| `feather_sigma_px` | `FLOAT` | Yes | 6.0 |  | How far the grown edge fades out, in pixels. Without it the band would have a visible border of its own; 6.0 gives a soft changeover, 0.0 leaves a hard-edged band. |
+| `mask_min` | `FLOAT` | Yes | 0.0 |  | Floor under the finished mask. Raise it above 0.0 to let a little of the smooth enlargement into areas with no edges at all, which takes the hard blockiness off the whole picture. |
+| `mask_max` | `FLOAT` | Yes | 1.0 |  | Ceiling over the finished mask. Lower it below 1.0 to keep some of the crisp enlargement even on the strongest edges, which is the way back when outlines come out too soft. |
+| `use_nearest_exact` | `BOOLEAN` | Yes | True |  | How the crisp half of the blend is enlarged. On, each output block takes the value of the source block whose centre is nearest, which keeps the picture from drifting half a block sideways. Off uses the older nearest-neighbour rule. |
+| `output_mask_resolution` | `COMBO` | Yes | image | `image`, `latent` | Which size the mask output comes out at. `image` gives it at the size the enlarged latent decodes to, ready to view or reuse against the finished picture. `latent` gives the small version that actually drove the blend. |
+| `video_decode_horizontal_tiles` | `INT` | Yes | 2 |  | How many columns a video latent is split into for the decode that finds edges. More tiles means less VRAM and more time. Ignored on an image latent. |
+| `video_decode_vertical_tiles` | `INT` | Yes | 2 |  | How many rows a video latent is split into for that decode. 2 rows and 2 columns is four tiles, each a quarter of the frame. Ignored on an image latent. |
+| `video_decode_overlap_latent` | `INT` | Yes | 4 |  | How far neighbouring tiles overlap, in latent units. The overlap is cross-faded, so raise it if seams show along the tile boundaries; 0 turns the fade off entirely. |
+| `video_decode_last_frame_fix` | `BOOLEAN` | Yes | False |  | Whether the final frame is duplicated before decoding and the extra output dropped afterwards. Turn it on when the last frames of a clip decode to something corrupt, which some video VAEs do. |
+| `video_decode_enable_cudnn` | `BOOLEAN` | Yes | True |  | Whether cuDNN is left on for the video decode. Turning it off is slower and avoids the large workspace allocations that make some cards run out of memory part way through a clip. |
+| `donor_latent` | `LATENT` | No |  |  | Where the smooth half of the blend comes from. Unconnected = the input latent interpolated; connected = a latent of the same batch and channel shape, such as a higher-resolution sample, whose detail is laid into the edges. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | The enlarged latent, ready for a sampler or a decode. |
+| `edge_mask` | `MASK` | Where the smooth enlargement was used: white along the edges the node found, black elsewhere. Watch it while setting the two Canny levels, or reuse it to treat the same areas downstream. |
+
+</details>
+
+<a id="node-waslatentscaletomaxdimension"></a>
+<details>
+<summary><b>Scale Latent to Max Dimension</b></summary>
+
+Resize a latent so the picture it decodes to has its longest side at a chosen number of pixels, aspect ratio kept, with no decode or re-encode. The new pixel width and height come out alongside the latent.
+
+| | |
+|---|---|
+| Node id | `WASLatentScaleToMaxDimension` |
+| Turn off with | `features.extras: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `samples` | `LATENT` | Yes |  |  | The latent to resize. A video latent with a time axis is resized on its height and width only, and keeps every frame. |
+| `upscale_method` | `COMBO` | Yes | bislerp | `nearest-exact`, `bilinear`, `area`, `bicubic`, `bislerp` | `nearest-exact` = copies the closest value, blocky; `area` = averages, suits shrinking; `bilinear`, `bicubic` = ordinary smooth; `bislerp` = follows the latent's shape, safest for a latent. |
+| `largest_size` | `INT` | Yes | 2048 |  | How long the longest side should be, in pixels of the decoded picture rather than in latent units. 2048 on a 3:2 latent gives 2048x1360. The target is rounded down to whole latent units, so the result never comes out larger than asked for. |
+| `scale_mode` | `COMBO` | Yes | always | `always`, `downscale_only`, `upscale_only` | `always` = hits the target from either side; `downscale_only` = largest_size is a ceiling, smaller latents left alone; `upscale_only` = brings small latents up, large ones left alone. |
+| `spatial_compression` | `INT` | Yes | 8 |  | Pixels per latent unit on the decoding VAE: 8 = SD, SDXL, Flux, Wan 2.1; 16 = Wan 2.2 TI2V; 32 = Hunyuan Image. A wrong value scales the result by the ratio. Ignored when vae is connected. |
+| `vae` | `VAE` | No |  |  | The VAE this latent will be decoded with. Connect it and the compression ratio is read straight off it, which removes the need to know the right spatial_compression for the model in use. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `samples` | `LATENT` | The resized latent. It is passed through untouched when scale_mode rules the resize out, or when it is already the right size. |
+| `width` | `INT` | Width the latent now decodes to, in pixels. Feed it to anything that has to be built at the same size, such as an empty image or a second resize. |
+| `height` | `INT` | Height the latent now decodes to, in pixels. |
 
 </details>
 
@@ -14017,7 +14105,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 |---|---|---|
 | `model` | `MODEL` | The model with the reweighted LoRA applied. |
 | `clip` | `CLIP` | The clip with the reweighted LoRA applied. |
-| `stats` | `DICT` | What the run did: which naming scheme was detected, how many blocks were found, how many tensors were scaled, dropped and kept, where the copy was saved with its SHA-256, and whether the round-trip check passed. Feed it to a debug node to see why a reweighting had no effect. |
+| `stats` | `DICT` | What the run did: the naming scheme detected, blocks found, tensors scaled, dropped and kept, where the copy was saved with its SHA-256, and whether the round-trip check passed. Shows why a reweighting had no effect. |
 
 </details>
 
@@ -14025,7 +14113,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 <details>
 <summary><b>Power LoRA Merger</b></summary>
 
-Merge any number of LoRAs into one new LoRA file, saved into your LoRA folder so it loads like any other. Add and remove rows with the buttons on the node, and optionally connect a model and clip to get the result applied straight away. Beyond `svd` the modes are: `add`, stacking them exactly, for the largest file and the closest match to loading them in turn; `rebase`, recompressing one LoRA; `add-diff` and `add-orth`, starting from the first and adding what the others differ by, orthogonalised in the second so they interfere less; `diff-export`, saving only the difference between the first two; `moe`, picking or blending the strongest source per module; `obfuscate`, rewriting a stack's factors without changing what it does; and `block-mix`, routing each part of the model to LoRA A or B by block_mix_recipe.
+Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads like any other. Add rows with the buttons on the node; connect a model and clip to apply the result straight away.
 
 | | |
 |---|---|
@@ -14039,7 +14127,7 @@ Merge any number of LoRAs into one new LoRA file, saved into your LoRA folder so
 | `output_filename` | `STRING` | Yes | merged_lora.safetensors |  | Name to save the merged LoRA under, inside your LoRA folder. Sub-folders are allowed, for example 'styles/mixed.safetensors'. '.safetensors' is added when it is missing, and the name cannot step outside the LoRA folder. |
 | `output_model_strength` | `FLOAT` | Yes | 1.0 |  | How strongly the merged LoRA is applied to the model output, if a model is connected. 1.0 is full strength, 0.5 is half. This does not change the saved file, only what comes out of the model socket. |
 | `output_clip_strength` | `FLOAT` | Yes | 1.0 |  | The same for the clip output: how strongly the merged LoRA is applied to the connected clip. Lower it when a LoRA's trigger words are overwhelming the rest of the prompt. Ignored where no clip is connected, as with a diffusion transformer. |
-| `mode` | `COMBO` | Yes | svd | `svd`, `rebase`, `add`, `add-diff`, `add-orth`, `diff-export`, `moe`, `obfuscate`, `block-mix` | How the LoRAs are combined. `svd` recompresses the combined result back to one rank, which keeps the file small and is the usual choice. |
+| `mode` | `COMBO` | Yes | svd | `svd`, `rebase`, `add`, `add-diff`, `add-orth`, `diff-export`, `moe`, `obfuscate`, `block-mix` | `svd` recompresses to one rank, small; `add` stacks exactly, largest; `rebase` recompresses one LoRA; `add-diff` first plus the others' differences; `add-orth` orthogonalises them; `diff-export` saves the first two's difference; `moe` picks or blends the strongest per module; `obfuscate` rewrites factors, same effect; `block-mix` follows block_mix_recipe. |
 | `block_mix_recipe` | `COMBO` | Yes | concept_a_style_b | `all_a`, `all_b`, `concept_a_style_b`, `concept_b_style_a`, `attn_a_ffn_b`, `attn_b_ffn_a`, `img_a_txt_b`, `img_b_txt_a` | Only read in `block-mix` mode: which of the two LoRAs each part of the model comes from. `all_a` and `all_b` route everything one way. |
 | `model` | `MODEL` | No |  |  | Optional. A model to apply the merged LoRA to once it is saved, so the merge can be tested in the same run. Leave it unconnected to only write the file. |
 | `clip` | `CLIP` | No |  |  | Optional, and only used when a model is connected too: the clip the merged LoRA's text-encoder half is applied to. |
@@ -14148,7 +14236,7 @@ Advanced settings for the Power LoRA Merger: how far the merged LoRA is compress
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `rank` | `INT` | Yes | 32 |  | How much detail the merged LoRA keeps, for the modes that recompress it. Higher keeps more of the sources and makes a bigger file: 32 suits most merges, 64 to 128 holds a complicated one together. Set it to 0 to let each part of the model choose its own rank from auto_rank_threshold instead. |
+| `rank` | `INT` | Yes | 32 |  | Detail the merged LoRA keeps in the modes that recompress it: 0 = each part of the model picks its own rank from auto_rank_threshold; 32 = most merges; 64 to 128 = a complicated one, bigger file. |
 | `auto_rank_threshold` | `FLOAT` | Yes | 0.99 |  | Only read when rank is 0: how much of each part's strength an automatic rank has to keep. 0.99 keeps almost all of it and picks a generous rank; 0.9 is far more aggressive and gives a much smaller file. |
 | `preserve_norm` | `BOOLEAN` | Yes | False |  | svd mode only. Rescales every merged part back to the average strength of the LoRAs it came from, which stops a merge of several strong LoRAs coming out overcooked at the strength you normally use. |
 | `cap_mult_enable` | `BOOLEAN` | Yes | False |  | svd mode only. Switches on the ceiling set by cap_mult below. Use it when one source LoRA is far stronger than the rest and is taking over the merge. |
@@ -14180,7 +14268,7 @@ Advanced settings for the Power LoRA Merger: how far the merged LoRA is compress
 <details>
 <summary><b>KSampler Sequence</b></summary>
 
-Run the sampler once per loop and stack the results into one latent batch, switching prompt as the frame schedule from CLIP Text Encode Sequence (Advanced) says to. Each loop starts from the previous loop's latent at a lower denoise, so the run reads as a moving picture rather than as unrelated images. Decode the batch and save it as frames.
+Run the sampler once per loop and stack the results into one latent batch, switching prompt on the frame schedule from CLIP Text Encode Sequence (Advanced). Each loop starts from the previous latent at a lower denoise, so the batch reads as a moving picture.
 
 | | |
 |---|---|
@@ -14193,8 +14281,8 @@ Run the sampler once per loop and stack the results into one latent batch, switc
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The diffusion model every loop in the run samples with. |
 | `seed` | `INT` | Yes | 0 |  | The seed the first loop runs on, and the base every later loop's seed is worked out from. The same seed replays the whole run; change it for a different one. Any whole number; `0` is as good a seed as any. |
-| `seed_mode_seq` | `COMBO` | Yes |  | `increment`, `decrement`, `random`, `fixed` | How the seed moves from loop to loop. 'increment' and 'decrement' step it by one, which keeps consecutive frames close and the run smooth; 'random' picks a fresh seed each loop, which makes every frame its own image; 'fixed' holds one seed for the whole run, so only the prompt and the denoise change anything. |
-| `alternate_values` | `BOOLEAN` | Yes | True |  | Whether every other loop runs on a second seed that drifts away from the first instead of on the stepped one. It gives the run a slight back-and-forth flicker between two looks, which reads as movement in a short sequence. Turn it off for a single steady progression. |
+| `seed_mode_seq` | `COMBO` | Yes |  | `increment`, `decrement`, `random`, `fixed` | 'fixed' = one seed for the run, only prompt and denoise change; 'increment', 'decrement' = step by one, keeping consecutive frames close; 'random' = a fresh seed each loop, every frame its own image. |
+| `alternate_values` | `BOOLEAN` | Yes | True |  | `false` = one steady progression; `true` = every other loop runs on a second seed drifting away from the first, a slight back-and-forth flicker that reads as movement in a short sequence. |
 | `steps` | `INT` | Yes | 20 |  | Sampling steps per loop. Around 20 suits most models; more takes proportionally longer, and the whole run is this many steps times sequence_loop_count. |
 | `cfg` | `FLOAT` | Yes | 8.0 |  | How closely each loop is held to its prompt. Around 7-8 suits most models; lower is looser and softer, much higher burns contrast and makes a sequence flicker. |
 | `sampler_name` | `COMBO` | Yes |  |  | The sampling algorithm. 'euler' is the plain, predictable choice and the steadiest across a sequence; the 'ancestral' and 'sde' variants add fresh noise as they go, which adds detail and also adds flicker frame to frame. The list is whatever this ComfyUI offers. |
@@ -14206,7 +14294,7 @@ Run the sampler once per loop and stack the results into one latent batch, switc
 | `cond_slerp_strength` | `FLOAT` | Yes | 0.5 |  | How far each loop moves towards the new prompt when use_conditioning_slerp is on. 0.0 keeps the previous prompt, 1.0 takes the new one whole, 0.5 sits halfway between them. Ignored while that switch is off. |
 | `latent_image` | `LATENT` | Yes |  |  | The latent the first loop starts from, which also sets the size of every frame. An empty latent generates from scratch; an encoded image starts the sequence on that picture. |
 | `use_latent_interpolation` | `BOOLEAN` | Yes | False |  | Whether each new latent is mixed back towards the previous frame before it is kept. It damps down how much can change between two frames, which is the main handle on how jumpy the finished sequence looks. |
-| `latent_interpolation_mode` | `COMBO` | Yes |  | `Blend`, `Slerp`, `Cosine Interp` | How the previous frame is mixed in. 'Blend' is a straight average; 'Slerp' travels along the arc between the two latents and holds contrast better; 'Cosine Interp' is a blend that eases in and out, so each frame is held a little longer. Ignored while use_latent_interpolation is off. |
+| `latent_interpolation_mode` | `COMBO` | Yes |  | `Blend`, `Slerp`, `Cosine Interp` | 'Blend' = straight average; 'Slerp' = along the arc between the latents, holds contrast better; 'Cosine Interp' = eased blend, each frame held a little longer. Ignored while use_latent_interpolation is off. |
 | `latent_interp_strength` | `FLOAT` | Yes | 0.5 |  | How much of the newly sampled frame survives the mix. 1.0 keeps it whole and changes nothing, 0.5 is an even blend with the frame before, and low values nearly freeze the sequence. Ignored while use_latent_interpolation is off. |
 | `denoise_start` | `FLOAT` | Yes | 1.0 |  | How much of the first loop is redrawn. 1.0 ignores latent_image's content and generates the opening frame from noise; around 0.5 keeps its composition and changes the detail. |
 | `denoise_seq` | `FLOAT` | Yes | 0.5 |  | How much every loop after the first redraws. This is what decides whether the run drifts or jumps: 0.5 lets a frame change noticeably, 0.2 barely moves, and near 1.0 each frame is a fresh image holding nothing of the last. |
@@ -14224,7 +14312,7 @@ Run the sampler once per loop and stack the results into one latent batch, switc
 <details>
 <summary><b>KSampler Sequence (v2)</b></summary>
 
-Run the sampler once per frame and stack the results into one latent batch, stepping to the next prompt whenever the frame is one of the keyframes. Built to be driven by CLIP Text Encode Sequence (v2), which produces the prompt list, the keyframe schedule and the frame count together. Noise injection, a swinging denoise and a keyed seed are all here to keep a long run moving instead of settling on one image.
+Run the sampler once per frame and stack the results into one latent batch, stepping to the next prompt at each keyframe. Driven by CLIP Text Encode Sequence (v2), with noise injection, a swinging denoise and a keyed seed to keep a long run moving.
 
 | | |
 |---|---|
@@ -14238,7 +14326,7 @@ Run the sampler once per frame and stack the results into one latent batch, step
 | `model` | `MODEL` | Yes |  |  | The diffusion model every frame in the run samples with. |
 | `seed` | `INT` | Yes | 0 |  | The seed the first frame runs on, and the base every later frame's seed is worked out from. The same seed replays the whole run. Any whole number; `0` is as good a seed as any. |
 | `seed_mode_seq` | `COMBO` | Yes |  | `increment`, `decrement`, `random`, `fixed` | How the seed moves from frame to frame, applied after any keying. 'increment' and 'decrement' step it by one, which keeps consecutive frames close; 'random' picks a fresh seed each frame, which makes every frame its own image; 'fixed' leaves the keyed seed alone. |
-| `alternate_values` | `BOOLEAN` | Yes | True |  | Whether every other loop runs on a second seed that drifts away from the first instead of on the scheduled one. It gives the run a slight back-and-forth flicker between two looks, which reads as movement in a short sequence. Off, seed_keying and seed_mode decide every frame's seed. |
+| `alternate_values` | `BOOLEAN` | Yes | True |  | `false` = seed_keying and seed_mode decide every frame's seed; `true` = every other loop runs on a second seed drifting away from the first, a slight back-and-forth flicker that reads as movement. |
 | `steps` | `INT` | Yes | 20 |  | Sampling steps per frame. Around 20 suits most models, and the whole run costs this many steps times the number of frames. |
 | `cfg` | `FLOAT` | Yes | 8.0 |  | How closely each frame is held to its prompt. Around 7-8 suits most models; lower is looser and softer, much higher burns contrast and makes a sequence flicker. |
 | `sampler_name` | `COMBO` | Yes |  |  | The sampling algorithm. 'euler' is the plain, predictable choice and the steadiest across a sequence; the 'ancestral' and 'sde' variants add fresh noise as they go, which adds detail and also adds flicker. The list is whatever this ComfyUI offers. |
@@ -14260,7 +14348,7 @@ Run the sampler once per frame and stack the results into one latent batch, step
 | `noise_strength` | `FLOAT` | Yes | 0.1 |  | How much noise is stirred in. 0.1 keeps the picture and adds movement; above about 0.3 the composition starts breaking up frame to frame. Ignored while inject_noise is off. |
 | `denoise_sine` | `BOOLEAN` | Yes | True |  | Whether the denoise swings between denoise_seq and denoise_max over the length of the run rather than staying put. The run then breathes , settling for a stretch, opening up again, which suits a long sequence better than one fixed value. |
 | `denoise_max` | `FLOAT` | Yes | 0.9 |  | The far end of the denoise swing. 0.9 lets the picture change a great deal at the top of the wave; bring it closer to denoise_seq for a flatter run. Ignored while denoise_sine is off. |
-| `seed_keying` | `BOOLEAN` | Yes | True |  | Whether the seed follows a pattern tied to the frame number instead of only stepping. A pattern that repeats brings back seeds the run has already used, which is how a sequence comes back round to a look rather than drifting away from it for good. |
+| `seed_keying` | `BOOLEAN` | Yes | True |  | `false` = the seed only steps; `true` = it follows a pattern tied to the frame number, and a repeating pattern brings back used seeds so the sequence returns to a look rather than drifting away. |
 | `seed_keying_mode` | `COMBO` | Yes |  | `sine`, `modulo` | Which pattern the seed follows. `sine` swings it smoothly around the base seed once every seed_divisor frames; `modulo` leaves it alone and jumps it on every seed_divisor-th frame, which also skips the unsample pass on those frames. Ignored while seed_keying is off. |
 | `seed_divisor` | `INT` | Yes | 4 |  | How many frames one cycle of the seed pattern takes. 4 gives a fast flutter, 24 a slow swing across a second of video. Ignored while seed_keying is off. |
 
@@ -14347,7 +14435,7 @@ Load a MiDaS depth model for MiDaS Depth Approximation and MiDaS Mask Image. Ena
 <details>
 <summary><b>Layers Load</b></summary>
 
-Read a Photoshop document or a layered TIFF into a layer stack, so work done in an image editor carries on in a graph. Every layer arrives with its name, its place on the canvas, its opacity, its blend mode and whether it was hidden. Layers inside a group arrive as ordinary layers, and adjustment, text and shape layers arrive as the pixels the file stored for them.
+Read a Photoshop document or a layered TIFF into a layer stack, so work done in an image editor carries on in a graph. Each layer keeps its name, placement, opacity, blend mode and visibility. Grouped layers arrive ungrouped, and adjustment, text and shape layers arrive as their stored pixels.
 
 | | |
 |---|---|
@@ -14375,7 +14463,7 @@ Read a Photoshop document or a layered TIFF into a layer stack, so work done in 
 <details>
 <summary><b>Layers Save</b></summary>
 
-Write a layer stack to a file an image editor opens with its layers intact. Every layer keeps its name, its place on the canvas, its opacity, its blend mode and whether it was hidden, so the composite can be taken apart and reworked in Photoshop, Affinity Photo, GIMP or Krita. A stack whose layers carry a batch is written as one file per frame.
+Write a layer stack to a file that Photoshop, Affinity Photo, GIMP or Krita opens with its layers intact, each keeping its name, placement, opacity, blend mode and visibility. A batch is written as one file per frame.
 
 | | |
 |---|---|
@@ -14391,7 +14479,7 @@ Write a layer stack to a file an image editor opens with its layers intact. Ever
 | `file_format` | `COMBO` | Yes | psd | `psd`, `tiff` | 'psd' = a Photoshop document, which every editor opens; 'tiff' = a layered TIFF, whose layers Photoshop and Affinity Photo read and whose flattened picture opens anywhere at all. |
 | `root` | `COMBO` | Yes |  |  | Which folder the files land in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. |
 | `filename_prefix` | `STRING` | Yes | ComfyUI_layers |  | Name and folder below the root, before the number. `ComfyUI_layers` gives `ComfyUI_layers_0001.psd`; `plates/shot` puts it in that subfolder. Tokens expand, so `[time(%Y-%m-%d)]/shot` dates the folder. |
-| `depth` | `COMBO` | Yes | 8 bit | `8 bit`, `16 bit`, `32 bit float` | '8 bit' = 256 levels a channel, the smallest file and what every editor expects; '16 bit' = 65536 levels, which keeps a graded plate off a banded gradient; '32 bit float' = the exact values on the wire, keeping anything above white for further grading. |
+| `depth` | `COMBO` | Yes | 8 bit | `8 bit`, `16 bit`, `32 bit float` | '8 bit' = 256 levels a channel, the smallest file, read by every editor; '16 bit' = 65536 levels, keeps a graded gradient from banding; '32 bit float' = the exact values on the wire, keeping anything above white. |
 | `compression` | `COMBO` | Yes | rle | `rle`, `zip`, `none` | 'rle' = the packing an editor writes itself, the most widely read; 'zip' = smaller layers, read by Photoshop 6 and later; 'none' = stored as they are, largest and fastest. All three are lossless, and the flattened picture is packed the same either way. |
 | `composite` | `IMAGE` | No |  |  | A flattened picture to store as the file's preview instead of the one this node composites; IMAGE. Wire the graded result so an editor shows that until it redraws the layers itself. It has to be the size of the canvas. |
 
@@ -14416,7 +14504,7 @@ Write a layer stack to a file an image editor opens with its layers intact. Ever
 <details>
 <summary><b>Image Remove Background</b></summary>
 
-Remove the background from an image, leaving the subject on transparency or on a flat colour. The cutout network comes from Image Remove Background Model Loader.
+Remove the background from an image, leaving the subject on transparency or on a flat colour, and hand on the cutout as a mask for further compositing. The cutout network comes from Image Remove Background Model Loader.
 
 | | |
 |---|---|
@@ -14436,13 +14524,14 @@ Remove the background from an image, leaving the subject on transparency or on a
 | `alpha_matting_foreground_threshold` | `INT` | Yes | 240 |  | How certain a pixel has to be to count as definitely the subject, from 0 to 255. Lower takes in more of the edge as subject; the default 240 keeps only the most confident core. |
 | `alpha_matting_background_threshold` | `INT` | Yes | 10 |  | How certain a pixel has to be to count as definitely background, from 0 to 255. Higher discards more of the edge; the default 10 leaves everything between the two thresholds for the matting to decide. |
 | `alpha_matting_erode_size` | `INT` | Yes | 10 |  | How far in from the edge, in pixels, the uncertain band is grown before matting. Larger values give the matting more room to work and soften the edge; 0 leaves the band as the thresholds drew it. |
-| `background_color` | `COMBO` | Yes | none | `none`, `black`, `white`, `magenta`, `chroma green`, `chroma blue` | What to put behind the subject. `none` leaves it empty. The rest fill it: `chroma green` and `chroma blue` are the two standard keying colours, and `magenta` is an easy colour to spot leftovers against. With transparency on, the fill is written fully transparent, so it only shows once the alpha channel is discarded. |
+| `background_color` | `COMBO` | Yes | none | `none`, `black`, `white`, `magenta`, `chroma green`, `chroma blue` | What fills the background: `none` = left empty; `chroma green`, `chroma blue` = keying colours; `magenta` = shows leftovers clearly. With transparency on, the fill only shows once the alpha channel is discarded. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `images` | `IMAGE` | The cut-out images, as a batch the same length as the input. Four channels when transparency is on, three when it is off or when only_mask is on. |
+| `mask` | `MASK` | The cutout as a mask, one per image: 1.0 = subject kept, 0.0 = background removed, soft values on the edge. The same values as the alpha of images, after post_processing and alpha_matting. Mask Invert turns it into the background. |
 
 </details>
 
@@ -14452,7 +14541,7 @@ Remove the background from an image, leaving the subject on transparency or on a
 <details>
 <summary><b>HDR Reconstruct</b></summary>
 
-Rebuild the light a clipped highlight lost, answering linear light with everything above one kept. A blown sky, a lamp or a specular hit comes back as a gradient rather than one flat white, so a sun and its glow stay apart under a grade or in a 32-bit EXR. Every frame of a batch is reconstructed, and the largest value reached is answered beside the image.
+Rebuild the light a clipped highlight lost, handing on linear light with everything above one kept. A blown sky, a lamp or a specular hit comes back as a gradient rather than flat white, ready for a grade or a 32-bit EXR, with the peak value beside the image.
 
 | | |
 |---|---|
@@ -14481,7 +14570,7 @@ Rebuild the light a clipped highlight lost, answering linear light with everythi
 <details>
 <summary><b>Power Preprocessor</b></summary>
 
-Measure an image and answer what it found: depth, surface direction, body pose, what every pixel is, edges, drawn lines, straight runs, the paint and the light it was lit by, or the frame with its noise or its darkness taken out. Feeding a ControlNet is the usual reason, and the same answers drive relighting, defocus, parallax, masking and stylising. Pick the question and the node draws only what that question reads. Five need no model at all and most fetch a checkpoint on first use. `Marigold v2` is the exception: it reads a transformer, a decoder and a prompt embedding placed by hand.
+Turn an image into a ControlNet hint or a map for relighting, defocus and masking: depth, normals, pose, segmentation, edges, line art, material and shading, or a denoised or brightened frame. The node shows only the inputs the chosen preprocessor reads. Most models download on first use; `Marigold v2` reads files placed by hand.
 
 | | |
 |---|---|
@@ -14494,14 +14583,14 @@ Measure an image and answer what it found: depth, surface direction, body pose, 
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The images to measure. A whole batch is processed. |
 | `preprocessor` | `COMBO` | Yes | canny_pyramid |  | What to work out. `canny_pyramid`, `lineart_simple`, `scribble_xdog`, `binary` and `shuffle` need no model; the rest run the model chosen below. |
-| `model_name` | `COMBO` | Yes | Depth Anything V2 Small |  | Which model answers the question, listing only the ones that can. Within a family the smaller is quicker and the larger more accurate: `Depth Anything V2 Small` is 99 MB against `Large` at 1.3 GB. `Marigold v2` is the sharpest, and the one read from the three inputs at the bottom rather than downloaded. |
-| `resolution` | `INT` | Yes | 512 |  | Longest edge the work is done at before the answer is scaled back to the image's own size. 512 is a sensible start; 1024 resolves finer detail and costs more. Anything above the image's own longest edge is held to it. `openpose`, `animal_pose`, `line_segments`, `denoise` and `low_light` ignore it. |
-| `threshold_low` | `FLOAT` | Yes | 100.0 |  | The lower cut-off, or the only one where a question takes one. Each preprocessor reads it over a range of its own, which the widget shows: `canny_pyramid` 1 to 255, `lineart_simple` 0 to 64, `openpose` 0.05 to 0.95, `line_segments` 0.01 to 0.40, `anyline` 1 to 256. Switching preprocessor moves it to that one's start. |
+| `model_name` | `COMBO` | Yes | Depth Anything V2 Small |  | Which model answers, listing only those that can. In a family the smaller is quicker, the larger more accurate: `Depth Anything V2 Small` 99 MB, `Large` 1.3 GB. `Marigold v2` is the sharpest, read from the three inputs at the bottom. |
+| `resolution` | `INT` | Yes | 512 |  | Longest edge the work is done at, never above the image's own, then scaled back to its size. 512 = a sensible start; 1024 = finer detail, slower. Ignored by `openpose`, `animal_pose`, `line_segments`, `denoise` and `low_light`. |
+| `threshold_low` | `FLOAT` | Yes | 100.0 |  | The lower cut-off, or the only one. Each preprocessor reads its own range: `canny_pyramid` 1 to 255, `lineart_simple` 0 to 64, `openpose` 0.05 to 0.95, `line_segments` 0.01 to 0.40, `anyline` 1 to 256. Switching preprocessor resets it to that one's default. |
 | `threshold_high` | `FLOAT` | Yes | 200.0 |  | The upper cut-off, for a question that takes a pair. `canny_pyramid` reads 0 to 255 as the strength an edge must reach to start at all; `line_segments` reads 1 to 60 as the shortest run it keeps. |
-| `radius` | `FLOAT` | Yes | 6.0 |  | A distance in pixels. `lineart_simple` reads 0.5 to 32.0 as the blur each pixel is compared against: 6.0 gives normal line weight, 2.0 fine lines and 16.0 heavy ones. `normal_map` reads 0 to 8 as how far the surface slope is measured across: 3 suits a depth model, 0 is the sharpest and 6 flattens fine grain. |
+| `radius` | `FLOAT` | Yes | 6.0 |  | A distance in pixels. `lineart_simple`, 0.5 to 32.0, the comparison blur: 2.0 = fine lines; 6.0 = normal; 16.0 = heavy. `normal_map`, 0 to 8, the span slope is measured over: 0 = sharpest; 3 = suits a depth model; 6 = flattens fine grain. |
 | `strength` | `FLOAT` | Yes | 16.0 |  | How hard the answer is shaped. `normal_map` reads 0.5 to 64.0 as relief: 16.0 shows the folds in a coat, 2.0 is nearly flat and 48.0 exaggerates every slope. |
-| `seed` | `INT` | Yes | 0 |  | Chooses between equally good random answers. `shuffle` reads it as the displacement: `0` and `1` scramble the same picture two different ways, and one seed always gives one scramble. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual` read it as the noise their first step starts from, and every frame of a batch starts from the same one. |
-| `tile` | `INT` | Yes | 0 |  | Work a square at a time instead of the whole frame, which holds VRAM down on a large picture. 0 reads the whole frame. 512 reads a 512 pixel square at a time, overlapping a quarter and faded together, so no join shows. A larger square is closer to the whole frame. Read only by `denoise` and `low_light`. |
+| `seed` | `INT` | Yes | 0 |  | Chooses between equally good random answers. `shuffle`: `0` and `1` give two different scrambles, and one seed always gives the same one. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual`: the starting noise, shared by every frame of a batch. |
+| `tile` | `INT` | Yes | 0 |  | Work a square at a time to hold VRAM down. 0 = whole frame; 512 = 512 pixel squares, overlapped a quarter and blended so no join shows. A larger square is closer to the whole frame. Read only by `denoise` and `low_light`. |
 | `steps` | `INT` | Yes | 4 |  | How many passes a question that denoises takes. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual` read 1 to 20: 4 is what Marigold was tuned for, 1 is roughly twice as quick and coarser, and above 8 the answer stops changing much. |
 | `model` | `MODEL` | No |  |  | The transformer `Marigold v2` runs on: Load Diffusion Model on `qwen_image_edit_2509_int8_convrot`. One transformer answers every map; `adapter_name` puts the adapter on it here. |
 | `vae` | `VAE` | No |  |  | A decoder to read the map through, in place of `vae_name`. Wire Load VAE, or anything answering a VAE, to use one this node cannot find by name. |
@@ -14596,7 +14685,7 @@ Describe which parts of an image Segment Anything should select, as a list of po
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `points` | `STRING` | Yes | [128, 128]; [0, 0] |  | The points to segment from, written as x and y pixel coordinates and separated by semicolons: '[128, 128]; [0, 0]' is two points, one 128 pixels in from the top left corner and one on the corner itself. Coordinates count from the top left of the image. |
+| `points` | `STRING` | Yes | [128, 128]; [0, 0] |  | The points to segment from, as x and y pixels from the top left, separated by semicolons: '[128, 128]; [0, 0]' is two points, one 128 pixels in from the corner and one on the corner itself. |
 | `labels` | `STRING` | Yes | [1, 0] |  | One number per point, in the same order: 1 means 'the thing I want is here', 0 means 'this is background, leave it out'. '[1, 0]' keeps whatever sits under the first point and pushes the mask away from the second. |
 
 **Outputs**
@@ -14650,7 +14739,7 @@ Load a Segment Anything model for SAM Image Mask, which turns clicked points int
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model_size` | `COMBO` | Yes |  | `ViT-H`, `ViT-L`, `ViT-B` | Which size of Segment Anything to load. `ViT-H` is the most accurate and the largest at around 2.4 GB, `ViT-L` sits in the middle, and `ViT-B` is roughly 375 MB and the fastest. All three take the same points and produce a mask the same way. |
+| `model_size` | `COMBO` | Yes |  | `ViT-H`, `ViT-L`, `ViT-B` | Which size of Segment Anything to load: `ViT-B` = about 375 MB, fastest; `ViT-L` = middle size; `ViT-H` = about 2.4 GB, most accurate. All three take the same points. |
 
 **Outputs**
 
@@ -14672,7 +14761,7 @@ Load a Segment Anything model for SAM Image Mask, which turns clicked points int
 <details>
 <summary><b>Three Animate Transform</b></summary>
 
-Move an object continuously. Rotate turns it on each axis, bob slides it up and down, and pulse breathes its scale. With units on 'per second' the amounts are rates. With 'per capture' they are spread across the whole run instead, so 180 degrees over 180 frames needs no arithmetic: set rotate_y to 180 and num_frames to 180. With 'per timeline' they are spread across Three App's loop_seconds, and a render then captures a window out of that longer animation, which is what lets the strip on Three Render pick a part of the motion rather than refit the whole of it. Leaving every amount at 0.0 leaves the object still.
+Keep an object moving: rotate turns it on each axis, bob slides it up and down, and pulse breathes its scale. Amounts are rates, totals over the captured frames, or totals over Three App's loop_seconds, as `units` chooses. Every amount at 0.0 leaves the object still.
 
 | | |
 |---|---|
@@ -14684,15 +14773,15 @@ Move an object continuously. Rotate turns it on each axis, bob slides it up and 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `object` | `THREE_OBJECT` | Yes |  |  | The object to animate. It is wrapped rather than changed. |
-| `units` | `COMBO` | Yes | per timeline | `per second`, `per capture`, `per timeline` | 'per timeline' spreads the amounts across Three App's loop_seconds, so `180` is 180 degrees per loop and the frame rate only samples it. 'per second' reads them as rates instead, so `90` is a quarter turn a second. 'per capture' spreads them across the frames actually taken, so the same `180` runs end to end whatever the frame count. |
-| `rotate_x` | `FLOAT` | Yes | 0.0 |  | Degrees per second around X. 0.0 is still, 90.0 is a quarter turn a second. |
-| `rotate_y` | `FLOAT` | Yes | 30.0 |  | Degrees per second around Y. 30.0 is a slow turntable, negative reverses it. |
-| `rotate_z` | `FLOAT` | Yes | 0.0 |  | Degrees per second around Z. 0.0 is still, 90.0 is a quarter turn a second. |
+| `units` | `COMBO` | Yes | per timeline | `per second`, `per capture`, `per timeline` | `per second` = rates, so `90` is a quarter turn a second; `per capture` = totals across the frames taken, whatever their count; `per timeline` = totals across Three App's loop_seconds, so `180` is 180 degrees per loop. |
+| `rotate_x` | `FLOAT` | Yes | 0.0 |  | Degrees around X: per second, per capture or per loop, as `units` reads it. 0.0 is still, 90.0 a quarter turn. |
+| `rotate_y` | `FLOAT` | Yes | 30.0 |  | Degrees around Y: per second, per capture or per loop, as `units` reads it. 360.0 is one full turn, which loops cleanly on `per timeline`; negative reverses it. |
+| `rotate_z` | `FLOAT` | Yes | 0.0 |  | Degrees around Z: per second, per capture or per loop, as `units` reads it. 0.0 is still, 90.0 a quarter turn. |
 | `bob_amplitude` | `FLOAT` | Yes | 0.0 |  | How far it rises and falls, in scene units. 0.0 is off, 0.25 is a gentle float. |
-| `bob_frequency` | `FLOAT` | Yes | 1.0 |  | Bobs per second. 1.0 is one rise and fall a second, 0.25 is languid. |
+| `bob_frequency` | `FLOAT` | Yes | 1.0 |  | Bobs per second, per capture or per loop, as `units` reads it. 1.0 is one rise and fall, 0.25 is languid. |
 | `pulse_amplitude` | `FLOAT` | Yes | 0.0 |  | How much the scale breathes, as a fraction. 0.0 is off, 0.1 swells it a tenth. |
-| `pulse_frequency` | `FLOAT` | Yes | 1.0 |  | Pulses per second. 1.0 is one breath a second, 2.0 is twice as quick. |
-| `phase` | `FLOAT` | Yes | 0.0 |  | Offset into the cycle, in seconds. Give copies 0.0, 0.5 and 1.0 so they do not move in step. |
+| `pulse_frequency` | `FLOAT` | Yes | 1.0 |  | Pulses per second, per capture or per loop, as `units` reads it. 1.0 is one breath, 2.0 is twice as quick. |
+| `phase` | `FLOAT` | Yes | 0.0 |  | Offset into the bob and pulse cycles, in radians: 3.14 is half a cycle. Give copies 0.0, 0.5 and 1.0 so they do not move in step. |
 
 **Outputs**
 
@@ -14731,7 +14820,7 @@ Smooth the stepped edges left along a silhouette. Three App's own antialias sett
 <details>
 <summary><b>Three App</b></summary>
 
-Bring a scene and a camera together with the settings the renderer runs under, and hand the result to Three Viewer. Tone mapping decides how brightness above 1.0 is brought into a displayable range: 'aces' is the filmic default, 'none' shows the raw values and clips them. Orbit control lets the viewer be dragged; with it off the camera stays exactly where the camera node put it.
+Bring a scene and a camera together with the settings the renderer runs under, for Three Viewer, the Three render nodes and Three Compile. Tone mapping, exposure, shadows, orbit dragging, effects and the animation's loop length are set here.
 
 | | |
 |---|---|
@@ -14751,7 +14840,7 @@ Bring a scene and a camera together with the settings the renderer runs under, a
 | `auto_rotate_speed` | `FLOAT` | Yes | 1.0 |  | How fast auto rotate turns. 1.0 is a slow drift, negative turns the other way. |
 | `tone_mapping` | `COMBO` | Yes | aces | `none`, `linear`, `reinhard`, `cineon`, `aces`, `agx`, `neutral` | How brightness above 1.0 is brought into range. 'aces' is filmic, 'none' clips, 'agx' is gentler. |
 | `exposure` | `FLOAT` | Yes | 1.0 |  | Overall brightness into the tone map. 1.0 is neutral, 2.0 one stop up. |
-| `loop_seconds` | `FLOAT` | Yes | 4.0 |  | How long the whole animation lasts, in seconds. 4.0 is a steady turntable, 20.0 a long move a render takes a few seconds out of. It is the length the viewer loops over, the axis the strip on Three Render is drawn against, and the span every `per timeline` motion is spread across. |
+| `loop_seconds` | `FLOAT` | Yes | 4.0 |  | How long the whole animation lasts, in seconds. 4.0 = a steady turntable; 20.0 = a long move a render captures part of. The viewer loops over it, Three Render's strip spans it and `per timeline` motion spreads across it. |
 | `pixel_ratio_limit` | `FLOAT` | Yes | 2.0 |  | Ceiling on how many device pixels back one CSS pixel. 2.0 is sharp, 1.0 is faster on a large viewer. |
 | `shadow_quality` | `COMBO` | Yes | 2048 | `512`, `1024`, `2048`, `4096`, `8192` | Pixels a side of the map every shadow is drawn into. 512 is blocky, 2048 suits most scenes, 8192 costs memory and is for a close crop. |
 | `effects` | `THREE_EFFECT` | No |  |  | The chain of passes the frame is put through, from Three Bloom, Three Depth Of Field or Three Antialias. Left unwired the frame is shown as it was drawn. |
@@ -14768,7 +14857,7 @@ Bring a scene and a camera together with the settings the renderer runs under, a
 <details>
 <summary><b>Three Area Light</b></summary>
 
-Light the scene from a panel with a size rather than from a point, so shadows soften with the width and height given and highlights read as a window or a softbox rather than a pinprick. Three Path Trace Render aims samples straight at it, so it renders cleaner than an emissive material at the same sample count, and the smaller the panel the wider that gap. The panel throws light from one face, the one facing the target. It does not appear in the picture itself, though a mirror reflects it, so pair it with an emissive Three Standard Material where the fitting has to be seen. Three Render lights Three Standard Material and Three Physical Material with it and casts no shadow from it; a traced render shadows and shapes it in full.
+Light the scene from a panel rather than a point, so shadows soften and highlights read as a window or softbox. The panel shines from the face toward its target and is invisible itself; pair it with an emissive material where the fitting must show. Only a path traced render casts its shadow.
 
 | | |
 |---|---|
@@ -14803,7 +14892,7 @@ Light the scene from a panel with a size rather than from a point, so shadows so
 <details>
 <summary><b>Three Basic Material</b></summary>
 
-A surface that ignores every light and draws its colour flat. Nothing shades it, so a sphere reads as a circle, which is what makes it right for a background card, a UI panel, a wireframe overlay or a texture that must arrive unaltered. It also renders in a scene with no light at all, where a standard material would be black.
+A surface that ignores every light and draws its colour flat, so a sphere reads as a circle. Right for a background card, a UI panel, a wireframe overlay or a texture that must arrive unaltered, and it shows even in a scene with no light.
 
 | | |
 |---|---|
@@ -14862,7 +14951,7 @@ Bleed a glow out of everything brighter than a threshold, which is what makes an
 <details>
 <summary><b>Three Box Geometry</b></summary>
 
-A rectangular box, sized in scene units and centred on its own origin. Wire it into Three Mesh together with a material. Segment counts subdivide each face, which matters only where a shader or a displacement map needs vertices to move; one segment a side is right for a plain box. The shape is described here and built in the browser, so nothing is rendered on the server.
+A rectangular box, sized in scene units and centred on its own origin, for Three Mesh together with a material. Segment counts subdivide each face, which matters only where a shader or a displacement map needs vertices to move.
 
 | | |
 |---|---|
@@ -14892,7 +14981,7 @@ A rectangular box, sized in scene units and centred on its own origin. Wire it i
 <details>
 <summary><b>Three Compile</b></summary>
 
-Write the scene out as a zip holding a web page that runs on its own. Unpack it and open index.html: the scene draws, and the camera can be orbited, with no ComfyUI and nothing fetched over the network. Three.js, the scene description and every texture go in the archive, and each texture address is rewritten to point at its copy. A scene using Three Custom Geometry, Custom Material, Custom Object, Custom Update or Script Module carries that JavaScript into the page, so the archive is code as well as data, and is refused unless threejs.allow_scripts is on in config.yaml.
+Write the scene out as a zip holding a web page that runs on its own: unpack it, open index.html, and the scene draws and orbits with no ComfyUI and nothing fetched over the network. A scene carrying code from a Three Custom node or Three Script Module is refused unless threejs.allow_scripts is on in config.yaml.
 
 | | |
 |---|---|
@@ -14922,7 +15011,7 @@ Write the scene out as a zip holding a web page that runs on its own. Unpack it 
 <details>
 <summary><b>Three Custom Geometry</b></summary>
 
-Reach any Three.js geometry class the pack has no node for, by returning one from a short JavaScript body. `THREE` is in scope, so a torus knot, a lathe, a tube or a hand-built BufferGeometry are all one line away. The code runs in your browser when the viewer loads, with the same reach as any frontend extension, so only run a workflow carrying custom JavaScript if you trust where it came from.
+Make any shape the pack has no node for, such as a torus knot, a lathe or a tube, from a short JavaScript body that returns one, for Three Mesh. The code runs in the browser with the reach of any extension, so only load a workflow carrying it from a trusted source.
 
 | | |
 |---|---|
@@ -14947,7 +15036,7 @@ Reach any Three.js geometry class the pack has no node for, by returning one fro
 <details>
 <summary><b>Three Custom Material</b></summary>
 
-Reach any Three.js material class the pack has no node for, from a module file you place in ComfyUI's input folder or a folder under paths.allow_read. The module's header names the textures it wants and the node's slots take those names. Code is never typed on the node and never travels inside a workflow, so a graph from someone else cannot bring javascript with it. A module runs in your browser when the viewer loads, with the same reach as any frontend extension, and only while threejs.allow_scripts is on.
+Use any material the pack has no node for, built by a module file on disk whose header names the textures it wants; the node's slots take those names. Modules run in the browser only while threejs.allow_scripts is on in config.yaml, and no code travels inside a workflow.
 
 | | |
 |---|---|
@@ -14976,7 +15065,7 @@ Reach any Three.js material class the pack has no node for, from a module file y
 <details>
 <summary><b>Three Custom Object</b></summary>
 
-Build any Object3D from a short JavaScript body, for what wiring cannot express: scattering a hundred copies, an InstancedMesh, a Points cloud, LineSegments. `THREE` is in scope and whatever is wired in arrives as `geometry1`, `geometry2`, `material1`, `material2`, `object1` and `object2`. The code runs in your browser when the viewer loads, with the same reach as any frontend extension, so only run a workflow carrying custom JavaScript if you trust where it came from.
+Build an object from a short JavaScript body for what wiring cannot express, such as a hundred scattered copies, an instanced crowd or a point cloud. Wired inputs arrive in the code by socket name. The code runs in the browser with the reach of any extension, so only load a workflow carrying it from a trusted source.
 
 | | |
 |---|---|
@@ -14987,7 +15076,7 @@ Build any Object3D from a short JavaScript body, for what wiring cannot express:
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `javascript` | `STRING` | Yes | const group = new THREE.Group(); if (object1) group.add(object1); return group; |  | A body returning an Object3D, as `return new THREE.InstancedMesh(geometry1, material1, 100);`. |
+| `javascript` | `STRING` | Yes | const group = new THREE.Group(); if (object1) group.add(object1); return group; |  | A body returning an Object3D, as `return new THREE.InstancedMesh(geometry1, material1, 100);`. `THREE` is in scope. |
 | `geometry1` | `THREE_GEOMETRY` | No |  |  | A shape reachable in the body as `geometry1`. |
 | `geometry2` | `THREE_GEOMETRY` | No |  |  | A shape reachable in the body as `geometry2`. |
 | `material1` | `THREE_MATERIAL` | No |  |  | A surface reachable in the body as `material1`. |
@@ -15007,7 +15096,7 @@ Build any Object3D from a short JavaScript body, for what wiring cannot express:
 <details>
 <summary><b>Three Custom Update</b></summary>
 
-Run a short JavaScript body on an object once per drawn frame, for motion Three Animate Transform cannot express. In scope are `object`, `time` in seconds since the viewer started, `delta` in seconds since the last frame, `THREE`, and `ctx` for anything to be kept between frames. Scaling by `delta` keeps the motion the same speed whatever the frame rate. The code runs in your browser, so only run a workflow carrying custom JavaScript if you trust where it came from.
+Run a short JavaScript body on an object every drawn frame, for motion Three Animate Transform cannot express. The code runs in the browser with the reach of any extension, so only load a workflow carrying it from a trusted source.
 
 | | |
 |---|---|
@@ -15019,7 +15108,7 @@ Run a short JavaScript body on an object once per drawn frame, for motion Three 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `object` | `THREE_OBJECT` | Yes |  |  | The object the code moves. It is wrapped rather than changed. |
-| `javascript` | `STRING` | Yes | object.rotation.y += delta * 0.5; |  | A body run each frame, as `object.position.y = Math.sin(time) * 0.5;`. Nothing is returned. |
+| `javascript` | `STRING` | Yes | object.rotation.y += delta * 0.5; |  | A body run each frame, as `object.position.y = Math.sin(time) * 0.5;`. In scope: `object`; `time`, seconds since start; `delta`, seconds since the last frame; `THREE`; `ctx`, kept between frames. Nothing is returned. |
 
 **Outputs**
 
@@ -15091,7 +15180,7 @@ Keep one distance from the camera sharp and blur everything nearer and further, 
 <details>
 <summary><b>Three Environment</b></summary>
 
-Light the scene from all around rather than from lamps alone, which is what gives metal and glass something to reflect. Without one a polished dark material renders almost black, since there is nothing in the world for it to mirror. 'studio room' builds a small lit room and needs no file. 'image' takes an equirectangular picture off the wire. 'file' reads a .hdr or .exr, which carries real intensities and lights a scene far better than an ordinary picture. Wire the result into Three Scene.
+Light the scene from all around, which gives metal and glass something to reflect; without it a polished dark material renders almost black. Build a lit studio room, wrap a picture from the graph around the scene, or read a .hdr or .exr file, then wire the result into Three Scene.
 
 | | |
 |---|---|
@@ -15237,7 +15326,7 @@ Take one material out of a Three Script Module by name and put it on a normal ma
 <details>
 <summary><b>Three Import Object</b></summary>
 
-Take one Object3D out of a Three Script Module by name and put it on a normal object wire, so a group or a scene can hold it without knowing it came from JavaScript. The name has to match a key the module returned, and the value it holds has to be an object or the viewer reports it by name.
+Take one object out of a Three Script Module by name and put it on a normal object wire, for Three Group or Three Scene. The name has to match a key the module returned, and a value that is not an object is reported by name in the viewer.
 
 | | |
 |---|---|
@@ -15263,7 +15352,7 @@ Take one Object3D out of a Three Script Module by name and put it on a normal ob
 <details>
 <summary><b>Three Light</b></summary>
 
-One light, wired into a group or straight into the scene. A standard or physical material is black without one. 'directional' is sunlight, parallel rays from the direction its position points; 'point' is a bulb that falls off with distance; 'spot' is a cone; 'ambient' lifts everything evenly and casts nothing; 'hemisphere' fades sky colour to ground colour. Only directional, point and spot can cast shadows.
+One light, wired into a group or straight into the scene; a standard or physical material is black without one. Choose sunlight, a bulb, a spotlight cone, an even ambient lift or a sky-to-ground fade; only the sun, bulb and spot cast shadows.
 
 | | |
 |---|---|
@@ -15274,7 +15363,7 @@ One light, wired into a group or straight into the scene. A standard or physical
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `light_type` | `COMBO` | Yes | directional | `ambient`, `hemisphere`, `directional`, `point`, `spot` | Which kind of light. 'directional' is sun, 'point' a bulb, 'spot' a cone, 'ambient' a flat lift. |
+| `light_type` | `COMBO` | Yes | directional | `ambient`, `hemisphere`, `directional`, `point`, `spot` | Which kind of light. 'directional' is sun, 'point' a bulb, 'spot' a cone, 'ambient' a flat lift, 'hemisphere' a sky colour fading to ground_color. |
 | `color` | `STRING` | Yes | #ffffff |  | Light colour as hexadecimal. #ffffff is neutral, #ffd8a8 warm, #a8c8ff cool daylight. |
 | `ground_color` | `STRING` | Yes | #404040 |  | The upward bounce colour, used by 'hemisphere' alone. #404040 reads as grey ground. |
 | `intensity` | `FLOAT` | Yes | 2.0 |  | How bright the light is. 2.0 suits a key light, 0.3 a fill, 0 turns it off. |
@@ -15299,7 +15388,7 @@ One light, wired into a group or straight into the scene. A standard or physical
 <details>
 <summary><b>Three Load Model</b></summary>
 
-Put a model file into the scene as an object, so a mesh made elsewhere can be lit, animated and rendered here. It reads .glb, .gltf, .dae, .fbx, .obj, .3mf, .stl and .ply. The menu lists what is in ComfyUI's input, output and temp folders; path takes anything else, including the mesh_path a Load 3D node answers with. A .glb, .gltf, .dae, .fbx or .3mf brings its own materials, an .obj takes them from a .mtl beside it, and a .stl or .ply arrives bare and takes the material wired in. Wire nothing and it keeps whatever it came with.
+Put a model file into the scene as an object, so a mesh made elsewhere can be lit, animated and rendered here. Reads .glb, .gltf, .dae, .fbx, .obj, .3mf, .stl and .ply; an .obj takes its materials from a .mtl beside it, and an .stl or .ply arrives with a plain default surface.
 
 | | |
 |---|---|
@@ -15328,7 +15417,7 @@ Put a model file into the scene as an object, so a mesh made elsewhere can be li
 <details>
 <summary><b>Three Material Mix</b></summary>
 
-Paint one material over another through a mask, the way a texturing tool stacks layers. The mask is read in UV space: black keeps the base, white shows the top, and grey mixes them. Every channel is mixed, so colour, roughness, metalness, normals, emission, ambient occlusion, bump and displacement all follow the same mask, and a channel only one side textures is mixed against the other's plain setting. The answer is a normal material, so feeding it back in as the base stacks a third layer, and a fourth.
+Paint one material over another through a mask, the way a texturing tool stacks layers: black keeps the base, white shows the top, grey mixes them. Every channel follows the same mask, and the result is a normal material, so feeding it back in as the base stacks another layer.
 
 | | |
 |---|---|
@@ -15386,7 +15475,7 @@ Draw one geometry with one material. This is the object that appears in the scen
 <details>
 <summary><b>Three Orthographic Camera</b></summary>
 
-A camera with no perspective, so parallel lines stay parallel and an object is the same size however far away it is. This is the view an elevation drawing or an isometric game uses. View height sets how much of the scene fits vertically, and the width follows the viewer's shape. Distance no longer changes size, so framing is done with view height rather than by moving closer.
+A camera with no perspective, so parallel lines stay parallel and an object is the same size at any distance, as in an elevation drawing or an isometric game. Framing is set with view height rather than by moving closer.
 
 | | |
 |---|---|
@@ -15397,7 +15486,7 @@ A camera with no perspective, so parallel lines stay parallel and an object is t
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `view_height` | `FLOAT` | Yes | 6.0 |  | How many scene units fit top to bottom. 6.0 frames a unit cube with room around it. |
+| `view_height` | `FLOAT` | Yes | 6.0 |  | How many scene units fit top to bottom; the width follows the viewer's shape. 6.0 frames a unit cube with room around it. |
 | `near` | `FLOAT` | Yes | 0.1 |  | Nearest distance drawn. 0.1 suits most scenes, and unlike a perspective camera this may be negative. |
 | `far` | `FLOAT` | Yes | 1000.0 |  | Furthest distance drawn. 1000.0 covers most scenes; anything beyond is clipped. |
 | `position_x` | `FLOAT` | Yes | 3.0 |  | Where the camera sits along X. With 3.0, 2.0 and 5.0 the view reads as isometric. |
@@ -15420,7 +15509,7 @@ A camera with no perspective, so parallel lines stay parallel and an object is t
 <details>
 <summary><b>Three Path Trace Render</b></summary>
 
-Render the scene by following light as it bounces, so soft shadows, colour bleeding between surfaces, mirror reflections and refracting glass come out of the geometry itself rather than being approximated. Every pixel averages `samples` traced paths and noise falls as that number rises, so this trades time for cleanliness where Three Render trades nothing. Light comes from Three Environment, from an emissive material and from directional, point and spot lights; an ambient or hemisphere light is not traced, and a scene lit only by one comes out black. The effect chain, antialias and supersample settings are not used. The drawing happens in an open ComfyUI tab, so a tab has to be open and the graph queued from it; a headless run says so rather than hanging.
+Render the scene by following light as it bounces, so soft shadows, colour bleeding, reflections and glass come out of the geometry, handing on frames, depth and normals. Ambient and hemisphere lights and Three App's effects are not used. It draws in an open ComfyUI tab, so queue the graph from one.
 
 | | |
 |---|---|
@@ -15464,7 +15553,7 @@ Render the scene by following light as it bounces, so soft shadows, colour bleed
 <details>
 <summary><b>Three Path Trace Viewer</b></summary>
 
-Trace the scene on this node and keep adding samples to the same picture, so it starts noisy and cleans up in place while nothing is touched. Moving the camera starts it over, which is how the framing for a Three Path Trace Render is found without waiting on a render each time. The animation is held still to begin with, since a moving scene starts every frame over and never settles; Play runs it anyway and the picture stays grainy. Drag inside to orbit, wheel to zoom, middle-drag or hold shift to pan. Nothing is rendered on the server and no image comes out of this node.
+Trace the scene on this node, adding samples so the picture cleans up in place, to find the framing for Three Path Trace Render without waiting on a render. Moving the camera starts it over; the animation stays held until Play. Drag to orbit, wheel to zoom, middle-drag or hold shift to pan.
 
 | | |
 |---|---|
@@ -15490,7 +15579,7 @@ Trace the scene on this node and keep adding samples to the same picture, so it 
 <details>
 <summary><b>Three Perspective Camera</b></summary>
 
-A camera with perspective, so distant things are smaller. Position places it and target is the point it looks at, which is also the point orbit control turns around. These are the starting values: dragging in the viewer moves the camera from here, and Reset Camera puts it back. For a view with no convergence, as in an elevation drawing, use Three Orthographic Camera.
+A camera with perspective, so distant things are smaller. Position places it and target is the point it looks at and orbits around; dragging in the viewer starts from here and Reset Camera returns here.
 
 | | |
 |---|---|
@@ -15524,7 +15613,7 @@ A camera with perspective, so distant things are smaller. Position places it and
 <details>
 <summary><b>Three Physical Material</b></summary>
 
-Three Standard Material with the effects glass, car paint and soap bubbles need. Transmission makes the surface see-through by refracting light rather than by going transparent, and wants a thickness and an index of refraction to read as a solid, and an attenuation colour to read as tinted. Clearcoat adds a second glossy layer over the base, as on lacquer. Sheen adds the soft rim velvet has. Iridescence shifts hue with viewing angle. Emissive gives off light, which Three Path Trace Render treats as a light in its own right. Everything at 0.0 behaves exactly like a standard material, at a higher cost.
+Three Standard Material with the extra layers glass, car paint, velvet and soap bubbles need: transmission, clearcoat, sheen and iridescence. Emission counts as a light in Three Path Trace Render. With every extra at 0.0 it looks exactly like a standard material, at a higher cost.
 
 | | |
 |---|---|
@@ -15540,7 +15629,7 @@ Three Standard Material with the effects glass, car paint and soap bubbles need.
 | `metalness` | `FLOAT` | Yes | 0.0 |  | How metallic the surface reads. 0.0 for glass and paint, 1.0 for bare metal. |
 | `clearcoat` | `FLOAT` | Yes | 0.0 |  | Strength of a glossy layer over the base. 0.0 is off, 1.0 is full lacquer. |
 | `clearcoat_roughness` | `FLOAT` | Yes | 0.0 |  | How scattered the clearcoat is. 0.0 is glassy, 0.3 reads as worn lacquer. |
-| `transmission` | `FLOAT` | Yes | 0.0 |  | How much light passes through. 0.0 is solid, 1.0 is clear glass. |
+| `transmission` | `FLOAT` | Yes | 0.0 |  | How much light passes through, by refraction. 0.0 is solid, 1.0 is clear glass; set thickness and ior for a solid block, attenuation_color for a tint. |
 | `thickness` | `FLOAT` | Yes | 0.0 |  | How deep the glass is, in scene units. 0.0 is a thin shell, 1.0 a solid block. |
 | `ior` | `FLOAT` | Yes | 1.5 |  | Index of refraction. 1.5 is glass, 1.33 water, 2.42 diamond, 1.0 bends nothing. |
 | `dispersion` | `FLOAT` | Yes | 0.0 |  | How far colours split through the glass. 0.0 is off, 1.0 gives a prism edge. |
@@ -15588,7 +15677,7 @@ Three Standard Material with the effects glass, car paint and soap bubbles need.
 <details>
 <summary><b>Three Plane Geometry</b></summary>
 
-A flat rectangle facing +Z, which is the usual carrier for a texture and the usual ground plane once it is turned flat with Three Transform Object. Only one side is drawn unless the material's side is set to 'double'. Raise the segment counts when a shader or a displacement map needs vertices to move; 1 by 1 is right for a plain card.
+A flat rectangle facing +Z, the usual carrier for a texture and, laid flat with Three Transform Object, the usual ground plane. Only one side is drawn unless the material's side is set to 'double'.
 
 | | |
 |---|---|
@@ -15616,7 +15705,7 @@ A flat rectangle facing +Z, which is the usual carrier for a texture and the usu
 <details>
 <summary><b>Three Play Animation</b></summary>
 
-Play a clip that was saved inside a model file, including a skinned one, so a rigged character walks rather than standing in its bind pose. It reads the clips a .glb, .gltf, .dae or .fbx carries; an .obj, .stl, .ply or .3mf carries none. With units on 'per second' the clip runs at the speed it was authored at. With 'per capture' one pass through the clip is spread across the whole render, so a walk cycle fills the batch whatever its frame count. With 'per timeline' it is spread across Three App's loop_seconds instead, and the render then captures a window out of that, which is how a strip on Three Render picks part of a long walk rather than refitting the whole of it. The pose is worked out from the moment alone, so a frame drawn twice comes out the same both times.
+Play a clip saved inside a .glb, .gltf, .dae or .fbx model, so a rigged character walks rather than standing in its bind pose. The clip runs at its authored speed, across the captured frames, or across Three App's loop_seconds, as `units` chooses.
 
 | | |
 |---|---|
@@ -15646,7 +15735,7 @@ Play a clip that was saved inside a model file, including a skinned one, so a ri
 <details>
 <summary><b>Three Render</b></summary>
 
-Draw the scene at a size you choose and hand it on as an IMAGE, so a Three.js scene can be saved, composited or fed to a sampler. Every frame comes back three ways, picture, depth and normals, so one render feeds a preview and a ControlNet at once. Three App's loop_seconds is how long the animation runs before it repeats, and fps and num_frames only sample it, so fps times loop_seconds is one whole loop and changing fps alone changes smoothness rather than speed. Each batch is in time order, and the fps output feeds a video saver's own fps. The scene is wound forward through the run, so motion that adds up frame by frame lands where it would. The drawing happens in an open ComfyUI tab, so one has to be open and the graph queued from it; a headless run says so rather than hanging.
+Draw the scene at a chosen size as an IMAGE batch with matching depth and normal maps, to save, composite or feed a sampler and a ControlNet. Its fps and num_frames sample Three App's loop_seconds, so fps alone changes smoothness, not speed. It draws in an open ComfyUI tab, so queue the graph from one.
 
 | | |
 |---|---|
@@ -15685,7 +15774,7 @@ Draw the scene at a size you choose and hand it on as an IMAGE, so a Three.js sc
 <details>
 <summary><b>Three Scene</b></summary>
 
-Everything that gets drawn, plus what sits behind it. Wire one object into root, usually a Three Group holding the meshes and the lights. Fog fades objects toward the fog colour with distance, which reads as depth and hides the far edge of a ground plane. A transparent background renders no backdrop at all, so the page shows through.
+Everything that gets drawn, plus what sits behind it: wire one object into root, usually a Three Group holding the meshes and the lights. Fog fades distant objects toward its colour and hides the far edge of a ground plane. A transparent background lets the page show through.
 
 | | |
 |---|---|
@@ -15717,7 +15806,7 @@ Everything that gets drawn, plus what sits behind it. Wire one object into root,
 <details>
 <summary><b>Three Script Module</b></summary>
 
-Build several named resources in one place and hand them out through Three Import Material, Three Import Geometry and Three Import Object. The body returns an object whose keys are the names, and it runs once per viewer load, so a palette of materials shared across many meshes is built once rather than per node. The code runs in your browser, with the same reach as any frontend extension, so only run a workflow carrying custom JavaScript if you trust where it came from.
+Build several named resources in one place, once per viewer load, and hand them out through the Three Import nodes, such as one palette of materials shared by many meshes. The code runs in the browser with the reach of any extension, so only load a workflow carrying it from a trusted source.
 
 | | |
 |---|---|
@@ -15743,7 +15832,7 @@ Build several named resources in one place and hand them out through Three Impor
 <details>
 <summary><b>Three Shader Material</b></summary>
 
-A surface whose look is written in GLSL rather than set by widgets. Lights do not touch it: the fragment shader decides every pixel. Uniforms are typed JSON entries, each `{"type": ..., "value": ...}` with a type of float, color, vec2, vec3 or vec4. Four names are filled in every frame, so an animated shader needs no wiring: `time` is elapsed seconds, `progress` runs 0 to 1 across the capture, `timeline` runs 0 to 1 across the app's `loop_seconds`, and `resolution` is the frame size in pixels. `uTime`, `uProgress`, `uTimeline` and `uResolution` name the same four.
+A surface whose look is written in GLSL rather than set by widgets, untouched by lights. Time, capture progress, loop position and frame size are filled into its uniforms every frame, so an animated shader needs no wiring.
 
 | | |
 |---|---|
@@ -15756,7 +15845,7 @@ A surface whose look is written in GLSL rather than set by widgets. Lights do no
 |---|---|---|---|---|---|
 | `vertex_shader` | `STRING` | Yes | varying vec2 vUv;  void main() {     vUv = uv;     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); } |  | GLSL for each vertex. It must set `gl_Position`; the default passes `uv` through as `vUv`. |
 | `fragment_shader` | `STRING` | Yes | uniform float time; uniform vec3 color; varying vec2 vUv;  void main() {     float pulse = 0.65 + 0.35 * sin(time * 2.0 + vUv.y * 10.0);     gl_FragColor = vec4(color * pulse, 1.0); } |  | GLSL for each pixel. It must set `gl_FragColor`, or `out vec4` under the `glsl3` version. |
-| `uniforms_json` | `STRING` | Yes | {"time": {"type": "float", "value": 0}, "color": {"type": "color", "value": "#6fdcff"}} |  | Typed values the shader reads, as `{"time": {"type": "float", "value": 0}}`. Types are float, color, vec2, vec3 and vec4. `time`, `progress`, `timeline` and `resolution` are filled in each frame, and so are `uTime`, `uProgress`, `uTimeline` and `uResolution`. |
+| `uniforms_json` | `STRING` | Yes | {"time": {"type": "float", "value": 0}, "color": {"type": "color", "value": "#6fdcff"}} |  | Typed values, as `{"time": {"type": "float", "value": 0}}`; types: float, color, vec2, vec3, vec4. Filled each frame, also prefixed `u` as in `uTime`: `time` in seconds; `progress` 0 to 1 over the capture; `timeline` 0 to 1 over the loop; `resolution` in pixels. |
 | `transparent` | `BOOLEAN` | Yes | False |  | `true` blends the shader's alpha with what is behind; `false` draws it solid. |
 | `depth_write` | `BOOLEAN` | Yes | True |  | `true` records depth so later objects sort behind; `false` suits glow and additive passes. |
 | `depth_test` | `BOOLEAN` | Yes | True |  | `true` hides the surface behind nearer objects; `false` draws it over everything. |
@@ -15775,7 +15864,7 @@ A surface whose look is written in GLSL rather than set by widgets. Lights do no
 <details>
 <summary><b>Three Sphere Geometry</b></summary>
 
-A sphere, centred on its own origin. The two angle pairs cut it: leaving phi at 0 to 360 and theta at 0 to 180 gives a whole sphere, while a shorter theta length gives a dome and a shorter phi length gives a wedge. Segment counts set how round it looks, and 32 by 16 is smooth at normal sizes.
+A sphere centred on its own origin, for Three Mesh. A shorter theta length gives a dome and a shorter phi length gives a wedge; 32 by 16 segments is smooth at normal sizes.
 
 | | |
 |---|---|
@@ -15806,7 +15895,7 @@ A sphere, centred on its own origin. The two angle pairs cut it: leaving phi at 
 <details>
 <summary><b>Three Standard Material</b></summary>
 
-A physically based surface, lit by the lights in the scene. Colour, roughness and metalness set the look on their own, and a texture wired into any of the map sockets overrides that channel per pixel. Metals take their colour from the map or the colour swatch and reflect their surroundings; a metalness of 0 with a roughness near 0.5 is the usual starting point for plastic, paint and cloth. For clearcoat, transmission or sheen use Three Physical Material.
+A physically based surface lit by the scene's lights, set by colour, roughness and metalness, with any wired map overriding its channel per pixel. Metalness 0 and roughness near 0.5 suit plastic, paint and cloth; for clearcoat, transmission or sheen use Three Physical Material.
 
 | | |
 |---|---|
@@ -15853,7 +15942,7 @@ A physically based surface, lit by the lights in the scene. Colour, roughness an
 <details>
 <summary><b>Three Texture From Image</b></summary>
 
-Carry an image into any of a material's map sockets. Only the first frame of a batch is used, since a material takes one texture. Colour space matters: a colour map such as albedo or emission is 'srgb', while a map read as numbers, meaning normal, roughness, metalness or alpha, is 'linear-srgb' and will look wrong tagged as colour. Repeat and offset tile the image across the surface.
+Carry the first frame of an image batch into any of a material's map sockets, tiled by repeat and offset. Tag colour maps 'srgb' and data maps such as normal or roughness 'linear-srgb', or they look wrong.
 
 | | |
 |---|---|
@@ -15951,7 +16040,7 @@ A ring lying in the XY plane. Radius is the distance from the centre to the midd
 <details>
 <summary><b>Three Track</b></summary>
 
-Aim a camera at an object, carry the camera along with it, or both, so a moving subject stays framed without the camera's numbers being worked out by hand. Wire the object in and the result into a camera's track socket. The object itself is not copied: the tracker finds the one already in the scene, so wire the same object into a group as well and there is still only one of it. It follows the object as it is at that moment, so an object being spun by Three Animate Transform or walked by Three Play Animation is tracked through the motion.
+Aim a camera at an object, carry the camera along with it, or both, so a moving subject stays framed. Wire the object in and the result into a camera's track socket; it follows the object already in the scene, motion included, without copying it.
 
 | | |
 |---|---|
@@ -15982,7 +16071,7 @@ Aim a camera at an object, carry the camera along with it, or both, so a moving 
 <details>
 <summary><b>Three Transform Object</b></summary>
 
-Place an object in the scene. The object wired in is not altered: it is put inside a parent that carries the position, rotation and scale, so the same mesh can be placed in several spots at once from one node. Rotation is in degrees, applied X then Y then Z. Turning a plane by -90 on X lays it flat as a floor.
+Place an object in the scene by wrapping it in a parent that carries position, rotation and scale, so one mesh can be placed in several spots. Rotation is in degrees, X then Y then Z; -90 on X lays a plane flat as a floor.
 
 | | |
 |---|---|
@@ -16018,7 +16107,7 @@ Place an object in the scene. The object wired in is not altered: it is put insi
 <details>
 <summary><b>Three Viewer</b></summary>
 
-Draw the scene on this node and keep drawing it. The picture is built in the browser on a WebGL surface, so nothing is rendered on the server and no image comes out of this node. Drag inside it to orbit, wheel to zoom, middle-drag or hold shift to pan, all of which need orbit control on in Three App. Pause stops the animation without stopping the camera, and Reset Camera returns to the values the camera node holds. The view fills the node, so drag the node's corner to make it bigger.
+Draw the scene live on this node, in the browser, with no image output. Drag to orbit, wheel to zoom, middle-drag or hold shift to pan while Three App's orbit control is on; Pause stops the animation and Reset Camera returns to the camera node's values.
 
 | | |
 |---|---|
@@ -16046,7 +16135,7 @@ Draw the scene on this node and keep drawing it. The picture is built in the bro
 <details>
 <summary><b>Content Viewer</b></summary>
 
-Display anything wired in, in an embedded frame, and pass it on unchanged: Markdown with Mermaid diagrams and KaTeX maths, HTML, SVG, documents on a DOC wire, syntax-highlighted code, collapsible JSON and YAML, CSV tables, coloured terminal logs, an image canvas with layers, brushes and blend modes, and an inspector for tensors. The view is picked from the content, and the dropdown beside it changes to any other. An edit made in the node is saved with the workflow and goes downstream, and a list arrives as numbered panes with a tick box each, so entries can be dropped before they go on.
+Display anything wired in and pass it on unchanged: Markdown with diagrams and maths, HTML, SVG, documents, code, JSON, YAML, CSV tables, terminal logs, a layered image canvas and a tensor inspector. The view is picked from the content and can be switched. Edits are saved with the workflow and go downstream.
 
 | | |
 |---|---|
@@ -16058,7 +16147,7 @@ Display anything wired in, in an embedded frame, and pass it on unchanged: Markd
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `content` | `*` | No |  |  | Whatever should be displayed. Text, a list of strings, a parsed object or an image batch all work: the view that recognises the content is the one that draws it. A list arrives as one numbered container per item, each with its own tick box and copy button. |
+| `content` | `*` | No |  |  | What to display: text, a list of strings, a parsed object or an image batch; the view that recognises it draws it. A list arrives as numbered panes, each with a tick box that keeps or drops it and a copy button. |
 | `manual_content` | `STRING` | No |  |  | What was typed into the node with the Edit button. Written by the viewer rather than by hand, and saved with the workflow, so an edit survives a reload and takes precedence over the wired content. |
 | `viewer_meta` | `STRING` | No | {"lastInputHash": "", "excluded": []} |  | Which list items are unticked, as JSON. Written by the viewer; unticked items are shown but left out of the output. |
 | `view_state` | `STRING` | No | {} |  | Which view is selected and anything that view has stored, as JSON. Written by the viewer, and what lets a composited canvas or a rendered frame survive a reload without re-running the graph. |
@@ -16125,8 +16214,8 @@ Find a face with YuNet and crop a square around it, together with the crop windo
 | `image` | `IMAGE` | Yes |  |  | The image to search for a face in. A batch is searched on its first image and every image is then cut to that same window. |
 | `yunet_model` | `YUNET_MODEL` | Yes |  |  | The detector, from YuNet Model Loader. |
 | `crop_padding_factor` | `FLOAT` | Yes | 0.25 |  | How much room to leave around the detected face, as a fraction of its size. 0.0 crops tight to the detection, 0.25 leaves a quarter of the face size as margin, and 2.0 pulls back far enough to include the shoulders. |
-| `confidence` | `FLOAT` | Yes | 0.6 |  | How sure the detector has to be before a region counts as a face. Lower finds more faces and more false positives: drop towards 0.3 for a small, blurred or heavily stylised face, raise towards 0.9 when a busy background is producing detections that are not faces. |
-| `select` | `COMBO` | Yes |  | `largest`, `highest confidence`, `leftmost`, `rightmost` | Which face to crop when several are found. `largest` takes the one filling the most pixels, which is usually the subject. `highest confidence` takes the one the detector is surest of, which suits a crowd where the subject is not the nearest. `leftmost` and `rightmost` pick by position, for a framing you already know. |
+| `confidence` | `FLOAT` | Yes | 0.6 |  | How sure the detector must be that a region is a face. Lower finds more faces and more false positives: 0.3 = catches small, blurred or stylised faces; 0.9 = rejects false detections on a busy background. |
+| `select` | `COMBO` | Yes |  | `largest`, `highest confidence`, `leftmost`, `rightmost` | Which face to crop when several are found. `largest` = the most pixels, usually the subject; `highest confidence` = the one the detector is surest of, for a crowd; `leftmost`, `rightmost` = by position. |
 
 **Outputs**
 
@@ -16197,7 +16286,7 @@ Deprecated: use core MaskToImage instead. Converts a batch of masks to greyscale
 <details>
 <summary><b>Image to Latent Mask</b></summary>
 
-Deprecated: use core ImageToMask instead, or ImageColorToMask to key on a colour. Takes one channel of an image as a mask, one mask per image in the batch. `alpha` uses transparency, which is fully opaque everywhere for an image that has none and so gives a solid white mask; `red`, `green` and `blue` each use one colour channel, which is how a mask painted in a single colour is picked up.
+Deprecated: use core ImageToMask instead, or ImageColorToMask to key on a colour. Takes one channel of each image in a batch as a mask: `alpha` for transparency (solid white for an opaque image), or `red`, `green` or `blue` for a mask painted in one colour.
 
 | | |
 |---|---|
@@ -16643,7 +16732,7 @@ Deprecated: use Model Switch instead. It takes the type of whatever is connected
 <details>
 <summary><b>Number Input Switch</b></summary>
 
-Deprecated: use Any Input Switch instead. It takes the type of whatever is connected and skips the branch it does not select. This node passes one of two numbers on, chosen by a boolean: number_a when the boolean is true, number_b when it is false. The selected value also leaves as a float and as a whole number.
+Deprecated: use Any Input Switch instead. Passes number_a on when boolean is true and number_b when it is false, also as a float and a whole number.
 
 | | |
 |---|---|

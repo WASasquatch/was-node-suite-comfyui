@@ -25,11 +25,7 @@ class ImagePasteCropByLocation(io.ComfyNode):
             category="WAS Suite/Image/Process",
             description=(
                 "Paste one image into a rectangle of another, stretching it to fit and "
-                "softening the edge. A crop_blending of 1.0 blurs so far that little of the "
-                "pasted image stays fully opaque. The fade is always measured from the "
-                "rectangle's longer side, so on a long thin rectangle a high value leaves the "
-                "whole paste faint rather than sharply cut. Lower it until the paste reads at "
-                "the strength wanted."
+                "softening the edge."
             ),
             inputs=[
                 io.Image.Input("image", tooltip="The image to paste into, which sets the canvas size."),
@@ -86,9 +82,10 @@ class ImagePasteCropByLocation(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How soft the edge of the paste is. 0.0 gives a hard rectangle, and "
-                        "0.25 blurs the edge over roughly an eighth of the rectangle's longer "
-                        "side."
+                        "How soft the edge of the paste is, measured from the rectangle's "
+                        "longer side. 0.0 = a hard rectangle; 0.25 = an eighth of that side; "
+                        "1.0 = little of the paste stays fully opaque. Lower it on a long, "
+                        "thin rectangle."
                     ),
                 ),
                 io.Int.Input(

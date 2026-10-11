@@ -328,14 +328,11 @@ class PowerPreprocessor(io.ComfyNode):
             ],
             category="WAS Suite/Image/Preprocess",
             description=(
-                "Measure an image and answer what it found: depth, surface direction, body "
-                "pose, what every pixel is, edges, drawn lines, straight runs, the paint and "
-                "the light it was lit by, or the frame with its noise or its darkness taken "
-                "out. Feeding a ControlNet is the usual reason, and the same answers drive "
-                "relighting, defocus, parallax, masking and stylising. Pick the question and "
-                "the node draws only what that question reads. Five need no model at all and "
-                "most fetch a checkpoint on first use. `Marigold v2` is the exception: it "
-                "reads a transformer, a decoder and a prompt embedding placed by hand."
+                "Turn an image into a ControlNet hint or a map for relighting, defocus and "
+                "masking: depth, normals, pose, segmentation, edges, line art, material and "
+                "shading, or a denoised or brightened frame. The node shows only the inputs "
+                "the chosen preprocessor reads. Most models download on first use; `Marigold "
+                "v2` reads files placed by hand."
             ),
             inputs=[
                 io.Image.Input(
@@ -357,11 +354,10 @@ class PowerPreprocessor(io.ComfyNode):
                     options=EVERY_MODEL,
                     default="Depth Anything V2 Small",
                     tooltip=(
-                        "Which model answers the question, listing only the ones that can. "
-                        "Within a family the smaller is quicker and the larger more "
-                        "accurate: `Depth Anything V2 Small` is 99 MB against `Large` at "
-                        "1.3 GB. `Marigold v2` is the sharpest, and the one read from the "
-                        "three inputs at the bottom rather than downloaded."
+                        "Which model answers, listing only those that can. In a family the "
+                        "smaller is quicker, the larger more accurate: `Depth Anything V2 "
+                        "Small` 99 MB, `Large` 1.3 GB. `Marigold v2` is the sharpest, read "
+                        "from the three inputs at the bottom."
                     ),
                 ),
                 io.Int.Input(
@@ -371,11 +367,10 @@ class PowerPreprocessor(io.ComfyNode):
                     max=8192,
                     step=64,
                     tooltip=(
-                        "Longest edge the work is done at before the answer is scaled back "
-                        "to the image's own size. 512 is a sensible start; 1024 resolves "
-                        "finer detail and costs more. Anything above the image's own "
-                        "longest edge is held to it. `openpose`, `animal_pose`, "
-                        "`line_segments`, `denoise` and `low_light` ignore it."
+                        "Longest edge the work is done at, never above the image's own, then "
+                        "scaled back to its size. 512 = a sensible start; 1024 = finer "
+                        "detail, slower. Ignored by `openpose`, `animal_pose`, "
+                        "`line_segments`, `denoise` and `low_light`."
                     ),
                 ),
                 io.Float.Input(
@@ -385,11 +380,10 @@ class PowerPreprocessor(io.ComfyNode):
                     max=256.0,
                     step=1.0,
                     tooltip=(
-                        "The lower cut-off, or the only one where a question takes one. Each "
-                        "preprocessor reads it over a range of its own, which the widget "
-                        "shows: `canny_pyramid` 1 to 255, `lineart_simple` 0 to 64, "
+                        "The lower cut-off, or the only one. Each preprocessor reads its own "
+                        "range: `canny_pyramid` 1 to 255, `lineart_simple` 0 to 64, "
                         "`openpose` 0.05 to 0.95, `line_segments` 0.01 to 0.40, `anyline` "
-                        "1 to 256. Switching preprocessor moves it to that one's start."
+                        "1 to 256. Switching preprocessor resets it to that one's default."
                     ),
                 ),
                 io.Float.Input(
@@ -412,11 +406,10 @@ class PowerPreprocessor(io.ComfyNode):
                     max=32.0,
                     step=0.1,
                     tooltip=(
-                        "A distance in pixels. `lineart_simple` reads 0.5 to 32.0 as the "
-                        "blur each pixel is compared against: 6.0 gives normal line weight, "
-                        "2.0 fine lines and 16.0 heavy ones. `normal_map` reads 0 to 8 as "
-                        "how far the surface slope is measured across: 3 suits a depth "
-                        "model, 0 is the sharpest and 6 flattens fine grain."
+                        "A distance in pixels. `lineart_simple`, 0.5 to 32.0, the comparison "
+                        "blur: 2.0 = fine lines; 6.0 = normal; 16.0 = heavy. "
+                        "`normal_map`, 0 to 8, the span slope is measured over: 0 = "
+                        "sharpest; 3 = suits a depth model; 6 = flattens fine grain."
                     ),
                 ),
                 io.Float.Input(
@@ -438,12 +431,10 @@ class PowerPreprocessor(io.ComfyNode):
                     max=0xFFFFFFFFFFFFFFFF,
                     control_after_generate=io.ControlAfterGenerate.fixed,
                     tooltip=(
-                        "Chooses between equally good random answers. `shuffle` reads it as "
-                        "the displacement: `0` and `1` scramble the same picture two "
-                        "different ways, and one seed always gives one scramble. `albedo`, "
-                        "`roughness`, `metallicity`, `material`, `shading` and `residual` "
-                        "read it as the noise their first step starts from, and every frame "
-                        "of a batch starts from the same one."
+                        "Chooses between equally good random answers. `shuffle`: `0` and `1` "
+                        "give two different scrambles, and one seed always gives the same "
+                        "one. `albedo`, `roughness`, `metallicity`, `material`, `shading` and "
+                        "`residual`: the starting noise, shared by every frame of a batch."
                     ),
                 ),
                 io.Int.Input(
@@ -453,11 +444,10 @@ class PowerPreprocessor(io.ComfyNode):
                     max=4096,
                     step=64,
                     tooltip=(
-                        "Work a square at a time instead of the whole frame, which holds "
-                        "VRAM down on a large picture. 0 reads the whole frame. 512 reads "
-                        "a 512 pixel square at a time, overlapping a quarter and faded "
-                        "together, so no join shows. A larger square is closer to the "
-                        "whole frame. Read only by `denoise` and `low_light`."
+                        "Work a square at a time to hold VRAM down. 0 = whole frame; 512 = "
+                        "512 pixel squares, overlapped a quarter and blended so no join "
+                        "shows. A larger square is closer to the whole frame. Read only by "
+                        "`denoise` and `low_light`."
                     ),
                 ),
                 io.Int.Input(

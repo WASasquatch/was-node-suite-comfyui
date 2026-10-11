@@ -31,11 +31,10 @@ class HSLToHex(io.ComfyNode):
                     "hsl_color",
                     default="hsl(0, 100%, 50%)",
                     tooltip=(
-                        "The colour to convert, as a CSS string: hue in degrees 0-359, then "
-                        "saturation and lightness as percentages, e.g. 'hsl(0, 100%, 50%)' "
-                        "for pure red. 'hsla(0, 100%, 50%, 0.5)' adds opacity from 0.0 to "
-                        "1.0. The percent signs may be left out. A hue of exactly 360 falls "
-                        "in no sector and comes out black; use 0 for red."
+                        "A CSS colour: hue 0 to 359 degrees, then saturation and lightness as "
+                        "percentages. 'hsl(0, 100%, 50%)' = pure red; 'hsla(0, 100%, 50%, "
+                        "0.5)' adds opacity, 0.0 to 1.0. Percent signs are optional. A hue of "
+                        "360 comes out black; use 0."
                     ),
                 ),
             ],

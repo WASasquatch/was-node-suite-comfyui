@@ -31,14 +31,10 @@ class CNSModelPatch(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Make a stochastic sampler put its fresh noise where the image is still "
-                "unfinished. Coarse shapes settle early and fine detail late, so white noise "
-                "keeps disturbing what is already done; this moves that noise toward the "
-                "detail still forming. Works with any model, and with any sampler that adds "
-                "noise each step, such as `euler_ancestral`, `dpmpp_2m_sde`, `er_sde`, "
-                "RES4LYF's samplers or `hfx_stochastic`; a sampler that adds none runs "
-                "unchanged. It learns each model's progress from its own runs, so it gets "
-                "closer from the second run of a model at a size."
+                "Make a stochastic sampler aim its fresh noise at the detail still forming "
+                "rather than what has settled. Works with any model and any sampler that adds "
+                "noise each step, such as `euler_ancestral` or `dpmpp_2m_sde`. It learns each "
+                "model from its own runs, so it aims better from the second run at a size."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The model to patch; any model loads."),

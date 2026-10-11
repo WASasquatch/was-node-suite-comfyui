@@ -28,12 +28,8 @@ class H3LowVRAM(io.ComfyNode):
             category="WAS Suite/Sampling",
             description=(
                 "Set a MiniMax H3 model up to sample long clips in less VRAM, with the same "
-                "result. Each block runs over the clip in token slices, and only the weights that "
-                "fit beside the clip stay on the card while the rest stream in as each block runs. "
-                "head_chunks and query_chunks split attention, the largest memory a block holds, "
-                "into smaller calls, and the room they free keeps more weights on the card. The "
-                "log names what was applied when sampling starts. Place it after the model "
-                "loaders and any LoRA so every H3 sampler in the graph uses it."
+                "result. Place it after the model loaders and any LoRA so every H3 sampler in "
+                "the graph uses it. The log names what was applied when sampling starts."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),
@@ -42,18 +38,17 @@ class H3LowVRAM(io.ComfyNode):
                     default=0, min=0, max=56,
                     tooltip=(
                         "0 = off; 4 = attention runs over 14 of the 56 heads at a time; 8 = 7 at "
-                        "a time. Every head is computed as before, so the result is unchanged. "
-                        "Frees roughly a third of the memory attention holds on a long clip."
+                        "a time. Same result; frees roughly a third of the memory attention "
+                        "holds on a long clip."
                     ),
                 ),
                 io.Int.Input(
                     "query_chunks",
                     default=0, min=0, max=64,
                     tooltip=(
-                        "0 = off; 4 = attention answers the clip's tokens in 4 chunks against keys "
-                        "and values worked out once. Each token is computed as before, so the "
-                        "result is unchanged. Frees about half the memory attention holds, at the "
-                        "cost of one extra attention projection per block. Combines with head_chunks."
+                        "0 = off; 4 = attention runs the clip's tokens in 4 chunks. Same result; "
+                        "frees about half the memory attention holds, for one extra attention "
+                        "projection per block. Combines with head_chunks."
                     ),
                 ),
                 io.Int.Input(

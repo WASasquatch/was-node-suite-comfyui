@@ -39,11 +39,9 @@ class MaskBatchToMask(io.ComfyNode):
                     max=limits.max_resolution(),
                     step=1,
                     tooltip=(
-                        "Which mask to take, counting from zero: 0 is the first mask, 1 the "
-                        "second. An index past the end of the batch returns the last mask "
-                        "and prints the index and the batch length to the console, rather "
-                        "than failing the prompt, so a sequence that came back shorter than "
-                        "expected still produces a mask."
+                        "Which mask to take, counting from zero: 0 = the first; 1 = the second. "
+                        "An index past the end returns the last mask and prints the index and "
+                        "batch length to the console instead of failing."
                     ),
                 ),
             ],

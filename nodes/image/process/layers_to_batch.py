@@ -39,10 +39,9 @@ class LayersToImageBatch(io.ComfyNode):
             category="WAS Suite/Image/Process",
             description=(
                 "Take a layer stack apart: one frame per layer, its coverage as a mask, "
-                "where it sits as bounds, and its name. Create Layered Image flattens a "
-                "stack into a single picture, so this is the way back out of one, and it "
-                "puts every layer of a compositor document, a detector's regions or a "
-                "pasted-together plate through the rest of the pack one frame at a time."
+                "where it sits as bounds, and its name. Every layer of a document or a "
+                "detector's regions can then go through the rest of the pack one frame at a "
+                "time."
             ),
             inputs=[
                 io.Layers.Input(

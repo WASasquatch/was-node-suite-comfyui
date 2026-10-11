@@ -565,23 +565,8 @@ class ImagePixelate(io.ComfyNode):
             search_aliases=["Image Pixelate", "pixel art", "posterize", "quantize", "8-bit"],
             category="WAS Suite/Image/Process",
             description=(
-                (
-                    (
-                        "Turn an image into pixel art with large blocky pixels and a small "
-                        "number of colours, optionally dithered or remapped onto a supplied "
-                        "palette. color_palette_mode is ignored with no palette connected, and "
-                        "`Perceptual` is the only mode palette_dither works with. `Luminance "
-                        "Ramp` throws the original colour away and places each pixel along the "
-                        "palette by brightness; set init_mode to `none` with it, since "
-                        "reducing the colours first destroys the shading it reads. The four "
-                        "older modes compare raw channel numbers: `Brightness` takes the "
-                        "closest colour overall, `Tonal` matches brightness only so hues swap "
-                        "freely, `BrightnessAndTonal` weighs both, and `Linear` indexes the "
-                        "palette by the red value for a hard banded remap. palette_dither "
-                        "diffuses against the palette itself, unlike dither, which runs first "
-                        "and is then re-quantised; `Bayer` is the one for a sequence."
-                    )
-                )
+                "Turn an image into pixel art with large blocky pixels and a small number of "
+                "colours, optionally dithered or repainted in a supplied palette."
             ),
             inputs=[
                 io.Image.Input(
@@ -674,8 +659,11 @@ class ImagePixelate(io.ComfyNode):
                     ],
                     optional=True,
                     tooltip=(
-                        "How a pixel is matched to a palette colour. `Perceptual` picks the "
-                        "closest colour as the eye sees it, and is the one to reach for."
+                        "How pixels match the palette. `Perceptual` = closest to the eye, the "
+                        "usual choice; `Luminance Ramp` = pixels placed along the palette by "
+                        "brightness, with init_mode `none`; `Brightness` = closest overall; "
+                        "`Tonal` = brightness only; `BrightnessAndTonal` = both; `Linear` = "
+                        "indexed by red."
                     ),
                 ),
                 io.Boolean.Input(
@@ -695,7 +683,7 @@ class ImagePixelate(io.ComfyNode):
                     tooltip=(
                         "How the error left by palette matching is spread, in `Perceptual` "
                         "mode. `FloydSteinberg` gives an organic stipple; `Bayer` a fixed 8x8 "
-                        "pattern that stays still."
+                        "pattern that stays still, the one for a sequence."
                     ),
                 ),
                 io.Boolean.Input(

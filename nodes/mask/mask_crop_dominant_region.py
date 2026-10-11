@@ -54,10 +54,9 @@ class MaskCropDominantRegion(io.ComfyNode):
                 io.Mask.Output(
                     display_name="MASKS",
                     tooltip=(
-                        "The cropped region on a square canvas. Its side is the longer edge of "
-                        "the crop plus twice padding, so it is normally not the size of the input. "
-                        "One batch carries one size, so where the masks of a batch crop to "
-                        "different sizes each is centred on the size of the largest."
+                        "The cropped region on a square canvas whose side is the crop's longer "
+                        "edge plus twice padding. Where masks in a batch crop to different "
+                        "sizes, each is centred on the largest."
                     ),
                 )
             ],

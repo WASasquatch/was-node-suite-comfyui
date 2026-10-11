@@ -29,12 +29,10 @@ class ThreeCustomGeometry(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Reach any Three.js geometry class the pack has no node for, by returning one "
-                "from a short JavaScript body. `THREE` is in scope, so a torus knot, a lathe, a "
-                "tube or a hand-built BufferGeometry are all one line away. The code runs in "
-                "your browser when the viewer loads, with the same reach as any frontend "
-                "extension, so only run a workflow carrying custom JavaScript if you trust "
-                "where it came from."
+                "Make any shape the pack has no node for, such as a torus knot, a lathe or a "
+                "tube, from a short JavaScript body that returns one, for Three Mesh. The code "
+                "runs in the browser with the reach of any extension, so only load a workflow "
+                "carrying it from a trusted source."
             ),
             inputs=[
                 io.String.Input(

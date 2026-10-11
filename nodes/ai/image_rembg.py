@@ -53,8 +53,8 @@ class ImageRembg(io.ComfyNode):
             category="WAS Suite/Image/AI",
             description=(
                 "Remove the background from an image, leaving the subject on transparency or "
-                "on a flat colour. The cutout network comes from Image Remove Background "
-                "Model Loader."
+                "on a flat colour, and hand on the cutout as a mask for further compositing. "
+                "The cutout network comes from Image Remove Background Model Loader."
             ),
             inputs=[
                 io.Image.Input(
@@ -146,11 +146,10 @@ class ImageRembg(io.ComfyNode):
                     default="none",
                     options=["none", "black", "white", "magenta", "chroma green", "chroma blue"],
                     tooltip=(
-                        "What to put behind the subject. `none` leaves it empty. The rest fill "
-                        "it: `chroma green` and `chroma blue` are the two standard keying "
-                        "colours, and `magenta` is an easy colour to spot leftovers against. "
-                        "With transparency on, the fill is written fully transparent, so it "
-                        "only shows once the alpha channel is discarded."
+                        "What fills the background: `none` = left empty; `chroma green`, "
+                        "`chroma blue` = keying colours; `magenta` = shows leftovers clearly. "
+                        "With transparency on, the fill only shows once the alpha channel is "
+                        "discarded."
                     ),
                 ),
             ],
@@ -161,6 +160,15 @@ class ImageRembg(io.ComfyNode):
                         "The cut-out images, as a batch the same length as the input. Four "
                         "channels when transparency is on, three when it is off or when "
                         "only_mask is on."
+                    ),
+                ),
+                io.Mask.Output(
+                    display_name="mask",
+                    tooltip=(
+                        "The cutout as a mask, one per image: 1.0 = subject kept, 0.0 = "
+                        "background removed, soft values on the edge. The same values as the "
+                        "alpha of images, after post_processing and alpha_matting. Mask Invert "
+                        "turns it into the background."
                     ),
                 ),
             ],
@@ -204,10 +212,13 @@ class ImageRembg(io.ComfyNode):
                 float(alpha_matting_background_threshold) / 255.0,
                 int(alpha_matting_erode_size),
             )
+        # The one matte both outputs carry.
+        shape = (cutout.tidy(mattes) if post_processing else mattes).clamp(0.0, 1.0)
+        mask = shape.float().contiguous()
         if only_mask:
-            shape = cutout.tidy(mattes) if post_processing else mattes
-            shown = shape.clamp(0.0, 1.0).unsqueeze(-1).expand(-1, -1, -1, 3)
-            return io.NodeOutput(shown.contiguous())
+            shown = shape.unsqueeze(-1).expand(-1, -1, -1, 3)
+            return io.NodeOutput(shown.contiguous(), mask)
         return io.NodeOutput(
-            cutout.compose(images, mattes, transparency, background_color, post_processing)
+            cutout.compose(images, shape, transparency, background_color, False),
+            mask,
         )

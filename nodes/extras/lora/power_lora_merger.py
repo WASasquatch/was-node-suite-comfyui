@@ -91,19 +91,9 @@ class PowerLoraMerger(io.ComfyNode):
             description=(
                 (
                     (
-                        "Merge any number of LoRAs into one new LoRA file, saved into your "
-                        "LoRA folder so it loads like any other. Add and remove rows with the "
-                        "buttons on the node, and optionally connect a model and clip to get "
-                        "the result applied straight away. Beyond `svd` the modes are: `add`, "
-                        "stacking them exactly, for the largest file and the closest match to "
-                        "loading them in turn; `rebase`, recompressing one LoRA; `add-diff` "
-                        "and `add-orth`, starting from the first and adding what the others "
-                        "differ by, orthogonalised in the second so they interfere less; "
-                        "`diff-export`, saving only the difference between the first two; "
-                        "`moe`, picking or blending the strongest source per module; "
-                        "`obfuscate`, rewriting a stack's factors without changing what it "
-                        "does; and `block-mix`, routing each part of the model to LoRA A or B "
-                        "by block_mix_recipe."
+                        "Merge any number of LoRAs into one new LoRA file in the LoRA folder, "
+                        "so it loads like any other. Add rows with the buttons on the node; "
+                        "connect a model and clip to apply the result straight away."
                     )
                 )
             ),
@@ -148,9 +138,12 @@ class PowerLoraMerger(io.ComfyNode):
                     options=MERGE_MODES,
                     default="svd",
                     tooltip=(
-                        "How the LoRAs are combined. `svd` recompresses the combined result "
-                        "back to one rank, which keeps the file small and is the usual "
-                        "choice."
+                        "`svd` recompresses to one rank, small; `add` stacks exactly, largest; "
+                        "`rebase` recompresses one LoRA; `add-diff` first plus the others' "
+                        "differences; `add-orth` orthogonalises them; `diff-export` saves the "
+                        "first two's difference; `moe` picks or blends the strongest per "
+                        "module; `obfuscate` rewrites factors, same effect; `block-mix` "
+                        "follows block_mix_recipe."
                     ),
                 ),
                 io.Combo.Input(

@@ -30,14 +30,10 @@ class CurveToNumbers(io.ComfyNode):
             ],
             category="WAS Suite/Number/Operations",
             description=(
-                "Read a curve as numbers, so a shape drawn by hand can drive a schedule. "
-                "Drag the plot on the node to bend the curve, or write the same "
-                "'0,0;128,200;255,255' shorthand, and this walks minimum to maximum by step "
-                "and answers what the curve reads at every position along the way. The "
-                "straight line gives an even ramp, a bent one redistributes the same range, "
-                "which is what gives a strength ramp, a denoise schedule or a camera move "
-                "its shape. Every value comes out on one wire and one per run, so it can "
-                "feed a list node or step a For Loop."
+                "Read a hand-drawn curve as numbers, walking minimum to maximum by step, so "
+                "its shape can drive a strength ramp, a denoise schedule or a camera move. "
+                "Bend the plot on the node or type the points. Every value comes out on one "
+                "wire and one per run, for a list node or a For Loop."
             ),
             inputs=[
                 io.String.Input(
@@ -45,11 +41,10 @@ class CurveToNumbers(io.ComfyNode):
                     default="",
                     multiline=True,
                     tooltip=(
-                        "The curve, written as '0,0;128,200;255,255' on a 0-255 scale, "
-                        "lowest input first. Drag the plot below to write it by hand, or "
-                        "paste the curve_points an Image Curves node holds, whose composite "
-                        "RGB curve is the one read. Empty is the straight line, which walks "
-                        "the range evenly."
+                        "The curve as '0,0;128,200;255,255' on a 0 to 255 scale, lowest input "
+                        "first. Drag the plot to draw it, or paste an Image Curves node's "
+                        "curve_points (its composite RGB curve is read). Empty = a straight "
+                        "line, an even ramp."
                     ),
                 ),
                 io.MultiType.Input(

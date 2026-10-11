@@ -9,7 +9,7 @@ from comfy_api.latest import io, ui
 from ...modules import log
 from ...modules.compat.types import H3_DEROPE
 from ...modules.interface.progress import progress_bar
-from ...modules.latent import h3_derope, h3_extend, h3_references
+from ...modules.latent import h3_derope, h3_extend, h3_preview, h3_references
 from ...modules.model import h3_low_vram, release_models
 
 MANUAL = "manual"
@@ -86,17 +86,10 @@ class H3DeRopeStretch(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Find where a MiniMax H3 clip moves too fast, show those frames several times "
-                "over, and encode the result with its audio as the start latent for any "
-                "sampler. The clip comes in as frames, as a latent, or both; for a clip "
-                "generated from text, wire the finished output of its sampler. Sample it at "
-                "the `denoise` output's strength, decode it, and H3 De-RoPE Recover puts "
-                "the frames back on the clip's timing. A clip joined from several scenes keeps "
-                "its cuts when its latent is wired: each scene is measured and held on its own, "
-                "and the stretched latent records where each one opens. The GPU's models are "
-                "released before and after its VAE work, so the samplers either side of it get "
-                "the whole card. The strip shows the motion of each latent row, what was held "
-                "and where the scenes cut."
+                "Slow down the fast parts of a MiniMax H3 clip so a refining sampler can redraw "
+                "their smeared motion. Refine its latent with H3 De-RoPE Refine at the `denoise` "
+                "output, then H3 De-RoPE Recover restores the clip's timing. Works on one clip "
+                "or on each segment inside a Prompt Timeline loop."
             ),
             inputs=[
                 io.Image.Input(
@@ -106,9 +99,9 @@ class H3DeRopeStretch(io.ComfyNode):
                 io.Vae.Input("vae", tooltip="The H3 video VAE."),
                 io.DynamicCombo.Input(
                     "mode", options=_coverage_options(), display_name="mode",
-                    tooltip="How much of the clip is held. `balanced` holds the fastest "
-                            "quarter at 4, `wide` the fastest 30% at 4, `economy` the fastest "
-                            "15% at 3. `manual` shows every setting.",
+                    tooltip="How much is held, each fast span joined to the next across up to 8 "
+                            "rows: `balanced` = fastest quarter at 4; `wide` = fastest 30% at 4; "
+                            "`economy` = fastest 15% at 3; `manual` = every setting.",
                 ),
                 io.Float.Input(
                     "strength", default=0.5, min=0.05, max=1.0, step=0.05,
@@ -138,21 +131,28 @@ class H3DeRopeStretch(io.ComfyNode):
                 ),
                 io.Latent.Input(
                     "latent", optional=True,
-                    tooltip="The clip's finished H3 latent, such as a sampler's output. Motion, "
-                            "audio and scene cuts are read from it instead of encoding the "
-                            "frames, and no hold crosses a cut. An early, unfinished estimate "
-                            "carries no motion to keep, and comes back fast-forwarded.",
+                    tooltip="The clip's finished H3 latent, as a sampler's output. Motion, audio "
+                            "and scene cuts are read from it; rows its noise mask holds, as a "
+                            "segment's carried frames, stay as they are. An unfinished estimate "
+                            "comes back fast-forwarded.",
                 ),
                 io.Model.Input(
                     "model", optional=True,
-                    tooltip="The H3 model the sampler uses. Passed out for the sampler's model.",
+                    tooltip="The model to refine with. In a loop, wire H3 Extend Window's model "
+                            "output, so each scene is refined by the model it chose; for one clip, "
+                            "the loader's model. Passed out without the timeline's live previews.",
                 ),
                 io.Boolean.Input(
                     "low_vram", default=True, optional=True,
-                    tooltip="`true` runs each model block over the stretched clip in slices of "
-                            "8192 tokens and keeps only the weights that fit beside it on the "
-                            "card, streaming the rest, for the same output at a lower memory "
-                            "peak. Needs model.",
+                    tooltip="`true` = each model block runs in 8192-token slices with only the "
+                            "weights that fit kept on the card; same output, lower memory peak. "
+                            "Needs model.",
+                ),
+                io.Conditioning.Input(
+                    "positive", optional=True,
+                    tooltip="The prompt the clip was sampled with, from H3 Extend Window or the "
+                            "conditioning node. Its pinned frames, as a first or last frame, are "
+                            "moved to where those frames land in the stretched clip.",
                 ),
             ],
             outputs=[
@@ -178,12 +178,17 @@ class H3DeRopeStretch(io.ComfyNode):
                     display_name="model",
                     tooltip="The model for the sampler, run in slices when low_vram is on.",
                 ),
+                io.Conditioning.Output(
+                    display_name="positive",
+                    tooltip="The prompt with its pinned frames on the stretched clip, for the "
+                            "sampler's positive. Empty when positive is not wired.",
+                ),
             ],
         )
 
     @classmethod
     def execute(cls, vae, mode, strength, audio_mode, images=None, audio=None, audio_vae=None,
-                fps=24.0, latent=None, model=None, low_vram=True) -> io.NodeOutput:
+                fps=24.0, latent=None, model=None, low_vram=True, positive=None) -> io.NodeOutput:
         """Fit, measure, hold and encode the clip.
 
         Raises:
@@ -246,53 +251,76 @@ class H3DeRopeStretch(io.ComfyNode):
         # Scene starts are read only where the frames follow the latent's timeline.
         scenes = starts if decoded or reused else None
         cuts = [start for start, _ in h3_derope.scene_spans(scenes, source_latent.shape[2])[1:]]
+        # Rows a carried window holds keep their frames and are pinned through the pass.
+        pinned = (min(h3_derope.pinned_rows(latent), source_latent.shape[2] - 1)
+                  if reused else 0)
         profile = h3_derope.motion(source_latent, scenes)
         bar.update(count)
         lap("measure")
+        # A segment of a loop keeps its last clip unheld, so the next one carries it at pace.
+        tail = 0
+        if reused and h3_extend.WINDOW_KEY in latent:
+            tail = source_latent.shape[2] - h3_derope.row_of_frame(
+                max(0, int(images.shape[0]) - h3_extend.CLIP_FRAMES))
         holds, row_holds = h3_derope.plan(profile, images.shape[0], quantile, peak, bridge, ramp,
-                                          scenes)
+                                          scenes, pinned, tail)
         holds = h3_derope.aligned(holds, scenes)
-        video, encoded, chunks = h3_derope.encode_stretched(vae, images, holds, source_latent)
+        video, encoded, chunks = h3_derope.encode_stretched(vae, images, holds, source_latent,
+                                                            pinned)
         bar.update(count * 3)
         lap("encode")
 
         span = h3_extend.audio_span(sum(holds))
-        mask = None
         if audio is not None:
             slowed = h3_derope.stretch_audio(audio, holds, fps)
             sound, _ = h3_references.audio_latent(audio_vae, slowed)
             sound = sound[..., :span]
             if sound.shape[-1] < span:
                 sound = torch.nn.functional.pad(sound, (0, span - sound.shape[-1]))
-            if audio_strength < 1.0:
-                mask = h3_derope.audio_row_strength(audio_strength, video, sound)
         else:
             sound = torch.zeros([video.shape[0], 32, 2, span], dtype=video.dtype,
                                 device=video.device)
+        kept_sound, joint = h3_derope.source_sound(latent if reused else None, audio, audio_vae,
+                                                   images.shape[0])
+        mask = None
+        if pinned or (audio is not None and audio_strength < 1.0):
+            mask = h3_derope.audio_row_strength(audio_strength if audio is not None else 1.0,
+                                                video, sound, pinned)
         bar.update(AUDIO_STEPS)
         release_models()
         lap("audio")
+        extras = ({key: value for key, value in latent.items() if key != "samples"}
+                  if reused else None)
         latent = h3_extend.join(video, sound)
         if cuts:
             latent = h3_extend.with_scenes(latent, h3_derope.stretched_starts(holds, scenes))
         if mask is not None:
             latent["noise_mask"] = mask
+        moved = 0
+        if positive is not None:
+            positive, moved = h3_derope.moved_keyframes(positive, holds)
 
         result = h3_derope.Plan(
             holds=tuple(holds), fps=float(fps), audio=heard_audio,
             rows=tuple(float(value) for value in profile), row_holds=tuple(row_holds),
-            source=source, cuts=tuple(cuts),
+            source=source, cuts=tuple(cuts), sound=kept_sound, joint=joint, extras=extras,
+            pinned=pinned, guide=h3_derope.guide_frames(images),
         )
         held = sum(1 for hold in holds[:source] if hold > 1)
         unread = len(h3_derope.scene_spans(starts, given.shape[2])) - 1 if given is not None else 0
         report = (
             f"{source} frames -> {result.stretched} ({result.stretched / source:.2f}x); "
-            f"{held} held, peak x{max(holds)}; {chosen}; {encoded} of {chunks} chunks encoded"
+            f"{held} held, peak x{max(row_holds)}; {chosen}; {encoded} of {chunks} chunks encoded"
             + (f"; {len(cuts)} {'cut' if len(cuts) == 1 else 'cuts'} kept out of the motion "
                f"measure, each scene {'decoded, ' if decoded else ''}held and encoded on its own"
                if cuts else "")
             + (f"; the latent's {unread} {'cut' if unread == 1 else 'cuts'} went unread, as the "
                f"frames wired are not its length" if unread and not cuts else "")
+            + (f"; {pinned} carried rows ({h3_derope.first_frame_of_row(pinned)} frames) held "
+               f"as they are" if pinned else "")
+            + (f"; the last {tail} rows left unheld for the next segment's carry" if tail else "")
+            + (f"; {moved} pinned {'frame' if moved == 1 else 'frames'} moved onto the "
+               f"stretched clip" if moved else "")
             + (f"; audio {heard_from}, re-rendered at {audio_strength:g}" if audio is not None
                else "; no audio, so the pass invents its own at natural pace and held spans "
                     "can come back rushed")
@@ -305,8 +333,10 @@ class H3DeRopeStretch(io.ComfyNode):
             )
         logger.info("H3 De-RoPE Stretch: %s", report)
         picture = h3_derope.plot(result)
+        if model is not None:
+            model = h3_preview.unwatched(model)
         if model is not None and low_vram:
             if not h3_low_vram.is_low_vram(model):
                 model = h3_low_vram.low_vram_model(model)
-        return io.NodeOutput(latent, result, float(strength), report, model,
+        return io.NodeOutput(latent, result, float(strength), report, model, positive,
                              ui=ui.PreviewImage(picture, cls=cls))

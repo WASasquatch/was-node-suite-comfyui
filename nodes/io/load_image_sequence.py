@@ -138,12 +138,10 @@ class LoadImageSequence(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "Load a numbered sequence from a folder as one batch, in filename order, "
-                "with the same range and strategy controls the frame samplers use. It takes "
-                "every frame unless num_frames says otherwise. Load Image Batch beside it "
-                "serves one frame per run; this serves the run of frames a video pipeline "
-                "takes, opening only the files it keeps. 16-bit PNGs load and resize at "
-                "full precision."
+                "Load a numbered image sequence from a folder as one batch, in filename "
+                "order, ready for a video pipeline. Pick how many frames to keep and how "
+                "they spread across the range; only the kept files are opened. 16-bit PNGs "
+                "keep full precision."
             ),
             inputs=[
                 io.Combo.Input(
@@ -171,10 +169,9 @@ class LoadImageSequence(io.ComfyNode):
                     min=0,
                     max=MAX_FRAMES,
                     tooltip=(
-                        f"How many frames to keep, chosen by the strategy below. `0` = every "
-                        f"file in the range, up to the {MAX_FRAMES} ceiling; `16` = a short "
-                        f"sample. A batch is one tensor, so a long run at full size stops "
-                        f"with the count to set rather than running out of memory."
+                        f"How many frames to keep, chosen by strategy. `0` = every file in "
+                        f"the range, up to the {MAX_FRAMES} ceiling; `16` = a short sample. "
+                        f"A run too long to fit in memory stops with the count to set."
                     ),
                 ),
                 io.Combo.Input(
@@ -184,8 +181,7 @@ class LoadImageSequence(io.ComfyNode):
                     tooltip=(
                         "How num_frames are chosen. uniform = evenly spaced; head = first; "
                         "center = middle; tail = last; random = a seeded pick; every_nth = "
-                        "every nth. Only the chosen files are opened, so sampling a long "
-                        "capture costs the frames you keep rather than all of them."
+                        "every nth. Only the chosen files are opened."
                     ),
                 ),
                 io.Int.Input(

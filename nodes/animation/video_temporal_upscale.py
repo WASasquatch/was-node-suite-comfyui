@@ -37,11 +37,10 @@ class VideoTemporalUpscale(io.ComfyNode):
             category="WAS Suite/Animation",
             is_output_node=True,
             description=(
-                "Upscale a clip with an upscale model without the added detail flickering, "
-                "as what the model adds to each frame is carried along the clip's own motion. "
-                "It can also change the frame rate, with EMA-VFI drawing new frames where they "
-                "fall between two and the audio kept in sync. The clip is written to a file as "
-                "it is made, so a long clip at 4x never has to fit in memory."
+                "Upscale a clip with an upscale model, holding the added detail steady along "
+                "its motion so it does not flicker. It can also change the frame rate, keeping "
+                "the audio in sync. The video is written as it is made, so a long clip at 4x "
+                "never has to fit in memory."
             ),
             inputs=[
                 io.MultiType.Input(
@@ -69,10 +68,10 @@ class VideoTemporalUpscale(io.ComfyNode):
                 io.Float.Input(
                     "strength", default=0.8, min=0.0, max=1.0, step=0.01,
                     tooltip=(
-                        "How much of each frame's detail comes from its neighbours: 0 = each "
-                        "frame upscaled on its own; 0.8 = default; 1.0 = holds the detail until "
-                        "a surface changes, or on a clip too large to hold at once, until the "
-                        "next block of frames."
+                        "Share of each frame's detail taken from its neighbours: 0 = each frame "
+                        "upscaled alone; 0.8 = default; 1.0 = detail held until a surface "
+                        "changes (or the next block of frames, on a clip too large to hold "
+                        "at once)."
                     ),
                 ),
                 io.Float.Input(
@@ -136,10 +135,10 @@ class VideoTemporalUpscale(io.ComfyNode):
                     default="auto",
                     optional=True,
                     tooltip=(
-                        "How a frame between two source frames is made when frame_rate changes: "
-                        "'auto' = EMA-VFI where the motion accounts for the change, the nearer "
-                        "frame where it does not, such as a mouth changing shape; 'interpolate' "
-                        "= EMA-VFI always; 'blend' = the two mixed; 'hold' = the nearer frame."
+                        "How new frames are made when frame_rate changes: 'hold' = the nearer "
+                        "frame; 'blend' = the two mixed; 'interpolate' = EMA-VFI always; "
+                        "'auto' = EMA-VFI where motion explains the change, the nearer frame "
+                        "where it does not, such as a mouth changing shape."
                     ),
                 ),
             ],

@@ -40,11 +40,9 @@ class WidgetToString(io.ComfyNode):
             ],
             category="WAS Suite/Utilities",
             description=(
-                "Read one widget off another node in the graph and answer what it holds as "
-                "text, so a filename, a caption or a log line can carry the seed, the "
-                "sampler name, the steps or a prompt from wherever it is actually set. "
-                "Nothing is wired to the node being read: give its id, the name of the "
-                "widget, and optionally text to answer when either cannot be found."
+                "Read one widget off another node in the graph as text, so a filename, "
+                "caption or log line can carry the seed, sampler, steps or prompt from where "
+                "it is set. Give the node's id and the widget's name; nothing is wired to it."
             ),
             inputs=[
                 io.String.Input(
@@ -75,10 +73,9 @@ class WidgetToString(io.ComfyNode):
                     multiline=False,
                     optional=True,
                     tooltip=(
-                        "Text to answer when the node or the widget cannot be found, which "
-                        "keeps the prompt running and sets found to false. Left empty, a "
-                        "miss stops the prompt with a message naming what was looked for "
-                        "and which nodes do carry a widget of that name."
+                        "Text to answer when the node or widget cannot be found, keeping the "
+                        "prompt running with found `false`. Empty = a miss stops the prompt, "
+                        "naming what was looked for and which nodes carry that widget."
                     ),
                 ),
             ],

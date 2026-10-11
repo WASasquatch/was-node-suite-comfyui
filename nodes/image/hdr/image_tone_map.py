@@ -38,11 +38,8 @@ class ImageToneMap(io.ComfyNode):
             category="WAS Suite/Image/HDR",
             description=(
                 "Roll highlights above white down into a range a screen can show, instead of "
-                "clipping them flat. HDR Reconstruct, HDR VAE Decode and EXR Load all answer "
-                "linear light with values far above 1.0, and every preview and every 8-bit "
-                "save cuts those to white. `aces` and `hable` give the filmic shoulder a "
-                "camera has, `reinhard` never clips at all, and `clip` is the cut this "
-                "replaces, for comparison."
+                "clipping them flat. Use it before a preview or an 8-bit save of linear light, "
+                "such as HDR Reconstruct, HDR VAE Decode or EXR Load hand on."
             ),
             inputs=[
                 io.Image.Input(

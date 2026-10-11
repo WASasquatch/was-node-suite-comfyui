@@ -27,11 +27,9 @@ class ThreeBoxGeometry(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A rectangular box, sized in scene units and centred on its own origin. Wire it "
-                "into Three Mesh together with a material. Segment counts subdivide each face, "
-                "which matters only where a shader or a displacement map needs vertices to move; "
-                "one segment a side is right for a plain box. The shape is described here and "
-                "built in the browser, so nothing is rendered on the server."
+                "A rectangular box, sized in scene units and centred on its own origin, for "
+                "Three Mesh together with a material. Segment counts subdivide each face, which "
+                "matters only where a shader or a displacement map needs vertices to move."
             ),
             inputs=[
                 io.Float.Input(

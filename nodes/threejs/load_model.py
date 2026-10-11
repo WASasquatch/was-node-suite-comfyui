@@ -47,13 +47,9 @@ class ThreeLoadModel(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "Put a model file into the scene as an object, so a mesh made elsewhere can be "
-                "lit, animated and rendered here. It reads .glb, .gltf, .dae, .fbx, .obj, "
-                ".3mf, .stl and .ply. The menu lists what is in ComfyUI's input, output and "
-                "temp folders; path takes anything else, including the mesh_path a Load 3D "
-                "node answers with. A .glb, .gltf, .dae, .fbx or .3mf brings its own "
-                "materials, an .obj takes them from a .mtl beside it, and a .stl or .ply "
-                "arrives bare and takes the material wired in. Wire nothing and it keeps "
-                "whatever it came with."
+                "lit, animated and rendered here. Reads .glb, .gltf, .dae, .fbx, .obj, .3mf, "
+                ".stl and .ply; an .obj takes its materials from a .mtl beside it, and an .stl "
+                "or .ply arrives with a plain default surface."
             ),
             inputs=[
                 io.Combo.Input(

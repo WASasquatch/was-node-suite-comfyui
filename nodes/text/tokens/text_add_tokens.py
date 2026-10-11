@@ -24,10 +24,9 @@ class TextAddTokens(io.ComfyNode):
             description=(
                 "Define custom tokens, one 'name: value' pair per line, for Text Parse "
                 "Tokens and every other node that expands [tokens]. Only the first colon "
-                "splits a line, so a value may itself contain colons and drive letters, and "
-                "a line with no colon, a blank one included, is skipped. The square "
-                "brackets are convention: the name is matched exactly as written, so a name "
-                "without them matches bare text anywhere in a prompt."
+                "splits a line, and a line without one is skipped. The name is matched "
+                "exactly as written, so the square brackets are a convention, not a "
+                "requirement."
             ),
             inputs=[
                 io.String.Input(

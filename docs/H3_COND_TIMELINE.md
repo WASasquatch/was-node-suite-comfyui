@@ -82,6 +82,7 @@ Every input, output and tooltip is in [`NODES.md`](../NODES.md) under **WAS Suit
 | Hard cut | `cut` | A new scene, nothing carried | New |
 | Cut, keep the sound | `carry (audio only)` | A new scene | Carried across the cut |
 | Cut, keep the sound and cast | `carry (audio) + reference (video)` | A new shot referencing the last frames | Carried across the cut |
+| Continue, keep the set | `carry + reference (sample)` | The same shot goes on from its last frames, referencing stills from the scene it continues | Carried |
 
 A scene's **Sound** setting overrides the transition's: **Carry over** runs the last scene's sound
 on across any cut, **Fresh** gives a carried shot new sound. A cut trims the 5 frames the model

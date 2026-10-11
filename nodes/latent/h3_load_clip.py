@@ -74,11 +74,10 @@ class H3LoadClip(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Read a MiniMax H3 clip H3 Save Clip wrote, whole or as it stood when any "
-                "scene finished, with every record the extend loop keeps. Hand it to the loop "
-                "as its starting clip and start the loop at next_index, and only the scenes "
-                "after it are rendered again: change scene 3's prompt and run from scene 3 "
-                "without sampling scenes 1 and 2."
+                "Read a MiniMax H3 clip that H3 Save Clip wrote, whole or as it stood when any "
+                "scene finished. Hand it to an extend loop as its starting clip and start at "
+                "next_index, so only later scenes render again: change scene 3's prompt "
+                "without resampling scenes 1 and 2."
             ),
             inputs=[
                 io.Combo.Input("clip_file", options=options(), tooltip=CLIP_HINT),

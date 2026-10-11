@@ -6,7 +6,8 @@
  */
 
 import {
-  AUDIO_CARRY, AUDIO_REFERENCE, BRIDGING, CONTINUITY, CUT_LIKE, CUT_PICTURES, FPS, REFERENCE_VIDEO,
+  AUDIO_CARRY, AUDIO_REFERENCE, BRIDGING, CARRY_REFERENCE, CONTINUITY, CUT_LIKE, CUT_PICTURES, FPS,
+  REFERENCE_VIDEO,
   bridgeFrames, closingIndex, cutsInto, durationOf, framesOf, guideLength, resolvedIndex,
   resolvedTransition, snapClip, snapOverlap, timeline,
 } from "./h3_extend.js";
@@ -92,6 +93,10 @@ export const TRANSITIONS = Object.freeze({
     glyph: "♫", name: "Cut, keep the sound and cast",
     detail: "new picture referencing the last frames, the soundtrack carries on",
   },
+  [CARRY_REFERENCE]: {
+    glyph: "⊕", name: "Continue, keep the set",
+    detail: "one unbroken shot referencing stills from the scene it continues",
+  },
 });
 
 /** The colour a scene takes from how it joins the one before, where no row colour is chosen. */
@@ -114,6 +119,9 @@ export const TRANSITION_TINTS = Object.freeze({
   },
   [AUDIO_REFERENCE]: {
     label: "Cut, keep the sound and cast", stripe: "#b98466", fill: "rgba(185, 132, 102, 0.32)", text: "#faf0ea",
+  },
+  [CARRY_REFERENCE]: {
+    label: "Continue, keep the set", stripe: "#8590c4", fill: "rgba(133, 144, 196, 0.32)", text: "#f0f2fb",
   },
 });
 

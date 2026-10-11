@@ -29,17 +29,10 @@ class RichTextEditor(io.ComfyNode):
             ],
             category="WAS Suite/Text",
             description=(
-                "Write a document in a rich text editor drawn on the node and emit it as "
-                "HTML. The document lives in the node's own text box, so a saved workflow "
-                "reopens with it intact and a run from the API produces the same text with "
-                "no browser involved. The box takes no link. Tokens such as [time] and "
-                "[user] are replaced on the way out, and the box itself is never "
-                "rewritten. With document.clean_html left on, which is the default, script "
-                "and iframe elements, object and embed tags, on* handler attributes and "
-                "javascript: URLs are removed from the output and named in the log; text, "
-                "styling, images, tables and everything else come through as the box holds "
-                "them. Setting document.clean_html to false in config.yaml emits the "
-                "markup untouched."
+                "Write a document in a rich text editor drawn on the node, saved with the "
+                "workflow, and emit it as HTML. Tokens such as [time] and [user] are "
+                "replaced on the way out. Scripts and other active content are removed "
+                "unless document.clean_html is set to false in config.yaml."
             ),
             inputs=[
                 io.String.Input(

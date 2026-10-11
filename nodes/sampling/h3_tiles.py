@@ -63,12 +63,9 @@ class H3Tiles(io.ComfyNode):
             category="WAS Suite/Sampling",
             description=(
                 "Run every MiniMax H3 model call in overlapping tiles across the frame and "
-                "overlapping windows along the clip, blended where they meet at each step so the "
-                "tiles stay one clip. Any sampler then refines a long or upscaled H3 latent in "
-                "tiles that each fit the card, run as H3 Low VRAM runs them. Upscale the latent "
-                "first, or decode, upscale and encode, and sample it at a partial denoise. Wire "
-                "the clip's latent as well and, where it takes several time windows, each one "
-                "stays inside one scene, so no blend crosses a cut."
+                "windows along the clip, blended at each step into one clip. Any sampler given "
+                "the model can then refine a long or upscaled H3 latent at a partial denoise in "
+                "tiles that each fit the card."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),

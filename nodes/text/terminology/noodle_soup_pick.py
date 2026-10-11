@@ -40,12 +40,10 @@ class NoodleSoupPick(io.ComfyNode):
             ],
             category="WAS Suite/Text/Terminology",
             description=(
-                "Choose words out of the Noodle Soup Prompts pantry and answer them as a "
-                "list, as text and as a count. The browser panel ticks them; the picked box "
-                "holds one pick per line either way. With nothing picked the terminology "
-                "names go out instead, which is how the pantry is read. The yours figure "
-                "counts what was added from a node or brought in from a file, apart from "
-                "what the published pantry supplied."
+                "Choose words out of the Noodle Soup Prompts pantry, ticked in the panel or "
+                "typed one per line, and hand them on as a list, as text and as a count. With "
+                "nothing picked the terminology names go out instead. The yours figure counts "
+                "what came from a node or a file, not the published pantry."
             ),
             inputs=[
                 io.String.Input(
@@ -53,11 +51,10 @@ class NoodleSoupPick(io.ComfyNode):
                     default="",
                     multiline=True,
                     tooltip=(
-                        "One pick per line, as `term: word`. `artist: Greg Rutkowski` takes "
-                        "one word, spelled as the pantry holds it; `artist: *` takes the "
-                        "whole terminology, and so does a line naming one on its own. Blank "
-                        "and `#` lines are ignored, a word named twice goes out once, and "
-                        "line order is output order."
+                        "One pick per line: `artist: Greg Rutkowski` = one word, spelled as "
+                        "the pantry holds it; `artist: *` or `artist` alone = the whole "
+                        "terminology. Blank and `#` lines are ignored, repeats go out once, "
+                        "and line order is output order."
                     ),
                 ),
                 io.Int.Input(

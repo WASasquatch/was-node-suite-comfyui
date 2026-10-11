@@ -33,11 +33,10 @@ class RandomNumber(io.ComfyNode):
                     "number_type",
                     options=["integer", "float", "bool"],
                     tooltip=(
-                        "What kind of number to draw. `integer` picks a whole number, both "
-                        "bounds included, cutting any fraction off the bounds first. `float` "
-                        "picks a decimal anywhere between them. `bool` ignores both bounds "
-                        "and picks a decimal from 0 up to 1, which the INT output rounds to "
-                        "0 or 1 for a coin flip."
+                        "`integer` = a whole number, both bounds included, fractions cut off "
+                        "the bounds first; `float` = a decimal between them; `bool` = bounds "
+                        "ignored, a decimal from 0 to 1 that the INT output rounds to 0 or 1, "
+                        "a coin flip."
                     ),
                 ),
                 io.Float.Input(

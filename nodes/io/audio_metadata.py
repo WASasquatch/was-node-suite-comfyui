@@ -125,13 +125,10 @@ class AudioMetadata(io.ComfyNode):
             ],
             category="WAS Suite/IO",
             description=(
-                "Read what an AUDIO is carrying: how long it plays for, the rate it was "
-                "sampled at, how many channels and samples each clip holds, how many clips "
-                "are stacked in it, and how loud it is as a peak and an average level. The "
-                "whole reading is drawn on the node and emitted as one line of text. "
-                "A load that found no sound, or handed over something unreadable, answers "
-                "zeroes and is_silent true rather than stopping the run, so a graph can "
-                "branch on the silence before it reaches an encoder."
+                "Read how long an AUDIO plays, its sample rate, channels, samples, clip count "
+                "and peak and average level, as separate numbers and one line of text drawn "
+                "on the node. Missing or unreadable sound reads as zeroes with is_silent "
+                "true, so a graph can branch on silence before an encoder."
             ),
             inputs=[
                 io.Audio.Input(
@@ -147,10 +144,9 @@ class AudioMetadata(io.ComfyNode):
                     "silence_threshold",
                     default=0.0, min=0.0, max=1.0, step=0.0001, round=0.00001,
                     tooltip=(
-                        "How loud the loudest sample may be and still count as silence. "
-                        "0.0 = only a track that is silent to the last bit; 0.001 is about "
-                        "-60 dBFS and also catches a noise floor or a tail of dither. "
-                        "Sample values run 0.0 to 1.0."
+                        "Loudest sample that still counts as silence, on a 0.0 to 1.0 scale. "
+                        "0.0 = only a track silent to the last bit; 0.001 = about -60 dBFS, "
+                        "which also catches a noise floor or a dither tail."
                     ),
                 ),
             ],

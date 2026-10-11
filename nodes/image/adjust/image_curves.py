@@ -29,12 +29,9 @@ class ImageCurves(io.ComfyNode):
             ],
             category="WAS Suite/Image/Adjustment",
             description=(
-                "Photoshop-style curves. Drag control points on the node to bend the "
-                "tonal response, together on the composite curve or one colour channel "
-                "at a time. The curve runs through the points as a monotone spline, so "
-                "it never overshoots into a halo the points do not ask for. ComfyUI's own "
-                "Curve Editor can drive it too: wire that node's curve output into `curve` "
-                "and it is applied to all three channels before this node's own curves."
+                "Photoshop-style curves for contrast and colour. Drag control points on the "
+                "node to bend the tonal response, on the composite curve or one colour channel "
+                "at a time, and hand on the adjusted image."
             ),
             inputs=[
                 io.Image.Input(

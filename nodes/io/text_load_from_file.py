@@ -75,11 +75,9 @@ class LoadTextFile(io.ComfyNode):
             category="WAS Suite/IO",
             description=(
                 "Read a text file picked from a menu, dropping comment lines, as text and as "
-                "a dictionary. The menu lists the text files, subfolders included, in "
-                "ComfyUI's input, output and temp folders and in every folder under "
-                "paths.allow_read in config.yaml, each tagged with its folder's name. A "
-                "folder added there appears after a ComfyUI restart and a page reload. A "
-                "file that cannot be read gives empty text and a line in the log."
+                "a dictionary. The menu covers input, output, temp and the folders under "
+                "paths.allow_read in config.yaml. A file that cannot be read gives empty "
+                "text."
             ),
             inputs=[
                 io.Combo.Input(

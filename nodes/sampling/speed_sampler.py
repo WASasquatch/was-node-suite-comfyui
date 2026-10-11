@@ -92,10 +92,9 @@ class SpeedSampler(io.ComfyNode):
                     max=10.0,
                     step=0.001,
                     tooltip=(
-                        "How fast the model's spectrum falls away with frequency. Unlike the "
-                        "amplitude this is a property of the model rather than of the scale its "
-                        "latents happen to be in, so a measured one is directly comparable to a "
-                        "published one. The default belongs to FLUX.1-dev."
+                        "How fast the model's spectrum falls away with frequency, as "
+                        "`1.915461` for FLUX.1-dev. Unlike the amplitude it does not depend on "
+                        "latent scale, so measured and published values compare directly."
                     ),
                 ),
                 io.Int.Input(

@@ -87,10 +87,8 @@ class NumberInputCondition(io.ComfyNode):
             description=(
                 "Test two numbers against each other and emit either 1/0 for the outcome or "
                 "the number that won the test, so a value can be picked without a separate "
-                "switch node. 'divisible by' and 'factor of' are the same test, whether B "
-                "divides evenly by A, so an A of 0 stops with a division error. 'if A odd', "
-                "'if A even' and 'if A prime' look at number_a alone, and 1 and everything "
-                "below it counts as not prime."
+                "switch node. Tests cover ordering, equality, and/or, divisibility, odd, even "
+                "and prime."
             ),
             inputs=[
                 io.MultiType.Input(
@@ -138,8 +136,10 @@ class NumberInputCondition(io.ComfyNode):
                         "factor of",
                     ],
                     tooltip=(
-                        "The test to apply. 'and' holds when neither number is 0, 'or' "
-                        "when at least one is not. The ordering tests compare A against B."
+                        "'and' = neither number is 0; 'or' = at least one is not; ordering "
+                        "tests compare A against B; 'divisible by' and 'factor of' = B "
+                        "divides evenly by A, and an A of 0 stops the prompt; 1 or below is "
+                        "not prime."
                     ),
                 ),
             ],

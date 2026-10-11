@@ -33,10 +33,9 @@ class LayerBevel(io.ComfyNode):
             category="WAS Suite/Image/Layers",
             description=(
                 "Build a slope from the edge of one layer in a stack and light it, so the "
-                "layer reads as raised off the plate or pressed into it. It gives a title, "
-                "a badge or a cut-out subject a physical edge without any 3D. An outer "
-                "bevel and an emboss grow that layer's picture and shift it back, so the "
-                "layer stays where it was on the canvas."
+                "layer reads as raised off the plate or pressed into it. Gives a title, a "
+                "badge or a cut-out subject a physical edge, and the layer keeps its place "
+                "on the canvas."
             ),
             inputs=[
                 io.Layers.Input(

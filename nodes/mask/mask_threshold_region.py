@@ -62,11 +62,9 @@ class MaskThresholdRegion(io.ComfyNode):
                     optional=True,
                     socketless=True,
                     tooltip=(
-                        "The mask painted on the node, written by the interface and saved with "
-                        "the workflow. Empty means nothing was painted, and the node then "
-                        "produces the thresholded mask alone. The node has to have run once "
-                        "before there is a mask to paint on. Clear the field to remove the "
-                        "painting."
+                        "The mask painted on the node, saved with the workflow. Empty = nothing "
+                        "painted, so the node gives the thresholded mask alone. Run the node once "
+                        "to get a mask to paint on; clear the field to remove the painting."
                     ),
                 ),
                 io.Combo.Input(
@@ -75,11 +73,10 @@ class MaskThresholdRegion(io.ComfyNode):
                     default=drawn.DEFAULT_COMBINE,
                     optional=True,
                     tooltip=(
-                        "How the painting joins the mask this node produced. union keeps "
-                        "whichever of the two is brighter at each pixel, subtract takes the "
-                        "painting away from the mask, intersect keeps whichever is darker, and "
-                        "off ignores the painting without deleting it. The painting is resized "
-                        "to the mask when the two differ."
+                        "How the painting joins the mask this node produced, resized to it if "
+                        "they differ. `union` = the brighter of the two at each pixel; "
+                        "`subtract` = the painting taken away; `intersect` = the darker; `off` "
+                        "= ignored, not deleted."
                     ),
                 ),
             ],

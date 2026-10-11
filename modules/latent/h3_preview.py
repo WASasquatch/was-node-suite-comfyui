@@ -7,7 +7,8 @@ import time
 from .. import log
 from ..interface import segment_preview
 
-__all__ = ["DECODER_NAME", "MIN_INTERVAL", "VIDEO_CHANNELS", "decoder", "step_of", "watched"]
+__all__ = ["DECODER_NAME", "MIN_INTERVAL", "VIDEO_CHANNELS", "decoder", "step_of", "unwatched",
+           "watched"]
 
 logger = log.get_logger("latent.h3_preview")
 
@@ -120,5 +121,24 @@ def watched(model, vae, owner, segment: int, head: int):
         state["last"] = time.monotonic()
         return denoised
 
+    preview.was_segment_preview = True
     patched.set_model_sampler_post_cfg_function(preview)
     return patched
+
+
+def unwatched(model):
+    """A model with the segment previews :func:`watched` added taken off again.
+
+    Args:
+        model: A model patcher, watched or not.
+
+    Returns:
+        A copy without the preview hook, or ``model`` itself where it carries none.
+    """
+    hooks = (getattr(model, "model_options", None) or {}).get("sampler_post_cfg_function") or []
+    if not any(getattr(hook, "was_segment_preview", False) for hook in hooks):
+        return model
+    plain = model.clone()
+    plain.model_options["sampler_post_cfg_function"] = [
+        hook for hook in hooks if not getattr(hook, "was_segment_preview", False)]
+    return plain

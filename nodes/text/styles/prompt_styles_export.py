@@ -31,10 +31,10 @@ class PromptStylesExport(io.ComfyNode):
             ],
             category="WAS Suite/Text/Styles",
             description=(
-                "Write the whole style library out to a file, to share it or back it up. A "
-                "name ending in .csv writes AUTOMATIC1111's name, prompt and "
-                "negative_prompt columns; any other name writes JSON. Prompt Styles Import "
-                "reads either back. A file already at that name is replaced."
+                "Write the whole style library out to a file, to share it or back it up, "
+                "replacing any file already at that name. A name ending in .csv writes "
+                "AUTOMATIC1111's name, prompt and negative_prompt columns; any other name "
+                "writes JSON. Prompt Styles Import reads either back."
             ),
             inputs=[
                 io.Combo.Input(

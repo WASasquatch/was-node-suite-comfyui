@@ -113,15 +113,9 @@ class FreeMemory(io.ComfyNode):
             ],
             category="WAS Suite/Utilities",
             description=(
-                "Hand memory back to the graphics card partway through a run. ComfyUI can "
-                "only be asked to free memory from its own menu, which a running graph "
-                "cannot reach, so a chain that loads, upscales and then encodes video can "
-                "run out on the last stage while the first two are still resident. Wire "
-                "the stage that has finished into passthrough and the stage that needs the "
-                "room after it, and the freeing happens between the two. Reports what the "
-                "device held before and after, so the effect is a number rather than a "
-                "guess. It frees where something upstream ran, leaving a graph that has "
-                "not changed on the cache; always_run frees on every queue instead. "
+                "Free graphics card memory partway through a run, between a stage that has "
+                "finished and one that needs the room. Unloads models, empties the cache and "
+                "collects garbage, and reports what the device held before and after. "
                 "Harmless on a machine with no graphics card."
             ),
             inputs=[
@@ -130,10 +124,9 @@ class FreeMemory(io.ComfyNode):
                     template=template,
                     optional=True,
                     tooltip=(
-                        "Anything at all: an image, a model, a latent, text. It comes back "
-                        "out unchanged once the freeing is done, which is what pins the "
-                        "free to a point in the chain instead of leaving it to happen "
-                        "whenever. Unwired, the node frees on its own and wants always_run."
+                        "Anything: an image, a model, a latent, text. It comes back out "
+                        "unchanged once memory is freed, pinning the free to this point in "
+                        "the chain. Unwired, the node needs always_run."
                     ),
                 ),
                 io.Boolean.Input(
@@ -150,10 +143,9 @@ class FreeMemory(io.ComfyNode):
                     "empty_cache",
                     default=True,
                     tooltip=(
-                        "true gives the driver back the blocks torch has reserved and is "
-                        "not using. Torch reuses those blocks itself, so this seldom "
-                        "changes what the next sampler can fit; reach for it when another "
-                        "program, or a library such as OpenCV, needs room on the card."
+                        "`true` = reserved but unused card memory goes back to the driver; "
+                        "`false` = kept. It seldom changes what the next sampler fits; use it "
+                        "when another program needs room on the card."
                     ),
                 ),
                 io.Boolean.Input(
@@ -185,11 +177,10 @@ class FreeMemory(io.ComfyNode):
                     default=False,
                     optional=True,
                     tooltip=(
-                        "`false` = free only where something upstream ran, leaving an "
-                        "unchanged graph served from cache; `true` = free on every prompt, "
-                        "which also runs everything wired after passthrough again. A node "
-                        "with nothing wired into passthrough needs `true`, or it frees once "
-                        "and is served from cache from then on."
+                        "`false` = free only where something upstream ran, an unchanged graph "
+                        "coming from cache; `true` = free on every prompt, rerunning "
+                        "everything after passthrough. With nothing wired into passthrough, "
+                        "use `true` or it frees only once."
                     ),
                 ),
             ],

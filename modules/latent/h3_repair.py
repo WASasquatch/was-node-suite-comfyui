@@ -509,7 +509,7 @@ def segment_origin(latent: dict, prompts, index: int) -> int | None:
         return begin - (h3_extend.snap_overlap(overlap) if overlap > 0 else 0)
     if continuity in h3_extend.BRIDGING:
         return begin - h3_extend.bridge_frames(overlap)
-    if continuity in ("carry", "refresh") and overlap > 0:
+    if continuity in h3_extend.CARRIED_PICTURES and overlap > 0:
         skip = rejoin_rows(latent, prompts, index)
         if skip is not None:
             return begin - skip // rows * size

@@ -9,6 +9,8 @@ from ....modules.compat.sockets import require_input
 
 REQUIRES = "extras"
 
+NODE = "Latent Detail Boost"
+
 PREVIEW_MODES = ["edge_mask", "detail_mask"]
 
 
@@ -19,29 +21,29 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="WASNSLatentContrastLimitedDetailBoost",
-            display_name="WAS Latent Detail Boost",
+            display_name=NODE,
             search_aliases=[
                 "WASNSLatentContrastLimitedDetailBoost",
-                "WAS Latent Detail Boost",
+                NODE,
                 "latent sharpen",
                 "detail boost",
                 "band pass",
+                "h3 detail",
             ],
             category="WAS Suite/Latent",
             description=(
-                "Bring out fine detail in a latent by isolating one band of detail, "
-                "levelling it against the local amount of contrast and adding it back. The "
-                "added detail is normalised and limited before it lands: a busy area and a "
-                "smooth one gain the same amount, and the dark outlines and embossed look "
-                "that come from sharpening a latent directly do not appear. Handles video "
-                "latents as well as single images."
+                "Bring out fine texture in an image, video or MiniMax H3 latent before a "
+                "second sampling pass or a decode, lifting smooth areas as much as busy ones "
+                "without the dark outlines of a plain sharpen. An H3 latent's sound passes "
+                "through untouched."
             ),
             inputs=[
                 io.Latent.Input(
                     "latent",
                     tooltip=(
-                        "The latent to enhance. A video latent with a time axis is handled "
-                        "frame by frame."
+                        "The latent to enhance: image, video, or a packed audio and video "
+                        "latent such as MiniMax H3. Video is treated frame by frame; the "
+                        "audio half comes back unchanged."
                     ),
                 ),
                 io.Float.Input(
@@ -102,11 +104,9 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
                     max=16.0,
                     step=0.05,
                     tooltip=(
-                        "How large an area the local amount of contrast is measured over, "
-                        "in latent blocks. It is what lets a smooth sky gain as much "
-                        "texture as a busy tree instead of being left behind. 0.0 measures "
-                        "over the whole frame instead, which restores the plain behaviour "
-                        "of sharpening everything by the same amount."
+                        "Area the local contrast is measured over, in latent blocks: 0.0 = the "
+                        "whole frame, sharpening everything equally; 1.2 = a smooth sky gains "
+                        "as much texture as a busy tree."
                     ),
                 ),
                 io.Float.Input(
@@ -179,9 +179,8 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
                     max=16,
                     step=1,
                     tooltip=(
-                        "How many preview pixels each latent block becomes. 8 matches the "
-                        "size the latent decodes to on most VAEs, so the preview lines up "
-                        "with the finished picture; 1 gives the small raw map. This affects "
+                        "Preview pixels per latent block. 8 = the decoded size on most image "
+                        "VAEs; 16 = the decoded size of MiniMax H3; 1 = the raw map. Changes "
                         "the preview image only, never the mask output."
                     ),
                 ),
@@ -200,13 +199,16 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
             outputs=[
                 io.Latent.Output(
                     display_name="latent",
-                    tooltip="The enhanced latent, ready for a sampler or a decode.",
+                    tooltip=(
+                        "The enhanced latent, ready for a sampler or a decode. A packed "
+                        "audio and video latent stays packed."
+                    ),
                 ),
                 io.Mask.Output(
                     display_name="mask",
                     tooltip=(
-                        "The chosen map at latent resolution, useful for driving another "
-                        "node from the same areas this one treated."
+                        "The chosen map at latent resolution, one per image or frame, for "
+                        "driving another node from the same areas this one treated."
                     ),
                 ),
                 io.Image.Output(
@@ -238,36 +240,53 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
         """Raise the latent's local detail.
 
         Raises:
-            ValueError: Nothing is connected to the latent input, or the latent holds no
-                samples.
+            ValueError: Nothing is connected to the latent input, the latent holds no
+                samples, or its picture stream is not an image or video tensor.
         """
         from ....modules.latent.filters import clamp01, gaussian_blur_depthwise, mask_preview, sobel_grad_mag
         from ....modules.latent.shape import flatten_5d_to_4d, is_latent_5d, unflatten_4d_to_5d
 
         require_input(
             latent,
-            "WAS Latent Detail Boost",
+            NODE,
             "latent",
             "latent",
             "latent source such as Empty Latent Image or VAE Encode",
             "LATENT",
         )
-        if "samples" not in latent:
-            raise ValueError("LATENT input must be a dict containing key 'samples'.")
+        samples = latent.get("samples") if isinstance(latent, dict) else None
+        if samples is None:
+            raise ValueError(
+                f"{NODE} was given a latent with nothing under 'samples'. Wire a sampler, a "
+                f"VAE Encode or an Empty Latent Image into its latent input."
+            )
 
-        samples: torch.Tensor = latent["samples"]
-        orig_dtype = samples.dtype
+        # A packed latent is boosted on its first stream, the picture; the rest pass through.
+        packed = getattr(samples, "is_nested", False)
+        streams = list(samples.unbind()) if packed else [samples]
+        picture = streams[0] if streams else None
+        if not torch.is_tensor(picture) or picture.ndim not in (4, 5):
+            shape = tuple(picture.shape) if torch.is_tensor(picture) else None
+            raise ValueError(
+                f"{NODE} needs a picture latent shaped [batch, channels, height, width] or "
+                f"[batch, channels, frames, height, width], and this one is shaped {shape}. "
+                f"An audio-only latent has no picture to boost; wire an image or video latent."
+            )
+        if picture.numel() == 0:
+            raise ValueError(
+                f"{NODE} was given an empty latent shaped {tuple(picture.shape)}. Check the "
+                f"batch size, frame count and size of the node that made it."
+            )
+        orig_dtype = picture.dtype
 
-        was_5d = is_latent_5d(samples)
+        was_5d = is_latent_5d(picture)
         if was_5d:
-            x, b, t = flatten_5d_to_4d(samples)
+            x, b, t = flatten_5d_to_4d(picture)
         else:
-            x = samples
+            x = picture
             b, t = x.shape[0], 1
 
-        # Everything below runs in float32 whatever the latent's own precision: the
-        # normalisation divides by a local measurement, and float16 loses the small
-        # differences that decides.
+        # Work in float32 whatever the latent's own precision.
         x_fp = x.float()
 
         s_small = float(sigma_small)
@@ -275,15 +294,12 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
         if s_large < s_small:
             s_small, s_large = s_large, s_small
 
-        # The difference of two blurs keeps one band of detail and drops everything
-        # coarser, so the enhancement cannot lift broad brightness with it.
+        # The difference of two blurs keeps one band of detail.
         low_small = gaussian_blur_depthwise(x_fp, s_small) if s_small > 0.0 else x_fp
         low_large = gaussian_blur_depthwise(x_fp, s_large) if s_large > 0.0 else x_fp
         dog = low_small - low_large
 
-        # Dividing by the local amount of contrast is what makes this contrast-limited: a
-        # quiet area and a busy one are lifted by the same amount instead of in proportion
-        # to what is already there, which is where dark halos come from.
+        # The band divided by its local RMS contrast.
         if float(rms_sigma) > 0.0:
             rms = gaussian_blur_depthwise(dog * dog, float(rms_sigma))
             rms = torch.sqrt(torch.clamp(rms, min=0.0) + 1e-8)
@@ -293,8 +309,7 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
         rms = rms + float(rms_floor)
         dog_n = dog / rms
 
-        # tanh squashes the extremes and leaves the middle nearly linear, so the strongest
-        # detail cannot overshoot into a ring.
+        # tanh squashes the extremes and leaves the middle nearly linear.
         lim = float(limit)
         dog_l = torch.tanh(dog_n * lim) / max(1e-6, lim)
 
@@ -326,6 +341,10 @@ class LatentContrastLimitedDetailBoost(io.ComfyNode):
 
         if was_5d:
             out = unflatten_4d_to_5d(out, b=b, t=t)
+        if packed:
+            import comfy.nested_tensor
+
+            out = comfy.nested_tensor.NestedTensor([out, *streams[1:]])
 
         out_latent = dict(latent)
         out_latent["samples"] = out

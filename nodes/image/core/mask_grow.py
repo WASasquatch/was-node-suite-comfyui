@@ -58,11 +58,9 @@ class MaskGrow(io.ComfyNode):
             category="WAS Suite/Image/Masking",
             description=(
                 "Move a mask's edge out or in by a number of pixels, keeping every grey "
-                "level it already had, so a soft edge stays soft. The band on the node "
-                "reports the coverage before and after, what was set and cleared, the "
-                "connected regions and the box the mask fills, so an expand that swallowed "
-                "the frame or a shrink that erased the mask reads off the node instead of "
-                "arriving as a blank result further down the graph."
+                "level it had, so a soft edge stays soft. The node reports the coverage "
+                "before and after, so an expand that swallowed the frame or a shrink that "
+                "erased the mask shows at once."
             ),
             inputs=[
                 io.Mask.Input(
@@ -79,10 +77,9 @@ class MaskGrow(io.ComfyNode):
                     max=limits.max_resolution(),
                     step=1,
                     tooltip=(
-                        "Pixels the edge moves by; INT. 0 leaves the mask alone, 8 grows it 8 "
-                        "pixels in every direction and closes gaps up to 16 across, -8 pulls "
-                        "it in by 8 and erases anything thinner than 16. Each pixel is one "
-                        "pass, so a few hundred takes a while."
+                        "Pixels the edge moves by; INT. 0 = no change; 8 = grows 8px every way, "
+                        "closing gaps up to 16 across; -8 = pulls in 8px, erasing anything "
+                        "thinner than 16. A few hundred takes a while."
                     ),
                 ),
                 io.Boolean.Input(

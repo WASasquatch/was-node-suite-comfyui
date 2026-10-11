@@ -46,13 +46,10 @@ class NumberListStatistics(io.ComfyNode):
             ],
             category="WAS Suite/Number/Operations",
             description=(
-                "Measure a whole list of numbers at once: sum, mean, min, max, median and "
-                "range, how many were read, and a summary line to preview. Feed it Number "
-                "Range's LIST, a text list, or numbers typed one to a line. Divide each "
-                "value by max to normalise a schedule against its own peak, or by sum to "
-                "turn weights into shares. Every figure comes out as a single value rather "
-                "than a list, so the graph below runs once however long the list is. An "
-                "entry holding no number is left out, counted as 0, or stopped on."
+                "Measure a whole list of numbers at once: sum, mean, min, max, median, range, "
+                "count and a summary line. Each figure is a single value, so the graph below "
+                "runs once however long the list is. Divide by max to normalise a schedule, "
+                "or by sum to turn weights into shares."
             ),
             inputs=[
                 io.MultiType.Input(

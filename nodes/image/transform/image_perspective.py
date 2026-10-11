@@ -32,10 +32,9 @@ class ImagePerspective(io.ComfyNode):
             category="WAS Suite/Image/Transform",
             description=(
                 "Drag each corner of the frame somewhere else and let the picture follow. "
-                "That maps a flat render onto a surface seen at an angle: a poster onto a "
-                "wall, a screen into a photograph, a label onto a box. It also takes a "
-                "keystone back out of a plate shot off-axis. Image Displacement Warp bends "
-                "the picture locally; this is the one straight-line mapping a camera makes."
+                "Maps a flat render onto a surface seen at an angle, such as a poster onto a "
+                "wall or a screen into a photograph, or takes a keystone out of a plate shot "
+                "off-axis."
             ),
             inputs=[
                 io.Image.Input(

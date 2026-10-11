@@ -30,11 +30,10 @@ class LayersInfo(io.ComfyNode):
             ],
             category="WAS Suite/Image/Layers",
             description=(
-                "Read a layer stack out as plain data: the canvas it is drawn on, how many "
-                "layers it holds and how many of those are visible, then a row per layer "
-                "carrying its index, name, placement, size, angle, opacity, blend mode and "
-                "whether it has a mask. The table is printed on the node, and the same figures "
-                "come out as a dictionary and a list for a switch or a caption."
+                "Read a layer stack out as data: the canvas, the layer count and how many are "
+                "visible, then a row per layer with its index, name, placement, size, angle, "
+                "opacity, blend mode and mask. The table shows on the node and comes out as a "
+                "dictionary and a list for a switch or a caption."
             ),
             inputs=[
                 io.Layers.Input(

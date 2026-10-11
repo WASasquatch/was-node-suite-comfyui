@@ -42,14 +42,10 @@ class ThreeCustomMaterial(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "Reach any Three.js material class the pack has no node for, from a module "
-                "file you place in ComfyUI's input folder or a folder under "
-                "paths.allow_read. The module's header names the textures it wants and the "
-                "node's slots take those names. Code is never typed on the node and never "
-                "travels inside a workflow, so a graph from someone else cannot bring "
-                "javascript with it. A module runs in your browser when the viewer loads, "
-                "with the same reach as any frontend extension, and only while "
-                "threejs.allow_scripts is on."
+                "Use any material the pack has no node for, built by a module file on disk whose "
+                "header names the textures it wants; the node's slots take those names. Modules "
+                "run in the browser only while threejs.allow_scripts is on in config.yaml, and "
+                "no code travels inside a workflow."
             ),
             inputs=[
                 io.Combo.Input(

@@ -34,10 +34,9 @@ class MaskDilateRegion(io.ComfyNode):
                     max=64,
                     step=1,
                     tooltip=(
-                        "How many passes of growth to run. Each pass expands the mask by about "
-                        "one pixel in every direction, so the default 5 widens it by roughly "
-                        "5 pixels and closes gaps up to about 10 pixels wide. The widget stops "
-                        "at 1; 0 on a wire grows until nothing changes, filling the frame."
+                        "Passes of growth, each about one pixel in every direction. 0 on a wire "
+                        "= grows until nothing changes, filling the frame; 5 = about 5 pixels "
+                        "wider, closing gaps up to about 10 pixels."
                     ),
                 ),
                 io.Float.Input(
@@ -49,9 +48,8 @@ class MaskDilateRegion(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "Soften the edge after the shape is settled, as a blur radius in "
-                        "pixels. 0 leaves the hard binary edge. A few pixels is what an "
-                        "inpaint or a composite wants so the seam does not show. Fractions "
-                        "are dropped, so 0.5 blurs the same as 0."
+                        "pixels; fractions are dropped. 0 or 0.5 = the hard binary edge; a few "
+                        "pixels hide the seam of an inpaint or a composite."
                     ),
                 ),
             ],

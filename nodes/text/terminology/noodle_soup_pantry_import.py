@@ -50,9 +50,8 @@ class NoodleSoupPantryImport(io.ComfyNode):
             description=(
                 "Read a Noodle Soup Prompts pantry file into the stored pantry, so a "
                 "terminology list shared as a file can be used here. The file is a JSON "
-                "object of terminology name to a list of words, which is what Noodle Soup "
-                "Pantry Export writes. The file itself is left where it is, and everything "
-                "read in counts as yours, so a refresh never removes it."
+                "object of terminology names to word lists, as Noodle Soup Pantry Export "
+                "writes; everything read in counts as yours and survives a refresh."
             ),
             inputs=[
                 io.Combo.Input(

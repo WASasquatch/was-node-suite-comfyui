@@ -31,12 +31,10 @@ class TextListGet(io.ComfyNode):
             ],
             category="WAS Suite/Text/List",
             description=(
-                "Read one entry out of a list by position. Negative counts from the end, "
-                "and an index past either end wraps, clamps, comes back empty or stops, "
-                "whichever is chosen. `wrap` counts round again, so index 5 of a 3-entry "
-                "list is entry 2, which is what cycles a list forever from a counter that "
-                "only climbs. `error` suits a workflow where a missing entry means "
-                "something is wrong upstream."
+                "Read one entry out of a list by position, with negative positions counting "
+                "from the end. An index past either end wraps, clamps, comes back empty or "
+                "stops, so a counter that only climbs can cycle a list forever. Hands on the "
+                "entry as text, the position read and the list's length."
             ),
             inputs=[
                 LIST.Input(

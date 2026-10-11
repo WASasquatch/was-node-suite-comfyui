@@ -13,7 +13,8 @@ NODE_NAME = "H3 Soundtrack"
 
 WINDOW_HINT = (
     "The window to sample, from H3 Extend Window's window output, or an Empty MiniMax H3 AV "
-    "Latent for a single shot. Passed on to the sampler's latent input."
+    "Latent for a single shot. Passed on to the sampler's latent input. Sound it already "
+    "carries from the clip stays as it was."
 )
 
 AUDIO_HINT = (
@@ -69,14 +70,10 @@ class H3Soundtrack(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Lay one long soundtrack, a music bed or a recorded dialogue, under a whole "
-                "MiniMax H3 video built a segment at a time. Place it between H3 Extend "
-                "Window's window and the sampler: each segment samples its picture under its "
-                "own slice of the same track, so the sound runs on unbroken across carries and "
-                "cuts. `offset_seconds` sets where the track starts on the video, `strength` "
-                "how firmly it is held, and `past_end` what plays once it runs out. Sound the "
-                "window already carries from the clip so far stays as it was. The track is "
-                "encoded once and every later segment reuses it."
+                "Lay one long soundtrack, a music bed or a recorded dialogue, under a MiniMax "
+                "H3 video built a segment at a time. Place it between H3 Extend Window's window "
+                "and the sampler; each segment samples under its own slice of the track, so the "
+                "sound runs on unbroken across carries and cuts."
             ),
             inputs=[
                 io.Latent.Input("window", tooltip=WINDOW_HINT),

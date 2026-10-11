@@ -39,10 +39,9 @@ class MaskArbitraryRegion(io.ComfyNode):
                     max=4096,
                     step=1,
                     tooltip=(
-                        "Smallest area a region may have to qualify, measured in ten-thousandths "
-                        "of the whole frame: 100 is 1% of the image, the default 256 is about "
-                        "2.6%, and 10000 is the entire frame. Because it is relative, the same "
-                        "value picks comparable regions at any resolution."
+                        "Smallest area a region may have to qualify, in ten-thousandths of the "
+                        "frame, so it holds at any resolution. 100 = 1% of the image; 256 = "
+                        "about 2.6%; 10000 = the whole frame."
                     ),
                 ),
                 io.Int.Input(

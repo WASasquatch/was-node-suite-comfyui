@@ -48,17 +48,8 @@ class ZipSave(io.ComfyNode):
             description=(
                 (
                     "Put files from ComfyUI's input, output and temp folders into one zip "
-                    "archive. Pick them in the browser on the node, or type them into 'files' "
-                    "one per line: a menu label such as 'renders/cat.png [output]', whose "
-                    "bracketed tag says which folder it came from so two files of one name "
-                    "stay apart, or a full path the pack may read. Line order is archive "
-                    "order, blank lines are ignored, a '#' line is a comment, and a file named "
-                    "twice goes in once. 'paths' takes the same from a link, after the typed "
-                    "lines. 'file name only' numbers a clash apart as 'cat_2.png'; 'source "
-                    "folder and relative path' gives 'output/batch/cat.png'. Archives are "
-                    "numbered unless filename_number_padding is 0. A file deleted since it was "
-                    "chosen is reported and skipped, and with nothing left the node says so "
-                    "rather than writing an empty archive."
+                    "archive, picked in the browser on the node or typed one per line, and "
+                    "hand on the path of the archive written."
                 )
             ),
             inputs=[
@@ -67,9 +58,10 @@ class ZipSave(io.ComfyNode):
                     default="",
                     multiline=True,
                     tooltip=(
-                        "The files going into the archive, one per line, in that order. A "
-                        "line is a menu label such as 'renders/cat.png [output]', or a "
-                        "full path to a file."
+                        "The files going into the archive, one per line, in archive order: a "
+                        "menu label such as 'renders/cat.png [output]', or a full path. Blank "
+                        "lines are ignored, '#' lines are comments, and a file named twice "
+                        "goes in once."
                     ),
                 ),
                 io.Combo.Input(
@@ -77,9 +69,10 @@ class ZipSave(io.ComfyNode):
                     options=list(save.NAMING),
                     default=save.RELATIVE,
                     tooltip=(
-                        "What each file is called inside the archive: its path below "
-                        "input, output or temp, that path with the source folder in front, "
-                        "or the file name alone."
+                        "Names inside the archive: `relative path` = its path below input, "
+                        "output or temp; `source folder and relative path` = "
+                        "'output/batch/cat.png'; `file name only` = 'cat.png', a clash "
+                        "numbered 'cat_2.png'."
                     ),
                 ),
                 io.Combo.Input(
@@ -146,9 +139,8 @@ class ZipSave(io.ComfyNode):
                     [LIST, io.String],
                     optional=True,
                     tooltip=(
-                        "More files to archive, from a link rather than the box above: "
-                        "this socket takes a connection. A string holding several lines is "
-                        "read as several files."
+                        "More files to archive, from a link, added after the typed lines. A "
+                        "string holding several lines is read as several files."
                     ),
                 ),
             ],

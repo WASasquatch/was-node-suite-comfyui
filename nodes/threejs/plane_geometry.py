@@ -27,11 +27,9 @@ class ThreePlaneGeometry(io.ComfyNode):
             ],
             category="WAS Suite/Three",
             description=(
-                "A flat rectangle facing +Z, which is the usual carrier for a texture and the "
-                "usual ground plane once it is turned flat with Three Transform Object. Only "
-                "one side is drawn unless the material's side is set to 'double'. Raise the "
-                "segment counts when a shader or a displacement map needs vertices to move; "
-                "1 by 1 is right for a plain card."
+                "A flat rectangle facing +Z, the usual carrier for a texture and, laid flat with "
+                "Three Transform Object, the usual ground plane. Only one side is drawn unless "
+                "the material's side is set to 'double'."
             ),
             inputs=[
                 io.Float.Input(

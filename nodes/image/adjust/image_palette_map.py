@@ -36,24 +36,10 @@ class ImagePaletteMap(io.ComfyNode):
             ],
             category="WAS Suite/Image/Adjustment",
             description=(
-                (
-                    (
-                        "Repaint an image in a palette's colours, either by matching each "
-                        "pixel to its closest colour or by mapping brightness along the "
-                        "palette as a gradient. Matching is measured in Oklab and can be "
-                        "dithered. `Perceptual` keeps the picture's own hues as closely as the "
-                        "palette allows; `Luminance Ramp` throws the original colour away, "
-                        "which colourises a greyscale plate or grades a depth map, and reads "
-                        "the palette sorted dark to light. Several colours can share a palette "
-                        "line separated by commas, a comma inside brackets belongs to its "
-                        "colour, PIL's other spellings such as 'hsl(30, 100%, 50%)' read, and "
-                        "a line that is not a colour is skipped. On dither, `none` leaves flat "
-                        "bands, `FloydSteinberg` flickers on a sequence where `Bayer` stays "
-                        "put, and `Luminance Ramp` reads neither. Leave normalize off for "
-                        "anything animated, or an exposure change between frames shifts the "
-                        "colours."
-                    )
-                )
+                "Repaint an image in a palette's colours, either snapping each pixel to its "
+                "closest colour or mapping brightness along the palette as a gradient. Use it "
+                "for a fixed set of inks, a duotone, or to colourise a greyscale plate or a "
+                "depth map."
             ),
             inputs=[
                 io.Image.Input(
@@ -69,36 +55,38 @@ class ImagePaletteMap(io.ComfyNode):
                     default=DEFAULT_PALETTE,
                     tooltip=(
                         "The palette, one colour per line: '#ff8800', '#f80', 'orange', "
-                        "'rgb(255, 136, 0)'. Ignored when color_palettes is connected."
+                        "'rgb(255, 136, 0)', 'hsl(30, 100%, 50%)'. Commas put several on one "
+                        "line; a line that is not a colour is skipped. Ignored when "
+                        "color_palettes is connected."
                     ),
                 ),
                 io.Combo.Input(
                     "mode",
                     options=list(palette_map.MODES),
                     tooltip=(
-                        "`Perceptual` snaps every pixel to its nearest palette colour, for a "
-                        "fixed set of inks. `Luminance Ramp` places pixels along the palette "
-                        "by brightness."
+                        "`Perceptual` = every pixel snaps to its nearest palette colour, keeping "
+                        "the picture's hues as far as the palette allows; `Luminance Ramp` = "
+                        "brightness mapped along the palette sorted dark to light, the original "
+                        "colour discarded."
                     ),
                 ),
                 io.Combo.Input(
                     "dither",
                     options=list(palette_map.DITHERS),
                     tooltip=(
-                        "How the error left by matching is spread, in `Perceptual` mode. "
-                        "`FloydSteinberg` gives a fine organic stipple; `Bayer` a fixed 8x8 "
-                        "crosshatch."
+                        "`none` = flat bands; `Bayer` = a fixed 8x8 crosshatch that holds still "
+                        "on a sequence; `FloydSteinberg` = a fine organic stipple that flickers "
+                        "on a sequence. Read by `Perceptual` only."
                     ),
                 ),
                 io.Boolean.Input(
                     "smooth",
                     default=True,
                     tooltip=(
-                        "Whether `Luminance Ramp` blends between neighbouring palette "
-                        "colours. On, the palette becomes a continuous gradient and shading "
-                        "survives. Off, every pixel snaps to one of the palette's colours, "
-                        "which posterises the picture into exactly that many bands, the "
-                        "poster or screen-print look. Not read by `Perceptual`."
+                        "`true` = the palette becomes a continuous gradient and shading "
+                        "survives; `false` = every pixel snaps to one palette colour, "
+                        "posterising into exactly that many bands, the screen-print look. "
+                        "Read by `Luminance Ramp` only."
                     ),
                 ),
                 io.Boolean.Input(
@@ -127,10 +115,9 @@ class ImagePaletteMap(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How much of the repainted image replaces the original. 1.0 is the "
-                        "palette alone. Lower values let the original show through, which is "
-                        "how a colourised plate is tied back to its own hues, around 0.6 to "
-                        "0.8 grades an image without it looking like a filter."
+                        "How much of the repainted image replaces the original. 0.0 = the "
+                        "original; 0.6 to 0.8 = a grade that ties a colourised plate back to its "
+                        "own hues; 1.0 = the palette alone."
                     ),
                 ),
                 LIST.Input(

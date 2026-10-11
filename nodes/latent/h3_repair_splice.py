@@ -24,11 +24,10 @@ class H3RepairSplice(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Write a sampled H3 Repair Window back into the clip it was cut from. Only the "
-                "frames and sound the window redrew are replaced; every other latent row and "
-                "audio step of the clip is carried through unchanged, along with its record of "
-                "segments and scene cuts. The report names the frames and seconds that changed. "
-                "Decode the result as any finished clip, or repair another stretch of it."
+                "Write a sampled H3 Repair Window back into the clip it was cut from, replacing "
+                "only the frames and sound it redrew; the rest, scene records included, is "
+                "unchanged. Decode the result as any finished clip, or repair another stretch "
+                "of it."
             ),
             inputs=[
                 io.Latent.Input(

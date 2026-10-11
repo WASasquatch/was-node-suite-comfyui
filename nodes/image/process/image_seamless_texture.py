@@ -36,9 +36,9 @@ class ImageSeamlessTexture(io.ComfyNode):
                     step=0.01,
                     tooltip=(
                         "How much of each side the cross-fade between edges spans, as a "
-                        "fraction. 0.0 answers the image unchanged; 0.4 fades the outer 40 "
-                        "percent, which suits most textures; 0.5 is the most the edges leave "
-                        "room for. The answer is smaller by this fraction on each side."
+                        "fraction; the result shrinks by it on each side. 0.0 = unchanged; "
+                        "0.4 = the outer 40 percent, suits most textures; 0.5 = the most "
+                        "possible."
                     ),
                 ),
                 io.Boolean.Input(

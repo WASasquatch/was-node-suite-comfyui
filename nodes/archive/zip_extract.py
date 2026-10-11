@@ -37,16 +37,9 @@ class ZipExtract(io.ComfyNode):
             ],
             category="WAS Suite/Archive",
             description=(
-                "Unpack the files an archive holds into a folder, picking them with a glob. "
-                "Wire Zip Open's archive output into this node: everything Zip Open refuses "
-                "is refused here too, so nothing lands outside the folder chosen. Every "
-                "written file comes out as a path, on one wire and one per run, so the graph "
-                "below can load, caption or resave each one. Files of any kind are written, "
-                "not only the ones this pack can load, which is what makes it the way to get "
-                "a model, a JSON sidecar or a config out of a dataset zip. A clash with a "
-                "file already in the folder is settled by 'existing', and two entries that "
-                "reach the same name inside one run are always numbered apart so neither is "
-                "lost."
+                "Unpack files of any kind from an archive opened by Zip Open into a folder, "
+                "picked by a glob. Every written file's path comes out as one list and one per "
+                "run, so the graph below can load, caption or resave each one."
             ),
             inputs=[
                 ZIP.Input(
@@ -103,9 +96,10 @@ class ZipExtract(io.ComfyNode):
                     options=list(extract.EXISTING),
                     default=extract.OVERWRITE,
                     tooltip=(
-                        "What happens where the folder already holds that name. `overwrite` "
-                        "replaces it, `skip` leaves it alone and names it in the report, and "
-                        "`number apart` writes 'cat_2.png' beside it."
+                        "Where the folder already holds that name: `overwrite` = replaces it; "
+                        "`skip` = leaves it, named in the report; `number apart` = writes "
+                        "'cat_2.png' beside it. Two entries reaching one name in a run are "
+                        "always numbered apart."
                     ),
                 ),
             ],
@@ -130,10 +124,9 @@ class ZipExtract(io.ComfyNode):
                     display_name="file_path",
                     is_output_list=True,
                     tooltip=(
-                        "The same paths one per run, so the nodes below run once for each "
-                        "file written: wire it into Load Image Batch, Load Text File or Path "
-                        "Exists. A run that wrote nothing stops the nodes reading this output "
-                        "with a message, and leaves the other four working."
+                        "The same paths one per run, so the nodes below run once per file: "
+                        "wire it into Load Image Batch, Load Text File or Path Exists. A run "
+                        "that wrote nothing stops only the nodes reading this output."
                     ),
                 ),
                 io.Int.Output(

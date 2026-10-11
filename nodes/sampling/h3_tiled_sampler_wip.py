@@ -129,13 +129,10 @@ class H3TiledSamplerWIP(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Work in progress. Denoise a MiniMax H3 latent with KSampler's settings in overlapping tiles across "
-                "the frame and overlapping windows along the clip, blended at every step so the "
-                "tiles stay one clip. For refining a long or upscaled H3 clip in tiles that each "
-                "fit the card, run as H3 Low VRAM runs them; it does no upscaling itself. A clip "
-                "joined by H3 Extend Append keeps its cuts: where it takes several time windows, "
-                "each stays inside one scene. The panel shows where the tiles sit, marks each "
-                "cut and gives the sigma the run started from."
+                "Work in progress. Refine a long or upscaled MiniMax H3 clip with KSampler's "
+                "settings, in overlapping tiles that each fit the card, blended at every step "
+                "into one clip. It does no upscaling itself; the panel shows the tiles, each cut "
+                "and the sigma the run started from."
             ),
             inputs=[
                 io.Model.Input("model", tooltip="The MiniMax H3 model, after any LoRA."),
@@ -176,17 +173,17 @@ class H3TiledSamplerWIP(io.ComfyNode):
                 ),
                 io.DynamicCombo.Input(
                     "tiling", options=_tiling_options(), display_name="tiling",
-                    tooltip="`auto` keeps the whole clip in one time window and splits the frame into "
-                            "the fewest tiles under the token budget, adding time windows only where no "
-                            "tiling of one window fits or the clip runs past 362 frames; `manual` sets tile "
-                            "and window sizes. Added windows never cross a cut the latent records.",
+                    tooltip="`auto` = the whole clip in one time window, the frame split into the "
+                            "fewest tiles under max_tokens; time windows are added only where no "
+                            "tiling fits or past 362 frames. `manual` = set tile and window sizes. "
+                            "Added windows never cross a recorded cut.",
                 ),
                 io.MultiType.Input(
                     "audio", [io.Latent, io.Audio], optional=True,
                     tooltip="The clip's sound, held as it is beside a video-only latent_image: an "
                             "audio latent from VAE Encode Audio with the H3 audio VAE, or a sound "
                             "such as Load Video's audio with audio_vae wired. Left empty, or "
-                            "empty because the file is silent, silence is held.",
+                            "silent, it holds silence.",
                 ),
                 io.Combo.Input(
                     "anchor", options=list(ANCHOR_MODES), default="auto",

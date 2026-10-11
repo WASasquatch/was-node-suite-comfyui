@@ -113,16 +113,10 @@ class CameraMotionTrajectory(io.ComfyNode):
             ],
             category="WAS Suite/Animation",
             description=(
-                "Move a virtual camera over a still picture and emit the result as a frame "
-                "sequence: zoom, rotate, pan, tilt, dolly and fisheye, keyframed in JSON "
-                "with easing between keys. Feed it a depth map and near parts of the scene "
-                "move more than far ones, which turns a single image into a parallax shot "
-                "ready for a video encoder or an image-to-video model. A keyframe takes any "
-                "of zoom, center, angle, pan, tilt, dolly_strength, sphereize_strength and "
-                "depth_strength, 'ease' on it shapes the run to the next keyframe, and "
-                "'loop': true wraps the last keyframe back round to the first. A property a "
-                "later keyframe leaves out keeps moving at the '<name>_speed' the earlier one "
-                "gave it."
+                "Move a virtual camera over a still picture and hand on the frames: zoom, "
+                "rotate, pan, tilt, dolly and fisheye, keyframed in JSON with easing. With a "
+                "depth map, near parts move more than far ones, turning one image into a "
+                "parallax shot."
             ),
             inputs=[
                 io.Image.Input(
@@ -144,9 +138,10 @@ class CameraMotionTrajectory(io.ComfyNode):
                 io.String.Input(
                     "trajectory_spec", default=DEFAULT_TRAJECTORY_SPEC, multiline=True,
                     tooltip=(
-                        "The move, as JSON: a 'keyframes' list, each entry carrying a "
-                        "'frame' number and the camera properties it sets there. Empty text "
-                        "holds the picture still."
+                        "The move as JSON: a 'keyframes' list, each with a 'frame' and any of "
+                        "zoom, center, angle, pan, tilt, dolly_strength, sphereize_strength, "
+                        "depth_strength and 'ease'. 'loop': true wraps back to the first. An "
+                        "omitted property keeps moving at its '<name>_speed'. Empty holds still."
                     ),
                 ),
                 io.Combo.Input(
@@ -193,10 +188,9 @@ class CameraMotionTrajectory(io.ComfyNode):
                 io.Image.Input(
                     "depth_map", optional=True,
                     tooltip=(
-                        "Optional depth map, white near and black far, at any size. With one "
-                        "connected, 'depth_strength' in the spec holds the far parts of the "
-                        "scene back while the near parts move fully, which is what makes the "
-                        "shot read as parallax. Leave it unconnected for a flat move."
+                        "Optional depth map, white near and black far, at any size. "
+                        "'depth_strength' in the spec then holds far parts back while near "
+                        "parts move fully, for parallax. Unconnected = a flat move."
                     ),
                 ),
             ],

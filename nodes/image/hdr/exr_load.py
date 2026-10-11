@@ -110,11 +110,9 @@ class EXRLoad(io.ComfyNode):
             ],
             category="WAS Suite/Image/HDR",
             description=(
-                "Read an OpenEXR file as linear light, with everything above one kept, so a "
-                "plate written by this pack or by a compositing program comes back into the "
-                "graph at its real brightness. A fourth channel arrives as the alpha "
-                "output. Uncompressed, ZIP, ZIPS and RLE files are read; a PIZ, DWA, B44 or "
-                "PXR24 file is named in the message and refused."
+                "Read an OpenEXR file as linear light with everything above one kept, so a "
+                "plate from this pack or a compositing program comes back at its real "
+                "brightness. Hands on the image, its alpha and its peak value."
             ),
             inputs=[
                 io.Combo.Input(
@@ -123,8 +121,8 @@ class EXRLoad(io.ComfyNode):
                     tooltip=(
                         "Which EXR to read. Each entry carries the folder it sits in: "
                         "`plate_0001.exr [output]`, `shot.exr [input]`, "
-                        "`scratch.exr [temp]`. EXR Save writes into output, so a file it "
-                        "wrote is listed here."
+                        "`scratch.exr [temp]`; EXR Save writes into output. Uncompressed, ZIP, "
+                        "ZIPS and RLE files read; PIZ, DWA, B44 and PXR24 are refused."
                     ),
                 ),
             ],

@@ -285,12 +285,11 @@ class KSamplerCycle(io.ComfyNode):
                     "latent_upscale",
                     options=LATENT_UPSCALE_METHODS,
                     tooltip=(
-                        "How the enlargement between cycles is done. `disable` takes the "
-                        "slower, sharper route through pixels, using vae, upscale_model, "
-                        "processor_model and scale_sampling. Any other entry stays in latent "
-                        "space and is much faster, ignoring all four; `nearest-exact` is the "
-                        "blockiest, `bilinear` and `bicubic` smoother, `area` averages, and "
-                        "`bislerp` is a blend built for latents."
+                        "`disable` = through pixels, slower and sharper, using vae, "
+                        "upscale_model, processor_model and scale_sampling. Any other entry stays "
+                        "in latent space, much faster, ignoring all four: `nearest-exact` = "
+                        "blockiest; `bilinear`, `bicubic` = smoother; `area` = averages; "
+                        "`bislerp` = a blend for latents."
                     ),
                 ),
                 io.Float.Input(

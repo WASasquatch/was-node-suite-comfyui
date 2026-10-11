@@ -337,8 +337,10 @@ a segment is one of `carry` (the same shot goes on, picture and sound held), `re
 with fresh noise, as much as `renewal` sets), `handoff` (a cut that opens on the last frame),
 `reference (video)` (a cut that keeps the cast by referencing the last frames),
 `reference (sample)` (a cut referencing stills from the whole clip), `cut` (a new scene, nothing
-carried), `carry (audio only)` (a cut whose sound runs on, in whole 17 frame clips) and
-`carry (audio) + reference (video)` (a cut that keeps both). A bridged cut that references the
+carried), `carry (audio only)` (a cut whose sound runs on, in whole 17 frame clips),
+`carry (audio) + reference (video)` (a cut that keeps both) and `carry + reference (sample)` (the
+same shot goes on and references stills from the scene it continues, so its set holds whatever
+the prompt describes). A bridged cut that references the
 scene before opens its prompt on a shot of that scene and cuts to its own shots where the bridge
 ends. `sound_N` sets each segment's sound apart from its picture: `auto` as the transition does,
 `carry` across any cut, `fresh` under a carried shot. `strength_N` loosens how firmly a segment
@@ -376,7 +378,9 @@ to any part of it.
 [`minimax-h3-ref2va-extend-loop.json`](docs/workflows/minimax-h3-ref2va-extend-loop.json),
 [`minimax-h3-flf-pair-loop.json`](docs/workflows/minimax-h3-flf-pair-loop.json),
 [`minimax-h3-scene-loop.json`](docs/workflows/minimax-h3-scene-loop.json),
-[`minimax-h3-extend-loop-audio-carry.json`](docs/workflows/minimax-h3-extend-loop-audio-carry.json).
+[`minimax-h3-extend-loop-audio-carry.json`](docs/workflows/minimax-h3-extend-loop-audio-carry.json),
+[`minimax-h3-extend-loop-derope.json`](docs/workflows/minimax-h3-extend-loop-derope.json)
+with each segment de-roped before it joins.
 
 ---
 
@@ -433,26 +437,35 @@ settings: [`docs/MODELS.md`](docs/MODELS.md#kandinsky-6). Graphs:
 
 **H3 De-RoPE Stretch** finds where a MiniMax H3 clip moves fastest from its own latent, shows
 those frames several times over, and encodes the stretched clip with its audio slowed to
-match, pitch kept, as the start latent for any sampler. `mode` picks how much is held:
+match, pitch kept, as the start latent for a refining pass. `mode` picks how much is held:
 `balanced`, `wide`, `economy`, or `manual` with the threshold, peak hold, bridge and ramp.
 `audio_mode` picks how much of the audio the pass re-renders the same way, and `denoise` carries
-the strength to the sampler. With the sampler's model wired through it, `low_vram` runs each
-model block over the stretched clip in slices and keeps only the weights that fit beside it on the
-card, streaming the rest, for the same output at a lower memory peak.
+the strength on. A prompt wired through it comes out with its pinned frames moved to where those
+frames land in the stretched clip, so a first or last frame still opens or closes it. With the
+model wired through it, `low_vram` runs each model block in slices for a lower memory peak.
 
-**H3 De-RoPE Recover** takes the held frames back out of the decoded result and passes the source
-audio out beside them, in time with the recovered frames.
+**H3 De-RoPE Refine** samples the stretched latent in one pass, or in windows as long as H3's
+longest pass where the stretch runs past it, each carrying the clip it shares with the window
+before. A SAMPLER, such as an affine-wrapped one, can stand in for the named sampler.
+
+**H3 De-RoPE Recover** takes the held frames back out, keeping the first showing of each or the
+one nearest the source frame, as frames with the source audio beside them for Create Video, or,
+with the video VAE wired, as an H3 latent carrying the source audio.
 
 The clip comes in as frames, as a latent, or both. For a clip generated from text, H3 De-RoPE
-Stretch takes the sampler's finished output, reads its motion and its audio from it, and needs no
-decode and encode to measure it.
+Stretch takes the sampler's finished output and reads its motion and its audio from it. Inside a
+Prompt Timeline loop, each segment is de-roped between its sampler and H3 Extend Append, refined
+by the model that sampled it: the frames it carried stay as they were sampled, its last clip is
+never held, and the next segment continues from the de-roped result.
 
 For re-rendering fast action at a slowed pace and putting it back on the clip's own timing, in a
-finished H3 clip, in the output of an earlier pass, or in a clip generated from text.
+finished H3 clip, in a clip generated from text, or in every segment of a long video.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Latent/Video**. Graphs:
 [`minimax-h3-derope.json`](docs/workflows/minimax-h3-derope.json) for a finished clip,
-[`minimax-h3-derope-t2v.json`](docs/workflows/minimax-h3-derope-t2v.json) for a clip generated from text.
+[`minimax-h3-derope-t2v.json`](docs/workflows/minimax-h3-derope-t2v.json) for a clip generated from text,
+[`minimax-h3-extend-loop-derope.json`](docs/workflows/minimax-h3-extend-loop-derope.json) for
+every segment of a Prompt Timeline video.
 
 ---
 
@@ -482,8 +495,9 @@ a pattern's structure from the first step. **Temporal Noise Hold** carries each 
 noise into the next rather than drawing every frame fresh, which returns a denser, more detailed
 scene the further it carries. Both replace **RandomNoise** on any custom sampler.
 
-**WAS Latent Detail Boost**, **Blend Latents** and **Latent Batch (Advanced)** work on a latent
-directly, and **SPEED Sampler** and **KSampler Cycle** are samplers of their own. **Fast
+**Latent Detail Boost**, **Blend Latents** and **Latent Batch (Advanced)** work on a latent
+directly. Latent Detail Boost treats the video half of a MiniMax H3 latent and passes its sound
+through unchanged. **SPEED Sampler** and **SPEED Sampler** and **KSampler Cycle** are samplers of their own. **Fast
 KSampler** samples exactly as KSampler does with a cheaper live preview: the preview decoder
 stays loaded, the preview is decoded at the size it is shown, and `preview_every` skips steps.
 
@@ -508,8 +522,8 @@ For steering a generation from its initialisation rather than correcting it late
 
 16 nodes. **Power LoRA Loader** stacks LoRAs on one node, **Power LoRA Merger** bakes a stack
 into a model, and **Apply Reweighted LoRA** reweights one. **BLIP Analyze Image** captions,
-**MiDaS Depth Approximation** estimates depth, **Image Remove Background** cuts a subject out,
-and **CLIPSeg Model Loader** and **SAM Model Loader** feed the masking nodes. **Model Info**
+**MiDaS Depth Approximation** estimates depth, **Image Remove Background** cuts a subject out
+and hands on its mask for compositing, and **CLIPSeg Model Loader** and **SAM Model Loader** feed the masking nodes. **Model Info**
 reports what a loaded model is.
 
 Weights ship with the pack or download on first use to a stated folder:

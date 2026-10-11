@@ -72,6 +72,30 @@ export function executionId(node) {
 }
 
 /**
+ * The id of the workflow open on the canvas.
+ *
+ * @returns {string} The root graph's id, which is the `workflow.id` a prompt queued from it
+ *   carries, or an empty string before a graph is loaded.
+ */
+export function workflowId() {
+  const id = window.app?.rootGraph?.id;
+  return typeof id === "string" ? id : "";
+}
+
+/**
+ * Whether a written run output belongs to the workflow open on the canvas.
+ *
+ * @param {object} entry - One entry a node named in its `ui`.
+ * @returns {boolean} False only when the entry names a different workflow. An entry naming
+ *   none, as one from a prompt posted straight to the API, belongs to every workflow.
+ */
+export function ownOutput(entry) {
+  const named = typeof entry?.workflow === "string" ? entry.workflow : "";
+  const open = workflowId();
+  return !named || !open || named === open;
+}
+
+/**
  * The key the frontend files a node's run output under.
  *
  * @param {object} node - The node the entry belongs to.
@@ -190,7 +214,9 @@ function installRefresh() {
  * Register a node as one a panel is open on, so its publishes are worth encoding.
  *
  * @param {object} node - The node the interface is drawn on.
- * @returns {() => void} Release. Safe to call more than once, and called on dispose.
+ * @returns {(options?: {keepRegistration?: boolean}) => void} Release. Safe to call more than
+ *   once, and called on dispose. `keepRegistration` leaves the server registered, for a node
+ *   whose workflow is put away rather than deleted, so a run still going in it keeps publishing.
  */
 export function watchPreviews(node) {
   if (!node) return () => {};
@@ -198,7 +224,7 @@ export function watchPreviews(node) {
   watched.set(node, (watched.get(node) ?? 0) + 1);
   postSubscription([executionId(node)], true);
   let released = false;
-  return () => {
+  return (options = {}) => {
     if (released) return;
     released = true;
     const held = (watched.get(node) ?? 1) - 1;
@@ -207,6 +233,7 @@ export function watchPreviews(node) {
       return;
     }
     watched.delete(node);
+    if (options?.keepRegistration) return;
     postSubscription([executionId(node)], false);
   };
 }
@@ -242,10 +269,13 @@ async function fetchPreview(nodeOrId, options = {}) {
   // The frame parameter is left off for the first one, so the request an interface written
   // before batches existed sends is the one it always sent.
   const index = Number(options.frame) || 0;
+  // The workflow open on the canvas, which the store files each run under.
+  const workflow = workflowId();
   const query = `${ROUTE}?node_id=${encodeURIComponent(id)}`
     + (name ? `&slot=${encodeURIComponent(name)}` : "")
     + (index ? `&frame=${encodeURIComponent(index)}` : "")
-    + (side === PREVIEW_SIDE.OUTPUT ? `&side=${side}` : "");
+    + (side === PREVIEW_SIDE.OUTPUT ? `&side=${side}` : "")
+    + (workflow ? `&workflow=${encodeURIComponent(workflow)}` : "");
 
   let blob = null;
   let source = { width: null, height: null };

@@ -54,17 +54,9 @@ class LoadTextFilesFromZip(io.ComfyNode):
             ],
             category="WAS Suite/Archive",
             description=(
-                "Read the text files inside a zip archive. Every file comes out twice: as "
-                "one LIST, and as a STRING list that runs everything downstream once per "
-                "file, with the names alongside so a caption keeps the name it arrived "
-                "under. A '/' in the pattern anchors it at the top of the archive, so "
-                "'captions/*.txt' reads that one folder and 'captions/**/*.txt' reads it "
-                "and everything under it; case is ignored. An archive that is missing, is "
-                "a folder, is not a readable zip, or holds nothing the pattern picks stops "
-                "the prompt and says which. Whatever is not read is counted on 'skipped' "
-                "and named in the log: wrong kind, an unsafe name, a symbolic link, "
-                "encrypted, repeated, too large, damaged, or not UTF-8 text. Files left by "
-                "the unpack total are not counted there, nothing being wrong with them."
+                "Read the text files inside a zip archive, both as one LIST and as a STRING "
+                "list that runs everything downstream once per file, each with the name it "
+                "arrived under. Useful for rendering a folder of captions or prompts."
             ),
             inputs=[
                 io.Combo.Input(
@@ -91,9 +83,9 @@ class LoadTextFilesFromZip(io.ComfyNode):
                     default="*",
                     multiline=False,
                     tooltip=(
-                        "Which entries inside the archive to read. '*' takes every text file "
-                        "at any depth, '*.txt' every .txt in any folder, and 'cat_*.txt' only "
-                        "those named that way."
+                        "Which entries to read, case ignored: '*' = every text file at any "
+                        "depth; '*.txt' = every .txt in any folder; 'captions/*.txt' = that "
+                        "folder only; 'captions/**/*.txt' = it and everything under it."
                     ),
                 ),
             ],
@@ -139,9 +131,9 @@ class LoadTextFilesFromZip(io.ComfyNode):
                 io.Int.Output(
                     display_name="skipped",
                     tooltip=(
-                        "How many entries the archive holds that were not read: a kind this "
-                        "node does not read, one unsafe to unpack, one damaged. The log names "
-                        "every one."
+                        "How many entries were not read: wrong kind, an unsafe name, a symbolic "
+                        "link, encrypted, repeated, too large, damaged or not UTF-8 text. Files "
+                        "past the unpack total are not counted. The log names every one."
                     ),
                 ),
             ],

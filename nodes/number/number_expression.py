@@ -40,17 +40,10 @@ class NumberExpression(io.ComfyNode):
             ],
             category="WAS Suite/Number/Operations",
             description=(
-                "Work out a whole formula over up to 24 numbers in one node, such as "
-                "`(a * b) / 2 + c`, `clamp(a, 0, 1)` or `round(a / b, 2)`. Rounding, "
-                "clamping, interpolation, roots, logarithms and trigonometry are all there, "
-                "with pi, e and tau as constants, and the expression box lists them. "
-                "Comparisons and `and`, `or` work too, so `a if a > b else b` picks the "
-                "larger and the boolean output carries the answer. Only arithmetic is read: "
-                "a name, an attribute or a call that is not on the list is refused by name "
-                "before anything runs. The box takes several lines, joined into one, and "
-                "`#` starts a comment. Slots a to x are sockets taking a whole number, a "
-                "decimal, a NUMBER or a true or false as 1 or 0; unwired counts as 0, so a "
-                "fixed number goes in the formula."
+                "Work out a formula over up to 24 numbers, such as `(a * b) / 2 + c` or "
+                "`clamp(a, 0, 1)`. Rounding, clamping, interpolation, roots, logarithms, "
+                "trigonometry and comparisons are built in, and the box lists them. Unwired "
+                "slots count as 0, so a fixed number goes in the formula."
             ),
             inputs=[
                 io.String.Input(
@@ -59,10 +52,10 @@ class NumberExpression(io.ComfyNode):
                     multiline=True,
                     placeholder="Eg: (a * b) / 2 + c",
                     tooltip=(
-                        "The formula, over `a` to `x`. Eg: `(a * b) / 2 + c`. Functions: "
-                        "min max abs round floor ceil sqrt clamp lerp sign log log2 log10 exp "
-                        "sin cos tan atan2 hypot degrees radians, plus pi, e and tau. `a > b` "
-                        "comes out as 1 or 0; `#` starts a comment."
+                        "The formula over `a` to `x`. Functions: min max abs round floor ceil "
+                        "sqrt clamp lerp sign log log2 log10 exp sin cos tan atan2 hypot "
+                        "degrees radians; constants pi, e, tau. `a > b` gives 1 or 0; `#` "
+                        "starts a comment."
                     ),
                 ),
                 io.MultiType.Input(

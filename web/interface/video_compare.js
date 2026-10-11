@@ -7,10 +7,11 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { executionId } from "./preview.js";
+import { executionId, nodeLocator, ownOutput } from "./preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
 import { themeVar } from "./theme.js";
+import { graphLoading, keepOnNode } from "./widget.js";
 
 const LOG_NAME = "WASNodeSuite.VideoCompare";
 
@@ -384,11 +385,16 @@ export function createVideoComparePanel(node) {
    * @returns {void}
    */
   function remember(sides) {
-    node.properties ??= {};
-    node.properties[REMEMBERED_KEY] = { a: sides?.a ?? null, b: sides?.b ?? null };
+    const next = { a: sides?.a ?? null, b: sides?.b ?? null };
+    if (JSON.stringify(node.properties?.[REMEMBERED_KEY]) === JSON.stringify(next)) return;
+    keepOnNode(node, REMEMBERED_KEY, next);
   }
 
-  const sidesOf = (output) => ({ a: output?.a_video?.[0], b: output?.b_video?.[0] });
+  // A pair is read only when every side it names was written by this workflow's runs.
+  const sidesOf = (output) => {
+    const sides = { a: output?.a_video?.[0], b: output?.b_video?.[0] };
+    return [sides.a, sides.b].filter(Boolean).every(ownOutput) ? sides : {};
+  };
 
   /**
    * Point both players at whatever the last run wrote, or the pair kept on the node.
@@ -398,7 +404,8 @@ export function createVideoComparePanel(node) {
   function refresh() {
     try {
       const store = app?.nodeOutputs ?? {};
-      const sides = sidesOf(store[executionId(node)] ?? store[node.id] ?? store[String(node.id)]);
+      const output = store[nodeLocator(node)] ?? store[executionId(node)] ?? store[String(node.id)];
+      const sides = sidesOf(output);
       if (show(sides)) {
         remember(sides);
         return;
@@ -437,10 +444,11 @@ export function createVideoComparePanel(node) {
     });
   }
 
+  // A pasted node reads its kept pair here; a loaded graph is read once its outputs are back.
   const originalOnConfigure = node.onConfigure;
   node.onConfigure = function (...args) {
     const configured = originalOnConfigure?.apply(this, args);
-    refresh();
+    if (!graphLoading()) refresh();
     return configured;
   };
 
