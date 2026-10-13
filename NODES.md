@@ -3586,7 +3586,7 @@ Fake a shallow depth of field: keep the image sharp where a depth map is bright 
 <details>
 <summary><b>Image Film Grain</b></summary>
 
-Lay photographic grain over an image, the speckle a film negative has. The grain is random on every run, so the same inputs do not give the same speckle twice.
+Add photographic film grain to an image or a video batch. The grain is strongest in the midtones and fades toward black and white, leaving colour and brightness as they were. Each frame gets its own grain pattern from the seed.
 
 | | |
 |---|---|
@@ -3596,17 +3596,17 @@ Lay photographic grain over an image, the speckle a film negative has. The grain
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `image` | `IMAGE` | Yes |  |  | The image to add grain to. A batch is handled one image at a time, and each image draws its own grain rather than sharing one layer. |
-| `density` | `FLOAT` | Yes | 1.0 |  | How much of the frame is speckled. 1.0 covers it evenly, 0.5 leaves gaps of untouched image between the grains, 0.01 gives sparse specks. |
-| `intensity` | `FLOAT` | Yes | 1.0 |  | How strongly the grain layer replaces the picture. 0.01 is barely there, 0.3 is a realistic amount, 1.0 discards the original colours and leaves the grey grain layer alone. |
-| `highlights` | `FLOAT` | Yes | 1.0 |  | Brightness multiplier applied at the end, to win back the light the grain absorbs. 1.0 leaves it alone, 1.2 lifts it slightly, and large values blow the image out to white. |
-| `supersample_factor` | `INT` | Yes | 4 |  | How much larger the grain is drawn before scaling down. 1 = coarse one-pixel grain; 4 = fine realistic grain; 8 = finer still. Cost grows with the square: 8 is 64 times the work of 1. |
+| `image` | `IMAGE` | Yes |  |  | The image or batch to add grain to. Values above white are kept, and an alpha channel is left as it was. |
+| `strength` | `FLOAT` | Yes | 0.03 |  | 0 = no grain, image unchanged; 0.03 = fine film grain; 0.06 = coarse, pushed film; 0.15 = heavy. Grain shows most on smooth areas such as skin and sky. |
+| `grain_size` | `FLOAT` | Yes | 1.5 |  | Width of one grain clump in pixels. 1 = fine and crisp; 1.5 = soft film grain; 3 = coarse. Raise it with the frame size: 2 to 3 suits a 4K frame. |
+| `color` | `FLOAT` | Yes | 0.0 |  | 0 = the same grain on red, green and blue, like black-and-white film; 0.25 = a hint of colour, like colour negative; 1 = separate grain per channel, which reads as digital noise. |
+| `seed` | `INT` | Yes | 0 |  | Which grain pattern: `0` and `1` give two different ones, and one seed always gives the same. Each frame of a batch draws its own, so grain moves on video like it does on film. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `IMAGE` | The image with grain blended into it. |
+| `<output0>` | `IMAGE` | The image with grain added. |
 
 </details>
 
@@ -7361,7 +7361,7 @@ Put a clip refined after H3 De-RoPE Stretch back on its source timing, with the 
 | `images` | `IMAGE` | One frame per source frame, at the source timing. |
 | `audio` | `AUDIO` | The pass's audio at the source timing, or the source audio when none is wired. Empty when neither exists. |
 | `report` | `STRING` | Frames in and frames out. |
-| `latent` | `LATENT` | The recovered frames as an H3 latent with the source's audio, for H3 Extend Append's sampled input or a decode. Empty without vae. |
+| `latent` | `LATENT` | The recovered clip as an H3 latent with the source's audio, its kept clips exactly as sampled, for H3 Extend Append's sampled input or a decode. Empty without vae. |
 
 </details>
 
@@ -7369,7 +7369,7 @@ Put a clip refined after H3 De-RoPE Stretch back on its source timing, with the 
 <details>
 <summary><b>H3 De-RoPE Refine</b></summary>
 
-Refine the stretched latent from H3 De-RoPE Stretch window by window, each the length of a normal H3 pass and carrying the clip it shares with the one before, so a long stretch fits in memory and keeps its detail to the end. Send the result to H3 De-RoPE Recover.
+Redraw the held spans of the stretched latent from H3 De-RoPE Stretch, window by window, each the length of a normal H3 pass and carrying the clip it shares with the one before; clips with nothing held are left as sampled. Send the result to H3 De-RoPE Recover.
 
 | | |
 |---|---|
@@ -7406,7 +7406,7 @@ Refine the stretched latent from H3 De-RoPE Stretch window by window, each the l
 <details>
 <summary><b>H3 De-RoPE Stretch</b></summary>
 
-Slow down the fast parts of a MiniMax H3 clip so a refining sampler can redraw their smeared motion. Refine its latent with H3 De-RoPE Refine at the `denoise` output, then H3 De-RoPE Recover restores the clip's timing. Works on one clip or on each segment inside a Prompt Timeline loop.
+Slow down the fast parts of a MiniMax H3 clip, shot by shot, so H3 De-RoPE Refine can redraw their smeared motion; calm clips pass through untouched. H3 De-RoPE Recover then restores the clip's timing. Works on one clip or on each segment inside a Prompt Timeline loop.
 
 | | |
 |---|---|
@@ -7417,7 +7417,7 @@ Slow down the fast parts of a MiniMax H3 clip so a refining sampler can redraw t
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE. |
-| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much is held, each fast span joined to the next across up to 8 rows: `balanced` = fastest quarter at 4; `wide` = fastest 30% at 4; `economy` = fastest 15% at 3; `manual` = every setting. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much of each shot is held, of rows moving at least 1.6x their scene's typical motion: `balanced` = fastest quarter at 4; `wide` = fastest 30% at 4; `economy` = fastest 15% at 3; `manual` = every setting. |
 | `strength` | `FLOAT` | Yes | 0.5 |  | Denoise for the sampler, passed out as `denoise`: `0.5` keeps the clip's motion and redraws the smear, `0.7` redraws more and re-times the action. Set the sampler's steps to the first pass's times this, as `4` after an 8-step pass or `13` after 25. |
 | `audio_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How much of the audio the pass re-renders: `follow` 0.5, `loose` 0.7, `pin` keeps it, `fresh` replaces it. Needs audio and audio_vae. |
 | `images` | `IMAGE` | No |  |  | The clip's frames at 24 fps. Leave empty to decode them from latent. |
@@ -7436,7 +7436,7 @@ Slow down the fast parts of a MiniMax H3 clip so a refining sampler can redraw t
 | `latent` | `LATENT` | The stretched clip and its audio, for the sampler's latent_image. A clip with cuts carries where each scene opens, for H3 Decode Video. |
 | `derope` | `WAS_H3_DEROPE` | What was held, for H3 De-RoPE Recover. |
 | `denoise` | `FLOAT` | The strength, for the sampler's denoise. |
-| `report` | `STRING` | Frames in and out, frames held, the peak hold and the cuts kept out of the motion measure. |
+| `report` | `STRING` | Frames in and out, frames held, the peak hold, clips kept as sampled, shot cuts found and each shot's fastest motion. |
 | `model` | `MODEL` | The model for the sampler, run in slices when low_vram is on. |
 | `positive` | `CONDITIONING` | The prompt with its pinned frames on the stretched clip, for the sampler's positive. Empty when positive is not wired. |
 

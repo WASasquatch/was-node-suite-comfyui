@@ -80,8 +80,9 @@ class H3DeRopeRecover(io.ComfyNode):
                 ),
                 io.Latent.Output(
                     display_name="latent",
-                    tooltip="The recovered frames as an H3 latent with the source's audio, "
-                            "for H3 Extend Append's sampled input or a decode. Empty without vae.",
+                    tooltip="The recovered clip as an H3 latent with the source's audio, its kept "
+                            "clips exactly as sampled, for H3 Extend Append's sampled input or a "
+                            "decode. Empty without vae.",
                 ),
             ],
         )
@@ -136,10 +137,13 @@ class H3DeRopeRecover(io.ComfyNode):
         sound = derope.audio
         if audio is not None:
             sound = h3_derope.squeeze_audio(audio, derope.holds, derope.source, derope.fps)
+        flags = h3_derope.kept_clips(derope.holds)
+        kept = sum(flags) if getattr(derope, "video", None) is not None else 0
         report = (f"{images.shape[0]} frames -> {frames.shape[0]} at {derope.fps:g} fps"
                   + moved
                   + ("; decoded from the latent" if decoded else "")
-                  + (f"; encoded again as {h3_derope.video_of(rebuilt).shape[2]} latent rows"
+                  + (f"; {h3_derope.video_of(rebuilt).shape[2]} latent rows, {kept} of "
+                     f"{len(flags)} clips kept as sampled and {len(flags) - kept} encoded again"
                      + (" with the source audio" if derope.sound is not None
                         else " with silence" if derope.joint else "")
                      if rebuilt is not None else "")

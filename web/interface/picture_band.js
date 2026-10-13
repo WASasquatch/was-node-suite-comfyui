@@ -26,9 +26,11 @@ const MAX_EDGE = 4096;
  *
  * @param {object} node - The node the panel is on.
  * @param {object} [options] - `slot` names the output the picture left on, `label` is the
- *   word drawn under it, and `height` overrides the band height in CSS pixels.
- * @returns {{element: HTMLElement, update: Function, clear: Function, dispose: Function}}
- *   The band, in the shape a report panel's sketch takes.
+ *   word drawn under it, `height` overrides the band height in CSS pixels, and `overlay` is
+ *   called as `overlay(pen, {x, y, width, height, ratio})` after the picture is drawn.
+ * @returns {{element: HTMLElement, update: Function, clear: Function, dispose: Function,
+ *   show: Function}} The band, in the shape a report panel's sketch takes; `show(image, text)`
+ *   draws a picture handed to it until the node next answers.
  */
 export function createPictureBand(node, options = {}) {
   const slot = String(options.slot ?? "");
@@ -39,7 +41,7 @@ export function createPictureBand(node, options = {}) {
   band.className = "was-picture-band";
   // Grows faster than the fact rows beside it, so dragging the node taller shows more
   // picture rather than more empty table.
-  band.style.cssText = "display:flex;align-items:center;gap:10px;flex:3 1 auto;"
+  band.style.cssText = "display:flex;flex-direction:column;gap:4px;flex:3 1 auto;"
     + `min-height:${height}px;overflow:hidden`;
 
   // The canvas is taken out of flow inside a frame of its own. In flow, a full-height
@@ -54,18 +56,19 @@ export function createPictureBand(node, options = {}) {
     + "border-radius:3px;display:block";
   frame.appendChild(stage);
 
+  // One line under the picture, so the picture keeps the band's whole width.
   const legend = document.createElement("div");
-  legend.style.cssText = "display:flex;flex-direction:column;gap:3px;min-width:0;"
-    + "flex:0 1 auto;max-width:45%;overflow:hidden";
+  legend.style.cssText = "display:flex;align-items:baseline;gap:8px;min-width:0;"
+    + "flex:0 0 auto;overflow:hidden;white-space:nowrap";
   band.appendChild(legend);
 
   const title = document.createElement("div");
-  title.style.cssText = `color:${themeVar("fgMuted")}`;
+  title.style.cssText = `flex:0 0 auto;color:${themeVar("fgMuted")}`;
   title.textContent = label;
   legend.appendChild(title);
 
   const detail = document.createElement("div");
-  detail.style.cssText = "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+  detail.style.cssText = "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;"
     + `color:${themeVar("fg")}`;
   legend.appendChild(detail);
 
@@ -83,10 +86,14 @@ export function createPictureBand(node, options = {}) {
     if (disposed) return;
     const theme = readTheme();
 
-    const ratio = surfaceRatio(stage);
-    const box = stage.getBoundingClientRect();
-    const wide = Math.min(MAX_EDGE, Math.max(1, Math.round(box.width * ratio)));
-    const tall = Math.min(MAX_EDGE, Math.max(1, Math.round(box.height * ratio)));
+    // Layout pixels times the ratio, which already holds the graph's zoom; both sides shrink
+    // together past the largest edge so the picture keeps its shape.
+    const layoutWide = Math.max(1, stage.clientWidth);
+    const layoutTall = Math.max(1, stage.clientHeight);
+    const wanted = surfaceRatio(stage);
+    const ratio = wanted * Math.min(1, MAX_EDGE / (Math.max(layoutWide, layoutTall) * wanted));
+    const wide = Math.max(1, Math.round(layoutWide * ratio));
+    const tall = Math.max(1, Math.round(layoutTall * ratio));
     if (stage.width !== wide) stage.width = wide;
     if (stage.height !== tall) stage.height = tall;
 
@@ -115,14 +122,17 @@ export function createPictureBand(node, options = {}) {
     const scale = Math.min(wide / picture.naturalWidth, tall / picture.naturalHeight);
     const drawWide = Math.max(1, Math.round(picture.naturalWidth * scale));
     const drawTall = Math.max(1, Math.round(picture.naturalHeight * scale));
+    const left = Math.round((wide - drawWide) / 2);
+    const top = Math.round((tall - drawTall) / 2);
     pen.imageSmoothingEnabled = true;
-    pen.drawImage(
-      picture,
-      Math.round((wide - drawWide) / 2),
-      Math.round((tall - drawTall) / 2),
-      drawWide,
-      drawTall,
-    );
+    pen.drawImage(picture, left, top, drawWide, drawTall);
+    if (typeof options.overlay === "function") {
+      try {
+        options.overlay(pen, { x: left, y: top, width: drawWide, height: drawTall, ratio });
+      } catch (error) {
+        console.error(`[${LOG_NAME}] Failed to draw over the picture:`, error);
+      }
+    }
   };
 
   /**
@@ -181,6 +191,13 @@ export function createPictureBand(node, options = {}) {
       picture = null;
       words = "";
       detail.textContent = "";
+      paint();
+    },
+    show(image, text = "") {
+      if (disposed || !image) return;
+      picture = image;
+      words = "";
+      detail.textContent = String(text ?? "");
       paint();
     },
     dispose() {

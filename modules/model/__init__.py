@@ -34,6 +34,7 @@ __all__ = [
     "published_checkpoint",
     "published_files",
     "release_models",
+    "release_others",
     "repository_id",
     "resolve",
     "shared_file",
@@ -610,6 +611,46 @@ def unpin_staged() -> bool:
     comfy.model_management.reset_cast_buffers()
     comfy_aimdo.model_vbar.vbars_reset_watermark_limits()
     return True
+
+
+def release_others(keep=(), device=None, unpin: bool = False) -> tuple:
+    """Free the VRAM every loaded model holds on a device, except the ones kept.
+
+    Args:
+        keep: Model patchers, or the models inside them, to leave loaded.
+        device: The device to free, ComfyUI's torch device when left out.
+        unpin: Hand back the pages a finished model staged before freeing.
+
+    Returns:
+        ``(bytes, partial, unloaded)``: bytes partly unloaded from dynamic models, how many
+        dynamic models were asked, and how many other models were unloaded.
+    """
+    try:
+        import comfy.model_management as management
+    except ImportError:
+        return 0, 0, 0
+    if unpin:
+        unpin_staged()
+    device = management.get_torch_device() if device is None else device
+    kept_models = set()
+    for item in keep or ():
+        if item is None:
+            continue
+        inner = item.model if hasattr(item, "model_size") and hasattr(item, "model") else item
+        kept_models.add(id(inner))
+    others, kept = [], []
+    for loaded in list(management.current_loaded_models):
+        patcher = loaded.model
+        if patcher is None or id(patcher.model) in kept_models or loaded.device != device:
+            kept.append(loaded)
+        elif patcher.is_dynamic():
+            kept.append(loaded)
+            others.append(patcher)
+    freed = sum(int(patcher.partially_unload(patcher.offload_device, 1e32) or 0) for patcher in others)
+    unloaded = management.free_memory(1e32, device, keep_loaded=kept) or []
+    if freed or unloaded:
+        management.soft_empty_cache()
+    return freed, len(others), len(unloaded)
 
 
 def release_models() -> bool:

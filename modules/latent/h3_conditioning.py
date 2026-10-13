@@ -1142,21 +1142,25 @@ def cut_in(text: str, seconds: float) -> str:
     text = str(text or "")
     lead = f"[Shot 1] {CUT_LEAD}\n\n"
     cut = f"At {shot_time(seconds)}, the shot cuts to the next scene."
-    first = SHOT_HEADING.search(text)
+    section = SHOT_SECTION.search(text)
+    start = section.end() if section else 0
+    # Shots are read from the description on; retention_analysis mentions them above it.
+    first = SHOT_HEADING.search(text, start)
     if first is None:
-        section = SHOT_SECTION.search(text)
-        at = section.end() if section else 0
-        gap = "\n" if section and not text[at:].startswith("\n") else ""
-        return f"{text[:at].rstrip(' ')}{gap}{lead}[Shot 2] {cut} {text[at:].lstrip()}".rstrip()
+        gap = "\n" if section and not text[start:].startswith("\n") else ""
+        return f"{text[:start].rstrip(' ')}{gap}{lead}[Shot 2] {cut} {text[start:].lstrip()}".rstrip()
 
     def later(match):
         minutes, whole, millis = (int(part) for part in match.groups())
         return f"At {shot_time(minutes * 60 + whole + millis / 1000 + float(seconds))}"
 
-    body = SHOT_TIME.sub(later, text[first.start():])
-    body = SHOT_HEADING.sub(lambda match: f"[Shot {int(match.group(1)) + 1}]", body)
+    def renumbered(match):
+        return f"[Shot {int(match.group(1)) + 1}]"
+
+    head = SHOT_HEADING.sub(renumbered, text[:first.start()])
+    body = SHOT_HEADING.sub(renumbered, SHOT_TIME.sub(later, text[first.start():]))
     opening = SHOT_HEADING.match(body)
-    return f"{text[:first.start()]}{lead}{opening.group(0)} {cut}{body[opening.end():]}"
+    return f"{head}{lead}{opening.group(0)} {cut}{body[opening.end():]}"
 
 
 def encoded_text(entry) -> str:

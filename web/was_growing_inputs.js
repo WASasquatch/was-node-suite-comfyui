@@ -7,9 +7,8 @@
 
 import { app } from "../../scripts/app.js";
 import { growWidgets } from "./interface/grow.js";
-import { addSectionHeader } from "./interface/decoration.js";
 import { sceneTint } from "./interface/h3_timeline.js";
-import { addRowHeaders, rowColourMenu } from "./interface/row_headers.js";
+import { addLabelHeader, addRowHeaders, rowColourMenu, rowName } from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.GrowingInputs";
 
@@ -22,18 +21,6 @@ const CONDITION_SLOTS = Array.from({ length: 26 }, (unused, index) => `condition
 // nodes/extras/lora/power_lora_loader.py.
 const POWER_LORA_MAX_ROWS = 26;
 
-const POWER_LORA_ROWS = {
-  groups: Array.from({ length: POWER_LORA_MAX_ROWS }, (unused, index) => [
-    `lora_${index + 1}_enabled`,
-    `lora_${index + 1}`,
-    `lora_${index + 1}_weight`,
-  ]),
-  empty: ["None"],
-  minVisible: 1,
-  decidesAt: 1,
-  header: { name: "was_row_header", title: "Selected LoRA's", before: "lora_1_enabled" },
-};
-
 /**
  * The value one of a node's widgets holds.
  *
@@ -44,6 +31,54 @@ const POWER_LORA_ROWS = {
 function widgetValue(node, name) {
   return node?.widgets?.find((widget) => widget?.name === name)?.value;
 }
+
+/**
+ * A LoRA file's name without its folder or extension.
+ *
+ * @param {string} file - The file as the list names it, as `wan/turbo_8step.safetensors`.
+ * @returns {string} As `turbo_8step`.
+ */
+function loraStem(file) {
+  const base = String(file).split(/[\\/]/).pop();
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(0, dot) : base;
+}
+
+/**
+ * Text of one row's header on the Power LoRA nodes.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} row - Row number, from 1.
+ * @returns {string} The row's name or file, as `1 · Turbo LoRA` or `2 · turbo_8step · off`.
+ */
+function loraRowTitle(node, row) {
+  const parts = [String(row)];
+  const file = widgetValue(node, `lora_${row}`);
+  const named = rowName(node, row);
+  if (named) parts.push(named);
+  else if (file && file !== "None") parts.push(loraStem(file));
+  if (widgetValue(node, `lora_${row}_enabled`) === false) parts.push("off");
+  return parts.join(" · ");
+}
+
+// A switch, a file and a strength to a row, with a coloured bar above each row folded away with
+// it. `decidesAt` names the file widget as the one that says whether a row is in use.
+const POWER_LORA_ROWS = {
+  groups: Array.from({ length: POWER_LORA_MAX_ROWS }, (unused, index) => [
+    `lora_${index + 1}_enabled`,
+    `lora_${index + 1}`,
+    `lora_${index + 1}_weight`,
+  ]),
+  empty: ["None"],
+  minVisible: 1,
+  decidesAt: 1,
+  rowHeaders: {
+    name: (row) => `was_lora_header_${row}`,
+    title: loraRowTitle,
+    noun: "LoRA",
+    renamable: true,
+  },
+};
 
 /**
  * Text of one segment's header on MiniMax H3 Conditioning.
@@ -105,6 +140,11 @@ const H3_PROMPT_ROWS = {
   ]),
   minVisible: 2,
   decidesAt: 0,
+  // Coloured bars above the text every segment shares.
+  labels: [
+    { name: "was_prompt_header_label", key: "prompt_header", title: "Global Prompt Header", before: "prompt_header" },
+    { name: "was_prompt_footer_label", key: "prompt_footer", title: "Global Prompt Footer", before: "prompt_footer" },
+  ],
   // A coloured bar above each segment, folded away with it.
   rowHeaders: {
     name: (row) => `was_segment_header_${row}`,
@@ -176,9 +216,9 @@ app.registerExtension({
   name: EXT_NAME,
 
   getNodeMenuItems(node) {
-    const rowHeaders = GROWING[node?.comfyClass]?.rowHeaders;
-    if (!rowHeaders) return [];
-    return rowColourMenu(node, rowHeaders.noun);
+    const entry = GROWING[node?.comfyClass];
+    if (!entry?.rowHeaders && !entry?.labels) return [];
+    return rowColourMenu(node);
   },
 
   async beforeRegisterNodeDef(nodeType, nodeData) {
@@ -192,7 +232,7 @@ app.registerExtension({
       if (Number.isFinite(entry.minVisible)) options.minVisible = entry.minVisible;
       if (Number.isFinite(entry.decidesAt)) options.decidesAt = entry.decidesAt;
     }
-    const header = Array.isArray(entry) ? null : entry?.header;
+    const labels = Array.isArray(entry) ? [] : entry?.labels ?? [];
     const rowHeaders = Array.isArray(entry) ? null : entry?.rowHeaders;
 
     const proto = nodeType.prototype;
@@ -205,7 +245,7 @@ app.registerExtension({
     proto.onNodeCreated = function () {
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
-        if (header) addSectionHeader(this, header);
+        for (const label of labels) addLabelHeader(this, label);
         let grown = groups;
         if (rowHeaders) {
           // Each header joins its row's group, after the widget that decides it, to fold with it.

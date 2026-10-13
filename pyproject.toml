@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.4.2"
+version = "3.5.0"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
@@ -24,7 +24,7 @@ branch = "main"
 docs = "https://github.com/WASasquatch/was-node-suite-comfyui/blob/main/NODES.md"
 funding = "https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US"
 release_note = """
-New MiniMax H3 Conditioning Timeline editor, creaft scenes in a visual timeline, with LLM assistance via a Load CLIP node.
+New Tile Captioned KSampler and Custom Sampler for high resolution image upscaling with VLM guidance for each tile.
 """
 themes = ["themes/was-node-suite-dark/was-node-suite.json", "themes/was-node-suite-light/was-node-suite.json"]
 example_workflows = [

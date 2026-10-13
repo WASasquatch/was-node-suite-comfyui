@@ -29,7 +29,7 @@ def _coverage_options() -> list:
             inputs=[
                 io.Float.Input(
                     "threshold", default=0.75, min=0.5, max=0.99, step=0.01,
-                    tooltip="Rows with motion above this share of the clip are held, as "
+                    tooltip="Rows with motion above this share of their shot are held, as "
                             "`0.75` for the fastest quarter or `0.85` for the fastest sixth.",
                 ),
                 io.Int.Input(
@@ -44,6 +44,11 @@ def _coverage_options() -> list:
                 io.Boolean.Input(
                     "ramp", default=True,
                     tooltip="`true` steps each held span down by one hold per row at its edges.",
+                ),
+                io.Float.Input(
+                    "floor", default=h3_derope.FLOOR, min=0.0, max=10.0, step=0.1,
+                    tooltip="Motion a row needs to be held, as a multiple of its scene's typical "
+                            "motion: `1.6`; `0` holds each shot's fastest share however calm.",
                 ),
             ],
         ),
@@ -86,10 +91,10 @@ class H3DeRopeStretch(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Slow down the fast parts of a MiniMax H3 clip so a refining sampler can redraw "
-                "their smeared motion. Refine its latent with H3 De-RoPE Refine at the `denoise` "
-                "output, then H3 De-RoPE Recover restores the clip's timing. Works on one clip "
-                "or on each segment inside a Prompt Timeline loop."
+                "Slow down the fast parts of a MiniMax H3 clip, shot by shot, so H3 De-RoPE "
+                "Refine can redraw their smeared motion; calm clips pass through untouched. H3 "
+                "De-RoPE Recover then restores the clip's timing. Works on one clip or on each "
+                "segment inside a Prompt Timeline loop."
             ),
             inputs=[
                 io.Image.Input(
@@ -99,9 +104,10 @@ class H3DeRopeStretch(io.ComfyNode):
                 io.Vae.Input("vae", tooltip="The H3 video VAE."),
                 io.DynamicCombo.Input(
                     "mode", options=_coverage_options(), display_name="mode",
-                    tooltip="How much is held, each fast span joined to the next across up to 8 "
-                            "rows: `balanced` = fastest quarter at 4; `wide` = fastest 30% at 4; "
-                            "`economy` = fastest 15% at 3; `manual` = every setting.",
+                    tooltip="How much of each shot is held, of rows moving at least 1.6x their "
+                            "scene's typical motion: `balanced` = fastest quarter at 4; `wide` = "
+                            "fastest 30% at 4; `economy` = fastest 15% at 3; `manual` = every "
+                            "setting.",
                 ),
                 io.Float.Input(
                     "strength", default=0.5, min=0.05, max=1.0, step=0.05,
@@ -171,8 +177,8 @@ class H3DeRopeStretch(io.ComfyNode):
                 ),
                 io.String.Output(
                     display_name="report",
-                    tooltip="Frames in and out, frames held, the peak hold and the cuts kept "
-                            "out of the motion measure.",
+                    tooltip="Frames in and out, frames held, the peak hold, clips kept as "
+                            "sampled, shot cuts found and each shot's fastest motion.",
                 ),
                 io.Model.Output(
                     display_name="model",
@@ -211,8 +217,9 @@ class H3DeRopeStretch(io.ComfyNode):
         if chosen == MANUAL:
             quantile, peak, bridge = mode["threshold"], mode["peak_hold"], mode["bridge"]
             ramp = bool(mode["ramp"])
+            floor = float(mode.get("floor", h3_derope.FLOOR))
         else:
-            quantile, peak, bridge = h3_derope.COVERAGE[chosen]
+            quantile, peak, bridge, floor = h3_derope.COVERAGE[chosen]
             ramp = True
         heard = audio_mode["audio_mode"]
         audio_strength = (float(audio_mode["audio_strength"]) if heard == MANUAL
@@ -255,6 +262,9 @@ class H3DeRopeStretch(io.ComfyNode):
         pinned = (min(h3_derope.pinned_rows(latent), source_latent.shape[2] - 1)
                   if reused else 0)
         profile = h3_derope.motion(source_latent, scenes)
+        # Shot cuts inside a scene; a scene's own first frame is already a cut.
+        opening = {start for start, _ in h3_derope.scene_frames(scenes, images.shape[0])}
+        shots = [frame for frame in h3_derope.shot_cuts(images) if frame not in opening]
         bar.update(count)
         lap("measure")
         # A segment of a loop keeps its last clip unheld, so the next one carries it at pace.
@@ -262,11 +272,11 @@ class H3DeRopeStretch(io.ComfyNode):
         if reused and h3_extend.WINDOW_KEY in latent:
             tail = source_latent.shape[2] - h3_derope.row_of_frame(
                 max(0, int(images.shape[0]) - h3_extend.CLIP_FRAMES))
-        holds, row_holds = h3_derope.plan(profile, images.shape[0], quantile, peak, bridge, ramp,
-                                          scenes, pinned, tail)
-        holds = h3_derope.aligned(holds, scenes)
+        holds, row_holds, peaks = h3_derope.plan(profile, images.shape[0], quantile, peak, bridge,
+                                                 ramp, scenes, pinned, tail, shots, floor)
+        holds = h3_derope.aligned(h3_derope.settled(holds, scenes), scenes)
         video, encoded, chunks = h3_derope.encode_stretched(vae, images, holds, source_latent,
-                                                            pinned)
+                                                            pinned, scenes)
         bar.update(count * 3)
         lap("encode")
 
@@ -282,10 +292,8 @@ class H3DeRopeStretch(io.ComfyNode):
                                 device=video.device)
         kept_sound, joint = h3_derope.source_sound(latent if reused else None, audio, audio_vae,
                                                    images.shape[0])
-        mask = None
-        if pinned or (audio is not None and audio_strength < 1.0):
-            mask = h3_derope.audio_row_strength(audio_strength if audio is not None else 1.0,
-                                                video, sound, pinned)
+        mask = h3_derope.pass_mask(audio_strength if audio is not None else 1.0, video, sound,
+                                   holds, pinned)
         bar.update(AUDIO_STEPS)
         release_models()
         lap("audio")
@@ -304,13 +312,21 @@ class H3DeRopeStretch(io.ComfyNode):
             holds=tuple(holds), fps=float(fps), audio=heard_audio,
             rows=tuple(float(value) for value in profile), row_holds=tuple(row_holds),
             source=source, cuts=tuple(cuts), sound=kept_sound, joint=joint, extras=extras,
-            pinned=pinned, guide=h3_derope.guide_frames(images),
+            pinned=pinned, guide=h3_derope.guide_frames(images), shots=tuple(shots),
+            video=source_latent.detach().cpu(),
         )
         held = sum(1 for hold in holds[:source] if hold > 1)
+        flags = h3_derope.kept_clips(holds)
         unread = len(h3_derope.scene_spans(starts, given.shape[2])) - 1 if given is not None else 0
+        fastest = ", ".join(f"{value:.1f}x" for value in peaks)
         report = (
             f"{source} frames -> {result.stretched} ({result.stretched / source:.2f}x); "
-            f"{held} held, peak x{max(row_holds)}; {chosen}; {encoded} of {chunks} chunks encoded"
+            f"{held} held, peak x{max(row_holds)}; {chosen}; "
+            f"{sum(flags)} of {len(flags)} clips kept as sampled; "
+            f"{len(shots)} shot {'cut' if len(shots) == 1 else 'cuts'} found"
+            + (f" at {', '.join(f'{frame / float(fps):.1f}' for frame in shots)} s" if shots else "")
+            + f"; fastest row per shot against its scene's typical motion: {fastest}, "
+              f"held from {floor:g}x; {encoded} of {chunks} chunks encoded"
             + (f"; {len(cuts)} {'cut' if len(cuts) == 1 else 'cuts'} kept out of the motion "
                f"measure, each scene {'decoded, ' if decoded else ''}held and encoded on its own"
                if cuts else "")

@@ -159,6 +159,26 @@ const HEADER_TEXT = "rgba(210, 230, 255, 0.95)";
 const HEADER_STRIPE = 4;
 
 /**
+ * Text cut short with an ellipsis to fit a width, in the context's current font.
+ *
+ * @param {CanvasRenderingContext2D} ctx - The context it will be drawn with.
+ * @param {string} text - The text.
+ * @param {number} room - Width available, in canvas units.
+ * @returns {string} The text whole, or as much of it as fits followed by `…`.
+ */
+function fitted(ctx, text, room) {
+  if (ctx.measureText(text).width <= room) return text;
+  let low = 0;
+  let high = text.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (ctx.measureText(`${text.slice(0, mid)}…`).width <= room) low = mid;
+    else high = mid - 1;
+  }
+  return low > 0 ? `${text.slice(0, low).trimEnd()}…` : "";
+}
+
+/**
  * Draw a titled bar immediately above one of a node's widgets.
  *
  * @param {object} node - The node to draw it on.
@@ -210,7 +230,7 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
         ctx.fillStyle = tint?.text ?? HEADER_TEXT;
         ctx.font = "12px sans-serif";
         ctx.textBaseline = "middle";
-        ctx.fillText(label, at, y + h / 2, Math.max(0, bar - (at - inset) - 6));
+        ctx.fillText(fitted(ctx, label, Math.max(0, bar - (at - inset) - 6)), at, y + h / 2);
       } catch (error) {
         // Once, not per frame.
         if (!widget.drawFailed) {
@@ -236,6 +256,9 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
   return addDecoration(node, widget, before);
 }
 
+// Node -> its buttons that grey out, as `{name, greyed}`.
+const GREYING = new WeakMap();
+
 /**
  * Put a button on a node without it ever being saved.
  *
@@ -245,39 +268,63 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
  * @param {string} button.label - Text drawn on the button.
  * @param {Function} button.onClick - Called with the node when it is pressed.
  * @param {Function} [button.disabled] - Called with the node; true greys the button out.
+ *   Read when the button is made, when it is pressed and on `refreshButtons`.
  * @param {string} [button.before] - Name of the widget it sits above. Appended when left out.
  * @returns {object|null} The widget added, or null when there was nowhere to put it.
  */
 export function addButton(node, { name, label, onClick, disabled, before }) {
+  const greyed = () => {
+    if (typeof disabled !== "function") return false;
+    try {
+      return Boolean(disabled(node));
+    } catch (error) {
+      console.error(`[${LOG_NAME}] ${name} could not say whether it is disabled:`, error);
+      return false;
+    }
+  };
   const widget = {
     name,
     type: "button",
     label,
     value: null,
+    disabled: greyed(),
     callback: () => {
-      if (widget.disabled) return;
+      if (greyed()) return;
       try {
         onClick(node);
       } catch (error) {
         console.error(`[${LOG_NAME}] ${name} failed:`, error);
       }
+      refreshButtons(node);
     },
   };
   if (typeof disabled === "function") {
-    Object.defineProperty(widget, "disabled", {
-      configurable: true,
-      enumerable: true,
-      // Read on every draw.
-      get() {
-        try {
-          return Boolean(disabled(node));
-        } catch (error) {
-          console.error(`[${LOG_NAME}] ${name} could not say whether it is disabled:`, error);
-          return false;
-        }
-      },
-      set() {},
-    });
+    const known = GREYING.get(node) ?? [];
+    known.push({ name, greyed });
+    GREYING.set(node, known);
   }
   return addDecoration(node, widget, before);
+}
+
+/**
+ * Grey out or restore a node's buttons to match what they act on.
+ *
+ * @param {object} node - The node whose buttons to read again.
+ * @returns {void}
+ */
+export function refreshButtons(node) {
+  const known = GREYING.get(node);
+  if (!known) return;
+  let changed = false;
+  for (const { name, greyed } of known) {
+    // The frontend draws its own copy of the widget, found by name.
+    const widget = node.widgets?.find((each) => each?.name === name);
+    if (!widget) continue;
+    const value = greyed();
+    if (widget.disabled !== value) {
+      widget.disabled = value;
+      changed = true;
+    }
+  }
+  if (changed) node.setDirtyCanvas?.(true, true);
 }

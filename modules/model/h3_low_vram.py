@@ -354,23 +354,12 @@ class _WeightBudget:
 
     def _release_others(self, device):
         """Frees the VRAM every other loaded model holds on ``device``, this one kept."""
-        import comfy.model_management as management
+        from . import release_others
 
-        mine = self.model()
-        others, keep = [], []
-        for loaded in list(management.current_loaded_models):
-            patcher = loaded.model
-            if patcher is None or patcher.model is mine or loaded.device != device:
-                keep.append(loaded)
-            elif patcher.is_dynamic():
-                keep.append(loaded)
-                others.append(patcher)
-        freed = sum(int(p.partially_unload(p.offload_device, 1e32) or 0) for p in others)
-        unloaded = management.free_memory(1e32, device, keep_loaded=keep)
+        freed, others, unloaded = release_others([self.model()], device)
         if freed or unloaded:
-            management.soft_empty_cache()
             logger.info("H3 low VRAM: released %.1f GB held by %d other model(s)",
-                        freed / 1024 ** 3, len(others) + len(unloaded))
+                        freed / 1024 ** 3, others + unloaded)
 
     def _vbar(self, device):
         """The model's weight address space on ``device``, or ``None`` when it has none."""

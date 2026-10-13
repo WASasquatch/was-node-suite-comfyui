@@ -3,7 +3,8 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { addButton } from "./interface/decoration.js";
+import { addButton, refreshButtons } from "./interface/decoration.js";
+import { rowColour, rowName, setRowColours, setRowNames } from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.PowerLoraRows";
 
@@ -51,7 +52,8 @@ function rowWidgets(node, index) {
  * Every row carrying a LoRA, in the order they are drawn.
  *
  * @param {object} node - The node to read.
- * @returns {Array<{on: boolean, name: string, weight: number}>} The rows in use.
+ * @returns {Array<{on: boolean, name: string, weight: number, colour: string|null,
+ *   title: string|null}>} The rows in use, each with its header colour and name.
  */
 function readRows(node) {
   const rows = [];
@@ -59,7 +61,13 @@ function readRows(node) {
     const row = rowWidgets(node, index);
     const name = row.name?.value;
     if (!name || name === EMPTY) continue;
-    rows.push({ on: row.on?.value ?? true, name, weight: row.weight?.value ?? 1.0 });
+    rows.push({
+      on: row.on?.value ?? true,
+      name,
+      weight: row.weight?.value ?? 1.0,
+      colour: rowColour(node, index),
+      title: rowName(node, index),
+    });
   }
   return rows;
 }
@@ -77,6 +85,21 @@ function visibleRows(node) {
     if (row && !row.hidden) count += 1;
   }
   return count;
+}
+
+/**
+ * How many rows the node's contents call for: every row up to the last LoRA, and one empty.
+ *
+ * @param {object} node - The node to read.
+ * @returns {number} Rows drawn with none held open.
+ */
+function naturalRows(node) {
+  let last = 0;
+  for (let index = 1; index <= MAX_ROWS; index += 1) {
+    const name = rowWidgets(node, index).name?.value;
+    if (name && name !== EMPTY) last = index;
+  }
+  return Math.min(MAX_ROWS, last + 1);
 }
 
 /**
@@ -110,20 +133,28 @@ function nothingToClear(node) {
 }
 
 /**
- * Lay a list of LoRAs back over the rows, packed to the top.
+ * Lay a list of LoRAs back over the rows, packed to the top, each header's colour and name with
+ * its LoRA.
  *
  * @param {object} node - The node to write to.
- * @param {Array<{on: boolean, name: string, weight: number}>} rows - The LoRAs to keep.
+ * @param {Array<{on: boolean, name: string, weight: number, colour: string|null,
+ *   title: string|null}>} rows - The LoRAs to keep.
  * @returns {void}
  */
 function writeRows(node, rows) {
+  const colours = {};
+  const titles = {};
   for (let index = 1; index <= MAX_ROWS; index += 1) {
     const row = rowWidgets(node, index);
     const wanted = rows[index - 1] ?? DEFAULT_ROW;
     if (row.on) row.on.value = wanted.on;
     if (row.name) row.name.value = wanted.name;
     if (row.weight) row.weight.value = wanted.weight;
+    colours[index] = wanted.colour ?? null;
+    titles[index] = wanted.title ?? null;
   }
+  setRowColours(node, colours);
+  setRowNames(node, titles);
 }
 
 /**
@@ -139,6 +170,7 @@ function refold(node, forced = 0) {
   const computed = node.computeSize?.();
   if (computed) node.setSize([node.size[0], computed[1]]);
   node.setDirtyCanvas(true, true);
+  refreshButtons(node);
 }
 
 /**
@@ -150,6 +182,22 @@ function refold(node, forced = 0) {
 function addRow(node) {
   if (atCeiling(node)) return;
   refold(node, Math.min(MAX_ROWS, visibleRows(node) + 1));
+}
+
+/**
+ * Take away the bottom row: an empty one held open, or else the last LoRA.
+ *
+ * @param {object} node - The node to remove from.
+ * @returns {void}
+ */
+function removeLast(node) {
+  const shown = visibleRows(node);
+  if (shown > naturalRows(node)) {
+    refold(node, shown - 1);
+    return;
+  }
+  const rows = readRows(node);
+  if (rows.length) removeRow(node, rows.length - 1);
 }
 
 /**
@@ -208,22 +256,24 @@ function removeEntries(node) {
   const rows = readRows(node);
   if (!rows.length) return [{ content: "No LoRAs to remove", disabled: true }];
   return rows.map((row, at) => ({
-    content: `${at + 1}. ${row.name}`,
+    content: `${at + 1}. ${row.title ?? row.name}`,
     callback: () => removeRow(node, at),
   }));
 }
 
 /**
- * Offer the list of LoRAs to take out, wherever the pointer is.
+ * Grey the row buttons out or back in once the change in hand has been drawn.
  *
- * @param {object} node - The node to remove from.
- * @param {Event} [event] - What opened the menu, used to place it.
+ * @param {object} node - The node whose buttons to read again.
  * @returns {void}
  */
-function askWhichToRemove(node, event) {
-  const ContextMenu = window.LiteGraph?.ContextMenu;
-  if (!ContextMenu) return;
-  new ContextMenu(removeEntries(node), { title: "Remove LoRA", event });
+function queueButtonRefresh(node) {
+  if (node.__was_buttons_queued) return;
+  node.__was_buttons_queued = true;
+  setTimeout(() => {
+    node.__was_buttons_queued = false;
+    refreshButtons(node);
+  }, 0);
 }
 
 app.registerExtension({
@@ -270,8 +320,8 @@ app.registerExtension({
         addButton(this, {
           name: "was_row_remove",
           label: "➖ Remove LoRA",
-          onClick: (node) => askWhichToRemove(node, window.event),
-          disabled: isEmpty,
+          onClick: removeLast,
+          disabled: nothingToClear,
         });
         addButton(this, {
           name: "was_row_clear",
@@ -284,9 +334,36 @@ app.registerExtension({
           label: "♻️ Refresh LoRA List",
           onClick: refreshCatalog,
         });
+        // Picking, switching or wiring a row changes what the buttons can do.
+        for (let index = 1; index <= MAX_ROWS; index += 1) {
+          for (const row of Object.values(rowWidgets(this, index))) {
+            if (!row) continue;
+            const original = row.callback;
+            const node = this;
+            row.callback = function (...args) {
+              const answer = original?.apply(this, args);
+              queueButtonRefresh(node);
+              return answer;
+            };
+          }
+        }
+        const originalConnections = this.onConnectionsChange;
+        this.onConnectionsChange = function (...args) {
+          const answer = originalConnections?.apply(this, args);
+          queueButtonRefresh(this);
+          return answer;
+        };
+        queueButtonRefresh(this);
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to add ${nodeData.name}'s row buttons:`, error);
       }
+      return result;
+    };
+
+    const originalOnConfigure = proto.onConfigure;
+    proto.onConfigure = function () {
+      const result = originalOnConfigure?.apply(this, arguments);
+      queueButtonRefresh(this);
       return result;
     };
   },

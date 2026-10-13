@@ -28,9 +28,9 @@ class H3DeRopeRefine(io.ComfyNode):
             ],
             category="WAS Suite/Latent/Video",
             description=(
-                "Refine the stretched latent from H3 De-RoPE Stretch window by window, each the "
-                "length of a normal H3 pass and carrying the clip it shares with the one before, "
-                "so a long stretch fits in memory and keeps its detail to the end. Send the "
+                "Redraw the held spans of the stretched latent from H3 De-RoPE Stretch, window "
+                "by window, each the length of a normal H3 pass and carrying the clip it shares "
+                "with the one before; clips with nothing held are left as sampled. Send the "
                 "result to H3 De-RoPE Recover."
             ),
             inputs=[
@@ -119,7 +119,8 @@ class H3DeRopeRefine(io.ComfyNode):
             scheduler=scheduler, denoise=denoise, seed=seed, window_frames=chunk,
             overlap_frames=shared, negative=negative, sampler=sampler,
         )
-        report = (f"{len(lines)} window(s) of up to {chunk} frames, {shared} carried; "
-                  + "; ".join(lines))
+        ran = [line for line in lines if line.startswith("window")]
+        report = (f"{len(ran)} window(s) of up to {chunk} frames, {shared} carried; "
+                  + "; ".join(lines)) if ran else "; ".join(lines)
         logger.info("H3 De-RoPE Refine: %s", report)
         return io.NodeOutput(refined, report)

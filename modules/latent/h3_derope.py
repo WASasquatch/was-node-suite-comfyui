@@ -1,6 +1,7 @@
 """Holding a MiniMax H3 clip's fast frames for a refining pass, and removing them again.
 
-A hold of ``n`` shows a frame ``n`` times. Latent rows cover ``1, 4, 4, 4, 4`` frames per 17.
+A hold of ``n`` shows a frame ``n`` times. Rows cover ``1, 4, 4, 4, 4`` frames per 17. Kept clips
+pass through as sampled.
 """
 
 from __future__ import annotations
@@ -28,10 +29,13 @@ __all__ = [
     "first_frame_of_row",
     "fit",
     "guide_frames",
+    "kept_clips",
+    "kept_rows",
     "latent_audio",
     "motion",
     "moved_keyframes",
     "nearest_showings",
+    "pass_mask",
     "padding",
     "pinned_rows",
     "plan",
@@ -42,6 +46,8 @@ __all__ = [
     "row_of_frame",
     "scene_frames",
     "scene_spans",
+    "settled",
+    "shot_cuts",
     "source_sound",
     "squeeze_audio",
     "stretch_audio",
@@ -53,13 +59,32 @@ __all__ = [
     "zeroed",
 ]
 
-#: Coverage presets: ``(quantile, peak hold, bridge)``. Rows at or above the quantile of the
-#: motion profile are held at the peak; gaps of up to ``bridge`` rows between them are filled.
+#: Motion a row needs to be held, as a multiple of its scene's typical motion.
+FLOOR = 1.6
+
+#: Coverage presets: ``(quantile, peak hold, bridge, floor)``. Rows above the quantile of their
+#: shot's motion and at least ``floor`` times their scene's typical motion are held at the peak;
+#: gaps of up to ``bridge`` rows between them are filled.
 COVERAGE = {
-    "balanced": (0.75, 4, 8),
-    "wide": (0.70, 4, 8),
-    "economy": (0.85, 3, 8),
+    "balanced": (0.75, 4, 8, FLOOR),
+    "wide": (0.70, 4, 8, FLOOR),
+    "economy": (0.85, 3, 8, FLOOR),
 }
+
+#: A frame step this many times the clip's median step opens a new shot...
+CUT_OVER_MEDIAN = 8.0
+
+#: ...when it is also this many times the steps either side of it...
+CUT_OVER_NEIGHBOURS = 3.0
+
+#: ...and at least this mean grey change, from 0 to 1.
+CUT_FLOOR = 0.05
+
+#: Height and width of the thumbnails cuts are found on.
+CUT_SIZE = (36, 64)
+
+#: Rows a cut reaches in the motion measure: from this many before its row to one fewer after.
+CUT_REACH = 2
 
 #: Audio presets: the share of each audio row the refining pass re-renders.
 AUDIO_MODES = {
@@ -88,6 +113,8 @@ class Plan:
         extras: Entries of the source latent besides ``samples``, for the rebuilt latent.
         pinned: Opening latent rows the source latent held, kept out of every hold.
         guide: ``[F, 40, 72]`` normalised greyscale thumbnails of the fitted clip, or ``None``.
+        shots: Frames of the fitted clip a new shot opens on, inside its scenes.
+        video: The fitted clip's ``[B, 24, T, H, W]`` video latent on the CPU, or ``None``.
     """
 
     holds: tuple
@@ -102,6 +129,8 @@ class Plan:
     extras: dict | None = None
     pinned: int = 0
     guide: object = None
+    shots: tuple = ()
+    video: object = None
 
     @property
     def frames(self) -> int:
@@ -405,6 +434,50 @@ def motion(video: torch.Tensor, starts=None) -> np.ndarray:
     return np.concatenate([_third(rows[:, :, start:stop]) for start, stop in spans])
 
 
+def shot_cuts(images: torch.Tensor) -> list[int]:
+    """Frames that open a new shot: a jump in the picture far above the steps either side of it.
+
+    Args:
+        images: ``[F, H, W, C]`` frames.
+
+    Returns:
+        Frame indices in order, none of them ``0``.
+    """
+    count = int(images.shape[0])
+    if count < 3:
+        return []
+    small = []
+    for first in range(0, count, 16):
+        grey = images[first:first + 16, ..., :3].float().mean(dim=-1, keepdim=True)
+        small.append(torch.nn.functional.interpolate(grey.movedim(-1, 1), size=CUT_SIZE,
+                                                     mode="area")[:, 0].cpu())
+    small = torch.cat(small)
+    steps = (small[1:] - small[:-1]).abs().mean(dim=(1, 2)).numpy().astype(np.float64)
+    # Repeated closing frames step by nothing and are left out of the typical step.
+    moving = steps[steps > 0.0]
+    typical = float(np.median(moving)) if len(moving) else 0.0
+    cuts = []
+    for index, step in enumerate(steps):
+        before = steps[index - 1] if index > 0 else 0.0
+        after = steps[index + 1] if index + 1 < len(steps) else 0.0
+        if (step >= CUT_FLOOR and step >= CUT_OVER_MEDIAN * typical
+                and step >= CUT_OVER_NEIGHBOURS * max(before, after)):
+            cuts.append(index + 1)
+    return cuts
+
+
+def _distance_to(flagged: np.ndarray) -> np.ndarray:
+    """Rows from each row to the nearest flagged row, ``0`` on one, the row count with none."""
+    spots = np.flatnonzero(flagged)
+    index = np.arange(len(flagged))
+    if not len(spots):
+        return np.full(len(flagged), len(flagged), dtype=int)
+    at = np.searchsorted(spots, index)
+    before = spots[np.clip(at - 1, 0, len(spots) - 1)]
+    after = spots[np.clip(at, 0, len(spots) - 1)]
+    return np.minimum(np.abs(index - before), np.abs(after - index))
+
+
 def _spread(rows: np.ndarray, peak: int, bridge: int, ramp: bool) -> np.ndarray:
     """Row holds with short gaps between held rows filled and each held span ramped down.
 
@@ -430,40 +503,66 @@ def _spread(rows: np.ndarray, peak: int, bridge: int, ramp: bool) -> np.ndarray:
 
 
 def plan(profile: np.ndarray, frames: int, quantile: float, peak: int, bridge: int,
-         ramp: bool = True, starts=None, pinned: int = 0, tail: int = 0):
-    """The hold of every frame, from the motion of every row.
+         ramp: bool = True, starts=None, pinned: int = 0, tail: int = 0, shots=(),
+         floor: float = 0.0):
+    """The hold of every frame, from the motion of every row, shot by shot.
 
     Args:
         profile: Motion per latent row.
         frames: Frames of the clip.
-        quantile: Share of rows below the hold threshold, ``0.5`` to ``0.99``.
+        quantile: Share of a shot's rows below its hold threshold, ``0.5`` to ``0.99``.
         peak: Hold of the fastest rows, ``2`` to ``8``.
         bridge: Longest gap in rows between held rows that is held too.
         ramp: Whether holds fall by one per row away from a held span.
-        starts: Latent rows each scene opens on, or ``None`` for one scene. Bridges and
-            ramps stop at a scene's edges.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
         pinned: Opening rows that are never held.
         tail: Closing rows that are never held.
+        shots: Frames a new shot opens on inside a scene, from :func:`shot_cuts`. Rows the cut
+            reaches are never held and holds step down to them.
+        floor: Motion a row needs, as a multiple of its scene's median, ``0`` for none.
 
     Returns:
-        ``(holds, row_holds)``, one hold per frame and one per row.
+        ``(holds, row_holds, peaks)``: one hold per frame, one per row, and per shot its
+        fastest row over its scene's median, ``0`` where none of its rows was measured.
     """
     profile = np.asarray(profile, dtype=np.float64)
-    rows = np.ones(len(profile), dtype=int)
-    if len(profile) and float(profile.max()) > 0.0:
-        rows[profile > np.quantile(profile, float(quantile))] = int(peak)
-    spans = scene_spans(starts, len(rows))
-    if len(spans) == 1:
-        rows = _spread(rows, peak, bridge, ramp)
-    else:
-        rows = np.concatenate([_spread(rows[start:stop].copy(), peak, bridge, ramp)
-                               for start, stop in spans])
-    rows[:max(0, int(pinned))] = 1
+    count = len(profile)
+    rows = np.ones(count, dtype=int)
+    blocked = np.zeros(count, dtype=bool)
+    cut_rows = sorted({row_of_frame(frame) for frame in shots or ()} - {0})
+    cut_rows = [row for row in cut_rows if row < count]
+    for row in cut_rows:
+        blocked[max(0, row - CUT_REACH):row + CUT_REACH] = True
+    blocked[:max(0, int(pinned))] = True
     if int(tail) > 0:
-        rows[-int(tail):] = 1
-    last = len(rows) - 1
+        blocked[-int(tail):] = True
+    spans, peaks = [], []
+    for scene_start, scene_stop in scene_spans(starts, count):
+        inside = np.arange(scene_start, scene_stop)
+        clean = inside[~blocked[inside]]
+        typical = float(np.median(profile[clean])) if len(clean) else 0.0
+        edges = [scene_start, *[row for row in cut_rows if scene_start < row < scene_stop],
+                 scene_stop]
+        for start, stop in zip(edges[:-1], edges[1:]):
+            spans.append((start, stop))
+            measured = np.arange(start, stop)
+            measured = measured[~blocked[measured]]
+            if not len(measured) or typical <= 0.0:
+                peaks.append(0.0)
+                continue
+            values = profile[measured]
+            peaks.append(float(values.max()) / typical)
+            hot = values > np.quantile(values, float(quantile))
+            if float(floor) > 0.0:
+                hot &= values >= float(floor) * typical
+            rows[measured[hot]] = int(peak)
+    for start, stop in spans:
+        rows[start:stop] = _spread(rows[start:stop].copy(), peak, bridge, ramp)
+    if blocked.any():
+        rows = np.minimum(rows, 1 + _distance_to(blocked))
+    last = count - 1
     holds = [int(rows[min(row_of_frame(frame), last)]) for frame in range(int(frames))]
-    return holds, [int(value) for value in rows]
+    return holds, [int(value) for value in rows], peaks
 
 
 def padding(holds) -> int:
@@ -512,6 +611,87 @@ def aligned(holds, starts=None) -> list[int]:
     return out
 
 
+def kept_clips(holds) -> list[bool]:
+    """Whether each clip of a clip on the 17k+5 grid shows every frame once.
+
+    Args:
+        holds: One hold per frame.
+
+    Returns:
+        One flag per clip, the closing five-frame clip last.
+    """
+    size = h3_extend.CLIP_FRAMES
+    return [all(int(hold) == 1 for hold in holds[start:start + size])
+            for start in range(0, len(holds), size)]
+
+
+def _runs(flags, starts, frames: int) -> list[tuple[int, int, bool]]:
+    """``(first, stop, kept)`` runs of clips sharing a flag, broken where a scene opens."""
+    breaks = {start // h3_extend.CLIP_TOKENS
+              for start, _ in scene_spans(starts, h3_extend.tokens_for(int(frames)))[1:]}
+    out, first = [], 0
+    for index in range(1, len(flags) + 1):
+        if index == len(flags) or flags[index] != flags[first] or index in breaks:
+            out.append((first, index, bool(flags[first])))
+            first = index
+    return out
+
+
+def settled(holds, starts=None) -> list[int]:
+    """Holds evened so every run of held clips stretches by whole clips, its held frames gaining
+    or losing showings.
+
+    Args:
+        holds: One hold per frame of a clip on the 17k+5 grid.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
+
+    Returns:
+        The evened holds.
+    """
+    size = h3_extend.CLIP_FRAMES
+    holds = [int(hold) for hold in holds]
+    for first, stop, kept in _runs(kept_clips(holds), starts, len(holds)):
+        if kept:
+            continue
+        low, high = first * size, min(stop * size, len(holds))
+        short = -(sum(holds[low:high]) - (high - low)) % size
+        held = [frame for frame in range(low, high) if holds[frame] > 1]
+        if not short or not held:
+            continue
+        spare = [frame for frame in held if holds[frame] > 2]
+        over = size - short
+        if over < short and over <= len(spare):
+            for step in range(over):
+                holds[spare[step * len(spare) // over]] -= 1
+        else:
+            for step in range(short):
+                holds[held[step * len(held) // short]] += 1
+    return holds
+
+
+def kept_rows(holds, stretched: bool = False) -> np.ndarray:
+    """Whether each latent row belongs to a kept clip, on the source or the stretched clip.
+
+    Args:
+        holds: Holds from :func:`settled`, one per frame of a clip on the 17k+5 grid.
+        stretched: Answer for the stretched clip's rows rather than the source's.
+
+    Returns:
+        One flag per row.
+    """
+    size = h3_extend.CLIP_FRAMES
+    frames = int(sum(holds)) if stretched else len(holds)
+    out = np.zeros(h3_extend.tokens_for(frames), dtype=bool)
+    shown = 0
+    for clip, kept in enumerate(kept_clips(holds)):
+        low, high = clip * size, min((clip + 1) * size, len(holds))
+        at = shown if stretched else low
+        if kept and at % size == 0:
+            out[row_of_frame(at):row_of_frame(at + high - low - 1) + 1] = True
+        shown += int(sum(holds[low:high]))
+    return out
+
+
 def stretched_starts(holds, starts) -> list[int]:
     """Latent rows each scene opens on in the stretched clip.
 
@@ -540,46 +720,56 @@ def stretch_frames(images: torch.Tensor, holds) -> torch.Tensor:
     return images[torch.tensor(order, dtype=torch.long, device=images.device)]
 
 
-def encode_stretched(vae, images: torch.Tensor, holds, source: torch.Tensor, pinned: int = 0):
-    """The stretched clip's video latent.
+def _encode_run(vae, frames: torch.Tensor, closing: bool) -> torch.Tensor:
+    """Whole clips of frames encoded, a closing run with its five-frame clip."""
+    if closing:
+        return vae.encode(frames[..., :3])
+    lead = frames[-1:].expand(h3_extend.CLIP_LEAD, *frames.shape[1:])
+    rows = frames.shape[0] // h3_extend.CLIP_FRAMES * h3_extend.CLIP_TOKENS
+    return vae.encode(torch.cat([frames, lead])[..., :3])[:, :, :rows]
 
-    Chunks before the first held frame and after the last, and the pinned rows, come from
-    ``source``.
+
+def _joined(pieces: list) -> torch.Tensor:
+    """Latent pieces joined over time, on the device and type of the first encoded one."""
+    like = next((piece for piece, encoded in pieces if encoded), pieces[0][0])
+    return torch.cat([piece.to(like) for piece, _ in pieces], dim=2)
+
+
+def encode_stretched(vae, images: torch.Tensor, holds, source: torch.Tensor, pinned: int = 0,
+                     starts=None):
+    """The stretched clip's video latent: kept clips from ``source``, held runs encoded.
 
     Args:
         vae: The H3 video VAE.
         images: ``[F, H, W, C]`` frames of the fitted clip.
-        holds: Aligned holds, one per frame.
+        holds: Holds from :func:`settled`, one per frame.
         source: The fitted clip's video latent.
-        pinned: Opening rows whose frames are held once each.
+        pinned: Opening rows whose frames are held once each, copied from ``source``.
+        starts: Latent rows each scene opens on, or ``None`` for one scene.
 
     Returns:
         ``(latent, encoded, chunks)``: the ``[B, 24, T, H, W]`` latent, the chunks encoded
         and the chunks it holds.
     """
-    size, rows = h3_extend.CLIP_FRAMES, h3_extend.CLIP_TOKENS
-    held = [frame for frame, hold in enumerate(holds) if hold > 1]
-    total = int(sum(holds))
-    chunks = math.ceil(total / size)
-    if not held:
+    size, per = h3_extend.CLIP_FRAMES, h3_extend.CLIP_TOKENS
+    chunks = math.ceil(int(sum(holds)) / size)
+    flags = kept_clips(holds)
+    if all(flags):
         return source, 0, chunks
-    shift = total - len(holds)
-    first = held[0] // size
-    last_shown = int(sum(holds[:held[-1] + 1]))
-    after = math.ceil(last_shown / size)
-    frames = stretch_frames(images, holds)[first * size:after * size]
-    if after >= chunks:
-        middle = vae.encode(frames[..., :3])
-    else:
-        lead = frames[-1:].expand(h3_extend.CLIP_LEAD, *frames.shape[1:])
-        middle = vae.encode(torch.cat([frames, lead])[..., :3])[:, :, :(after - first) * rows]
-    head = source[:, :, :first * rows]
-    tail = source[:, :, (after - shift // size) * rows:]
-    latent = torch.cat([head.to(middle), middle, tail.to(middle)], dim=2)
+    pieces, encoded = [], 0
+    for first, stop, kept in _runs(flags, starts, len(holds)):
+        low, high = first * size, min(stop * size, len(holds))
+        if kept:
+            pieces.append((source[:, :, first * per:min(stop * per, source.shape[2])], False))
+            continue
+        frames = stretch_frames(images[low:high], holds[low:high])
+        encoded += math.ceil(frames.shape[0] / size)
+        pieces.append((_encode_run(vae, frames, high >= len(holds)), True))
+    latent = _joined(pieces)
     pinned = min(int(pinned), latent.shape[2], source.shape[2])
-    if pinned > first * rows:
-        latent[:, :, first * rows:pinned] = source[:, :, first * rows:pinned].to(latent)
-    return latent, after - first, chunks
+    if pinned:
+        latent[:, :, :pinned] = source[:, :, :pinned].to(latent)
+    return latent, encoded, chunks
 
 
 def source_sound(latent, audio, audio_vae, frames: int):
@@ -643,8 +833,30 @@ def _mask_rows(mask) -> int | None:
     return None if video is None else int(video.shape[2])
 
 
+def _recovered_video(vae, images: torch.Tensor, result: Plan) -> tuple[torch.Tensor, int]:
+    """The recovered video latent: kept clips from the source latent, held runs encoded.
+
+    Returns:
+        ``(video, encoded)``: the ``[B, 24, T, H, W]`` latent and the clips encoded.
+    """
+    size, per = h3_extend.CLIP_FRAMES, h3_extend.CLIP_TOKENS
+    flags = kept_clips(result.holds)
+    if result.video is None or not any(flags):
+        return encode_scenes(vae, images, result.cuts), len(flags)
+    source, frames = result.video, len(result.holds)
+    pieces, encoded = [], 0
+    for first, stop, kept in _runs(flags, result.cuts, frames):
+        if kept:
+            pieces.append((source[:, :, first * per:min(stop * per, source.shape[2])], False))
+            continue
+        high = min(stop * size, frames)
+        pieces.append((_encode_run(vae, images[first * size:high], high >= frames), True))
+        encoded += stop - first
+    return _joined(pieces), encoded
+
+
 def recovered_latent(vae, images: torch.Tensor, result: Plan) -> dict:
-    """The recovered frames encoded again, beside the source's own audio and records.
+    """The recovered clip as a latent, kept clips from the source latent, beside its audio.
 
     Args:
         vae: The H3 video VAE.
@@ -655,7 +867,7 @@ def recovered_latent(vae, images: torch.Tensor, result: Plan) -> dict:
         A LATENT on the fitted clip's timeline: joint where the source was, carrying every
         entry the source latent did. A noise mask is kept only where it still fits.
     """
-    video = encode_scenes(vae, images, result.cuts)
+    video, _ = _recovered_video(vae, images, result)
     if result.joint:
         sound = result.sound
         span = h3_extend.audio_span(int(images.shape[0]))
@@ -746,18 +958,48 @@ def denoise_sigmas(model, scheduler: str, steps: int, denoise: float):
     return comfy.samplers.calculate_sigmas(sampling, scheduler, total)[-(steps + 1):]
 
 
-def _windows(rows: int, starts, window_frames: int, overlap_frames: int) -> list:
-    """The windows covering a stretched latent, none crossing a scene cut.
+#: Clips of held context a refined span takes either side of its free rows.
+CONTEXT_CLIPS = 2
+
+
+def _areas(rows: int, starts, free=None) -> list[tuple[int, int, int]]:
+    """``(start, stop, bound)`` rows to refine, each free run with :data:`CONTEXT_CLIPS` clips
+    either side; ``bound`` is its scene's end."""
+    per = h3_extend.CLIP_TOKENS
+    out = []
+    for start, stop in scene_spans(starts, rows):
+        if free is None:
+            out.append((start, stop, stop))
+            continue
+        marks = np.flatnonzero(free[start:stop]) + start
+        if not len(marks):
+            continue
+        breaks = np.flatnonzero(np.diff(marks) > 1)
+        for low, high in zip(marks[np.concatenate([[0], breaks + 1])],
+                             marks[np.concatenate([breaks, [len(marks) - 1]])]):
+            low = max(start, (int(low) // per - CONTEXT_CLIPS) * per)
+            high = min(stop, (int(high) // per + 1 + CONTEXT_CLIPS) * per)
+            if out and out[-1][2] == stop and low <= out[-1][1]:
+                out[-1] = (out[-1][0], max(out[-1][1], high), stop)
+            else:
+                out.append((low, high, stop))
+    return out
+
+
+def _windows(rows: int, starts, window_frames: int, overlap_frames: int, free=None) -> list:
+    """The windows covering a stretched latent's free rows, none crossing a scene cut.
 
     Args:
         rows: Latent rows of the stretched clip.
         starts: Latent rows each scene opens on, or ``None`` for one scene.
         window_frames: Frames one window holds at most.
-        overlap_frames: Frames each window shares with the one before in its scene.
+        overlap_frames: Frames each window shares with the one before in its area.
+        free: One flag per row, true where the noise mask lets it change, or ``None`` for
+            every row.
 
     Returns:
-        ``(start_row, stop_row, chunk)`` per window: its scene's first row and the row after
-        its last, and its :class:`modules.latent.h3_upscale.Chunk` counted from the scene's
+        ``(start_row, stop_row, chunk)`` per window: its area's first row, the end of the
+        area's scene, and its :class:`modules.latent.h3_upscale.Chunk` counted from the area's
         start.
     """
     from . import h3_upscale
@@ -765,9 +1007,10 @@ def _windows(rows: int, starts, window_frames: int, overlap_frames: int) -> list
     most = (h3_upscale.snap_chunk(window_frames) - h3_extend.CLIP_LEAD) // h3_extend.CLIP_FRAMES
     shared = h3_upscale.snap_overlap(overlap_frames, window_frames) // h3_extend.CLIP_FRAMES
     out = []
-    for start, stop in scene_spans(starts, rows):
-        frames = h3_extend.frames_for(stop - start) if stop >= rows else (
-            (stop - start) // h3_extend.CLIP_TOKENS * h3_extend.CLIP_FRAMES + h3_extend.CLIP_LEAD)
+    for start, area_stop, stop in _areas(rows, starts, free):
+        frames = h3_extend.frames_for(area_stop - start) if area_stop >= rows else (
+            (area_stop - start) // h3_extend.CLIP_TOKENS * h3_extend.CLIP_FRAMES
+            + h3_extend.CLIP_LEAD)
         total = h3_upscale.clips_for(frames)
         chunk_frames = window_frames
         if total > most > shared:
@@ -819,8 +1062,15 @@ def refine(model, positive, latent: dict, *, steps: int, cfg: float, sampler_nam
     if negative is None:
         negative = zeroed(positive)
     steps = max(1, int(steps))
+    free = None
+    if video_mask is not None and int(video_mask.shape[2]) == int(video.shape[2]):
+        free = (video_mask.float().amax(dim=(0, 1, 3, 4)) > 0.0).cpu().numpy()
     plan_ = _windows(video.shape[2], h3_extend.scene_starts(latent), window_frames,
-                     overlap_frames)
+                     overlap_frames, free)
+    if not plan_:
+        out = {key: value for key, value in latent.items() if key not in ("samples", "noise_mask")}
+        out.update(h3_extend.join(video_out, sound_out))
+        return out, ["nothing held, every clip kept as sampled"]
     callback = preview.prepare_callback(model, steps * len(plan_))
     sigmas = denoise_sigmas(model, scheduler, steps, denoise)
     lines = []
@@ -846,6 +1096,11 @@ def refine(model, positive, latent: dict, *, steps: int, cfg: float, sampler_nam
             if tuple(given.shape[3:]) == tuple(frame_mask.shape[3:]):
                 frame_mask[:, :, :given.shape[2]] = given
         frame_mask[:, :, :chunk.held] = 0.0
+        writes = min(chunk.kept, stop - start)
+        if writes <= chunk.held or float(frame_mask[:, :, chunk.held:writes].max()) <= 0.0:
+            lines.append(f"window {index + 1} of {len(plan_)}: stretched frames {first} to "
+                         f"{first + chunk.frames - 1}, every clip kept as sampled")
+            continue
         heard_mask = torch.ones([heard.shape[0], 1, *heard.shape[2:]], dtype=torch.float32)
         if sound_mask is not None:
             given = sound_mask[..., a0:a0 + span].float().cpu()
@@ -875,8 +1130,12 @@ def refine(model, positive, latent: dict, *, steps: int, cfg: float, sampler_nam
                 seed=int(seed) + index)
         refined, heard_refined = h3_extend.split({"samples": result})
         kept = min(chunk.kept, stop - start)
-        video_out[:, :, start + chunk.held:start + kept] = \
-            refined[:, :, chunk.held:kept].to(video_out)
+        fresh = refined[:, :, chunk.held:kept].to(video_out)
+        # Rows the mask held fully stay exactly as they came in.
+        frozen = (frame_mask[0, 0, chunk.held:kept].amax(dim=(1, 2)) <= 0.0).to(fresh.device)
+        if bool(frozen.any()):
+            fresh[:, :, frozen] = video_out[:, :, start + chunk.held:start + kept][:, :, frozen]
+        video_out[:, :, start + chunk.held:start + kept] = fresh
         kept_frames = (h3_extend.frames_for(kept) if kept % h3_extend.CLIP_TOKENS
                        else kept // h3_extend.CLIP_TOKENS * h3_extend.CLIP_FRAMES)
         a1 = a0 + h3_extend.audio_span(held_frames)
@@ -1058,6 +1317,39 @@ def audio_row_strength(strength: float, video, audio, pinned: int = 0):
     return h3_extend.join(video_mask, audio_mask)["samples"]
 
 
+def pass_mask(strength: float, video, audio, holds, pinned: int = 0):
+    """A joint noise mask for the refining pass: held runs free, kept clips and pinned rows held.
+
+    Args:
+        strength: Share of each audio row under a held run re-rendered, ``0`` to ``1``.
+        video: The stretched video latent, ``[B, 24, T, H, W]``.
+        audio: The stretched audio latent, ``[B, 32, 2, L]``.
+        holds: Holds from :func:`settled`, one per source frame.
+        pinned: Opening video rows held as they are.
+
+    Returns:
+        The joint mask, as ``join`` builds it, or ``None`` where every row is free at full
+        strength.
+    """
+    count = int(video.shape[2])
+    kept = kept_rows(holds, stretched=True)[:count]
+    if not kept.any() and not int(pinned) and float(strength) >= 1.0:
+        return None
+    video_mask = torch.ones([video.shape[0], 1, count, video.shape[3], video.shape[4]],
+                            dtype=torch.float32, device=video.device)
+    video_mask[:, :, torch.as_tensor(np.flatnonzero(kept), dtype=torch.long)] = 0.0
+    video_mask[:, :, :max(0, int(pinned))] = 0.0
+    audio_mask = torch.full([audio.shape[0], 1, audio.shape[2], audio.shape[3]],
+                            float(strength), dtype=torch.float32, device=audio.device)
+    total = int(sum(holds))
+    edges = np.flatnonzero(np.diff(np.concatenate([[0], kept.astype(int), [0]])))
+    for low, high in zip(edges[::2], edges[1::2]):
+        first = first_frame_of_row(int(low))
+        last = first_frame_of_row(int(high)) if int(high) < count else total
+        audio_mask[..., h3_extend.audio_span(first):h3_extend.audio_span(last)] = 0.0
+    return h3_extend.join(video_mask, audio_mask)["samples"]
+
+
 def plot(result: Plan, width: int = 1280, height: int = 200) -> torch.Tensor:
     """A strip of motion per latent row, coloured by the hold each row got.
 
@@ -1076,15 +1368,24 @@ def plot(result: Plan, width: int = 1280, height: int = 200) -> torch.Tensor:
     draw = ImageDraw.Draw(picture)
     rows = np.asarray(result.rows, dtype=np.float64)
     base, top = height - 18, 26
-    tallest = float(rows.max()) if len(rows) and rows.max() > 0 else 1.0
+    # Scaled to the tallest row no shot cut reaches; a cut's rows are cut off at the top.
+    reach = np.zeros(len(rows), dtype=bool)
+    for frame in result.shots:
+        row = row_of_frame(frame)
+        reach[max(0, row - CUT_REACH):row + CUT_REACH] = True
+    clean = rows[~reach] if (~reach).any() else rows
+    tallest = float(clean.max()) if len(clean) and clean.max() > 0 else 1.0
     span = max(1, len(rows))
     for row, value in enumerate(rows):
         left = int(row / span * width)
         right = max(left + 1, int((row + 1) / span * width) - 1)
         hold = result.row_holds[row]
-        colour = colours.get(hold, (232, 72, 72))
-        draw.rectangle([left, base - int(value / tallest * (base - top)), right, base],
+        colour = (96, 96, 108) if reach[row] else colours.get(hold, (232, 72, 72))
+        draw.rectangle([left, base - int(min(1.0, value / tallest) * (base - top)), right, base],
                        fill=colour)
+    for frame in result.shots:
+        x = int(row_of_frame(frame) / span * width)
+        draw.line([(x, top - 4), (x, base)], fill=(150, 150, 165), width=1)
     for cut in result.cuts:
         x = int(cut / span * width)
         draw.line([(x, top - 4), (x, base)], fill=(236, 236, 242), width=2)
@@ -1095,10 +1396,14 @@ def plot(result: Plan, width: int = 1280, height: int = 200) -> torch.Tensor:
         draw.text((x + 2, base + 3), f"{mark}s", fill=(150, 150, 160))
     held = sum(1 for hold in result.holds[:result.source] if hold > 1)
     peak = max(result.row_holds) if result.row_holds else max(result.holds)
+    flags = kept_clips(result.holds)
     heading = (f"{held} of {result.source} frames held, peak x{peak}, "
-               f"{result.source} -> {result.stretched} frames")
+               f"{result.source} -> {result.stretched} frames, "
+               f"{sum(flags)} of {len(flags)} clips kept")
+    if result.shots:
+        heading += f", {len(result.shots)} shot {'cut' if len(result.shots) == 1 else 'cuts'}"
     if result.cuts:
-        heading += f", {len(result.cuts)} {'cut' if len(result.cuts) == 1 else 'cuts'} marked"
+        heading += f", {len(result.cuts)} scene {'cut' if len(result.cuts) == 1 else 'cuts'}"
     draw.text((8, 6), heading, fill=(230, 230, 235))
     array = np.asarray(picture, dtype=np.float32) / 255.0
     return torch.from_numpy(array)[None]

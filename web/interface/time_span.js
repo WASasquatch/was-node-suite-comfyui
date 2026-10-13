@@ -172,10 +172,14 @@ export function createTimeSpanPanel(node, options = {}) {
     const theme = readTheme();
 
     const window = current();
-    const ratio = surfaceRatio(strip);
-    const box = strip.getBoundingClientRect();
-    const wide = Math.min(MAX_EDGE, Math.max(1, Math.round(box.width * ratio)));
-    const tall = Math.min(MAX_EDGE, Math.max(1, Math.round(box.height * ratio)));
+    // Layout pixels times the ratio, which already holds the graph's zoom; both sides shrink
+    // together past the largest edge so the strip keeps its shape.
+    const layoutWide = Math.max(1, strip.clientWidth);
+    const layoutTall = Math.max(1, strip.clientHeight);
+    const wanted = surfaceRatio(strip);
+    const ratio = wanted * Math.min(1, MAX_EDGE / (Math.max(layoutWide, layoutTall) * wanted));
+    const wide = Math.max(1, Math.round(layoutWide * ratio));
+    const tall = Math.max(1, Math.round(layoutTall * ratio));
     if (strip.width !== wide) strip.width = wide;
     if (strip.height !== tall) strip.height = tall;
 
@@ -191,7 +195,7 @@ export function createTimeSpanPanel(node, options = {}) {
       return;
     }
 
-    const width = box.width || 1;
+    const width = layoutWide;
     const step = tickStep(window.length);
     pen.strokeStyle = theme.borderLight;
     pen.lineWidth = Math.max(1, Math.round(ratio));
