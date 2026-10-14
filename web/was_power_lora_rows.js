@@ -3,7 +3,7 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { addButton, refreshButtons } from "./interface/decoration.js";
+import { addButton, addSectionHeader, refreshButtons } from "./interface/decoration.js";
 import { rowColour, rowName, setRowColours, setRowNames } from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.PowerLoraRows";
@@ -21,6 +21,43 @@ const REFRESH_COMMAND = "Comfy.RefreshNodeDefinitions";
 const EMPTY = "None";
 
 const DEFAULT_ROW = { on: true, name: EMPTY, weight: 1.0 };
+
+// The Power LoRA Merger input whose LoRAs replace the rows while it is wired.
+const STACK_INPUT = "stack_data";
+
+// The bar above the rows, and what it reads with stack_data wired and without.
+const ROWS_HEADER = "was_rows_header";
+const ROWS_TITLE = "LoRAs";
+const STACK_TITLE = "Using stack_data (rows ignored)";
+
+/**
+ * Whether the node's stack_data input is wired, so its rows take no part.
+ *
+ * @param {object} node - The node to read.
+ * @returns {boolean} True while a link reaches stack_data.
+ */
+function stackLinked(node) {
+  return (node?.inputs ?? []).some((input) => input?.name === STACK_INPUT && input.link != null);
+}
+
+/**
+ * Grey the row widgets out while stack_data is wired, and back in once it is not.
+ *
+ * @param {object} node - The node whose rows to set.
+ * @returns {void}
+ */
+function applyStackState(node) {
+  const linked = stackLinked(node);
+  let changed = false;
+  for (let index = 1; index <= MAX_ROWS; index += 1) {
+    for (const row of Object.values(rowWidgets(node, index))) {
+      if (!row || Boolean(row.disabled) === linked) continue;
+      row.disabled = linked;
+      changed = true;
+    }
+  }
+  if (changed) node.setDirtyCanvas?.(true, true);
+}
 
 /**
  * One of a node's widgets by name.
@@ -272,6 +309,7 @@ function queueButtonRefresh(node) {
   node.__was_buttons_queued = true;
   setTimeout(() => {
     node.__was_buttons_queued = false;
+    applyStackState(node);
     refreshButtons(node);
   }, 0);
 }
@@ -282,18 +320,19 @@ app.registerExtension({
   getNodeMenuItems(node) {
     if (!NODES.includes(node?.comfyClass)) return [];
     const rows = readRows(node);
+    const linked = stackLinked(node);
     return [
       null,
-      { content: "➕ Add LoRA", disabled: atCeiling(node), callback: () => addRow(node) },
+      { content: "➕ Add LoRA", disabled: linked || atCeiling(node), callback: () => addRow(node) },
       {
         content: "➖ Remove LoRA",
-        disabled: rows.length === 0,
-        has_submenu: rows.length > 0,
+        disabled: linked || rows.length === 0,
+        has_submenu: !linked && rows.length > 0,
         submenu: { options: removeEntries(node) },
       },
       {
         content: "❌ Clear LoRAs",
-        disabled: nothingToClear(node),
+        disabled: linked || nothingToClear(node),
         callback: () => clearRows(node),
       },
       { content: "♻️ Refresh LoRA List", callback: () => refreshCatalog(node) },
@@ -311,23 +350,30 @@ app.registerExtension({
     proto.onNodeCreated = function () {
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
+        if (this.inputs?.some((input) => input?.name === STACK_INPUT)) {
+          addSectionHeader(this, {
+            name: ROWS_HEADER,
+            title: (node) => (stackLinked(node) ? STACK_TITLE : ROWS_TITLE),
+            before: "lora_1_enabled",
+          });
+        }
         addButton(this, {
           name: "was_row_add",
           label: "➕ Add LoRA",
           onClick: addRow,
-          disabled: atCeiling,
+          disabled: (node) => stackLinked(node) || atCeiling(node),
         });
         addButton(this, {
           name: "was_row_remove",
           label: "➖ Remove LoRA",
           onClick: removeLast,
-          disabled: nothingToClear,
+          disabled: (node) => stackLinked(node) || nothingToClear(node),
         });
         addButton(this, {
           name: "was_row_clear",
           label: "❌ Clear LoRAs",
           onClick: clearRows,
-          disabled: nothingToClear,
+          disabled: (node) => stackLinked(node) || nothingToClear(node),
         });
         addButton(this, {
           name: "was_row_refresh",

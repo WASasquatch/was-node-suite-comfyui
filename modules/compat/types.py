@@ -23,6 +23,7 @@ __all__ = [
     "H3_PROMPTS",
     "IMAGE_BOUNDS",
     "LIST",
+    "LORA_STACK",
     "LUT",
     "MIDAS_MODEL",
     "MOTION",
@@ -216,6 +217,11 @@ WAS_LOOP = io.Custom("WAS_LOOP")
 #: plain dictionary. Kept off the DICT wire so the merger's options socket accepts only a
 #: set of merge settings and says so in the Add Node menu's link filter.
 WAS_LORA_MERGE_OPTIONS = io.Custom("WAS_LORA_MERGE_OPTIONS")
+
+#: `Power LoRA Loader` / `Power LoRA Merger` -> `Power LoRA Merger`'s `stack_data`. A list of
+#: ``(lora_name, model_strength, clip_strength)`` tuples, each name relative to the LoRA folder,
+#: the type other packs' LoRA stack nodes read and write.
+LORA_STACK = io.Custom("LORA_STACK")
 
 #: `Load Video` / `Load Video (Upload)` -> `Video Metadata`. What one read measured, as a plain
 #: dictionary: the rate, the frame count, the size and the duration of both the answer and the

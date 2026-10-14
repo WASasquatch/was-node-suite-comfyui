@@ -19,6 +19,20 @@ const ROUTE = "/was/interface/api/segment_preview";
 const INDEX_ROUTE = `${ROUTE}/index`;
 
 /**
+ * A random version 4 UUID, on pages served over plain HTTP as well as HTTPS.
+ *
+ * @returns {string} The UUID.
+ */
+function newPreviewKey() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+/**
  * Give a node a preview key of its own, or a new one where another node in its graph shares it.
  *
  * @param {object} node - The node.
@@ -32,7 +46,7 @@ export function ensurePreviewKey(node) {
     (other) => other !== node && other?.properties?.[PREVIEW_KEY] === key,
   );
   if (key && !shared) return false;
-  node.properties[PREVIEW_KEY] = crypto.randomUUID();
+  node.properties[PREVIEW_KEY] = newPreviewKey();
   return true;
 }
 
@@ -42,12 +56,16 @@ export function ensurePreviewKey(node) {
  * @param {() => string} ownerId - The node's execution id, read on every message.
  * @param {(segment: number, preview: object) => void} onPreview - Called once a sheet is ready to
  *   draw, with `{fields, image}`.
- * @returns {{previews: Map<number, object>, reload: (owner?: string) => Promise<void>,
- *   dispose: () => void}} The held sheets by segment, a re-read of every sheet the server holds
- *   for the node or for another key, and unsubscribe.
+ * @param {(segment: number, fields: object) => void} [onProblem] - Called when a segment could
+ *   not be previewed, with `{problem, detail}` among the fields.
+ * @returns {{previews: Map<number, object>, problems: Map<number, object>,
+ *   reload: (owner?: string) => Promise<void>, dispose: () => void}} The held sheets by segment,
+ *   why a segment has none, a re-read of everything the server holds for the node or for another
+ *   key, and unsubscribe.
  */
-export function followSegmentPreviews(ownerId, onPreview) {
+export function followSegmentPreviews(ownerId, onPreview, onProblem) {
   const previews = new Map();
+  const problems = new Map();
   const wanted = new Map();
   let heldFor = null;
   let disposed = false;
@@ -57,6 +75,7 @@ export function followSegmentPreviews(ownerId, onPreview) {
     if (heldFor === owner) return;
     for (const preview of previews.values()) preview.image?.close?.();
     previews.clear();
+    problems.clear();
     wanted.clear();
     heldFor = owner;
   };
@@ -65,6 +84,13 @@ export function followSegmentPreviews(ownerId, onPreview) {
     const segment = Number(fields.segment);
     if ((wanted.get(segment) ?? -1) > fields.version) return;
     wanted.set(segment, fields.version);
+    if (fields.problem) {
+      previews.get(segment)?.image?.close?.();
+      previews.delete(segment);
+      problems.set(segment, fields);
+      onProblem?.(segment, fields);
+      return;
+    }
     try {
       const response = await api.fetchApi(
         `${ROUTE}?node_id=${encodeURIComponent(fields.node_id)}&segment=${segment}&v=${fields.version}`,
@@ -79,6 +105,7 @@ export function followSegmentPreviews(ownerId, onPreview) {
       previews.get(segment)?.image?.close?.();
       const preview = { fields, image };
       previews.set(segment, preview);
+      problems.delete(segment);
       onPreview(segment, preview);
     } catch (error) {
       console.warn(`[${LOG_NAME}] Segment ${segment + 1}'s preview could not be read:`, error);
@@ -109,6 +136,7 @@ export function followSegmentPreviews(ownerId, onPreview) {
 
   return {
     previews,
+    problems,
     reload,
     dispose: () => {
       if (disposed) return;
@@ -116,6 +144,7 @@ export function followSegmentPreviews(ownerId, onPreview) {
       api.removeEventListener(PREVIEW_EVENT, listener);
       for (const preview of previews.values()) preview.image?.close?.();
       previews.clear();
+      problems.clear();
     },
   };
 }

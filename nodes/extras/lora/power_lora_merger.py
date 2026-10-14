@@ -6,7 +6,7 @@ import json
 
 from comfy_api.latest import io
 
-from ....modules.compat.types import WAS_LORA_MERGE_OPTIONS
+from ....modules.compat.types import LORA_STACK, WAS_LORA_MERGE_OPTIONS
 from ....modules.log import get_logger
 from ...legacy.loaders.lora_loader import NONE_OPTION, lora_names
 
@@ -89,13 +89,10 @@ class PowerLoraMerger(io.ComfyNode):
             ],
             category="WAS Suite/LoRA",
             description=(
-                (
-                    (
-                        "Merge any number of LoRAs into one new LoRA file in the LoRA folder, "
-                        "so it loads like any other. Add rows with the buttons on the node; "
-                        "connect a model and clip to apply the result straight away."
-                    )
-                )
+                "Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it "
+                "loads like any other. Add rows with the buttons on the node, or link a LoRA "
+                "stack into stack_data; connect a model and clip to apply the result straight "
+                "away."
             ),
             inputs=[
                 io.String.Input(
@@ -179,6 +176,16 @@ class PowerLoraMerger(io.ComfyNode):
                         "Optional settings from a Power LoRA Merger Options node: rank, "
                         "precision, module filters and the per-mode controls. Leave it "
                         "unconnected to merge at rank 32 in bf16."
+                    ),
+                ),
+                io.MultiType.Input(
+                    "stack_data",
+                    [LORA_STACK, io.Model],
+                    optional=True,
+                    tooltip=(
+                        "LoRAs to merge in place of the rows, in order, each at its model "
+                        "strength: a lora_stack output, or the model output of a Power LoRA "
+                        "Loader, ours or rgthree's, whose switched-on rows are read."
                     ),
                 ),
                 io.Boolean.Input(
@@ -517,7 +524,15 @@ class PowerLoraMerger(io.ComfyNode):
                         "to record what a run produced."
                     ),
                 ),
+                LORA_STACK.Output(
+                    display_name="lora_stack",
+                    tooltip=(
+                        "The saved file as a one-entry LoRA stack at output_model_strength and "
+                        "output_clip_strength, for another merger's stack_data."
+                    ),
+                ),
             ],
+            hidden=[io.Hidden.prompt, io.Hidden.unique_id],
             # Rows are added and removed on the canvas, so they arrive as extra inputs
             # rather than as declared sockets.
             accept_all_inputs=True,
@@ -534,31 +549,46 @@ class PowerLoraMerger(io.ComfyNode):
         model=None,
         clip=None,
         options=None,
+        stack_data=None,
         **rows,
     ) -> io.NodeOutput:
-        import folder_paths
         from safetensors.torch import save_file
 
         from ....modules.lora import merge_loras_z, output, rows as lora_rows
+        from ....modules.lora import stack as lora_stack
         from ....modules.lora.options import MergeSettings
         from ....modules.lora.progress import MergeProgress
 
-        selected = lora_rows.rows_from_inputs(rows)
-        if not selected:
+        stack = lora_stack.entries(stack_data, cls.hidden.prompt, cls.hidden.unique_id)
+        if stack is None:
+            stack = lora_stack.from_rows(lora_rows.rows_from_inputs(rows))
+            if not stack:
+                raise ValueError(
+                    "No LoRA is selected. Add a row with the node's Add LoRA button, choose "
+                    "a file in it, and leave its weight above zero, or link a LoRA stack into "
+                    "stack_data."
+                )
+        elif not any(weight != 0.0 for _, weight, _ in stack):
             raise ValueError(
-                "No LoRA is selected. Add a row with the node's Add LoRA button, choose a "
-                "file in it, and leave its weight above zero."
+                "stack_data is linked but carries no LoRA with a model strength above zero. "
+                "Switch a row on in the node it comes from, or unlink stack_data to merge "
+                "this node's own rows."
             )
 
         sources = []
-        for row in selected:
-            full_path = folder_paths.get_full_path("loras", row.lora)
+        for name, weight, clip_weight in stack:
+            if weight == 0.0:
+                continue
+            full_path = lora_stack.resolve(name)
             if full_path is None:
                 raise ValueError(
-                    f"The LoRA `{row.lora}` is not in your LoRA folder. Refresh the list on "
+                    f"The LoRA `{name}` is not in your LoRA folder. Refresh the list on "
                     f"the node, or pick another file."
                 )
-            sources.append((full_path, row.weight))
+            if clip_weight != weight:
+                logger.info("%s carries clip strength %g; it merges at its model strength %g",
+                            name, clip_weight, weight)
+            sources.append((full_path, weight))
 
         exact = EXACT_COUNTS.get(mode)
         if exact is not None and len(sources) != exact[0]:
@@ -660,7 +690,9 @@ class PowerLoraMerger(io.ComfyNode):
             )
             if clip is not None:
                 clip = patched
-        return io.NodeOutput(model, clip, relative)
+        return io.NodeOutput(
+            model, clip, relative, [(relative, output_model_strength, output_clip_strength)]
+        )
 
     @classmethod
     def _from_file(cls, model, clip, relative, model_strength, clip_strength):
@@ -674,10 +706,11 @@ class PowerLoraMerger(io.ComfyNode):
             clip_strength: How strongly it is applied to the clip.
 
         Returns:
-            The node's three outputs.
+            The node's four outputs.
         """
+        stack = [(relative, model_strength, clip_strength)]
         if model is None:
-            return io.NodeOutput(model, clip, relative)
+            return io.NodeOutput(model, clip, relative, stack)
 
         from nodes import LoraLoader
 
@@ -685,7 +718,7 @@ class PowerLoraMerger(io.ComfyNode):
             model, clip, relative, model_strength,
             clip_strength if clip is not None else 0.0,
         )
-        return io.NodeOutput(model, patched if clip is not None else clip, relative)
+        return io.NodeOutput(model, patched if clip is not None else clip, relative, stack)
 
     @classmethod
     def _load(cls, sources, device, compute_dtype, settings, mode, progress):

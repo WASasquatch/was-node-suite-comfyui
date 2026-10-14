@@ -69,8 +69,8 @@ REFRESH_HINT = (
 
 LIVE_PREVIEW_HINT = (
     "`true` = the Prompt Timeline draws this segment as it samples and keeps its last step, "
-    "through the preview decoder in models/vae_approx whose name starts `taeh3`, as ComfyUI's "
-    "own previews find theirs; `false` = no previews. Needs prompts."
+    "through the preview decoder in models/vae_approx whose name starts `taeh3`, subfolders "
+    "included; `false` = no previews. Needs prompts."
 )
 
 REFERENCE_SOUND_HINT = (
@@ -722,10 +722,9 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         window = dict(window)
         window[h3_extend.WINDOW_KEY] = h3_extend.window_place(
             clip_rows, window, int(head), int(pass_index) <= 0, int(clip_audio.shape[-1]))
-        preview = h3_preview.decoder() if live_preview and prompts else None
-        if preview is not None and 0 <= int(pass_index) < len(prompts):
+        if live_preview and prompts and 0 <= int(pass_index) < len(prompts):
             owner = prompts[int(pass_index)].get(h3_conditioning.OWNER_KEY)
-            model = h3_preview.watched(model, preview, owner, int(pass_index), int(head))
+            model = h3_preview.previewed(model, owner, int(pass_index), int(head))
         own = h3_conditioning.seed_of(prompts, int(pass_index), int(seed))
         return io.NodeOutput(window, conditioned, head, report, model, own)
 

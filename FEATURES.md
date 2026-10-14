@@ -414,6 +414,20 @@ For laying out a whole video by eye, and for drafting it from a few sentences.
 
 ---
 
+## MiniMax H3 attention made sparse
+
+**H3 Sparse Attention** runs MiniMax H3's attention block-sparse with Sol-Attn, SLA or VSA,
+layer by layer, while the layers H3's video suffers most for stay dense on the model's own
+attention backend. Presets set which layers stay dense, and a written plan gives any layer a
+setting of its own. Sparse layers compute in INT8 and soften fine detail.
+
+For faster, lighter H3 sampling where the speed is worth some softness.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
+[`minimax-h3-sparse-attention.json`](docs/workflows/minimax-h3-sparse-attention.json).
+
+---
+
 ## Kandinsky 6 video with sound
 
 Kandinsky 6 runs on ComfyUI's own nodes: **Load Diffusion Model** loads the transformer,
@@ -521,7 +535,9 @@ For steering a generation from its initialisation rather than correcting it late
 ## Models and LoRA
 
 16 nodes. **Power LoRA Loader** stacks LoRAs on one node, **Power LoRA Merger** bakes a stack
-into a model, and **Apply Reweighted LoRA** reweights one. **BLIP Analyze Image** captions,
+into a model, and **Apply Reweighted LoRA** reweights one. Power LoRA Loader hands its rows on
+a LoRA stack wire, and Power LoRA Merger merges a stack from that wire, from the loader's model
+output or from another pack's stack nodes in place of its own rows. **BLIP Analyze Image** captions,
 **MiDaS Depth Approximation** estimates depth, **Image Remove Background** cuts a subject out
 and hands on its mask for compositing, and **CLIPSeg Model Loader** and **SAM Model Loader** feed the masking nodes. **Model Info**
 reports what a loaded model is.
@@ -530,8 +546,9 @@ Weights ship with the pack or download on first use to a stated folder:
 [`docs/MODELS.md`](docs/MODELS.md).
 
 [`NODES.md`](NODES.md) under **WAS Suite/LoRA**, **WAS Suite/Loaders** and
-**WAS Suite/Image/AI**. Graph:
-[`face-detection.json`](docs/workflows/face-detection.json).
+**WAS Suite/Image/AI**. Graphs:
+[`face-detection.json`](docs/workflows/face-detection.json),
+[`power-lora-stack.json`](docs/workflows/power-lora-stack.json).
 
 ---
 

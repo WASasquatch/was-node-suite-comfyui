@@ -1,0 +1,3330 @@
+{
+  "id": "81f4e7de-5d61-4940-b2a3-8b8c9f053b5f",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASPowerLoraLoader",
+      "pos": [
+        40,
+        80
+      ],
+      "size": [
+        420,
+        572
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "localized_name": "fuse",
+          "name": "fuse",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fuse"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_enabled",
+          "name": "lora_1_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_1_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1",
+          "name": "lora_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_weight",
+          "name": "lora_1_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_1_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_enabled",
+          "name": "lora_2_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_2_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2",
+          "name": "lora_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_weight",
+          "name": "lora_2_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_2_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_enabled",
+          "name": "lora_3_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_3_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3",
+          "name": "lora_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_weight",
+          "name": "lora_3_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_3_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_enabled",
+          "name": "lora_4_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_4_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4",
+          "name": "lora_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_weight",
+          "name": "lora_4_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_4_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_enabled",
+          "name": "lora_5_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_5_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5",
+          "name": "lora_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_weight",
+          "name": "lora_5_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_5_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_enabled",
+          "name": "lora_6_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_6_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6",
+          "name": "lora_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_weight",
+          "name": "lora_6_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_6_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_enabled",
+          "name": "lora_7_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_7_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7",
+          "name": "lora_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_weight",
+          "name": "lora_7_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_7_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_enabled",
+          "name": "lora_8_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_8_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8",
+          "name": "lora_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_weight",
+          "name": "lora_8_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_8_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_enabled",
+          "name": "lora_9_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_9_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9",
+          "name": "lora_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_weight",
+          "name": "lora_9_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_9_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_enabled",
+          "name": "lora_10_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_10_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10",
+          "name": "lora_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_weight",
+          "name": "lora_10_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_10_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_enabled",
+          "name": "lora_11_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_11_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11",
+          "name": "lora_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_weight",
+          "name": "lora_11_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_11_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_enabled",
+          "name": "lora_12_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_12_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12",
+          "name": "lora_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_weight",
+          "name": "lora_12_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_12_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_enabled",
+          "name": "lora_13_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_13_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13",
+          "name": "lora_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_weight",
+          "name": "lora_13_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_13_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_enabled",
+          "name": "lora_14_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_14_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14",
+          "name": "lora_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_weight",
+          "name": "lora_14_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_14_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_enabled",
+          "name": "lora_15_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_15_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15",
+          "name": "lora_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_weight",
+          "name": "lora_15_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_15_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_enabled",
+          "name": "lora_16_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_16_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16",
+          "name": "lora_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_weight",
+          "name": "lora_16_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_16_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_enabled",
+          "name": "lora_17_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_17_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17",
+          "name": "lora_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_weight",
+          "name": "lora_17_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_17_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_enabled",
+          "name": "lora_18_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_18_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18",
+          "name": "lora_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_weight",
+          "name": "lora_18_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_18_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_enabled",
+          "name": "lora_19_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_19_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19",
+          "name": "lora_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_weight",
+          "name": "lora_19_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_19_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_enabled",
+          "name": "lora_20_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_20_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20",
+          "name": "lora_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_weight",
+          "name": "lora_20_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_20_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_enabled",
+          "name": "lora_21_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_21_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21",
+          "name": "lora_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_weight",
+          "name": "lora_21_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_21_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_enabled",
+          "name": "lora_22_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_22_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22",
+          "name": "lora_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_weight",
+          "name": "lora_22_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_22_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_enabled",
+          "name": "lora_23_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_23_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23",
+          "name": "lora_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_weight",
+          "name": "lora_23_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_23_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_enabled",
+          "name": "lora_24_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_24_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24",
+          "name": "lora_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_weight",
+          "name": "lora_24_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_24_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_enabled",
+          "name": "lora_25_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_25_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25",
+          "name": "lora_25",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_25"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_weight",
+          "name": "lora_25_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_25_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_enabled",
+          "name": "lora_26_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_26_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26",
+          "name": "lora_26",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_26"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_weight",
+          "name": "lora_26_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_26_weight"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "lora_stack",
+          "name": "lora_stack",
+          "type": "LORA_STACK",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "name_1",
+          "name": "name_1",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "name_2",
+          "name": "name_2",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASPowerLoraLoader"
+      },
+      "widgets_values": [
+        false,
+        1,
+        true,
+        "Krea2\\skin_detail_slider_krea2_ZT-V1.safetensors",
+        1,
+        true,
+        "Krea2\\day_&_night_slider_0ts-krea2-v1.safetensors",
+        0.5,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1
+      ],
+      "widgets_values_named": {
+        "fuse": false,
+        "strength": 1,
+        "lora_1_enabled": true,
+        "lora_1": "Krea2\\skin_detail_slider_krea2_ZT-V1.safetensors",
+        "lora_1_weight": 1,
+        "lora_2_enabled": true,
+        "lora_2": "Krea2\\day_&_night_slider_0ts-krea2-v1.safetensors",
+        "lora_2_weight": 0.5,
+        "lora_3_enabled": true,
+        "lora_3": "None",
+        "lora_3_weight": 1,
+        "lora_4_enabled": true,
+        "lora_4": "None",
+        "lora_4_weight": 1,
+        "lora_5_enabled": true,
+        "lora_5": "None",
+        "lora_5_weight": 1,
+        "lora_6_enabled": true,
+        "lora_6": "None",
+        "lora_6_weight": 1,
+        "lora_7_enabled": true,
+        "lora_7": "None",
+        "lora_7_weight": 1,
+        "lora_8_enabled": true,
+        "lora_8": "None",
+        "lora_8_weight": 1,
+        "lora_9_enabled": true,
+        "lora_9": "None",
+        "lora_9_weight": 1,
+        "lora_10_enabled": true,
+        "lora_10": "None",
+        "lora_10_weight": 1,
+        "lora_11_enabled": true,
+        "lora_11": "None",
+        "lora_11_weight": 1,
+        "lora_12_enabled": true,
+        "lora_12": "None",
+        "lora_12_weight": 1,
+        "lora_13_enabled": true,
+        "lora_13": "None",
+        "lora_13_weight": 1,
+        "lora_14_enabled": true,
+        "lora_14": "None",
+        "lora_14_weight": 1,
+        "lora_15_enabled": true,
+        "lora_15": "None",
+        "lora_15_weight": 1,
+        "lora_16_enabled": true,
+        "lora_16": "None",
+        "lora_16_weight": 1,
+        "lora_17_enabled": true,
+        "lora_17": "None",
+        "lora_17_weight": 1,
+        "lora_18_enabled": true,
+        "lora_18": "None",
+        "lora_18_weight": 1,
+        "lora_19_enabled": true,
+        "lora_19": "None",
+        "lora_19_weight": 1,
+        "lora_20_enabled": true,
+        "lora_20": "None",
+        "lora_20_weight": 1,
+        "lora_21_enabled": true,
+        "lora_21": "None",
+        "lora_21_weight": 1,
+        "lora_22_enabled": true,
+        "lora_22": "None",
+        "lora_22_weight": 1,
+        "lora_23_enabled": true,
+        "lora_23": "None",
+        "lora_23_weight": 1,
+        "lora_24_enabled": true,
+        "lora_24": "None",
+        "lora_24_weight": 1,
+        "lora_25_enabled": true,
+        "lora_25": "None",
+        "lora_25_weight": 1,
+        "lora_26_enabled": true,
+        "lora_26": "None",
+        "lora_26_weight": 1
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASNSPowerLoraMerger",
+      "pos": [
+        520,
+        40
+      ],
+      "size": [
+        420,
+        434
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "localized_name": "options",
+          "name": "options",
+          "shape": 7,
+          "type": "WAS_LORA_MERGE_OPTIONS",
+          "link": null
+        },
+        {
+          "localized_name": "stack_data",
+          "name": "stack_data",
+          "shape": 7,
+          "type": "LORA_STACK,MODEL",
+          "link": 1
+        },
+        {
+          "localized_name": "output_filename",
+          "name": "output_filename",
+          "type": "STRING",
+          "widget": {
+            "name": "output_filename"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_model_strength",
+          "name": "output_model_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "output_model_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_clip_strength",
+          "name": "output_clip_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "output_clip_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "block_mix_recipe",
+          "name": "block_mix_recipe",
+          "type": "COMBO",
+          "widget": {
+            "name": "block_mix_recipe"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_enabled",
+          "name": "lora_1_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_1_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1",
+          "name": "lora_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_weight",
+          "name": "lora_1_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_1_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_enabled",
+          "name": "lora_2_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_2_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2",
+          "name": "lora_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_weight",
+          "name": "lora_2_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_2_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_enabled",
+          "name": "lora_3_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_3_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3",
+          "name": "lora_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_weight",
+          "name": "lora_3_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_3_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_enabled",
+          "name": "lora_4_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_4_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4",
+          "name": "lora_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_weight",
+          "name": "lora_4_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_4_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_enabled",
+          "name": "lora_5_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_5_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5",
+          "name": "lora_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_weight",
+          "name": "lora_5_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_5_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_enabled",
+          "name": "lora_6_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_6_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6",
+          "name": "lora_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_weight",
+          "name": "lora_6_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_6_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_enabled",
+          "name": "lora_7_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_7_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7",
+          "name": "lora_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_weight",
+          "name": "lora_7_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_7_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_enabled",
+          "name": "lora_8_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_8_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8",
+          "name": "lora_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_weight",
+          "name": "lora_8_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_8_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_enabled",
+          "name": "lora_9_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_9_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9",
+          "name": "lora_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_weight",
+          "name": "lora_9_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_9_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_enabled",
+          "name": "lora_10_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_10_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10",
+          "name": "lora_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_weight",
+          "name": "lora_10_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_10_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_enabled",
+          "name": "lora_11_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_11_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11",
+          "name": "lora_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_weight",
+          "name": "lora_11_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_11_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_enabled",
+          "name": "lora_12_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_12_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12",
+          "name": "lora_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_weight",
+          "name": "lora_12_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_12_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_enabled",
+          "name": "lora_13_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_13_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13",
+          "name": "lora_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_weight",
+          "name": "lora_13_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_13_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_enabled",
+          "name": "lora_14_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_14_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14",
+          "name": "lora_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_weight",
+          "name": "lora_14_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_14_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_enabled",
+          "name": "lora_15_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_15_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15",
+          "name": "lora_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_weight",
+          "name": "lora_15_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_15_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_enabled",
+          "name": "lora_16_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_16_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16",
+          "name": "lora_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_weight",
+          "name": "lora_16_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_16_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_enabled",
+          "name": "lora_17_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_17_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17",
+          "name": "lora_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_weight",
+          "name": "lora_17_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_17_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_enabled",
+          "name": "lora_18_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_18_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18",
+          "name": "lora_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_weight",
+          "name": "lora_18_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_18_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_enabled",
+          "name": "lora_19_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_19_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19",
+          "name": "lora_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_weight",
+          "name": "lora_19_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_19_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_enabled",
+          "name": "lora_20_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_20_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20",
+          "name": "lora_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_weight",
+          "name": "lora_20_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_20_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_enabled",
+          "name": "lora_21_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_21_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21",
+          "name": "lora_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_weight",
+          "name": "lora_21_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_21_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_enabled",
+          "name": "lora_22_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_22_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22",
+          "name": "lora_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_weight",
+          "name": "lora_22_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_22_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_enabled",
+          "name": "lora_23_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_23_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23",
+          "name": "lora_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_weight",
+          "name": "lora_23_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_23_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_enabled",
+          "name": "lora_24_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_24_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24",
+          "name": "lora_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_weight",
+          "name": "lora_24_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_24_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_enabled",
+          "name": "lora_25_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_25_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25",
+          "name": "lora_25",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_25"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_weight",
+          "name": "lora_25_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_25_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_enabled",
+          "name": "lora_26_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_26_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26",
+          "name": "lora_26",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_26"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_weight",
+          "name": "lora_26_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_26_weight"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "lora_path",
+          "name": "lora_path",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "lora_stack",
+          "name": "lora_stack",
+          "type": "LORA_STACK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASNSPowerLoraMerger"
+      },
+      "widgets_values": [
+        "power_lora_demo/from_stack.safetensors",
+        1,
+        1,
+        "add",
+        "concept_a_style_b",
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1
+      ],
+      "widgets_values_named": {
+        "output_filename": "power_lora_demo/from_stack.safetensors",
+        "output_model_strength": 1,
+        "output_clip_strength": 1,
+        "mode": "add",
+        "block_mix_recipe": "concept_a_style_b",
+        "lora_1_enabled": true,
+        "lora_1": "None",
+        "lora_1_weight": 1,
+        "lora_2_enabled": true,
+        "lora_2": "None",
+        "lora_2_weight": 1,
+        "lora_3_enabled": true,
+        "lora_3": "None",
+        "lora_3_weight": 1,
+        "lora_4_enabled": true,
+        "lora_4": "None",
+        "lora_4_weight": 1,
+        "lora_5_enabled": true,
+        "lora_5": "None",
+        "lora_5_weight": 1,
+        "lora_6_enabled": true,
+        "lora_6": "None",
+        "lora_6_weight": 1,
+        "lora_7_enabled": true,
+        "lora_7": "None",
+        "lora_7_weight": 1,
+        "lora_8_enabled": true,
+        "lora_8": "None",
+        "lora_8_weight": 1,
+        "lora_9_enabled": true,
+        "lora_9": "None",
+        "lora_9_weight": 1,
+        "lora_10_enabled": true,
+        "lora_10": "None",
+        "lora_10_weight": 1,
+        "lora_11_enabled": true,
+        "lora_11": "None",
+        "lora_11_weight": 1,
+        "lora_12_enabled": true,
+        "lora_12": "None",
+        "lora_12_weight": 1,
+        "lora_13_enabled": true,
+        "lora_13": "None",
+        "lora_13_weight": 1,
+        "lora_14_enabled": true,
+        "lora_14": "None",
+        "lora_14_weight": 1,
+        "lora_15_enabled": true,
+        "lora_15": "None",
+        "lora_15_weight": 1,
+        "lora_16_enabled": true,
+        "lora_16": "None",
+        "lora_16_weight": 1,
+        "lora_17_enabled": true,
+        "lora_17": "None",
+        "lora_17_weight": 1,
+        "lora_18_enabled": true,
+        "lora_18": "None",
+        "lora_18_weight": 1,
+        "lora_19_enabled": true,
+        "lora_19": "None",
+        "lora_19_weight": 1,
+        "lora_20_enabled": true,
+        "lora_20": "None",
+        "lora_20_weight": 1,
+        "lora_21_enabled": true,
+        "lora_21": "None",
+        "lora_21_weight": 1,
+        "lora_22_enabled": true,
+        "lora_22": "None",
+        "lora_22_weight": 1,
+        "lora_23_enabled": true,
+        "lora_23": "None",
+        "lora_23_weight": 1,
+        "lora_24_enabled": true,
+        "lora_24": "None",
+        "lora_24_weight": 1,
+        "lora_25_enabled": true,
+        "lora_25": "None",
+        "lora_25_weight": 1,
+        "lora_26_enabled": true,
+        "lora_26": "None",
+        "lora_26_weight": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASNSPowerLoraMerger",
+      "pos": [
+        520,
+        620
+      ],
+      "size": [
+        420,
+        434
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "localized_name": "options",
+          "name": "options",
+          "shape": 7,
+          "type": "WAS_LORA_MERGE_OPTIONS",
+          "link": null
+        },
+        {
+          "localized_name": "stack_data",
+          "name": "stack_data",
+          "shape": 7,
+          "type": "LORA_STACK,MODEL",
+          "link": 2
+        },
+        {
+          "localized_name": "output_filename",
+          "name": "output_filename",
+          "type": "STRING",
+          "widget": {
+            "name": "output_filename"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_model_strength",
+          "name": "output_model_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "output_model_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_clip_strength",
+          "name": "output_clip_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "output_clip_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "block_mix_recipe",
+          "name": "block_mix_recipe",
+          "type": "COMBO",
+          "widget": {
+            "name": "block_mix_recipe"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_enabled",
+          "name": "lora_1_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_1_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1",
+          "name": "lora_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_weight",
+          "name": "lora_1_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_1_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_enabled",
+          "name": "lora_2_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_2_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2",
+          "name": "lora_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_weight",
+          "name": "lora_2_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_2_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_enabled",
+          "name": "lora_3_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_3_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3",
+          "name": "lora_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_weight",
+          "name": "lora_3_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_3_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_enabled",
+          "name": "lora_4_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_4_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4",
+          "name": "lora_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_weight",
+          "name": "lora_4_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_4_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_enabled",
+          "name": "lora_5_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_5_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5",
+          "name": "lora_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_weight",
+          "name": "lora_5_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_5_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_enabled",
+          "name": "lora_6_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_6_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6",
+          "name": "lora_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_weight",
+          "name": "lora_6_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_6_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_enabled",
+          "name": "lora_7_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_7_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7",
+          "name": "lora_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_weight",
+          "name": "lora_7_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_7_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_enabled",
+          "name": "lora_8_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_8_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8",
+          "name": "lora_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_weight",
+          "name": "lora_8_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_8_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_enabled",
+          "name": "lora_9_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_9_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9",
+          "name": "lora_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_weight",
+          "name": "lora_9_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_9_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_enabled",
+          "name": "lora_10_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_10_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10",
+          "name": "lora_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_weight",
+          "name": "lora_10_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_10_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_enabled",
+          "name": "lora_11_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_11_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11",
+          "name": "lora_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_weight",
+          "name": "lora_11_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_11_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_enabled",
+          "name": "lora_12_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_12_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12",
+          "name": "lora_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_weight",
+          "name": "lora_12_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_12_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_enabled",
+          "name": "lora_13_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_13_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13",
+          "name": "lora_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_weight",
+          "name": "lora_13_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_13_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_enabled",
+          "name": "lora_14_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_14_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14",
+          "name": "lora_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_weight",
+          "name": "lora_14_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_14_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_enabled",
+          "name": "lora_15_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_15_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15",
+          "name": "lora_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_weight",
+          "name": "lora_15_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_15_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_enabled",
+          "name": "lora_16_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_16_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16",
+          "name": "lora_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_weight",
+          "name": "lora_16_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_16_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_enabled",
+          "name": "lora_17_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_17_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17",
+          "name": "lora_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_weight",
+          "name": "lora_17_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_17_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_enabled",
+          "name": "lora_18_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_18_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18",
+          "name": "lora_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_weight",
+          "name": "lora_18_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_18_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_enabled",
+          "name": "lora_19_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_19_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19",
+          "name": "lora_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_weight",
+          "name": "lora_19_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_19_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_enabled",
+          "name": "lora_20_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_20_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20",
+          "name": "lora_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_weight",
+          "name": "lora_20_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_20_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_enabled",
+          "name": "lora_21_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_21_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21",
+          "name": "lora_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_weight",
+          "name": "lora_21_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_21_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_enabled",
+          "name": "lora_22_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_22_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22",
+          "name": "lora_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_weight",
+          "name": "lora_22_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_22_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_enabled",
+          "name": "lora_23_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_23_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23",
+          "name": "lora_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_weight",
+          "name": "lora_23_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_23_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_enabled",
+          "name": "lora_24_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_24_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24",
+          "name": "lora_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_weight",
+          "name": "lora_24_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_24_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_enabled",
+          "name": "lora_25_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_25_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25",
+          "name": "lora_25",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_25"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_weight",
+          "name": "lora_25_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_25_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_enabled",
+          "name": "lora_26_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_26_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26",
+          "name": "lora_26",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_26"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_weight",
+          "name": "lora_26_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_26_weight"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "lora_path",
+          "name": "lora_path",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        },
+        {
+          "localized_name": "lora_stack",
+          "name": "lora_stack",
+          "type": "LORA_STACK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASNSPowerLoraMerger"
+      },
+      "widgets_values": [
+        "power_lora_demo/from_model_link.safetensors",
+        1,
+        1,
+        "add",
+        "concept_a_style_b",
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1
+      ],
+      "widgets_values_named": {
+        "output_filename": "power_lora_demo/from_model_link.safetensors",
+        "output_model_strength": 1,
+        "output_clip_strength": 1,
+        "mode": "add",
+        "block_mix_recipe": "concept_a_style_b",
+        "lora_1_enabled": true,
+        "lora_1": "None",
+        "lora_1_weight": 1,
+        "lora_2_enabled": true,
+        "lora_2": "None",
+        "lora_2_weight": 1,
+        "lora_3_enabled": true,
+        "lora_3": "None",
+        "lora_3_weight": 1,
+        "lora_4_enabled": true,
+        "lora_4": "None",
+        "lora_4_weight": 1,
+        "lora_5_enabled": true,
+        "lora_5": "None",
+        "lora_5_weight": 1,
+        "lora_6_enabled": true,
+        "lora_6": "None",
+        "lora_6_weight": 1,
+        "lora_7_enabled": true,
+        "lora_7": "None",
+        "lora_7_weight": 1,
+        "lora_8_enabled": true,
+        "lora_8": "None",
+        "lora_8_weight": 1,
+        "lora_9_enabled": true,
+        "lora_9": "None",
+        "lora_9_weight": 1,
+        "lora_10_enabled": true,
+        "lora_10": "None",
+        "lora_10_weight": 1,
+        "lora_11_enabled": true,
+        "lora_11": "None",
+        "lora_11_weight": 1,
+        "lora_12_enabled": true,
+        "lora_12": "None",
+        "lora_12_weight": 1,
+        "lora_13_enabled": true,
+        "lora_13": "None",
+        "lora_13_weight": 1,
+        "lora_14_enabled": true,
+        "lora_14": "None",
+        "lora_14_weight": 1,
+        "lora_15_enabled": true,
+        "lora_15": "None",
+        "lora_15_weight": 1,
+        "lora_16_enabled": true,
+        "lora_16": "None",
+        "lora_16_weight": 1,
+        "lora_17_enabled": true,
+        "lora_17": "None",
+        "lora_17_weight": 1,
+        "lora_18_enabled": true,
+        "lora_18": "None",
+        "lora_18_weight": 1,
+        "lora_19_enabled": true,
+        "lora_19": "None",
+        "lora_19_weight": 1,
+        "lora_20_enabled": true,
+        "lora_20": "None",
+        "lora_20_weight": 1,
+        "lora_21_enabled": true,
+        "lora_21": "None",
+        "lora_21_weight": 1,
+        "lora_22_enabled": true,
+        "lora_22": "None",
+        "lora_22_weight": 1,
+        "lora_23_enabled": true,
+        "lora_23": "None",
+        "lora_23_weight": 1,
+        "lora_24_enabled": true,
+        "lora_24": "None",
+        "lora_24_weight": 1,
+        "lora_25_enabled": true,
+        "lora_25": "None",
+        "lora_25_weight": 1,
+        "lora_26_enabled": true,
+        "lora_26": "None",
+        "lora_26_weight": 1
+      }
+    },
+    {
+      "id": 4,
+      "type": "PreviewAny",
+      "pos": [
+        980,
+        40
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 5,
+      "type": "PreviewAny",
+      "pos": [
+        980,
+        620
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      2,
+      2,
+      3,
+      "LORA_STACK"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      3,
+      "MODEL"
+    ],
+    [
+      3,
+      2,
+      2,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      3,
+      2,
+      5,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.8,
+      "offset": [
+        60,
+        90
+      ]
+    }
+  },
+  "version": 0.4
+}

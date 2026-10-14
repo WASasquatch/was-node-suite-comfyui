@@ -14,6 +14,9 @@ runs.
 | [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) | MIT, Shiqi Yu | The face detector **Image Crop Face (YuNet)** uses, as weights converted to safetensors in [`modules/data/models/`](../modules/data/models/) | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [Marigold IID](https://huggingface.co/prs-eth/marigold-iid-appearance-v1-1) | Open RAIL++-M, PRS ETH Zürich | The two token empty prompt embedding the intrinsic maps on **Power Preprocessor** condition on, read out of the checkpoints' own text encoder into [`modules/data/models/`](../modules/data/models/). The checkpoints themselves are downloaded, not bundled | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [EMA-VFI](https://github.com/MCG-NJU/EMA-VFI) | Apache-2.0, Zhang, Zhu, Wang, Chen, Wu and Wang | The network **EMA-VFI Frame Interpolation** runs, vendored in [`modules/vendor/ema_vfi/`](../modules/vendor/ema_vfi/). No weights are bundled | [`LICENSE`](../modules/vendor/ema_vfi/LICENSE), [`NOTICE.md`](../modules/vendor/ema_vfi/NOTICE.md) |
+| [SEA-RAFT](https://github.com/princeton-vl/SEA-RAFT) | BSD-3-Clause, Princeton Vision & Learning Lab | The optical flow network **Video Motion Model Loader** builds, vendored in [`modules/vendor/sea_raft/`](../modules/vendor/sea_raft/). No weights are bundled | [`LICENSE`](../modules/vendor/sea_raft/LICENSE), [`NOTICE.md`](../modules/vendor/sea_raft/NOTICE.md) |
+| [FlowSeek](https://github.com/mattpoggi/flowseek) | Apache-2.0, Poggi and Tosi | The depth-aware optical flow network the same loader builds, vendored in [`modules/vendor/flowseek/`](../modules/vendor/flowseek/), with the Depth Anything V2 and DINOv2 parts it runs (Apache-2.0). No weights are bundled | [`LICENSE`](../modules/vendor/flowseek/LICENSE), [`NOTICE.md`](../modules/vendor/flowseek/NOTICE.md) |
+| [MiniMax H3 latent upscaler](https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler) | MIT, LBH-123-AI | The network **H3 Upscale Video** enlarges the latent with, vendored in [`modules/vendor/h3_latent_upscaler/`](../modules/vendor/h3_latent_upscaler/). No weights are bundled | [`LICENSE`](../modules/vendor/h3_latent_upscaler/LICENSE), [`NOTICE.md`](../modules/vendor/h3_latent_upscaler/NOTICE.md) |
 | [Kandinsky 6](https://github.com/kandinskylab/kandinsky-6) | MIT, Kandinsky Lab | The video and audio transformer and the PiFlow policy the Kandinsky 6 nodes run, vendored in [`modules/vendor/kandinsky6/`](../modules/vendor/kandinsky6/). No weights are bundled | [`LICENSE`](../modules/vendor/kandinsky6/LICENSE), [`NOTICE.md`](../modules/vendor/kandinsky6/NOTICE.md) |
 | ⤷ [MMAudio](https://github.com/hkchengrex/MMAudio) | MIT, Sony Research Inc. | The audio autoencoder **Kandinsky 6 Audio VAE Loader** builds, taken with Kandinsky 6 | [`LICENSE.mmaudio`](../modules/vendor/kandinsky6/licenses/LICENSE.mmaudio) |
 | ⤷ [BigVGAN](https://github.com/NVIDIA/BigVGAN) | MIT, NVIDIA Corporation, with the MIT, Apache-2.0 and BSD-3-Clause notices of the projects it carries | The vocoder that loader builds, taken with Kandinsky 6 | [`LICENSE.bigvgan`](../modules/vendor/kandinsky6/licenses/LICENSE.bigvgan), `LICENSE.bigvgan_1` to `_8` beside it |
@@ -26,9 +29,10 @@ runs.
 | [DejaVu](https://github.com/dejavu-fonts/dejavu-fonts) 2.37 | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | Four faces **Image Draw Text** renders with, in [`modules/data/fonts/dejavu/`](../modules/data/fonts/dejavu/) | [`dejavu/LICENSE`](../modules/data/fonts/dejavu/LICENSE), [`AUTHORS`](../modules/data/fonts/dejavu/AUTHORS) |
 | [Liberation](https://github.com/liberationfonts/liberation-fonts) 2.1.5 | SIL Open Font License 1.1, Red Hat, Inc., with digitized data copyright Google Corporation | Four faces metric-compatible with Arial, Times New Roman and Courier New, in [`modules/data/fonts/liberation/`](../modules/data/fonts/liberation/) | [`liberation/LICENSE`](../modules/data/fonts/liberation/LICENSE), [`AUTHORS`](../modules/data/fonts/liberation/AUTHORS) |
 
-Eight of the components are MIT in their own code, and two of those compile in a copy of
-DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, two are Apache-2.0, two
-are under the SIL Open Font License, one is Bitstream Vera with Arev, and one is Open RAIL++-M.
+Twelve of the components are MIT in their own code, and two of those compile in a copy of
+DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, three are Apache-2.0, one
+is BSD-3-Clause, two are under the SIL Open Font License, one is Bitstream Vera with Arev, and one
+is Open RAIL++-M.
 All of those permit redistribution. MPL-2.0 is the only copyleft licence here and its conditions
 are file level, reaching the two files DOMPurify is compiled into and nothing beside them;
 complying with Apache-2.0 instead satisfies the same component. Open RAIL++-M covers 8 KB of
@@ -37,9 +41,9 @@ restrictions. The two font licences ask that the licence and copyright travel wi
 which is what the `LICENSE` and `AUTHORS` beside each family are, and the OFL reserves the
 Liberation names against modified copies. These are unmodified.
 
-Counting every file rather than every component, the pack carries 143 third-party files, 26.6 MB
+Counting every file rather than every component, the pack carries 162 third-party files, 26.7 MB
 of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
-two networks.
+five networks.
 
 ## Verifying a copy
 

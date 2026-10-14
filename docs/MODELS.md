@@ -10,18 +10,63 @@ Published at <https://huggingface.co/WAS/EMA-VFI>. Goes in `ComfyUI/models/EMA-V
 
 | File | Size | Quality | Multiplier above 2 |
 |---|---|---|---|
-| `ours_t.safetensors` | 250 MB | best | **yes** |
-| `ours.safetensors` | 250 MB | best | no |
-| `ours_small_t.safetensors` | 56 MB | lower | **yes** |
-| `ours_small.safetensors` | 56 MB | lower | no |
+| [`ours_t.safetensors`](https://huggingface.co/WAS/EMA-VFI/blob/main/ours_t.safetensors) | 263 MB | best | **yes** |
+| [`ours.safetensors`](https://huggingface.co/WAS/EMA-VFI/blob/main/ours.safetensors) | 263 MB | best | no |
+| [`ours_small_t.safetensors`](https://huggingface.co/WAS/EMA-VFI/blob/main/ours_small_t.safetensors) | 58 MB | lower | **yes** |
+| [`ours_small.safetensors`](https://huggingface.co/WAS/EMA-VFI/blob/main/ours_small.safetensors) | 58 MB | lower | no |
 
 A `_t` file is the one to take: it lands a frame anywhere between two, so a multiplier above 2
 works.
 
+## Optical flow
+
+**Video Motion Model Loader** builds the network that **Video Motion** and **Video Temporal
+Upscale** read. Files go in `ComfyUI/models/optical_flow`, or a folder an `extra_model_paths.yaml`
+entry names under the key `optical_flow`. With `features.network: true`, a file in this table is
+fetched by the first run that picks it.
+
+| Save as | Network | Size | Download |
+|---|---|--:|---|
+| `sea_raft_m_spring.safetensors` | SEA-RAFT M, the default | 79 MB | `model.safetensors` from [MemorySlices/Tartan-C-T-TSKH-spring540x960-M](https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-M) |
+| `sea_raft_s_spring.safetensors` | SEA-RAFT S, about 1.3x faster | 36 MB | `model.safetensors` from [MemorySlices/Tartan-C-T-TSKH-spring540x960-S](https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-S) |
+| `sea_raft_m_ct.safetensors` | SEA-RAFT M, general purpose | 79 MB | `model.safetensors` from [MemorySlices/Tartan-C-T432x960-M](https://huggingface.co/MemorySlices/Tartan-C-T432x960-M) |
+| `flowseek_t_ct.safetensors` | FlowSeek T, reads depth too, about 1.5x slower | 171 MB | `optical_flow/flowseek_t_ct.safetensors` from [WAS/was-node-suite-weights](https://huggingface.co/WAS/was-node-suite-weights/tree/main/optical_flow) |
+| `flowseek_t_tskh.safetensors` | FlowSeek T, the TSKH training | 171 MB | `optical_flow/flowseek_t_tskh.safetensors` from [WAS/was-node-suite-weights](https://huggingface.co/WAS/was-node-suite-weights/tree/main/optical_flow) |
+
+Every SEA-RAFT repository names its file `model.safetensors`. A copy downloaded by hand is saved
+under the name in the first column. Upstream's own `.pth` releases load under the names they are
+published with: SEA-RAFT's `Tartan-*.pth` from [princeton-vl/SEA-RAFT](https://github.com/princeton-vl/SEA-RAFT)
+and FlowSeek's `flowseek_*.pth` from [mattpoggi/flowseek](https://github.com/mattpoggi/flowseek).
+
+| Weights | Licence |
+|---|---|
+| SEA-RAFT | BSD-3-Clause, Princeton Vision & Learning Lab |
+| FlowSeek, with the Depth Anything V2 weights inside it | Apache-2.0 |
+
+## MiniMax H3
+
+| File | Goes in | Size | Read by | Download |
+|---|---|--:|---|---|
+| `minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors` | `ComfyUI/models/latent_upscale_models` | 691 MB | **H3 Upscale Video**, `upscale_model` | `minimax_h3_latent_upscaler_3d_conv_v1/` in [LBH-123-AI/Minimax_h3_latent_Upscaler](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler) |
+| `taeh3.safetensors` | `ComfyUI/models/vae_approx` | 22,709,752 bytes | **H3 Extend Window**, `live_preview`, drawn in the Prompt Timeline | `safetensors/taeh3.safetensors` in [madebyollin/taehv](https://github.com/madebyollin/taehv) |
+
+The upscaler is fetched by the first run that picks it with `features.network: true`, and the
+`_bf16` file beside it loads too. `taeh3.safetensors` is never fetched. Another file named
+`taeh3`, the older per-frame decoder, is a different size and does not load. Both folders are
+read through `extra_model_paths.yaml` only where a root carries an entry under the key
+`latent_upscale_models` or `vae_approx`.
+
+| Weights | Licence |
+|---|---|
+| The H3 latent upscaler | Apache-2.0, LBH-123-AI |
+| `taeh3.safetensors` | MIT, Ollin Boer Bohan |
+
 ## HDR reconstruction
 
-`hdrcnn.safetensors`, 112 MB, from the same repository under `hdr/`, into `ComfyUI/models/hdr`.
-`models/hdr/hdr/` is read too, and an `extra_model_paths.yaml` entry under the key `hdr`.
+[`hdrcnn.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/hdr/hdrcnn.safetensors),
+118 MB, from `hdr/` in [WAS/was-node-suite-weights](https://huggingface.co/WAS/was-node-suite-weights),
+into `ComfyUI/models/hdr`. `models/hdr/hdr/` is read too, and an `extra_model_paths.yaml` entry
+under the key `hdr`.
 
 ## Power Preprocessor
 
@@ -40,6 +85,8 @@ cost of one set of weights.
 | Line segments | `ComfyUI/models/mlsd` |
 | AnyLine | `ComfyUI/models/teed` |
 | Intrinsics | `ComfyUI/models/intrinsics` |
+| Denoising | `ComfyUI/models/denoise` |
+| Low light | `ComfyUI/models/low_light` |
 
 | Model | Answers | Size |
 |---|---|--:|
@@ -99,16 +146,16 @@ yourself:
 
 | File | Goes in | Size |
 |---|---|--:|
-| `qwen_image_edit_2509_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 19.1 GB |
-| `marigold_v2_depth_log_stage2.safetensors` | `ComfyUI/models/loras` | 1.6 GB |
-| `marigold_v2_normals.safetensors` | `ComfyUI/models/loras` | 1.6 GB |
-| `marigold_v2_albedo.safetensors` | `ComfyUI/models/loras` | 1.6 GB |
-| `marigold_v2_depth_log_stage2_vae.safetensors` | `ComfyUI/models/vae` | 0.24 GB |
-| `marigold_v2_normals_vae.safetensors` | `ComfyUI/models/vae` | 0.24 GB |
-| `marigold_v2_albedo_vae.safetensors` | `ComfyUI/models/vae` | 0.24 GB |
-| `marigold_v2_depth_conditioning.safetensors` | `ComfyUI/models/embeddings` | 2.4 MB |
-| `marigold_v2_normals_conditioning.safetensors` | `ComfyUI/models/embeddings` | 2.5 MB |
-| `marigold_v2_albedo_conditioning.safetensors` | `ComfyUI/models/embeddings` | 2.6 MB |
+| [`qwen_image_edit_2509_int8_convrot.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/diffusion_models/qwen_image_edit_2509_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 20.5 GB |
+| [`marigold_v2_depth_log_stage2.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/loras/marigold_v2_depth_log_stage2.safetensors) | `ComfyUI/models/loras` | 1.7 GB |
+| [`marigold_v2_normals.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/loras/marigold_v2_normals.safetensors) | `ComfyUI/models/loras` | 1.7 GB |
+| [`marigold_v2_albedo.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/loras/marigold_v2_albedo.safetensors) | `ComfyUI/models/loras` | 1.7 GB |
+| [`marigold_v2_depth_log_stage2_vae.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/vae/marigold_v2_depth_log_stage2_vae.safetensors) | `ComfyUI/models/vae` | 254 MB |
+| [`marigold_v2_normals_vae.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/vae/marigold_v2_normals_vae.safetensors) | `ComfyUI/models/vae` | 254 MB |
+| [`marigold_v2_albedo_vae.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/vae/marigold_v2_albedo_vae.safetensors) | `ComfyUI/models/vae` | 254 MB |
+| [`marigold_v2_depth_conditioning.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/embeddings/marigold_v2_depth_conditioning.safetensors) | `ComfyUI/models/embeddings` | 2.4 MB |
+| [`marigold_v2_normals_conditioning.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/embeddings/marigold_v2_normals_conditioning.safetensors) | `ComfyUI/models/embeddings` | 2.5 MB |
+| [`marigold_v2_albedo_conditioning.safetensors`](https://huggingface.co/Comfy-Org/marigold-v2-0/blob/main/embeddings/marigold_v2_albedo_conditioning.safetensors) | `ComfyUI/models/embeddings` | 2.6 MB |
 
 Which map each answer takes:
 
@@ -190,18 +237,18 @@ are.
 
 | File | Goes in | Size | Loaded by |
 |---|---|--:|---|
-| `kandinsky6_lite_distill_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 4.2 GB | Load Diffusion Model |
-| `kandinsky6_lite_distill_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 3.8 GB | Load Diffusion Model |
-| `kandinsky6_lite_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 4.2 GB | Load Diffusion Model |
-| `kandinsky6_lite_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 3.8 GB | Load Diffusion Model |
-| `kandinsky6_pro_distill_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 34.9 GB | Load Diffusion Model |
-| `kandinsky6_pro_distill_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 29.4 GB | Load Diffusion Model |
-| `kandinsky6_pro_5s_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 34.9 GB | Load Diffusion Model |
-| `kandinsky6_pro_5s_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 29.3 GB | Load Diffusion Model |
-| `qwen_2.5_vl_7b_fp8_scaled.safetensors` | `ComfyUI/models/text_encoders` | 9.4 GB | DualCLIPLoader, type `kandinsky5` |
-| `clip_l.safetensors` | `ComfyUI/models/text_encoders` | 246 MB | DualCLIPLoader, type `kandinsky5` |
-| `kandinsky6_audio_vae.safetensors` | `ComfyUI/models/vae` | 1.7 GB | Kandinsky 6 Audio VAE Loader |
-| `hunyuan_video_vae_bf16.safetensors` | `ComfyUI/models/vae` | 493 MB | Load VAE |
+| [`kandinsky6_lite_distill_5s_int8_convrot.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_lite_distill_5s_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 4.2 GB | Load Diffusion Model |
+| [`kandinsky6_lite_distill_5s_w6a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_lite_distill_5s_w6a8.safetensors) | `ComfyUI/models/diffusion_models` | 3.8 GB | Load Diffusion Model |
+| [`kandinsky6_lite_5s_int8_convrot.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_lite_5s_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 4.2 GB | Load Diffusion Model |
+| [`kandinsky6_lite_5s_w6a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_lite_5s_w6a8.safetensors) | `ComfyUI/models/diffusion_models` | 3.8 GB | Load Diffusion Model |
+| [`kandinsky6_pro_distill_5s_int8_convrot.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_pro_distill_5s_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 34.9 GB | Load Diffusion Model |
+| [`kandinsky6_pro_distill_5s_w6a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_pro_distill_5s_w6a8.safetensors) | `ComfyUI/models/diffusion_models` | 29.4 GB | Load Diffusion Model |
+| [`kandinsky6_pro_5s_int8_convrot.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_pro_5s_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 34.9 GB | Load Diffusion Model |
+| [`kandinsky6_pro_5s_w6a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_pro_5s_w6a8.safetensors) | `ComfyUI/models/diffusion_models` | 29.3 GB | Load Diffusion Model |
+| [`qwen_2.5_vl_7b_fp8_scaled.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors) | `ComfyUI/models/text_encoders` | 9.4 GB | DualCLIPLoader, type `kandinsky5` |
+| [`clip_l.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/text_encoders/clip_l.safetensors) | `ComfyUI/models/text_encoders` | 246 MB | DualCLIPLoader, type `kandinsky5` |
+| [`kandinsky6_audio_vae.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/vae/kandinsky6_audio_vae.safetensors) | `ComfyUI/models/vae` | 1.7 GB | Kandinsky 6 Audio VAE Loader |
+| [`hunyuan_video_vae_bf16.safetensors`](https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged/blob/main/split_files/vae/hunyuan_video_vae_bf16.safetensors) | `ComfyUI/models/vae` | 493 MB | Load VAE |
 
 `hunyuan_video_vae_bf16.safetensors` is published by Comfy-Org at
 <https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged> under `split_files/vae/`.
@@ -250,11 +297,82 @@ Each is searched under its folder in these layouts, and Hugging Face's own cache
 | Owner and name | `models/blip/Salesforce/blip-image-captioning-base/` |
 | A Hugging Face cache tree | `models/blip/models--Salesforce--blip-image-captioning-base/snapshots/<rev>/` |
 
+## Example workflows
+
+The graphs in `docs/workflows` load these files through ComfyUI's own loaders. The Kandinsky 6,
+Marigold v2, EMA-VFI and optical flow files they read are in those sections above. A graph names
+some LoRAs inside a subfolder, as `H3/taomate_h3_3step_comfy.safetensors`: a file kept in that
+subfolder loads as the graph names it, and one kept elsewhere is picked again from the loader.
+
+### MiniMax H3
+
+Graphs: every `minimax-h3-*.json` and `affine-minimax-h3-*.json`.
+
+| File | Goes in | Size | Download | Licence |
+|---|---|--:|---|---|
+| `minimax_h3_fl2va_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 34.0 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_fl2va_int8_convrot.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_fl2va_pruned_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 21.0 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_fl2va_pruned_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 16.0 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_fl2va_pruned_w6a8.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 21.0 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_ref2va_pruned_w6a8.safetensors` | `ComfyUI/models/diffusion_models` | 16.0 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_ref2va_pruned_w6a8.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 21.0 GB | [silveroxides/MiniMax-H3_tests](https://huggingface.co/silveroxides/MiniMax-H3_tests/blob/main/diffusion_models/minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors) | None stated |
+| `singularity_minimax_h3_ref2va_pruned_w4a8_mixed.safetensors` | `ComfyUI/models/diffusion_models` | 11.8 GB | Withdrawn upstream. Its replacement is [`Minimax-h3_Singularity_ref2va_v1.3_Pruned_w4a8.safetensors`](https://huggingface.co/WarmBloodAban/Minimax-h3_Singularity/blob/main/Minimax-h3_Singularity_ref2va_v1.3_Pruned_w4a8.safetensors), picked in the loader in its place | Apache-2.0 |
+| `minimax_h3_video_vae_fp16.safetensors` | `ComfyUI/models/vae` | 5.2 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_video_vae_fp16.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_video_vae_int8_convrot.safetensors` | `ComfyUI/models/vae` | 2.8 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_video_vae_int8_convrot.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_audio_vae_fp32.safetensors` | `ComfyUI/models/vae` | 605 MB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_audio_vae_fp32.safetensors) | MiniMax H3 Community License |
+| `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` | `ComfyUI/models/text_encoders` | 15.7 GB | [Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors) | MiniMax H3 Community License |
+| `qwen3vl_8b_fp8_scaled.safetensors` | `ComfyUI/models/text_encoders` | 10.6 GB | [Comfy-Org/Qwen3-VL](https://huggingface.co/Comfy-Org/Qwen3-VL/blob/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors) | Apache-2.0 |
+| `minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors` | `ComfyUI/models/loras/H3` | 2.0 GB | [lightx2v/Minimax-h3-Turbo](https://huggingface.co/lightx2v/Minimax-h3-Turbo/blob/main/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors) | Apache-2.0 |
+| `minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` | `ComfyUI/models/loras/H3` | 2.0 GB | [lightx2v/Minimax-h3-Turbo](https://huggingface.co/lightx2v/Minimax-h3-Turbo/blob/main/minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors) | Apache-2.0 |
+| `dmad_minimax_h3_4step_full_critic_comfyui.safetensors` | `ComfyUI/models/loras/H3` | 2.0 GB | [ZhengmingYu/DMAD](https://huggingface.co/ZhengmingYu/DMAD/blob/main/minimax_h3/dmad_minimax_h3_4step_full_critic_comfyui.safetensors) | MiniMax H3 Community License |
+| `minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors` | `ComfyUI/models/loras/H3` | 367 MB | [Minimax H3 Turbo LoRas on Civitai](https://civitai.com/models/2837571?modelVersionId=3382801), version `DMAD_4step_full` | On the Civitai page |
+| `taomate_h3_3step_comfy.safetensors` | `ComfyUI/models/loras/H3` | 2.5 GB | [Robert1212star/TaoMate-H3-3Step-ComfyUI](https://huggingface.co/Robert1212star/TaoMate-H3-3Step-ComfyUI/blob/main/taomate_h3_3step_comfy.safetensors) | On the repository |
+
+### Krea 2
+
+Graphs: `affine-krea2.json`, `cns-krea2.json`.
+
+| File | Goes in | Size | Download | Licence |
+|---|---|--:|---|---|
+| `krea2_raw_bf16.safetensors` | `ComfyUI/models/diffusion_models` | 26.3 GB | [Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2/blob/main/diffusion_models/krea2_raw_bf16.safetensors) | Krea 2 Community License |
+| `krea2_raw_fp8_scaled.safetensors` | `ComfyUI/models/diffusion_models` | 13.1 GB | [Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2/blob/main/diffusion_models/krea2_raw_fp8_scaled.safetensors) | Krea 2 Community License |
+| `krea2_turbo_fp8_scaled.safetensors` | `ComfyUI/models/diffusion_models` | 13.1 GB | [Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2/blob/main/diffusion_models/krea2_turbo_fp8_scaled.safetensors) | Krea 2 Community License |
+| `qwen3vl_4b_fp8_scaled.safetensors` | `ComfyUI/models/text_encoders` | 5.2 GB | [Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2/blob/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) | Krea 2 Community License |
+| `qwen_image_vae.safetensors` | `ComfyUI/models/vae` | 254 MB | [Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2/blob/main/vae/qwen_image_vae.safetensors) | Krea 2 Community License |
+| `wan_2.1_vae.safetensors` | `ComfyUI/models/vae` | 254 MB | [Comfy-Org/Wan_2.1_ComfyUI_repackaged](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/blob/main/split_files/vae/wan_2.1_vae.safetensors) | Apache-2.0 |
+| `krea2_darkbrush.safetensors` | `ComfyUI/models/loras` | 469 MB | [Comfy-Org/Krea-2](https://huggingface.co/Comfy-Org/Krea-2/blob/main/loras/krea2_darkbrush.safetensors) | Krea 2 Community License |
+| `krea2_raw_to_turbo_r256_comfy.safetensors` | `ComfyUI/models/loras/Krea2` | 1.7 GB | [Krea 2 Turbo LoRA 256dim on Civitai](https://civitai.com/models/2727641?modelVersionId=3066079) | On the Civitai page |
+
+### FLUX.2 klein 9B
+
+Graph: `cns-klein9b.json`. Hugging Face asks for a signed-in account that has accepted the terms
+before it serves `flux-2-klein-9b-fp8.safetensors`.
+
+| File | Goes in | Size | Download | Licence |
+|---|---|--:|---|---|
+| `flux-2-klein-9b-fp8.safetensors` | `ComfyUI/models/diffusion_models` | 9.4 GB | [black-forest-labs/FLUX.2-klein-9b-fp8](https://huggingface.co/black-forest-labs/FLUX.2-klein-9b-fp8) | **FLUX Non-Commercial License** |
+| `qwen_3_8b_fp8mixed.safetensors` | `ComfyUI/models/text_encoders` | 8.7 GB | [Comfy-Org/vae-text-encorder-for-flux-klein-9b](https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/blob/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors) | **FLUX Non-Commercial License**, as the repository is labelled |
+| `flux2-vae.safetensors` | `ComfyUI/models/vae` | 336 MB | [Comfy-Org/flux2-dev](https://huggingface.co/Comfy-Org/flux2-dev/blob/main/split_files/vae/flux2-vae.safetensors) | **FLUX.1 [dev] Non-Commercial License**, as the repository is labelled |
+
+### The other graphs
+
+| File | Goes in | Size | Download | Licence | Graphs |
+|---|---|--:|---|---|---|
+| `autismmixSDXL_autismmixConfetti.safetensors` | `ComfyUI/models/checkpoints` | 6.9 GB | [AutismMix SDXL on Civitai](https://civitai.com/models/288584?modelVersionId=324524), version `AutismMix_confetti` | On the Civitai page | `fast-samplers-and-savers.json`, `hdr.json` |
+| `qwen_3_4b.safetensors` | `ComfyUI/models/text_encoders` | 8.0 GB | [Comfy-Org/z_image_turbo](https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/text_encoders/qwen_3_4b.safetensors) | Apache-2.0 | `fast-generate-text.json` |
+| `4xNomosWebPhoto_RealPLKSR.safetensors` | `ComfyUI/models/upscale_models` | 30 MB | [Phips/4xNomosWebPhoto_RealPLKSR](https://huggingface.co/Phips/4xNomosWebPhoto_RealPLKSR/blob/main/4xNomosWebPhoto_RealPLKSR.safetensors) | CC-BY-4.0 | `vtc_temporal_upscale.json` |
+| `skin_detail_slider_krea2_ZT-V1.safetensors` | `ComfyUI/models/loras/Krea2` | 1.2 MB | [Skin Detail Slider on Civitai](https://civitai.com/models/2936275?modelVersionId=3323867), version `V1` | On the Civitai page | `power-lora-stack.json` |
+| `day_&_night_slider_0ts-krea2-v1.safetensors` | `ComfyUI/models/loras/Krea2` | 1.2 MB | [Day & Night Slider on Civitai](https://civitai.com/models/2957416?modelVersionId=3350109), version `V1` | On the Civitai page | `power-lora-stack.json` |
+
 ## Troubleshooting
 
 | What you see | What it means |
 |---|---|
 | The menu reads `put a checkpoint in models/EMA-VFI` | Nothing on disk and `features.network` off. Turn it on, or place a file and restart |
+| The menu reads `put a checkpoint in models/optical_flow` | Nothing on disk and `features.network` off. Turn it on, or place a file from the optical flow table and restart |
+| The Prompt Timeline's Preview reads `No MiniMax H3 Preview VAE` | No `taeh3` file is in a `vae_approx` folder ComfyUI reads. Hover **Unavailable** for the folders searched |
+| The Prompt Timeline's Preview reads `Invalid MiniMax H3 Preview VAE` | The file is not the `taeh3.safetensors` in the MiniMax H3 table. Replace it; the next run reads it |
+| The Prompt Timeline's Preview reads `MiniMax H3 Preview Failed` | Decoding a step raised. Hover **Unavailable** for the error; sampling goes on without previews |
 | The file is on disk but not in the menu | Press **R** on the canvas |
 | A BiRefNet file is on disk but not in the cutout menu | It is a Lite file or another architecture. The menu lists full size BiRefNet and BEN2 base files only |
 | `is a link to ..., which ComfyUI cannot open` | The model folder or file is a link that does not resolve from ComfyUI. Recreate it with `mklink` on Windows, or point `extra_model_paths.yaml` at the real folder |

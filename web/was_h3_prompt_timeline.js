@@ -1672,6 +1672,17 @@ function createPromptTimeline(first) {
     }
     strip.repaint();
     drawMonitor();
+  }, (segment) => {
+    stamps.delete(segment);
+    if (live?.segment === segment) live = null;
+    // A scene that cannot be previewed is followed as a sampling one is, so its reason is on screen.
+    const entry = state.layout[segment];
+    if (running && entry && !playing && performance.now() - movedAt > FOLLOW_AFTER_MS
+        && sceneAt(state.layout, Math.round(playhead * FPS)) !== segment) {
+      playhead = entry.start / FPS;
+    }
+    strip.repaint();
+    drawMonitor();
   });
 
   const runListeners = {
@@ -1977,6 +1988,7 @@ function createPromptTimeline(first) {
     const frame = Math.max(0, Math.min(Math.round(playhead * FPS), end - 1));
     const index = sceneAt(state.layout, frame);
     const sheet = index >= 0 ? sheets.previews.get(index) : null;
+    const problem = index >= 0 ? sheets.problems.get(index) : null;
     captionClock.textContent = `${clockOf(playhead)} / ${clockOf(end / FPS)}`;
     const share = end > 0 ? Math.max(0, Math.min(1, (playhead * FPS) / end)) : 0;
     seekFill.style.width = `${share * 100}%`;
@@ -2015,7 +2027,8 @@ function createPromptTimeline(first) {
       const role = inspected.role ? ROLE_NAMES[inspected.role] ?? inspected.role : "Media";
       monitorState.append(pill(where ? `${role} · ${where}` : role, LOOK.accent), closeInspect);
     } else {
-      screenNote.textContent = final ? (finalVideo.error ? "Video unreadable" : "") : sheet ? "" : "Idle Preview";
+      screenNote.textContent = final ? (finalVideo.error ? "Video unreadable" : "")
+        : sheet ? "" : problem ? problem.problem : "Idle Preview";
       const shown = index >= 0 ? previewOf(index) : null;
       const length = finalVideo.duration;
       if (final && Number.isFinite(length) && Math.abs(length - end / FPS) > 0.25) {
@@ -2025,6 +2038,10 @@ function createPromptTimeline(first) {
       } else if (final) {
         const tag = pill("Final", LOOK.success);
         tag.title = finished.name;
+        monitorState.appendChild(tag);
+      } else if (problem && !sheet) {
+        const tag = pill("Unavailable", LOOK.warning);
+        tag.title = problem.detail || problem.problem;
         monitorState.appendChild(tag);
       } else if (shown?.live) {
         monitorState.appendChild(pill(`Sampling · ${shown.live.step}/${shown.live.steps}`, LOOK.accent));

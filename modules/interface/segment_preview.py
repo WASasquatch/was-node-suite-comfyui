@@ -1,7 +1,7 @@
 """Each segment of a run as one sheet of small frames, replaced as it samples.
 
 ``GET /was/interface/api/segment_preview?node_id=<id>&segment=<n>`` answers a sheet as JPEG;
-``/index?node_id=<id>`` lists the segments held. :data:`EVENT` announces each new sheet.
+``/index?node_id=<id>`` lists the sheets and problems held. :data:`EVENT` announces each.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ __all__ = [
     "owner_of",
     "publish",
     "register_routes",
+    "report",
     "sheet",
 ]
 
@@ -57,6 +58,7 @@ MAX_BYTES = 384 * 1024 * 1024
 
 _lock = threading.Lock()
 _sheets: OrderedDict[tuple[str, int], tuple[bytes, dict]] = OrderedDict()
+_problems: dict[tuple[str, int], dict] = {}
 _held = 0
 _version = 0
 _registered = False
@@ -164,18 +166,54 @@ def publish(owner, segment: int, frames, step: int = 0, steps: int = 0, head: in
         previous = _sheets.pop(key, None)
         if previous is not None:
             _held -= len(previous[0])
+        _problems.pop(key, None)
         _sheets[key] = (body, fields)
         _held += len(body)
         while _held > MAX_BYTES and len(_sheets) > 1:
             _, (dropped, _) = _sheets.popitem(last=False)
             _held -= len(dropped)
+    _announce(fields)
+    return fields
+
+
+def report(owner, segment: int, problem: str, detail: str = "") -> dict | None:
+    """Hold why one segment could not be previewed, in place of its sheet, and announce it.
+
+    Args:
+        owner: The id of the node the segment belongs to.
+        segment: Segment number, from 0.
+        problem: A short title for the Prompt Timeline to show, as ``Invalid MiniMax H3 Preview VAE``.
+        detail: The cause and the fix.
+
+    Returns:
+        The announced fields, or None where the segment has no owner.
+    """
+    global _held, _version
+    if owner is None:
+        return None
+    key = (str(owner), int(segment))
+    with _lock:
+        _version += 1
+        fields = {
+            "node_id": key[0], "segment": key[1], "problem": str(problem), "detail": str(detail),
+            "version": _version, "time": time.time(), "prompt_id": executing_prompt_id() or "",
+        }
+        previous = _sheets.pop(key, None)
+        if previous is not None:
+            _held -= len(previous[0])
+        _problems[key] = fields
+    _announce(fields)
+    return fields
+
+
+def _announce(fields: dict) -> None:
+    """Send a sheet's or a problem's fields to every open page."""
     try:
         from server import PromptServer
 
         PromptServer.instance.send_sync(EVENT, fields)
     except Exception as error:
         logger.debug("a segment preview could not be announced (%s)", error)
-    return fields
 
 
 def sheet(owner, segment: int) -> tuple[bytes, dict] | None:
@@ -193,21 +231,22 @@ def sheet(owner, segment: int) -> tuple[bytes, dict] | None:
 
 
 def held(owner) -> list[dict]:
-    """The fields of every sheet held for one node.
+    """The fields of every sheet and problem held for one node.
 
     Args:
         owner: The node's id.
 
     Returns:
-        One entry per segment, in segment order.
+        One entry per segment, in segment order. A problem's entry carries ``problem``.
     """
     with _lock:
         found = [fields for (node, _), (_, fields) in _sheets.items() if node == str(owner)]
+        found += [fields for (node, _), fields in _problems.items() if node == str(owner)]
     return sorted(found, key=lambda fields: fields["segment"])
 
 
 def clear(owner, keep: int | None = None) -> int:
-    """Drop one node's sheets.
+    """Drop one node's sheets and problems.
 
     Args:
         owner: The node's id.
@@ -218,12 +257,17 @@ def clear(owner, keep: int | None = None) -> int:
     """
     global _held
     dropped = 0
+
+    def gone(key) -> bool:
+        return key[0] == str(owner) and (keep is None or key[1] >= int(keep))
+
     with _lock:
-        for key in [key for key in _sheets if key[0] == str(owner)
-                    and (keep is None or key[1] >= int(keep))]:
+        for key in [key for key in _sheets if gone(key)]:
             body, _ = _sheets.pop(key)
             _held -= len(body)
             dropped += 1
+        for key in [key for key in _problems if gone(key)]:
+            del _problems[key]
     return dropped
 
 

@@ -7,7 +7,8 @@ import time
 from .. import log
 from ..interface import segment_preview
 
-__all__ = ["DECODER_NAME", "MIN_INTERVAL", "VIDEO_CHANNELS", "decoder", "step_of", "unwatched",
+__all__ = ["DECODER_NAME", "FAILED", "INVALID", "MIN_INTERVAL", "MISSING", "SOURCE",
+           "VIDEO_CHANNELS", "Unavailable", "decoder", "previewed", "step_of", "unwatched",
            "watched"]
 
 logger = log.get_logger("latent.h3_preview")
@@ -21,39 +22,106 @@ VIDEO_CHANNELS = 24
 #: What the preview decoder's file name starts with in ``vae_approx``, as core's previewer reads it.
 DECODER_NAME = "taeh3"
 
+#: Where the preview decoder is downloaded from.
+SOURCE = "safetensors/taeh3.safetensors from https://github.com/madebyollin/taehv"
+
+#: What the Prompt Timeline shows on a segment that cannot be previewed.
+MISSING = "No MiniMax H3 Preview VAE"
+INVALID = "Invalid MiniMax H3 Preview VAE"
+FAILED = "MiniMax H3 Preview Failed"
+
 _decoders: dict = {}
+_reported: set = set()
+
+
+class Unavailable(Exception):
+    """No preview decoder can be used.
+
+    Attributes:
+        title: What the Prompt Timeline shows, as :data:`MISSING` or :data:`INVALID`.
+        detail: The cause and the fix.
+    """
+
+    def __init__(self, title: str, detail: str):
+        super().__init__(f"{title}. {detail}")
+        self.title = title
+        self.detail = detail
 
 
 def decoder(name: str = DECODER_NAME):
-    """The preview decoder in ComfyUI's ``vae_approx`` folder, loaded once and kept.
+    """The preview decoder in ComfyUI's ``vae_approx`` folders, loaded once and kept.
 
     Args:
-        name: What the file's name starts with.
+        name: What the file's name starts with, in any case and in any subfolder.
 
     Returns:
-        The loaded VAE, or ``None`` where no such file is installed.
+        The loaded VAE.
+
+    Raises:
+        Unavailable: No such file is installed, or ComfyUI cannot load the one that is.
     """
     import os
 
     import folder_paths
 
-    found = next((entry for entry in folder_paths.get_filename_list("vae_approx")
-                  if entry.startswith(name)), None)
+    entries = [entry.replace("\\", "/") for entry in folder_paths.get_filename_list("vae_approx")]
+    matches = [entry for entry in entries
+               if entry.rsplit("/", 1)[-1].lower().startswith(name.lower())]
+    # A file at the top of the folder is taken before one in a subfolder.
+    found = min(matches, key=lambda entry: ("/" in entry, entry), default=None)
     path = folder_paths.get_full_path("vae_approx", found) if found else None
     if not path:
-        return None
+        folders = tuple(folder_paths.get_folder_paths("vae_approx"))
+        problem = Unavailable(MISSING, (
+            f"No file named {name}* is in the vae_approx folders ComfyUI reads "
+            f"({', '.join(folders) or 'none configured'}). Put {SOURCE} in one of them; it is "
+            "found on the next run without a restart."))
+        if folders not in _reported:
+            _reported.add(folders)
+            logger.warning("live_preview is on but the Prompt Timeline draws no segments: %s",
+                           problem)
+        raise problem
     key = (path, os.path.getmtime(path))
-    held = _decoders.get(key)
-    if held is None:
+    if key not in _decoders:
         import comfy.sd
         import comfy.utils
 
         held = comfy.sd.VAE(sd=comfy.utils.load_torch_file(path, safe_load=True))
-        if hasattr(held.first_stage_model, "show_progress_bar"):
+        if getattr(held, "first_stage_model", None) is None:
+            held = Unavailable(INVALID, (
+                f"{path} is not a decoder ComfyUI can load, likely the older per-frame taeh3. "
+                f"Replace it with {SOURCE}; it is read on the next run without a restart."))
+            logger.warning("live_preview is on but the Prompt Timeline draws no segments: %s",
+                           held)
+        elif hasattr(held.first_stage_model, "show_progress_bar"):
             held.first_stage_model.show_progress_bar = False
         _decoders.clear()
         _decoders[key] = held
+    held = _decoders[key]
+    if isinstance(held, Unavailable):
+        raise Unavailable(held.title, held.detail)
     return held
+
+
+def previewed(model, owner, segment: int, head: int):
+    """A copy of a model that previews a segment, or a problem held in the segment's place.
+
+    Args:
+        model: The segment's model.
+        owner: The id of the node the segment belongs to.
+        segment: Segment number, from 0.
+        head: Frames at the start of the window that come from the segment before.
+
+    Returns:
+        The patched copy from :func:`watched`, or ``model`` where no preview decoder can be
+        used, the problem then published for the Prompt Timeline in place of a sheet.
+    """
+    try:
+        vae = decoder()
+    except Unavailable as problem:
+        segment_preview.report(owner, segment, problem.title, problem.detail)
+        return model
+    return watched(model, vae, owner, segment, head)
 
 
 def step_of(sigma, sigmas) -> tuple[int, int, bool]:
@@ -118,6 +186,9 @@ def watched(model, vae, owner, segment: int, head: int):
             state["failed"] = True
             logger.warning("segment %d could not be previewed (%s: %s); sampling goes on without "
                            "previews", int(segment) + 1, type(error).__name__, error)
+            reason = " ".join(str(error).split())[:300]
+            segment_preview.report(owner, segment, FAILED, (
+                f"{type(error).__name__}: {reason}. Sampling went on without previews."))
         state["last"] = time.monotonic()
         return denoised
 

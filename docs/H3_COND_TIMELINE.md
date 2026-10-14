@@ -177,7 +177,7 @@ is never given a cast transition.
 
 | Control | Does |
 |---|---|
-| Preview | Each segment as it samples, from a `taeh3` decoder in `ComfyUI/models/vae_approx`; the last step stays |
+| Preview | Each segment as it samples, from a `taeh3` decoder in `ComfyUI/models/vae_approx` ([`MODELS.md`](MODELS.md#minimax-h3)); the last step stays |
 | Final | The video the run saved, with its sound, on the same playhead |
 | Play, previous scene, next scene | Space, Home, End |
 | Ready, N to fix | Lists what needs fixing before a run |
@@ -234,6 +234,9 @@ the asset reads the frame from the video as it is made, and reaches the scenes a
 | Seen | Fix |
 |---|---|
 | Idle Preview through a whole run | Put a `taeh3` decoder in `ComfyUI/models/vae_approx` and leave `live_preview` on H3 Extend Window |
+| Preview reads `No MiniMax H3 Preview VAE` | No `taeh3` file is in a `vae_approx` folder ComfyUI reads. Hover **Unavailable** for the folders searched |
+| Preview reads `Invalid MiniMax H3 Preview VAE` | The file is not the video decoder listed in [`MODELS.md`](MODELS.md#minimax-h3). Replace it; the next run reads it |
+| Preview reads `MiniMax H3 Preview Failed` | Decoding a step raised. Hover **Unavailable** for the error; sampling goes on without previews |
 | Write scenes asks for a language model | Wire Load CLIP with a language model into `vlm_clip` on MiniMax H3 Conditioning |
 | Queued behind the runs ahead of it | The job starts when the runs ahead of it finish |
 | Reference frame entries for this scene and earlier ones are greyed | Run the graph; once a preview or the Final video holds the frame, every scene takes it |

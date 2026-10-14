@@ -7,6 +7,7 @@ import os
 from comfy_api.latest import io
 
 from ....modules.compat.sockets import require_input
+from ....modules.compat.types import LORA_STACK
 from ....modules.log import get_logger
 from ...legacy.loaders.lora_loader import NONE_OPTION, lora_names
 
@@ -77,13 +78,17 @@ class PowerLoraLoader(io.ComfyNode):
             description=(
                 "Apply any number of LoRAs in one node. Each row names a file, carries its "
                 "own strength and has a switch, so a LoRA is muted without unwiring "
-                "anything. Power LoRA Merger beside it bakes a stack like this into a "
-                "single file; this one applies it for the run."
+                "anything. The lora_stack output hands the same rows to Power LoRA Merger, "
+                "which bakes them into a single file."
             ),
             inputs=[
                 io.Model.Input(
                     "model",
-                    tooltip="The diffusion model the LoRAs are applied to, in row order.",
+                    optional=True,
+                    tooltip=(
+                        "The diffusion model the LoRAs are applied to, in row order. Needed "
+                        "only where the model output is wired; lora_stack alone needs none."
+                    ),
                 ),
                 io.Clip.Input(
                     "clip",
@@ -442,6 +447,14 @@ class PowerLoraLoader(io.ComfyNode):
                         "through untouched when no CLIP was connected."
                     ),
                 ),
+                LORA_STACK.Output(
+                    display_name="lora_stack",
+                    tooltip=(
+                        "The switched-on rows as a LoRA stack, each at its strength times "
+                        "strength, for the stack_data input of Power LoRA Merger. Empty when "
+                        "every row is off."
+                    ),
+                ),
                 io.String.Output(
                     display_name="names",
                     tooltip=(
@@ -449,7 +462,7 @@ class PowerLoraLoader(io.ComfyNode):
                         "Empty when every row is off."
                     ),
                 ),
-                # One per row, after the three fixed outputs: a link is kept by position.
+                # One per row, after the four fixed outputs: a link is kept by position.
                 io.String.Output(display_name="name_1", tooltip=NAME_TOOLTIP.format(slot=1)),
                 io.String.Output(display_name="name_2", tooltip=NAME_TOOLTIP.format(slot=2)),
                 io.String.Output(display_name="name_3", tooltip=NAME_TOOLTIP.format(slot=3)),
@@ -477,52 +490,51 @@ class PowerLoraLoader(io.ComfyNode):
                 io.String.Output(display_name="name_25", tooltip=NAME_TOOLTIP.format(slot=25)),
                 io.String.Output(display_name="name_26", tooltip=NAME_TOOLTIP.format(slot=26)),
             ],
+            hidden=[io.Hidden.prompt, io.Hidden.unique_id],
         )
 
     @classmethod
-    def execute(cls, model, clip=None, fuse=False, strength=1.0, **rows) -> io.NodeOutput:
+    def execute(cls, model=None, clip=None, fuse=False, strength=1.0, **rows) -> io.NodeOutput:
         """Apply every switched-on row.
 
         Args:
-            model: The model to patch.
+            model: The model to patch, or None where only the stack is read.
             clip: The text encoder to patch, or None to patch the model alone.
             fuse: Join the rows into one patch before applying, rather than one each.
             strength: Multiplier over every row's own strength.
             rows: The row widgets the interface sends, read by ``rows_from_inputs``.
 
         Returns:
-            The patched model and CLIP, what was applied, and one name per row.
+            The patched model and CLIP, the LoRA stack, what was applied, and one name per row.
 
         Raises:
-            ValueError: Nothing is connected to the model input.
+            ValueError: The model output is wired but nothing is connected to the model input.
         """
         import comfy.sd
         import folder_paths
 
         from ....modules.lora import rows as lora_rows
+        from ....modules.lora import stack as lora_stack
         from ...legacy.loaders.lora_loader import lora_state_dict
 
-        require_input(model, "Power LoRA Loader", "model", "model", "checkpoint loader", "MODEL")
+        if model is None and lora_stack.consumed(cls.hidden.prompt, cls.hidden.unique_id, 0):
+            require_input(model, "Power LoRA Loader", "model", "model", "checkpoint loader", "MODEL")
 
         selected = lora_rows.rows_from_inputs(rows)
-        if not selected or strength == 0.0:
+        stack = lora_stack.from_rows(selected, strength)
+        if not stack:
             logger.debug("no lora row is switched on, the model passes through")
-            return io.NodeOutput(model, clip, "", *name_slots([]))
+            return io.NodeOutput(model, clip, [], "", *name_slots([]))
 
-        applied = []
-        names = []
-        loaded = []
-        for row in selected:
-            weight = float(row.weight) * float(strength)
-            if weight == 0.0:
-                continue
-            path = folder_paths.get_full_path_or_raise("loras", row.lora)
-            loaded.append((lora_state_dict(path), weight))
-            names.append(os.path.splitext(os.path.basename(row.lora))[0])
-            applied.append(f"{names[-1]} {weight:g}")
+        names = [os.path.splitext(os.path.basename(name))[0] for name, _, _ in stack]
+        applied = [f"{name} {weight:g}" for name, (_, weight, _) in zip(names, stack)]
+        if model is None:
+            return io.NodeOutput(model, clip, stack, "\n".join(applied), *name_slots(names))
 
-        if not loaded:
-            return io.NodeOutput(model, clip, "", *name_slots([]))
+        loaded = [
+            (lora_state_dict(folder_paths.get_full_path_or_raise("loras", name)), weight)
+            for name, weight, _ in stack
+        ]
 
         if fuse and len(loaded) > 1:
             from ....modules.lora.fuse import fuse_state_dicts
@@ -533,7 +545,7 @@ class PowerLoraLoader(io.ComfyNode):
             model, clip = comfy.sd.load_lora_for_models(
                 model, clip, combined, 1.0, 1.0 if clip is not None else 0.0
             )
-            return io.NodeOutput(model, clip, "\n".join(applied), *name_slots(names))
+            return io.NodeOutput(model, clip, stack, "\n".join(applied), *name_slots(names))
 
         for state, weight in loaded:
             # Each row patches the answer of the one before it, so the stack composes in the
@@ -543,4 +555,4 @@ class PowerLoraLoader(io.ComfyNode):
             )
 
         logger.debug("applied %d lora(s)", len(applied))
-        return io.NodeOutput(model, clip, "\n".join(applied), *name_slots(names))
+        return io.NodeOutput(model, clip, stack, "\n".join(applied), *name_slots(names))

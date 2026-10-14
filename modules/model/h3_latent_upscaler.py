@@ -44,7 +44,7 @@ FOLDER = "latent_upscale_models"
 CHECKPOINTS = {
     "minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors": (
         "LBH-123-AI/Minimax_h3_latent_Upscaler",
-        "minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors",
+        "minimax_h3_latent_upscaler_3d_conv_v1/minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors",
     ),
 }
 

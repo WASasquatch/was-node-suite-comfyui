@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping
 
-__all__ = ["Row", "rows_from_inputs", "to_bool"]
+__all__ = ["NAME_KEY", "Row", "rows_from_inputs", "to_bool"]
 
 #: ``lora_3_enabled`` -> slot 3. Matched on the whole key, lowercased.
 ENABLED_KEY = re.compile(r"lora_(\d+)_enabled")

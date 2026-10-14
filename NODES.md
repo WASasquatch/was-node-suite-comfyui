@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **515** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **518** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-508 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+511 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 393 |
+| [Always loaded](#always-loaded) | always on | 396 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-393 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+396 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (15)
+- [WAS Suite/Sampling](#was-suitesampling) (18)
 - [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -7532,7 +7532,7 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 | `renewal` | `FLOAT` | No | 0.35 |  | Fresh noise `refresh` puts into the carried frames, as `0.0` to hold them as `carry` does, `0.35` to loosen them so the scene can evolve, or `1.0` to resample them with only the carried picture to start from. Read by `refresh`. |
 | `reference_samples` | `INT` | No | 4 |  | Stills `reference (sample)` and `carry + reference (sample)` take, spread evenly across sample_span, as `4`, or `6` for a long clip with many scenes. |
 | `source` | `INT` | No | -1 |  | Which segment this pass continues from: `-1` = the one before; `-2` = two back; `2` = segment 2. From an earlier segment the picture carries with fresh sound; new frames still join the clip's end. Sound carries always read the segment before. |
-| `live_preview` | `BOOLEAN` | No | True |  | `true` = the Prompt Timeline draws this segment as it samples and keeps its last step, through the preview decoder in models/vae_approx whose name starts `taeh3`, as ComfyUI's own previews find theirs; `false` = no previews. Needs prompts. |
+| `live_preview` | `BOOLEAN` | No | True |  | `true` = the Prompt Timeline draws this segment as it samples and keeps its last step, through the preview decoder in models/vae_approx whose name starts `taeh3`, subfolders included; `false` = no previews. Needs prompts. |
 | `reference_sound` | `BOOLEAN` | No | True |  | On, a clip the window references from the scene before carries that scene's sound under it, so voices and ambience follow the cast across the cut. Read by `reference (video)` and `carry (audio) + reference (video)`. |
 | `reencode_prompt` | `BOOLEAN` | No | True |  | `true` = a segment this window adds references or a handoff frame to has its prompt encoded again with them, as wired references are; one text encoder pass for that segment. `false` = they are attached as they are. |
 | `sample_span` | `COMBO` | No | source scene | `source scene`, `whole clip` | Where sampled stills come from: `source scene` = spread across the scene this segment continues from; `whole clip` = from the first frame to the last. Read by both `reference (sample)` continuities. |
@@ -8253,7 +8253,7 @@ Writes a whole MiniMax H3 video from an idea: a language model outlines the stor
 <details>
 <summary><b>Power LoRA Loader</b></summary>
 
-Apply any number of LoRAs in one node. Each row names a file, carries its own strength and has a switch, so a LoRA is muted without unwiring anything. Power LoRA Merger beside it bakes a stack like this into a single file; this one applies it for the run.
+Apply any number of LoRAs in one node. Each row names a file, carries its own strength and has a switch, so a LoRA is muted without unwiring anything. The lora_stack output hands the same rows to Power LoRA Merger, which bakes them into a single file.
 
 | | |
 |---|---|
@@ -8263,7 +8263,7 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `MODEL` | Yes |  |  | The diffusion model the LoRAs are applied to, in row order. |
+| `model` | `MODEL` | No |  |  | The diffusion model the LoRAs are applied to, in row order. Needed only where the model output is wired; lora_stack alone needs none. |
 | `clip` | `CLIP` | No |  |  | The text encoder the LoRAs are applied to. Optional: left unconnected the model alone is patched, which is what a workflow encoding its prompt elsewhere wants. |
 | `fuse` | `BOOLEAN` | No | False |  | `false` = one patch per row; `true` = every row joined into one patch, cheaper on a long stack, near-identical results within float rounding. A row whose format cannot be joined is carried through, scaled. |
 | `strength` | `FLOAT` | No | 1.0 |  | Multiplies every row's own strength, so the whole stack is turned up or down together. 1.0 leaves each row as it is set. |
@@ -8352,6 +8352,7 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 |---|---|---|
 | `model` | `MODEL` | The model with every switched-on row applied, in order. |
 | `clip` | `CLIP` | The text encoder with the same rows applied. The input passes through untouched when no CLIP was connected. |
+| `lora_stack` | `LORA_STACK` | The switched-on rows as a LoRA stack, each at its strength times strength, for the stack_data input of Power LoRA Merger. Empty when every row is off. |
 | `names` | `STRING` | The LoRAs that were applied, one per line, as name and strength. Empty when every row is off. |
 | `name_1` | `STRING` | File name of applied LoRA 1, without its folder or its extension, the same name that appears in the names output. Empty when the stack applies fewer LoRAs than that. |
 | `name_2` | `STRING` | File name of applied LoRA 2, without its folder or its extension, the same name that appears in the names output. Empty when the stack applies fewer LoRAs than that. |
@@ -10517,6 +10518,38 @@ Set a MiniMax H3 model up to sample long clips in less VRAM, with the same resul
 
 </details>
 
+<a id="node-wash3sparseattention"></a>
+<details>
+<summary><b>H3 Sparse Attention</b></summary>
+
+Run MiniMax H3's attention block-sparse with Sol-Attn, SLA or VSA, faster and lighter on VRAM, while chosen layers stay dense on the model's own attention backend. The layers H3's video suffers most for stay dense by default. Sparse layers compute in INT8, which softens detail.
+
+| | |
+|---|---|
+| Node id | `WASH3SparseAttention` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 model, after any LoRA. |
+| `method` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `sol-attn` = default, an adaptive threshold per head, for any H3 weights; `sla` = a fixed share of blocks, for SLA-distilled LoRAs; `vsa` = video cubes plus a learned coarse branch, for FastH3 weights. |
+| `layers` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `balanced` = default, layers 39-42 and 49 dense, 2.3x faster steps with sol-attn tau 1 on an RTX 4090; `careful` = 0-1, 37-43 and 49 dense, about 2x; `fastest` = every layer sparse, 2.7x, softest; `manual` = type layer_plan. |
+| `start_percent` | `FLOAT` | Yes | 0.2 |  | Point in the schedule sparse attention starts: `0.2` = default, the first fifth of the steps dense; `0` = every step sparse. |
+| `end_percent` | `FLOAT` | Yes | 1.0 |  | Point in the schedule sparse attention stops: `1.0` = the last step. |
+| `sink_conditioning` | `COMBO` | Yes | exact_kv_and_rows | `exact_kv_and_rows`, `exact_kv`, `off` | sol-attn and sla: `exact_kv_and_rows` = default, the prompt, reference and sound rows read exactly and the sound rows run dense; `exact_kv` = read exactly only; `off` = routed like the video. |
+| `extra_tokens` | `INT` | Yes | 256 |  | sol-attn and sla: top-scoring tokens each query block reads beyond its chosen blocks: `256` = default, closest to dense; `0` = none, fastest. |
+| `min_tokens` | `INT` | Yes | 12288 |  | Calls with fewer tokens run dense: `12288` = default. 1344x768 at 124 frames is about 38000 tokens; short clips run as fast dense. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with the planned layers sparse, for a guider or sampler. |
+| `plan` | `STRING` | The method, and which layers run dense and which sparse, at what setting. |
+
+</details>
+
 <a id="node-wash3tiledsampler"></a>
 <details>
 <summary><b>H3 Tiled Sampler</b></summary>
@@ -10825,6 +10858,95 @@ Starting noise whose pattern carries over from one video frame to the next, so t
 | Name | Type | What it is |
 |---|---|---|
 | `NOISE` | `NOISE` | The starting noise, for the noise socket of Sampler Custom Advanced or Custom Sampler Affine Advanced. |
+
+</details>
+
+<a id="node-wastiledcaptionedcustomsampler"></a>
+<details>
+<summary><b>Tiled Captioned Custom Sampler</b></summary>
+
+Upscale and refine a picture in overlapping tiles from a guider, sampler and sigmas, every tile sampled together so no seam shows. A vision model can caption each tile in place of the guider's positive prompt.
+
+| | |
+|---|---|
+| Node id | `WASTiledCaptionedCustomSampler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `noise` | `NOISE` | Yes |  |  | Where the noise laid over the whole picture comes from. |
+| `guider` | `GUIDER` | Yes |  |  | What steers the denoising, as CFGGuider. With a captioner each tile's caption replaces the text of its positive prompt. |
+| `sampler` | `SAMPLER` | Yes |  |  | The sampler to wrap, from KSamplerSelect or any other SAMPLER source. Every stock sampler carries the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which is reported in the console rather than failing the run. |
+| `sigmas` | `SIGMAS` | Yes |  |  | The noise levels to step through, as BasicScheduler gives them. Its denoise sets how much of the picture is redrawn. |
+| `vae` | `VAE` | Yes |  |  | The VAE of the model, which encodes the picture and decodes the answer. |
+| `image` | `IMAGE` | Yes |  |  | The picture or batch of pictures to refine, each sampled on its own. |
+| `upscale_by` | `FLOAT` | Yes | 2.0 |  | Size of the answer against the picture. `1.0` = refine at the same size; `2.0` = twice as wide and tall. The upscale model runs first where one is wired. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` = tiles the size the model was trained at, 512 for SD1 and 1024 for the rest, sharing a quarter of a tile; `manual` = set the tile size and overlap. |
+| `affine` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `off` = sample as it is; `on` = scale and offset the whole picture from inside the sampler's loop, which pushes texture and contrast in as the tiles refine. |
+| `clip` | `CLIP` | No |  |  | The text encoder from the loader the model came from. It encodes each tile's caption; with no captioner it is not used. |
+| `captioner` | `CLIP` | No |  |  | A vision language model from Load CLIP that writes each tile's prompt, as `qwen3vl_8b_fp8_scaled.safetensors`. Unwired, every tile takes the positive prompt. |
+| `prompt` | `STRING` | No |  |  | The prompt the picture was made from, or what it shows, as `a top-down view of a space station`. The captioner reads it to name what each tile holds; it is not sampled. |
+| `style` | `STRING` | No |  |  | Words added to the end of every tile's caption, as `oil painting, sharp focus`. |
+| `upscale_model` | `UPSCALE_MODEL` | No |  |  | An upscale model run on the picture before it is sampled, as `4x-UltraSharp`. |
+| `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+| `system_prompt` | `STRING` | No | You write the prompt an image model uses to repaint a crop of a larger picture. - You are shown the whole picture with its tiles ruled and numbered and the crop's tile outlined in yellow, and the crop itself at full detail. Describe only what lies inside the crop. - Name each subject and object inside the crop, largest first, including any only partly in frame. For each, say which part of it shows, where that part sits within the frame and how much of the frame it fills. For a person or animal only partly in the crop, name exactly which part of the body shows and whose it is, as the whole picture shows it. Then describe their surfaces, textures, colours and lighting, and any legible text in double quotes. - Use the whole picture and the overview only to recognise and name what the crop shows. Most of what they show lies outside the crop. Never name anything that is not inside it. - Keep the medium and style of the whole picture. - Where the crop holds only empty background, sky, water or a plain surface, name that surface and its colour in a few words. - Describe what is there directly. Write one plain paragraph of at most 60 words, with no preamble and no list. Never write the words tile, crop, overview, outlined, numbered, attached or image, and never say where the crop sits in the whole picture. |  | The rules each tile's caption is written under. A line such as `Name every plant species you can identify.` adds a rule. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | The refined pictures. |
+| `latent` | `LATENT` | The refined latents, for a further pass. |
+| `captions` | `STRING` | The overview and every tile's caption, one numbered line each. Empty with no captioner. |
+
+</details>
+
+<a id="node-wastiledcaptionedksampler"></a>
+<details>
+<summary><b>Tiled Captioned KSampler</b></summary>
+
+Upscale and refine a picture in overlapping tiles sampled together, so no seam shows and any sampler works. A vision model can caption each tile, so a tile is prompted only with what it holds. Affine can push texture in as it runs.
+
+| | |
+|---|---|
+| Node id | `WASTiledCaptionedKSampler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The model to refine with. |
+| `positive` | `CONDITIONING` | Yes |  |  | The prompt for the whole picture. With a captioner each tile takes its own caption in place of this text, keeping its other settings. |
+| `negative` | `CONDITIONING` | Yes |  |  | What every tile should avoid. |
+| `vae` | `VAE` | Yes |  |  | The VAE of the model, which encodes the picture and decodes the answer. |
+| `image` | `IMAGE` | Yes |  |  | The picture or batch of pictures to refine, each sampled on its own. |
+| `upscale_by` | `FLOAT` | Yes | 2.0 |  | Size of the answer against the picture. `1.0` = refine at the same size; `2.0` = twice as wide and tall. The upscale model runs first where one is wired. |
+| `seed` | `INT` | Yes | 0 |  | Seeds the noise laid over the whole picture, `0` as good as any. |
+| `steps` | `INT` | Yes | 20 |  | Steps over the whole schedule, as `20`, or `8` for a turbo model. |
+| `cfg` | `FLOAT` | Yes | 4.5 |  | Guidance. `1.0` for a distilled model, `4.5` for most, `7.0` for SD1 and SDXL. |
+| `sampler_name` | `COMBO` | Yes | euler |  | The algorithm the steps are taken with, as `euler` or `dpmpp_2m`. |
+| `scheduler` | `COMBO` | Yes | normal |  | How the noise level falls across the steps, as `normal`, `simple` or `beta`. |
+| `denoise` | `FLOAT` | Yes | 0.35 |  | How much of the picture is redrawn. `0.2` = sharpens and repairs; `0.35` = adds detail; `0.6` = repaints, which captions keep on subject. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` = tiles the size the model was trained at, 512 for SD1 and 1024 for the rest, sharing a quarter of a tile; `manual` = set the tile size and overlap. |
+| `affine` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `off` = sample as it is; `on` = scale and offset the whole picture from inside the sampler's loop, which pushes texture and contrast in as the tiles refine. |
+| `clip` | `CLIP` | No |  |  | The text encoder from the loader the model came from. It encodes each tile's caption; with no captioner it is not used. |
+| `captioner` | `CLIP` | No |  |  | A vision language model from Load CLIP that writes each tile's prompt, as `qwen3vl_8b_fp8_scaled.safetensors`. Unwired, every tile takes the positive prompt. |
+| `prompt` | `STRING` | No |  |  | The prompt the picture was made from, or what it shows, as `a top-down view of a space station`. The captioner reads it to name what each tile holds; it is not sampled. |
+| `style` | `STRING` | No |  |  | Words added to the end of every tile's caption, as `oil painting, sharp focus`. |
+| `upscale_model` | `UPSCALE_MODEL` | No |  |  | An upscale model run on the picture before it is sampled, as `4x-UltraSharp`. |
+| `affine_schedule` | `DICT` | No |  |  | The per-step strength curve from an Affine Schedule node. Left unwired the affine ramps up over the middle of the run, from a fifth of the way in to four fifths. |
+| `affine_options` | `DICT` | No |  |  | Pattern parameters and mask shaping from an Affine Options node. Leave it unwired and every value takes its default. A pattern set there wins over the pattern widget. |
+| `system_prompt` | `STRING` | No | You write the prompt an image model uses to repaint a crop of a larger picture. - You are shown the whole picture with its tiles ruled and numbered and the crop's tile outlined in yellow, and the crop itself at full detail. Describe only what lies inside the crop. - Name each subject and object inside the crop, largest first, including any only partly in frame. For each, say which part of it shows, where that part sits within the frame and how much of the frame it fills. For a person or animal only partly in the crop, name exactly which part of the body shows and whose it is, as the whole picture shows it. Then describe their surfaces, textures, colours and lighting, and any legible text in double quotes. - Use the whole picture and the overview only to recognise and name what the crop shows. Most of what they show lies outside the crop. Never name anything that is not inside it. - Keep the medium and style of the whole picture. - Where the crop holds only empty background, sky, water or a plain surface, name that surface and its colour in a few words. - Describe what is there directly. Write one plain paragraph of at most 60 words, with no preamble and no list. Never write the words tile, crop, overview, outlined, numbered, attached or image, and never say where the crop sits in the whole picture. |  | The rules each tile's caption is written under. A line such as `Name every plant species you can identify.` adds a rule. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | The refined pictures. |
+| `latent` | `LATENT` | The refined latents, for a further pass. |
+| `captions` | `STRING` | The overview and every tile's caption, one numbered line each. Empty with no captioner. |
 
 </details>
 
@@ -14113,7 +14235,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 <details>
 <summary><b>Power LoRA Merger</b></summary>
 
-Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads like any other. Add rows with the buttons on the node; connect a model and clip to apply the result straight away.
+Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads like any other. Add rows with the buttons on the node, or link a LoRA stack into stack_data; connect a model and clip to apply the result straight away.
 
 | | |
 |---|---|
@@ -14132,6 +14254,7 @@ Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads
 | `model` | `MODEL` | No |  |  | Optional. A model to apply the merged LoRA to once it is saved, so the merge can be tested in the same run. Leave it unconnected to only write the file. |
 | `clip` | `CLIP` | No |  |  | Optional, and only used when a model is connected too: the clip the merged LoRA's text-encoder half is applied to. |
 | `options` | `WAS_LORA_MERGE_OPTIONS` | No |  |  | Optional settings from a Power LoRA Merger Options node: rank, precision, module filters and the per-mode controls. Leave it unconnected to merge at rank 32 in bf16. |
+| `stack_data` | `LORA_STACK,MODEL` | No |  |  | LoRAs to merge in place of the rows, in order, each at its model strength: a lora_stack output, or the model output of a Power LoRA Loader, ours or rgthree's, whose switched-on rows are read. |
 | `lora_1_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_1` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
 | `lora_1_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
@@ -14218,6 +14341,7 @@ Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads
 | `model` | `MODEL` | The connected model with the merged LoRA applied, or nothing when no model was connected. |
 | `clip` | `CLIP` | The connected clip with the merged LoRA applied, or nothing when no clip was connected. A model on its own is still patched. |
 | `lora_path` | `STRING` | The saved file's name relative to your LoRA folder, such as 'styles/mixed.safetensors'. Feed it to a loader, or to a text node to record what a run produced. |
+| `lora_stack` | `LORA_STACK` | The saved file as a one-entry LoRA stack at output_model_strength and output_clip_strength, for another merger's stack_data. |
 
 </details>
 

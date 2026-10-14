@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **515 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **518 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -51,13 +51,13 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-515 nodes across a package of source files. The pack itself needs no packages, and nothing is
+518 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 515 |
+| Nodes | 220 | 518 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 143 files: browser libraries, fonts, eight face cascades, three sets of weights and two networks, each with its licence |
@@ -151,7 +151,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**515 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
+**518 nodes** across 48 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 
@@ -191,8 +191,9 @@ explains it. Edit it there as it will survive updates.
 
 # Third-party code in the pack
 
-The suite is MIT, see [`LICENSE`](LICENSE). It bundles 143 third-party files: three.js and
-three-gpu-pathtracer, HugeRTE, Prism.js, KaTeX and Mermaid, the EMA-VFI and Kandinsky 6 networks,
+The suite is MIT, see [`LICENSE`](LICENSE). It bundles 162 third-party files: three.js and
+three-gpu-pathtracer, HugeRTE, Prism.js, KaTeX and Mermaid, the EMA-VFI, SEA-RAFT, FlowSeek,
+MiniMax H3 latent upscaler and Kandinsky 6 networks,
 the DejaVu and Liberation fonts, eight face cascades and three sets of weights. Each keeps its own licence text
 in the folder it ships in, and none of it is ever fetched. Every licence permits redistribution.
 

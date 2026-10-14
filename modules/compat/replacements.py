@@ -524,6 +524,7 @@ REPLACEMENTS: tuple[io.NodeReplace, ...] = (
             {"new_id": "model", "old_id": "model"},
             {"new_id": "clip", "old_id": "clip"},
             {"new_id": "options", "old_id": "options"},
+            {"new_id": "stack_data", "old_id": "stack_data"},
             {"new_id": "lora_1_enabled", "old_id": "lora_1_enabled"},
             {"new_id": "lora_1", "old_id": "lora_1"},
             {"new_id": "lora_1_weight", "old_id": "lora_1_weight"},
