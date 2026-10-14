@@ -1,7 +1,7 @@
 """The tiles a tiled sampler is working on, announced as they change.
 
-:data:`EVENT` carries ``node_id``, ``prompt_id``, ``phase``, ``tiles``, ``step``, ``steps`` and
-``boxes``, each box ``[top, bottom, left, right]`` in fractions of the frame.
+:data:`EVENT` carries ``node_id``, ``prompt_id``, ``phase``, ``tiles``, ``step``, ``steps``,
+``visited`` and ``boxes``, each box ``[top, bottom, left, right]`` in fractions of the frame.
 """
 
 from __future__ import annotations
@@ -39,27 +39,51 @@ class Announcer:
         self.node_id = node_id if node_id is not None else executing_node_id()
         self.prompt_id = prompt_id if prompt_id is not None else executing_prompt_id()
         self.last = None
+        self.step = 0
+        self.steps = 0
+        self.visited = set()
 
-    def __call__(self, phase: str, tiles=(), step: int = 0, steps: int = 0) -> None:
+    def begin(self, steps: int) -> None:
+        """Start counting a sampling run.
+
+        Args:
+            steps: Steps in the run.
+        """
+        self.steps, self.step, self.visited = int(steps), 0, set()
+
+    def finished(self, step: int) -> None:
+        """Note a step the sampler finished, which opens the next.
+
+        Args:
+            step: The finished step, from 0.
+        """
+        self.step, self.visited = min(int(step) + 1, max(self.steps - 1, 0)), set()
+
+    def __call__(self, phase: str, tiles=(), step=None, steps=None) -> None:
         """Announce the tiles being worked on.
 
         Args:
             phase: :data:`PREPARE`, :data:`OVERVIEW`, :data:`CAPTION`, :data:`SAMPLE` or
                 :data:`DONE`.
             tiles: Indices of the tiles, row by row.
-            step: The step being taken, from 0.
-            steps: Steps in the run.
+            step: The step being taken from 0, the counted one when left out.
+            steps: Steps in the run, the counted number when left out.
         """
         if self.node_id is None:
             return
         active = sorted({int(tile) for tile in tiles})
-        key = (phase, tuple(active), int(step))
+        step = self.step if step is None else int(step)
+        steps = self.steps if steps is None else int(steps)
+        if phase == SAMPLE:
+            self.visited.update(active)
+        key = (phase, tuple(active), step)
         if key == self.last:
             return
         self.last = key
         fields = {
             "node_id": str(self.node_id), "prompt_id": self.prompt_id or "", "phase": phase,
-            "tiles": active, "step": int(step), "steps": int(steps), "boxes": self.boxes,
+            "tiles": active, "step": step, "steps": steps, "boxes": self.boxes,
+            "visited": len(self.visited) if phase == SAMPLE else 0,
         }
         try:
             from server import PromptServer

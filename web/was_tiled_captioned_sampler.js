@@ -52,7 +52,8 @@ const UI_WIDGET_TYPE = "was_tiled_captioned_sampler";
 function activityLabel(live) {
   const names = live.tiles.map((tile) => tile + 1).join(", ");
   if (live.phase === "caption") return `captioning tile ${names}`;
-  if (live.phase === "sample" && live.steps) return `step ${live.step + 1} of ${live.steps}: tile ${names}`;
+  const word = live.tiles.length > 1 ? "tiles" : "tile";
+  if (live.phase === "sample" && live.steps) return `step ${live.step + 1} of ${live.steps}: ${word} ${names}`;
   return "";
 }
 
@@ -65,7 +66,9 @@ function activityLabel(live) {
 function progressOf(live) {
   const count = live.boxes.length;
   if (live.phase === "caption" && count) return (Math.max(...live.tiles, -1) + 1) / count;
-  if (live.phase === "sample" && live.steps) return live.step / live.steps;
+  if (live.phase === "sample" && live.steps) {
+    return (live.step + (count ? Math.min(live.visited, count) / count : 0)) / live.steps;
+  }
   if (live.phase === "done") return 1;
   return 0;
 }
@@ -88,7 +91,10 @@ function liveReport(live) {
   };
   const counts = count ? [{ name: "tiles", value: count }] : [];
   if (live.phase === "caption") counts.push({ name: "captioned", value: `${done - 1} of ${count}` });
-  if (live.phase === "sample") counts.push({ name: "step", value: `${live.step + 1} of ${live.steps}` });
+  if (live.phase === "sample") {
+    counts.push({ name: "step", value: `${live.step + 1} of ${live.steps}` });
+    counts.push({ name: "done this step", value: `${Math.min(live.visited, count)} of ${count}` });
+  }
   return { status: "ok", summary: lines[live.phase] || "running", counts };
 }
 
@@ -146,7 +152,9 @@ app.registerExtension({
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
         const node = this;
-        const live = { on: false, prompt: "", phase: "", tiles: [], boxes: [], step: 0, steps: 0 };
+        const live = {
+          on: false, prompt: "", phase: "", tiles: [], boxes: [], step: 0, steps: 0, visited: 0,
+        };
         let band = null;
         let panel = null;
         let shown = null;
@@ -170,6 +178,7 @@ app.registerExtension({
           live.boxes = Array.isArray(fields.boxes) ? fields.boxes : [];
           live.step = Number(fields.step) || 0;
           live.steps = Number(fields.steps) || 0;
+          live.visited = Number(fields.visited) || 0;
           live.on = live.phase !== "done";
           if (fresh) shown = null;
           if (!shown && live.boxes.length) {

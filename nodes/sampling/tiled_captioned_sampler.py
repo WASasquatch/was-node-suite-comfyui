@@ -295,7 +295,8 @@ class TiledCaptionedKSampler(io.ComfyNode):
             tile_negative = tiles.tiled_conditioning(negative, frame.grid, frame.masks, None, controls)
             noise = comfy.sample.prepare_noise(samples, int(seed), [index])
             tile_refine.release(model)
-            callback = preview.prepare_callback(tiled, int(sigmas.shape[-1]) - 1)
+            callback = tile_refine.tracked(preview.prepare_callback(tiled, int(sigmas.shape[-1]) - 1),
+                                           frame.announce, int(sigmas.shape[-1]) - 1)
             result = comfy.samplers.sample(
                 tiled, noise, tile_positive, tile_negative, float(cfg), tiled.load_device, sampler,
                 sigmas, model_options=tiled.model_options, latent_image=samples, callback=callback,
@@ -403,7 +404,9 @@ class TiledCaptionedCustomSampler(io.ComfyNode):
                     {key: tiles.tiled_conditioning(conditioning, frame.grid, frame.masks, texts, controls)})
             latent = {"samples": samples, "batch_index": [index]}
             tile_refine.release(model)
-            callback = preview.prepare_callback(tiled_guider.model_patcher, int(sigmas.shape[-1]) - 1)
+            callback = tile_refine.tracked(
+                preview.prepare_callback(tiled_guider.model_patcher, int(sigmas.shape[-1]) - 1),
+                frame.announce, int(sigmas.shape[-1]) - 1)
             result = tiled_guider.sample(
                 noise.generate_noise(latent), samples, sampler, sigmas, callback=callback,
                 disable_pbar=not comfy.utils.PROGRESS_BAR_ENABLED, seed=noise.seed,

@@ -25,6 +25,7 @@ __all__ = [
     "prepare",
     "publish",
     "release",
+    "tracked",
     "tile_settings",
     "upscaled",
 ]
@@ -225,6 +226,26 @@ def release(*keep) -> None:
         release_others([getattr(item, "patcher", item) for item in keep if item is not None], unpin=True)
     except Exception as error:
         logger.debug("The other models could not be released: %s", error)
+
+
+def tracked(callback, announce, steps: int):
+    """A sampler callback that also counts finished steps for the node's panel.
+
+    Args:
+        callback: The callback the sampler is handed, called as ``callback(step, x0, x, total)``.
+        announce: The frame's announcer.
+        steps: Steps in the run.
+
+    Returns:
+        The wrapped callback.
+    """
+    announce.begin(steps)
+
+    def counted(step, x0, x, total_steps):
+        announce.finished(step)
+        return callback(step, x0, x, total_steps)
+
+    return counted
 
 
 def _publish_plan(picture: torch.Tensor, grid: tiles.Grid) -> None:

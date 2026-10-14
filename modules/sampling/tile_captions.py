@@ -21,11 +21,14 @@ __all__ = [
     "OVERVIEW_CONTEXT",
     "OVERVIEW_QUESTION",
     "SYSTEM_CONTEXT",
+    "TILE_CONTEXT",
     "TILE_QUESTION",
+    "TILE_QUESTION_PANELS",
     "caption_tiles",
     "encode",
     "require_captioner",
     "takes_pictures",
+    "takes_several_pictures",
 ]
 
 logger = log.get_logger("sampling.tile_captions")
@@ -33,18 +36,23 @@ logger = log.get_logger("sampling.tile_captions")
 #: The rules every tile caption is written under.
 DEFAULT_SYSTEM_PROMPT = (
     "You write the prompt an image model uses to repaint a crop of a larger picture.\n"
-    "- Look only at the attached crop. Name each subject and object visible in it, largest "
-    "first, including any only partly in frame, and say which part of it shows. Then describe "
-    "their surfaces, textures, colours and lighting, and any legible text in double quotes.\n"
-    "- The overview describes the whole picture, and most of what it names lies outside this "
-    "crop. Use it only to name and style what the crop shows. Never name anything that is not "
-    "visible in the crop.\n"
+    "- You are shown the whole picture with its tiles ruled and numbered and the crop's tile "
+    "outlined in yellow, and the crop itself at full detail. Describe only what lies inside "
+    "the crop.\n"
+    "- Name each subject and object inside the crop, largest first, including any only partly "
+    "in frame. For each, say which part of it shows, where that part sits within the frame and "
+    "how much of the frame it fills. For a person or animal only partly in the crop, name "
+    "exactly which part of the body shows and whose it is, as the whole picture shows it. Then "
+    "describe their surfaces, textures, colours and lighting, and any legible text in double "
+    "quotes.\n"
+    "- Use the whole picture and the overview only to recognise and name what the crop shows. "
+    "Most of what they show lies outside the crop. Never name anything that is not inside it.\n"
     "- Keep the medium and style of the whole picture.\n"
     "- Where the crop holds only empty background, sky, water or a plain surface, name that "
     "surface and its colour in a few words.\n"
     "- Describe what is there directly. Write one plain paragraph of at most 60 words, with no "
-    "preamble and no list. Never write the words tile, crop, section, corner, overview, "
-    "attached or image, and never say where in the picture the crop sits."
+    "preamble and no list. Never write the words tile, crop, overview, outlined, numbered, "
+    "attached or image, and never say where the crop sits in the whole picture."
 )
 
 #: What the model is asked about the whole picture.
@@ -60,14 +68,35 @@ OVERVIEW_CONTEXT = (
     "Call things what the prompt calls them.\n\n"
 )
 
+#: What precedes each tile question where the picture's own prompt is known; ``{context}`` is
+#: filled in.
+TILE_CONTEXT = "The whole picture was made from this prompt, given for names only: {context}\n\n"
+
 #: What is added to the system prompt where the picture's own prompt is known.
 SYSTEM_CONTEXT = "\n\nThe original prompt and context of the image was:\n\n{context}"
 
-#: What the model is asked about each tile; ``{overview}`` and ``{place}`` are filled in.
+#: What the model is asked about each tile, shown as two pictures; ``{overview}``,
+#: ``{number}`` and ``{place}`` are filled in.
 TILE_QUESTION = (
-    "Overview of the whole picture: {overview}\n\n"
-    "The attached picture is a crop of that picture ({place}). Write the prompt for everything "
-    "visible in the attached picture."
+    "Overview of the whole picture, given for names only: {overview}\n\n"
+    "The first attached picture is the whole picture with its tiles ruled and numbered; tile "
+    "{number} ({place}) is outlined in yellow. The second is tile {number} at full detail.\n\n"
+    "Write the prompt for the second picture only. Start with its largest subject. For "
+    "everything cut off by an edge of the second picture, say which edge it touches and which "
+    "part of it shows. Leave out anything outside tile {number}, even where the overview or "
+    "the prompt names it, and copy no sentence from either."
+)
+
+#: What the model is asked about each tile, shown as one picture of two panels.
+TILE_QUESTION_PANELS = (
+    "Overview of the whole picture, given for names only: {overview}\n\n"
+    "The attached picture has two panels. On the left is the whole picture with its tiles "
+    "ruled and numbered, tile {number} ({place}) outlined in yellow; on the right is tile "
+    "{number} at full detail.\n\n"
+    "Write the prompt for the right panel only. Start with its largest subject. For "
+    "everything cut off by an edge of the right panel, say which edge it touches and which "
+    "part of it shows. Leave out anything outside tile {number}, even where the overview or "
+    "the prompt names it, and copy no sentence from either."
 )
 
 #: Longest side in pixels of the picture the overview is written from.
@@ -75,6 +104,9 @@ OVERVIEW_SIDE = 1024
 
 #: Longest side in pixels of the picture a tile caption is written from.
 TILE_SIDE = 768
+
+#: Longest side in pixels of the whole picture shown beside each tile.
+CONTEXT_SIDE = 768
 
 #: Most tokens an overview may run to.
 OVERVIEW_TOKENS = 200
@@ -117,6 +149,22 @@ def require_captioner(captioner, clip, node: str) -> None:
         )
 
 
+def _flat(tokens) -> list:
+    """Every entry of a tokenizer's answer, in order."""
+    batches = tokens.values() if isinstance(tokens, dict) else [tokens]
+    return [item for batch in batches for row in batch for item in row]
+
+
+def _pictures_in(tokens) -> int:
+    """How many entries of a tokenizer's answer carry a picture rather than a token id."""
+    count = 0
+    for item in _flat(tokens):
+        head = item[0] if isinstance(item, tuple) and item else item
+        if isinstance(head, dict):
+            count += 1
+    return count
+
+
 def takes_pictures(clip) -> bool:
     """Whether a CLIP's tokenizer turns a picture into tokens.
 
@@ -126,16 +174,38 @@ def takes_pictures(clip) -> bool:
     Returns:
         True where tokenizing with a picture answers different tokens than without one.
     """
-    def flat(tokens):
-        batches = tokens.values() if isinstance(tokens, dict) else [tokens]
-        return [item for batch in batches for row in batch for item in row]
-
     try:
-        plain = flat(clip.tokenize("probe", min_length=1))
-        seen = flat(clip.tokenize("probe", image=torch.zeros(1, 64, 64, 3), min_length=1))
+        plain = clip.tokenize("probe", min_length=1)
+        seen = clip.tokenize("probe", image=torch.zeros(1, 64, 64, 3), min_length=1)
     except Exception:
         return False
-    return len(seen) != len(plain) or any(not isinstance(item, (int, tuple)) for item in seen)
+    return len(_flat(seen)) != len(_flat(plain)) or _pictures_in(seen) > 0
+
+
+def takes_several_pictures(clip) -> bool:
+    """Whether a CLIP's tokenizer takes two pictures into one question.
+
+    Args:
+        clip: A ComfyUI ``CLIP``.
+
+    Returns:
+        True where two pictures handed together both arrive in the tokens.
+    """
+    try:
+        probe = torch.zeros(1, 64, 64, 3)
+        return _pictures_in(clip.tokenize("probe", images=[probe, probe], min_length=1)) == 2
+    except Exception:
+        return False
+
+
+def _panels(context: torch.Tensor, crop: torch.Tensor) -> torch.Tensor:
+    """The context picture and the crop side by side at one height, a dark gap between them."""
+    height = int(context.shape[1])
+    width = max(1, round(crop.shape[2] * height / max(1, crop.shape[1])))
+    resized = torch.nn.functional.interpolate(crop.movedim(-1, 1), size=(height, width), mode="bicubic",
+                                              align_corners=False, antialias=True).movedim(1, -1)
+    gap = torch.zeros(1, height, max(4, height // 64), 3)
+    return torch.cat([context, gap, resized.clamp(0.0, 1.0)], dim=2)
 
 
 def _fit(picture: torch.Tensor, side: int) -> torch.Tensor:
@@ -181,14 +251,19 @@ def _tidy(text: str) -> str:
     return reply
 
 
-def _ask(write, store: OrderedDict, picture: torch.Tensor, question: str, system: str,
+def _ask(write, store: OrderedDict, pictures: list, question: str, system: str,
          budget: int, ruled: bool) -> str:
-    """One answer about a picture, read from the cache where the same question was asked before."""
-    key = (_digest(picture), question, system if ruled else "", int(budget))
+    """One answer about pictures, read from the cache where the same question was asked before."""
+    key = (tuple(_digest(picture) for picture in pictures), question, system if ruled else "",
+           int(budget))
     if key in store:
         store.move_to_end(key)
         return store[key]
-    answer = _tidy(write(question, image=picture, max_length=budget, ruled=ruled))
+    if len(pictures) > 1:
+        reply = write(question, images=pictures, max_length=budget, ruled=ruled)
+    else:
+        reply = write(question, image=pictures[0], max_length=budget, ruled=ruled)
+    answer = _tidy(reply)
     store[key] = answer
     while len(store) > MOST_CACHED:
         store.popitem(last=False)
@@ -223,13 +298,16 @@ def caption_tiles(captioner, image: torch.Tensor, grid: tiles.Grid, system_promp
     write = h3_writer.make_writer(captioner, 0, SAMPLING, system)
     store = _store(captioner)
     lead = OVERVIEW_CONTEXT.format(context=context) if context else ""
+    tile_lead = TILE_CONTEXT.format(context=context) if context else ""
     if announce is not None:
         announce("overview")
-    overview = _ask(write, store, _fit(image, OVERVIEW_SIDE), lead + OVERVIEW_QUESTION, system,
+    overview = _ask(write, store, [_fit(image, OVERVIEW_SIDE)], lead + OVERVIEW_QUESTION, system,
                     OVERVIEW_TOKENS, ruled=False)
     if progress is not None:
         progress.update(1)
     height, width = int(image.shape[1]), int(image.shape[2])
+    several = takes_several_pictures(captioner)
+    whole = _fit(image, CONTEXT_SIDE)
     captions = []
     for index, (h0, h1, w0, w1) in enumerate(grid.boxes()):
         comfy.model_management.throw_exception_if_processing_interrupted()
@@ -237,11 +315,13 @@ def caption_tiles(captioner, image: torch.Tensor, grid: tiles.Grid, system_promp
             announce("caption", [index])
         top, bottom = int(round(h0 * grid.scale)), min(height, int(round(h1 * grid.scale)))
         left, right = int(round(w0 * grid.scale)), min(width, int(round(w1 * grid.scale)))
-        crop = image[:, top:max(bottom, top + 1), left:max(right, left + 1)]
-        question = lead + TILE_QUESTION.format(overview=overview or "not available",
-                                               place=tiles.position(grid, index))
-        captions.append(_ask(write, store, _fit(crop, TILE_SIDE), question, system, TILE_TOKENS,
-                             ruled=True))
+        crop = _fit(image[:, top:max(bottom, top + 1), left:max(right, left + 1)], TILE_SIDE)
+        context_picture = tiles.numbered(whole, grid, index, CONTEXT_SIDE)
+        template = TILE_QUESTION if several else TILE_QUESTION_PANELS
+        pictures = [context_picture, crop] if several else [_panels(context_picture, crop)]
+        question = tile_lead + template.format(overview=overview or "not available",
+                                               number=index + 1, place=tiles.position(grid, index))
+        captions.append(_ask(write, store, pictures, question, system, TILE_TOKENS, ruled=True))
         if progress is not None:
             progress.update(1)
     return overview, captions

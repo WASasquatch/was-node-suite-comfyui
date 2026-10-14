@@ -19,6 +19,7 @@ __all__ = [
     "Grid",
     "auto_tile",
     "masks",
+    "numbered",
     "plan",
     "plot",
     "position",
@@ -349,24 +350,14 @@ def tiled_conditioning(conditioning: list, grid: Grid, tile_masks: list, texts=N
     return out
 
 
-def _step_of(options: dict) -> tuple:
-    """``(step, steps)`` of a model call, from the sigma it runs at and the run's schedule."""
-    sigma, schedule = options.get("sigmas"), options.get("sample_sigmas")
-    if not torch.is_tensor(sigma) or not torch.is_tensor(schedule) or schedule.numel() < 2:
-        return 0, 0
-    value = float(sigma.flatten()[0])
-    step = int(torch.argmin((schedule.float().cpu() - value).abs()))
-    return min(step, schedule.numel() - 2), schedule.numel() - 1
-
-
 def tiled_model(model, grid: Grid, announce=None):
     """A clone of a model that reserves memory for one tile rather than the whole latent.
 
     Args:
         model: A model patcher.
         grid: The tiling it samples.
-        announce: Called as ``announce(phase, tiles, step, steps)`` with the tiles each model
-            call runs, or None.
+        announce: Called as ``announce("sample", tiles)`` with the tiles each model call runs,
+            or None.
 
     Returns:
         The patched clone.
@@ -397,7 +388,7 @@ def tiled_model(model, grid: Grid, announce=None):
             uuids = (options or {}).get("uuids") or ()
             active = [owners[uuid] for uuid in uuids if uuid in owners]
             if active:
-                announce("sample", active, *_step_of(options))
+                announce("sample", active)
         except Exception as error:
             logger.debug("The active tiles could not be read: %s", error)
         return executor(*args, **kwargs)
@@ -458,6 +449,64 @@ def plot(image: torch.Tensor, grid: Grid, size: int = 960) -> torch.Tensor:
         draw.text((centre[0] - (left + right) / 2, centre[1] - (top + bottom) / 2), label,
                   fill=(240, 240, 245, 255), font=font)
     picture = Image.alpha_composite(picture.convert("RGBA"), shade).convert("RGB")
+    return torch.from_numpy(np.asarray(picture, dtype=np.float32) / 255.0)[None]
+
+
+def numbered(image: torch.Tensor, grid: Grid, active: int, size: int = 768) -> torch.Tensor:
+    """A picture with its tiles ruled and numbered at full brightness, one tile outlined in yellow.
+
+    Args:
+        image: ``[H, W, C]`` or ``[1, H, W, C]`` in ``[0, 1]``.
+        grid: The tiling.
+        active: The tile outlined, counted row by row from 0.
+        size: Longest side of the answer in pixels.
+
+    Returns:
+        An IMAGE tensor ``[1, h, w, 3]``.
+    """
+    import numpy as np
+    from PIL import Image, ImageDraw
+
+    frame = image[0] if image.ndim == 4 else image
+    frame = frame[..., :3].float().clamp(0.0, 1.0)
+    height, width = int(frame.shape[0]), int(frame.shape[1])
+    ratio = min(1.0, size / max(height, width))
+    out_w, out_h = max(1, int(round(width * ratio))), max(1, int(round(height * ratio)))
+    picture = Image.fromarray((frame.cpu().numpy() * 255.0).round().astype(np.uint8))
+    picture = picture.resize((out_w, out_h), Image.LANCZOS).convert("RGBA")
+    marks = Image.new("RGBA", picture.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(marks)
+    unit_h, unit_w = out_h / grid.size[0], out_w / grid.size[1]
+    # Seams fall halfway across each overlap, so the ruled cells do not overlap.
+    rows = [0.0] + [(a[1] + b[0]) / 2 * unit_h for a, b in zip(grid.heights, grid.heights[1:])] + [out_h]
+    cols = [0.0] + [(a[1] + b[0]) / 2 * unit_w for a, b in zip(grid.widths, grid.widths[1:])] + [out_w]
+    line = (255, 255, 255, 150)
+    for y in rows[1:-1]:
+        draw.line([(0, y), (out_w, y)], fill=line, width=1)
+    for x in cols[1:-1]:
+        draw.line([(x, 0), (x, out_h)], fill=line, width=1)
+    cell = min(out_h / len(grid.heights), out_w / len(grid.widths))
+    font = _font(max(10, int(cell / 6)))
+    columns = len(grid.widths)
+    h0, h1, w0, w1 = grid.boxes()[active]
+    box = [w0 * unit_w, h0 * unit_h, w1 * unit_w - 1, h1 * unit_h - 1]
+    yellow = (255, 214, 40, 255)
+    for index in range(grid.count):
+        row, column = divmod(index, columns)
+        x, y = cols[column] + 3, rows[row] + 3
+        # Another tile's number inside the outlined tile would name the wrong tile.
+        if index != active and box[0] <= x <= box[2] and box[1] <= y <= box[3]:
+            continue
+        label = str(index + 1)
+        left, top, right, bottom = draw.textbbox((0, 0), label, font=font)
+        own = index == active
+        draw.rectangle([x, y, x + (right - left) + 6, y + (bottom - top) + 6],
+                       fill=yellow if own else (14, 16, 22, 170))
+        draw.text((x + 3 - left, y + 3 - top), label, font=font,
+                  fill=(14, 16, 22, 255) if own else (255, 255, 255, 255))
+    edge = max(2, round(min(out_w, out_h) / 160))
+    draw.rectangle(box, outline=yellow, width=edge)
+    picture = Image.alpha_composite(picture, marks).convert("RGB")
     return torch.from_numpy(np.asarray(picture, dtype=np.float32) / 255.0)[None]
 
 

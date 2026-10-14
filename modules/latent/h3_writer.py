@@ -314,8 +314,9 @@ def make_writer(clip, seed: int, sampling: Sampling, system: str = ""):
         system: The rules every question is asked under, empty for none.
 
     Returns:
-        ``write(prompt, image=None, max_length=1024, temperature=None, ruled=True)`` answering
-        text; ``temperature`` replaces the sampling's own, ``ruled`` asks under ``system``.
+        ``write(prompt, image=None, max_length=1024, temperature=None, ruled=True, images=None)``
+        answering text; ``temperature`` replaces the sampling's own, ``ruled`` asks under
+        ``system``, ``images`` hands several pictures in place of ``image``.
     """
     import comfy.model_management
     import comfy.utils
@@ -328,7 +329,7 @@ def make_writer(clip, seed: int, sampling: Sampling, system: str = ""):
     def quiet(*args, **kwargs):
         comfy.model_management.throw_exception_if_processing_interrupted()
 
-    def write(prompt, image=None, max_length=1024, temperature=None, ruled=True):
+    def write(prompt, image=None, max_length=1024, temperature=None, ruled=True, images=None):
         asked = str(prompt)
         extra = {}
         if ruled and rules:
@@ -336,7 +337,8 @@ def make_writer(clip, seed: int, sampling: Sampling, system: str = ""):
                 extra["system_prompt"] = rules
             else:
                 asked = f"Follow these rules.\n\n{rules}\n\n----------\n\n{asked}"
-        tokens = clip.tokenize(asked, image=image, min_length=1, thinking=bool(sampling.thinking), **extra)
+        pictures = {"images": list(images)} if images else {"image": image}
+        tokens = clip.tokenize(asked, min_length=1, thinking=bool(sampling.thinking), **pictures, **extra)
         budget = int(max_length) + (THINKING_TOKENS if sampling.thinking else 0)
         heat = sampling.temperature if temperature is None else min(float(temperature), sampling.temperature)
         # The node's own bar counts its steps; the model's per-token bar only checks for Stop.
