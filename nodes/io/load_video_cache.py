@@ -70,8 +70,9 @@ class LoadVideoCache(io.ComfyNode):
                     "delete_after_save",
                     default=False,
                     tooltip=(
-                        "`true` = the cache is deleted once a save has written all of it; "
-                        "`false` = it is kept for the next save."
+                        "`true` = the cache's own files are deleted once a save has written "
+                        "all of it, for a cache in output, temp or a `paths.allow_write` "
+                        "folder; `false` = it is kept for the next save."
                     ),
                 ),
             ],
@@ -98,7 +99,8 @@ class LoadVideoCache(io.ComfyNode):
 
         Raises:
             ValueError: No cache is chosen, or the chosen one is no longer there.
-            PathNotAllowed: The cache sits outside every folder this pack may read.
+            PathNotAllowed: The cache sits outside every folder this pack may read, or
+                ``delete_after_save`` is on for a cache outside every folder it may write.
         """
         path = _named(cache)
         if not path:
@@ -112,6 +114,12 @@ class LoadVideoCache(io.ComfyNode):
                 f"{NODE_NAME} cannot find {cache}; it was deleted or moved. Pick another cache."
             )
         folder = os.path.dirname(str(manifest))
+        if delete_after_save and not frame_cache.writable(folder):
+            raise sandbox.PathNotAllowed(
+                f"{NODE_NAME} deletes a cache after saving only from output, temp or a "
+                f"paths.allow_write folder, and {folder} is in none of them. Turn "
+                f"delete_after_save off to read it, or move the cache into output."
+            )
         video = frame_cache.CachedVideo(folder, delete_after_save=bool(delete_after_save))
         rate = video.get_frame_rate()
         logger.info("opened %d cached frame(s) at %s", video.get_frame_count(), folder)

@@ -12,8 +12,8 @@ import io as _io
 import json
 import os
 import re
-import shutil
 from fractions import Fraction
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -21,16 +21,19 @@ from comfy_api.latest import Input, InputImpl, Types
 
 from .. import log
 from ..image import scratch
+from ..util import sandbox
 
 __all__ = [
     "DATA",
     "DEPTHS",
     "EXTENSION",
     "MANIFEST",
+    "OWN_FILES",
     "SOUND",
     "CachedVideo",
     "FrameCache",
     "cached",
+    "writable",
 ]
 
 logger = log.get_logger("media.frame_cache")
@@ -60,16 +63,36 @@ CONVERT_BYTES = 256 * 1024 ** 2
 #: Folder names a cache takes, the name then a five digit number.
 FOLDER = re.compile(r"^(?P<name>.+)_(?P<number>\d{5})$")
 
+#: The files a cache writes in its folder, the only ones deleting it removes.
+OWN_FILES = (MANIFEST, MANIFEST + ".part", DATA, SOUND)
+
+
+def writable(folder: str) -> bool:
+    """Whether a cache folder lies inside a folder nodes may write to, so it may be added to or deleted."""
+    resolved = Path(os.path.abspath(folder)).resolve(strict=False)
+    return any(sandbox.contains(root, resolved) for root in sandbox.write_roots())
+
 
 def _next_folder(parent: str, name: str) -> str:
-    """The next unused ``name_NNNNN`` folder below ``parent``."""
+    """The next unused ``name_NNNNN`` folder below ``parent``, inside a permitted write folder.
+
+    Raises:
+        PathNotAllowed: ``name`` is not one folder name, or ``parent`` is outside every write root.
+    """
+    reason = sandbox.leaves_folder(name)
+    if reason is None and ("/" in name or "\\" in name):
+        reason = "holds a folder separator"
+    if reason is not None:
+        raise sandbox.PathNotAllowed(
+            f"refusing the frame cache name `{name}`: it is the name of one folder inside "
+            f"{parent}, and this one {reason}. Use a plain name such as `clip`.")
     highest = 0
     with contextlib.suppress(OSError):
         for entry in os.listdir(parent):
             found = FOLDER.match(entry)
             if found and found.group("name") == name:
                 highest = max(highest, int(found.group("number")))
-    return os.path.join(parent, f"{name}_{highest + 1:05d}")
+    return str(sandbox.resolve_write_file(parent, f"{name}_{highest + 1:05d}"))
 
 
 class FrameCache:
@@ -98,7 +121,12 @@ class FrameCache:
 
         Returns:
             The :class:`FrameCache`.
+
+        Raises:
+            PathNotAllowed: ``name`` is not one folder name, or the folder would land outside
+                every permitted write folder.
         """
+        parent = str(sandbox.resolve_write(parent))
         os.makedirs(parent, exist_ok=True)
         folder = _next_folder(parent, name)
         os.makedirs(folder)
@@ -196,6 +224,19 @@ class FrameCache:
         width, height = self.size
         return width * height * self.channels * (1 if dtype == "uint8" else 2)
 
+    def _require_writable(self) -> None:
+        """Refuse to add to a cache outside every folder nodes may write to.
+
+        Raises:
+            PathNotAllowed: The cache's folder is outside every permitted write folder.
+        """
+        if not writable(self.folder):
+            raise sandbox.PathNotAllowed(
+                f"the frame cache at {self.folder} is outside every folder nodes write to "
+                f"(output, temp and paths.allow_write), so nothing is added to it. Add to a "
+                f"cache in output or temp, or start a new cache."
+            )
+
     def append(self, images, scene: bool = False, device=None) -> int:
         """Write a batch of frames after the last.
 
@@ -209,11 +250,13 @@ class FrameCache:
 
         Raises:
             ValueError: The batch's size or channel count differs from the cache's.
+            PathNotAllowed: The cache is outside every permitted write folder.
         """
         count, height, width, channels = (int(side) for side in images.shape)
         first = self.frames
         if count == 0:
             return first
+        self._require_writable()
         if first == 0:
             self.manifest.update(width=width, height=height, channels=channels)
         elif (width, height, channels) != (*self.size, self.channels):
@@ -263,9 +306,11 @@ class FrameCache:
 
         Raises:
             ValueError: The sample rate or channel count differs from the sound kept.
+            PathNotAllowed: The cache is outside every permitted write folder.
         """
         if not isinstance(audio, dict) or audio.get("waveform") is None:
             return
+        self._require_writable()
         wave = audio["waveform"][0].detach().float().cpu().numpy()
         rate = int(audio.get("sample_rate", 44100))
         held = self.manifest.get("audio")
@@ -349,9 +394,27 @@ class FrameCache:
         return {"waveform": piece.unsqueeze(0), "sample_rate": int(held["sample_rate"])}
 
     def delete(self) -> None:
-        """Remove the cache's folder and everything in it."""
-        shutil.rmtree(self.folder, ignore_errors=True)
-        logger.info("deleted the frame cache at %s", self.folder)
+        """Remove the cache's own files and its numbered folder once empty; a cache outside every write folder stays."""
+        folder = Path(os.path.abspath(self.folder)).resolve(strict=False)
+        permitted = sandbox.write_roots()
+        if not any(sandbox.contains(root, folder) for root in permitted):
+            logger.warning(
+                "the frame cache at %s was not deleted: it is outside every folder a node "
+                "writes to (%s). Add its folder to paths.allow_write in config.yaml to let "
+                "the cache be deleted after saving.", folder, ", ".join(map(str, permitted)))
+            return
+        for name in OWN_FILES:
+            try:
+                (folder / name).unlink()
+            except FileNotFoundError:
+                pass
+            except OSError as error:
+                logger.warning("could not delete %s: %s", folder / name, error)
+        roots = {os.path.normcase(str(root)) for root in (*permitted, *sandbox.read_roots())}
+        if FOLDER.match(folder.name) and os.path.normcase(str(folder)) not in roots:
+            with contextlib.suppress(OSError):
+                folder.rmdir()
+        logger.info("deleted the frame cache at %s", folder)
 
 
 class _Frames:

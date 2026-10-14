@@ -1962,7 +1962,7 @@ Pick a frame cache written by Video Cache or H3 Decode Video and use it as a cli
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `cache` | `COMBO` | Yes |  |  | Which frame cache to read, as `frame_cache/scene_00001/cache.wasframes [output]`. A cache in temp is gone after a restart. |
-| `delete_after_save` | `BOOLEAN` | Yes | False |  | `true` = the cache is deleted once a save has written all of it; `false` = it is kept for the next save. |
+| `delete_after_save` | `BOOLEAN` | Yes | False |  | `true` = the cache's own files are deleted once a save has written all of it, for a cache in output, temp or a `paths.allow_write` folder; `false` = it is kept for the next save. |
 
 **Outputs**
 
@@ -2088,7 +2088,7 @@ Keep frames on disk as a clip instead of holding them in memory, for a long rend
 | `name` | `STRING` | Yes | frame_cache/clip |  | The cache's name below root, numbered on each run, as `frame_cache/scene` for `frame_cache/scene_00001`. |
 | `delete_after_save` | `BOOLEAN` | Yes | False |  | `true` = the cached frames are deleted once a save has written all of them, and the node runs again on every queue; `false` = they are kept. |
 | `audio` | `AUDIO` | No |  |  | Sound for the frames, added after any already in the cache. |
-| `append_to` | `VIDEO` | No |  |  | A clip from Video Cache, H3 Decode Video or Load Video Cache to add these frames to, as a loop's carried value. Left empty, a new cache is made. |
+| `append_to` | `VIDEO` | No |  |  | A clip from Video Cache, H3 Decode Video or Load Video Cache to add these frames to, as a loop's carried value, for a cache in output, temp or a `paths.allow_write` folder. Left empty, a new cache is made. |
 | `depth` | `COMBO` | No | auto | `auto`, `16 bit` | How frames are kept: 'auto' = 8-bit codes, half floats for a batch outside 0 to 1; '16 bit' = half floats always, for a 10-bit save. |
 
 **Outputs**

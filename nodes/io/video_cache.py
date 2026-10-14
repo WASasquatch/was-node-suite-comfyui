@@ -80,8 +80,8 @@ class VideoCache(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "A clip from Video Cache, H3 Decode Video or Load Video Cache to add "
-                        "these frames to, as a loop's carried value. Left empty, a new cache "
-                        "is made."
+                        "these frames to, as a loop's carried value, for a cache in output, "
+                        "temp or a `paths.allow_write` folder. Left empty, a new cache is made."
                     ),
                 ),
                 io.Combo.Input(
@@ -121,7 +121,8 @@ class VideoCache(io.ComfyNode):
 
         Raises:
             ValueError: append_to is not a cached clip, or the frames differ from it in size.
-            PathNotAllowed: root and name settle outside every permitted write folder.
+            PathNotAllowed: root and name settle outside every permitted write folder, or
+                append_to's cache is outside every one.
         """
         if append_to is not None:
             if not frame_cache.cached(append_to):

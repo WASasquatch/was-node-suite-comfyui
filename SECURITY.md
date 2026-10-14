@@ -63,10 +63,11 @@ prefix `\??\`, checked after `~` is expanded. A link along a path is read withou
 and one pointing at another machine is refused the same way. ComfyUI's own path helpers resolve
 what they are given, so the pack calls them only through wrappers that refuse first.
 
-A glob pattern, a file name prefix, and a name or folder typed below a folder the node has
-already chosen are refused before anything is listed or resolved when they name another
-machine, carry a drive, start at a root, or hold a segment of dots and spaces alone such as
-`..`. Whatever they match stays inside that folder.
+A glob pattern, a file name prefix, a frame cache name, and a name or folder typed below a
+folder the node has already chosen are refused before anything is listed or resolved when they
+name another machine, carry a drive, start at a root, or hold a segment of dots and spaces alone
+such as `..`. A frame cache name is refused as well when it holds a folder separator. Whatever
+they match stays inside that folder.
 
 A node input naming a file or directory is resolved and checked against an allowlist before it
 is opened, listed or written, whatever value arrives: a menu offers labels, and a linked input
@@ -82,6 +83,25 @@ it is read.
 No node writes the pack's settings. `config.yaml`, `config.json`, the config file `WAS_CONFIG`
 names, and the `viewer-extensions/` folder are refused as write targets, even inside the state
 directory. [docs/CONFIG.md](docs/CONFIG.md#containment) has the table.
+
+A frame cache picked from a folder no node writes to, such as `input/` or a `paths.allow_read`
+folder, is read and never added to or deleted.
+
+### Deleting files
+
+Files are deleted, moved or replaced in these modules and no others. Each removes files it
+wrote, by name. `shutil.rmtree` is called only on a checkpoint's download folder, which the
+fetch made inside the model folder.
+
+| Module | What it removes |
+|---|---|
+| `modules/media/frame_cache.py` | A frame cache's own `cache.wasframes`, `frames.bin` and `audio.npy` once a save has written it, then its numbered folder if that is left empty. Only inside `output/`, `temp/` or a `paths.allow_write` folder, and never a permitted root itself. The manifest is replaced through a `.part` file |
+| `modules/media/video.py` | The video Write to Video adds a frame to, replaced by the copy holding that frame |
+| `modules/media/temporal_upscale.py` | The files in `temp/` a failed Video Temporal Upscale run was writing |
+| `modules/archive/save.py` | The archive Zip Save was writing, when the write fails |
+| `modules/latent/h3_clip_file.py` | The `.part` file H3 Save Clip writes, renamed over the clip once complete |
+| `modules/interface/preview.py` | Mask editor uploads, as the route table below states |
+| `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
 
 ## HTTP routes
 
