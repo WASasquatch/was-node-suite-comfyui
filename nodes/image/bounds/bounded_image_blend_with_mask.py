@@ -9,6 +9,7 @@ from ....modules.compat.sockets import require_input
 from ....modules.compat.types import IMAGE_BOUNDS
 from ....modules.convert.tensors import pil2tensor, tensor2pil
 from ....modules.interface import size_report
+from .bounded_image_blend import checked_window
 
 
 class BoundedImageBlendWithMask(io.ComfyNode):
@@ -101,8 +102,10 @@ class BoundedImageBlendWithMask(io.ComfyNode):
         """Blend each source image into its window of the target through the mask.
 
         Raises:
-            ValueError: Nothing is connected to the target_bounds input, or source holds no
-                images.
+            ValueError: Nothing is connected to the target_bounds input, source holds no
+                images, or a bounds window is empty.
+            CanvasTooLarge: A bounds window is past 30000 pixels a side or 16384x16384 in
+                all.
             MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from PIL import Image, ImageFilter
@@ -140,6 +143,9 @@ class BoundedImageBlendWithMask(io.ComfyNode):
                 rmin, rmax, cmin, cmax = target_bounds[idx]
 
                 height, width = (rmax - rmin + 1, cmax - cmin + 1)
+                checked_window(
+                    "Bounded Image Blend with Mask", (rmin, rmax, cmin, cmax), width, height
+                )
                 first_window = first_window or (width, height)
 
             if (tgt_mask_len == 1 and idx == 0) or tgt_mask_len > 1:

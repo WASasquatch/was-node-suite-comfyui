@@ -49,7 +49,14 @@ class CompareAny(io.ComfyNode):
                     ),
                 ),
                 io.MultiType.Input(
-                    io.String.Input("value_b", default="", multiline=False),
+                    io.String.Input(
+                        "value_b", default="", multiline=False,
+                        tooltip=(
+                            "The right-hand value, as `10` or `cat`. For `matches regex` it is "
+                            "the pattern, as `^cat|dog$`, stopped with an error past 1 second. "
+                            "Patterns run in the regex package's re-compatible mode."
+                        ),
+                    ),
                     [io.String, io.Int, io.Float, NUMBER, io.Boolean],
                     tooltip="Right-hand value. Ignored by `is empty`.",
                 ),

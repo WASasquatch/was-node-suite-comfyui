@@ -8,6 +8,9 @@ from ...modules.compat.types import LIST, NUMBER
 from ...modules.util.easing import EASING_NAMES, ease
 from ...modules.util.numbers import whole_steps
 
+#: Most values one range makes, the same as ``count`` allows.
+MAX_VALUES = 10000
+
 
 class NumberRange(io.ComfyNode):
     """Generate a series of numbers between two values, by count or by step.
@@ -210,6 +213,11 @@ class NumberRange(io.ComfyNode):
             span = stop - start
             size = abs(step) * (1 if span >= 0 else -1)
             steps = whole_steps(abs(span), abs(step)) + 1
+            if steps > MAX_VALUES:
+                raise ValueError(
+                    f"Number Range from {start:g} to {stop:g} by {step:g} makes {steps:,} values, "
+                    f"and it makes at most {MAX_VALUES:,}. Raise step, or switch mode to 'count'."
+                )
             return [start + size * index for index in range(steps)]
 
         if count <= 1:

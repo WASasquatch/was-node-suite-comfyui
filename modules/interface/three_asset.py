@@ -122,7 +122,8 @@ def register_routes() -> bool:
             return web.Response(
                 body=body,
                 content_type=content_type,
-                headers={"Cache-Control": "private, max-age=31536000, immutable"},
+                headers={"Cache-Control": "private, max-age=31536000, immutable",
+                         "X-Content-Type-Options": "nosniff"},
             )
 
     except Exception as error:

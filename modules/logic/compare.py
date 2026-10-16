@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from ..util import patterns
+
 __all__ = [
     "COMPARISONS",
     "MAX_CONDITIONS",
@@ -99,7 +101,8 @@ def compare(left, right, comparison: str) -> bool:
         otherwise, so ``"apple" < "banana"`` answers as a dictionary would order them.
 
     Raises:
-        ValueError: The comparison is unknown, or a regex could not be read.
+        ValueError: The comparison is unknown, or a regex could not be read or ran past
+            :data:`modules.util.patterns.MATCH_SECONDS`.
     """
     if comparison not in COMPARISONS:
         raise ValueError(f"unknown comparison {comparison!r}, expected one of {COMPARISONS}")
@@ -141,9 +144,13 @@ def compare(left, right, comparison: str) -> bool:
     if comparison == "ends with":
         return text.endswith(needle)
     try:
-        return re.search(needle, text) is not None
+        return patterns.search(needle, text, "Compare's value_b") is not None
     except re.error as bad:
-        raise ValueError(f"`{needle}` is not a readable regular expression ({bad})") from bad
+        raise ValueError(
+            f"Compare's value_b `{needle}` is not a readable regular expression ({bad}). "
+            f"Correct the pattern, or put a backslash before a special character to match it "
+            f"literally."
+        ) from bad
 
 
 def reduce_booleans(values: list[bool], reduction: str) -> bool:

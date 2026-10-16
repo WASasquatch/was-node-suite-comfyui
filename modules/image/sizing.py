@@ -7,6 +7,7 @@ image here is a PIL image.
 from __future__ import annotations
 
 import io
+import math
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -18,6 +19,7 @@ __all__ = [
     "BOMB",
     "CHANNELS",
     "CROP_OR_PAD",
+    "CanvasTooLarge",
     "DEFAULT_ALIGNMENT",
     "DEFAULT_FILTER",
     "FILL_AND_CROP",
@@ -27,6 +29,8 @@ __all__ = [
     "FOLD_BUDGET",
     "ImageTooLarge",
     "MAX_BATCH_PIXELS",
+    "MAX_CANVAS_PIXELS",
+    "MAX_CANVAS_SIDE",
     "MAX_RESAMPLE_PIXELS",
     "MAX_SOURCE_PIXELS",
     "MODES",
@@ -35,6 +39,7 @@ __all__ = [
     "SizingError",
     "as_channels",
     "batch_limit",
+    "check_canvas",
     "cover_box",
     "fit",
     "fit_frames",
@@ -108,6 +113,12 @@ MAX_BATCH_PIXELS = 32 * 1024 * 1024
 #: image is allowed to arrive with.
 MAX_RESAMPLE_PIXELS = MAX_SOURCE_PIXELS
 
+#: Most pixels one image built here may cover, 16384 by 16384.
+MAX_CANVAS_PIXELS = 1 << 28
+
+#: Longest side one image built here may have, in pixels.
+MAX_CANVAS_SIDE = 30000
+
 #: Elements of source and result one run of frames holds while :func:`fit_frames` folds it.
 FOLD_BUDGET = 1 << 26
 
@@ -127,6 +138,34 @@ class NotAnImage(SizingError):
 
 class ImageTooLarge(SizingError):
     """The image declares more pixels than :data:`MAX_SOURCE_PIXELS`."""
+
+
+class CanvasTooLarge(SizingError):
+    """An image to be built is past :data:`MAX_CANVAS_SIDE` or :data:`MAX_CANVAS_PIXELS`."""
+
+
+def check_canvas(width: int, height: int, what: str, lower: str) -> None:
+    """Refuse an image size past :data:`MAX_CANVAS_SIDE` or :data:`MAX_CANVAS_PIXELS`.
+
+    Args:
+        width: Width in pixels.
+        height: Height in pixels.
+        what: The image named at the start of the message, such as ``"The padded canvas"``.
+        lower: The sentence closing the message, naming what to lower.
+
+    Raises:
+        CanvasTooLarge: A side is longer than :data:`MAX_CANVAS_SIDE`, or the area is larger
+            than :data:`MAX_CANVAS_PIXELS`.
+    """
+    width, height = int(width), int(height)
+    if max(width, height) <= MAX_CANVAS_SIDE and width * height <= MAX_CANVAS_PIXELS:
+        return
+    side = math.isqrt(MAX_CANVAS_PIXELS)
+    raise CanvasTooLarge(
+        f"{what} would be {width}x{height} pixels, past the largest image this pack builds: "
+        f"{MAX_CANVAS_SIDE} pixels on a side and {MAX_CANVAS_PIXELS:,} pixels in all, which "
+        f"is {side}x{side}. Nothing was allocated. {lower}"
+    )
 
 
 def batch_limit(width: int, height: int) -> int:
@@ -281,8 +320,13 @@ def fit(
     Returns:
         A new image of exactly the target size in mode ``RGBA``, unless the source is
         already that size and needs no resampling, in which case the source is returned.
+
+    Raises:
+        CanvasTooLarge: The target is past :data:`MAX_CANVAS_SIDE` or
+            :data:`MAX_CANVAS_PIXELS`.
     """
     target = (max(1, int(width)), max(1, int(height)))
+    check_canvas(target[0], target[1], "The resized image", "Lower the target width or height.")
     scaled = scaled_size(image.size, target, mode)
     chosen = FILTERS.get(resample, FILTERS[DEFAULT_FILTER])
     if mode == FILL_AND_CROP and scaled[0] * scaled[1] > MAX_RESAMPLE_PIXELS:
@@ -403,7 +447,7 @@ def _is_text(prefix: bytes) -> bool:
     return all(character >= " " or character in "\t\r\n" for character in text)
 
 
-def _frame_plans(source, target, mode, resampling, align):
+def _frame_plans(source, target, mode, resampling, align, final=None):
     """Axis plans bringing frames of one size to a target in one of :data:`MODES`.
 
     Args:
@@ -412,11 +456,18 @@ def _frame_plans(source, target, mode, resampling, align):
         mode: One of :data:`MODES`.
         resampling: A key of :data:`FILTERS`.
         align: A key of :data:`ALIGNMENTS`.
+        final: ``(width, height)`` each plan is resampled down to once built, through
+            :func:`modules.image.resample.composed`. None keeps the plans at ``target``.
 
     Returns:
         ``(across, down)`` plans for :func:`modules.image.resample.apply`.
     """
     from . import resample
+
+    def plan(size_in, scaled_to, length, offset, box, side):
+        if final is None:
+            return resample.axis(size_in, scaled_to, length, offset, resampling, box)
+        return resample.composed(size_in, scaled_to, length, offset, resampling, box, final[side])
 
     (width, height), (wide, high) = source, target
     scaled = scaled_size(source, target, mode)
@@ -426,13 +477,13 @@ def _frame_plans(source, target, mode, resampling, align):
             left, upper = float(int(left)), float(int(upper))
             right, lower = left + wide, upper + high
         return (
-            resample.axis(width, wide, wide, 0, resampling, (left, right)),
-            resample.axis(height, high, high, 0, resampling, (upper, lower)),
+            plan(width, wide, wide, 0, (left, right), 0),
+            plan(height, high, high, 0, (upper, lower), 1),
         )
     across, down = draw.anchor_origin(align, target, scaled)
     return (
-        resample.axis(width, scaled[0], wide, across, resampling),
-        resample.axis(height, scaled[1], high, down, resampling),
+        plan(width, scaled[0], wide, across, None, 0),
+        plan(height, scaled[1], high, down, None, 1),
     )
 
 
@@ -458,6 +509,8 @@ def fit_frames(frames, target, mode=FIT_AND_PAD, resample_name=DEFAULT_FILTER,
         batch comes from :func:`modules.image.scratch.allocate`.
 
     Raises:
+        CanvasTooLarge: The target is past :data:`MAX_CANVAS_SIDE` or
+            :data:`MAX_CANVAS_PIXELS`.
         MemoryError: Neither free memory nor any scratch drive has room for the result.
     """
     import comfy.model_management
@@ -467,12 +520,11 @@ def fit_frames(frames, target, mode=FIT_AND_PAD, resample_name=DEFAULT_FILTER,
 
     name = resample_name if resample_name in FILTERS else DEFAULT_FILTER
     target = (max(1, int(target[0])), max(1, int(target[1])))
+    check_canvas(target[0], target[1], "The resized image", "Lower the target width or height.")
     source = (int(frames.shape[2]), int(frames.shape[1]))
     if supersample > 1 and mode != CROP_OR_PAD:
         large = (target[0] * supersample, target[1] * supersample)
-        across, down = _frame_plans(source, large, mode, name, align)
-        across = resample.supersampled(across, target[0], name)
-        down = resample.supersampled(down, target[1], name)
+        across, down = _frame_plans(source, large, mode, name, align, final=target)
     else:
         across, down = _frame_plans(source, target, mode, name, align)
     options = {

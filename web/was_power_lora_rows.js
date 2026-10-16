@@ -4,7 +4,7 @@
 
 import { app } from "../../scripts/app.js";
 import { addButton, addSectionHeader, refreshButtons } from "./interface/decoration.js";
-import { rowColour, rowName, setRowColours, setRowNames } from "./interface/row_headers.js";
+import { menuText, rowColour, rowName, setRowColours, setRowNames } from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.PowerLoraRows";
 
@@ -293,7 +293,7 @@ function removeEntries(node) {
   const rows = readRows(node);
   if (!rows.length) return [{ content: "No LoRAs to remove", disabled: true }];
   return rows.map((row, at) => ({
-    content: `${at + 1}. ${row.title ?? row.name}`,
+    content: menuText(`${at + 1}. ${row.title ?? row.name}`),
     callback: () => removeRow(node, at),
   }));
 }

@@ -33,6 +33,7 @@ __all__ = [
     "CachedVideo",
     "FrameCache",
     "cached",
+    "deletable",
     "writable",
 ]
 
@@ -63,14 +64,80 @@ CONVERT_BYTES = 256 * 1024 ** 2
 #: Folder names a cache takes, the name then a five digit number.
 FOLDER = re.compile(r"^(?P<name>.+)_(?P<number>\d{5})$")
 
+#: Longest side of a cached frame.
+MAX_SIDE = 30000
+
+#: Pixels in one cached frame.
+MAX_PIXELS = 268435456
+
+#: Channels in one cached frame.
+MAX_CHANNELS = 4
+
+#: Bytes per value, by how a run keeps its frames.
+VALUE_BYTES = {"uint8": 1, "float16": 2}
+
 #: The files a cache writes in its folder, the only ones deleting it removes.
 OWN_FILES = (MANIFEST, MANIFEST + ".part", DATA, SOUND)
+
+
+def _checked(manifest, folder: str) -> dict:
+    """The manifest, once every figure is in range and every run of frames lies inside the frames file.
+
+    Raises:
+        ValueError: A figure is missing or out of range, or a run names bytes the frames file
+            does not hold.
+    """
+    def damaged(what: str) -> ValueError:
+        return ValueError(f"the frame cache at {folder} is damaged: {what}. Write the clip to a new cache.")
+
+    if not isinstance(manifest, dict):
+        raise damaged("its manifest is not a table of figures")
+    try:
+        width, height = int(manifest["width"]), int(manifest["height"])
+        channels, frames = int(manifest["channels"]), int(manifest["frames"])
+        numerator, denominator = (int(part) for part in manifest["rate"])
+        runs = [(int(run["start"]), int(run["count"]), str(run["dtype"]), int(run["offset"]))
+                for run in manifest["runs"]]
+        sound = manifest.get("audio")
+        sample_rate = int(sound["sample_rate"]) if sound else 1
+        if not isinstance(manifest.get("scenes", []), list):
+            raise TypeError("scenes is not a list")
+    except (KeyError, TypeError, ValueError) as error:
+        raise damaged(f"its manifest is missing a figure or holds one that is not a number ({error})") from None
+    if not (0 <= width <= MAX_SIDE and 0 <= height <= MAX_SIDE and width * height <= MAX_PIXELS):
+        raise damaged(f"its frames are {width}x{height}, past {MAX_SIDE} a side or {MAX_PIXELS} pixels")
+    if not 1 <= channels <= MAX_CHANNELS or numerator <= 0 or denominator <= 0 or sample_rate <= 0:
+        raise damaged("its channel count, frame rate or sample rate is out of range")
+    if frames and (width < 1 or height < 1):
+        raise damaged(f"it lists {frames} frame(s) of no size")
+    try:
+        held = os.path.getsize(os.path.join(folder, DATA))
+    except OSError:
+        raise damaged(f"{DATA} is missing") from None
+    expected = 0
+    for start, count, dtype, offset in runs:
+        if dtype not in VALUE_BYTES or start != expected or count < 1 or offset < 0:
+            raise damaged("its runs of frames are out of order")
+        if offset + count * width * height * channels * VALUE_BYTES[dtype] > held:
+            raise damaged(f"it lists more frames than {DATA} holds")
+        expected += count
+    if expected != frames:
+        raise damaged(f"it lists {frames} frame(s) and its runs hold {expected}")
+    return manifest
 
 
 def writable(folder: str) -> bool:
     """Whether a cache folder lies inside a folder nodes may write to, so it may be added to or deleted."""
     resolved = Path(os.path.abspath(folder)).resolve(strict=False)
     return any(sandbox.contains(root, resolved) for root in sandbox.write_roots())
+
+
+def deletable(folder: str) -> bool:
+    """Whether a cache folder may be deleted: a numbered cache folder inside a write folder, not one itself."""
+    resolved = Path(os.path.abspath(folder)).resolve(strict=False)
+    roots = {os.path.normcase(str(root)) for root in (*sandbox.write_roots(), *sandbox.read_roots())}
+    return (writable(folder) and bool(FOLDER.match(resolved.name))
+            and os.path.normcase(str(resolved)) not in roots)
 
 
 def _next_folder(parent: str, name: str) -> str:
@@ -161,7 +228,7 @@ class FrameCache:
 
         Raises:
             FileNotFoundError: The folder holds no cache, as after one was deleted.
-            ValueError: The manifest was written by a newer layout.
+            ValueError: The manifest was written by a newer layout, or is damaged.
         """
         path = os.path.join(str(folder), MANIFEST)
         if not os.path.isfile(path):
@@ -169,11 +236,14 @@ class FrameCache:
                 f"no frame cache is left at {folder}. A cache set to delete after saving is "
                 f"gone once saved; run the node that wrote it again."
             )
-        with open(path, encoding="utf-8") as handle:
-            manifest = json.load(handle)
-        if int(manifest.get("version", 0)) > VERSION:
+        try:
+            with open(path, encoding="utf-8") as handle:
+                manifest = json.load(handle)
+        except (ValueError, UnicodeDecodeError, RecursionError):
+            raise ValueError(f"the frame cache at {folder} has a manifest that is not JSON") from None
+        if isinstance(manifest, dict) and int(manifest.get("version", 0)) > VERSION:
             raise ValueError(f"the frame cache at {folder} was written by a newer version of the pack")
-        return cls(folder, manifest)
+        return cls(folder, _checked(manifest, str(folder)))
 
     @property
     def frames(self) -> int:
@@ -222,7 +292,7 @@ class FrameCache:
     def _frame_bytes(self, dtype: str) -> int:
         """Bytes one frame takes in ``dtype``."""
         width, height = self.size
-        return width * height * self.channels * (1 if dtype == "uint8" else 2)
+        return width * height * self.channels * VALUE_BYTES[dtype]
 
     def _require_writable(self) -> None:
         """Refuse to add to a cache outside every folder nodes may write to.
@@ -394,7 +464,7 @@ class FrameCache:
         return {"waveform": piece.unsqueeze(0), "sample_rate": int(held["sample_rate"])}
 
     def delete(self) -> None:
-        """Remove the cache's own files and its numbered folder once empty; a cache outside every write folder stays."""
+        """Remove the cache's own files and its numbered folder, where :func:`deletable` allows it."""
         folder = Path(os.path.abspath(self.folder)).resolve(strict=False)
         permitted = sandbox.write_roots()
         if not any(sandbox.contains(root, folder) for root in permitted):
@@ -403,6 +473,13 @@ class FrameCache:
                 "writes to (%s). Add its folder to paths.allow_write in config.yaml to let "
                 "the cache be deleted after saving.", folder, ", ".join(map(str, permitted)))
             return
+        roots = {os.path.normcase(str(root)) for root in (*permitted, *sandbox.read_roots())}
+        if not FOLDER.match(folder.name) or os.path.normcase(str(folder)) in roots:
+            logger.warning(
+                "the frame cache at %s was not deleted: a cache is deleted only from a folder "
+                "named like `clip_00001` that Video Cache, H3 Decode Video or H3 Upscale Video "
+                "made.", folder)
+            return
         for name in OWN_FILES:
             try:
                 (folder / name).unlink()
@@ -410,10 +487,8 @@ class FrameCache:
                 pass
             except OSError as error:
                 logger.warning("could not delete %s: %s", folder / name, error)
-        roots = {os.path.normcase(str(root)) for root in (*permitted, *sandbox.read_roots())}
-        if FOLDER.match(folder.name) and os.path.normcase(str(folder)) not in roots:
-            with contextlib.suppress(OSError):
-                folder.rmdir()
+        with contextlib.suppress(OSError):
+            folder.rmdir()
         logger.info("deleted the frame cache at %s", folder)
 
 

@@ -53,10 +53,10 @@ def load(midas_model: str = "DPT_Large", device: str | None = None):
 
     def build():
         processor = transformers.AutoImageProcessor.from_pretrained(
-            pretrained, cache_dir=cache_dir
+            pretrained, cache_dir=cache_dir, token=False
         )
         model = transformers.AutoModelForDepthEstimation.from_pretrained(
-            pretrained, cache_dir=cache_dir
+            pretrained, cache_dir=cache_dir, token=False
         )
         return processor, model
 

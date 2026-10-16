@@ -55,6 +55,21 @@ const SWATCH_WIDTH = 3;
 // gaps, the node count, the switch, the padding and the border.
 const ROW_CHROME = 72;
 
+// The group colours a row's band is painted with: hex, or rgb, rgba, hsl and hsla of plain numbers.
+const HEX_COLOUR = /^#[0-9a-fA-F]{3,8}$/;
+const FUNCTION_COLOUR = /^(?:rgba?|hsla?)\([0-9.,%\s]*\)$/i;
+
+/**
+ * A group's colour, where it is one a row's band may be painted with.
+ *
+ * @param {unknown} value - The colour the group holds.
+ * @returns {string} The colour, or an empty string for anything else.
+ */
+function groupColour(value) {
+  const text = typeof value === "string" ? value.trim() : "";
+  return HEX_COLOUR.test(text) || FUNCTION_COLOUR.test(text) ? text : "";
+}
+
 /**
  * Whether the group list is drawn at all.
  *
@@ -151,7 +166,7 @@ function readGroups(graph, order) {
     entries.push({
       group,
       title: String(group.title ?? ""),
-      colour: String(group.color ?? ""),
+      colour: groupColour(group.color),
       nodes: [],
     });
   }
@@ -333,8 +348,8 @@ function createFastGroupsPanel(node) {
       "align-self:stretch",
       `width:${SWATCH_WIDTH}px`,
       "border-radius:2px 0 0 2px",
-      `background:${entry.colour || themeVar("border")}`,
     ].join(";");
+    swatch.style.backgroundColor = entry.colour || themeVar("border");
 
     const title = document.createElement("span");
     title.style.cssText = "flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";

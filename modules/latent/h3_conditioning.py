@@ -53,6 +53,9 @@ AUDIO_CHANNELS = 32
 #: Pixels per latent cell on each spatial axis.
 SPATIAL_STRIDE = 16
 
+#: Most video latent values one segment holds.
+MAX_LATENT_VALUES = 1 << 31
+
 #: Audio latent rows, which do not vary with length.
 AUDIO_ROWS = 2
 
@@ -935,6 +938,14 @@ def empty_latent(width: int, height: int, frames: int) -> tuple[dict, int]:
             f"{width}x{height} is not"
         )
     count = h3_extend.snap_clip(frames)
+    held = VIDEO_CHANNELS * h3_extend.tokens_for(count) * (height // SPATIAL_STRIDE) * (
+        width // SPATIAL_STRIDE)
+    if held > MAX_LATENT_VALUES:
+        raise ValueError(
+            f"a {width}x{height} MiniMax H3 segment of {count} frames would hold {held:,} latent "
+            f"values, past the {MAX_LATENT_VALUES:,} one segment may hold. Lower the size or the "
+            f"segment's duration."
+        )
     device = comfy.model_management.intermediate_device()
     video = torch.zeros(
         [1, VIDEO_CHANNELS, h3_extend.tokens_for(count),

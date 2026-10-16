@@ -113,7 +113,7 @@ For grading and finishing a render inside the graph.
 
 ## One node that measures a picture
 
-4 nodes. **Power Preprocessor** answers 25 questions about an image: depth, surface
+4 nodes. **Power Preprocessor** answers 22 questions about an image: depth, surface
 direction, body and animal pose, what every pixel is, edges, drawn lines, straight runs, the
 paint and the light it was lit by, and the frame with its noise or its darkness taken out.
 Picking the question redraws the node so only what that question reads is on it. **HDR
@@ -121,10 +121,10 @@ Reconstruct**, **Image Remove Background** and its model loader sit beside it.
 
 Five answers need no model and most fetch a checkpoint on first use. **Marigold v2** is the
 exception: pick it from the model menu on `depth_map`, `normal_map` or `albedo` and the node
-reads a transformer off one socket and finds that map's adapter, decoder and prompt
-embedding by name in ComfyUI's own model folders. One transformer serves all three maps, it
-takes a single step, and it is the sharpest of the three. See
-[`docs/MODELS.md`](docs/MODELS.md).
+wires a Load Diffusion Model on its transformer, finds that map's adapter, decoder and prompt
+embedding by name in ComfyUI's own model folders, and names any file still to download in
+ComfyUI's missing models list. One transformer serves all three maps, it takes a single
+step, and it is the sharpest of the three. See [`docs/MODELS.md`](docs/MODELS.md).
 
 For feeding a ControlNet, and for relighting, defocus, parallax, masking and stylising.
 
@@ -511,7 +511,7 @@ scene the further it carries. Both replace **RandomNoise** on any custom sampler
 
 **Latent Detail Boost**, **Blend Latents** and **Latent Batch (Advanced)** work on a latent
 directly. Latent Detail Boost treats the video half of a MiniMax H3 latent and passes its sound
-through unchanged. **SPEED Sampler** and **SPEED Sampler** and **KSampler Cycle** are samplers of their own. **Fast
+through unchanged. **SPEED Sampler** and **KSampler Cycle** are samplers of their own. **Fast
 KSampler** samples exactly as KSampler does with a cheaper live preview: the preview decoder
 stays loaded, the preview is decoded at the size it is shown, and `preview_every` skips steps.
 
@@ -529,6 +529,22 @@ For steering a generation from its initialisation rather than correcting it late
 
 [`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Latent**. Graph:
 [`fast-samplers-and-savers.json`](docs/workflows/fast-samplers-and-savers.json).
+
+---
+
+## The distilled FLUX 3 Image Klein on its base model
+
+**Flux 3 Flow Map Patch** gives the FLUX 3 Image Klein base model the distilled checkpoint's
+target-time branch. With one of the distillation LoRAs from
+[WAS/flux3_klein](https://huggingface.co/WAS/flux3_klein) on the base, it samples as the
+distilled model does from 16 steps: the distilled picture from the same seed at CFG 1, and
+more contrast and colour at CFG 2.5 to 3.5, which the distilled model does not take.
+
+For the distilled model's look with CFG, on the base model.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
+[`flux3-klein-distill-lora.json`](docs/workflows/flux3-klein-distill-lora.json). Files:
+[`docs/MODELS.md`](docs/MODELS.md#flux-3-image-klein).
 
 ---
 

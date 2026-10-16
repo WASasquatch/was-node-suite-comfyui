@@ -132,7 +132,7 @@ class H3DeRopeStretch(io.ComfyNode):
                     tooltip="The H3 audio VAE, for encoding the audio and decoding a latent's.",
                 ),
                 io.Float.Input(
-                    "fps", default=24.0, min=1.0, max=120.0, step=0.001, optional=True,
+                    "fps", default=24.0, min=1.0, max=240.0, step=0.001, optional=True,
                     tooltip="Frame rate of the clip, as `24`, for timing its audio.",
                 ),
                 io.Latent.Input(

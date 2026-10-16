@@ -1,0 +1,1258 @@
+{
+  "id": "a0b83669-9d2e-42e7-9c89-97d43bd036b0",
+  "revision": 0,
+  "last_node_id": 16,
+  "last_link_id": 22,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux3_image_klein_bf16.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "flux3_image_klein_bf16.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        400,
+        60
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "localized_name": "lora_name",
+          "name": "lora_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_model",
+          "name": "strength_model",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_model"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "flux3_image_klein_distill_r256.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "flux3_image_klein_distill_r256.safetensors",
+        "strength_model": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASFlux3FlowMapPatch",
+      "pos": [
+        760,
+        60
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        },
+        {
+          "localized_name": "checkpoint",
+          "name": "checkpoint",
+          "type": "COMBO",
+          "widget": {
+            "name": "checkpoint"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            5,
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASFlux3FlowMapPatch"
+      },
+      "widgets_values": [
+        "flux3_image_klein_sd_bf16.safetensors"
+      ],
+      "widgets_values_named": {
+        "checkpoint": "flux3_image_klein_sd_bf16.safetensors"
+      }
+    },
+    {
+      "id": 4,
+      "type": "CLIPLoader",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            3,
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_4b_int8_convrot.safetensors",
+        "flux3",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_4b_int8_convrot.safetensors",
+        "type": "flux3",
+        "device": "default"
+      }
+    },
+    {
+      "id": 5,
+      "type": "CLIPTextEncode",
+      "pos": [
+        400,
+        300
+      ],
+      "size": [
+        420,
+        300
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 3
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            6,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "Full-color outdoor photograph in a tall portrait composition, looking along a river winding through the Alpine valleys of Bavaria. The viewpoint sits low above the water near the foreground, with the river filling the lower half of the frame as it narrows into the distance. Clear blue-green water flows over dark grey stones and pale gravel bars, forming narrow ripples, white eddies, and broken reflections of the surrounding peaks. On both banks, angular boulders rise into dense stands of spruce and fir trees, their deep green foliage framing the river without obscuring its course. A small meadow on the left bank carries patches of yellow alpine flowers and exposed grass, while a weathered wooden footbridge crosses the midground at a shallow bend. Beyond it, steep limestone cliffs climb toward layered Bavarian Alps. Snow-covered summits stack through the upper half of the image, with darker rock faces below and bright snowfields above. Low sunlight breaks through an opening in heavy blue-grey clouds from the upper right, illuminating one side of the central peak and laying a warm band across the distant water. Cool shadow remains in the valley walls, while mist gathers around the far ridges. The sky occupies the top third, with long cloud shadows and a brighter patch above the highest summit; the river’s converging lines lead upward through the center of the vertical scene."
+      ],
+      "widgets_values_named": {
+        "text": "Full-color outdoor photograph in a tall portrait composition, looking along a river winding through the Alpine valleys of Bavaria. The viewpoint sits low above the water near the foreground, with the river filling the lower half of the frame as it narrows into the distance. Clear blue-green water flows over dark grey stones and pale gravel bars, forming narrow ripples, white eddies, and broken reflections of the surrounding peaks. On both banks, angular boulders rise into dense stands of spruce and fir trees, their deep green foliage framing the river without obscuring its course. A small meadow on the left bank carries patches of yellow alpine flowers and exposed grass, while a weathered wooden footbridge crosses the midground at a shallow bend. Beyond it, steep limestone cliffs climb toward layered Bavarian Alps. Snow-covered summits stack through the upper half of the image, with darker rock faces below and bright snowfields above. Low sunlight breaks through an opening in heavy blue-grey clouds from the upper right, illuminating one side of the central peak and laying a warm band across the distant water. Cool shadow remains in the valley walls, while mist gathers around the far ridges. The sky occupies the top third, with long cloud shadows and a brighter patch above the highest summit; the river’s converging lines lead upward through the center of the vertical scene."
+      }
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        400,
+        650
+      ],
+      "size": [
+        420,
+        130
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 4
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            7,
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "text": ""
+      }
+    },
+    {
+      "id": 7,
+      "type": "VAELoader",
+      "pos": [
+        40,
+        500
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            16,
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "flux2-vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "flux2-vae.safetensors"
+      }
+    },
+    {
+      "id": 8,
+      "type": "EmptyFlux2LatentImage",
+      "pos": [
+        40,
+        650
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            8,
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "EmptyFlux2LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1536,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1536,
+        "batch_size": 1
+      }
+    },
+    {
+      "id": 9,
+      "type": "PrimitiveInt",
+      "pos": [
+        40,
+        860
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "INT",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "INT",
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            9,
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        42,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "value": 42,
+        "fixed": "fixed"
+      }
+    },
+    {
+      "id": 10,
+      "type": "KSampler",
+      "pos": [
+        1120,
+        60
+      ],
+      "size": [
+        270,
+        262
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 7
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 8
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": 9
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        16,
+        1,
+        "euler",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 16,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 11,
+      "type": "KSampler",
+      "pos": [
+        1120,
+        480
+      ],
+      "size": [
+        270,
+        262
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 10
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 11
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 12
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 13
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": 14
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        16,
+        2.5,
+        "euler",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 16,
+        "cfg": 2.5,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 12,
+      "type": "VAEDecode",
+      "pos": [
+        1480,
+        60
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 15
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            17,
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 13,
+      "type": "VAEDecode",
+      "pos": [
+        1480,
+        480
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 18
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            20,
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 14,
+      "type": "SaveImage",
+      "pos": [
+        1720,
+        60
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 17
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "flux3_klein_distill_lora/cfg1"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "flux3_klein_distill_lora/cfg1"
+      }
+    },
+    {
+      "id": 15,
+      "type": "SaveImage",
+      "pos": [
+        1720,
+        480
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 20
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "flux3_klein_distill_lora/cfg2.5"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "flux3_klein_distill_lora/cfg2.5"
+      }
+    },
+    {
+      "id": 16,
+      "type": "WASImageCompare",
+      "pos": [
+        2080,
+        200
+      ],
+      "size": [
+        226.2408203125,
+        446
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageCompare"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "CLIP"
+    ],
+    [
+      4,
+      4,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      5,
+      3,
+      0,
+      10,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      5,
+      0,
+      10,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      7,
+      6,
+      0,
+      10,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      8,
+      8,
+      0,
+      10,
+      3,
+      "LATENT"
+    ],
+    [
+      9,
+      9,
+      0,
+      10,
+      4,
+      "INT"
+    ],
+    [
+      10,
+      3,
+      0,
+      11,
+      0,
+      "MODEL"
+    ],
+    [
+      11,
+      5,
+      0,
+      11,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      12,
+      6,
+      0,
+      11,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      13,
+      8,
+      0,
+      11,
+      3,
+      "LATENT"
+    ],
+    [
+      14,
+      9,
+      0,
+      11,
+      4,
+      "INT"
+    ],
+    [
+      15,
+      10,
+      0,
+      12,
+      0,
+      "LATENT"
+    ],
+    [
+      16,
+      7,
+      0,
+      12,
+      1,
+      "VAE"
+    ],
+    [
+      17,
+      12,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      11,
+      0,
+      13,
+      0,
+      "LATENT"
+    ],
+    [
+      19,
+      7,
+      0,
+      13,
+      1,
+      "VAE"
+    ],
+    [
+      20,
+      13,
+      0,
+      15,
+      0,
+      "IMAGE"
+    ],
+    [
+      21,
+      12,
+      0,
+      16,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      13,
+      0,
+      16,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "ds": {
+      "scale": 0.6,
+      "offset": [
+        60,
+        90
+      ]
+    }
+  },
+  "version": 0.4
+}

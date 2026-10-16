@@ -7,6 +7,7 @@ and ``tail`` answer consecutive frames.
 from __future__ import annotations
 
 from .. import deps, log
+from . import demux
 
 __all__ = [
     "CONTIGUOUS",
@@ -241,7 +242,7 @@ def decode_frames(video, indices: list[int], name: str = ""):
     images = None
     kept: set[int] = set()
     # One pass in presentation order, stopping at the last frame asked for.
-    with av.open(video.get_stream_source(), mode="r") as container:
+    with av.open(video.get_stream_source(), mode="r", container_options=demux.OPTIONS) as container:
         for number, frame in enumerate(container.decode(container.streams.video[0])):
             if number in slots:
                 plane = torch.from_numpy(frame.to_ndarray(format="rgb24").copy())

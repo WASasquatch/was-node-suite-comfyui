@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
-from ...modules.convert.tensors import pil2tensor
+from ...modules.compat import limits
 
 
 class ImageBlank(io.ComfyNode):
@@ -27,7 +27,7 @@ class ImageBlank(io.ComfyNode):
                     "width",
                     default=512,
                     min=8,
-                    max=4096,
+                    max=limits.max_resolution(),
                     step=1,
                     tooltip=(
                         "Width in pixels, rounded down to a multiple of divisible_by: 500 "
@@ -38,7 +38,7 @@ class ImageBlank(io.ComfyNode):
                     "height",
                     default=512,
                     min=8,
-                    max=4096,
+                    max=limits.max_resolution(),
                     step=1,
                     tooltip=(
                         "Height in pixels, rounded down to a multiple of divisible_by: 500 "
@@ -134,15 +134,13 @@ class ImageBlank(io.ComfyNode):
         alpha_channel=False, alpha=1.0,
     ) -> io.NodeOutput:
         import torch
-        from PIL import Image
 
         # Each side rounded down to a multiple of divisible_by, and no shorter than one step.
         width = max(divisible_by, (width // divisible_by) * divisible_by)
         height = max(divisible_by, (height // divisible_by) * divisible_by)
 
-        blank = Image.new(mode="RGB", size=(width, height), color=(red, green, blue))
-
-        frames = pil2tensor(blank)
+        colour = torch.tensor([red, green, blue], dtype=torch.float32) / 255.0
+        frames = colour.expand(1, height, width, 3).contiguous()
         if alpha_channel:
             level = min(1.0, max(0.0, float(alpha)))
             frames = torch.cat([frames, torch.full_like(frames[..., :1], level)], dim=-1)

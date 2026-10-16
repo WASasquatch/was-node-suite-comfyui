@@ -102,7 +102,8 @@ class PowerLoraMerger(io.ComfyNode):
                         "Name to save the merged LoRA under, inside your LoRA folder. "
                         "Sub-folders are allowed, for example 'styles/mixed.safetensors'. "
                         "'.safetensors' is added when it is missing, and the name cannot "
-                        "step outside the LoRA folder."
+                        "step outside the LoRA folder. A LoRA this node did not write is "
+                        "never replaced."
                     ),
                 ),
                 io.Float.Input(
@@ -617,6 +618,14 @@ class PowerLoraMerger(io.ComfyNode):
             return cls._from_file(
                 model, clip, relative, output_model_strength, output_clip_strength
             )
+        if output.foreign(target):
+            raise ValueError(
+                f"`{relative}` is already in the LoRA folder and was not written by this "
+                f"node, so the merge will not replace it.\n"
+                f"  Choose another output_filename. A merge this node wrote earlier is "
+                f"replaced freely; any other file is replaced only after it is moved or "
+                f"deleted by hand."
+            )
 
         # Checked before the merge runs.
         held = output.claimed(target)
@@ -905,7 +914,9 @@ class PowerLoraMerger(io.ComfyNode):
             Metadata keys to add to the ones the merge produced. Every value is a string,
             which is all the safetensors header holds.
         """
-        note = "Created by WAS Merge Loras"
+        from ....modules.lora.output import TOOL_KEY, TOOL_NAME
+
+        note = f"Created by {TOOL_NAME}"
         return {
             "merged_from": str([(path, weight) for path, weight in sources] if mode != "obfuscate" else None),
             "mode": mode,
@@ -924,6 +935,6 @@ class PowerLoraMerger(io.ComfyNode):
             "moe_temperature": str(settings.moe_temperature),
             "moe_hard": str(settings.moe_hard),
             "auto_rank_threshold": str(settings.auto_rank_threshold),
-            "tool": "WAS Merge Loras",
+            TOOL_KEY: TOOL_NAME,
             "note": note if mode == "obfuscate" else f"{note} - Merging Mode: {mode}",
         }

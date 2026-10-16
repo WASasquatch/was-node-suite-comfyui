@@ -8,7 +8,9 @@ from __future__ import annotations
 __all__ = ["PAGE_NAME", "bundle", "written_files"]
 
 import copy
+import html
 import json
+import re
 import zipfile
 from pathlib import Path
 
@@ -123,6 +125,9 @@ BY_EFFECT = {
 }
 
 
+#: A CSS colour the page's background may be: ``#`` and 3 to 8 hex digits, or a plain name.
+COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,20}")
+
 PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,7 +147,7 @@ import {{ createOrbitControls, createRuntime, toneMappingConstant }} from "./thr
 
 const app = await (await fetch("./scene.json")).json();
 const canvas = document.getElementById("stage");
-const runtime = createRuntime(canvas, null);
+const runtime = createRuntime(canvas, null, {{ network: {network} }});
 
 const renderer = new THREE.WebGLRenderer({{
     canvas,
@@ -339,18 +344,26 @@ def bundle(app: dict, title: str, web_root: Path) -> tuple[bytes, list[str]]:
     Raises:
         FileNotFoundError: A file the page needs is missing from the pack.
     """
+    from ..model import network_enabled
+
     textures: dict[str, bytes] = {}
     localised = _localise(copy.deepcopy(app), textures)
     background = localised.get("deps", {}).get("scene", {}).get("params", {}).get(
         "background", "#111111"
     )
+    if not isinstance(background, str) or not COLOUR.fullmatch(background.strip()):
+        background = "#111111"
 
     import io as _io
 
     buffer = _io.BytesIO()
     names: list[str] = []
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as archive:
-        page = PAGE.format(title=title or "Three.js scene", background=background)
+        page = PAGE.format(
+            title=html.escape(title or "Three.js scene"),
+            background=background.strip(),
+            network="true" if network_enabled() else "false",
+        )
         archive.writestr(PAGE_NAME, page)
         names.append(PAGE_NAME)
 

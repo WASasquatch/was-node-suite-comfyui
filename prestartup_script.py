@@ -58,9 +58,21 @@ def configure_logging(level: str = "info") -> None:
 configure_logging()
 
 
+def env_value(name: str) -> str:
+    """One environment variable's value.
+
+    Args:
+        name: The variable's name.
+
+    Returns:
+        Its value with surrounding space removed, or ``""`` where it is unset or empty.
+    """
+    return (os.environ.get(name) or "").strip()
+
+
 def config_directory() -> Path | None:
     """``<user_dir>/was-node-suite``, or ``$WAS_CONFIG_DIR`` when it is set."""
-    override = os.environ.get(ENV_CONFIG_DIR)
+    override = env_value(ENV_CONFIG_DIR)
     if override:
         return Path(override)
     try:
@@ -77,7 +89,7 @@ def find_config_file() -> Path | None:
 
     The same order ``modules.config`` resolves, so both read one file and agree on which.
     """
-    explicit = os.environ.get(ENV_CONFIG_FILE)
+    explicit = env_value(ENV_CONFIG_FILE)
     if explicit and Path(explicit).is_file():
         return Path(explicit)
     for directory in (config_directory(), Path(__file__).resolve().parent):

@@ -152,7 +152,7 @@ class LatentAffine(io.ComfyNode):
                     default="static",
                     tooltip=TEMPORAL_HINT,
                 ),
-                io.Int.Input("seed", default=0, min=0, max=0x7FFFFFFF, tooltip=SEED_HINT),
+                io.Int.Input("seed", default=0, min=0, max=0xFFFFFFFFFFFFFFFF, tooltip=SEED_HINT),
                 io.Combo.Input(
                     "streams",
                     options=affine.STREAM_MODES,

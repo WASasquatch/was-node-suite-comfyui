@@ -13,9 +13,21 @@ input that reaches it is fixed fastest.
 |---|---|
 | Start a process | No `subprocess`, `multiprocessing` or `pty`, and no `os.system`, `os.popen`, `os.exec*`, `os.spawn*`, `os.posix_spawn`, `os.startfile`, `os.fork` or `asyncio.create_subprocess_*`, in any import form |
 | Install a package | Nothing runs `pip`. A feature group that needs a library names it in the log with the command to run |
-| Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in two places, both below: Three.js scenes while `threejs.allow_scripts` is on, and the Content Viewer's sandboxed frame |
-| Load arbitrary pickles | Every `torch.load` passes `weights_only=True`, and every `comfy.utils.load_torch_file` passes `safe_load=True` |
-| Require any package | The default node set installs nothing and `requirements.txt` is empty. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group. Nothing installs them: the group prints the command for a person to run |
+| Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in three places, all below: Three.js scenes while `threejs.allow_scripts` is on, the page Three Compile writes under the same setting, and the Content Viewer's sandboxed frame |
+| Load arbitrary pickles | Every `torch.load` passes `weights_only=True`, and Load Cache, which reads a file a person picks, refuses torch older than 2.6. Every `comfy.utils.load_torch_file` passes `safe_load=True`. Diffusers Hub Model Down-Loader fetches and loads `.safetensors` weights only, and BLIP and CLIPSeg load `model.safetensors` only. The checkpoint and Diffusers model loaders hand a model-folder file to ComfyUI's own loading code, as ComfyUI's loader nodes do |
+| Require any package | The default node set installs nothing, and `requirements.txt` names no package. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group. Nothing installs them: the group prints the command for a person to run |
+
+## Number inputs
+
+Every number input is held to the range its node declares, whether it is typed, linked from
+another node or posted to the API. A value outside that range, or a float that is not finite,
+stops the run before the node does any work.
+
+Image Resize, Image Padding, Image Transpose, Image Perspective, the layer nodes and Bounded
+Image Blend refuse an output past 30000 pixels a side or 268435456 pixels before allocating it,
+and name the input to lower. An empty Kandinsky 6 latent and a MiniMax H3 segment are refused
+past 2147483648 values, Number Range makes at most 10000 values, and every LUT a node builds is
+at most 256 a side.
 
 ## Network
 
@@ -23,18 +35,31 @@ input that reaches it is fixed fastest.
 request beyond ComfyUI's own server. A node that cannot find its weights names the file and the
 key instead.
 
-With it on, two requests are possible. `huggingface_hub` fetches model weights a node needs and
-does not find on disk, from Hugging Face only. Three Texture URL lets the browser load the
-`http` or `https` address the node was given. Every other address the browser is handed is the
-pack's own asset route, a `data:` URL or a `blob:` URL, and the Three.js runtime turns any other
-address a scene or a model names into an empty file.
+With it on, `huggingface_hub` and transformers fetch files a node needs and does not find on
+disk, from Hugging Face only, and never send a stored Hugging Face token. Most nodes fetch fixed
+files from fixed repositories. BLIP Model Loader, CLIPSeg Model Loader and Diffusers Hub Model
+Down-Loader fetch the repository the workflow names into the model folder: its configuration and
+its `.safetensors` weights. Three Texture URL lets the browser load the `http` or `https`
+address the node was given. The browser learns whether `features.network` is on from what the
+server sends with a scene, never from the scene itself. Every other address the browser is
+handed is the pack's own asset route, a `data:` URL, a `blob:` URL or one of the ten fixed
+Marigold v2 downloads below, and the Three.js runtime turns any other address a scene or a model
+names into an empty file.
+
+Choosing `Marigold v2` on Power Preprocessor names any of its ten files the model folders lack
+in ComfyUI's missing models list, each with its fixed address under
+`https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/`. ComfyUI's frontend asks Hugging
+Face for each listed file's size, whatever `features.network` is set to, and downloads one only
+when its Download button is pressed, as it does for any workflow that lists its models. No other
+outside address appears in the pack's own browser code.
 
 No Python code here is an HTTP client: nothing imports `requests`, `httpx`, `urllib.request`,
 `http.client`, `urllib3` or `websockets`, and nothing opens a socket. Three related names do
 appear, and none of them reaches the network. `aiohttp.web` registers this pack's own inbound
-routes in twelve modules, and its client half is never imported. `urllib.parse` reads strings in
-two files: it decodes a `data:` URI in one and unescapes the file names a 3D model refers to in
-the other. `socket.gethostname()` fills the `[hostname]` token.
+routes in fourteen modules, and its client half is never used. `urllib.parse` reads strings in
+three files: it decodes a `data:` URI and a picture's name in the document exporter, unescapes
+the file names a 3D model refers to, and splits the address Three Texture URL is given.
+`socket.gethostname()` fills the `[hostname]` token.
 
 The PDF export hands its document to xhtml2pdf with every picture already inside it as a `data:`
 URL. Stylesheet imports, `url()` references and `<link>` tags are removed first, every file
@@ -47,27 +72,35 @@ and local reads wherever the installed version has one.
 Module** put javascript into the scene they build, and the browser runs it. A scene carrying
 code is refused while `threejs.allow_scripts` is `false`, which is the default, at every point a
 descriptor leaves the server: handed to the browser, rendered, or written into a page by **Three
-Compile**. The check reads the whole descriptor, so it covers a descriptor built any way at all.
-See [docs/CONFIG.md](docs/CONFIG.md#threejs).
+Compile**. A scene naming an address outside the server, or marked to fetch from the network, is
+refused at the same points while `features.network` is off. The check reads the whole
+descriptor, so it covers a descriptor built any way at all. See
+[docs/CONFIG.md](docs/CONFIG.md#threejs).
 
 Frames for a render are drawn in the browser, so the node files a job and waits. A job is filed
-only for a prompt queued from a ComfyUI session and is offered only to that session. A frame is
-refused before it is read when the request declares no size or a size over the bound, and each
-frame it takes back is bounded by the frame count the job asked for and by 64 MB.
+only for a prompt queued with a client id and is offered only to a request carrying that id. A
+frame is refused when its token, read from the first 512 bytes of the request, names no waiting
+job, and before it is read when the request declares no size or a size over the bound. Each
+frame a job takes back is bounded by the frame count it asked for and by 64 MB.
 
 ## Files
 
 A path naming another machine is refused before anything resolves it: a UNC path such as
 `\\server\share`, the same with forward slashes, the `\\?\UNC\` and `\\.\UNC\` forms, and the NT
 prefix `\??\`, checked after `~` is expanded. A link along a path is read without being followed,
-and one pointing at another machine is refused the same way. ComfyUI's own path helpers resolve
-what they are given, so the pack calls them only through wrappers that refuse first.
+from the root down, and one pointing at another machine is refused the same way. ComfyUI's
+`get_annotated_filepath` and `get_save_image_path` resolve what they are given, so the pack calls
+them only through wrappers that refuse first; a subfolder in a file name prefix is checked before
+ComfyUI creates it. Model files are found with ComfyUI's `get_full_path`, which keeps a name
+inside its model folder.
 
 A glob pattern, a file name prefix, a frame cache name, and a name or folder typed below a
 folder the node has already chosen are refused before anything is listed or resolved when they
 name another machine, carry a drive, start at a root, or hold a segment of dots and spaces alone
-such as `..`. A frame cache name is refused as well when it holds a folder separator. Whatever
-they match stays inside that folder.
+such as `..`. On Windows they are refused as well when a segment holds `:`, which names a stream
+of another file, or names a device such as `NUL` or `COM1`, and so is any write target. A frame
+cache name is refused when it holds a folder separator. Whatever they match stays inside that
+folder.
 
 A node input naming a file or directory is resolved and checked against an allowlist before it
 is opened, listed or written, whatever value arrives: a menu offers labels, and a linked input
@@ -78,53 +111,74 @@ of the comparison are resolved, which covers `..` segments and symlinks. Model f
 from ComfyUI's model folders, saved workflows from its workflows folder and fonts from the font
 catalog, each by a name that cannot leave its folder. A glob pattern holding `**` lists through
 links the user placed inside a permitted folder; every match it returns is checked again before
-it is read.
+it is read. A folder in `paths.allow_read` is listed, previewed and read by the routes below for
+any client that can reach ComfyUI, the same as `input/`.
+
+A video, sound or picture the pack opens with FFmpeg, through PyAV, opens only as a single-file
+container, stream or picture from local disk. A playlist, a concatenation list and any network
+protocol are refused.
 
 No node writes the pack's settings. `config.yaml`, `config.json`, the config file `WAS_CONFIG`
 names, and the `viewer-extensions/` folder are refused as write targets, even inside the state
-directory. [docs/CONFIG.md](docs/CONFIG.md#containment) has the table.
+directory, compared without regard to case and to trailing dots and spaces.
+[docs/CONFIG.md](docs/CONFIG.md#containment) has the table.
 
 A frame cache picked from a folder no node writes to, such as `input/` or a `paths.allow_read`
 folder, is read and never added to or deleted.
 
+At startup the pack writes into its state directory, into the config file in use with a `.bak`
+beside it when it brings that file up to date, and into
+`web/viewer/views/extension_views.json` when the installed view extensions change. With
+`viewer.install_extensions` on, it also writes the files of the extensions it installs, never
+over a file the pack ships.
+
 ### Deleting files
 
-Files are deleted, moved or replaced in these modules and no others. Each removes files it
-wrote, by name. `shutil.rmtree` is called only on a checkpoint's download folder, which the
-fetch made inside the model folder.
+Files are deleted, moved or renamed over in these modules and no others. No folder is removed
+with its contents except a checkpoint's download folder, which the fetch made inside the model
+folder, and the temporary folder the ODT export makes for itself.
 
 | Module | What it removes |
 |---|---|
-| `modules/media/frame_cache.py` | A frame cache's own `cache.wasframes`, `frames.bin` and `audio.npy` once a save has written it, then its numbered folder if that is left empty. Only inside `output/`, `temp/` or a `paths.allow_write` folder, and never a permitted root itself. The manifest is replaced through a `.part` file |
+| `modules/media/frame_cache.py` | A frame cache's own `cache.wasframes`, `frames.bin` and `audio.npy` once a save has written it, then its folder if that is left empty. Only a numbered cache folder such as `clip_00001` inside a folder nodes write to, never a permitted root itself. The manifest is replaced through a `.part` file |
 | `modules/media/video.py` | The video Write to Video adds a frame to, replaced by the copy holding that frame |
 | `modules/media/temporal_upscale.py` | The files in `temp/` a failed Video Temporal Upscale run was writing |
-| `modules/archive/save.py` | The archive Zip Save was writing, when the write fails |
+| `modules/archive/save.py` | The `.part` file Zip Save writes, renamed over the archive once complete or removed when the write fails, and a leftover `.part` of the same name |
 | `modules/latent/h3_clip_file.py` | The `.part` file H3 Save Clip writes, renamed over the clip once complete |
-| `modules/interface/preview.py` | Mask editor uploads, as the route table below states |
+| `modules/interface/preview.py` | Mask editor uploads in `input/clipspace/` written in the last ten minutes, as the route table below states |
+| `modules/viewer/parsers/canvas_parser.py` | The `.part` file the Content Viewer writes a picture into, renamed to `input/was_viewer/<md5>.png` once complete |
 | `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
+
+Some nodes replace a file of the same name: Zip Extract, Save LUT and the save nodes'
+overwrite settings replace files inside the folder they write to, and Power LoRA Merger replaces
+only a LoRA it wrote itself.
 
 ## HTTP routes
 
-Every route the pack registers takes a key. None takes a path.
+Each route takes a key, a menu label looked up in the file listing, or a name inside one fixed
+folder that is refused if it would leave it. None takes a path to open.
 
 | Route | Takes | Answers from |
 |---|---|---|
-| `GET /was/interface/api/preview` | node id, slot, side, frame | an in-memory store |
+| `GET /was/interface/api/preview` | node id, slot, side, frame, workflow, channel | an in-memory store |
 | `POST /was/interface/api/preview/subscribe` | node id | an in-memory store |
-| `POST /was/interface/api/preview/discard` | mask editor upload names | deletes those files: names matching `clipspace-…-<digits>.png`, directly in `input/`, at most eight a call |
+| `POST /was/interface/api/preview/discard` | a list of mask editor upload names | deletes those files: names matching `clipspace-…-<digits>.png`, directly in `input/clipspace/`, written in the last ten minutes, at most eight a call |
 | `GET /was/interface/api/run_result`, `/run_result_page` | node id | an in-memory store |
 | `GET /was/interface/api/text_lines` | menu label | the file listing, then the allowlist |
 | `GET /was/interface/api/font` | font name | the font catalog |
 | `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most |
-| `GET /was/interface/api/file_thumbnail` | menu label, a size | the file listing, then the allowlist; a picture of the file or a video's first frame, 512 pixels a side at most |
-| `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment | an in-memory store of preview frames, 384 MB at most |
+| `GET /was/interface/api/file_thumbnail` | menu label, a size | the file listing, then the allowlist; a picture of the file or a video's first frame, 512 pixels a side at most. A source over 64 megapixels is refused before it is decoded |
+| `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
-| `GET /was/interface/api/video_probe` | menu label | another machine refused, then the allowlist |
-| `GET`, `POST /was/interface/api/pause` | node id, session id, value | an in-memory hold; a held run is released only by the session that queued it |
-| `GET /was/interface/api/app_exposure` | saved workflow name | the workflows folder, a name leaving it refused before it is read |
+| `GET /was/interface/api/video_probe` | menu label | the file listing of video files, then the allowlist; read off the server's event loop |
+| `GET`, `POST /was/interface/api/pause` | node id, client id, value | an in-memory hold. GET lists only the holds queued under the asking client id, and POST releases a hold only for that id |
+| `GET /was/interface/api/app_exposure` | saved workflow name | the workflows folder, a name leaving it refused before it is read. A file over 16 MB, a subgraph holding itself, nesting past 32 levels or more than 20000 nodes is refused, and the work runs off the server's event loop |
 | `GET /was/threejs/api/asset` | key | an in-memory store |
-| `GET`, `POST /was/threejs/api/render` | session id, token, frames | an in-memory job queue |
+| `GET`, `POST /was/threejs/api/render` | client id, token, frames | an in-memory job queue |
 | `GET /was/threejs/api/module` | menu label | the file listing, then the allowlist; refused while `threejs.allow_scripts` is off |
+
+A client id is not a secret: ComfyUI lists them on its `/queue` route. The routes that answer by
+client id keep one tab from reading or releasing another's run; they authenticate no one.
 
 ## The content viewer
 
@@ -134,27 +188,35 @@ frame it is drawn in never holds this page's origin.
 | What is framed | Origin |
 |---|---|
 | Content built from a node, as `srcdoc` or a blob URL | None. `allow-same-origin` is stripped, whatever the view asked for |
-| An app a view extension serves from its own endpoint | This origin, and only for an extension the user installed: by hand, or from `viewer-extensions/` with `viewer.install_extensions` on, which is off by default |
+| An app a view extension serves from its own endpoint | This origin, and only for an extension the user installed: by hand, or with `viewer.install_extensions` on, which is off by default, from `viewer-extensions/` or a `custom_nodes/ComfyUI_Viewer_*` checkout |
 
 A frame reaches the viewer only through `postMessage`. The viewer acts on a message only when it
-comes from a frame the viewer created, and only for that frame's own node, so framed content
-cannot read another node's pictures, change its settings or release its held run. A document
-inside a frame carries a policy limiting what it may load and connect to.
+comes from a frame the viewer created, with that frame's own origin, and only for that frame's
+own node and the view it is showing, so framed content cannot read another node's pictures,
+change its settings or release its held run. A canvas frame is handed only the pictures the
+Content Viewer wrote for it, and the page draws only `data:` and `blob:` pictures and those from
+it. A document inside a frame carries a policy limiting what it may load and connect to; it can
+still navigate its own frame to another address.
 
 The rich text editor shows a document in a frame of this page's origin, under a content policy
 that allows no scripts, plugins, frames, forms or connections, and loads images, fonts, media
 and stylesheets only from this origin or from `data:` and `blob:` URLs.
 
+Text a workflow carries reaches a context menu with every `<` replaced, and is drawn as text
+whatever the frontend's version.
+
 ## Vendored code
 
-Six directories under `web/` hold third-party browser libraries, kept as upstream publishes
-them. `web/vendor/MANIFEST.json` records a SHA-256 for all 92 of those files, alongside the npm
-package and version each directory was taken from. Every digest recomputes from the file beside
-it, and the manifest names no file the tree does not hold.
+Six directories under `web/` hold third-party browser libraries. `web/vendor/MANIFEST.json`
+records a SHA-256 for all 92 of those files, alongside the npm package and version each
+directory was taken from. Every digest recomputes from the file beside it, and the manifest
+names no file the tree does not hold.
 
-To verify a copy independently, fetch the package named in `MANIFEST.json` from npm and compare
-digests. `NOTICE.md` in each directory names the upstream file behind every file it holds and
-what, if anything, was changed in it.
+`NOTICE.md` in each directory names the upstream file behind every file it holds and what, if
+anything, was changed in it: three.js and the path tracer have their import specifiers
+rewritten, and the KaTeX stylesheet has its fonts inlined. To verify a copy independently, fetch
+the package named in `MANIFEST.json` from npm and compare digests for the files `NOTICE.md` marks
+unchanged.
 
 | Directory | Package | Licence |
 |---|---|---|
@@ -175,18 +237,23 @@ from a library. Image Load and the batch, sequence, grid and morph loaders read 
 other common formats with Pillow, and Image Load reads a PNG's header chunks itself. A size in a
 header is checked before anything is allocated from it, a header that describes more data than
 the file could hold is refused, and data shorter than its header promises is refused rather than
-padded.
+padded. Load Video Cache reads a frame cache's manifest the same way: before any frame is read,
+the frame size is held to the ceilings below and every run of frames the manifest lists must lie
+inside `frames.bin`. A 16-bit PNG's declared size is held to the same ceilings before FFmpeg
+decodes it, and a `.cube` LUT's declared size before its samples are read.
 
 | Ceiling | Value | What it bounds |
 |---|---|---|
-| Longest side | 30000 pixels | The EXR data window, the PSD canvas and each PSD layer, and the TIFF picture |
-| Pixels | 268435456 | The same four, as an area, so two permitted sides cannot multiply into a refused one |
+| Longest side | 30000 pixels | The EXR data window, the PSD canvas and each PSD layer, the TIFF picture, a frame cache's frames, and a 16-bit PNG |
+| Pixels | 268435456 | The same six, as an area, so two permitted sides cannot multiply into a refused one |
+| Channels | 4 | A frame cache's frames |
 | Samples | 1073741824 | An EXR's pixels times its channels, and a TIFF's pixels times its samples per pixel |
 | Samples | 268435456 | The floats every PSD layer is decoded into, four a pixel, across the document, counted before any layer is decoded |
 | Channels | 1024 | The EXR channel list |
 | Channels | 56 | One PSD document or layer |
 | Samples per pixel | 1024 | One TIFF pixel |
 | Bits per sample | 8, 16 or 32 | The TIFF picture |
+| Edge | 256 | A `.cube` LUT's `LUT_3D_SIZE` |
 | Expansion | 2048 bytes per byte held | What a file of a given size may describe, in all three readers |
 | Directory bytes | 2 times the file | Every value one TIFF directory copies, together |
 | Chunk | 2147483647 bytes, and no more than the rest of the file | One PNG chunk read for its header |
@@ -196,34 +263,40 @@ deflate bomb yields no more than the block it claims to be. A file is read whole
 the ceilings are what keep a small file from asking for a large allocation. The expansion figure
 sits above the 1032 bytes per byte deflate can produce, so it refuses no real picture.
 
+A Word document's property parts are read only when under 4 MB and holding no document type
+declaration. A latent VAEEncode (Bundle Latent) carries in a
+workflow is read only when its text is under 64 MB and inflates to no more than 256 MB.
+
 ## Bundled data
 
 The Noodle Soup Prompts terminology ships as a snapshot, `modules/data/nsp_pantry.pack`:
-zlib-compressed JSON holding 82 terms and 17,518 entries. A fresh start reads it into the
-state database and makes no request. The snapshot is refreshed and re-bundled with a release,
-never at runtime.
+zlib-compressed JSON holding 82 terms and 17,518 entries. The first Noodle Soup parse on an
+empty database reads it into the state database and makes no request. The snapshot is refreshed
+and re-bundled with a release, never at runtime.
 
 ## Static analysis
 
-The following are false or outdated positives by Comfy Registry's pattern-matching scanners. Each is listed with what the code is doing, so
-a reviewer can confirm it without reading the whole tree.
+The following are false or outdated positives by Comfy Registry's pattern-matching scanners.
+Each is listed with what the code is doing, so a reviewer can confirm it without reading the
+whole tree.
 
 | Reported as | Where | What it is |
 |---|---|---|
-| Socket `connect` | `web/was_app_workflow.js` | LiteGraph's own method for wiring one node's output slot to another node's input, called on a node the graph looked up by id |
-| Socket `bind` | 7 of this pack's own files under `web/`, and `web/interface/mask_paint.js` | `Function.prototype.bind`, the standard way to fix a callback's `this`, in those 7, which are every one of the pack's own browser files that calls it. `mask_paint.js` defines a method of its own named `bind`. The vendored libraries call it throughout |
+| Socket `connect` | `web/was_app_workflow.js`, `web/interface/h3_asset_chain.js` | LiteGraph's own method for wiring one node's output slot to another node's input, called on a node the graph looked up by id |
+| Socket `bind` | 5 of this pack's own files under `web/`, and `web/was_mask_brush.js`, `web/was_mask_rect_area.js` | `Function.prototype.bind`, the standard way to fix a callback's `this`, in those 5, which are every one of the pack's own browser files that uses it. The two mask files call the `bind` method `web/interface/mask_paint.js` defines. The vendored libraries call it throughout |
 | Socket `connect`, `bind` | `web/vendor/three`, `web/vendor/hugerte` | The same two JavaScript methods, in third-party code for Three.js and HugeRTE |
 | Socket `bind` | `web/viewer/views/code_scripts/prism.min.txt`, `web/viewer/views/markdown_scripts/mermaid.min.txt` | The same JavaScript method, in Prism and Mermaid. They are syntax highlighting and diagram drawing, read as text and inlined into the sandboxed frame a view builds, which has no access to this page |
 | Network operation, database connection | `modules/state/store.py` | `sqlite3.connect`, opening a local database file. Reported twice, under both rule names |
 | Dynamic import | `__init__.py` | Walking this pack's own `nodes/` package and importing each valid module it finds |
 | Dynamic import | `modules/deps.py` | Resolving an optional dependency by name, so a missing one reports itself instead of raising on import |
 | Dynamic import | `prestartup_script.py` | Loading this pack's own `modules/viewer/install.py` before ComfyUI starts |
-| Dynamic import | `modules/viewer/parsers`, `modules/viewer/extension_nodes` | Loading view extensions from the user's `viewer-extensions/` folder, which holds only what the user put there or installed with `viewer.install_extensions` on |
-| Environment access | `modules/config/paths.py`, `prestartup_script.py` | Reading eight variables and writing none: `WAS_CONFIG` and `WAS_CONFIG_DIR` relocate the config file, `LOCALAPPDATA` and `XDG_DATA_HOME` locate user data, `HF_HOME`, `HF_HUB_CACHE` and `HUGGINGFACE_HUB_CACHE` find weights already on disk, and `PSSR_ROOT` finds one model. Every read in `modules/` goes through one function, `paths.env_value`. Python's `Path.home()` and `expanduser()` read the user's home directory |
+| Dynamic import | `modules/viewer/parsers`, `modules/viewer/extension_nodes` | Loading the pack's own built-in parsers, and view extension modules placed there by hand or, with `viewer.install_extensions` on, installed from `viewer-extensions/*.zip` or a `custom_nodes/ComfyUI_Viewer_*` checkout |
+| Dynamic import | `modules/model/pssr.py` | With `features.pssr` on, which is off by default, importing the PS-SR checkout the user places in `models/PS-SR` or names with `PSSR_ROOT`. That code and the `diffsynth` package it uses run as published, outside this pack's checks |
+| Environment access | `modules/config/paths.py`, `prestartup_script.py` | Reading eight variables and writing none: `WAS_CONFIG` and `WAS_CONFIG_DIR` relocate the config file, `LOCALAPPDATA` and `XDG_DATA_HOME` locate user data, `HF_HOME`, `HF_HUB_CACHE` and `HUGGINGFACE_HUB_CACHE` find weights already on disk, and `PSSR_ROOT` finds one model. Every read in `modules/` goes through one function, `paths.env_value`. Python's `Path.home()` and `expanduser()` read the user's home directory, and `tempfile.gettempdir()` reads `TMPDIR`, `TEMP` and `TMP` to find the scratch folder |
 | Sensitive file access | `modules/image/exr.py`, `modules/image/psd.py` | Reading the image file chosen in the node, resolved through the allowlist above whatever value arrives. See the section above for what bounds the parse |
 
-JavaScript files are reported under Python rule names by some scanners without proper filtering enabled. `connect` and `bind`, etc,
-are ordinary JavaScript methods and carry no network meaning.
+JavaScript files are reported under Python rule names by some scanners without proper filtering
+enabled. `connect` and `bind` are ordinary JavaScript methods and carry no network meaning.
 
 This page is itself matched. Naming an API to explain it puts that name in the file, and
 version 3.2.2 was reported for a socket pattern at this document's own table row above. The

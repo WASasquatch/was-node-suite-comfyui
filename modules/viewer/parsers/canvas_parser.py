@@ -16,6 +16,9 @@ import hashlib
 
 from .base_parser import BaseParser
 
+#: Folder under ComfyUI's input directory that the canvas view's source images are written to.
+VIEWER_SUBFOLDER = "was_viewer"
+
 
 class CanvasParser(BaseParser):
     """Canvas parser for IMAGE tensor input and composite output."""
@@ -43,10 +46,15 @@ class CanvasParser(BaseParser):
 
     @classmethod
     def handle_input(cls, content, logger=None) -> dict:
-        """
-        Process IMAGE tensors and prepare them for canvas view display.
+        """Write each IMAGE to ``input/was_viewer`` and answer the canvas marker naming them.
 
-        Saves tensors as temp PNG files and returns canvas marker JSON.
+        Args:
+            content: One IMAGE tensor, or a list holding them among other values.
+            logger: Where progress is reported, or ``None``.
+
+        Returns:
+            ``{"display_content", "output_values", "content_hash"}``, or ``None`` when the
+            content holds no image.
         """
 
         items = content if isinstance(content, (list, tuple)) else [content]
@@ -56,7 +64,7 @@ class CanvasParser(BaseParser):
 
         for item in items:
             if cls._is_image_tensor(item):
-                files = cls._tensor_to_input_files(item, session_id, logger)
+                files = cls._tensor_to_input_files(item, logger)
                 image_files.extend(files)
 
         if not image_files:
@@ -139,46 +147,54 @@ class CanvasParser(BaseParser):
         return False
 
     @staticmethod
-    def _tensor_to_input_files(tensor, session_id, logger=None):
-        """Convert IMAGE tensor to input PNG files (persists across restarts)."""
+    def _tensor_to_input_files(tensor, logger=None):
+        """Write each image of a batch to ``input/was_viewer/<md5>.png``, once per distinct image.
+
+        Args:
+            tensor: IMAGE tensor, ``(batch, height, width, channels)`` or
+                ``(height, width, channels)`` in ``[0, 1]``.
+            logger: Where each newly written file is reported, or ``None``.
+
+        Returns:
+            One ``{"filename", "subfolder", "type"}`` reference per image, in batch order.
+        """
         import numpy as np
         from PIL import Image
         import folder_paths
 
-        input_dir = folder_paths.get_input_directory()
-        subdir = f"was_viewer_{session_id}"
-        full_subdir = os.path.join(input_dir, subdir)
-        os.makedirs(full_subdir, exist_ok=True)
-
-        files = []
+        folder = os.path.join(folder_paths.get_input_directory(), VIEWER_SUBFOLDER)
+        os.makedirs(folder, exist_ok=True)
 
         if len(tensor.shape) == 3:
             tensor = tensor.unsqueeze(0)
 
-        batch_size = tensor.shape[0]
-
-        for idx in range(batch_size):
-            img_array = tensor[idx].cpu().numpy()
-            img_array = (img_array * 255).astype(np.uint8)
-
-            if img_array.shape[-1] == 4:
-                pil_img = Image.fromarray(img_array, mode="RGBA")
-                pil_img = CanvasParser._trim_transparency(pil_img)
-            elif img_array.shape[-1] == 3:
-                pil_img = Image.fromarray(img_array, mode="RGB")
-            else:
-                pil_img = Image.fromarray(img_array)
-
-            img_hash = hashlib.md5(img_array.tobytes(), usedforsecurity=False).hexdigest()[:12]
-            filename = f"{idx:04d}_{img_hash}.png"
-            filepath = os.path.join(full_subdir, filename)
+        files = []
+        for idx in range(tensor.shape[0]):
+            img_array = (np.clip(tensor[idx].cpu().numpy(), 0.0, 1.0) * 255).astype(np.uint8)
+            digest = hashlib.md5(repr(img_array.shape).encode("ascii"), usedforsecurity=False)
+            digest.update(img_array.tobytes())
+            filename = f"{digest.hexdigest()}.png"
+            filepath = os.path.join(folder, filename)
 
             if not os.path.exists(filepath):
-                pil_img.save(filepath, format="PNG")
+                if img_array.shape[-1] == 4:
+                    pil_img = CanvasParser._trim_transparency(Image.fromarray(img_array))
+                elif img_array.shape[-1] == 3:
+                    pil_img = Image.fromarray(img_array)
+                else:
+                    pil_img = Image.fromarray(img_array[..., 0])
+                # Written under a passing name, then moved into place whole.
+                partial = f"{filepath}.{uuid.uuid4().hex[:8]}.part"
+                try:
+                    pil_img.save(partial, format="PNG")
+                    os.replace(partial, filepath)
+                finally:
+                    if os.path.exists(partial):
+                        os.remove(partial)
                 if logger:
                     logger.debug(f"[Canvas Parser] Saved: {filepath}")
 
-            files.append({"filename": filename, "subfolder": subdir, "type": "input"})
+            files.append({"filename": filename, "subfolder": VIEWER_SUBFOLDER, "type": "input"})
 
         return files
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from comfy_api.latest import io
@@ -16,6 +17,44 @@ logger = log.get_logger("nodes.legacy.utility")
 
 #: What the menus say when the cache holds nothing of that kind.
 NOTHING_CACHED = "nothing cached"
+
+#: Oldest torch ``(major, minor)`` this node reads a cache file with.
+SAFE_TORCH = (2, 6)
+
+
+def torch_release(version: str) -> tuple[int, int]:
+    """The ``(major, minor)`` release a torch version string names.
+
+    Args:
+        version: A version such as ``"2.6.0+cu124"`` or ``"2.13.0"``.
+
+    Returns:
+        ``(major, minor)``, or ``(0, 0)`` where the string names no release.
+    """
+    match = re.match(r"\s*(\d+)\.(\d+)", str(version or ""))
+    return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+
+def refuse_old_torch(version: str, path) -> None:
+    """Refuse to read a cache file on a torch older than :data:`SAFE_TORCH`.
+
+    Args:
+        version: The running torch's ``__version__``.
+        path: The cache file about to be read, named in the error.
+
+    Raises:
+        RuntimeError: The torch release is older than :data:`SAFE_TORCH`.
+    """
+    if torch_release(version) >= SAFE_TORCH:
+        return
+    wanted = ".".join(str(part) for part in SAFE_TORCH)
+    raise RuntimeError(
+        f"Load Cache refuses to read {path}: this ComfyUI runs torch {version}.\n"
+        f"    Below torch {wanted}, a crafted cache file can run code while it is read, "
+        f"even in the safe loading mode (CVE-2025-32434).\n"
+        f"    Upgrade torch to {wanted} or newer in the Python this ComfyUI runs on, then "
+        f"run the node again."
+    )
 
 
 def cache_roots() -> list[tuple[str, str]]:
@@ -55,7 +94,8 @@ class LoadCache(io.ComfyNode):
             description=(
                 "Deprecated, with no direct replacement. Reads back a latent, image batch or "
                 "conditioning that Cache Node wrote in an earlier prompt; a file holding "
-                "anything but tensor data is refused. Enable legacy.cache to load it."
+                "anything but tensor data is refused, and reading needs torch 2.6 or newer. "
+                "Enable legacy.cache to load it."
             ),
             inputs=[
                 io.Combo.Input(
@@ -96,23 +136,24 @@ class LoadCache(io.ComfyNode):
                 io.Latent.Output(
                     display_name="LATENT",
                     tooltip=(
-                        "The latent read from latent_path. Nothing at all when the widget is "
-                        "empty or the file is missing, which will fail whatever it is "
-                        "connected to."
+                        "The latent read from the file the latent menu names. Nothing at all "
+                        "when the menu is on its empty entry or the file is missing, which "
+                        "will fail whatever it is connected to."
                     ),
                 ),
                 io.Image.Output(
                     display_name="IMAGE",
                     tooltip=(
-                        "The image batch read from image_path. Nothing at all when the widget "
-                        "is empty or the file is missing."
+                        "The image batch read from the file the image menu names. Nothing at "
+                        "all when the menu is on its empty entry or the file is missing."
                     ),
                 ),
                 io.Conditioning.Output(
                     display_name="CONDITIONING",
                     tooltip=(
-                        "The conditioning read from conditioning_path. Nothing at all when the "
-                        "widget is empty or the file is missing."
+                        "The conditioning read from the file the conditioning menu names. "
+                        "Nothing at all when the menu is on its empty entry or the file is "
+                        "missing."
                     ),
                 ),
             ],
@@ -131,8 +172,7 @@ class LoadCache(io.ComfyNode):
             if path is None:
                 loaded.append(None)
             elif path.is_file():
-                # weights_only rejects the pickle format WAS Node Suite 2 wrote, so those
-                # files raise here rather than loading.
+                refuse_old_torch(torch.__version__, path)
                 loaded.append(torch.load(path, map_location="cpu", weights_only=True))
             else:
                 logger.error("unable to locate cache file %s", path)

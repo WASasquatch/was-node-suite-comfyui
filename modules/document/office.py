@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from io import BytesIO
 from typing import Any, Mapping
 from xml.etree import ElementTree
+from xml.parsers import expat
 
 from .. import deps, log
 from . import container, markup
@@ -164,8 +165,11 @@ _INLINE_ELEMENTS = (
 #: A cell holding one unstyled paragraph, whose tags come off so its text sits in the cell.
 _LONE_PARAGRAPH = re.compile(r"<p>(.*)</p>", re.DOTALL)
 
-#: A document type declaration, which is not read out of a metadata part.
-_DOCTYPE = re.compile(rb"<!DOCTYPE", re.IGNORECASE)
+#: A document type or entity declaration, which is not read out of a metadata part.
+_DECLARATION = re.compile(rb"<!(?:DOCTYPE|ENTITY)", re.IGNORECASE)
+
+#: Largest metadata part read out of a package, in bytes.
+MAX_XML_PART = 4 * 1024 * 1024
 
 #: How a Word style names a heading level, and how it names a list and its level.
 _HEADING_STYLE = re.compile(r"^heading\s*(\d+)$")
@@ -690,21 +694,68 @@ def _stamp(value: Any) -> str:
         return ""
 
 
-def _parsed(payload: bytes, part: str):
-    """One metadata part as an element tree, or ``None`` where it cannot be read.
+class _Declared(Exception):
+    """A part declares a document type or an entity."""
+
+
+def _declares(payload: bytes) -> bool:
+    """Whether a part declares a document type or an entity anywhere, in any encoding.
 
     Args:
         payload: The part's bytes.
-        part: Its name inside the package, for the message.
+
+    Returns:
+        True where a declaration appears.
+    """
+    if _DECLARATION.search(payload):
+        return True
+
+    def refuse(*_arguments):
+        raise _Declared
+
+    scanner = expat.ParserCreate()
+    scanner.StartDoctypeDeclHandler = refuse
+    scanner.EntityDeclHandler = refuse
+    try:
+        scanner.Parse(payload, True)
+    except _Declared:
+        return True
+    except (expat.ExpatError, LookupError, ValueError):
+        return False
+    return False
+
+
+def _parsed(archive: zipfile.ZipFile, part: str):
+    """One metadata part as an element tree, or ``None`` where it cannot be read.
+
+    Args:
+        archive: The open package.
+        part: The part's name inside it.
 
     Returns:
         The root element, or ``None``.
+
+    Raises:
+        KeyError: The package holds no part of that name.
     """
-    if _DOCTYPE.search(payload[:4096]):
+    info = archive.getinfo(part)
+    payload = b""
+    if info.file_size <= MAX_XML_PART:
+        with archive.open(info) as stream:
+            payload = stream.read(MAX_XML_PART + 1)
+    if info.file_size > MAX_XML_PART or len(payload) > MAX_XML_PART:
         logger.warning(
-            "%s declares a document type, which can define entities that expand to far "
-            "more than the file holds, so it was not read. The document carries whatever "
-            "the rest of the file states and none of the properties this part held.",
+            "%s unpacks to more than %d MB, far more than any properties part holds, so "
+            "it was not read. The document carries whatever the rest of the file states "
+            "and none of the properties this part held.",
+            part, MAX_XML_PART // (1024 * 1024),
+        )
+        return None
+    if _declares(payload):
+        logger.warning(
+            "%s declares a document type or an entity, which can expand to far more than "
+            "the file holds, so it was not read. The document carries whatever the rest of "
+            "the file states and none of the properties this part held.",
             part,
         )
         return None
@@ -1237,7 +1288,7 @@ def _docx_properties(payload: bytes) -> tuple[dict[str, str], str]:
         with zipfile.ZipFile(BytesIO(payload)) as archive:
             names = set(archive.namelist())
             if ooxml.CUSTOM_PART in names:
-                root = _parsed(archive.read(ooxml.CUSTOM_PART), ooxml.CUSTOM_PART)
+                root = _parsed(archive, ooxml.CUSTOM_PART)
                 for element in root if root is not None else ():
                     if len(found) >= ooxml.MAX_PROPERTIES:
                         break
@@ -1246,7 +1297,7 @@ def _docx_properties(payload: bytes) -> tuple[dict[str, str], str]:
                     if name and value:
                         found.setdefault(name, value)
             if APP_PART in names:
-                root = _parsed(archive.read(APP_PART), APP_PART)
+                root = _parsed(archive, APP_PART)
                 for element in root if root is not None else ():
                     if element.tag.rpartition("}")[2] == "Application":
                         application = str(element.text or "").strip()

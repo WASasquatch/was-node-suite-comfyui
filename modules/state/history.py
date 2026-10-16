@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 from .. import config, log
+from ..util.sandbox import names_another_host
 from .database import HISTORY_CATEGORY, HistoryDatabase, get_history_db
 
 __all__ = [
@@ -84,7 +85,7 @@ def recent(key: str, limit: int, existing_only: bool = True) -> list[str]:
             break
         skipped += len(page)
         for path in page:
-            if os.path.exists(path):
+            if not names_another_host(path) and os.path.exists(path):
                 found.append(path)
                 if len(found) >= limit:
                     break

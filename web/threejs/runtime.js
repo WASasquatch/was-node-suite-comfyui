@@ -88,6 +88,21 @@ function isHeldAddress(address) {
     }
 }
 
+/**
+ * Whether an address is an absolute `http` or `https` URL.
+ *
+ * @param {string} address - The address a texture names.
+ * @returns {boolean} True for an absolute web address.
+ */
+function isWebAddress(address) {
+    try {
+        const protocol = new URL(String(address || "").trim()).protocol;
+        return protocol === "http:" || protocol === "https:";
+    } catch (error) {
+        return false;
+    }
+}
+
 function sideConstant(side) {
     if (side === "back") return THREE.BackSide;
     if (side === "double") return THREE.DoubleSide;
@@ -669,7 +684,17 @@ function depthBounds(scene, camera) {
     return { near: Math.max(0, nearest - pad), far };
 }
 
-export function createRuntime(canvas, statusElement) {
+/**
+ * A resolver turning descriptors into Three.js objects for one canvas.
+ *
+ * @param {HTMLCanvasElement} canvas - The surface the scene is drawn on.
+ * @param {HTMLElement|null} statusElement - Where status lines are written, or null.
+ * @param {object} [options] - `network: true` lets a texture name an `http` or `https`
+ *     address. Off by default.
+ * @returns {object} The context and the resolve, build and dispose functions.
+ */
+export function createRuntime(canvas, statusElement, options = {}) {
+    const networkAllowed = options?.network === true;
     const cache = {
         texture: new Map(),
         geometry: new Map(),
@@ -717,7 +742,7 @@ export function createRuntime(canvas, statusElement) {
         camera: null,
         controls: null,
         status(message) {
-            statusElement.textContent = String(message);
+            if (statusElement) statusElement.textContent = String(message);
         },
     };
 
@@ -777,11 +802,11 @@ export function createRuntime(canvas, statusElement) {
 
             const params = spec.params || {};
             const address = String(params.url || "");
-            if (params.network !== true && !isHeldAddress(address)) {
+            if (!isHeldAddress(address) && !(networkAllowed && isWebAddress(address))) {
                 throw new Error(
-                    "A texture names an address outside ComfyUI, and its descriptor does not "
-                        + "allow the network, so it was not fetched. Queue the graph again with "
-                        + "features.network on in config.yaml to fetch it."
+                    "A texture names an address outside ComfyUI, and this page fetches only "
+                        + "pictures ComfyUI holds, so it was not fetched. Use Three Texture From "
+                        + "Image, or paste a data:image/png;base64, address into Three Texture URL."
                 );
             }
             const loader = new THREE.TextureLoader();

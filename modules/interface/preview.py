@@ -11,6 +11,7 @@ import math
 import os
 import re
 import threading
+import time
 from pathlib import Path
 from collections import OrderedDict
 from io import BytesIO
@@ -149,7 +150,10 @@ DISCARD_ROUTE = "/was/interface/api/preview/discard"
 
 #: What one of those uploads is named, which is the only shape this will delete: the editor's own
 #: prefix, one of its four layer names, and the millisecond stamp it wrote them under.
-CLIPSPACE_NAME = re.compile(r"^clipspace-(mask|paint|painted|painted-masked)-\d{6,}\.png$")
+CLIPSPACE_NAME = re.compile(r"^clipspace-(mask|paint|painted|painted-masked)-[0-9]{6,}\.png$")
+
+#: The folder below ``input/`` ComfyUI's mask editor uploads into.
+CLIPSPACE_FOLDER = "clipspace"
 
 #: The one route serving what was published, keyed by a ``node_id`` query parameter, an optional
 #: ``slot`` naming one picture of a node holding more than one, an optional ``frame``, an
@@ -832,7 +836,7 @@ def register_routes() -> bool:
             removed = 0
             try:
                 body = await request.json()
-                removed = discard_clipspace(body.get("names") or [])
+                removed = discard_clipspace(body.get("names") if isinstance(body, dict) else None)
             except Exception as error:
                 logger.debug("no clipspace leftover was discarded (%s)", error)
             return web.json_response({"removed": removed}, headers=NO_STORE)
@@ -1089,21 +1093,25 @@ def discard_clipspace(names) -> int:
     """Delete the uploads ComfyUI's mask editor made for a save nothing kept.
 
     Args:
-        names: Filenames as the editor wrote them, with no directory part.
+        names: A list of filenames as the editor wrote them into ``input/clipspace``, with no
+            directory part. Anything other than a list deletes nothing.
 
     Returns:
         How many files were deleted. 0 when the input directory cannot be found, which leaves
         every file exactly where it is.
     """
+    if not isinstance(names, list):
+        return 0
     try:
         import folder_paths
 
-        root = Path(folder_paths.get_input_directory()).resolve()
+        root = Path(folder_paths.get_input_directory()).resolve() / CLIPSPACE_FOLDER
+        root = root.resolve()
     except Exception as error:
         logger.debug("the input directory could not be resolved (%s)", error)
         return 0
     removed = 0
-    for value in list(names)[:MAX_DISCARD]:
+    for value in names[:MAX_DISCARD]:
         if not isinstance(value, str) or not CLIPSPACE_NAME.match(value.strip()):
             continue
         target = (root / value.strip()).resolve()
@@ -1112,6 +1120,8 @@ def discard_clipspace(names) -> int:
         if target.parent != root or not target.is_file():
             continue
         try:
+            if time.time() - target.stat().st_mtime > MAX_DISCARD_AGE:
+                continue
             target.unlink()
             removed += 1
         except Exception as error:
@@ -1120,6 +1130,9 @@ def discard_clipspace(names) -> int:
         logger.debug("discarded %d mask editor upload(s)", removed)
     return removed
 
+
+#: Seconds since an upload was written within which a discard call deletes it.
+MAX_DISCARD_AGE = 600
 
 #: Most files one discard call will delete, which is one save's worth with room to spare.
 MAX_DISCARD = 8

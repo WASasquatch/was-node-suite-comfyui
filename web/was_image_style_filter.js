@@ -21,7 +21,7 @@ import { ICON, ICON_SIZE, drawIcon, hoverTitles, iconTitle } from "./interface/i
 import { captureWheel, elementPoint } from "./interface/pointer.js";
 import { LABELS, PREVIEW_STATE, fetchInputPreview } from "./interface/preview.js";
 import { contentRatio, surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
-import { onRunEnded } from "./interface/run_events.js";
+import { onNodeDone } from "./interface/run_events.js";
 import { onThemeChange, readTheme } from "./interface/theme.js";
 import { setWidgetHidden } from "./interface/visibility.js";
 import { appendInterfaceWidget, chainWidgetCallback } from "./interface/widget.js";
@@ -1604,14 +1604,14 @@ function createStyleSheet(options) {
 
 
 /**
- * Ask for the picture again whenever a run ends, including a run that failed or was
- * cancelled part way through.
+ * Ask for the picture again as soon as the node finishes, or when a run ends without it.
  *
+ * @param {object} node - The node the picture is published for.
  * @param {{refresh: () => void}} sheet - Sheet from `createStyleSheet`.
  * @returns {() => void} Unhooks the listener.
  */
-function watchRuns(sheet) {
-  return onRunEnded(() => {
+function watchRuns(node, sheet) {
+  return onNodeDone(node, () => {
     try {
       sheet.refresh();
     } catch (error) {
@@ -1722,7 +1722,7 @@ function attachStyleSheet(node) {
   chainWidgetCallback(node, STYLE_WIDGET, () => sheet.schedulePaint(), EXT_NAME);
   chainWidgetCallback(node, SHEET_WIDGET, () => showMode(), EXT_NAME);
 
-  const stopWatchingRuns = watchRuns(sheet);
+  const stopWatchingRuns = watchRuns(node, sheet);
 
   // Linking the style input leaves its widget read by nothing, and attaching a link changes no
   // widget value, so the callback above never hears about it.

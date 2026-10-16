@@ -7,6 +7,53 @@ import { BaseView, escapeHtml } from "./base_view.js";
 // How long the parent waits for a frame to answer with what its canvas holds.
 const OUTPUT_TIMEOUT_MS = 20000;
 
+// ComfyUI's file route at both of its paths, and the two folder and file name shapes a canvas
+// source image is held under.
+const VIEW_ROUTES = new Set(["/view", "/api/view"]);
+const VIEWER_SUBFOLDER = "was_viewer";
+const VIEWER_FILENAME = /^[0-9a-f]{32}\.png$/;
+const LEGACY_SUBFOLDER = /^was_viewer_[0-9a-f]{8}$/;
+const LEGACY_FILENAME = /^\d{4,}_[0-9a-f]{12}\.png$/;
+
+/**
+ * Whether a file reference names a source image the canvas parser wrote.
+ *
+ * @param {object} fileInfo - A `{filename, subfolder, type}` reference.
+ * @returns {boolean} True for `<md5>.png` in `input/was_viewer`, or `NNNN_<hash>.png` in an
+ *   `input/was_viewer_<hex>` folder.
+ */
+function isViewerImage(fileInfo) {
+  if (!fileInfo || typeof fileInfo !== "object" || fileInfo.type !== "input") return false;
+  const subfolder = String(fileInfo.subfolder ?? "");
+  const filename = String(fileInfo.filename ?? "");
+  return (subfolder === VIEWER_SUBFOLDER && VIEWER_FILENAME.test(filename))
+    || (LEGACY_SUBFOLDER.test(subfolder) && LEGACY_FILENAME.test(filename));
+}
+
+/**
+ * Whether this page may load an address a frame reported for a layer.
+ *
+ * @param {unknown} value - The address the frame supplied.
+ * @returns {boolean} True for a `data:image/` or `blob:` URL, or `/view` on this origin naming
+ *   a source image the canvas parser wrote.
+ */
+function isLayerSource(value) {
+  if (typeof value !== "string") return false;
+  const text = value.trim();
+  if (/^data:image\//i.test(text) || /^blob:/i.test(text)) return true;
+  try {
+    const url = new URL(text, window.location.href);
+    if (url.origin !== window.location.origin || !VIEW_ROUTES.has(url.pathname)) return false;
+    return isViewerImage({
+      filename: url.searchParams.get("filename"),
+      subfolder: url.searchParams.get("subfolder"),
+      type: url.searchParams.get("type"),
+    });
+  } catch {
+    return false;
+  }
+}
+
 class CanvasView extends BaseView {
   static id = "canvas";
   static displayName = "Canvas";
@@ -3136,6 +3183,7 @@ class CanvasView extends BaseView {
           
           // Listen for updated images from parent
           window.addEventListener('message', (e) => {
+            if (e.source !== window.parent) return;
             if (e.data && e.data.type === 'updateImages' && Array.isArray(e.data.images)) {
               imagesData = e.data.images;
               updateImagesList();
@@ -3174,10 +3222,13 @@ class CanvasView extends BaseView {
           if (savedState && savedState.layers && imagesData.length > 0) {
             const savedImageUrls = savedState.layers
               .filter(l => l.imageUrl)
-              .map(l => l.imageUrl);
-            const currentSubfolder = imagesData[0]?.subfolder || '';
-            const savedHasDifferentSession = savedImageUrls.length > 0 && 
-              !savedImageUrls.some(url => url.includes(currentSubfolder));
+              .map(l => String(l.imageUrl));
+            // A current image is known by its file name, or by its data URL where it has no file.
+            const currentRefs = imagesData
+              .map(f => typeof f === 'string' ? f : (f && f.filename ? String(f.filename) : ''))
+              .filter(Boolean);
+            const savedHasDifferentSession = savedImageUrls.length > 0 &&
+              !savedImageUrls.some(url => currentRefs.some(ref => url.includes(ref)));
             
             if (savedHasDifferentSession) {
               console.warn('[Canvas] The saved layers belong to another run, so the canvas starts fresh');
@@ -3371,7 +3422,8 @@ class CanvasView extends BaseView {
       };
       const answer = (event) => {
         const message = event.data;
-        if (event.source !== frame) return;
+        // Acts only on this frame, whose sandboxed document reports the opaque origin `null`.
+        if (event.source !== frame || event.origin !== "null") return;
         if (message?.type !== "canvas-composite-response") return;
         if (message.requestId !== requestId) return;
         if (!message.data) {
@@ -3401,7 +3453,8 @@ class CanvasView extends BaseView {
    */
   static _composite(exportData) {
     return new Promise((resolve) => {
-      const { layers, bounds, bgTransparent, bgColor } = exportData;
+      const { bounds, bgTransparent, bgColor } = exportData;
+      const layers = Array.isArray(exportData.layers) ? exportData.layers : [];
       const { minX, minY, maxX, maxY, padding } = bounds;
 
       const exportCanvas = document.createElement('canvas');
@@ -3423,18 +3476,33 @@ class CanvasView extends BaseView {
         return;
       }
 
+      // Each layer's picture and mask, kept only where this page may load the address.
+      const sources = layers.map((layer, idx) => {
+        // Use drawDataUrl if available (for draw layers or image layers edited with eraser/brush)
+        const imgSrc = (layer.isDrawLayer || layer.hasDrawCanvas) ? layer.drawDataUrl : layer.imageUrl;
+        const maskSrc = layer.maskEnabled ? layer.maskDataUrl : null;
+        if (imgSrc && !isLayerSource(imgSrc)) {
+          console.warn('[Canvas Export] Layer', idx, 'names an address this page does not load, skipping');
+        }
+        if (maskSrc && !isLayerSource(maskSrc)) {
+          console.warn('[Canvas Export] The mask of layer', idx, 'names an address this page does not load, skipping');
+        }
+        return {
+          image: imgSrc && isLayerSource(imgSrc) ? imgSrc : null,
+          mask: maskSrc && isLayerSource(maskSrc) ? maskSrc : null,
+        };
+      });
+
       // Count total items to load (layer images + mask images)
       let totalToLoad = 0;
       let loadedCount = 0;
       const loadedImages = [];
       const loadedMasks = [];
 
-      layers.forEach((layer) => {
-        // Use drawDataUrl if available (for draw layers or image layers edited with eraser/brush)
-        const imgSrc = (layer.isDrawLayer || layer.hasDrawCanvas) ? layer.drawDataUrl : layer.imageUrl;
-        if (!imgSrc) return;
+      sources.forEach((source) => {
+        if (!source.image) return;
         totalToLoad++;
-        if (layer.maskEnabled && layer.maskDataUrl) totalToLoad++;
+        if (source.mask) totalToLoad++;
       });
 
       if (totalToLoad === 0) {
@@ -3450,8 +3518,7 @@ class CanvasView extends BaseView {
       };
 
       layers.forEach((layer, idx) => {
-        // Use drawDataUrl if available (for draw layers or image layers edited with eraser/brush)
-        const imgSrc = (layer.isDrawLayer || layer.hasDrawCanvas) ? layer.drawDataUrl : layer.imageUrl;
+        const { image: imgSrc, mask: maskSrc } = sources[idx];
 
         // Skip layers without valid image source
         if (!imgSrc) {
@@ -3478,7 +3545,7 @@ class CanvasView extends BaseView {
         img.src = imgSrc;
 
         // Load mask image if enabled
-        if (layer.maskEnabled && layer.maskDataUrl) {
+        if (maskSrc) {
           const maskImg = new Image();
           maskImg.crossOrigin = 'anonymous';
           maskImg.onload = () => {
@@ -3492,7 +3559,7 @@ class CanvasView extends BaseView {
             loadedCount++;
             checkComplete();
           };
-          maskImg.src = layer.maskDataUrl;
+          maskImg.src = maskSrc;
         } else {
           loadedMasks[idx] = null;
         }
@@ -3561,25 +3628,29 @@ class CanvasView extends BaseView {
   }
 
   /**
-   * Read each source image here and hand the iframe the bytes.
+   * Read each source image the canvas parser wrote and hand the iframe the bytes.
    *
-   * The canvas is sandboxed without `allow-same-origin`, so its own requests carry a null
-   * origin and `/view` answers 403. This page is same-origin and is served normally.
-   *
-   * @param {Array} images - File references, or strings already carrying data.
+   * @param {Array} images - File references, or strings already carrying data. A reference
+   *   naming any other file is passed on unread.
    * @param {Window} iframeSource - The canvas to send them to.
    * @returns {Promise<void>} Settled once the images have been sent.
    */
   static async _sendImagesAsData(images, iframeSource) {
     const read = async (fileInfo) => {
       if (typeof fileInfo === "string") return fileInfo;
+      if (!isViewerImage(fileInfo)) {
+        console.warn("[Canvas View] A source image names a file the viewer did not write, so it was not read.");
+        return fileInfo;
+      }
       const params = new URLSearchParams({
         filename: fileInfo.filename,
         subfolder: fileInfo.subfolder || "",
         type: fileInfo.type || "temp",
       });
       try {
-        const blob = await (await fetch("/view?" + params.toString())).blob();
+        const response = await fetch("/view?" + params.toString());
+        if (!response.ok) throw new Error(`/view answered ${response.status}`);
+        const blob = await response.blob();
         return await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
@@ -3600,23 +3671,27 @@ class CanvasView extends BaseView {
   }
 
   /**
-   * Handle requestImages message from iframe
-   * Note: The viewer system automatically extracts view-specific content from multiview
-   * payloads and provides it via data._viewContent
+   * Answer a canvas frame asking for its node's source images.
+   *
+   * @param {object} data - The message, with the node's own canvas content on `_viewContent`.
+   * @param {object} node - The node whose frame asked.
+   * @param {object} app - The ComfyUI app.
+   * @param {Window} iframeSource - The frame that asked.
+   * @returns {boolean} True where the node holds canvas content and its images were sent.
    */
   static _handleRequestImages(data, node, app, iframeSource) {
     // Use view-specific content provided by the viewer system (handles multiview automatically)
     let content = data._viewContent || "";
-    
+
     if (!content) return false;
-    
+
     try {
       let jsonContent = content;
       if (content.startsWith(this.CANVAS_MARKER)) {
         jsonContent = content.slice(this.CANVAS_MARKER.length);
       }
       const parsed = JSON.parse(jsonContent);
-      if (parsed.images && Array.isArray(parsed.images) && iframeSource) {
+      if (parsed?.type === "canvas_composer" && Array.isArray(parsed.images) && iframeSource) {
         this._sendImagesAsData(parsed.images, iframeSource);
         return true;
       }

@@ -19,9 +19,12 @@ __all__ = [
     "report",
     "register_routes",
     "wait_for_frames",
+    "waiting",
 ]
 
 import base64
+import json
+import re
 import time
 import uuid
 from threading import Lock
@@ -65,6 +68,45 @@ MAX_ENCODED_BYTES = 4 * -(-MAX_FRAME_BYTES // 3)
 #: plus room for the data URL prefixes, the field names and the progress note.
 MAX_BODY_BYTES = len(PASSES) * MAX_ENCODED_BYTES + 64 * 1024
 
+#: Most bytes of a frame post read before its token is checked.
+TOKEN_HEAD_BYTES = 512
+
+#: The opening of a frame post, ``{"token":"<token>"``, which names the job it answers.
+TOKEN_HEAD = re.compile(rb'\A\s*\{\s*"token"\s*:\s*"([^"\\]{1,128})"')
+
+
+def waiting(token: str) -> bool:
+    """Whether a job is filed under a token.
+
+    Args:
+        token: The token a browser posted.
+
+    Returns:
+        True where a node is waiting under it.
+    """
+    with _lock:
+        return token in _jobs
+
+
+async def _opening(content) -> bytes:
+    """The first bytes of a request body, read until the token closes.
+
+    Args:
+        content: The request's body stream.
+
+    Returns:
+        At most :data:`TOKEN_HEAD_BYTES` bytes.
+    """
+    head = b""
+    while len(head) < TOKEN_HEAD_BYTES:
+        chunk = await content.read(TOKEN_HEAD_BYTES - len(head))
+        if not chunk:
+            break
+        head += chunk
+        if TOKEN_HEAD.match(head):
+            break
+    return head
+
 
 def file_job(
     app: dict, width: int, height: int, transparent: bool, times: list[float],
@@ -94,9 +136,11 @@ def file_job(
         ValueError: The scene carries browser code and ``threejs.allow_scripts`` is off, or
             the prompt was queued without a client id.
     """
+    from ..model import network_enabled
     from ..threejs.spec import refuse_script
 
     refuse_script(app, "This render")
+    network = network_enabled()
     client = _asking_client()
     if not client:
         raise ValueError(
@@ -120,6 +164,7 @@ def file_job(
             "depthFar": float(depth_far),
             "times": [float(moment) for moment in times],
             "trace": dict(trace) if trace else None,
+            "network": network,
             "total": int(progress_total) or len(times),
             "done": 0,
             "note": "",
@@ -149,7 +194,8 @@ def pending(client: str = "") -> list[dict]:
             under that id are offered; an empty id is offered nothing.
 
     Returns:
-        One entry per job, each with its token, descriptor, frame size and moments.
+        One entry per job, each with its token, descriptor, frame size and moments, and
+        ``network``: whether ``features.network`` was on when the job was filed.
     """
     taken = []
     asking = str(client or "").strip()
@@ -173,6 +219,7 @@ def pending(client: str = "") -> list[dict]:
                 "depthFar": job["depthFar"],
                 "times": job["times"],
                 "trace": job["trace"],
+                "network": job["network"],
             })
     return taken
 
@@ -354,15 +401,27 @@ def register_routes() -> bool:
                         f"{MAX_BODY_BYTES} bytes, {MAX_FRAME_BYTES // 1048576} MB per pass."
                     ),
                 )
+            # The token is read and checked before the rest of the body.
+            token = str(request.query.get("token", "")).strip()
+            head = b""
+            if not token:
+                head = await _opening(request.content)
+                opened = TOKEN_HEAD.match(head)
+                if opened is None:
+                    return web.Response(
+                        status=400, text='The body has to open with {"token": "<token>".'
+                    )
+                token = opened.group(1).decode("utf-8", "replace").strip()
+            if not waiting(token):
+                return web.Response(status=404, text="No node is waiting under that token.")
             try:
-                sent = await request.json()
+                sent = json.loads(head + await request.read())
             except Exception:
                 return web.Response(status=400, text="The body has to be JSON.")
             if not isinstance(sent, dict):
                 return web.Response(status=400, text="The body has to be a JSON object.")
-            token = str(sent.get("token", "")).strip()
-            if not token:
-                return web.Response(status=400, text="The body has to name a token.")
+            if str(sent.get("token", token)).strip() != token:
+                return web.Response(status=400, text="The body names a different token.")
             failure = str(sent.get("error", "")).strip()
 
             # A body carrying only how far along it is moves the bar and nothing else.

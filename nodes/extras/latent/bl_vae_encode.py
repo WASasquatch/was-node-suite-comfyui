@@ -23,6 +23,12 @@ logger = get_logger("nodes.extras.latent")
 #: node at its defaults.
 TILE_OVERLAP = 64
 
+#: Longest bundle text read out of or written into a workflow, in characters.
+MAX_BUNDLE_TEXT = 64 * 1024 * 1024
+
+#: Most bytes of JSON a bundle may inflate to.
+MAX_BUNDLE_BYTES = 256 * 1024 * 1024
+
 #: ``graph node id -> digest of the image that node last encoded``, for the lifetime of the
 #: process. A bundled latent from an earlier run is stale the moment an image is connected,
 #: and is replaced rather than reloaded. ``execute`` runs on a per-execution clone of
@@ -55,6 +61,10 @@ def serialize(obj) -> str:
 
     Returns:
         The base64 text.
+
+    Raises:
+        ValueError: The JSON is longer than :data:`MAX_BUNDLE_BYTES` or the text longer
+            than :data:`MAX_BUNDLE_TEXT`.
     """
     json_str = json.dumps(
         obj,
@@ -64,8 +74,19 @@ def serialize(obj) -> str:
             else o.__dict__
         ),
     )
-    compressed_data = zlib.compress(json_str.encode("utf-8"))
-    return base64.b64encode(compressed_data).decode("utf-8")
+    json_bytes = json_str.encode("utf-8")
+    if len(json_bytes) > MAX_BUNDLE_BYTES:
+        raise ValueError(
+            f"the latent is {_megabytes(len(json_bytes))} as text, more than the "
+            f"{_megabytes(MAX_BUNDLE_BYTES)} a bundle may hold"
+        )
+    text = base64.b64encode(zlib.compress(json_bytes)).decode("utf-8")
+    if len(text) > MAX_BUNDLE_TEXT:
+        raise ValueError(
+            f"the latent packs to {_megabytes(len(text))}, more than the "
+            f"{_megabytes(MAX_BUNDLE_TEXT)} a bundle may hold"
+        )
+    return text
 
 
 def deserialize(base64_str: str):
@@ -78,15 +99,38 @@ def deserialize(base64_str: str):
         The original structure, with every marked entry rebuilt as a CPU tensor.
 
     Raises:
-        Exception: The text is not valid base64, does not inflate, or is not JSON, which
-            is what a truncated or edited metadata field looks like.
+        ValueError: The value is not text, is longer than :data:`MAX_BUNDLE_TEXT`, inflates
+            past :data:`MAX_BUNDLE_BYTES`, or is cut short.
+        Exception: The text is not valid base64, does not inflate, or is not JSON.
     """
-    compressed_data = base64.b64decode(base64_str)
-    json_str = zlib.decompress(compressed_data).decode("utf-8")
+    if not isinstance(base64_str, (str, bytes)):
+        raise ValueError(
+            f"the bundle is a {type(base64_str).__name__}, not the text a bundle is kept as"
+        )
+    if len(base64_str) > MAX_BUNDLE_TEXT:
+        raise ValueError(
+            f"the bundle is {_megabytes(len(base64_str))} of text, more than the "
+            f"{_megabytes(MAX_BUNDLE_TEXT)} a bundle may be"
+        )
+    inflater = zlib.decompressobj()
+    json_bytes = inflater.decompress(base64.b64decode(base64_str), MAX_BUNDLE_BYTES + 1)
+    if len(json_bytes) > MAX_BUNDLE_BYTES:
+        raise ValueError(
+            f"the bundle inflates to more than the {_megabytes(MAX_BUNDLE_BYTES)} a bundle "
+            f"may hold"
+        )
+    if not inflater.eof:
+        raise ValueError("the bundle's compressed stream is cut short")
+    json_str = json_bytes.decode("utf-8")
     return json.loads(
         json_str,
         object_hook=lambda d: torch.tensor(d["value"]) if "__tensor__" in d else d,
     )
+
+
+def _megabytes(count: int) -> str:
+    """A byte or character count as a rounded number of megabytes, for a message."""
+    return f"{count / (1024 * 1024):.1f} MB"
 
 
 def workflow_extra(extra_pnginfo):
@@ -297,19 +341,19 @@ class BundleLatentVAEEncode(io.ComfyNode):
                 logger.info("Loading latent image from workflow node: %s", unique_id)
                 try:
                     workflow_latent = deserialize(extra[latent_key])
-                except Exception:
+                except Exception as error:
                     logger.error(
-                        "There was an issue extracting the latent tensor from the workflow. "
-                        "Is it corrupted?"
+                        "%s could not read the latent bundled in the workflow (%s), so the "
+                        "bundle is damaged or was not written by this node.", node_label, error
                     )
                     workflow_latent = None
                     if not has_image:
                         raise ValueError(
                             f"{node_label} could not read the latent bundled in the "
-                            f"workflow, and has no image on its image input to encode "
-                            f"instead. Connect an image, or turn on "
+                            f"workflow ({error}), and has no image on its image input to "
+                            f"encode instead. Connect an image, or turn on "
                             f"delete_workflow_latent for one run to discard the bundle."
-                        )
+                        ) from error
 
                 if workflow_latent and remove_latent_on_load:
                     try:
@@ -339,7 +383,15 @@ class BundleLatentVAEEncode(io.ComfyNode):
         encoded = encode_image(vae, image, tiled, tile_size)
 
         if store_or_load_latent and unique_id and extra is not None:
-            logger.info("Saving latent to workflow node %s", unique_id)
-            extra[latent_key] = serialize(encoded)
+            try:
+                extra[latent_key] = serialize(encoded)
+                logger.info("Saving latent to workflow node %s", unique_id)
+            except ValueError as error:
+                extra.pop(latent_key, None)
+                logger.warning(
+                    "%s did not bundle its latent: %s. The latent is passed on, and the "
+                    "saved workflow carries none; encode a smaller image to bundle one.",
+                    node_label, error,
+                )
 
         return io.NodeOutput(encoded)

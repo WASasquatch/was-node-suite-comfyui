@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import re
+import heapq
 
 from comfy_api.latest import io
 
@@ -10,6 +10,7 @@ from ....modules import log
 from ....modules.compat.sockets import LINK, WIDGET, input_source
 from ....modules.compat.types import LIST, NUMBER
 from ....modules.interface import run_result
+from ....modules.util import patterns
 
 logger = log.get_logger("nodes.text.search")
 
@@ -274,7 +275,9 @@ class TextFindAndReplace(io.ComfyNode):
                     tooltip=(
                         "A regular expression, so 'cat|dog' matches either word and '\\s+' "
                         "matches whitespace. A backslash makes a special character literal. "
-                        "Left empty, nothing is replaced."
+                        "Left empty, nothing is replaced. A search past 1 second stops with "
+                        "an error. Patterns run in the regex package's re-compatible "
+                        "mode."
                     ),
                 ),
                 io.MultiType.Input(
@@ -288,7 +291,8 @@ class TextFindAndReplace(io.ComfyNode):
                     tooltip=(
                         "What each match becomes. Leave it empty to delete the matches. "
                         "\\1 and \\2 stand for the first and second parenthesised group of "
-                        "the pattern, and a literal backslash has to be doubled."
+                        "the pattern, and a literal backslash has to be doubled. The result "
+                        "may grow by at most 16,777,216 characters."
                     ),
                 ),
                 *EXTRA_PAIR_INPUTS,
@@ -398,45 +402,46 @@ def _apply(
         pair, in the order of ``pairs``, with every match counted however many there were.
 
     Raises:
-        re.error: A pattern is not a valid regular expression.
+        re.error: A pattern is not a valid regular expression, or a replacement holds a bad
+            escape or names a group its pattern lacks.
+        ValueError: A search ran past :data:`modules.util.patterns.MATCH_SECONDS`, or the
+            result would grow by more than :data:`modules.util.patterns.MAX_GROWTH_CHARS`.
     """
     walk = {"spans": [], "counts": [0] * len(pairs)} if record else None
     if not pairs:
         return text, 0, walk
 
-    # Where two patterns match at the same place the earlier pair wins, and where they
-    # overlap the one starting earlier wins, which is what sorting on (start, pair) and
-    # then skipping anything inside what has already been taken comes to.
-
-    # Each pattern is scanned on its own rather than joined into one alternation, so its
-    # groups keep the numbers the user wrote: a combined pattern would renumber them and
-    # a replacement template of \1 would expand to whatever the join put first instead.
-    found = []
-    for index, (pattern, replacement) in enumerate(pairs):
-        for match in re.finditer(pattern, text):
-            found.append((match.start(), index, match, replacement))
-
-    # Leftmost first, and the earlier box where two start together, which is the order the
-    # boxes are read in. Sorting on the match itself is never reached and would not compare.
-    found.sort(key=lambda entry: (entry[0], entry[1]))
+    # One scan per pattern, merged leftmost first and the earlier box first at one start.
+    scans = [
+        _tagged(patterns.finditer(pattern, text, _where("pattern", pattern)), index)
+        for index, (pattern, _) in enumerate(pairs)
+    ]
 
     out = []
     cursor = 0
     count = 0
     written = 0
-    for start, index, match, replacement in found:
-        # A match inside one already taken is dropped rather than nested, so every character
-        # of the result comes from exactly one pattern.
+    growth = 0
+    for start, index, match in heapq.merge(*scans, key=_merge_order):
+        # A match inside one already taken is dropped rather than nested.
         if start < cursor:
             continue
+        pattern, replacement = pairs[index]
         kept = text[cursor:start]
-        expansion = match.expand(replacement)
+        width = match.end() - start
+        expansion = patterns.expand(
+            match,
+            pattern,
+            replacement,
+            patterns.MAX_GROWTH_CHARS - growth + width,
+            _where("replacement for", pattern),
+        )
+        growth += len(expansion) - width
         out.append(kept)
         out.append(expansion)
         count += 1
         if walk is not None:
-            # Where the replacement lands is the length of the result so far, which is exact
-            # for every pattern rather than worked out again from the offsets it moved.
+            # The replacement lands at the length of the result so far.
             written += len(kept)
             walk["counts"][index] += 1
             if len(walk["spans"]) < MAX_SCANNED_MATCHES:
@@ -445,11 +450,42 @@ def _apply(
                     expansion == match.group(0),
                 ))
             written += len(expansion)
-        # A zero width match consumes nothing, so the cursor may not go backwards and the
-        # character it sat before is still written.
+        # The cursor never moves back, past a zero width match included.
         cursor = max(cursor, match.end())
     out.append(text[cursor:])
     return "".join(out), count, walk
+
+
+def _tagged(matches, index: int):
+    """One pattern's matches, each as ``(start, pair index, match)``.
+
+    Args:
+        matches: What :func:`modules.util.patterns.finditer` answered for the pattern.
+        index: The pattern's place in the pairs.
+
+    Yields:
+        One tuple per match, leftmost first.
+    """
+    for match in matches:
+        yield match.start(), index, match
+
+
+def _merge_order(entry: tuple) -> tuple[int, int]:
+    """The order matches are taken in: leftmost first, then the earlier box."""
+    return entry[0], entry[1]
+
+
+def _where(role: str, pattern: str) -> str:
+    """How a message names one box, as ``Text Find and Replace's pattern 'cat'``.
+
+    Args:
+        role: ``pattern`` or ``replacement for``.
+        pattern: The pattern the box holds or is paired with.
+
+    Returns:
+        The node's name, the role and the pattern in quotes.
+    """
+    return f"Text Find and Replace's {role} {_quoted(pattern)}"
 
 
 def _publish_run(

@@ -104,7 +104,7 @@ AFFINE_INPUTS = [
         ),
     ),
     io.Combo.Input("pattern", options=patterns.PATTERNS, default="white_noise", tooltip=PATTERN_HINT),
-    io.Int.Input("affine_seed", default=0, min=0, max=0x7FFFFFFF, tooltip=SEED_HINT),
+    io.Int.Input("affine_seed", default=0, min=0, max=0xFFFFFFFFFFFFFFFF, tooltip=SEED_HINT),
     io.Boolean.Input(
         "affine_seed_increment",
         default=False,

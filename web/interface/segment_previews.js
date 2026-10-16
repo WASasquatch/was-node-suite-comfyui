@@ -19,6 +19,15 @@ const ROUTE = "/was/interface/api/segment_preview";
 const INDEX_ROUTE = `${ROUTE}/index`;
 
 /**
+ * This tab's client id, which the server serves a run's sheets to.
+ *
+ * @returns {string} The id, or an empty string before the socket has given one.
+ */
+function clientId() {
+  return String(api?.clientId || api?.initialClientId || "");
+}
+
+/**
  * A random version 4 UUID, on pages served over plain HTTP as well as HTTPS.
  *
  * @returns {string} The UUID.
@@ -93,7 +102,8 @@ export function followSegmentPreviews(ownerId, onPreview, onProblem) {
     }
     try {
       const response = await api.fetchApi(
-        `${ROUTE}?node_id=${encodeURIComponent(fields.node_id)}&segment=${segment}&v=${fields.version}`,
+        `${ROUTE}?node_id=${encodeURIComponent(fields.node_id)}&segment=${segment}&v=${fields.version}` +
+          `&client_id=${encodeURIComponent(clientId())}`,
         { cache: "no-store" },
       );
       if (response.status !== 200) return;
@@ -123,7 +133,8 @@ export function followSegmentPreviews(ownerId, onPreview, onProblem) {
   const reload = async (owner = ownerId()) => {
     own(String(ownerId()));
     try {
-      const response = await api.fetchApi(`${INDEX_ROUTE}?node_id=${encodeURIComponent(owner)}`, {
+      const response = await api.fetchApi(
+        `${INDEX_ROUTE}?node_id=${encodeURIComponent(owner)}&client_id=${encodeURIComponent(clientId())}`, {
         cache: "no-store",
       });
       if (response.status !== 200) return;

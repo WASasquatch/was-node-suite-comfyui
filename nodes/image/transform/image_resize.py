@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from comfy_api.latest import io
 
 from ....modules.image import dynamic
@@ -59,6 +61,29 @@ def resize_target(size, mode="rescale", factor=2, width=1024, height=1024):
         new_height = int(height) + (-int(height) % SIZE_STEP)
 
     return requested, (max(1, new_width), max(1, new_height))
+
+
+def largest_factor(size) -> float:
+    """The largest rescale factor, in steps of 0.01, whose result is an image the pack builds.
+
+    Args:
+        size: The source ``(width, height)``.
+
+    Returns:
+        The factor, or 0.0 where not even 0.01 gives a small enough result.
+    """
+    width, height = max(1, int(size[0])), max(1, int(size[1]))
+    reach = min(
+        sizing.MAX_CANVAS_SIDE / max(width, height),
+        math.sqrt(sizing.MAX_CANVAS_PIXELS / (width * height)),
+    )
+    factor = round(math.floor(reach * 100) / 100 + 0.02, 2)
+    while factor > 0:
+        wide, high = resize_target((width, height), "rescale", factor)[1]
+        if max(wide, high) <= sizing.MAX_CANVAS_SIDE and wide * high <= sizing.MAX_CANVAS_PIXELS:
+            return factor
+        factor = round(factor - 0.01, 2)
+    return 0.0
 
 
 def resized_frames(frames, target, resampling, supersample=False, resize_mode=None,
@@ -169,7 +194,7 @@ class ImageResize(io.ComfyNode):
                     "resize_width",
                     default=1024,
                     min=1,
-                    max=48000,
+                    max=sizing.MAX_CANVAS_SIDE,
                     step=1,
                     tooltip=(
                         "Target width in pixels for resize mode, rounded up to the next "
@@ -180,7 +205,7 @@ class ImageResize(io.ComfyNode):
                     "resize_height",
                     default=1536,
                     min=1,
-                    max=48000,
+                    max=sizing.MAX_CANVAS_SIDE,
                     step=1,
                     tooltip=(
                         "Target height in pixels for resize mode, rounded up to the next "
@@ -265,6 +290,13 @@ class ImageResize(io.ComfyNode):
                 resize_height, resize_mode=sizing.STRETCH,
                 align=sizing.DEFAULT_ALIGNMENT, pad_color="#000000",
                 multiple_of=0) -> io.NodeOutput:
+        """Resize every frame to the size the mode asks for.
+
+        Raises:
+            CanvasTooLarge: The size asked for is past 30000 pixels a side or 16384x16384 in
+                all.
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
         scale = dynamic.factor(image)
         source = size_report.frame_size(image)
         requested, delivered = resize_target(
@@ -274,11 +306,21 @@ class ImageResize(io.ComfyNode):
 
         if mode == "resize":
             target = rounded(delivered[0], delivered[1], multiple_of)
+            sizing.check_canvas(
+                target[0], target[1], "Image Resize's result",
+                "Lower resize_width or resize_height.",
+            )
             scaled = resized_frames(
                 image, target, resampling, supersample, resize_mode, align,
                 parse_color(pad_color, FALLBACK_PAD), scale,
             )
         else:
+            fits = largest_factor(source or (1, 1))
+            sizing.check_canvas(
+                delivered[0], delivered[1], "Image Resize's result",
+                f"Lower rescale_factor to {fits} or less." if fits >= 0.01
+                else "Shrink the source before rescaling it.",
+            )
             scaled = resized_frames(image, delivered, resampling, supersample, scale=scale)
 
         size_report.publish(

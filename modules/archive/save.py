@@ -61,6 +61,9 @@ ZIP_FLOOR = (1980, 1, 1, 0, 0, 0)
 #: File mode written on every entry: a regular file, readable by anybody.
 ENTRY_MODE = 0o100644 << 16
 
+#: Suffix of the file an archive is written into before it replaces the target.
+PART_SUFFIX = ".part"
+
 
 class WriteFailed(ValueError):
     """A source file failed part way into the archive, so the archive was abandoned."""
@@ -127,11 +130,12 @@ def build(
     naming: str = RELATIVE,
     compression: str = "deflate",
 ) -> Written:
-    """Write the archive.
+    """Write the archive into ``<target>.part`` beside the target, then move it onto the target.
 
     Args:
         target: Where the archive goes, already resolved through
-            ``modules.util.sandbox.resolve_write_file``. Its folder is expected to exist.
+            ``modules.util.sandbox.resolve_write_file``. Its folder is expected to exist. An
+            archive already there is replaced only once the new one is complete.
         sources: The files going in, in the order they go in.
         naming: One of :data:`NAMING`.
         compression: A key of :data:`COMPRESSIONS`. Anything else falls back to ``deflate``.
@@ -151,9 +155,12 @@ def build(
     skipped: dict[str, str] = {}
     taken = 0
     used: set[str] = set()
+    part = target.with_name(target.name + PART_SUFFIX)
 
     try:
-        with zipfile.ZipFile(target, "w", method, allowZip64=True) as archive:
+        with _created(part) as handle, zipfile.ZipFile(
+            handle, "w", method, allowZip64=True
+        ) as archive:
             for source in sources:
                 wanted = entry_name(source, naming)
                 name = _unique(wanted, used)
@@ -171,10 +178,10 @@ def build(
                 used.add(name.casefold())
                 names.append(name)
                 taken += written
+        os.replace(part, target)
     except BaseException:
-        # A part-written archive is a file that opens and holds less than it says it does, so
-        # it is removed rather than left for somebody to find later.
-        _discard(target)
+        # Only the part-written file is removed; an archive already at the target is kept.
+        _discard(part)
         raise
 
     return Written(tuple(names), taken, _size(target), renamed, skipped)
@@ -304,6 +311,24 @@ def _unique(name: str, used: set[str]) -> str:
         if candidate.casefold() not in used:
             return candidate
         counter += 1
+
+
+def _created(part: Path):
+    """Open a new, empty file to write an archive into, replacing a stale one of that name.
+
+    Args:
+        part: The file to create, beside the archive's target.
+
+    Returns:
+        A binary file object open for writing.
+
+    Raises:
+        OSError: The file could not be created.
+    """
+    if os.path.lexists(part):
+        os.unlink(part)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0)
+    return os.fdopen(os.open(part, flags, 0o666), "wb")
 
 
 def _discard(target: Path) -> None:

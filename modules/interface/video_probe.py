@@ -1,22 +1,57 @@
 """What a video measures, as JSON a node interface draws its timeline against.
 
 ``GET /was/interface/api/video_probe?file=<name>`` answers the rate, the frame count, the
-duration, the size and the bit depth of one file in ComfyUI's input folder.
+duration, the size and the bit depth of one video a file menu lists.
 """
 
 from __future__ import annotations
 
+import os
+
 from .. import log
 from .channel import NO_STORE
 
-__all__ = ["ROUTE", "probe_payload", "register_routes"]
+__all__ = ["PROBES", "ROUTE", "probe_payload", "register_routes", "video_path"]
 
 logger = log.get_logger("interface.video_probe")
 
 #: The one route serving the measurement.
 ROUTE = "/was/interface/api/video_probe"
 
+#: Videos measured at once, each on a worker thread.
+PROBES = 4
+
 _registered = False
+
+
+def video_path(name: str) -> str | None:
+    """The regular video file a menu label names.
+
+    Args:
+        name: A label the file listing offers, as ``clips/a.mp4 [output]``, or a bare
+            name in the input folder.
+
+    Returns:
+        The resolved absolute path, or ``None`` where no listed video carries that label.
+
+    Raises:
+        PathNotAllowed: The listed file resolves outside every permitted read root.
+    """
+    from ..media.reader import VIDEO_EXTENSIONS
+    from ..util import file_listing, sandbox
+
+    text = (name or "").strip()
+    if not text:
+        return None
+    entry = file_listing.find(text, VIDEO_EXTENSIONS, file_listing.ROOTS)
+    if entry is None and not text.endswith("]"):
+        entry = file_listing.find(
+            f"{text} [{file_listing.INPUT}]", VIDEO_EXTENSIONS, (file_listing.INPUT,)
+        )
+    if entry is None:
+        return None
+    path = str(sandbox.resolve_read(entry.path))
+    return path if os.path.isfile(path) else None
 
 
 def probe_payload(name: str) -> dict:
@@ -25,12 +60,12 @@ def probe_payload(name: str) -> dict:
     Never raises.
 
     Args:
-        name: The file as the widget holds it, inside ComfyUI's input folder.
+        name: The file as the widget holds it: a menu label, or a bare name in the input
+            folder.
 
     Returns:
         ``{"fps", "frame_count", "duration", "width", "height", "bit_depth", "read"}``.
-        ``read`` is False
-        where nothing could be measured.
+        ``read`` is False where nothing could be measured.
     """
     # A file that cannot be read answers zeroes rather than an error, which leaves the player
     # on its own measurement rather than on nothing at all.
@@ -41,9 +76,13 @@ def probe_payload(name: str) -> dict:
     if not name:
         return empty
     try:
+        path = video_path(name)
+        if path is None:
+            logger.debug("%s refused %r: no listed video carries that name", ROUTE, name)
+            return empty
         from ..media import reader
 
-        found = reader.probe(reader.input_path(name))
+        found = reader.probe(path)
     except Exception as error:
         logger.debug("%s could not measure %r (%s)", ROUTE, name, error)
         return empty
@@ -70,14 +109,20 @@ def register_routes() -> bool:
     if _registered:
         return False
     try:
+        import asyncio
+
         from aiohttp import web
         from server import PromptServer
 
+        gate = asyncio.Semaphore(PROBES)
+
         @PromptServer.instance.routes.get(ROUTE)
         async def get_video_probe(request):
-            return web.json_response(
-                probe_payload(request.query.get("file", "")), headers=NO_STORE
-            )
+            async with gate:
+                payload = await asyncio.to_thread(
+                    probe_payload, request.query.get("file", "")
+                )
+            return web.json_response(payload, headers=NO_STORE)
 
     except Exception as error:
         logger.warning(
@@ -88,5 +133,5 @@ def register_routes() -> bool:
         logger.debug("%s could not be registered", ROUTE, exc_info=True)
         return False
     _registered = True
-    logger.debug("%s is serving the rate and frame count of input videos", ROUTE)
+    logger.debug("%s is serving the rate and frame count of listed videos", ROUTE)
     return True

@@ -227,6 +227,7 @@ export function buildIframeContent(content, contentType, theme, excluded = [], n
     window.WAS_NODE_ID = '${nodeId || ''}';
     window.WAS_SCRIPTS_LOADED = false;
     window.addEventListener('message', function(event) {
+      if (event.source !== window.parent) return;
       if (event.data && event.data.type === 'was-theme-update') {
         try {
           var cssVars = event.data.cssVars || '';

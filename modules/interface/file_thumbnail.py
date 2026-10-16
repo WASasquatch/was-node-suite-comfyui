@@ -14,11 +14,15 @@ from collections import OrderedDict
 
 from .. import log
 from ..constants import ALLOWED_EXT
+from ..image.sizing import MAX_SOURCE_PIXELS
 from ..media.reader import VIDEO_EXTENSIONS
 from ..util import file_listing, sandbox
 from .channel import NO_STORE
 
-__all__ = ["DEFAULT_EDGE", "EXTENSIONS", "MAX_EDGE", "ROUTE", "register_routes", "thumbnail"]
+__all__ = [
+    "DEFAULT_EDGE", "EXTENSIONS", "MAX_EDGE", "MAX_SOURCE_PIXELS", "ROUTE", "register_routes",
+    "thumbnail",
+]
 
 logger = log.get_logger("interface.file_thumbnail")
 
@@ -62,12 +66,22 @@ def _encoded(picture) -> tuple[bytes, str]:
     return buffer.getvalue(), "image/jpeg"
 
 
+def _refuse_size(path: str, width: int, height: int) -> None:
+    """Raise where a source decodes to more than :data:`MAX_SOURCE_PIXELS` pixels."""
+    if max(0, int(width)) * max(0, int(height)) > MAX_SOURCE_PIXELS:
+        raise ValueError(
+            f"{os.path.basename(path)} is {width}x{height}, more than the "
+            f"{MAX_SOURCE_PIXELS} pixels a picture is drawn from"
+        )
+
+
 def _image(path: str, edge: int):
     """The picture a file holds, fitted inside ``edge`` pixels a side."""
     from PIL import Image, ImageOps
 
     with Image.open(path) as opened:
         opened.draft("RGB", (DECODE_EDGE, DECODE_EDGE))
+        _refuse_size(path, *opened.size)
         picture = ImageOps.exif_transpose(opened)
         picture.thumbnail((edge, edge))
         return picture.copy()
@@ -79,7 +93,9 @@ def _first_frame(path: str, edge: int):
 
     from ..media import reader
 
-    clip = reader.read(path, start=0, end=0, num_frames=1)
+    header = reader.probe(path)
+    _refuse_size(path, header.width, header.height)
+    clip = reader.read(path, start=0, end=0, num_frames=1, max_size=DECODE_EDGE)
     frame = (clip.images[0, ..., :3].clamp(0.0, 1.0) * 255.0).round().byte().cpu().numpy()
     picture = Image.fromarray(frame, "RGB")
     picture.thumbnail((edge, edge))

@@ -1,8 +1,8 @@
 /**
  * When a node finished, when a run ended, and which nodes came from cache.
  *
- * `onNodeFinished` fires at most once per run, `onRunEnded` on any of the three ways a run
- * stops, and `onRunCached` for nodes served from cache.
+ * `onNodeFinished` fires once per run, `onRunEnded` however a run stops, `onNodeDone` at the
+ * first of the two, and `onRunCached` for nodes served from cache.
  */
 
 import { api } from "../../../scripts/api.js";
@@ -126,6 +126,40 @@ export function onRunEnded(handler) {
     if (stopped) return;
     stopped = true;
     for (const [name, listener] of listeners) api.removeEventListener?.(name, listener);
+  };
+}
+
+/**
+ * Call a handler as soon as a node finishes, or when a run stops without it having finished.
+ *
+ * @param {object} node - The node the interface is drawn on.
+ * @param {() => void} handler - Called once per run: when the node's body returns, or when the
+ *   run ends with the node never reported finished in it.
+ * @returns {() => void} Unsubscribe. Safe to call more than once.
+ */
+export function onNodeDone(node, handler) {
+  if (typeof handler !== "function") return () => {};
+  let finished = false;
+  const onStart = () => {
+    finished = false;
+  };
+  api.addEventListener("execution_start", onStart);
+  const stopFinished = onNodeFinished(node, () => {
+    finished = true;
+    handler();
+  });
+  const stopEnded = onRunEnded(() => {
+    const seen = finished;
+    finished = false;
+    if (!seen) handler();
+  });
+  let stopped = false;
+  return () => {
+    if (stopped) return;
+    stopped = true;
+    api.removeEventListener?.("execution_start", onStart);
+    stopFinished();
+    stopEnded();
   };
 }
 

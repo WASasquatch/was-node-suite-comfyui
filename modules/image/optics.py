@@ -21,7 +21,7 @@ import math
 import torch
 from torch.nn import functional
 
-from . import dynamic
+from . import dynamic, sizing
 
 #: How a blur travels across the frame, in menu order.
 BLURS = ("linear", "zoom", "spin")
@@ -41,6 +41,9 @@ _PADDING = {
 
 #: Below this a division is read as a division by zero.
 EPSILON = 1e-6
+
+#: Answer pixels whose sampling coordinates :func:`perspective` works out at once.
+GRID_BAND = 1 << 22
 
 
 def _grid(height: int, width: int, device, dtype):
@@ -202,12 +205,14 @@ def perspective(
     Raises:
         ValueError: Fewer than four corners, the four are collinear so no mapping exists,
             or ``out`` is not shaped like the answer.
+        CanvasTooLarge: The answer is past 30000 pixels a side or 16384x16384 in all.
     """
     if len(corners) < 4:
         raise ValueError(f"perspective needs four corners, got {len(corners)}.")
     batch, source_h, source_w, channels = (int(side) for side in images.shape)
     out_w = int(width) or source_w
     out_h = int(height) or source_h
+    sizing.check_canvas(out_w, out_h, "The warped frame", "Lower the answer width and height.")
     shape = (batch, out_h, out_w, channels)
     if out is None:
         out = torch.empty(shape, dtype=images.dtype, device=images.device)
@@ -258,19 +263,22 @@ def _pinned_grid(corners, source_w: int, source_h: int, out_w: int, out_h: int, 
     matrix = _homography([(float(x), float(y)) for x, y in corners[:4]], source,
                          device).to(dtype=torch.float32)
 
-    ys = torch.arange(out_h, device=device, dtype=torch.float32)
+    grid = torch.empty((1, out_h, out_w, 2), dtype=torch.float32, device=device)
     xs = torch.arange(out_w, device=device, dtype=torch.float32)
-    grid_y, grid_x = torch.meshgrid(ys, xs, indexing="ij")
-    ones = torch.ones_like(grid_x)
-    stacked = torch.stack([grid_x, grid_y, ones], dim=-1)
-    mapped = stacked @ matrix.transpose(0, 1)
-    depth = mapped[..., 2:3]
-    depth = torch.where(depth.abs() < EPSILON, torch.full_like(depth, EPSILON), depth)
-    flat = mapped[..., :2] / depth
-
-    read_x = flat[..., 0] / max(source_w - 1.0, EPSILON) * 2.0 - 1.0
-    read_y = flat[..., 1] / max(source_h - 1.0, EPSILON) * 2.0 - 1.0
-    return torch.stack([read_x, read_y], dim=-1).unsqueeze(0)
+    band = max(1, GRID_BAND // max(1, out_w))
+    for top in range(0, out_h, band):
+        ys = torch.arange(top, min(out_h, top + band), device=device, dtype=torch.float32)
+        grid_y, grid_x = torch.meshgrid(ys, xs, indexing="ij")
+        ones = torch.ones_like(grid_x)
+        stacked = torch.stack([grid_x, grid_y, ones], dim=-1)
+        mapped = stacked @ matrix.transpose(0, 1)
+        depth = mapped[..., 2:3]
+        depth = torch.where(depth.abs() < EPSILON, torch.full_like(depth, EPSILON), depth)
+        flat = mapped[..., :2] / depth
+        rows = grid[0, top:top + int(ys.shape[0])]
+        rows[..., 0] = flat[..., 0] / max(source_w - 1.0, EPSILON) * 2.0 - 1.0
+        rows[..., 1] = flat[..., 1] / max(source_h - 1.0, EPSILON) * 2.0 - 1.0
+    return grid
 
 
 def _homography(source, target, device):

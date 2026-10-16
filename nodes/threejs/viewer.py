@@ -7,6 +7,7 @@ import json
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_APP
+from ...modules.model import network_enabled
 from ...modules.threejs.spec import refuse_script, require_spec
 
 REQUIRES = "threejs"
@@ -53,5 +54,5 @@ class ThreeViewer(io.ComfyNode):
         """
         require_spec(app, "app")
         refuse_script(app, "Three Viewer")
-        payload = {"app": app}
+        payload = {"app": app, "network": network_enabled()}
         return io.NodeOutput(ui={"three_app": [json.dumps(payload, separators=(",", ":"))]})

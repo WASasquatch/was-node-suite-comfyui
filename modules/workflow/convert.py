@@ -22,6 +22,15 @@ BOUNDARY_OUT = -20
 #: Input kinds drawn as a widget rather than a socket.
 WIDGET_KINDS = ("INT", "FLOAT", "STRING", "BOOLEAN", "COMBO")
 
+#: Deepest subgraph nesting a workflow may flatten through.
+MAX_DEPTH = 32
+
+#: Most nodes a workflow may flatten to, counting every expanded subgraph instance.
+MAX_NODES = 20000
+
+#: Most nodes, links and input slots read across every expanded level.
+MAX_ITEMS = 1_000_000
+
 
 def input_spec(class_type):
     """A registered node's declared inputs.
@@ -90,6 +99,8 @@ class Converter:
         missing: Class types encountered that no registered node provides.
         origins: ``{api_id: (definition_id, inner_id)}``, where ``definition_id`` is
             ``None`` for a node sitting in the root graph.
+        nodes: Nodes read so far, across every expanded level.
+        items: Nodes, links and input slots read so far.
     """
 
     def __init__(self, workflow, lookup=declared_widgets):
@@ -99,6 +110,9 @@ class Converter:
         self.prompt = {}
         self.missing = set()
         self.origins = {}
+        self.nodes = 0
+        self.items = 0
+        self._inner = {}
 
     def convert(self, workflow):
         """Build the API prompt for a whole workflow.
@@ -108,41 +122,86 @@ class Converter:
 
         Returns:
             ``{node_id: {"class_type": str, "inputs": dict}}``.
+
+        Raises:
+            ValueError: A subgraph contains itself, nesting passes ``MAX_DEPTH``, or the
+                expanded workflow passes ``MAX_NODES`` nodes or ``MAX_ITEMS`` items.
         """
         self.prompt = {}
         self.missing = set()
         self.origins = {}
-        self._walk(workflow, "", None, None)
+        self.nodes = 0
+        self.items = 0
+        self._walk(workflow, "", None, None, ())
         return self.prompt
 
-    def _walk(self, graph, prefix, boundary, definition):
+    def _spend(self, nodes=0, items=0):
+        """Count nodes and items read, raising once either passes its ceiling."""
+        self.nodes += nodes
+        self.items += nodes + items
+        if self.nodes > MAX_NODES:
+            raise ValueError(
+                f"the workflow expands to more than {MAX_NODES} nodes once every subgraph "
+                f"instance is unpacked. Open it and remove some nested subgraph instances"
+            )
+        if self.items > MAX_ITEMS:
+            raise ValueError(
+                f"the workflow holds more than {MAX_ITEMS} nodes, links and inputs once "
+                f"every subgraph instance is unpacked. Open it and remove some nested "
+                f"subgraph instances"
+            )
+
+    def _enter(self, kind, path):
+        """The definition path one level into ``kind``, refusing a cycle or deep nesting."""
+        name = self.subgraphs[kind].get("name") or kind
+        if kind in path:
+            raise ValueError(
+                f"subgraph {name!r} contains an instance of itself, so the workflow cannot "
+                f"be flattened. Open the subgraph and remove that instance"
+            )
+        if len(path) >= MAX_DEPTH:
+            raise ValueError(
+                f"subgraph {name!r} sits more than {MAX_DEPTH} subgraphs deep. Open the "
+                f"workflow and unpack some of the nesting"
+            )
+        return (*path, kind)
+
+    def _walk(self, graph, prefix, boundary, definition, path):
         """Emit every node of one graph level, recursing into each subgraph instance."""
-        nodes = {str(n["id"]): n for n in graph.get("nodes") or []}
+        listed = graph.get("nodes") or []
+        self._spend(len(listed), len(graph.get("links") or []))
+        nodes = {str(n["id"]): n for n in listed}
         links = _links(graph)
         skipped = {i for i, n in nodes.items() if n.get("mode") in (MUTED, BYPASSED)}
 
-        def source(origin, slot, seen=()):
-            if origin == str(BOUNDARY_IN):
-                return boundary.get(slot) if boundary else None
-            node = nodes.get(origin)
-            if node is None:
-                return None
-            if origin in skipped:
+        def source(origin, slot):
+            seen = set()
+            while origin != str(BOUNDARY_IN):
+                node = nodes.get(origin)
+                if node is None:
+                    return None
+                if origin not in skipped:
+                    if node["type"] in self.subgraphs:
+                        return self._through_output(node, prefix, slot, path)
+                    return [prefix + origin, slot]
                 if node.get("mode") == MUTED or origin in seen:
                     return None
+                seen.add(origin)
+                self._spend(items=1 + len(node.get("inputs") or []))
                 outputs = node.get("outputs") or []
                 wanted = outputs[slot].get("type") if slot < len(outputs) else None
                 # A bypassed node passes through from its first input of the same type.
+                upstream = None
                 for candidate in node.get("inputs") or []:
                     if candidate.get("type") != wanted or candidate.get("link") is None:
                         continue
                     upstream = links.get(candidate["link"])
                     if upstream:
-                        return source(upstream[0], upstream[1], (*seen, origin))
-                return None
-            if node["type"] in self.subgraphs:
-                return self._through_output(node, prefix, slot)
-            return [prefix + origin, slot]
+                        break
+                if not upstream:
+                    return None
+                origin, slot = upstream
+            return boundary.get(slot) if boundary else None
 
         def wired(node):
             found = {}
@@ -158,12 +217,15 @@ class Converter:
         for node_id, node in nodes.items():
             if node_id in skipped:
                 continue
+            self._spend(items=len(node.get("inputs") or []))
             if node["type"] in self.subgraphs:
+                inner = self._enter(node["type"], path)
                 self._walk(
                     self.subgraphs[node["type"]],
                     f"{prefix}{node_id}:",
                     self._boundary_inputs(node, links, source),
                     node["type"],
+                    inner,
                 )
                 continue
 
@@ -174,7 +236,7 @@ class Converter:
             linked = wired(node)
             inputs = dict(linked)
             free = [name for name in widgets if name not in linked]
-            for name, value in zip(free, list(node.get("widgets_values") or [])):
+            for name, value in zip(free, node.get("widgets_values") or []):
                 inputs[name] = value
             self.prompt[prefix + node_id] = {"class_type": node["type"], "inputs": inputs}
             self.origins[prefix + node_id] = (definition, node_id)
@@ -184,8 +246,8 @@ class Converter:
         inner = self.subgraphs[instance["type"]]
         slots = instance.get("inputs") or []
         mapped = {}
-        for index in range(len(inner.get("inputs") or [])):
-            if index >= len(slots) or slots[index].get("link") is None:
+        for index in range(min(len(inner.get("inputs") or []), len(slots))):
+            if slots[index].get("link") is None:
                 continue
             upstream = links.get(slots[index]["link"])
             if upstream:
@@ -194,26 +256,50 @@ class Converter:
                     mapped[index] = resolved
         return mapped
 
-    def _through_output(self, instance, prefix, slot):
-        """Resolve a subgraph instance's output slot to the inner node feeding it."""
-        inner = self.subgraphs[instance["type"]]
-        inner_prefix = f"{prefix}{instance['id']}:"
-        inner_nodes = {str(n["id"]): n for n in inner.get("nodes") or []}
+    def _definition(self, kind):
+        """``(exits, nodes)`` of one subgraph definition, read once.
 
-        for link in inner.get("links") or []:
-            if isinstance(link, dict):
-                target, target_slot = link["target_id"], link["target_slot"]
-                origin, origin_slot = str(link["origin_id"]), int(link["origin_slot"])
-            else:
-                target, target_slot = link[3], link[4]
-                origin, origin_slot = str(link[1]), int(link[2])
-            if int(target) != BOUNDARY_OUT or int(target_slot) != slot:
-                continue
+        Args:
+            kind: A subgraph definition id.
+
+        Returns:
+            ``exits`` maps each output slot to the first ``(origin_id, origin_slot)`` feeding
+            it; ``nodes`` maps each inner node id to its node.
+        """
+        if kind not in self._inner:
+            inner = self.subgraphs[kind]
+            wires = inner.get("links") or []
+            listed = inner.get("nodes") or []
+            self._spend(items=len(wires) + len(listed))
+            exits = {}
+            for link in wires:
+                try:
+                    if isinstance(link, dict):
+                        target, target_slot = link["target_id"], link["target_slot"]
+                        origin, origin_slot = str(link["origin_id"]), int(link["origin_slot"])
+                    else:
+                        target, target_slot = link[3], link[4]
+                        origin, origin_slot = str(link[1]), int(link[2])
+                    if int(target) == BOUNDARY_OUT:
+                        exits.setdefault(int(target_slot), (origin, origin_slot))
+                except (KeyError, IndexError, TypeError, ValueError):
+                    continue
+            self._inner[kind] = (exits, {str(n["id"]): n for n in listed})
+        return self._inner[kind]
+
+    def _through_output(self, instance, prefix, slot, path):
+        """Resolve a subgraph instance's output slot to the inner node feeding it."""
+        while True:
+            path = self._enter(instance["type"], path)
+            prefix = f"{prefix}{instance['id']}:"
+            exits, inner_nodes = self._definition(instance["type"])
+            if slot not in exits:
+                return None
+            origin, slot = exits[slot]
             node = inner_nodes.get(origin)
-            if node is not None and node["type"] in self.subgraphs:
-                return self._through_output(node, inner_prefix, origin_slot)
-            return [inner_prefix + origin, origin_slot]
-        return None
+            if node is None or node["type"] not in self.subgraphs:
+                return [prefix + origin, slot]
+            instance = node
 
 
 def to_prompt(workflow, lookup=declared_widgets):
@@ -225,6 +311,9 @@ def to_prompt(workflow, lookup=declared_widgets):
 
     Returns:
         ``(prompt, missing)``: the API prompt, and the class types no node provides.
+
+    Raises:
+        ValueError: A subgraph contains itself, or the workflow expands past its ceilings.
     """
     converter = Converter(workflow, lookup)
     prompt = converter.convert(workflow)
@@ -241,6 +330,9 @@ def prompt_with_origins(workflow, lookup=declared_widgets):
     Returns:
         ``(prompt, origins, missing)``, with ``origins`` mapping each API id to
         ``(definition_id, inner_id)``.
+
+    Raises:
+        ValueError: A subgraph contains itself, or the workflow expands past its ceilings.
     """
     converter = Converter(workflow, lookup)
     prompt = converter.convert(workflow)

@@ -1,7 +1,7 @@
 """Each segment of a run as one sheet of small frames, replaced as it samples.
 
-``GET /was/interface/api/segment_preview?node_id=<id>&segment=<n>`` answers a sheet as JPEG;
-``/index?node_id=<id>`` lists the sheets and problems held. :data:`EVENT` announces each.
+``GET /was/interface/api/segment_preview?node_id=&segment=&client_id=`` answers a sheet as
+JPEG and ``/index?node_id=&client_id=`` lists those held, to the queuing tab alone.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import time
 from collections import OrderedDict
 
 from .. import log
-from .channel import NO_STORE, executing_prompt_id
+from .channel import NO_STORE, executing_client_id, executing_prompt_id
 
 __all__ = [
     "CELL_WIDTH",
@@ -59,6 +59,7 @@ MAX_BYTES = 384 * 1024 * 1024
 _lock = threading.Lock()
 _sheets: OrderedDict[tuple[str, int], tuple[bytes, dict]] = OrderedDict()
 _problems: dict[tuple[str, int], dict] = {}
+_clients: dict[tuple[str, int], str] = {}
 _held = 0
 _version = 0
 _registered = False
@@ -168,11 +169,14 @@ def publish(owner, segment: int, frames, step: int = 0, steps: int = 0, head: in
             _held -= len(previous[0])
         _problems.pop(key, None)
         _sheets[key] = (body, fields)
+        _clients[key] = client = executing_client_id()
         _held += len(body)
         while _held > MAX_BYTES and len(_sheets) > 1:
-            _, (dropped, _) = _sheets.popitem(last=False)
+            evicted, (dropped, _) = _sheets.popitem(last=False)
             _held -= len(dropped)
-    _announce(fields)
+            if evicted not in _problems:
+                _clients.pop(evicted, None)
+    _announce(fields, client)
     return fields
 
 
@@ -202,46 +206,58 @@ def report(owner, segment: int, problem: str, detail: str = "") -> dict | None:
         if previous is not None:
             _held -= len(previous[0])
         _problems[key] = fields
-    _announce(fields)
+        _clients[key] = client = executing_client_id()
+    _announce(fields, client)
     return fields
 
 
-def _announce(fields: dict) -> None:
-    """Send a sheet's or a problem's fields to every open page."""
+def _announce(fields: dict, client: str) -> None:
+    """Send a sheet's or a problem's fields to the tab that queued the run, or to every tab without one."""
     try:
         from server import PromptServer
 
-        PromptServer.instance.send_sync(EVENT, fields)
+        PromptServer.instance.send_sync(EVENT, fields, client or None)
     except Exception as error:
         logger.debug("a segment preview could not be announced (%s)", error)
 
 
-def sheet(owner, segment: int) -> tuple[bytes, dict] | None:
+def _visible(key, client: str) -> bool:
+    """Whether a sheet or problem is served to a client: its own, or one queued with no client id."""
+    return _clients.get(key, "") in ("", str(client or "").strip())
+
+
+def sheet(owner, segment: int, client: str) -> tuple[bytes, dict] | None:
     """The latest sheet held for one segment.
 
     Args:
         owner: The id of the node the segment belongs to.
         segment: Segment number, from 0.
+        client: The asking tab's client id.
 
     Returns:
-        ``(jpeg, fields)``, or None.
+        ``(jpeg, fields)``, or None where none is held or it belongs to another client.
     """
+    key = (str(owner), int(segment))
     with _lock:
-        return _sheets.get((str(owner), int(segment)))
+        found = _sheets.get(key)
+        return found if found is not None and _visible(key, client) else None
 
 
-def held(owner) -> list[dict]:
+def held(owner, client: str) -> list[dict]:
     """The fields of every sheet and problem held for one node.
 
     Args:
         owner: The node's id.
+        client: The asking tab's client id; another client's sheets are left out.
 
     Returns:
         One entry per segment, in segment order. A problem's entry carries ``problem``.
     """
     with _lock:
-        found = [fields for (node, _), (_, fields) in _sheets.items() if node == str(owner)]
-        found += [fields for (node, _), fields in _problems.items() if node == str(owner)]
+        found = [fields for key, (_, fields) in _sheets.items()
+                 if key[0] == str(owner) and _visible(key, client)]
+        found += [fields for key, fields in _problems.items()
+                  if key[0] == str(owner) and _visible(key, client)]
     return sorted(found, key=lambda fields: fields["segment"])
 
 
@@ -268,6 +284,8 @@ def clear(owner, keep: int | None = None) -> int:
             dropped += 1
         for key in [key for key in _problems if gone(key)]:
             del _problems[key]
+        for key in [key for key in _clients if gone(key)]:
+            del _clients[key]
     return dropped
 
 
@@ -288,7 +306,8 @@ def register_routes() -> bool:
         @PromptServer.instance.routes.get(ROUTE)
         async def get_segment_preview(request):
             try:
-                found = sheet(request.query.get("node_id", ""), int(request.query.get("segment", -1)))
+                found = sheet(request.query.get("node_id", ""), int(request.query.get("segment", -1)),
+                              request.query.get("client_id", ""))
             except (TypeError, ValueError):
                 found = None
             if found is None:
@@ -297,7 +316,10 @@ def register_routes() -> bool:
 
         @PromptServer.instance.routes.get(INDEX_ROUTE)
         async def get_segment_preview_index(request):
-            return web.json_response(held(request.query.get("node_id", "")), headers=NO_STORE)
+            return web.json_response(
+                held(request.query.get("node_id", ""), request.query.get("client_id", "")),
+                headers=NO_STORE,
+            )
 
     except Exception as error:
         logger.warning(

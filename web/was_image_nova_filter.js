@@ -24,7 +24,7 @@ import { captureWheel, elementPoint } from "./interface/pointer.js";
 import { PREVIEW_STATE } from "./interface/preview.js";
 import { floorMod, truncate } from "./interface/python_arithmetic.js";
 import { surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
-import { onRunEnded } from "./interface/run_events.js";
+import { onNodeDone } from "./interface/run_events.js";
 import { onThemeChange, readTheme } from "./interface/theme.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
@@ -943,14 +943,14 @@ function chainWidgetCallback(node, name, onChange) {
 }
 
 /**
- * Ask for the picture again whenever a run ends, including a run that failed or was
- * cancelled part way through.
+ * Ask for the picture again as soon as the node finishes, or when a run ends without it.
  *
+ * @param {object} node - The node the picture is published for.
  * @param {{refresh: () => void}} surface - Surface from `createFilterSurface`.
  * @returns {() => void} Unhooks the listener.
  */
-function watchRuns(surface) {
-  return onRunEnded(() => {
+function watchRuns(node, surface) {
+  return onNodeDone(node, () => {
     try {
       surface.refresh();
     } catch (error) {
@@ -1017,6 +1017,7 @@ function attachNovaFilter(node) {
     },
     fidelity: (info) => fidelityText(info, model()),
     height: SURFACE_HEIGHT,
+    metrics: true,
   });
 
   // The curve is drawn as well as the picture. The wrap at black is the character of this
@@ -1038,7 +1039,7 @@ function attachNovaFilter(node) {
 
   for (const name of WIDGETS) chainWidgetCallback(node, name, repaint);
 
-  const stopWatchingRuns = watchRuns(surface);
+  const stopWatchingRuns = watchRuns(node, surface);
 
   // Linking one of these inputs leaves its widget read by nothing, and attaching a link changes
   // no widget value, so the callbacks above never hear about it.

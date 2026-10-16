@@ -19,6 +19,7 @@ __all__ = [
     "REFUSAL_HEADER",
     "clear_subscriptions",
     "executing_class_type",
+    "executing_client_id",
     "executing_node_id",
     "executing_prompt_id",
     "executing_workflow_id",
@@ -212,6 +213,30 @@ def executing_prompt_id() -> str | None:
     except Exception as error:
         logger.debug("the executing prompt id could not be read (%s)", error)
         return None
+
+
+def executing_client_id() -> str:
+    """The client id of the browser tab the running prompt was queued from.
+
+    Returns:
+        The id, or ``""`` when no prompt is running, when it was queued without one, and when
+        the queue cannot be read.
+    """
+    prompt_id = executing_prompt_id()
+    if not prompt_id:
+        return ""
+    try:
+        from server import PromptServer
+
+        running, _ = PromptServer.instance.prompt_queue.get_current_queue_volatile()
+        for item in running:
+            if len(item) < 4 or item[1] != prompt_id:
+                continue
+            extra = item[3] if isinstance(item[3], dict) else {}
+            return str(extra.get("client_id") or "").strip()
+    except Exception as error:
+        logger.debug("the executing client id could not be read (%s)", error)
+    return ""
 
 
 def executing_workflow_id() -> str | None:

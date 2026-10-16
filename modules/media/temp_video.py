@@ -12,6 +12,7 @@ import os
 from .. import log
 from ..interface.channel import executing_workflow_id
 from ..util import sandbox
+from . import demux
 
 logger = log.get_logger("media.temp_video")
 
@@ -96,7 +97,7 @@ def _smaller(video, target: str, size: tuple[int, int]) -> None:
                 out.write_rgb(shrink(frame.to(device), size))
         return
     if isinstance(video, InputImpl.VideoFromFile):
-        with av.open(video.get_stream_source()) as container:
+        with av.open(video.get_stream_source(), mode="r", container_options=demux.OPTIONS) as container:
             stream = container.streams.video[0]
             rate = stream.average_rate or 24
             with Encoder(target, "h264", width, height, rate, options=PREVIEW_OPTIONS,

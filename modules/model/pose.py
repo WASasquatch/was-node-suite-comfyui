@@ -131,10 +131,10 @@ def _backend(transformers, repo_id: str, class_name: str, device, key: str):
 
     def build():
         processor = transformers.AutoImageProcessor.from_pretrained(
-            pretrained, cache_dir=cache_dir
+            pretrained, cache_dir=cache_dir, token=False
         )
         model = getattr(transformers, class_name).from_pretrained(
-            pretrained, cache_dir=cache_dir
+            pretrained, cache_dir=cache_dir, token=False
         )
         return processor, model
 

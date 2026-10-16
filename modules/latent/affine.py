@@ -109,20 +109,44 @@ CONTENT_GATES = ["off", *patterns.CONTENT_PATTERNS]
 BIAS_FIELDS = ["constant", "gaussian"]
 
 
+#: Options that size an allocation, held to the range Affine Options declares for them
+#: whichever node or dictionary set them.
+LIMITS = {
+    "perlin_scale": (4.0, 1024.0),
+    "perlin_octaves": (1, 8),
+    "perlin_lacunarity": (1.0, 4.0),
+    "checker_size": (2, 256),
+    "bayer_size": (2, 64),
+    "content_window": (3, 63),
+    "hatch_supersample": (1, 8),
+    "worley_points_per_kpx": (0.1, 200.0),
+    "mask_blur": (0.0, 16.0),
+    "sharpen_radius": (0.0, 8.0),
+}
+
+
 def resolve(*layers) -> dict:
-    """Merge option dictionaries over :data:`DEFAULTS`, later layers winning.
+    """Merge option dictionaries over :data:`DEFAULTS`, later layers winning, :data:`LIMITS` applied.
 
     Args:
         *layers: Mappings of option name to value. Anything that is not a mapping is
             skipped, and a key outside :data:`DEFAULTS` is carried through untouched.
 
     Returns:
-        A full option dictionary holding every key in :data:`DEFAULTS`.
+        A full option dictionary holding every key in :data:`DEFAULTS`, each key in
+        :data:`LIMITS` clamped to its range.
     """
     out = dict(DEFAULTS)
     for layer in layers:
         if isinstance(layer, dict):
             out.update(layer)
+    for key, (low, high) in LIMITS.items():
+        value = out.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        if value != value:
+            value = low
+        out[key] = type(low)(min(max(value, low), high))
     return out
 
 

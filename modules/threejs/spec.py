@@ -8,20 +8,26 @@ from __future__ import annotations
 
 __all__ = [
     "ALLOW_SCRIPTS",
+    "HELD_SCHEMES",
+    "NETWORK_PARAM",
     "SCHEMA_VERSION",
     "WRAPPER_KEY",
     "carries_script",
     "compact_deps",
     "create_spec",
     "identifier",
+    "leaves_server",
     "parse_json_array",
     "parse_json_object",
+    "refuse_remote",
     "refuse_script",
+    "remote_address",
     "require_spec",
 ]
 
 import hashlib
 import json
+import re
 from typing import Any
 
 #: Version stamped into every descriptor and checked when one is read back.
@@ -75,6 +81,23 @@ SCRIPT_PARAM = "javascript"
 #: Config key that lets a scene carry code the browser runs.
 ALLOW_SCRIPTS = "threejs.allow_scripts"
 
+#: Params naming an address the browser fetches: one ``url``, and ``resources`` as
+#: ``{file name: address}``.
+URL_PARAM = "url"
+RESOURCES_PARAM = "resources"
+
+#: Param marking an address the browser may fetch from another machine.
+NETWORK_PARAM = "network"
+
+#: Schemes whose address carries its own bytes rather than naming a place.
+HELD_SCHEMES = ("data", "blob")
+
+#: Characters a browser drops from either end of an address.
+_URL_TRIM = "".join(chr(code) for code in range(0x21))
+
+#: The scheme an address opens with, as a browser reads one.
+_SCHEME = re.compile(r"([A-Za-z][A-Za-z0-9+.\-]*):")
+
 
 def carries_script(value) -> bool:
     """Whether a descriptor, or anything under it, carries browser code.
@@ -95,18 +118,98 @@ def carries_script(value) -> bool:
     return False
 
 
-def refuse_script(value, where: str) -> None:
-    """Stop a scene carrying browser code unless the config permits it.
+def leaves_server(address) -> bool:
+    """Whether a browser reading an address would fetch it from another machine.
+
+    Args:
+        address: An address a descriptor carries.
+
+    Returns:
+        True where it has a scheme other than :data:`HELD_SCHEMES`, or names a host.
+    """
+    text = "".join(ch for ch in str(address) if ch not in "\t\r\n")
+    text = text.strip(_URL_TRIM).replace("\\", "/")
+    scheme = _SCHEME.match(text)
+    if scheme is not None:
+        return scheme.group(1).lower() not in HELD_SCHEMES
+    return text.startswith("//")
+
+
+def remote_address(value) -> str | None:
+    """The first address in a descriptor tree that reaches past this server.
+
+    Args:
+        value: A descriptor, or any part of one.
+
+    Returns:
+        The address, or ``None`` where none leaves the server and no ``params.network``
+        is set.
+    """
+    if isinstance(value, dict):
+        params = value.get("params")
+        if isinstance(params, dict):
+            address = params.get(URL_PARAM)
+            if params.get(NETWORK_PARAM):
+                return str(address or "an address marked for the network")
+            if address is not None and leaves_server(address):
+                return str(address)
+            resources = params.get(RESOURCES_PARAM)
+            if isinstance(resources, dict):
+                for where in resources.values():
+                    if leaves_server(where):
+                        return str(where)
+        for entry in value.values():
+            found = remote_address(entry)
+            if found is not None:
+                return found
+    elif isinstance(value, (list, tuple)):
+        for entry in value:
+            found = remote_address(entry)
+            if found is not None:
+                return found
+    return None
+
+
+def refuse_remote(value, where: str) -> None:
+    """Stop a scene fetching from another machine unless ``features.network`` is on.
 
     Args:
         value: The descriptor about to reach the browser.
         where: Name of the node, for the message.
 
     Raises:
-        ValueError: The scene carries code and ``threejs.allow_scripts`` is off.
+        ValueError: The scene names an address past this server, or sets
+            ``params.network``, and ``features.network`` is off.
+    """
+    address = remote_address(value)
+    if address is None:
+        return
+    from ..model import NETWORK_FEATURE, network_enabled
+
+    if network_enabled():
+        return
+    raise ValueError(
+        f"{where} was given a scene that has the browser fetch {address[:80]} from another "
+        f"machine, which is refused while {NETWORK_FEATURE} is off. Turn {NETWORK_FEATURE} on "
+        f"in config.yaml to fetch web addresses, or use Three Texture From Image to take a "
+        f"picture from the graph."
+    )
+
+
+def refuse_script(value, where: str) -> None:
+    """Stop a scene carrying browser code, or fetching from another machine, unless permitted.
+
+    Args:
+        value: The descriptor about to reach the browser.
+        where: Name of the node, for the message.
+
+    Raises:
+        ValueError: The scene carries code and ``threejs.allow_scripts`` is off, or names
+            an address past this server and ``features.network`` is off.
     """
     from ..config import group_enabled
 
+    refuse_remote(value, where)
     if not carries_script(value) or group_enabled(ALLOW_SCRIPTS):
         return
     raise ValueError(

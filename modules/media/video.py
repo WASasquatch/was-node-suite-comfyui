@@ -14,6 +14,7 @@ from PIL import Image
 from .. import config, deps, log
 from ..constants import ALLOWED_EXT
 from ..util import sandbox
+from . import demux
 
 __all__ = [
     "AUDIO_ENCODER",
@@ -350,7 +351,7 @@ class VideoWriter:
             sandbox.resolve_write_file(os.path.dirname(video_path), stem + "_temp" + extension)
         )
 
-        with av.open(video_path) as source:
+        with av.open(video_path, mode="r", container_options=demux.OPTIONS) as source:
             stream = source.streams.video[0]
             stream.thread_type = "AUTO"
             width = stream.codec_context.width

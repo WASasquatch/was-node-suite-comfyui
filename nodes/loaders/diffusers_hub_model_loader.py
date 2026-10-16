@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from comfy_api.latest import io
@@ -17,40 +18,108 @@ logger = log.get_logger("nodes.loaders")
 #: Config key of the feature group this node is gated on.
 FEATURE = "features.diffusers"
 
-#: File patterns the download skips. A single-file checkpoint and an ONNX export are both
-#: unreadable by the diffusers loader, and either one can be most of the repository's size.
-IGNORE_PATTERNS = ["*.ckpt", "*.onnx"]
+#: Repository files the download fetches: configuration and tokenizer text, and the
+#: safetensors weights of the folders the loader reads.
+ALLOW_PATTERNS = [
+    "*.json",
+    "*.txt",
+    "unet/*.safetensors",
+    "vae/*.safetensors",
+    "text_encoder/*.safetensors",
+    "text_encoder_2/*.safetensors",
+]
 
-#: Widget values that mean "no revision was given", so the repository's default branch is
-#: fetched. The widget defaults to the string "None".
-UNSET_REVISIONS = ("", "None", "none")
+#: Widget values that select the repository's default branch. The widget defaults to the
+#: string "None".
+DEFAULT_REVISIONS = ("", "None", "none", "main")
+
+#: A pinned revision: a full commit hash.
+COMMIT_HASH = re.compile(r"[0-9a-fA-F]{40}")
+
+#: Weight files the loader tries in a ``unet`` or ``vae`` folder, the first present winning.
+DIFFUSION_WEIGHTS = (
+    "diffusion_pytorch_model.fp16.safetensors",
+    "diffusion_pytorch_model.safetensors",
+    "diffusion_pytorch_model.fp16.bin",
+    "diffusion_pytorch_model.bin",
+)
+
+#: Weight files the loader tries in a text encoder folder, the first present winning.
+TEXT_ENCODER_WEIGHTS = (
+    "model.fp16.safetensors",
+    "model.safetensors",
+    "pytorch_model.fp16.bin",
+    "pytorch_model.bin",
+)
+
+#: ``(folder, weight file names, required)`` for every folder the loader reads.
+COMPONENTS = (
+    ("unet", DIFFUSION_WEIGHTS, True),
+    ("vae", DIFFUSION_WEIGHTS, True),
+    ("text_encoder", TEXT_ENCODER_WEIGHTS, True),
+    ("text_encoder_2", TEXT_ENCODER_WEIGHTS, False),
+)
 
 
-def download_directory(repo_id: str) -> str:
+def pinned_commit(revision) -> str | None:
+    """The commit a revision widget names, or None for the default branch.
+
+    Args:
+        revision: The raw widget value.
+
+    Returns:
+        A lowercase 40-character commit hash, or None for an empty value, ``None`` or
+        ``main``.
+
+    Raises:
+        ValueError: The value names a branch, tag or pull request other than ``main``.
+    """
+    text = "" if revision is None else str(revision).strip()
+    if text in DEFAULT_REVISIONS:
+        return None
+    if COMMIT_HASH.fullmatch(text):
+        return text.lower()
+    raise ValueError(
+        f"revision {text!r} is not a commit hash, so nothing was downloaded.\n"
+        f"    This node fetches the default branch ('None' or 'main') or one commit named by "
+        f"its full 40-character hash. A branch, tag or pull request such as 'fp16' or "
+        f"'refs/pr/2' can change after a workflow is saved, and is refused.\n"
+        f"    Copy the commit's full hash from the repository's history on huggingface.co, "
+        f"or set revision back to 'None'."
+    )
+
+
+def download_directory(repo_id: str, commit: str | None = None) -> str:
     """The absolute directory a repository is downloaded into.
 
     Args:
         repo_id: A Hugging Face repository id, ``owner/name``.
+        commit: A 40-character commit hash from :func:`pinned_commit`, or None for the
+            default branch.
 
     Returns:
-        ``<models/diffusers>/<repo_id>``.
+        ``<models/diffusers>/<repo_id>``, or ``<models/diffusers>/<repo_id>@<commit>`` for
+        a pinned commit.
 
     Raises:
-        ValueError: The repository id is not ``owner/name``, no diffusers model directory is
-            configured, or the id resolves outside it.
+        ValueError: The repository id is not ``owner/name``, the commit is not a hash, no
+            diffusers model directory is configured, or the id resolves outside it.
     """
     import folder_paths
 
     from ...modules.model import repository_id
 
     repo_id = repository_id(repo_id)
+    if commit is not None and not COMMIT_HASH.fullmatch(commit):
+        raise ValueError(f"{commit!r} is not a 40-character commit hash")
     roots = folder_paths.get_folder_paths("diffusers")
     if not roots:
         raise ValueError(
             "no models/diffusers directory is configured, so there is nowhere to download to"
         )
     root = os.path.abspath(roots[0])
-    target = os.path.abspath(os.path.join(root, repo_id))
+    name = repo_id if commit is None else f"{repo_id}@{commit}"
+    target = os.path.abspath(os.path.join(root, name))
     if not sandbox.contains(Path(root).resolve(), Path(target).resolve()):
         raise ValueError(
             f"refusing to download {repo_id!r}, which resolves to {target}, outside the "
@@ -59,10 +128,47 @@ def download_directory(repo_id: str) -> str:
     return target
 
 
+def safetensors_weights(directory: str) -> list[str]:
+    """The weight file the loader reads from each folder, every one a safetensors file.
+
+    Args:
+        directory: A diffusers repository on disk.
+
+    Returns:
+        The absolute weight files, one per folder that holds one.
+
+    Raises:
+        ValueError: ``unet``, ``vae`` or ``text_encoder`` holds no weight file, or the file
+            the loader would read from any folder is not ``.safetensors``.
+    """
+    found, problems = [], []
+    for folder, names, required in COMPONENTS:
+        candidates = (os.path.join(directory, folder, name) for name in names)
+        chosen = next((path for path in candidates if os.path.exists(path)), None)
+        if chosen is None:
+            if required:
+                problems.append(f"{folder} holds no weight file")
+            continue
+        if not chosen.endswith(".safetensors") or not os.path.isfile(chosen):
+            problems.append(f"{folder} holds {os.path.basename(chosen)}, not .safetensors")
+            continue
+        found.append(chosen)
+    if problems:
+        raise ValueError(
+            f"refusing to load {directory}: {'; '.join(problems)}.\n"
+            f"    This node loads .safetensors weights only, from the unet, vae and "
+            f"text_encoder folders.\n"
+            f"    Pick a repository that publishes them, or remove {directory} so the next "
+            f"run fetches it again."
+        )
+    return found
+
+
 class DiffusersHubModelLoader(io.ComfyNode):
     """Fetch a diffusers model from the Hugging Face Hub and load it.
 
-    The repository is downloaded into ``models/diffusers/<repo_id>`` and loaded from there.
+    Files land in ``models/diffusers/<repo_id>``, or ``<repo_id>@<commit>`` for a pinned
+    commit.
     """
 
     @classmethod
@@ -88,8 +194,8 @@ class DiffusersHubModelLoader(io.ComfyNode):
                     tooltip=(
                         "The Hugging Face repository to fetch, owner and name, such as "
                         "'stabilityai/stable-diffusion-2-1'. It must be a diffusers-format "
-                        "repository: one holding unet, vae and text_encoder folders. "
-                        "Fetching needs features.network on in config.yaml; without it, a "
+                        "repository whose unet, vae and text_encoder folders hold "
+                        ".safetensors weights. Fetching needs features.network on in config.yaml; without it, a "
                         "repository already in models/diffusers still loads."
                     ),
                 ),
@@ -98,10 +204,10 @@ class DiffusersHubModelLoader(io.ComfyNode):
                     default="None",
                     multiline=False,
                     tooltip=(
-                        "Branch, tag or commit to fetch, such as 'fp16' or 'refs/pr/2'. "
-                        "Leave it as 'None' for the repository's default branch, which then "
-                        "means the files can change under a saved workflow; a commit hash "
-                        "pins them."
+                        "'None' or 'main' = the default branch, which can change under a "
+                        "saved workflow; a full 40-character commit hash = that commit, "
+                        "pinned, in its own '<name>@<hash>' folder. Other branches, tags and "
+                        "pull requests, such as 'fp16' or 'refs/pr/2', are refused."
                     ),
                 ),
             ],
@@ -138,12 +244,10 @@ class DiffusersHubModelLoader(io.ComfyNode):
         repo_id = (repo_id or "").strip().strip("/")
         if not repo_id:
             raise ValueError("no repository id was given, so there is nothing to download")
-        revision = revision.strip() if isinstance(revision, str) else revision
-        if revision in UNSET_REVISIONS or revision is None:
-            revision = None
+        commit = pinned_commit(revision)
 
-        target = download_directory(repo_id)
-        if revision is None and os.path.isfile(os.path.join(target, "model_index.json")):
+        target = download_directory(repo_id, commit)
+        if os.path.isfile(os.path.join(target, "model_index.json")):
             logger.info("%s is on disk at %s, so the hub is not contacted", repo_id, target)
         elif network_enabled():
             hub = deps.require("huggingface_hub", feature=FEATURE)
@@ -152,9 +256,9 @@ class DiffusersHubModelLoader(io.ComfyNode):
                 repo_id=repo_id,
                 repo_type="model",
                 local_dir=target,
-                revision=revision,
+                revision=commit,
                 token=False,
-                ignore_patterns=IGNORE_PATTERNS,
+                allow_patterns=ALLOW_PATTERNS,
             )
         elif os.path.isdir(target):
             logger.info(
@@ -169,6 +273,7 @@ class DiffusersHubModelLoader(io.ComfyNode):
                 f"    or put the repository at {target} yourself and run this node again."
             )
 
+        safetensors_weights(target)
         model, clip, vae = comfy.diffusers_load.load_diffusers(
             target,
             output_vae=True,

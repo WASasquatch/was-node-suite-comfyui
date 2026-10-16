@@ -24,7 +24,9 @@ __all__ = [
     "MAX_BYTES_TOTAL",
     "MAX_EXAMPLES",
     "MAX_FILES",
+    "MAX_LEVELS",
     "MAX_NOTES",
+    "MAX_WILDCARDS",
     "Member",
     "NOT_AN_IMAGE",
     "NOT_A_DOCUMENT",
@@ -61,6 +63,12 @@ MAX_NOTES = 20
 #: How many of an archive's own names a report offers, for the message a node builds when a
 #: pattern picked none of them.
 MAX_EXAMPLES = 12
+
+#: Most ``*`` wildcards one pattern may hold.
+MAX_WILDCARDS = 32
+
+#: Most folder levels one pattern may name.
+MAX_LEVELS = 64
 
 #: How much of a media type entry is read before it is compared. A media type is one short
 #: line, so anything longer is not one whatever the entry is called.
@@ -319,14 +327,19 @@ def matches(name: str, pattern: str) -> bool:
 
     Args:
         name: The entry's relative name inside the archive, spelled with ``/``.
-        pattern: A glob. ``*`` and ``?`` stand for anything within one folder level and
-            ``**`` for any number of levels. A pattern holding no ``/`` is matched against
+        pattern: A glob. ``*`` and ``?`` stand for anything within one folder level,
+            ``[abc]`` and ``[!abc]`` for one character listed or not listed, and ``**``
+            for any number of levels. A pattern holding no ``/`` is matched against
             the file's own name at any depth, so ``*.txt`` finds one in every folder, while
             ``notes/*.txt`` is anchored at the top of the archive. Empty picks everything,
             and case is ignored.
 
     Returns:
         True when the entry is picked.
+
+    Raises:
+        ValueError: The pattern holds more than :data:`MAX_WILDCARDS` ``*`` wildcards or
+            :data:`MAX_LEVELS` folder levels, or a character class that cannot be read.
     """
     text = (pattern or "").strip().replace("\\", "/")
     while text.startswith("./"):
@@ -334,7 +347,7 @@ def matches(name: str, pattern: str) -> bool:
     if not text:
         return True
     target = name if "/" in text else name.rsplit("/", 1)[-1]
-    return _compiled(text).fullmatch(target) is not None
+    return _fits(_compiled(text), target.split("/"))
 
 
 def read_matching(
@@ -513,52 +526,160 @@ def _read(
 
 
 @functools.lru_cache(maxsize=64)
-def _compiled(pattern: str) -> re.Pattern:
-    """The expression one glob compiles to, held for reuse across entries."""
-    return re.compile(_translated(pattern), re.IGNORECASE)
-
-
-def _translated(pattern: str) -> str:
-    """One glob as an expression matching a whole name.
+def _compiled(pattern: str) -> tuple:
+    """One glob as its folder levels, held for reuse across entries.
 
     Args:
         pattern: The glob, already spelled with ``/``.
 
     Returns:
-        The expression. A ``**`` segment stands for any number of folder levels and every
-        other wildcard stops at a ``/``, so ``a/**/b.txt`` reaches any depth under ``a``
-        while ``a/*.txt`` reaches one level.
+        One entry per folder level: None for a ``**`` level, otherwise what :func:`_level`
+        answers for it.
+
+    Raises:
+        ValueError: The glob holds more than :data:`MAX_WILDCARDS` ``*`` wildcards or
+            :data:`MAX_LEVELS` folder levels, or a character class that cannot be read.
     """
-    segments = pattern.split("/")
-    out = []
-    for index, segment in enumerate(segments):
-        last = index == len(segments) - 1
-        if segment == "**":
-            out.append(".*" if last else "(?:[^/]+/)*")
-            continue
-        out.append(_segment(segment) + ("" if last else "/"))
-    return "".join(out)
+    stars = pattern.count("*")
+    if stars > MAX_WILDCARDS:
+        raise ValueError(
+            f"The pattern {pattern!r} holds {stars} * wildcards, and at most {MAX_WILDCARDS} "
+            f"are read. Use fewer, such as '*.png' or 'frames/**/*.png'."
+        )
+    levels = pattern.split("/")
+    if len(levels) > MAX_LEVELS:
+        raise ValueError(
+            f"The pattern {pattern!r} names {len(levels)} folder levels, and at most "
+            f"{MAX_LEVELS} are read. Stand for the levels between with '**', as "
+            f"'frames/**/*.png'."
+        )
+    return tuple(None if level == "**" else _level(level, pattern) for level in levels)
 
 
-def _segment(segment: str) -> str:
-    """One folder level of a glob as an expression, where no wildcard crosses a ``/``."""
-    out = []
+def _level(level: str, pattern: str) -> tuple[tuple, bool]:
+    """One folder level of a glob as the fixed runs between its ``*`` wildcards.
+
+    Args:
+        level: The level, holding no ``/``.
+        pattern: The whole glob, for the message.
+
+    Returns:
+        ``(runs, starred)``. ``runs`` holds one ``(expression, width)`` per stretch between
+        ``*`` wildcards, each expression matching exactly ``width`` characters with case
+        ignored. ``starred`` is whether the level holds a ``*``.
+
+    Raises:
+        ValueError: A character class cannot be read.
+    """
+    runs = []
+    pieces: list[str] = []
+    starred = False
     index = 0
-    while index < len(segment):
-        char = segment[index]
+    while index < len(level):
+        char = level[index]
         index += 1
         if char == "*":
-            out.append("[^/]*")
+            runs.append(pieces)
+            pieces = []
+            starred = True
         elif char == "?":
-            out.append("[^/]")
+            pieces.append("[^/]")
         elif char == "[":
-            close = segment.find("]", index)
-            if close < 0:
-                out.append(re.escape(char))
+            close = level.find("]", index)
+            # An unclosed or empty class is a literal bracket.
+            if close < 0 or level[index:close] in ("", "!", "^"):
+                pieces.append(re.escape(char))
                 continue
-            body = segment[index:close].replace("\\", "\\\\")
+            body = level[index:close].replace("\\", "\\\\")
             index = close + 1
-            out.append(f"[{'^' + body[1:] if body.startswith('!') else body}]")
+            pieces.append(f"[{'^' + body[1:] if body.startswith('!') else body}]")
         else:
-            out.append(re.escape(char))
-    return "".join(out)
+            pieces.append(re.escape(char))
+    runs.append(pieces)
+    try:
+        compiled = tuple(
+            (re.compile("".join(run), re.IGNORECASE), len(run)) for run in runs
+        )
+    except re.error as error:
+        raise ValueError(
+            f"The pattern {pattern!r} holds a character class that cannot be read ({error}). "
+            f"Write a range low to high, as '[a-z]', or list the characters, as '[abc]' or "
+            f"'[!abc]'."
+        ) from error
+    return compiled, starred
+
+
+def _level_fits(level: tuple[tuple, bool], text: str) -> bool:
+    """Whether one folder level of a glob matches one folder level of a name.
+
+    Args:
+        level: What :func:`_level` answered.
+        text: The name's folder level, holding no ``/``.
+
+    Returns:
+        True on a match.
+    """
+    runs, starred = level
+    if not starred:
+        expression, width = runs[0]
+        return width == len(text) and expression.fullmatch(text) is not None
+    (head, head_width), *middle, (tail, tail_width) = runs
+    end = len(text) - tail_width
+    if end < head_width:
+        return False
+    if head_width and head.match(text) is None:
+        return False
+    if tail_width and tail.fullmatch(text, end) is None:
+        return False
+    position = head_width
+    for expression, width in middle:
+        if width:
+            found = expression.search(text, position, end)
+            if found is None:
+                return False
+            position = found.end()
+    return True
+
+
+def _fits(levels: tuple, parts: list[str]) -> bool:
+    """Whether a glob's folder levels match a name's.
+
+    Args:
+        levels: What :func:`_compiled` answered.
+        parts: The name cut at every ``/``.
+
+    Returns:
+        True where each level matches in turn. A ``**`` level takes any number of non-empty
+        folder levels, and as the last level takes everything left.
+    """
+    if None not in levels and len(levels) != len(parts):
+        return False
+    final = len(parts) - 1
+    # The indices of the parts the next level may start on, in ascending order.
+    reach = [0]
+    for position, level in enumerate(levels):
+        if position == len(levels) - 1:
+            if level is None:
+                return True
+            return reach[-1] == final and _level_fits(level, parts[final])
+        following = []
+        if level is None:
+            covered = -1
+            for start in reach:
+                if start <= covered:
+                    continue
+                index = start
+                following.append(index)
+                while index < final and parts[index] != "":
+                    index += 1
+                    following.append(index)
+                covered = index
+        else:
+            following = [
+                index + 1 for index in reach
+                if index < final and _level_fits(level, parts[index])
+            ]
+        if not following:
+            return False
+        reach = following
+    return False

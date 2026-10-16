@@ -7,6 +7,7 @@ import json
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_APP
+from ...modules.model import network_enabled
 from ...modules.threejs.spec import refuse_script, require_spec
 
 REQUIRES = "threejs"
@@ -120,6 +121,7 @@ class ThreePathTraceViewer(io.ComfyNode):
         refuse_script(app, "Three Path Trace Viewer")
         payload = {
             "app": app,
+            "network": network_enabled(),
             "trace": {
                 "samples": int(max_samples),
                 "bounces": int(bounces),

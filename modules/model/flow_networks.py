@@ -211,7 +211,9 @@ def _fetch(name: str, source: tuple[str, str], target: Path) -> Path:
     landing = target / f".{Path(name).stem}.download"
     try:
         target.mkdir(parents=True, exist_ok=True)
-        fetched = hub.hf_hub_download(repo_id=repo_id, filename=filename, local_dir=str(landing))
+        fetched = hub.hf_hub_download(
+            repo_id=repo_id, filename=filename, local_dir=str(landing), token=False
+        )
         final = target / name
         os.replace(fetched, final)
     except Exception as error:

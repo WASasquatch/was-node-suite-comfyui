@@ -165,10 +165,17 @@ Which map each answer takes:
 | `normal_map` | `..._normals` | `..._normals_vae` | `..._normals_conditioning` |
 | `albedo` | `..._albedo` | `..._albedo_vae` | `..._albedo_conditioning` |
 
-Wire **Load Diffusion Model** on the transformer into `model`. That is the only wire the
-answer needs: `adapter_name`, `vae_name` and `conditioning_name` all stay on `auto` and find
-that row's files by name, so one transformer feeds every map and no LoRA or VAE loader is
-placed.
+Choosing `Marigold v2` on the canvas wires **Load Diffusion Model** on the transformer into
+`model`. A loader already in the graph on a `qwen_image_edit_2509` file is reused; otherwise
+one is placed beside the node, on `qwen_image_edit_2509_int8_convrot.safetensors` or, where
+the folder lacks it, another `qwen_image_edit_2509` build it holds. That is the only wire the answer needs: `adapter_name`,
+`vae_name` and `conditioning_name` stay on `auto` and find that row's files by name, so one
+transformer feeds every map and no LoRA or VAE loader is placed.
+
+A file the folders lack is named on its widget instead of `auto`, and ComfyUI lists it under
+missing models with its download. Choosing another model takes the loader's link off the
+node and puts a named, missing file back to `auto`; changing the answer moves each widget to
+that map's file.
 
 The three overrides, where a file is named something else or a loader is wanted:
 
@@ -193,8 +200,10 @@ and each one after that about 0.8 seconds a frame.
 
 | Trouble | Cause |
 |---|---|
-| `model and vae are not wired` | `Marigold v2` reads both. Wire them. |
+| `model is not wired` | No transformer reaches `model`, as in a workflow saved before it was wired. Set `model_name` to another model and back to `Marigold v2`, or wire Load Diffusion Model by hand. |
+| `Value not in list` on `unet_name`, `adapter_name`, `vae_name` or `conditioning_name` | The file named there is not downloaded yet. Download it from the missing models list, or from the table above, and reload the page. |
 | `found no adapter` | That map's LoRA is not in the loras folder, or the model already carries one and `adapter_name` was not set to `already on the model`. |
+| `found no decoder` | That map's VAE is not in the vae folder. |
 | `found no prompt embedding` | That map's conditioning file is not in the embeddings folder. |
 | A map that looks like noise | The LoRA and the VAE name different maps. |
 | Depth flat or inverted | The answer already turns log depth over, so no invert node is wanted after it. |
@@ -353,6 +362,34 @@ before it serves `flux-2-klein-9b-fp8.safetensors`.
 | `flux-2-klein-9b-fp8.safetensors` | `ComfyUI/models/diffusion_models` | 9.4 GB | [black-forest-labs/FLUX.2-klein-9b-fp8](https://huggingface.co/black-forest-labs/FLUX.2-klein-9b-fp8) | **FLUX Non-Commercial License** |
 | `qwen_3_8b_fp8mixed.safetensors` | `ComfyUI/models/text_encoders` | 8.7 GB | [Comfy-Org/vae-text-encorder-for-flux-klein-9b](https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/blob/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors) | **FLUX Non-Commercial License**, as the repository is labelled |
 | `flux2-vae.safetensors` | `ComfyUI/models/vae` | 336 MB | [Comfy-Org/flux2-dev](https://huggingface.co/Comfy-Org/flux2-dev/blob/main/split_files/vae/flux2-vae.safetensors) | **FLUX.1 [dev] Non-Commercial License**, as the repository is labelled |
+
+### FLUX 3 Image Klein
+
+Graph: `flux3-klein-distill-lora.json`. Hugging Face asks for a signed-in account that has
+accepted the terms before it serves the `black-forest-labs` files.
+
+| File | Goes in | Size | Download | Licence |
+|---|---|--:|---|---|
+| `flux3_image_klein_bf16.safetensors` | `ComfyUI/models/diffusion_models` | 11.1 GB | [black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/diffusion_models/flux3_image_klein_bf16.safetensors) | **FLUX Kommunity License** |
+| `flux3_image_klein_sd_bf16.safetensors` | `ComfyUI/models/diffusion_models` | 11.1 GB | [black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/diffusion_models/flux3_image_klein_sd_bf16.safetensors) | **FLUX Kommunity License** |
+| `flux3_image_klein_distill_r256.safetensors` | `ComfyUI/models/loras` | 1.3 GB | [WAS/flux3_klein](https://huggingface.co/WAS/flux3_klein/blob/main/flux3_image_klein_distill_r256.safetensors) | **FLUX Kommunity License** |
+| `flux3_image_klein_distill_r64.safetensors` | `ComfyUI/models/loras` | 338 MB | [WAS/flux3_klein](https://huggingface.co/WAS/flux3_klein/blob/main/flux3_image_klein_distill_r64.safetensors) | **FLUX Kommunity License** |
+| `flux3_image_klein_distill_r32.safetensors` | `ComfyUI/models/loras` | 169 MB | [WAS/flux3_klein](https://huggingface.co/WAS/flux3_klein/blob/main/flux3_image_klein_distill_r32.safetensors) | **FLUX Kommunity License** |
+| `flux3_image_klein_distill_r16.safetensors` | `ComfyUI/models/loras` | 85 MB | [WAS/flux3_klein](https://huggingface.co/WAS/flux3_klein/blob/main/flux3_image_klein_distill_r16.safetensors) | **FLUX Kommunity License** |
+| `qwen3vl_4b_int8_convrot.safetensors` | `ComfyUI/models/text_encoders` | 4.9 GB | [black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors) | Apache-2.0, Qwen3-VL-4B-Instruct |
+| `flux2-vae.safetensors` | `ComfyUI/models/vae` | 336 MB | [black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/vae/flux2-vae.safetensors) | **FLUX Kommunity License**, as the repository is labelled |
+
+The four LoRAs are the distilled checkpoint minus the base, one per rank; the higher the rank,
+the closer the base comes to the distilled picture at CFG 1. **Flux 3 Flow Map Patch** reads the
+two `ref_time_in` weights from `flux3_image_klein_sd_bf16.safetensors` or
+`flux3_image_klein_sd_int8_convrot.safetensors`, so one distilled file stays in
+`ComfyUI/models/diffusion_models` beside the base.
+
+| What you see | What it means |
+|---|---|
+| A fine stripe every 4 pixels down the rows, and a blue cast | The LoRA is on the base without **Flux 3 Flow Map Patch**. Put the patch between the LoRA and the sampler |
+| `holds no ref_time_in weights` | The checkpoint menu names a base file. Pick a file with `_sd_` in its name |
+| `takes a FLUX 3 Image model` | The model wired in is another architecture. Wire the Load Diffusion Model on `flux3_image_klein_bf16.safetensors` |
 
 ### The other graphs
 

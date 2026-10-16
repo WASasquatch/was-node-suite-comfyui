@@ -122,7 +122,18 @@ class LUTFromReference(io.ComfyNode):
         cls, source, reference, method="mkl", color_space="RGB", size=DEFAULT_SIZE,
         strength=1.0, title="",
     ) -> io.NodeOutput:
-        edge = int(size)
+        """Measure the grade from source to reference and bake it into a cube.
+
+        Raises:
+            ValueError: ``size`` is not one of :data:`SIZES`.
+        """
+        if str(size).strip() not in SIZES:
+            raise ValueError(
+                f"LUT from Reference was given a size of {size!r}, and the cube is built at "
+                f"{', '.join(SIZES[:-1])} or {SIZES[-1]} samples. Set size to one of those; "
+                f"33 is the usual choice."
+            )
+        edge = int(str(size).strip())
         rgb_source = source[..., :3]
         rgb_reference = reference[..., :3]
 

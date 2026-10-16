@@ -317,6 +317,7 @@ def perlin(
         return torch.stack((torch.cos(theta), torch.sin(theta)), dim=-1)
 
     def octave(freq_y: float, freq_x: float) -> torch.Tensor:
+        freq_y, freq_x = min(freq_y, float(height)), min(freq_x, float(width))
         rows = int(math.floor(freq_y)) + 1
         columns = int(math.floor(freq_x)) + 1
         g = gradients(rows, columns)

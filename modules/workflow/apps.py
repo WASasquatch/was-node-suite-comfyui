@@ -100,6 +100,10 @@ def discover() -> list[str]:
     return sorted(found)
 
 
+#: Largest app workflow file read, in bytes.
+MAX_WORKFLOW_BYTES = 16 * 1024 * 1024
+
+
 def load(name: str) -> dict:
     """Read one app workflow.
 
@@ -111,7 +115,8 @@ def load(name: str) -> dict:
 
     Raises:
         FileNotFoundError: No workflows directory, or no such file within it.
-        ValueError: The path leaves the workflows directory, or the file is not JSON.
+        ValueError: The path leaves the workflows directory, the file is larger than
+            :data:`MAX_WORKFLOW_BYTES`, or it is not JSON.
     """
     root = directory()
     if root is None:
@@ -123,6 +128,7 @@ def load(name: str) -> dict:
     reason = sandbox.leaves_folder(name)
     if reason is not None:
         raise ValueError(f"{name!r} {reason}. Name a workflow inside {root}")
+    sandbox.refuse_linked_host(root / name, trusted=root)
     target = (root / name).resolve()
     if root.resolve() not in (target, *target.parents):
         raise ValueError(
@@ -133,6 +139,13 @@ def load(name: str) -> dict:
         raise FileNotFoundError(
             f"no saved workflow named {name!r} in {root}. Save one from the workflow menu, "
             f"with a name ending {SUFFIX}"
+        )
+    size = target.stat().st_size
+    if size > MAX_WORKFLOW_BYTES:
+        raise ValueError(
+            f"{name!r} is {size / (1024 * 1024):.1f} MiB, larger than the "
+            f"{MAX_WORKFLOW_BYTES / (1024 * 1024):.0f} MiB an app workflow may be. Save a "
+            f"smaller workflow"
         )
     try:
         return json.loads(target.read_text(encoding="utf-8"))

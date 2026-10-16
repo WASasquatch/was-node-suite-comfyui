@@ -26,9 +26,7 @@ __all__ = [
     "validate_scales",
 ]
 
-#: Measured ``(A, beta)`` for the two models the paper profiled, offered as starting points.
-#: Anything else should be measured with :func:`fit_power_spectrum` rather than guessed at, and
-#: these two are only correct for the exact checkpoints named.
+#: Measured ``(A, beta)`` for the two checkpoints the paper profiled, by name.
 PRESETS = {
     "FLUX.1-dev": (203.615097, 1.915461),
     "Wan 2.1 T2V-1.3B": (219.484718, 2.422687),
@@ -273,14 +271,12 @@ def base_sampler_names() -> list[str]:
     """The solvers a SPEED run can be built on.
 
     Returns:
-        The solver names, sorted. Read from the running ComfyUI rather than frozen into the
-        source, so a solver added by a later release is offered without a change here.
+        The names of the running ComfyUI's ``sample_*`` solvers, without the prefix, sorted,
+        less the three that cannot run in segments.
     """
     import comfy.k_diffusion.sampling as k_diffusion
 
-    # Each segment is a fresh call into the solver, which a stateful solver survives by starting
-    # its state again. These three cannot be segmented at all: two choose their own step count
-    # from a tolerance instead of following the sigmas handed to them, and one carries a schedule.
+    # Solvers that pick their own step count or carry their own schedule.
     cannot_be_segmented = {"dpm_fast", "dpm_adaptive", "lcm"}
     prefix = "sample_"
     found = [name[len(prefix):] for name in dir(k_diffusion) if name.startswith(prefix)]
@@ -734,9 +730,13 @@ def sample_speed(
     """
     import comfy.k_diffusion.sampling as k_diffusion
 
-    solver = getattr(k_diffusion, "sample_" + base_sampler, None)
-    if solver is None:
-        raise ValueError(f"there is no sampler called {base_sampler!r} in this ComfyUI.")
+    offered = base_sampler_names()
+    if not isinstance(base_sampler, str) or base_sampler not in offered:
+        raise ValueError(
+            f"{base_sampler!r} is not a sampler SPEED can run in this ComfyUI. Pick one of: "
+            f"{', '.join(offered)}."
+        )
+    solver = getattr(k_diffusion, "sample_" + base_sampler)
 
     extra_args = {} if extra_args is None else extra_args
     scales = list(scales)

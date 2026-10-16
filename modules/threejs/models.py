@@ -55,10 +55,60 @@ MAX_SIDECAR_BYTES = 96 * 1024 * 1024
 #: Bytes of a model read while looking for the names it references.
 MAX_SCAN_BYTES = 64 * 1024 * 1024
 
-#: A Collada image, a Wavefront material library and a Wavefront texture map.
-_COLLADA_IMAGE = re.compile(r"<init_from>\s*([^<\s][^<]*?)\s*</init_from>", re.I)
-_OBJ_LIBRARY = re.compile(r"^\s*mtllib\s+(.+?)\s*$", re.I | re.M)
-_MTL_MAP = re.compile(r"^\s*map_\w+\s+(?:-\S+\s+\S+\s+)*(.+?)\s*$", re.I | re.M)
+#: A Collada image reference, everything up to the next tag.
+_COLLADA_IMAGE = re.compile(r"<init_from>([^<]*)</init_from>", re.I)
+
+#: One run of characters that are not whitespace.
+_WORD = re.compile(r"\S+")
+
+
+def _obj_libraries(text: str) -> list[str]:
+    """The material libraries a Wavefront model names on its ``mtllib`` lines.
+
+    Args:
+        text: The model's text.
+
+    Returns:
+        What follows ``mtllib`` on each line, stripped, in the order found.
+    """
+    names = []
+    for line in text.split("\n"):
+        words = line.strip().split(None, 1)
+        if len(words) == 2 and words[0].lower() == "mtllib":
+            names.append(words[1])
+    return names
+
+
+def _mtl_maps(text: str) -> list[str]:
+    """The texture files a Wavefront material library names on its ``map_`` lines.
+
+    Args:
+        text: The library's text.
+
+    Returns:
+        What follows each ``map_Kd`` style keyword and its ``-option value`` pairs, stripped,
+        in the order found.
+    """
+    names = []
+    for line in text.split("\n"):
+        words = line.strip().split(None, 1)
+        if len(words) < 2:
+            continue
+        key, rest = words
+        if key[:4].lower() != "map_" or len(key) == 4:
+            continue
+        if not all(char.isalnum() or char == "_" for char in key[4:]):
+            continue
+        spans = [found.span() for found in _WORD.finditer(rest)]
+        index = 0
+        while (
+            index + 2 < len(spans)
+            and rest.startswith("-", spans[index][0])
+            and spans[index][1] - spans[index][0] > 1
+        ):
+            index += 2
+        names.append(rest[spans[index][0]:])
+    return names
 
 
 def _cleaned(name: str) -> str:
@@ -135,7 +185,7 @@ def _referenced(path: Path) -> list[str]:
 
     names: list[str] = []
     if suffix == ".dae":
-        names = _COLLADA_IMAGE.findall(text)
+        names = [found.strip() for found in _COLLADA_IMAGE.findall(text)]
     elif suffix == ".gltf":
         try:
             document = json.loads(text)
@@ -149,7 +199,7 @@ def _referenced(path: Path) -> list[str]:
                 if isinstance(where, str):
                     names.append(where)
     else:
-        for library in _OBJ_LIBRARY.findall(text):
+        for library in _obj_libraries(text):
             names.append(library)
             if _cleaned(library).lower().startswith("data:"):
                 continue
@@ -157,7 +207,7 @@ def _referenced(path: Path) -> list[str]:
             if beside is None or beside.stat().st_size > MAX_SCAN_BYTES:
                 continue
             try:
-                names.extend(_MTL_MAP.findall(beside.read_text(encoding="utf-8", errors="replace")))
+                names.extend(_mtl_maps(beside.read_text(encoding="utf-8", errors="replace")))
             except OSError:
                 continue
 

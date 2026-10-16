@@ -17,6 +17,10 @@ logger = log.get_logger("nodes.extras.image")
 #: Extension every saved table carries.
 CUBE_SUFFIX = ".cube"
 
+#: Smallest and largest edge of the cube written, in samples.
+MIN_OUTPUT_SIZE = 17
+MAX_OUTPUT_SIZE = 65
+
 
 class SaveLUT(io.ComfyNode):
     """Write a colour lookup table to a ``.cube`` file and pass it on."""
@@ -54,7 +58,8 @@ class SaveLUT(io.ComfyNode):
                     ),
                 ),
                 io.Int.Input(
-                    "output_size", default=33, min=17, max=65, step=2,
+                    "output_size", default=33, min=MIN_OUTPUT_SIZE, max=MAX_OUTPUT_SIZE,
+                    step=2,
                     tooltip=(
                         "Edge length of the cube written to the file, in samples. 33 is the "
                         "industry-standard size and is what most grading tools expect; 65 is "
@@ -104,6 +109,7 @@ class SaveLUT(io.ComfyNode):
                 f"under another name."
             )
 
+        output_size = max(MIN_OUTPUT_SIZE, min(int(output_size), MAX_OUTPUT_SIZE))
         target.parent.mkdir(parents=True, exist_ok=True)
         resampled = tables.convert_to_3d(lut, output_size)
         tables.save_cube(target, resampled)

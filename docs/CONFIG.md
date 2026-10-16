@@ -103,12 +103,14 @@ written.
 | ComfyUI `input/` | yes | **no**, a write there is moved to `temp/`, below |
 | ComfyUI `output/` | yes | yes |
 | ComfyUI `temp/` | yes | yes |
-| The pack's own directory, `<user_dir>/was-node-suite/`, or `$WAS_CONFIG_DIR` | yes | yes |
-| Anything in `paths.allow_read` | yes | no |
+| The pack's own directory, `<user_dir>/was-node-suite/`, or `$WAS_CONFIG_DIR` | yes | yes, except the entries below |
+| `config.yaml`, `config.json` and `viewer-extensions/` in that directory, and the file `WAS_CONFIG` names | yes | **no** |
+| Anything in `paths.allow_read` | yes, and listed, previewed and read by the pack's routes for any client that reaches ComfyUI | no |
 | Anything in `paths.allow_write` | no | yes |
 
 Subdirectories of a permitted root are permitted. A write that resolves inside `input/` is
-rewritten to the same relative path under `temp/` and logged with both paths.
+rewritten to the same relative path under `temp/` and logged with both paths. The refused
+entries are matched without regard to case or to trailing dots and spaces.
 
 Both sides of a comparison are fully resolved first, which covers `..` segments and symlinks: a
 symlink inside a root pointing outside it does not widen the boundary. Comparison is

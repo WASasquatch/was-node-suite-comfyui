@@ -9,6 +9,7 @@ import { app } from "../../../scripts/app.js";
 import { imageBackdrop, normaliseFrame } from "./backdrop.js";
 import { elideText } from "./canvas_text.js";
 import { ICON, ICON_SIZE, ICON_TITLES, drawIcon, hoverTitles, iconTitle } from "./icons.js";
+import { createMetricsSection } from "./metrics_panel.js";
 import { captureWheel, elementPoint } from "./pointer.js";
 import { LABELS, PREVIEW_STATE } from "./preview.js";
 import { floorMod } from "./python_arithmetic.js";
@@ -148,6 +149,13 @@ export const MAGNIFIED_AT = 0.98;
 
 // Pixels the filter may walk on one repaint while nobody is holding the surface at full detail.
 const FILTER_PIXEL_BUDGET = 320000;
+
+// Room the measurement band adds below the two panels, in node units.
+const METRICS_HEIGHT = 104;
+
+// The longest edge the band measures at, and how long a slider rests before it measures.
+const METRICS_EDGE = 512;
+const METRICS_DELAY = 150;
 
 // The footer button that lifts the picture to the image's own detail while it is held, and the
 // room it takes. Its words change while it is down.
@@ -701,11 +709,15 @@ function clampEdges(image, margin) {
  *   pixels, for anything that blurs.
  * @param {{before?: string, after?: string}} [options.labels] - What to call the two panels.
  * @param {number} [options.height] - Height of the appended widget in node units.
+ * @param {boolean} [options.metrics] - Draw a band under the panels measuring the picture
+ *   against the filtered one: PSNR, SSIM, RMSE, MAE, colour shift and both histograms. Off by
+ *   default.
  * @returns {{element: HTMLElement, height: number, schedulePaint: () => void,
  *   refresh: () => void, dispose: () => void}} The element to hand to `addDOMWidget`, the
  *   height it was built for, a coalesced repaint, a fresh ask for the backdrop, and teardown.
  */
 export function createFilterSurface(options = {}) {
+  const measured = options.metrics === true;
   const settings = {
     node: options.node ?? null,
     backdrop: options.backdrop ?? (options.node ? imageBackdrop(options.node) : testCardBackdrop()),
@@ -713,7 +725,8 @@ export function createFilterSurface(options = {}) {
     fidelity: typeof options.fidelity === "function" ? options.fidelity : null,
     margin: options.margin ?? 0,
     labels: { ...DEFAULT_LABELS, ...(options.labels ?? {}) },
-    height: Math.max(UI_MARGIN * 2 + MIN_PANEL, toNumber(options.height, DEFAULT_HEIGHT)),
+    height: Math.max(UI_MARGIN * 2 + MIN_PANEL, toNumber(options.height, DEFAULT_HEIGHT))
+      + (measured ? METRICS_HEIGHT : 0),
   };
 
   const root = document.createElement("div");
@@ -726,11 +739,27 @@ export function createFilterSurface(options = {}) {
     "overflow:hidden",
     "touch-action:none",
     "user-select:none",
+    ...(measured ? ["display:flex", "flex-direction:column"] : []),
   ].join(";");
+
+  // The panels are drawn on a stage at the top of the element, the measurement band under it.
+  const stage = measured ? document.createElement("div") : root;
+  if (measured) {
+    stage.style.cssText = "position:relative;flex:1 1 auto;min-height:0;overflow:hidden";
+    root.appendChild(stage);
+  }
 
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "display:block;width:100%;height:100%";
-  root.appendChild(canvas);
+  stage.appendChild(canvas);
+
+  const metrics = measured ? createMetricsSection({ workingEdge: METRICS_EDGE }) : null;
+  if (metrics) {
+    // Sized to its figures, which wrap to a second row on a narrow node.
+    metrics.element.style.flex = "0 0 auto";
+    metrics.element.style.padding = `${PAD}px ${PAD}px 0`;
+    root.appendChild(metrics.element);
+  }
 
   // The footer's glyphs state their sentence through the element's own title. The regions are
   // handed over again on every repaint, since a glyph moves whenever the node is resized.
@@ -752,6 +781,9 @@ export function createFilterSurface(options = {}) {
     holding: false,
     holdBox: null,
     disposed: false,
+    measure: null,
+    measureTimer: 0,
+    measureCanvases: null,
   };
 
   // The footer's two hover regions, rebuilt on every paint.
@@ -1332,14 +1364,66 @@ export function createFilterSurface(options = {}) {
   }
 
   /**
+   * Copy the picture inside a buffer, without its margin, onto a canvas the band can read.
+   *
+   * @param {number} index - Which of the two kept canvases, 0 or 1.
+   * @param {ImageData} image - Buffer holding the picture inset by the margin.
+   * @param {number} margin - Margin the buffer carries on every side.
+   * @param {{w: number, h: number}} picture - The picture inside the buffer.
+   * @returns {HTMLCanvasElement|null} The canvas, or null where a context could not be had.
+   */
+  function measureCanvas(index, image, margin, picture) {
+    if (!state.measureCanvases) {
+      state.measureCanvases = [document.createElement("canvas"), document.createElement("canvas")];
+    }
+    const held = state.measureCanvases[index];
+    if (held.width !== picture.w) held.width = picture.w;
+    if (held.height !== picture.h) held.height = picture.h;
+    const ctx = held.getContext("2d");
+    if (!ctx) return null;
+    ctx.putImageData(image, -margin, -margin, margin, margin, picture.w, picture.h);
+    return held;
+  }
+
+  /**
+   * Measure the last painted pair once the settings have rested.
+   *
+   * @returns {void}
+   */
+  function scheduleMeasure() {
+    if (!metrics) return;
+    if (state.measureTimer) clearTimeout(state.measureTimer);
+    state.measureTimer = setTimeout(() => {
+      state.measureTimer = 0;
+      if (state.disposed) return;
+      try {
+        const pair = state.measure;
+        if (!pair) {
+          metrics.clear();
+          return;
+        }
+        const before = measureCanvas(0, pair.source, pair.margin, pair.picture);
+        const after = measureCanvas(1, pair.after, pair.margin, pair.picture);
+        if (!before || !after) {
+          metrics.clear();
+          return;
+        }
+        metrics.update(before, after);
+      } catch (error) {
+        console.error(`[${LOG_NAME}] Failed to measure the filter:`, error);
+      }
+    }, METRICS_DELAY);
+  }
+
+  /**
    * Draw the whole surface.
    *
    * @returns {void}
    */
   function paint() {
     if (state.disposed) return;
-    const width = root.clientWidth;
-    const height = root.clientHeight;
+    const width = stage.clientWidth;
+    const height = stage.clientHeight;
     if (!width || !height) return;
 
     // The graph's zoom is in here as well as the screen's density, so a magnified node is drawn
@@ -1383,6 +1467,7 @@ export function createFilterSurface(options = {}) {
     const device = view ? deviceRect(view, ratio) : null;
     let info = null;
     let drew = false;
+    state.measure = null;
 
     if (picture && device && picture.w > 0 && picture.h > 0 && device.w > 0 && device.h > 0) {
       const margin = readMargin(describe(picture, 0));
@@ -1397,6 +1482,10 @@ export function createFilterSurface(options = {}) {
         drawPicture(ctx, source, margin, picture, device, ratio);
         drawPicture(ctx, after, margin, picture, afterDevice, ratio);
         drew = true;
+        // Only the node's own picture is measured, never the test card.
+        if (state.frame.kind === BACKDROP_KIND.IMAGE) {
+          state.measure = { source, after, margin, picture: { w: picture.w, h: picture.h } };
+        }
       } else {
         drawEmpty(ctx, theme, layout.before);
         drawEmpty(ctx, theme, layout.after);
@@ -1426,6 +1515,7 @@ export function createFilterSurface(options = {}) {
     ctx.fillText(settings.labels.after, layout.after.x, tagY, Math.max(1, layout.after.w));
 
     drawFooter(ctx, theme, info, drew);
+    scheduleMeasure();
   }
 
   /**
@@ -1555,12 +1645,17 @@ export function createFilterSurface(options = {}) {
     releaseWheel();
     if (state.paintHandle) cancelAnimationFrame(state.paintHandle);
     if (state.retryTimer) clearTimeout(state.retryTimer);
+    if (state.measureTimer) clearTimeout(state.measureTimer);
     state.paintHandle = 0;
     state.retryTimer = 0;
+    state.measureTimer = 0;
     state.source = null;
     state.sourceKey = "";
     state.target = null;
     state.scratch = null;
+    state.measure = null;
+    state.measureCanvases = null;
+    metrics?.dispose();
     titles.dispose();
     // Taken off the page rather than off the root, so a disposed surface leaves neither behind.
     window.removeEventListener("blur", releaseHold);

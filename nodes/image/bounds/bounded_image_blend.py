@@ -10,6 +10,39 @@ from ....modules.convert.tensors import pil2tensor, tensor2pil
 from ....modules.interface import size_report
 
 
+def checked_window(node, row, width, height, feathering=0):
+    """Refuse a bounds window that holds no pixels or is larger than the pack builds.
+
+    Args:
+        node: The node's display name, opening the message.
+        row: The ``(rmin, rmax, cmin, cmax)`` bounds row the window came from.
+        width: Window width in pixels.
+        height: Window height in pixels.
+        feathering: Fade width in pixels taken in from each edge, 0 for none.
+
+    Raises:
+        ValueError: The window is empty, or narrower than twice the feathering.
+        CanvasTooLarge: The window is past 30000 pixels a side or 16384x16384 in all.
+    """
+    from ....modules.image import sizing
+
+    if width < 1 or height < 1:
+        raise ValueError(
+            f"{node} was given the bounds row {tuple(row)}, which encloses no pixels: rmax "
+            f"must be at least rmin and cmax at least cmin. Connect the bounds the region "
+            f"was cropped with."
+        )
+    if min(width, height) < 2 * feathering:
+        raise ValueError(
+            f"{node} cannot fade a {width}x{height} window by {feathering} pixels from each "
+            f"edge. Lower feathering to {min(width, height) // 2} or less."
+        )
+    sizing.check_canvas(
+        width, height, f"{node}'s bounds window",
+        "Narrow target_bounds, such as with Inset Image Bounds, before blending.",
+    )
+
+
 class BoundedImageBlend(io.ComfyNode):
     """Scale a source into a target's bounds and blend it in through a feathered mask."""
 
@@ -87,8 +120,10 @@ class BoundedImageBlend(io.ComfyNode):
         """Blend each source image into its window of the target.
 
         Raises:
-            ValueError: Nothing is connected to the target_bounds input, or source holds no
-                images.
+            ValueError: Nothing is connected to the target_bounds input, source holds no
+                images, or a bounds window is empty or narrower than twice the feathering.
+            CanvasTooLarge: A bounds window is past 30000 pixels a side or 16384x16384 in
+                all.
             MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from PIL import Image, ImageFilter, ImageOps
@@ -124,6 +159,9 @@ class BoundedImageBlend(io.ComfyNode):
                 rmin, rmax, cmin, cmax = target_bounds[idx]
 
                 height, width = (rmax - rmin + 1, cmax - cmin + 1)
+                checked_window(
+                    "Bounded Image Blend", (rmin, rmax, cmin, cmax), width, height, feathering
+                )
                 first_window = first_window or (width, height)
 
                 if feathering > 0:

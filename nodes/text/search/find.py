@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import re
-
 from comfy_api.latest import io
+
+from ....modules.util import patterns
 
 
 class TextFind(io.ComfyNode):
@@ -46,10 +46,10 @@ class TextFind(io.ComfyNode):
                     default="",
                     multiline=False,
                     tooltip=(
-                        "Regular expression to search for when substring is empty, for "
-                        "example 'cat|dog' to find either word or '^photo' to require it at "
-                        "the start. An empty pattern matches everything, so leaving both "
-                        "fields blank always reports found."
+                        "Regular expression searched for when substring is empty, as "
+                        "'cat|dog' for either word or '^photo' for one at the start. Empty "
+                        "matches everything. A search past 1 second stops with an error. "
+                        "Patterns run in the regex package's re-compatible mode."
                     ),
                 ),
             ],
@@ -69,4 +69,4 @@ class TextFind(io.ComfyNode):
         if substring:
             return io.NodeOutput(substring in text)
 
-        return io.NodeOutput(bool(re.search(pattern, text)))
+        return io.NodeOutput(bool(patterns.search(pattern, text, "Text Find's pattern")))

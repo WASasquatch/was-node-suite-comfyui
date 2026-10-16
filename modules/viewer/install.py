@@ -62,6 +62,12 @@ ARCHIVE_BRANCHES = ("-main", "-master")
 #: Written into the views directory and fetched by the frontend's view loader.
 MANIFEST_NAME = "extension_views.json"
 
+#: Every file a view extension has written into this pack, relative to the pack root.
+LEDGER = NODES_DIR / "_installed_files.json"
+
+#: Most bytes one extension may install, counting every file it would write.
+MAX_EXTENSION_BYTES = 256 * 1024 * 1024
+
 #: View files the viewer ships itself, listed in ``view_manifest.js`` and loaded from
 #: there. They must not appear in the extension manifest as well, or each is imported
 #: twice.
@@ -138,6 +144,10 @@ copied in on the same start.
 Nothing is pip-installed, by either route. When a package ships a requirements.txt, each
 requirement is named in the ComfyUI log; install those yourself as shown above.
 
+Neither route replaces a file no extension installed, such as WAS Node Suite's own views
+and parsers, and neither copies a symbolic link. An extension that would write more than
+256 MB is not installed. Each file skipped is named in the ComfyUI log.
+
 It is off by default. With it on, a .zip dropped here, or a ComfyUI_Viewer_ clone in
 custom_nodes, puts Python code into WAS Node Suite that runs every time ComfyUI starts.
 Each package unpacked, and every requirement a package names, is written to the ComfyUI
@@ -209,6 +219,88 @@ def _write_if_changed(path: Path, text: str) -> None:
         logger.debug("%s could not be written (%s)", path, error)
 
 
+class _Ledger:
+    """The files view extensions have written into this pack, read from :data:`LEDGER`.
+
+    Attributes:
+        path: The ledger file.
+        names: Paths relative to the pack root, ``/`` separated.
+    """
+
+    def __init__(self, pack_root: Path):
+        self.path = pack_root / LEDGER
+        try:
+            stored = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            stored = []
+        self.names = {name for name in stored if isinstance(name, str)} if isinstance(stored, list) else set()
+        self._folded = {os.path.normcase(name) for name in self.names}
+
+    def owns(self, relative: str) -> bool:
+        """Whether an extension wrote the file at ``relative``."""
+        return os.path.normcase(relative) in self._folded
+
+    def add(self, relative: str) -> None:
+        """Record that an extension wrote the file at ``relative``."""
+        self.names.add(relative)
+        self._folded.add(os.path.normcase(relative))
+
+    def save(self) -> None:
+        """Write the ledger where it changed."""
+        _write_if_changed(self.path, json.dumps(sorted(self.names), indent=2))
+
+
+def _refusal(target: Path, pack_root: Path, ledger: _Ledger) -> str | None:
+    """Why an extension may not write a file, or ``None`` where it may.
+
+    Args:
+        target: The file it would write, under ``pack_root``.
+        pack_root: This pack's root directory.
+        ledger: The files extensions have written before.
+
+    Returns:
+        A reason naming the file, or ``None``.
+    """
+    relative = target.relative_to(pack_root).as_posix()
+    if os.path.normcase(relative) == os.path.normcase((VIEWS_DIR / MANIFEST_NAME).as_posix()):
+        return f"{relative} is the viewer's own manifest"
+    if os.path.lexists(target) and not ledger.owns(relative):
+        return f"{relative} is already there and no view extension installed it"
+    return None
+
+
+def _linked(path: str) -> bool:
+    """Whether a path is a symbolic link or a Windows junction."""
+    return os.path.islink(path) or bool(getattr(os.path, "isjunction", lambda _: False)(path))
+
+
+def _tree(source: Path) -> list[Path]:
+    """Every regular, non-private file under ``source``, links neither followed nor listed."""
+    if _linked(str(source)):
+        return []
+    found = []
+    for folder, folders, names in os.walk(source, followlinks=False):
+        folders[:] = [name for name in folders if not _linked(os.path.join(folder, name))]
+        for name in names:
+            path = os.path.join(folder, name)
+            if name.startswith("_") or name.endswith(".pyc") or _linked(path):
+                continue
+            if os.path.isfile(path):
+                found.append(Path(path))
+    return found
+
+
+def _bytes(paths) -> int:
+    """Total size of the files named, counting one that cannot be read as empty."""
+    total = 0
+    for path in paths:
+        try:
+            total += os.path.getsize(path)
+        except OSError:
+            continue
+    return total
+
+
 def write_manifest(pack_root: Path) -> list[str]:
     """List the extension views on disk and write the manifest the frontend reads.
 
@@ -274,13 +366,15 @@ def install_all(pack_root: Path, drop_dir: Path) -> int:
         return 0
 
     installed = 0
+    ledger = _Ledger(pack_root)
     for package in packages:
         record = _record_path(drop_dir, package)
         if _is_installed(record, pack_root):
             continue
         logger.info("content viewer: installing the view extension %s", package.name)
-        if _install(package, pack_root, record):
+        if _install(package, pack_root, record, ledger):
             installed += 1
+    ledger.save()
     return installed
 
 
@@ -318,6 +412,7 @@ def sync_siblings(pack_root: Path, custom_nodes: Path) -> int:
         return 0
 
     copied = 0
+    ledger = _Ledger(pack_root)
     for entry in entries:
         if not entry.name.startswith(EXTENSION_PREFIX):
             continue
@@ -327,6 +422,7 @@ def sync_siblings(pack_root: Path, custom_nodes: Path) -> int:
         except OSError:
             continue
         registers_itself = loads_as_pack(entry)
+        trees = []
         for source, relative in EXTRACT.items():
             if source in PER_EXTENSION:
                 # A clone ComfyUI can import is loaded as a pack of its own, so its nodes
@@ -340,27 +436,54 @@ def sync_siblings(pack_root: Path, custom_nodes: Path) -> int:
             root = entry.joinpath(*source.split("/"))
             if not root.is_dir():
                 continue
-            copied += _copy_tree(root, pack_root / relative, entry.name)
+            trees.append((root, pack_root / relative, _tree(root)))
+        size = _bytes(path for _root, _target, files in trees for path in files)
+        if size > MAX_EXTENSION_BYTES:
+            logger.warning(
+                "the view extension %s holds %d MB of files to copy, more than the %d MB one "
+                "extension may install, so none of it was copied. Remove what it does not "
+                "need, or install its files by hand",
+                entry.name, size // 1048576, MAX_EXTENSION_BYTES // 1048576,
+            )
+            continue
+        for root, target, files in trees:
+            copied += _copy_tree(root, target, entry.name, files, pack_root, ledger)
+    ledger.save()
     return copied
 
 
-def _copy_tree(source: Path, target: Path, label: str) -> int:
-    """Copy every non-private file under ``source`` into ``target``, keeping structure."""
+def _copy_tree(
+    source: Path, target: Path, label: str, files: list[Path], pack_root: Path, ledger: _Ledger
+) -> int:
+    """Copy files from under ``source`` into ``target``, keeping structure.
+
+    Args:
+        source: The extension's directory the files sit under.
+        target: The pack directory they are copied into.
+        label: The extension's name, for messages.
+        files: Regular files under ``source``, as :func:`_tree` lists them.
+        pack_root: This pack's root directory.
+        ledger: The files extensions have written, added to as files are copied.
+
+    Returns:
+        How many files were copied.
+    """
     copied = 0
-    try:
-        files = [path for path in source.rglob("*") if path.is_file()]
-    except OSError as error:
-        logger.debug("%s could not be walked (%s)", source, error)
-        return 0
     for path in files:
-        if path.name.startswith("_") or path.suffix == ".pyc":
-            continue
         destination = target / path.relative_to(source)
+        refusal = _refusal(destination, pack_root, ledger)
+        if refusal is not None:
+            logger.warning(
+                "the view extension %s ships %s, and %s, so that file was not copied",
+                label, path.relative_to(source).as_posix(), refusal,
+            )
+            continue
         try:
             destination.parent.mkdir(parents=True, exist_ok=True)
             if destination.is_file() and destination.stat().st_mtime >= path.stat().st_mtime:
                 continue
-            shutil.copy2(path, destination)
+            shutil.copy2(path, destination, follow_symlinks=False)
+            ledger.add(destination.relative_to(pack_root).as_posix())
         except OSError as error:
             logger.warning(
                 "the content viewer could not copy %s from %s (%s), so that part of the "
@@ -417,14 +540,16 @@ def _is_installed(record: Path, pack_root: Path) -> bool:
     return all((pack_root / name).exists() for name in files)
 
 
-def _install(package: Path, pack_root: Path, record: Path) -> bool:
+def _install(package: Path, pack_root: Path, record: Path, ledger: _Ledger) -> bool:
     """Unpack one package, log the requirements it declares, and write its record."""
-    written: list[str] = []
+    written: list[str] | None = []
     requirements = ""
     try:
         with zipfile.ZipFile(package) as archive:
             root = _archive_root(archive)
-            written = _extract(archive, root, pack_root, package.name, extension_slug(package.name))
+            written = _extract(
+                archive, root, pack_root, package.name, extension_slug(package.name), ledger
+            )
             requirements = _requirements(archive, root)
     except (OSError, zipfile.BadZipFile) as error:
         logger.warning(
@@ -434,6 +559,8 @@ def _install(package: Path, pack_root: Path, record: Path) -> bool:
         )
         return False
 
+    if written is None:
+        return False
     if not written:
         logger.warning(
             "the view extension %s holds none of %s, so there was nothing to install. It "
@@ -480,7 +607,9 @@ def _archive_root(archive: zipfile.ZipFile) -> str:
     return ""
 
 
-def _extract(archive: zipfile.ZipFile, root: str, pack_root: Path, label: str, slug: str) -> list[str]:
+def _extract(
+    archive: zipfile.ZipFile, root: str, pack_root: Path, label: str, slug: str, ledger: _Ledger
+) -> list[str] | None:
     """Copy the directories named in :data:`EXTRACT` out of one package.
 
     Args:
@@ -489,16 +618,67 @@ def _extract(archive: zipfile.ZipFile, root: str, pack_root: Path, label: str, s
         pack_root: This pack's root directory, which the files are written under.
         label: The package's file name, named in any message about it.
         slug: Directory name for the sources listed in :data:`PER_EXTENSION`.
+        ledger: The files extensions have written, added to as files are written.
 
     Returns:
-        Paths written, relative to ``pack_root``, for the install record.
+        Paths written, relative to ``pack_root``, for the install record. ``None`` where the
+        package would write more than :data:`MAX_EXTENSION_BYTES` and nothing was written.
     """
+    planned = _planned(archive, root, pack_root, label, slug)
+    size = sum(max(0, info.file_size) for info, _target in planned)
+    if size > MAX_EXTENSION_BYTES:
+        logger.warning(
+            "the view extension %s would write %d MB, more than the %d MB one extension may "
+            "install, so none of it was installed. Remove what it does not need, or install "
+            "its files by hand",
+            label, size // 1048576, MAX_EXTENSION_BYTES // 1048576,
+        )
+        return None
+
     written = []
+    for info, target in planned:
+        refusal = _refusal(target, pack_root, ledger)
+        if refusal is not None:
+            logger.warning(
+                "the view extension %s holds %s, and %s, so that entry was skipped",
+                label, info.filename, refusal,
+            )
+            continue
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with archive.open(info) as source_file, open(target, "wb") as handle:
+                shutil.copyfileobj(source_file, handle)
+        except OSError as error:
+            logger.warning("the content viewer could not write %s (%s)", target, error)
+            continue
+        relative = target.relative_to(pack_root).as_posix()
+        ledger.add(relative)
+        written.append(relative)
+    return written
+
+
+def _planned(
+    archive: zipfile.ZipFile, root: str, pack_root: Path, label: str, slug: str
+) -> list[tuple[zipfile.ZipInfo, Path]]:
+    """The entries of one package to write, each with the file it lands in.
+
+    Args:
+        archive: The open package.
+        root: The wrapper directory inside it, or ``""``.
+        pack_root: This pack's root directory.
+        label: The package's file name, named in any message about it.
+        slug: Directory name for the sources listed in :data:`PER_EXTENSION`.
+
+    Returns:
+        ``[(entry, resolved target)]``, every target inside the viewer directory.
+    """
+    planned = []
     for source, relative in EXTRACT.items():
         if source in PER_EXTENSION:
             relative = relative / slug
         prefix = f"{root}/{source}/" if root else f"{source}/"
-        for name in archive.namelist():
+        for info in archive.infolist():
+            name = info.filename
             if not name.startswith(prefix) or name.endswith("/"):
                 continue
             tail = name[len(prefix):]
@@ -518,15 +698,8 @@ def _extract(archive: zipfile.ZipFile, root: str, pack_root: Path, label: str, s
                     label, name,
                 )
                 continue
-            try:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                with archive.open(name) as source_file, open(target, "wb") as handle:
-                    shutil.copyfileobj(source_file, handle)
-            except OSError as error:
-                logger.warning("the content viewer could not write %s (%s)", target, error)
-                continue
-            written.append(str(target.relative_to(pack_root)).replace("\\", "/"))
-    return written
+            planned.append((info, target))
+    return planned
 
 
 def _requirements(archive: zipfile.ZipFile, root: str) -> str:

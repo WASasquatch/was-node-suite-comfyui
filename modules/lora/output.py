@@ -1,12 +1,13 @@
-"""Where a merged LoRA is allowed to land.
+"""Where a merged LoRA lands.
 
-The directory comes from ``folder_paths``; the file name is a widget value.
-:func:`resolve_output` joins them, refusing a drive letter, a leading separator or a ``..``
-segment.
+:func:`resolve_output` places a widget's file name in the ``folder_paths`` LoRA directory,
+refusing a drive, a leading separator or a ``..`` segment. :func:`foreign` tells a merge's own
+file from any other.
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path, PureWindowsPath
 
 from ..util.sandbox import PathNotAllowed, contains, leaves_folder
@@ -14,8 +15,12 @@ from ..util.sandbox import PathNotAllowed, contains, leaves_folder
 __all__ = [
     "DEFAULT_FILENAME",
     "SUFFIX",
+    "TOOL_KEY",
+    "TOOL_NAME",
     "built_from",
     "claimed",
+    "foreign",
+    "header_metadata",
     "lora_directory",
     "resolve_output",
 ]
@@ -25,6 +30,13 @@ DEFAULT_FILENAME = "merged_lora.safetensors"
 
 #: Appended to a name that does not already end in it. Nothing else can be loaded.
 SUFFIX = ".safetensors"
+
+#: Header metadata key, and its value, stamped into every merged LoRA.
+TOOL_KEY = "tool"
+TOOL_NAME = "WAS Merge Loras"
+
+#: Largest safetensors header read, in bytes.
+HEADER_LIMIT = 100_000_000
 
 
 def lora_directory() -> Path:
@@ -112,6 +124,52 @@ def claimed(target: Path) -> str | None:
         return str(refused)
 
 
+def header_metadata(target: Path) -> dict | None:
+    """The ``__metadata__`` block of a safetensors file, read from its header alone.
+
+    Args:
+        target: The file to read.
+
+    Returns:
+        The metadata, empty where the header holds none, or ``None`` where the file is not
+        a readable safetensors file.
+    """
+    try:
+        with open(target, "rb") as handle:
+            prefix = handle.read(8)
+            if len(prefix) != 8:
+                return None
+            length = int.from_bytes(prefix, "little")
+            if length < 2 or length > HEADER_LIMIT:
+                return None
+            header = handle.read(length)
+        if len(header) != length:
+            return None
+        parsed = json.loads(header)
+    except (OSError, ValueError, RecursionError):
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    metadata = parsed.get("__metadata__") or {}
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def foreign(target: Path) -> bool:
+    """Whether a file already at the target was written by something other than a merge.
+
+    Args:
+        target: The file a merge is about to be written to.
+
+    Returns:
+        True where anything is there whose header does not carry :data:`TOOL_KEY` set to
+        :data:`TOOL_NAME`; False where nothing is there or a merge wrote it.
+    """
+    if not target.exists():
+        return False
+    held = header_metadata(target)
+    return not held or held.get(TOOL_KEY) != TOOL_NAME
+
+
 def built_from(target: Path, wanted: dict) -> bool:
     """Whether the file already there carries the metadata a merge would write.
 
@@ -124,11 +182,7 @@ def built_from(target: Path, wanted: dict) -> bool:
     """
     if not target.exists() or not wanted:
         return False
-    try:
-        from safetensors import safe_open
-
-        with safe_open(str(target), framework="pt") as handle:
-            held = handle.metadata() or {}
-    except Exception:
+    held = header_metadata(target)
+    if not held:
         return False
     return all(held.get(key) == value for key, value in wanted.items())

@@ -42,15 +42,23 @@ _lock = threading.Lock()
 _registered = False
 
 
-def waiting() -> list[dict]:
-    """Every node holding a run still.
+def waiting(client: str) -> list[dict]:
+    """Every node holding a run queued from one browser tab.
+
+    Args:
+        client: The tab's client id. A hold queued from another tab, or with no client id,
+            is left out, and an empty id gets nothing.
 
     Returns:
-        One entry per held node, each ``{"node_id", "message", "waited"}``.
+        One entry per held node, each ``{"node_id", "message", "kind", "content", "timeout",
+        "waited"}``.
     """
+    asking = str(client or "").strip()
+    if not asking:
+        return []
     now = time.monotonic()
     with _lock:
-        current = list(_holds.items())
+        current = [(node_id, hold) for node_id, hold in _holds.items() if hold.get("client") == asking]
     return [
         {"node_id": node_id, "message": hold.get("message", ""),
          "kind": hold.get("kind", "none"), "content": hold.get("content", ""),
@@ -246,7 +254,9 @@ def register_routes() -> bool:
 
         @PromptServer.instance.routes.get(ROUTE)
         async def get_pause(request):
-            return web.json_response({"waiting": waiting()}, headers=NO_STORE)
+            return web.json_response(
+                {"waiting": waiting(request.query.get("client_id", ""))}, headers=NO_STORE
+            )
 
         @PromptServer.instance.routes.post(ROUTE)
         async def post_pause(request):

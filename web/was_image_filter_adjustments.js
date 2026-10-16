@@ -14,7 +14,7 @@ import {
 } from "./interface/filter_surface.js";
 import { ICON } from "./interface/icons.js";
 import { roundHalfEven } from "./interface/python_arithmetic.js";
-import { onRunEnded } from "./interface/run_events.js";
+import { onNodeDone } from "./interface/run_events.js";
 import { chainWidgetCallback } from "./interface/widget.js";
 
 const EXT_NAME = "WASNodeSuite.FilterAdjustmentsUI";
@@ -754,14 +754,14 @@ function fidelityNote(node, info) {
 
 
 /**
- * Ask for the picture again whenever a run ends, including a run that failed or was
- * cancelled part way through.
+ * Ask for the picture again as soon as the node finishes, or when a run ends without it.
  *
+ * @param {object} node - The node the picture is published for.
  * @param {{refresh: () => void}} surface - Surface from `createFilterSurface`.
  * @returns {() => void} Unhooks the listener.
  */
-function watchRuns(surface) {
-  return onRunEnded(() => {
+function watchRuns(node, surface) {
+  return onNodeDone(node, () => {
     try {
       surface.refresh();
     } catch (error) {
@@ -807,6 +807,7 @@ function attachPreview(node) {
     fidelity: (info) => fidelityNote(node, info),
     labels: LABELS,
     height: UI_HEIGHT,
+    metrics: true,
   });
 
   // Appended after every schema widget, with both serialize flags set, which is what
@@ -817,7 +818,7 @@ function attachPreview(node) {
     chainWidgetCallback(node, name, surface.schedulePaint, EXT_NAME);
   }
 
-  const stopWatchingRuns = watchRuns(surface);
+  const stopWatchingRuns = watchRuns(node, surface);
 
   // Linking one of these inputs leaves its widget read by nothing, and attaching a link changes
   // no widget value, so the callbacks above never hear about it.

@@ -17,7 +17,8 @@ import {
   viewNeedsBlobUrl,
   getViewDirectUrl,
   getDirectUrlSandbox,
-  getViewContentMessage
+  getViewContentMessage,
+  getViewForMessageType
 } from "./views/view_loader.js";
 import { loadPrismScripts } from "./views/code_scripts.js";
 import { computeThemeTokens, getFullTheme, themeToCssVars } from "./utils/theme.js";
@@ -909,13 +910,28 @@ function findSurfaceByFrame(source) {
   return null;
 }
 
+/**
+ * Whether a message came from an origin a viewer frame's document can have.
+ *
+ * @param {MessageEvent} event - The message received.
+ * @param {object} elements - The surface whose frame posted it.
+ * @returns {boolean} True for the opaque origin `null`, or for this page's origin where the
+ *   frame's sandbox grants same-origin access.
+ */
+function isFrameOrigin(event, elements) {
+  if (event.origin === "null") return true;
+  if (event.origin !== window.location.origin) return false;
+  const sandbox = String(elements?.iframe?.getAttribute("sandbox") || "").split(/\s+/);
+  return sandbox.includes("allow-same-origin");
+}
+
 window.addEventListener("message", (event) => {
   const messageType = event.data?.type;
   if (!messageType) return;
 
   // A message is acted on only for the node whose own frame posted it.
   const sender = findSurfaceByFrame(event.source);
-  if (!sender) return;
+  if (!sender || !isFrameOrigin(event, sender.elements)) return;
   const claimedId = event.data.nodeId;
   if (claimedId != null && claimedId !== "" && String(claimedId) !== sender.nodeId) return;
 
@@ -957,6 +973,9 @@ window.addEventListener("message", (event) => {
       }
     }
   } else {
+    // A view answers only the frame that is showing that view.
+    const view = getViewForMessageType(messageType);
+    if (!view || view.id !== elements.contentType) return;
     handleViewMessage(messageType, event.data, node, app, event.source);
   }
 });

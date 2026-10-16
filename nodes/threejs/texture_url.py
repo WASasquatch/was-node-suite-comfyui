@@ -10,7 +10,7 @@ from comfy_api.latest import io
 from ...modules.compat.types import THREE_TEXTURE
 from ...modules.interface import three_asset
 from ...modules.model import NETWORK_FEATURE, network_enabled
-from ...modules.threejs.spec import create_spec
+from ...modules.threejs.spec import NETWORK_PARAM, create_spec
 from ...modules.threejs.textures import COLOR_SPACES, WRAP_MODES
 
 REQUIRES = "threejs"
@@ -204,7 +204,7 @@ class ThreeTextureURL(io.ComfyNode):
                 "TextureURL",
                 params={
                     "url": address,
-                    "network": remote,
+                    NETWORK_PARAM: remote,
                     "colorSpace": color_space,
                     "wrapS": wrap_s,
                     "wrapT": wrap_t,

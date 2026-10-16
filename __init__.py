@@ -291,6 +291,26 @@ def register_viewer_nodes(config: Mapping, reserved: set[str]) -> None:
         logger.debug("%s", traceback.format_exc())
 
 
+def guard_ranges(nodes: list) -> list:
+    """Hold every node's number inputs to their declared range, linked values included.
+
+    Never raises. A node that cannot be wrapped is returned as it is.
+    """
+    try:
+        from .modules.compat.ranges import guard
+    except Exception as error:
+        logger.warning("number inputs are not held to their declared ranges (%s)", error)
+        return nodes
+    guarded = []
+    for node in nodes:
+        try:
+            guarded.append(guard(node))
+        except Exception as error:
+            logger.debug("%s keeps its own execute (%s)", getattr(node, "__name__", node), error)
+            guarded.append(node)
+    return guarded
+
+
 async def register_replacements() -> None:
     """Register the v2 -> v3 ``io.NodeReplace`` table.
 
@@ -607,7 +627,7 @@ else:
             # register: ComfyUI writes the returned list into its mappings last and would
             # overwrite the extension's node without saying so.
             register_viewer_nodes(self.config, loader.reserved_ids())
-            return loader.nodes
+            return guard_ranges(loader.nodes)
 
     async def comfy_entrypoint() -> WASNodeSuite:
         return WASNodeSuite()

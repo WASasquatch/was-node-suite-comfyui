@@ -104,7 +104,7 @@ async function drawJob(job, onFrame, onProgress) {
         return output;
     };
 
-    const runtime = createRuntime(canvas, null);
+    const runtime = createRuntime(canvas, null, { network: job.network === true });
     let renderer = null;
     let tracer = null;
     try {

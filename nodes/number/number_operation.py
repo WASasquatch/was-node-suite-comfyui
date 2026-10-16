@@ -8,6 +8,7 @@ from comfy_api.latest import io
 
 from ...modules import log
 from ...modules.compat.types import NUMBER
+from ...modules.number.expression import carried, power
 
 logger = log.get_logger("nodes.number")
 
@@ -20,7 +21,7 @@ OPERATIONS = {
     "division": operator.truediv,
     "floor division": operator.floordiv,
     "multiplication": operator.mul,
-    "exponentiation": operator.pow,
+    "exponentiation": power,
     "modulus": operator.mod,
     "greater-than": lambda a, b: int(a > b),
     "greater-than or equals": lambda a, b: int(a >= b),
@@ -88,14 +89,16 @@ class NumberOperation(io.ComfyNode):
                     tooltip=(
                         "What to do with the two values. `division` keeps the fraction, so "
                         "7 over 2 is 3.5, while `floor division` throws it away and gives "
-                        "3."
+                        "3. `exponentiation` takes exponents up to 64 and bases up to 1e15, "
+                        "either side of zero."
                     ),
                 ),
             ],
             outputs=[
                 NUMBER.Output(
                     tooltip=(
-                        "The result of the operation, or 1/0 when a comparison was chosen."
+                        "The result of the operation, or 1/0 when a comparison was chosen. "
+                        "A result past 309 digits, or infinite, stops with an error."
                     ),
                 ),
                 io.Float.Output(tooltip="The same result, on a FLOAT socket."),
@@ -115,5 +118,5 @@ class NumberOperation(io.ComfyNode):
             logger.error("Invalid number operation selected: %s", operation)
             return io.NodeOutput(number_a, number_a, int(number_a))
 
-        result = compute(number_a, number_b)
+        result = carried(compute(number_a, number_b))
         return io.NodeOutput(result, result, int(result))

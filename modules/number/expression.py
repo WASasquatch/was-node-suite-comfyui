@@ -18,11 +18,14 @@ __all__ = [
     "MAX_EXPRESSION_CHARS",
     "MAX_POW_BASE",
     "MAX_POW_EXPONENT",
+    "MAX_ROUND_DIGITS",
     "ON_ERROR",
     "VARIABLE_NAMES",
     "ExpressionError",
     "as_int",
+    "carried",
     "evaluate",
+    "power",
 ]
 
 
@@ -38,6 +41,9 @@ MAX_POW_EXPONENT = 64
 
 #: Largest base ``**`` accepts, either side of zero.
 MAX_POW_BASE = 1e15
+
+#: Most decimal places ``round`` accepts, either side of zero.
+MAX_ROUND_DIGITS = 400
 
 #: Widest whole number an INT socket carries.
 INT_LIMIT = 2**63 - 1
@@ -74,8 +80,27 @@ def _sign(value):
 
 
 def _round(value, digits=None):
-    """Round to a number of decimal places, or to a whole number where none is given."""
-    return round(value) if digits is None else round(value, int(digits))
+    """Round to a number of decimal places, or to a whole number where none is given.
+
+    Args:
+        value: The number rounded.
+        digits: Decimal places, negative for tens, hundreds and up, or None.
+
+    Returns:
+        The rounded value.
+
+    Raises:
+        ValueError: ``digits`` is past :data:`MAX_ROUND_DIGITS` either side of zero.
+    """
+    if digits is None:
+        return round(value)
+    places = int(digits)
+    if abs(places) > MAX_ROUND_DIGITS:
+        raise ValueError(
+            f"the places have to be from -{MAX_ROUND_DIGITS} to {MAX_ROUND_DIGITS}, and "
+            f"{_value_word(places)} was given; use a count inside that range"
+        )
+    return round(value, places)
 
 
 #: Function name -> the callable, the fewest arguments and the most, ``None`` for no
@@ -105,7 +130,7 @@ FUNCTIONS: dict[str, tuple] = {
 }
 
 #: The two-sided operators that are computed. ``**`` is absent: it goes through
-#: :func:`_power`, which bounds it.
+#: :func:`power`, which bounds it.
 OPERATORS = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -301,7 +326,7 @@ def _number(value, name: str):
         ) from unreadable
 
 
-def _power(base, exponent):
+def power(base, exponent):
     """Raise one value to another, within bounds.
 
     Args:
@@ -433,7 +458,7 @@ def _binary(node, names: dict):
     left = _visit(node.left, names)
     right = _visit(node.right, names)
     if isinstance(node.op, ast.Pow):
-        return _power(left, right)
+        return power(left, right)
     try:
         return OPERATORS[type(node.op)](left, right)
     except ZeroDivisionError as error:
@@ -577,11 +602,11 @@ def _visit(node, names: dict):
     raise ExpressionError(f"{_node_word(node)} is not allowed in an expression. {_allowed()}")
 
 
-def _result(value):
-    """A walked value, checked as something a graph can carry.
+def carried(value):
+    """A computed value, checked as something a graph can carry.
 
     Args:
-        value: What the walk answered.
+        value: What an expression or an operation answered.
 
     Returns:
         The same value.
@@ -594,7 +619,7 @@ def _result(value):
     if isinstance(value, float):
         if not math.isfinite(value):
             raise ExpressionError(
-                f"The expression came out as {value}, which no downstream node can use. "
+                f"The result came out as {value}, which no downstream node can use. "
                 f"Check for a division by a very small number."
             )
         return value
@@ -607,7 +632,7 @@ def _result(value):
                 f"on a number wire. The widest a number wire carries is 309 digits."
             ) from error
         return value
-    raise ExpressionError(f"The expression came out as {value!r}, which is not a number.")
+    raise ExpressionError(f"The result came out as {value!r}, which is not a number.")
 
 
 def as_int(value) -> int:
@@ -674,7 +699,7 @@ def evaluate(expression, variables: dict | None = None):
         ) from error
 
     try:
-        return _result(_visit(tree, names))
+        return carried(_visit(tree, names))
     except RecursionError as error:
         raise ExpressionError(
             "The expression is nested too deeply to work out. Split it across two nodes."

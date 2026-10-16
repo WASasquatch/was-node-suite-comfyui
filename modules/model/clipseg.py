@@ -6,7 +6,7 @@ One cached processor and model serve every CLIPSeg node, on ComfyUI's compute de
 from __future__ import annotations
 
 from .. import deps
-from . import managed, resolve
+from . import ModelUnavailable, managed, resolve
 
 __all__ = ["load"]
 
@@ -33,7 +33,8 @@ def load(repo_id: str = "", device: str | None = None):
 
     Raises:
         DependencyError: transformers is not importable.
-        ModelUnavailable: No local checkpoint, and ``features.network`` is off.
+        ModelUnavailable: No local checkpoint and ``features.network`` is off, or the
+            checkpoint holds no ``model.safetensors``.
     """
     repo_id = repo_id.strip() or DEFAULT_REPO
 
@@ -41,10 +42,23 @@ def load(repo_id: str = "", device: str | None = None):
     pretrained, cache_dir = resolve(FOLDER, repo_id, feature=FEATURE)
 
     def build():
-        processor = transformers.CLIPSegProcessor.from_pretrained(pretrained, cache_dir=cache_dir)
-        model = transformers.CLIPSegForImageSegmentation.from_pretrained(
-            pretrained, cache_dir=cache_dir
+        processor = transformers.CLIPSegProcessor.from_pretrained(
+            pretrained, cache_dir=cache_dir, token=False
         )
+        try:
+            model = transformers.CLIPSegForImageSegmentation.from_pretrained(
+                pretrained, cache_dir=cache_dir, use_safetensors=True, trust_remote_code=False,
+                token=False,
+            )
+        except OSError as error:
+            if "safetensors" not in str(error):
+                raise
+            raise ModelUnavailable(
+                f"{repo_id} has no model.safetensors at {pretrained}, so it was not loaded.\n"
+                f"    CLIPSeg weights are read from model.safetensors only.\n"
+                f"    Pick a repository that publishes one, such as {DEFAULT_REPO}, or put a "
+                f"model.safetensors copy of this checkpoint in models/{FOLDER}."
+            ) from error
         return processor, model
 
     return managed(("clipseg", pretrained), build, device=device)

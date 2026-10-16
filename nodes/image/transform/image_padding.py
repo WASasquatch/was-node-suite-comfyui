@@ -57,8 +57,22 @@ def apply_image_padding(image, left_pad=100, right_pad=100, top_pad=100, bottom_
         ``(padded, mask)``. ``padded`` is the faded image on the larger canvas in mode
         ``RGBA``; ``mask`` is the same size in mode ``RGB``, black where the image is
         opaque and white where it is fully transparent.
+
+    Raises:
+        CanvasTooLarge: The padded canvas would be past 30000 pixels a side or 16384x16384
+            in all.
     """
     from PIL import Image, ImageDraw, ImageFilter
+
+    from ....modules.image import sizing
+
+    sizing.check_canvas(
+        image.width + left_pad + right_pad,
+        image.height + top_pad + bottom_pad,
+        "Image Padding's canvas",
+        "Lower left_padding, right_padding, top_padding and bottom_padding, or target_width "
+        "and target_height.",
+    )
 
     mask = Image.new('L', image.size, 255)
     draw = ImageDraw.Draw(mask)
@@ -249,6 +263,8 @@ class ImagePadding(io.ComfyNode):
 
         Raises:
             ValueError: The batch holds no frame.
+            CanvasTooLarge: The padded canvas would be past 30000 pixels a side or
+                16384x16384 in all.
             MemoryError: Neither free memory nor a scratch drive can hold the canvases.
         """
         from ....modules.image import scratch

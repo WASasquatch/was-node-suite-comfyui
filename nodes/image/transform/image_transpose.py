@@ -10,6 +10,9 @@ from ....modules.image import dynamic
 from ....modules.convert.tensors import broadcast_image_planes, pil2tensor, tensor2pil
 from ....modules.interface import size_report
 
+#: Pixels of the feather ramp worked out at once.
+FEATHER_BAND = 1 << 20
+
 
 def rotated_silhouette(source_size, canvas_size, target_size, rotate):
     """Corners of an element's own rectangle inside the canvas a rotation expands it into.
@@ -71,18 +74,25 @@ def feather_mask(size, corners, feathering):
     import numpy as np
     from PIL import Image
 
-    columns = np.arange(size[0], dtype=np.float64).reshape(1, size[0])
-    rows = np.arange(size[1], dtype=np.float64).reshape(size[1], 1)
-    inward = np.full((size[1], size[0]), np.inf)
-    for (start_x, start_y), (end_x, end_y) in zip(corners, corners[1:] + corners[:1]):
-        run_x, run_y = end_x - start_x, end_y - start_y
-        # Distance from the edge's line, positive on the interior side, with the corners
-        # running in one direction around the rectangle.
-        distance = (run_x * (rows - start_y) - run_y * (columns - start_x)) / math.hypot(
-            run_x, run_y
-        )
-        np.minimum(inward, distance, out=inward)
-    ramp = np.clip(255.0 * (inward + 1.0) / feathering, 0, 255).astype(np.uint8)
+    width, height = int(size[0]), int(size[1])
+    columns = np.arange(width, dtype=np.float64).reshape(1, width)
+    edges = list(zip(corners, corners[1:] + corners[:1]))
+    ramp = np.empty((height, width), dtype=np.uint8)
+    band = max(1, FEATHER_BAND // max(1, width))
+    for top in range(0, height, band):
+        rows = np.arange(top, min(height, top + band), dtype=np.float64).reshape(-1, 1)
+        inward = np.full((rows.shape[0], width), np.inf)
+        for (start_x, start_y), (end_x, end_y) in edges:
+            run_x, run_y = end_x - start_x, end_y - start_y
+            # Distance from the edge's line, positive on the interior side, with the corners
+            # running in one direction around the rectangle.
+            distance = (run_x * (rows - start_y) - run_y * (columns - start_x)) / math.hypot(
+                run_x, run_y
+            )
+            np.minimum(inward, distance, out=inward)
+        ramp[top:top + rows.shape[0]] = np.clip(
+            255.0 * (inward + 1.0) / feathering, 0, 255
+        ).astype(np.uint8)
     return Image.fromarray(ramp, mode='L')
 
 
@@ -108,14 +118,20 @@ def apply_transpose_image(image_bg, image_element, size, loc, rotate=0, featheri
 
     Raises:
         ValueError: ``size`` holds a value below 1, which scales the element to nothing.
+        CanvasTooLarge: ``size`` is past 30000 pixels a side or 16384x16384 in all.
     """
     from PIL import Image
+
+    from ....modules.image import sizing
 
     if size[0] < 1 or size[1] < 1:
         raise ValueError(
             "The overlay is scaled to width by height, so both need to be 1 pixel or "
             f"more, and this is {size[0]} by {size[1]}."
         )
+    sizing.check_canvas(
+        size[0], size[1], "Image Transpose's scaled overlay", "Lower width or height."
+    )
 
     element = image_element.convert('RGBA')
     rotated = element.rotate(rotate, expand=True)
@@ -253,6 +269,8 @@ class ImageTranspose(io.ComfyNode):
 
         Raises:
             ValueError: An input holds no images, or width or height is below 1.
+            CanvasTooLarge: width by height is past 30000 pixels a side or 16384x16384 in
+                all.
             MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from ....modules.image import scratch

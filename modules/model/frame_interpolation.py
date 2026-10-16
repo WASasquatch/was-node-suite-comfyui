@@ -262,7 +262,9 @@ def _fetch(name: str, target: Path) -> Path:
     )
     try:
         target.mkdir(parents=True, exist_ok=True)
-        path = hub.hf_hub_download(repo_id=REPO_ID, filename=name, local_dir=str(target))
+        path = hub.hf_hub_download(
+            repo_id=REPO_ID, filename=name, local_dir=str(target), token=False
+        )
     except Exception as error:
         raise ModelUnavailable(
             f"EMA-VFI's {name} could not be fetched from {DOWNLOAD_PAGE} "

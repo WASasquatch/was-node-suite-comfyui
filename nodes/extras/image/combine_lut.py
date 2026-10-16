@@ -12,6 +12,10 @@ from ....modules.image.lut_blend import BLEND_MODES, blend
 
 REQUIRES = "extras"
 
+#: Smallest and largest edge of the mixed cube, in samples.
+MIN_OUTPUT_SIZE = 17
+MAX_OUTPUT_SIZE = 65
+
 
 class CombineLUT(io.ComfyNode):
     """Blend two colour lookup tables into a single table."""
@@ -64,7 +68,8 @@ class CombineLUT(io.ComfyNode):
                     ),
                 ),
                 io.Int.Input(
-                    "output_size", default=33, min=17, max=65, step=2,
+                    "output_size", default=33, min=MIN_OUTPUT_SIZE, max=MAX_OUTPUT_SIZE,
+                    step=2,
                     tooltip=(
                         "Edge length of the resulting cube, in samples. Both inputs are "
                         "resampled to it before mixing. 33 is the industry-standard size; "
@@ -93,6 +98,7 @@ class CombineLUT(io.ComfyNode):
                 value, "LUT Blender", socket, "table", "Load LUT or another LUT Blender", "lut"
             )
 
+        output_size = max(MIN_OUTPUT_SIZE, min(int(output_size), MAX_OUTPUT_SIZE))
         table_a = tables.convert_to_3d(lut_a, output_size).table_3d
         table_b = tables.convert_to_3d(lut_b, output_size).table_3d
         mixed = blend(table_a, table_b, mode, strength)

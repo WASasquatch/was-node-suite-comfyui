@@ -52,8 +52,10 @@ def load(model_size: str = "ViT-H", device: str | None = None):
     pretrained, cache_dir = resolve(FOLDERS, repo_id, legacy=(legacy_name,), feature=FEATURE)
 
     def build():
-        processor = transformers.SamProcessor.from_pretrained(pretrained, cache_dir=cache_dir)
-        model = transformers.SamModel.from_pretrained(pretrained, cache_dir=cache_dir)
+        processor = transformers.SamProcessor.from_pretrained(
+            pretrained, cache_dir=cache_dir, token=False
+        )
+        model = transformers.SamModel.from_pretrained(pretrained, cache_dir=cache_dir, token=False)
         return processor, model
 
     return managed(("sam", pretrained), build, device=device)

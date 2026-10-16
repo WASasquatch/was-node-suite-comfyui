@@ -7,7 +7,7 @@ each with its own processor.
 from __future__ import annotations
 
 from .. import deps
-from . import managed, resolve
+from . import ModelUnavailable, managed, resolve
 
 __all__ = ["load"]
 
@@ -45,7 +45,8 @@ def load(repo_id: str = "", task: str = "caption", device: str | None = None):
     Raises:
         ValueError: ``task`` is not a key of :data:`TASKS`.
         DependencyError: transformers is not importable.
-        ModelUnavailable: No local checkpoint, and ``features.network`` is off.
+        ModelUnavailable: No local checkpoint and ``features.network`` is off, or the
+            checkpoint holds no ``model.safetensors``.
     """
     if task not in TASKS:
         raise ValueError(f"BLIP task must be one of {', '.join(TASKS)}, not {task!r}")
@@ -58,8 +59,23 @@ def load(repo_id: str = "", task: str = "caption", device: str | None = None):
     pretrained, cache_dir = resolve(FOLDER, repo_id, feature=FEATURE)
 
     def build():
-        processor = transformers.BlipProcessor.from_pretrained(pretrained, cache_dir=cache_dir)
-        model = getattr(transformers, model_class).from_pretrained(pretrained, cache_dir=cache_dir)
+        processor = transformers.BlipProcessor.from_pretrained(
+            pretrained, cache_dir=cache_dir, token=False
+        )
+        try:
+            model = getattr(transformers, model_class).from_pretrained(
+                pretrained, cache_dir=cache_dir, use_safetensors=True, trust_remote_code=False,
+                token=False,
+            )
+        except OSError as error:
+            if "safetensors" not in str(error):
+                raise
+            raise ModelUnavailable(
+                f"{repo_id} has no model.safetensors at {pretrained}, so it was not loaded.\n"
+                f"    BLIP weights are read from model.safetensors only.\n"
+                f"    Pick a repository that publishes one, or put a model.safetensors copy "
+                f"of this checkpoint in models/{FOLDER}."
+            ) from error
         return processor, model
 
     return managed(("blip", model_class, pretrained), build, device=device)

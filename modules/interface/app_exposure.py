@@ -6,10 +6,13 @@ and the node types the workflow needs that are not registered here.
 
 from __future__ import annotations
 
+import os
+
 from .. import log
+from ..workflow.apps import MAX_WORKFLOW_BYTES
 from .channel import NO_STORE
 
-__all__ = ["ROUTE", "SLOTS", "exposure_payload", "register_routes"]
+__all__ = ["MAX_WORKFLOW_BYTES", "ROUTE", "SLOTS", "exposure_payload", "register_routes"]
 
 logger = log.get_logger("interface.app_exposure")
 
@@ -18,6 +21,7 @@ ROUTE = "/was/interface/api/app_exposure"
 
 #: Exposed inputs the node gives a socket of its own, matching its declared slots.
 SLOTS = 4
+
 
 _registered = False
 
@@ -70,6 +74,25 @@ def declared(class_type, widget):
     return found
 
 
+def file_size(name):
+    """Size of a saved app workflow file, in bytes.
+
+    Args:
+        name: A saved workflow's name, relative to the workflows directory.
+
+    Returns:
+        Its size, or ``None`` when the name leaves the directory or names no file.
+    """
+    from ..util import sandbox
+    from ..workflow import apps
+
+    root = apps.directory()
+    if root is None or sandbox.leaves_folder(name) is not None:
+        return None
+    target = os.path.join(root, name)
+    return os.path.getsize(target) if os.path.isfile(target) else None
+
+
 def exposure_payload(name):
     """What one app workflow offers.
 
@@ -79,11 +102,22 @@ def exposure_payload(name):
     Returns:
         ``{"app", "inputs", "results", "panels", "nodes", "missing"}``, or ``None`` when
         no such workflow can be read.
+
+    Raises:
+        ValueError: The file is larger than ``MAX_WORKFLOW_BYTES``, or the workflow
+            cannot be flattened.
     """
     if not name:
         return None
     from ..workflow import apps, convert
 
+    size = file_size(name)
+    if size is not None and size > MAX_WORKFLOW_BYTES:
+        raise ValueError(
+            f"{name!r} is {size / (1024 * 1024):.1f} MiB, larger than the "
+            f"{MAX_WORKFLOW_BYTES / (1024 * 1024):.0f} MiB an app workflow may be. Save a "
+            f"smaller workflow"
+        )
     try:
         workflow = apps.load(name)
     except (FileNotFoundError, ValueError):
@@ -163,12 +197,21 @@ def register_routes():
     if _registered:
         return False
     try:
+        import asyncio
+
         from aiohttp import web
         from server import PromptServer
 
         @PromptServer.instance.routes.get(ROUTE)
         async def get_app_exposure(request):
-            payload = exposure_payload(request.query.get("app"))
+            name = request.query.get("app")
+            try:
+                payload = await asyncio.to_thread(exposure_payload, name)
+            except ValueError as error:
+                logger.warning("app workflow %r was refused: %s", name, error)
+                return web.json_response(
+                    {"error": str(error)}, status=422, headers=NO_STORE
+                )
             if payload is None:
                 return web.json_response(
                     {"error": "no such app workflow"}, status=404, headers=NO_STORE

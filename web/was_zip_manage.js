@@ -88,7 +88,8 @@ async function adoptExistingHold(node, picker) {
  */
 async function heldFor(nodeId) {
   try {
-    const response = await fetchWithin(ROUTE);
+    const client = String(api?.clientId || api?.initialClientId || "");
+    const response = await fetchWithin(`${ROUTE}?client_id=${encodeURIComponent(client)}`);
     const body = await response.json();
     const wanted = String(nodeId);
     return (body?.waiting ?? []).find((hold) => String(hold.node_id) === wanted) ?? null;

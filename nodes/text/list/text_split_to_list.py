@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import re
-
 from comfy_api.latest import io
 
 from ....modules import log
 from ....modules.compat.types import LIST
+from ....modules.util import patterns
 
 logger = log.get_logger("nodes.text.list")
 
@@ -64,9 +63,9 @@ class TextSplitToList(io.ComfyNode):
                     multiline=False,
                     tooltip=(
                         "What to cut on, read only by `delimiter` and `regex`. Type \\n for "
-                        "a line break or \\t for a tab. An unreadable regular expression "
-                        "stops with the error the pattern produced, naming the position in "
-                        "it that failed."
+                        "a line break or \\t for a tab. An unreadable pattern, or a regex "
+                        "search past 1 second, stops with an error. Patterns run in the "
+                        "regex package's re-compatible mode."
                     ),
                 ),
                 io.Boolean.Input(
@@ -147,10 +146,13 @@ class TextSplitToList(io.ComfyNode):
                 widget cannot hold either.
 
         Returns:
-            The pieces, untrimmed and including empty ones.
+            The pieces, untrimmed and including empty ones. A regex group that took no part
+            in a cut is an empty piece.
 
         Raises:
             re.error: ``split_by`` is ``regex`` and ``delimiter`` is not a valid pattern.
+            ValueError: ``split_by`` is ``regex`` and the search ran past
+                :data:`modules.util.patterns.MATCH_SECONDS`.
         """
         if split_by == "lines":
             return text.splitlines()
@@ -161,7 +163,7 @@ class TextSplitToList(io.ComfyNode):
 
         separator = delimiter.replace("\\n", "\n").replace("\\t", "\t")
         if split_by == "regex":
-            return re.split(separator, text)
-        # An empty delimiter is a ValueError from str.split, and the whitespace split is
-        # the only reading of "cut on nothing" that produces anything usable.
+            pieces = patterns.split(separator, text, "Text Split to List's delimiter")
+            return [piece or "" for piece in pieces]
+        # An empty delimiter cuts on whitespace.
         return text.split(separator) if separator else text.split()

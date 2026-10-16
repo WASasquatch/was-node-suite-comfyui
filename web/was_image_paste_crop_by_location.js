@@ -8,7 +8,7 @@
 import { app } from "../../scripts/app.js";
 import { imageBackdrop } from "./interface/backdrop.js";
 import { EDGE, createRegionEditor } from "./interface/region.js";
-import { onRunEnded } from "./interface/run_events.js";
+import { onNodeDone } from "./interface/run_events.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
 const EXT_NAME = "WASNodeSuite.PasteCropByLocationUI";
@@ -523,14 +523,14 @@ function chainWidgetCallback(node, name, onChange) {
 }
 
 /**
- * Ask for the picture again whenever a run ends, including a run that failed or was
- * cancelled part way through.
+ * Ask for the picture again as soon as the node finishes, or when a run ends without it.
  *
+ * @param {object} node - The node the picture is published for.
  * @param {{refresh: () => void}} editor - Editor from `createRegionEditor`.
  * @returns {() => void} Unhooks the listener.
  */
-function watchRuns(editor) {
-  return onRunEnded(() => {
+function watchRuns(node, editor) {
+  return onNodeDone(node, () => {
     try {
       editor.refresh();
     } catch (error) {
@@ -581,7 +581,7 @@ function attachRegionEditor(node) {
   // The blur changes what the footer says about the paste and nothing about the rectangle.
   chainWidgetCallback(node, CROP_BLENDING, () => editor.schedulePaint());
 
-  const stopWatchingRuns = watchRuns(editor);
+  const stopWatchingRuns = watchRuns(node, editor);
 
   // Linking one of these inputs leaves its widget read by nothing, and attaching a link
   // changes no widget value, so the callbacks above never hear about it.

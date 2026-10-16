@@ -354,10 +354,10 @@ class PowerPreprocessor(io.ComfyNode):
                     options=EVERY_MODEL,
                     default="Depth Anything V2 Small",
                     tooltip=(
-                        "Which model answers, listing only those that can. In a family the "
-                        "smaller is quicker, the larger more accurate: `Depth Anything V2 "
-                        "Small` 99 MB, `Large` 1.3 GB. `Marigold v2` is the sharpest, read "
-                        "from the three inputs at the bottom."
+                        "Which model answers. In a family the smaller is quicker, the larger "
+                        "more accurate: `Depth Anything V2 Small` 99 MB, `Large` 1.3 GB. "
+                        "`Marigold v2` is the sharpest; choosing it wires a Load Diffusion "
+                        "Model into `model` and names any file still to download."
                     ),
                 ),
                 io.Int.Input(
@@ -467,8 +467,9 @@ class PowerPreprocessor(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "The transformer `Marigold v2` runs on: Load Diffusion Model on "
-                        "`qwen_image_edit_2509_int8_convrot`. One transformer answers "
-                        "every map; `adapter_name` puts the adapter on it here."
+                        "`qwen_image_edit_2509_int8_convrot` or another `qwen_image_edit_2509` "
+                        "build. Choosing `Marigold v2` wires one in, reusing one already in "
+                        "the graph. One transformer answers every map."
                     ),
                 ),
                 io.Vae.Input(
@@ -642,7 +643,8 @@ def _wired(name, model, vae, adapter_name, vae_name, conditioning_name, conditio
             f"{marigold_v2.MODEL_NAME} reads its transformer off the node's own socket, "
             f"and {TRANSFORMER} is not wired.\n"
             f"  Wire Load Diffusion Model on qwen_image_edit_2509_int8_convrot into "
-            f"{TRANSFORMER}.\n"
+            f"{TRANSFORMER}, or set {MODEL} to another model and back to "
+            f"{marigold_v2.MODEL_NAME} on the node, which adds and wires one.\n"
             f"  The {modality} adapter, decoder and prompt embedding are found by name "
             f"here, so no other loader is needed.\n"
             f"  Nothing is downloaded for it: place the files in your models folders "

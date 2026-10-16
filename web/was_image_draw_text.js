@@ -23,7 +23,7 @@ import { drawStandIn, loadPlaceholder, standInDetail } from "./interface/placeho
 import { captureWheel, elementPoint } from "./interface/pointer.js";
 import { PREVIEW_STATE } from "./interface/preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
-import { onRunEnded } from "./interface/run_events.js";
+import { onNodeDone } from "./interface/run_events.js";
 import { ALIGN, layoutText, strokeLineWidth } from "./interface/text_layout.js";
 import { onThemeChange, readTheme } from "./interface/theme.js";
 import { appendInterfaceWidget, boundTextBoxes } from "./interface/widget.js";
@@ -1980,14 +1980,14 @@ function chainWidgetCallback(node, name, onChange) {
 }
 
 /**
- * Ask for the picture again whenever a run ends, including a run that failed or was
- * cancelled part way through.
+ * Ask for the picture again as soon as the node finishes, or when a run ends without it.
  *
+ * @param {object} node - The node the picture is published for.
  * @param {{refresh: () => void}} surface - Interface from `createTextInterface`.
  * @returns {() => void} Unhooks the listener.
  */
-function watchRuns(surface) {
-  return onRunEnded(() => {
+function watchRuns(node, surface) {
+  return onNodeDone(node, () => {
     try {
       surface.refresh();
     } catch (error) {
@@ -2021,7 +2021,7 @@ function attachInterface(node) {
     chainWidgetCallback(node, name, () => surface.handleWidgetChanged(name));
   }
 
-  const unwatchRuns = watchRuns(surface);
+  const unwatchRuns = watchRuns(node, surface);
 
   // Linking one of these inputs leaves its widget read by nothing, and attaching a link changes
   // no widget value, so the callbacks above never hear about it. Without this the glyph, its

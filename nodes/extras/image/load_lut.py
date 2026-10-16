@@ -16,6 +16,10 @@ CUSTOM = "Custom"
 #: Prefix the menu puts in front of a file name, so a file cannot be mistaken for a preset.
 FILE_PREFIX = "LUT: "
 
+#: Smallest and largest cube edge built for a named look or for 'Custom', in samples.
+MIN_BUILTIN_SIZE = 17
+MAX_BUILTIN_SIZE = 65
+
 
 def lut_choices() -> list[str]:
     """The look menu: the custom entry, the built-in presets, then every cube file found.
@@ -60,7 +64,8 @@ class LoadLUT(io.ComfyNode):
                     ),
                 ),
                 io.Int.Input(
-                    "builtin_size", default=33, min=17, max=65, step=2,
+                    "builtin_size", default=33, min=MIN_BUILTIN_SIZE, max=MAX_BUILTIN_SIZE,
+                    step=2,
                     tooltip=(
                         "Edge length of the cube built for a named look or for 'Custom', in "
                         "samples. 33 is the industry-standard size and is plenty; 65 is "
@@ -181,6 +186,7 @@ class LoadLUT(io.ComfyNode):
         """
         import numpy as np
 
+        builtin_size = max(MIN_BUILTIN_SIZE, min(int(builtin_size), MAX_BUILTIN_SIZE))
         if look == CUSTOM:
             cube = tables.identity_cube(builtin_size)
             cube = tables.apply_exposure(cube, custom_ev)

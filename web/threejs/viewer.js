@@ -195,7 +195,7 @@ class ViewerController {
             const height = Math.max(2, Math.floor(rect.height || payload.viewerHeight || 360));
             const aspect = width / height;
 
-            const runtime = createRuntime(elements.canvas, elements.status);
+            const runtime = createRuntime(elements.canvas, elements.status, { network: payload.network === true });
             this.runtime = runtime;
 
             const renderer = new THREE.WebGLRenderer({

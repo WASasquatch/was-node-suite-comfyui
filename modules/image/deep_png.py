@@ -12,6 +12,8 @@ import struct
 from dataclasses import dataclass
 
 from .. import log
+from ..media import demux
+from .exr import MAX_PIXELS, MAX_SIDE
 
 logger = log.get_logger("image.deep_png")
 
@@ -184,7 +186,8 @@ def read(path) -> Picture:
         colour and four for colour with alpha, turned by any EXIF orientation.
 
     Raises:
-        ValueError: The file is not a PNG, or could not be decoded.
+        ValueError: The file is not a PNG, declares a side longer than :data:`MAX_SIDE` or
+            more than :data:`MAX_PIXELS` pixels, or could not be decoded.
     """
     import av
     import numpy as np
@@ -192,8 +195,19 @@ def read(path) -> Picture:
     found = header(path)
     if found is None:
         raise ValueError(f"`{path}` is not a PNG file")
+    if max(found.width, found.height) > MAX_SIDE:
+        raise ValueError(
+            f"`{path}` declares a {found.width} by {found.height} picture, a side longer "
+            f"than the {MAX_SIDE} pixels the 16-bit reader decodes"
+        )
+    if found.width * found.height > MAX_PIXELS:
+        raise ValueError(
+            f"`{path}` declares a {found.width} by {found.height} picture of "
+            f"{found.width * found.height} pixels, more than the {MAX_PIXELS} the 16-bit "
+            f"reader decodes"
+        )
     try:
-        with av.open(str(path)) as container:
+        with av.open(str(path), mode="r", container_options=demux.OPTIONS) as container:
             frame = next(container.decode(video=0))
             rgba = frame.to_ndarray(format="rgba64le").astype(np.float32) / 65535.0
     except Exception as error:

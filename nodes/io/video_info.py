@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import VideoInput, io
 
 from ...modules import deps, log
+from ...modules.media import demux
 
 logger = log.get_logger("nodes.io")
 
@@ -47,7 +48,7 @@ def has_sound(video) -> bool:
     # True where the class reads its source as it stands rather than encoding one first.
     if streamable is not None and streamable is not VideoInput.get_stream_source:
         av = deps.require("av")
-        with av.open(video.get_stream_source(), mode="r") as container:
+        with av.open(video.get_stream_source(), mode="r", container_options=demux.OPTIONS) as container:
             # A stream FFmpeg holds no decoder for carries no codec context.
             return any(
                 stream.codec_context is not None for stream in container.streams.audio

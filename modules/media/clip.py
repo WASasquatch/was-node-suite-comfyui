@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 from .. import log
+from . import demux
 
 __all__ = [
     "Clip",
@@ -132,7 +133,7 @@ def _compact(video, name: str) -> Clip | None:
 
     path = source()
     pictures = []
-    with av.open(path) as container:
+    with av.open(path, mode="r", container_options=demux.OPTIONS) as container:
         stream = container.streams.video[0]
         stream.thread_type = "AUTO"
         rate = Fraction(stream.average_rate or DEFAULT_RATE)

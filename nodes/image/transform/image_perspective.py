@@ -189,13 +189,19 @@ class ImagePerspective(io.ComfyNode):
 
         Raises:
             ValueError: The four corners lie on one line.
+            CanvasTooLarge: The output size is past 30000 pixels a side or 16384x16384 in
+                all.
             MemoryError: Neither free memory nor a scratch drive can hold the warped frames.
         """
-        from ....modules.image import scratch
+        from ....modules.image import scratch, sizing
 
         source_h, source_w = int(images.shape[1]), int(images.shape[2])
         out_w = int(width) or source_w
         out_h = int(height) or source_h
+        sizing.check_canvas(
+            out_w, out_h, "Image Perspective's result",
+            "Set width and height to a smaller size; 0 takes the frames' own size.",
+        )
         corners = (
             (int(top_left_x), int(top_left_y)),
             (out_w - 1 - int(top_right_x), int(top_right_y)),

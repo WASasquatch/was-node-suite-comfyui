@@ -6,6 +6,12 @@ import torch
 from comfy_api.latest import io
 
 from ...modules.compat import limits
+from ...modules.log import get_logger
+
+logger = get_logger("nodes.image.batch_repeat")
+
+#: Most frames one repeat may answer.
+MAX_FRAMES = 1 << 20
 
 #: Repeat the frames a set number of times.
 MODE_TIMES = "times"
@@ -31,7 +37,8 @@ def repeat_indices(count: int, mode: str, times: int, length: int, each_frame: b
         A position from 0 to ``count - 1`` for every output frame, in order.
 
     Raises:
-        ValueError: ``mode`` is unknown, or the count it reads is below 1.
+        ValueError: ``mode`` is unknown, the count it reads is below 1, or the result
+            would hold more than :data:`MAX_FRAMES` frames.
     """
     if mode == MODE_LENGTH:
         if length < 1:
@@ -39,6 +46,7 @@ def repeat_indices(count: int, mode: str, times: int, length: int, each_frame: b
                 f"Image Batch Repeat was asked for a length of {length}, and a batch cannot "
                 "be empty. Set length to 1 or more."
             )
+        _require_frames(length)
         if each_frame:
             # The share each frame holds is the length over the count, in whole frames.
             return [position * count // length for position in range(length)]
@@ -49,6 +57,7 @@ def repeat_indices(count: int, mode: str, times: int, length: int, each_frame: b
                 f"Image Batch Repeat was asked to repeat {times} times. Set times to 1 or "
                 "more, where 1 passes the batch through unchanged."
             )
+        _require_frames(count * times)
         if each_frame:
             return [position for position in range(count) for _ in range(times)]
         return [position % count for position in range(count * times)]
@@ -56,6 +65,43 @@ def repeat_indices(count: int, mode: str, times: int, length: int, each_frame: b
         f"Image Batch Repeat does not know the mode {mode!r}. Set mode to "
         f"{MODE_TIMES!r} or {MODE_LENGTH!r}."
     )
+
+
+def _require_frames(total: int) -> None:
+    """Refuse a repeat that would answer more than :data:`MAX_FRAMES` frames.
+
+    Args:
+        total: How many frames the repeat would answer.
+
+    Raises:
+        ValueError: ``total`` is above :data:`MAX_FRAMES`.
+    """
+    if total > MAX_FRAMES:
+        raise ValueError(
+            f"Image Batch Repeat would answer {total} frames, more than the {MAX_FRAMES} one "
+            "repeat may hold. Lower times or length, or pass fewer frames."
+        )
+
+
+def _within_widget(value, name: str) -> int:
+    """A linked count held to the widget's maximum.
+
+    Args:
+        value: The count as it arrived.
+        name: The input it arrived on, for the log.
+
+    Returns:
+        ``value`` as an int, no larger than :func:`limits.max_resolution`.
+    """
+    count = int(value)
+    ceiling = limits.max_resolution()
+    if count > ceiling:
+        logger.warning(
+            "Image Batch Repeat was given %s %d, above the widget's %d, and used %d. Lower "
+            "the value feeding %s to keep it.", name, count, ceiling, ceiling, name,
+        )
+        return ceiling
+    return count
 
 
 class ImageBatchRepeat(io.ComfyNode):
@@ -163,7 +209,8 @@ class ImageBatchRepeat(io.ComfyNode):
             The repeated frames and their count.
 
         Raises:
-            ValueError: The batch is empty, the mode is unknown, or a count is below 1.
+            ValueError: The batch is empty, the mode is unknown, a count is below 1, or the
+                result would hold more than :data:`MAX_FRAMES` frames.
             MemoryError: Neither free memory nor any scratch drive has room for the batch.
         """
         count = int(images.shape[0])
@@ -174,7 +221,9 @@ class ImageBatchRepeat(io.ComfyNode):
             )
         from ...modules.image import scratch
 
-        order = repeat_indices(count, str(mode), int(times), int(length), bool(each_frame))
+        times = _within_widget(times, "times")
+        length = _within_widget(length, "length")
+        order = repeat_indices(count, str(mode), times, length, bool(each_frame))
         index = torch.tensor(order, dtype=torch.long, device=images.device)
         shape = (len(order),) + tuple(images.shape[1:])
         if images.device.type == "cpu":

@@ -110,7 +110,7 @@ export function setRowColour(node, row, colour) {
 export function colourEntries(node, row) {
   const current = rowColour(node, row);
   const entries = Object.entries(ROW_PALETTE).map(([key, colour]) => ({
-    content: `${SWATCH[key] ?? ""} ${colour.label}${key === current ? " ✓" : ""}`,
+    content: menuText(`${SWATCH[key] ?? ""} ${colour.label}${key === current ? " ✓" : ""}`),
     callback: () => setRowColour(node, row, key),
   }));
   entries.push({
@@ -134,6 +134,16 @@ export function askRowColour(node, row, title, event) {
   const ContextMenu = window.LiteGraph?.ContextMenu;
   if (!ContextMenu) return;
   new ContextMenu(colourEntries(node, row), { title, event: event ?? window.event });
+}
+
+/**
+ * Text for a context menu entry, with every `<` turned into `‹`.
+ *
+ * @param {*} value - The text, as a workflow or a widget holds it.
+ * @returns {string} The text with no `<` left in it.
+ */
+export function menuText(value) {
+  return String(value ?? "").replaceAll("<", "\u2039");
 }
 
 /**
@@ -350,14 +360,14 @@ export function rowColourMenu(node) {
       const entries = [
         null,
         {
-          content: `🎨 ${under.label} Colour`,
+          content: menuText(`🎨 ${under.label} Colour`),
           has_submenu: true,
           submenu: { options: colourEntries(node, under.key) },
         },
       ];
       if (under.renamable) {
         entries.push({
-          content: `✏️ Rename ${under.label}`,
+          content: menuText(`✏️ Rename ${under.label}`),
           callback: () => askRowName(node, under.key, under.label),
         });
       }
@@ -374,7 +384,7 @@ export function rowColourMenu(node) {
           options: drawn.map(({ key, label }) => {
             const colour = rowColour(node, key);
             return {
-              content: `${colour ? SWATCH[colour] + " " : ""}${label}`,
+              content: menuText(`${colour ? SWATCH[colour] + " " : ""}${label}`),
               callback: (value, options, event) =>
                 askRowColour(node, key, `${label} colour`, event),
             };
@@ -391,7 +401,7 @@ export function rowColourMenu(node) {
           options: renamable.map(({ key, label }) => {
             const named = rowName(node, key);
             return {
-              content: named ? `${label} · ${named}` : label,
+              content: menuText(named ? `${label} · ${named}` : label),
               callback: () => askRowName(node, key, label),
             };
           }),

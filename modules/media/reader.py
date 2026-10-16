@@ -21,7 +21,7 @@ from ..convert.tensors import pil2tensor
 from ..image import scratch, sizing
 from ..image.draw import parse_color
 from ..util import file_listing, sandbox
-from . import sampling
+from . import demux, sampling
 
 __all__ = [
     "BatchTooLarge",
@@ -238,7 +238,7 @@ def probe(path: str) -> Metadata:
     av = deps.require("av")
 
     name = str(path)
-    with av.open(name, mode="r") as container:
+    with av.open(name, mode="r", container_options=demux.OPTIONS) as container:
         return _describe(container, _video_stream(container, name), name)
 
 
@@ -299,7 +299,7 @@ def read(
 
     name = str(path)
     pad = parse_color(pad_color, FALLBACK_PAD)
-    with av.open(name, mode="r") as container:
+    with av.open(name, mode="r", container_options=demux.OPTIONS) as container:
         stream = _video_stream(container, name)
         source = _describe(container, stream, name)
         if source.frame_count <= 0:
@@ -524,7 +524,7 @@ def _counted(path: str, index: int) -> int:
 
     count = 0
     # A container of its own, so nothing the caller is reading has to be rewound.
-    with av.open(str(path), mode="r") as container:
+    with av.open(str(path), mode="r", container_options=demux.OPTIONS) as container:
         for packet in container.demux(container.streams[index]):
             if packet.size:
                 count += 1
@@ -680,7 +680,7 @@ def audio_length(path: str) -> float:
     """
     av = deps.require("av")
 
-    with av.open(str(path), mode="r") as container:
+    with av.open(str(path), mode="r", container_options=demux.OPTIONS) as container:
         stream = next(
             (entry for entry in container.streams.audio if entry.codec_context is not None),
             None,
@@ -711,7 +711,7 @@ def audio_span(path: str, begin: float, seconds: float) -> dict | None:
     blocks: list[np.ndarray] = []
     head: float | None = None
     done = False
-    with av.open(str(path), mode="r") as container:
+    with av.open(str(path), mode="r", container_options=demux.OPTIONS) as container:
         # A stream FFmpeg has no decoder for carries no codec context, and decoding its
         # packets takes the process down with it.
         stream = next(

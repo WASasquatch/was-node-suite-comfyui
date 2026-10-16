@@ -51,10 +51,10 @@ def load(name: str = "SegFormer B0 ADE20K", device: str | None = None):
 
     def build():
         processor = transformers.AutoImageProcessor.from_pretrained(
-            pretrained, cache_dir=cache_dir
+            pretrained, cache_dir=cache_dir, token=False
         )
         model = transformers.SegformerForSemanticSegmentation.from_pretrained(
-            pretrained, cache_dir=cache_dir
+            pretrained, cache_dir=cache_dir, token=False
         )
         return processor, model
 

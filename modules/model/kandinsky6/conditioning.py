@@ -84,11 +84,16 @@ def audio_frames(video_frames: int, fps: float) -> int:
     return int(math.ceil(video_frames / float(fps) * AUDIO_SAMPLE_RATE / AUDIO_FRAME_SAMPLES))
 
 
+#: Most values one empty latent holds, video and audio together.
+MAX_LATENT_VALUES = 1 << 31
+
+
 def empty_latent(width: int, height: int, length: int, fps: float, batch_size: int) -> dict:
     """A zeroed joint latent, video and audio of one duration.
 
     Raises:
-        ValueError: The size is under 16 pixels on a side, or ``fps`` is not positive.
+        ValueError: The size is under 16 pixels on a side, ``fps`` is not positive, or the
+            latent would hold more than :data:`MAX_LATENT_VALUES` values.
     """
     import comfy.model_management
     import comfy.nested_tensor
@@ -98,9 +103,16 @@ def empty_latent(width: int, height: int, length: int, fps: float, batch_size: i
         raise ValueError(f"Kandinsky 6 needs at least 16x16 pixels, not {width}x{height}.")
     if fps <= 0:
         raise ValueError(f"fps must be above 0, not {fps}.")
+    sound = audio_frames((frames - 1) * TEMPORAL_FACTOR + 1, fps)
+    held = batch_size * (VIDEO_CHANNELS * frames * latent_height * latent_width + AUDIO_CHANNELS * sound)
+    if held > MAX_LATENT_VALUES:
+        raise ValueError(
+            f"a {width}x{height} Kandinsky 6 latent of {length} frames, batch {batch_size}, would "
+            f"hold {held:,} values, past the {MAX_LATENT_VALUES:,} one latent may hold. Lower "
+            f"the size, the length or batch_size."
+        )
     device = comfy.model_management.intermediate_device()
     video = torch.zeros(batch_size, VIDEO_CHANNELS, frames, latent_height, latent_width, device=device)
-    sound = audio_frames((frames - 1) * TEMPORAL_FACTOR + 1, fps)
     audio = torch.zeros(batch_size, AUDIO_CHANNELS, sound, device=device)
     return {"samples": comfy.nested_tensor.NestedTensor((video, audio))}
 

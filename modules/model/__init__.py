@@ -258,7 +258,7 @@ def published_checkpoint(
     hub = deps.require("huggingface_hub")
     return hub.hf_hub_download(
         repo_id, filename, subfolder=subfolder or None,
-        local_dir=str(roots[0]) if roots else None,
+        local_dir=str(roots[0]) if roots else None, token=False,
     )
 
 
@@ -313,7 +313,8 @@ def published_files(
     for filename in wanted:
         found[filename] = Path(
             hub.hf_hub_download(
-                repo_id, filename, local_dir=str(into) if into is not None else None
+                repo_id, filename, local_dir=str(into) if into is not None else None,
+                token=False,
             )
         )
     return found
@@ -363,8 +364,13 @@ def unresolved_links(roots: Sequence[Path], filename: str = "") -> list[str]:
 
     Returns:
         One line per link that exists but points at nothing this process can open, with
-        its target where it can be read. Empty when every link resolves.
+        its target where it can be read. Empty when every link resolves. A ``filename`` that
+        would leave its folder is not looked for.
     """
+    from ..util.sandbox import leaves_folder
+
+    if filename and leaves_folder(filename) is not None:
+        filename = ""
     lines = []
     for root in roots:
         for candidate in (root, root / filename) if filename else (root,):

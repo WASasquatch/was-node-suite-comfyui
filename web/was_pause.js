@@ -85,7 +85,7 @@ async function release(node, action) {
 async function showHeldContent(node, nodeId) {
   if (typeof node?.onExecuted !== "function") return;
   try {
-    const answer = await (await fetchWithin(ROUTE)).json();
+    const answer = await (await fetchWithin(`${ROUTE}?client_id=${encodeURIComponent(clientId())}`)).json();
     const entry = (answer?.waiting ?? []).find((w) => String(w.node_id) === String(nodeId));
     if (!entry?.content) return;
     node.onExecuted({

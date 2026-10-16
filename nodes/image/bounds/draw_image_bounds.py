@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+import re
+
 from comfy_api.latest import io
 
 from ....modules.compat.types import IMAGE_BOUNDS
 from ....modules.convert.tensors import image_planes, pil2mask, pil2tensor, tensor2pil
 from ....modules.image import bounds, draw
+
+#: Longest label template drawn.
+MAX_LABEL_CHARS = 256
+
+#: A label template's fields, each with an optional padded width such as ``{index:03d}``,
+#: and the ``{{`` and ``}}`` escapes.
+LABEL_FIELDS = re.compile(r"\{\{|\}\}|\{(index|width|height)(?::(0?)(\d{1,2})d?)?\}")
 
 
 class DrawImageBounds(io.ComfyNode):
@@ -86,10 +95,10 @@ class DrawImageBounds(io.ComfyNode):
                     default="",
                     multiline=False,
                     tooltip=(
-                        "Caption drawn inside the top left corner of each rectangle. Empty "
-                        "draws none. {index} becomes the row number, {width} and {height} "
-                        "the size of that region in pixels, 'region {index}: {width}x"
-                        "{height}' labels a set of crops with what each one will produce."
+                        "Caption drawn inside the top left corner of each rectangle, up to "
+                        "256 characters; empty draws none. {index} = row number; {width} and "
+                        "{height} = region size in pixels, as 'region {index}: {width}x"
+                        "{height}' to label crops with what each produces."
                     ),
                 ),
                 io.Int.Input(
@@ -142,6 +151,12 @@ class DrawImageBounds(io.ComfyNode):
 
         from ....modules.image import scratch
 
+        if len(label) > MAX_LABEL_CHARS:
+            raise ValueError(
+                f"Draw Image Bounds was given a label of {len(label):,} characters, and the "
+                f"longest it draws is {MAX_LABEL_CHARS}. Shorten the label, using {{index}}, "
+                f"{{width}} and {{height}} for the parts that change per rectangle."
+            )
         rows = bounds.rows(image_bounds)
         if not rows:
             raise ValueError(
@@ -203,13 +218,20 @@ class DrawImageBounds(io.ComfyNode):
             box: ``(left, top, right, bottom)`` of the rectangle.
 
         Returns:
-            The finished label. A template naming a field that does not exist is returned
-            as written rather than raising.
+            The finished label. ``{index:03d}`` pads to a width up to 99; any other text is
+            kept as written.
         """
         left, top, right, bottom = box
-        try:
-            return template.format(
-                index=index, width=abs(right - left) + 1, height=abs(bottom - top) + 1
-            )
-        except (KeyError, IndexError, ValueError):
-            return template
+        values = {
+            "index": index,
+            "width": abs(right - left) + 1,
+            "height": abs(bottom - top) + 1,
+        }
+        def filled(found) -> str:
+            field, zero, width = found.groups()
+            if field is None:
+                return found.group(0)[0]
+            text = str(values[field])
+            return text.rjust(int(width), "0" if zero else " ") if width else text
+
+        return LABEL_FIELDS.sub(filled, template)

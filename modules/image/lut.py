@@ -16,6 +16,8 @@ from .. import log
 
 __all__ = [
     "BUILTIN_PRESETS",
+    "MAX_LUT_EDGE",
+    "MIN_LUT_EDGE",
     "PRESET_DEFAULTS",
     "LUT",
     "apply_color_balance",
@@ -29,6 +31,7 @@ __all__ = [
     "apply_vibrance",
     "apply_white_balance",
     "convert_to_3d",
+    "cube_edge",
     "cube_files",
     "estimate_saturation",
     "find_cube",
@@ -49,6 +52,10 @@ LUT_DIR_NAME = "LUT"
 
 #: File extension a cube file carries, lower-cased for comparison.
 CUBE_SUFFIX = ".cube"
+
+#: Shortest and longest cube edge a table is built, read or resampled at, in samples.
+MIN_LUT_EDGE = 2
+MAX_LUT_EDGE = 256
 
 #: Named looks that need no file, as
 #: ``(exposure, contrast, saturation, vibrance, gamma, temperature, tint)``.
@@ -172,6 +179,28 @@ class LUT:
         return 0
 
 
+def cube_edge(size) -> int:
+    """A cube edge length as an int, held to :data:`MIN_LUT_EDGE` and :data:`MAX_LUT_EDGE`.
+
+    Args:
+        size: Edge length in samples.
+
+    Returns:
+        ``size`` as an int.
+
+    Raises:
+        ValueError: ``size`` is not a whole number, or lies outside that range.
+    """
+    edge = int(size)
+    if edge < MIN_LUT_EDGE or edge > MAX_LUT_EDGE:
+        raise ValueError(
+            f"a LUT cube edge of {edge} samples was asked for, and an edge runs from "
+            f"{MIN_LUT_EDGE} to {MAX_LUT_EDGE}. Set the size inside that range; 33 is the "
+            f"usual choice."
+        )
+    return edge
+
+
 def identity_cube(size: int) -> torch.Tensor:
     """Build the cube that maps every colour to itself.
 
@@ -182,7 +211,11 @@ def identity_cube(size: int) -> torch.Tensor:
         A ``(1, size, size, size, 3)`` float32 tensor whose sample at ``[r, g, b]`` is the
         colour that indexes it. The leading axis is there so the grading operations, which
         are written for a batched image, apply to it unchanged.
+
+    Raises:
+        ValueError: ``size`` lies outside :data:`MIN_LUT_EDGE` to :data:`MAX_LUT_EDGE`.
     """
+    size = cube_edge(size)
     grid = torch.linspace(0, 1, steps=size)
     red, green, blue = torch.meshgrid(grid, grid, grid, indexing="ij")
     return torch.stack([red, green, blue], dim=-1).unsqueeze(0).to(torch.float32)
@@ -443,7 +476,8 @@ def load_cube(path: Path) -> LUT:
         when its sample count is a perfect cube and as a 1D curve set otherwise.
 
     Raises:
-        ValueError: The sample count contradicts the declared size, or the file holds
+        ValueError: The sample count contradicts the declared size, the declared cube edge
+            lies outside :data:`MIN_LUT_EDGE` to :data:`MAX_LUT_EDGE`, or the file holds
             nothing that can be read as a table.
         OSError: The file cannot be opened.
     """
@@ -479,6 +513,11 @@ def load_cube(path: Path) -> LUT:
                 continue
             if upper.startswith("LUT_3D_SIZE"):
                 size_3d = int(stripped.split()[1])
+                if not MIN_LUT_EDGE <= size_3d <= MAX_LUT_EDGE:
+                    raise ValueError(
+                        f"{path.name} declares LUT_3D_SIZE {size_3d}, and a cube edge runs "
+                        f"from {MIN_LUT_EDGE} to {MAX_LUT_EDGE}"
+                    )
                 continue
             parts = stripped.split()
             if len(parts) >= 3:
@@ -594,8 +633,10 @@ def convert_to_3d(lut: LUT, size: int) -> LUT:
         domain.
 
     Raises:
-        ValueError: The LUT holds no table at all.
+        ValueError: The LUT holds no table at all, or ``size`` lies outside
+            :data:`MIN_LUT_EDGE` to :data:`MAX_LUT_EDGE`.
     """
+    size = cube_edge(size)
     if lut.table_3d is not None and lut.table_3d.shape[0] == size:
         return lut
 

@@ -12,7 +12,7 @@ import { ICON, ICON_SIZE, drawIcon, hoverTitles, iconTitle } from "./interface/i
 import { captureWheel } from "./interface/pointer.js";
 import { PREVIEW_STATE } from "./interface/preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
-import { onRunEnded } from "./interface/run_events.js";
+import { onNodeDone } from "./interface/run_events.js";
 import {
   RUN_LABELS,
   RUN_STATUS,
@@ -580,10 +580,8 @@ function createRunReadout(node) {
    */
   function joinRuns() {
     if (state.unwatchRuns || typeof api?.addEventListener !== "function") return;
-    // A node reports during its own execution, so the report is there by the time a run ends,
-    // including the two ways a prompt ends early: a graph that failed further along still ran
-    // this node.
-    const stopWatchingRuns = onRunEnded(() => refresh());
+    // Asked for as soon as the node finishes, and again when a run ends without it finishing.
+    const stopWatchingRuns = onNodeDone(node, () => refresh());
     // The socket opening is what turns the connecting state into an answer, and a status
     // arrives with it. Nothing is asked for while a report is already drawn.
     const onStatus = () => {

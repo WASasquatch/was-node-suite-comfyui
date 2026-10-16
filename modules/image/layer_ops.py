@@ -42,7 +42,7 @@ import torch
 
 from .. import log
 from ..interface import run_result
-from . import blend_modes, dynamic
+from . import blend_modes, dynamic, sizing
 
 #: Blend modes a layer may carry, in the order the compositor lists them.
 BLEND_MODES = blend_modes.MODES
@@ -71,6 +71,12 @@ EPSILON = blend_modes.EPSILON
 
 #: How a layer reaches the box it is fitted into, in menu order.
 FITS = ("fit inside", "fill and overflow", "stretch")
+
+#: Closing sentence of the refusal for a canvas larger than the pack builds.
+_CANVAS_FIX = "Set a smaller canvas, or bring the layers' x, y, w and h in so the stack spans less."
+
+#: Closing sentence of the refusal for one layer drawn larger than the pack builds.
+_LAYER_FIX = "Lower that layer's w and h."
 
 logger = log.get_logger("image.layer_ops")
 
@@ -242,6 +248,10 @@ def drawn(document) -> list[Frame]:
     Returns:
         One :class:`Frame` per picture, lowest in the stack first. A layer carrying a
         batch answers one frame per picture, in batch order.
+
+    Raises:
+        CanvasTooLarge: A layer drawn at its size and angle is past 30000 pixels a side or
+            16384x16384 in all.
     """
     found = []
     for entry in entries(document):
@@ -274,7 +284,11 @@ def placed(frame: Frame, width: int, height: int, channels: int):
     Returns:
         ``(image, coverage)``. The image is ``(height, width, channels)`` and the
         coverage ``(height, width)``, 1 where the layer paints.
+
+    Raises:
+        CanvasTooLarge: The canvas is past 30000 pixels a side or 16384x16384 in all.
     """
+    sizing.check_canvas(width, height, "The layer canvas", _CANVAS_FIX)
     picture = frame.image
     canvas = torch.zeros((height, width, channels), dtype=picture.dtype, device=picture.device)
     cover = torch.zeros((height, width), dtype=picture.dtype, device=picture.device)
@@ -344,6 +358,10 @@ def composited(layers, width: int, height: int):
         ``(image, coverage)``. The image is ``(height, width, 3)`` picture codes and the
         coverage ``(height, width)``, 1 where a layer painted. A stack carrying light
         above white comes back on the scale it arrived on.
+
+    Raises:
+        CanvasTooLarge: The canvas, or a layer drawn on it, is past 30000 pixels a side or
+            16384x16384 in all.
     """
     scale = dynamic.peak(*[entry.get("image") for entry in layers])
     canvas, _box = _flattened(layers, width, height, scale)
@@ -836,6 +854,7 @@ def _covered(frame, source):
 
 def _resized(frame, width: int, height: int):
     """One picture at another size."""
+    sizing.check_canvas(width, height, "A layer drawn at its w and h", _LAYER_FIX)
     shrinking = height < int(frame.shape[0]) or width < int(frame.shape[1])
     stretched = torch.nn.functional.interpolate(
         frame.permute(2, 0, 1).unsqueeze(0),
@@ -870,9 +889,13 @@ def _turned(frame, x: int, y: int, turn: float):
 
     Returns:
         ``(picture, x, y)`` with the picture grown to hold every corner.
+
+    Raises:
+        CanvasTooLarge: The turned box is past 30000 pixels a side or 16384x16384 in all.
     """
     height, width = int(frame.shape[0]), int(frame.shape[1])
     left, top, box_w, box_h = _bounds(x, y, width, height, turn)
+    sizing.check_canvas(box_w, box_h, "A turned layer's box", _LAYER_FIX)
     cos, sin = math.cos(turn), math.sin(turn)
     cx, cy = x + width / 2.0, y + height / 2.0
 
@@ -958,7 +981,12 @@ def _flattened(layers, width: int, height: int, scale: float = 1.0):
         ``(picture, box)``. The picture is ``(height, width, 4)`` linear light with
         straight alpha, and the box is the ``(left, top, right, bottom)`` the layers
         reached. A layer carrying a batch is drawn one picture at a time, lowest first.
+
+    Raises:
+        CanvasTooLarge: The canvas, or a layer drawn on it, is past 30000 pixels a side or
+            16384x16384 in all.
     """
+    sizing.check_canvas(width, height, "The layer canvas", _CANVAS_FIX)
     canvas = None
     box = None
     for entry in layers:
@@ -1017,6 +1045,10 @@ def merged(layers, width: int, height: int, name: str):
         opacity; the image is ``(1, height, width, 3)`` and the mask ``(1, height,
         width)``, both cropped to what the layers covered. A stack carrying light above
         white comes back on the scale it arrived on.
+
+    Raises:
+        CanvasTooLarge: The canvas, or a layer drawn on it, is past 30000 pixels a side or
+            16384x16384 in all.
     """
     scale = dynamic.peak(*[entry.get("image") for entry in layers])
     canvas, (left, top, right, bottom) = _flattened(layers, width, height, scale)

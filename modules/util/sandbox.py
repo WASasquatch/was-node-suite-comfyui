@@ -26,6 +26,7 @@ __all__ = [
     "glob_read",
     "leaves_folder",
     "read_roots",
+    "refuse_linked_host",
     "resolve_read",
     "resolve_write",
     "resolve_write_file",
@@ -45,6 +46,13 @@ WRITE = "write"
 #: Entries of the pack's state directory no node writes: its settings, and the folder view
 #: extensions are installed from.
 PROTECTED = ("config.yaml", "config.json", "viewer-extensions")
+
+#: Names Windows opens as a device in every folder, whatever extension follows them.
+DEVICE_NAMES = frozenset({
+    "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$",
+    *(f"COM{digit}" for digit in "0123456789\u00b9\u00b2\u00b3"),
+    *(f"LPT{digit}" for digit in "0123456789\u00b9\u00b2\u00b3"),
+})
 
 #: Links followed through one another before a path is refused.
 MAX_LINKS = 16
@@ -285,6 +293,29 @@ def names_another_host(value: str | os.PathLike) -> bool:
     return drive.startswith("\\\\") or drive.startswith("//")
 
 
+def _windows_name(part: str) -> str | None:
+    """Why one path segment names something other than a file on Windows, or ``None``.
+
+    Args:
+        part: One segment, with no separator.
+
+    Returns:
+        A reason in words for a drive such as ``C:``, a segment holding ``:``, which names a
+        stream of another file, or one naming a device such as ``NUL`` or ``COM1.txt``.
+        ``None`` off Windows.
+    """
+    if os.name != "nt":
+        return None
+    if len(part) == 2 and part[1] == ":" and part[0].isalpha():
+        return "carries a drive"
+    if ":" in part:
+        return "names a stream of another file with ':'"
+    stem = part.split(".", 1)[0].rstrip(" ").upper()
+    if stem in DEVICE_NAMES:
+        return f"names the Windows device {stem}"
+    return None
+
+
 def leaves_folder(text: str | os.PathLike) -> str | None:
     r"""Why a relative path or glob pattern would name somewhere other than inside its folder.
 
@@ -294,7 +325,8 @@ def leaves_folder(text: str | os.PathLike) -> str | None:
     Returns:
         ``None`` when it stays inside, otherwise what it does, in words: it names another
         machine (``\\server\share`` or ``//server/share``), carries a drive, starts at a
-        root, or holds a segment of dots and spaces alone such as ``..`` or ``.. ``.
+        root, holds a segment of dots and spaces alone such as ``..`` or ``.. ``, or on
+        Windows holds a segment naming a stream or a device.
     """
     value = str(text).strip()
     if names_another_host(value):
@@ -306,6 +338,10 @@ def leaves_folder(text: str | os.PathLike) -> str | None:
         return "starts at a filesystem root"
     if any(not part.strip(" .") for part in relative.parts):
         return "climbs out with '..'"
+    for part in relative.parts:
+        reason = _windows_name(part)
+        if reason is not None:
+            return reason
     return None
 
 
@@ -355,6 +391,9 @@ def annotated_path(name: str) -> str | None:
         return None
     import folder_paths
 
+    bare, _ = folder_paths.annotated_filepath(text)
+    if not str(bare or "").strip() or leaves_folder(bare) is not None:
+        return None
     if not folder_paths.exists_annotated_filepath(text):
         return None
     return folder_paths.get_annotated_filepath(text)
@@ -382,6 +421,9 @@ def save_image_path(prefix: str, directory: str | os.PathLike, width: int = 0, h
             f"the filename prefix `{prefix}` {reason}, so it would be written outside "
             f"`{directory}`. Use a prefix such as `renders/shot`"
         )
+    below = os.path.dirname(str(prefix).replace("\\", "/"))
+    if below:
+        resolve_write_file(directory, below)
     import folder_paths
 
     return folder_paths.get_save_image_path(prefix, str(directory), width, height)
@@ -521,6 +563,7 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
         for root in roots:
             if contains(root, target):
                 if purpose == WRITE:
+                    _refuse_device(target)
                     _refuse_protected(target)
                 return target
     if purpose == WRITE:
@@ -572,6 +615,7 @@ def _join(parent: Path, name: str | os.PathLike, purpose: str) -> Path:
             f"symlink that points out of that directory."
         )
     if purpose == WRITE:
+        _refuse_device(target)
         _refuse_protected(target)
     return target
 
@@ -590,7 +634,8 @@ def _refuse_linked_host(path: Path, depth: int = 0) -> None:
     if depth > MAX_LINKS:
         raise PathNotAllowed(f"{path} goes through more than {MAX_LINKS} links, so it is not read")
     junction = getattr(os.path, "isjunction", None)
-    for step in (path, *path.parents):
+    # From the root down, so every link above a step is read before the step is looked at.
+    for step in reversed((path, *path.parents)):
         try:
             linked = os.path.islink(step) or bool(junction and junction(step))
             target = os.readlink(step) if linked else ""
@@ -605,6 +650,45 @@ def _refuse_linked_host(path: Path, depth: int = 0) -> None:
             )
         nested = Path(target) if os.path.isabs(target) else step.parent / target
         _refuse_linked_host(Path(os.path.abspath(nested)), depth + 1)
+
+
+def refuse_linked_host(path: str | os.PathLike, trusted: str | os.PathLike | None = None) -> None:
+    """Refuse a path that names another machine, or reaches one through a link, before it is resolved.
+
+    Args:
+        path: The path as written; nothing along it is followed.
+        trusted: A folder the path sits in that may itself be on another machine, as a
+            configured directory can be; only links are then checked.
+
+    Raises:
+        PathNotAllowed: It names another machine, or a link along it points at one.
+    """
+    text = str(path)
+    inside = trusted is not None and contains(
+        Path(os.path.abspath(str(trusted))), Path(os.path.abspath(text)))
+    if names_another_host(text) and not inside:
+        raise PathNotAllowed(f"`{text}` names another machine, so it is not read")
+    _refuse_linked_host(Path(os.path.abspath(text)))
+
+
+def _refuse_device(target: Path) -> None:
+    """Refuse a write target any segment of which names a stream or a device on Windows.
+
+    Args:
+        target: The resolved write target.
+
+    Raises:
+        PathNotAllowed: A segment holds ``:`` past the drive, or names a device such as ``NUL``.
+    """
+    for part in target.parts[1:]:
+        reason = _windows_name(part)
+        if reason is not None:
+            raise PathNotAllowed(f"refusing to write {target}\n  `{part}` {reason}.")
+
+
+def _folded(path: Path) -> tuple[str, ...]:
+    """A path's segments casefolded, trailing dots and spaces dropped, for comparing names."""
+    return tuple(part.rstrip(" .").casefold() for part in Path(path).parts)
 
 
 def _refuse_protected(target: Path) -> None:
@@ -629,8 +713,10 @@ def _refuse_protected(target: Path) -> None:
             guarded.append(found.resolve())
     except Exception as error:
         logger.debug("the config file could not be located (%s)", error)
+    held = _folded(target)
     for entry in guarded:
-        if contains(entry, target):
+        mark = _folded(entry)
+        if held[:len(mark)] == mark:
             raise PathNotAllowed(
                 f"refusing to write {target}\n"
                 f"  It is this pack's {entry.name}, which holds its settings or its installed "

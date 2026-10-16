@@ -12,6 +12,7 @@ from PIL import Image
 
 from .. import deps, log
 from ..util import sandbox
+from . import demux
 from .video import progress_bar
 
 __all__ = ["extract"]
@@ -60,7 +61,7 @@ def extract(
     os.makedirs(destination, exist_ok=True)
 
     frame_number = 0
-    with av.open(video_file) as video:
+    with av.open(video_file, mode="r", container_options=demux.OPTIONS) as video:
         stream = video.streams.video[0]
         stream.thread_type = "AUTO"
         progress = progress_bar(stream.frames or 0)

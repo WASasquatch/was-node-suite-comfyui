@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **518** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **519** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-511 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+512 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 396 |
+| [Always loaded](#always-loaded) | always on | 397 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-396 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+397 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (18)
+- [WAS Suite/Sampling](#was-suitesampling) (19)
 - [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -3291,7 +3291,7 @@ Draw a bounds value as rectangles on the image, with an optional fill and label,
 | `color` | `STRING` | Yes | #00FF00 |  | Colour of the outline, as #RRGGBB, #RRGGBBAA or a name. Green shows up on most photographs; magenta is the better choice over foliage. |
 | `thickness` | `INT` | Yes | 3 |  | Width of the outline in pixels. Scale it with the image, 3 is clear at 1024 and invisible at 4096. 0 draws no outline, which leaves the fill as the only mark and turns the region into a solid block. |
 | `fill_opacity` | `FLOAT` | Yes | 0.0 |  | How solidly the inside of each rectangle is filled, in the same colour. 0.0 leaves it open, which is what an inspection overlay wants; around 0.25 tints the region while leaving the picture readable underneath. |
-| `label` | `STRING` | Yes |  |  | Caption drawn inside the top left corner of each rectangle. Empty draws none. {index} becomes the row number, {width} and {height} the size of that region in pixels, 'region {index}: {width}x{height}' labels a set of crops with what each one will produce. |
+| `label` | `STRING` | Yes |  |  | Caption drawn inside the top left corner of each rectangle, up to 256 characters; empty draws none. {index} = row number; {width} and {height} = region size in pixels, as 'region {index}: {width}x{height}' to label crops with what each produces. |
 | `label_size` | `INT` | Yes | 20 |  | Height of the label text in points. Read only when a label is set. |
 | `opacity` | `FLOAT` | Yes | 1.0 |  | How much of the whole overlay shows. Applied to the outlines, fills and labels together, so nothing drifts out of step when it is faded. |
 
@@ -10111,13 +10111,13 @@ Combine two numbers with one operation. The seven arithmetic operations emit the
 |---|---|---|---|---|---|
 | `number_a` | `NUMBER,INT,FLOAT` | Yes |  |  | The left-hand value: what is divided, raised to a power or compared against number_b. |
 | `number_b` | `NUMBER,INT,FLOAT` | Yes |  |  | The right-hand value: what number_a is divided by, raised to, or measured against. A value of 0 with `division`, `floor division` or `modulus` stops with a division error. |
-| `operation` | `COMBO` | Yes |  | `addition`, `subtraction`, `division`, `floor division`, `multiplication`, `exponentiation`, `modulus`, `greater-than`, `greater-than or equals`, `less-than`, `less-than or equals`, `equals` and 1 more | What to do with the two values. `division` keeps the fraction, so 7 over 2 is 3.5, while `floor division` throws it away and gives 3. |
+| `operation` | `COMBO` | Yes |  | `addition`, `subtraction`, `division`, `floor division`, `multiplication`, `exponentiation`, `modulus`, `greater-than`, `greater-than or equals`, `less-than`, `less-than or equals`, `equals` and 1 more | What to do with the two values. `division` keeps the fraction, so 7 over 2 is 3.5, while `floor division` throws it away and gives 3. `exponentiation` takes exponents up to 64 and bases up to 1e15, either side of zero. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `NUMBER` | The result of the operation, or 1/0 when a comparison was chosen. |
+| `<output0>` | `NUMBER` | The result of the operation, or 1/0 when a comparison was chosen. A result past 309 digits, or infinite, stops with an error. |
 | `<output1>` | `FLOAT` | The same result, on a FLOAT socket. |
 | `<output2>` | `INT` | The same result as a whole number, cut off rather than rounded, so 3.5 leaves here as 3. |
 
@@ -10488,6 +10488,31 @@ Denoise a latent exactly as core KSampler does, with the live preview made cheap
 | Name | Type | What it is |
 |---|---|---|
 | `LATENT` | `LATENT` | The denoised latent. |
+
+</details>
+
+<a id="node-wasflux3flowmappatch"></a>
+<details>
+<summary><b>Flux 3 Flow Map Patch</b></summary>
+
+Give a FLUX 3 Image Klein base model the distilled checkpoint's target-time branch, so the base with a distillation LoRA samples the way the distilled model does, from 16 steps. CFG 1 matches the distilled picture from the same seed; CFG 2.5 to 3.5 adds contrast and colour. Only the branch's two weights are read.
+
+| | |
+|---|---|
+| Node id | `WASFlux3FlowMapPatch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The FLUX 3 Image Klein base model, before or after the distillation LoRA: Load Diffusion Model on flux3_image_klein_bf16, then Load LoRA on flux3_image_klein_distill_r256, r64, r32 or r16. |
+| `checkpoint` | `COMBO` | Yes |  |  | The distilled checkpoint the branch is read from: flux3_image_klein_sd_bf16 or flux3_image_klein_sd_int8_convrot. Both hold the same bf16 branch. A file with no _sd_ holds none. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with the branch, for a KSampler at 16 steps: CFG 1 for the distilled picture, 2.5 to 3.5 for more contrast and colour. |
 
 </details>
 
@@ -11756,7 +11781,7 @@ Split text into a list on a delimiter, line breaks, whitespace, a regular expres
 |---|---|---|---|---|---|
 | `text` | `STRING` | Yes |  |  | The text to cut up, as `cat, forest, sunset`. Typed here, or wired in from any node with a text output, such as a prompt built by Text Concatenate. |
 | `split_by` | `COMBO` | Yes |  | `delimiter`, `lines`, `whitespace`, `regex`, `characters` | Where the cuts go. `delimiter` = the exact text in the delimiter field; `regex` = that field as a pattern, so `[,;]` cuts on either mark; `lines` = line breaks; `whitespace` = runs of space; `characters` = every character. |
-| `delimiter` | `STRING` | Yes | , |  | What to cut on, read only by `delimiter` and `regex`. Type \n for a line break or \t for a tab. An unreadable regular expression stops with the error the pattern produced, naming the position in it that failed. |
+| `delimiter` | `STRING` | Yes | , |  | What to cut on, read only by `delimiter` and `regex`. Type \n for a line break or \t for a tab. An unreadable pattern, or a regex search past 1 second, stops with an error. Patterns run in the regex package's re-compatible mode. |
 | `trim_whitespace` | `BOOLEAN` | Yes | True |  | Whether each piece has its surrounding space removed. On, 'a, b, c' gives 'a', 'b', 'c'; off it gives 'a', ' b', ' c', and the leading spaces travel into whatever reads the list. |
 | `remove_empty` | `BOOLEAN` | Yes | True |  | Whether pieces holding nothing are dropped. Two delimiters in a row produce an empty piece, which is what a trailing comma on a prompt leaves behind. Turn this off when the position of every entry matters and an empty slot has to stay a slot. |
 
@@ -12122,7 +12147,7 @@ Search text for a plain substring, or for a regular expression when the substrin
 |---|---|---|---|---|---|
 | `text` | `STRING` | Yes |  |  | Text to search; STRING, as `a tabby cat`. Read only, never changed. |
 | `substring` | `STRING` | Yes |  |  | Exact text to look for, taken literally and matched case sensitively, so 'cat' does not find 'Cat'. Filled in, it is what gets searched for and pattern is ignored; leave it empty to search with pattern instead. |
-| `pattern` | `STRING` | Yes |  |  | Regular expression to search for when substring is empty, for example 'cat\|dog' to find either word or '^photo' to require it at the start. An empty pattern matches everything, so leaving both fields blank always reports found. |
+| `pattern` | `STRING` | Yes |  |  | Regular expression searched for when substring is empty, as 'cat\|dog' for either word or '^photo' for one at the start. Empty matches everything. A search past 1 second stops with an error. Patterns run in the regex package's re-compatible mode. |
 
 **Outputs**
 
@@ -12147,8 +12172,8 @@ Replace every regular-expression match in the text and report how many replaceme
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `text` | `STRING` | Yes |  |  | Text to search; STRING, as `a tabby cat`. Every filled find box is applied in one pass over it. |
-| `find` | `STRING,ARRAY` | Yes |  |  | A regular expression, so 'cat\|dog' matches either word and '\s+' matches whitespace. A backslash makes a special character literal. Left empty, nothing is replaced. |
-| `replace` | `STRING,ARRAY` | Yes |  |  | What each match becomes. Leave it empty to delete the matches. \1 and \2 stand for the first and second parenthesised group of the pattern, and a literal backslash has to be doubled. |
+| `find` | `STRING,ARRAY` | Yes |  |  | A regular expression, so 'cat\|dog' matches either word and '\s+' matches whitespace. A backslash makes a special character literal. Left empty, nothing is replaced. A search past 1 second stops with an error. Patterns run in the regex package's re-compatible mode. |
+| `replace` | `STRING,ARRAY` | Yes |  |  | What each match becomes. Leave it empty to delete the matches. \1 and \2 stand for the first and second parenthesised group of the pattern, and a literal backslash has to be doubled. The result may grow by at most 16,777,216 characters. |
 | `find_2` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
 | `replace_2` | `STRING,ARRAY` | No |  |  | What the pattern in the box above becomes. Leave it empty to delete what that pattern matched, the same as the first pair. |
 | `find_3` | `STRING,ARRAY` | No |  |  | Another pattern, searched in the same pass as the first. Every pattern reads the text as it arrived, so a replacement is never matched again and two patterns can swap; where two match at one place, the earlier box wins. |
@@ -12983,7 +13008,7 @@ Deprecated, with no direct replacement. Writes a latent, image batch or conditio
 <details>
 <summary><b>Load Cache</b></summary>
 
-Deprecated, with no direct replacement. Reads back a latent, image batch or conditioning that Cache Node wrote in an earlier prompt; a file holding anything but tensor data is refused. Enable legacy.cache to load it.
+Deprecated, with no direct replacement. Reads back a latent, image batch or conditioning that Cache Node wrote in an earlier prompt; a file holding anything but tensor data is refused, and reading needs torch 2.6 or newer. Enable legacy.cache to load it.
 
 | | |
 |---|---|
@@ -13002,9 +13027,9 @@ Deprecated, with no direct replacement. Reads back a latent, image batch or cond
 
 | Name | Type | What it is |
 |---|---|---|
-| `LATENT` | `LATENT` | The latent read from latent_path. Nothing at all when the widget is empty or the file is missing, which will fail whatever it is connected to. |
-| `IMAGE` | `IMAGE` | The image batch read from image_path. Nothing at all when the widget is empty or the file is missing. |
-| `CONDITIONING` | `CONDITIONING` | The conditioning read from conditioning_path. Nothing at all when the widget is empty or the file is missing. |
+| `LATENT` | `LATENT` | The latent read from the file the latent menu names. Nothing at all when the menu is on its empty entry or the file is missing, which will fail whatever it is connected to. |
+| `IMAGE` | `IMAGE` | The image batch read from the file the image menu names. Nothing at all when the menu is on its empty entry or the file is missing. |
+| `CONDITIONING` | `CONDITIONING` | The conditioning read from the file the conditioning menu names. Nothing at all when the menu is on its empty entry or the file is missing. |
 
 </details>
 
@@ -13382,8 +13407,8 @@ Download a diffusers model from the Hugging Face Hub into models/diffusers and l
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `repo_id` | `STRING` | Yes |  |  | The Hugging Face repository to fetch, owner and name, such as 'stabilityai/stable-diffusion-2-1'. It must be a diffusers-format repository: one holding unet, vae and text_encoder folders. Fetching needs features.network on in config.yaml; without it, a repository already in models/diffusers still loads. |
-| `revision` | `STRING` | Yes | None |  | Branch, tag or commit to fetch, such as 'fp16' or 'refs/pr/2'. Leave it as 'None' for the repository's default branch, which then means the files can change under a saved workflow; a commit hash pins them. |
+| `repo_id` | `STRING` | Yes |  |  | The Hugging Face repository to fetch, owner and name, such as 'stabilityai/stable-diffusion-2-1'. It must be a diffusers-format repository whose unet, vae and text_encoder folders hold .safetensors weights. Fetching needs features.network on in config.yaml; without it, a repository already in models/diffusers still loads. |
+| `revision` | `STRING` | Yes | None |  | 'None' or 'main' = the default branch, which can change under a saved workflow; a full 40-character commit hash = that commit, pinned, in its own '<name>@<hash>' folder. Other branches, tags and pull requests, such as 'fp16' or 'refs/pr/2', are refused. |
 
 **Outputs**
 
@@ -14246,7 +14271,7 @@ Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `output_filename` | `STRING` | Yes | merged_lora.safetensors |  | Name to save the merged LoRA under, inside your LoRA folder. Sub-folders are allowed, for example 'styles/mixed.safetensors'. '.safetensors' is added when it is missing, and the name cannot step outside the LoRA folder. |
+| `output_filename` | `STRING` | Yes | merged_lora.safetensors |  | Name to save the merged LoRA under, inside your LoRA folder. Sub-folders are allowed, for example 'styles/mixed.safetensors'. '.safetensors' is added when it is missing, and the name cannot step outside the LoRA folder. A LoRA this node did not write is never replaced. |
 | `output_model_strength` | `FLOAT` | Yes | 1.0 |  | How strongly the merged LoRA is applied to the model output, if a model is connected. 1.0 is full strength, 0.5 is half. This does not change the saved file, only what comes out of the model socket. |
 | `output_clip_strength` | `FLOAT` | Yes | 1.0 |  | The same for the clip output: how strongly the merged LoRA is applied to the connected clip. Lower it when a LoRA's trigger words are overwhelming the rest of the prompt. Ignored where no clip is connected, as with a diffusion transformer. |
 | `mode` | `COMBO` | Yes | svd | `svd`, `rebase`, `add`, `add-diff`, `add-orth`, `diff-export`, `moe`, `obfuscate`, `block-mix` | `svd` recompresses to one rank, small; `add` stacks exactly, largest; `rebase` recompresses one LoRA; `add-diff` first plus the others' differences; `add-orth` orthogonalises them; `diff-export` saves the first two's difference; `moe` picks or blends the strongest per module; `obfuscate` rewrites factors, same effect; `block-mix` follows block_mix_recipe. |
@@ -14707,7 +14732,7 @@ Turn an image into a ControlNet hint or a map for relighting, defocus and maskin
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The images to measure. A whole batch is processed. |
 | `preprocessor` | `COMBO` | Yes | canny_pyramid |  | What to work out. `canny_pyramid`, `lineart_simple`, `scribble_xdog`, `binary` and `shuffle` need no model; the rest run the model chosen below. |
-| `model_name` | `COMBO` | Yes | Depth Anything V2 Small |  | Which model answers, listing only those that can. In a family the smaller is quicker, the larger more accurate: `Depth Anything V2 Small` 99 MB, `Large` 1.3 GB. `Marigold v2` is the sharpest, read from the three inputs at the bottom. |
+| `model_name` | `COMBO` | Yes | Depth Anything V2 Small |  | Which model answers. In a family the smaller is quicker, the larger more accurate: `Depth Anything V2 Small` 99 MB, `Large` 1.3 GB. `Marigold v2` is the sharpest; choosing it wires a Load Diffusion Model into `model` and names any file still to download. |
 | `resolution` | `INT` | Yes | 512 |  | Longest edge the work is done at, never above the image's own, then scaled back to its size. 512 = a sensible start; 1024 = finer detail, slower. Ignored by `openpose`, `animal_pose`, `line_segments`, `denoise` and `low_light`. |
 | `threshold_low` | `FLOAT` | Yes | 100.0 |  | The lower cut-off, or the only one. Each preprocessor reads its own range: `canny_pyramid` 1 to 255, `lineart_simple` 0 to 64, `openpose` 0.05 to 0.95, `line_segments` 0.01 to 0.40, `anyline` 1 to 256. Switching preprocessor resets it to that one's default. |
 | `threshold_high` | `FLOAT` | Yes | 200.0 |  | The upper cut-off, for a question that takes a pair. `canny_pyramid` reads 0 to 255 as the strength an edge must reach to start at all; `line_segments` reads 1 to 60 as the shortest run it keeps. |
@@ -14716,7 +14741,7 @@ Turn an image into a ControlNet hint or a map for relighting, defocus and maskin
 | `seed` | `INT` | Yes | 0 |  | Chooses between equally good random answers. `shuffle`: `0` and `1` give two different scrambles, and one seed always gives the same one. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual`: the starting noise, shared by every frame of a batch. |
 | `tile` | `INT` | Yes | 0 |  | Work a square at a time to hold VRAM down. 0 = whole frame; 512 = 512 pixel squares, overlapped a quarter and blended so no join shows. A larger square is closer to the whole frame. Read only by `denoise` and `low_light`. |
 | `steps` | `INT` | Yes | 4 |  | How many passes a question that denoises takes. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual` read 1 to 20: 4 is what Marigold was tuned for, 1 is roughly twice as quick and coarser, and above 8 the answer stops changing much. |
-| `model` | `MODEL` | No |  |  | The transformer `Marigold v2` runs on: Load Diffusion Model on `qwen_image_edit_2509_int8_convrot`. One transformer answers every map; `adapter_name` puts the adapter on it here. |
+| `model` | `MODEL` | No |  |  | The transformer `Marigold v2` runs on: Load Diffusion Model on `qwen_image_edit_2509_int8_convrot` or another `qwen_image_edit_2509` build. Choosing `Marigold v2` wires one in, reusing one already in the graph. One transformer answers every map. |
 | `vae` | `VAE` | No |  |  | A decoder to read the map through, in place of `vae_name`. Wire Load VAE, or anything answering a VAE, to use one this node cannot find by name. |
 | `adapter_name` | `COMBO` | No | auto |  | `auto` = this map's adapter, found by name in the loras folder; `already on the model` = apply none, for a LoRA put on the transformer before it arrives; `marigold_v2_normals.safetensors` = that file. |
 | `vae_name` | `COMBO` | No | auto |  | `auto` = this map's decoder, found by name in the vae folder; `marigold_v2_normals_vae.safetensors` = that file. The `vae` socket beats this when wired. |
