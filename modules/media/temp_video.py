@@ -10,7 +10,7 @@ import contextlib
 import os
 
 from .. import log
-from ..interface.channel import executing_workflow_id
+from ..interface.channel import executing_workflow_id, temp_prefix
 from ..util import sandbox
 from . import demux
 
@@ -192,7 +192,7 @@ def to_temp(video, prefix: str) -> dict | None:
             # An odd side is refused by the yuv420p encoders every codec here uses.
             video = even_sided(video)
         folder, name, counter, subfolder, _ = sandbox.save_image_path(
-            prefix, folder_paths.get_temp_directory(), width, height
+            temp_prefix(prefix), folder_paths.get_temp_directory(), width, height
         )
         file = f"{name}_{counter:05}_.{VideoContainer.get_extension(CONTAINER)}"
         target = os.path.join(folder, file)

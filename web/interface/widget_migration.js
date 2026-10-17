@@ -60,7 +60,7 @@ function namesArray(named, saved) {
 }
 
 /**
- * Restore a v2 workflow's widget values onto a node that has since gained widgets.
+ * Restore an earlier save's widget values onto a node that has since gained or lost widgets.
  *
  * @param {object} node - The node being created.
  * @param {string[]|string[][]} order - The widgets an earlier save's array holds, in the order
@@ -110,7 +110,7 @@ export function migrateWidgetValues(node, order) {
       }
       const candidates = orders.flatMap((each) => [withLinked(current, each), each]);
       const matched = Array.isArray(saved) && !byNames
-        ? candidates.find((names) => names.length === saved.length && current.length > names.length)
+        ? candidates.find((names) => names.length === saved.length && current.length !== names.length)
         : null;
       if (matched) {
         restoreDefaults();

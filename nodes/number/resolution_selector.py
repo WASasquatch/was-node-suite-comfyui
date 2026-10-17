@@ -26,9 +26,9 @@ class ResolutionSelector(io.ComfyNode):
             category="WAS Suite/Number",
             description=(
                 "Pick a shape and one measurement, and get the width and height that match. "
-                "Size by an edge in pixels when you know the resolution you want, such as "
-                "1024 across, and by megapixels when you are working to a budget instead. "
-                "Both sides land on a whole step, so the pair is one a model will take."
+                "Every shape is listed portrait and landscape, and the panel draws the frame "
+                "and sets the shape by dragging its corner. Both sides land on a whole step, so "
+                "the pair is one a model will take."
             ),
             inputs=[
                 io.Combo.Input(
@@ -36,18 +36,9 @@ class ResolutionSelector(io.ComfyNode):
                     options=list(resolution.RATIOS),
                     default="1:1",
                     tooltip=(
-                        "The shape, widest side first. 16:9 is widescreen, 3:2 is a stills "
-                        "camera, 1:1 is square. Orientation below decides which way round it "
-                        "is applied, so each shape is listed once."
-                    ),
-                ),
-                io.Combo.Input(
-                    "orientation",
-                    options=list(resolution.ORIENTATIONS),
-                    default="landscape",
-                    tooltip=(
-                        "Which way round the shape goes. `portrait` swaps the two sides, and "
-                        "`square` ignores the ratio entirely."
+                        "The shape, width:height. 16:9 is widescreen, 9:16 the same shape "
+                        "portrait, 1:1 square. Listed from the tallest portrait, 1:3, to the "
+                        "widest landscape, 3:1, each landscape shape mirroring a portrait one."
                     ),
                 ),
                 io.Combo.Input(
@@ -57,8 +48,8 @@ class ResolutionSelector(io.ComfyNode):
                     tooltip=(
                         "Which measurement you are giving. `long edge` and `short edge` fix "
                         "whichever side is longer or shorter; `width` and `height` fix that "
-                        "side whatever the orientation; `megapixels` fixes the area instead "
-                        "and reads the megapixels widget rather than size."
+                        "side; `megapixels` fixes the area instead and reads the megapixels "
+                        "widget rather than size."
                     ),
                 ),
                 io.Int.Input(
@@ -78,7 +69,6 @@ class ResolutionSelector(io.ComfyNode):
                     min=0.01,
                     max=64.0,
                     step=0.01,
-                    optional=True,
                     tooltip=(
                         "The area in millions of pixels, read only when size_by is "
                         "`megapixels`. 1.0 at 16:9 is about 1344 by 768."
@@ -132,14 +122,12 @@ class ResolutionSelector(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, aspect_ratio, orientation="landscape", size_by="long edge", size=1024,
-        megapixels=1.0, multiple_of=64,
+        cls, aspect_ratio, size_by="long edge", size=1024, megapixels=1.0, multiple_of=64,
     ) -> io.NodeOutput:
         """Work out the pair and describe it.
 
         Args:
-            aspect_ratio: The shape, as an entry from the widget's list.
-            orientation: Which way round the shape goes.
+            aspect_ratio: The shape, as an entry from the widget's list, width first.
             size_by: Which measurement is being given.
             size: The measurement in pixels.
             megapixels: The measurement in millions of pixels.
@@ -148,9 +136,7 @@ class ResolutionSelector(io.ComfyNode):
         Returns:
             The width and height, the ratio and area they came to, and a label.
         """
-        width, height = resolution.resolve(
-            aspect_ratio, orientation, size_by, size, megapixels, multiple_of
-        )
+        width, height = resolution.resolve(aspect_ratio, size_by, size, megapixels, multiple_of)
         area = width * height / 1_000_000.0
         label = f"{width} x {height}, {aspect_ratio}, {area:.2f} MP"
         return io.NodeOutput(width, height, width / height, area, label)

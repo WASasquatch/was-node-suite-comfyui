@@ -29,6 +29,7 @@ from .channel import (
     executing_workflow_id,
     node_key,
     subscribe,
+    temp_prefix,
     unsubscribe,
     wanted,
     watching,
@@ -479,7 +480,7 @@ def write_frames(images, prefix: str, kind: str = IMAGE_KIND) -> list[dict]:
         pictures, total = _encode_frames(images, kind, first_only=False)
         workflow = executing_workflow_id() or ""
         folder, name, counter, subfolder, _ = sandbox.save_image_path(
-            prefix, folder_paths.get_temp_directory(),
+            temp_prefix(prefix), folder_paths.get_temp_directory(),
         )
         entries = []
         for offset, picture in enumerate(pictures):

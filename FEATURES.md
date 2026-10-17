@@ -219,7 +219,8 @@ For graphs that vary per iteration, or that skip work a condition rules out.
 23 nodes. **Number Expression** evaluates a formula, **Number Operation** and **Number
 Easing** shape a value, **Number Counter** and **Number Range** step one per run, and
 **Number List Statistics** summarises many. **Image Size to Number**, **Latent Size to
-Number**, **Image Aspect Ratio** and **Resolution Selector (Advanced)** read a size.
+Number** and **Image Aspect Ratio** read a size. **Resolution Selector (Advanced)** picks one:
+every shape listed portrait and landscape, set by dragging the corner of the frame it draws.
 **Curve to Numbers** turns a drawn curve into values.
 
 For driving a setting from something the graph worked out rather than a typed constant.

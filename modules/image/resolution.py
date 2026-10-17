@@ -11,15 +11,27 @@ import math
 __all__ = [
     "DRIVERS",
     "MULTIPLES",
-    "ORIENTATIONS",
     "RATIOS",
     "parse_ratio",
     "resolve",
 ]
 
-#: Aspect ratios offered, widest side first, in the order the widget lists them. Saved
-#: workflows store the chosen option by value, so entries are appended and never reordered.
+#: Every shape offered, from the tallest portrait down to square, then each landscape shape in
+#: the place mirroring its portrait one.
 RATIOS: tuple[str, ...] = (
+    "1:3",
+    "1:2.39",
+    "9:21",
+    "1:2.2",
+    "1:2",
+    "1:1.85",
+    "9:16",
+    "1:1.66",
+    "10:16",
+    "2:3",
+    "1:1.43",
+    "3:4",
+    "4:5",
     "1:1",
     "5:4",
     "4:3",
@@ -35,9 +47,6 @@ RATIOS: tuple[str, ...] = (
     "2.39:1",
     "3:1",
 )
-
-#: Which way round the ratio is applied.
-ORIENTATIONS: tuple[str, ...] = ("landscape", "portrait", "square")
 
 #: Which measurement is being given, and so what the other one is worked out from.
 DRIVERS: tuple[str, ...] = ("long edge", "short edge", "width", "height", "megapixels")
@@ -64,6 +73,8 @@ def parse_ratio(text: str) -> tuple[float, float]:
     if not cleaned:
         return 1.0, 1.0
     parts = [part.strip() for part in cleaned.split(":") if part.strip()]
+    if not parts:
+        return 1.0, 1.0
     try:
         if len(parts) == 1:
             wide, high = float(parts[0]), 1.0
@@ -85,7 +96,6 @@ def _snap(value: float, multiple: int) -> int:
 
 def resolve(
     ratio: str,
-    orientation: str = "landscape",
     driver: str = "long edge",
     size: int = 1024,
     megapixels: float = 1.0,
@@ -94,8 +104,7 @@ def resolve(
     """The width and height a ratio and one measurement come to.
 
     Args:
-        ratio: An entry from :data:`RATIOS`, or anything :func:`parse_ratio` reads.
-        orientation: An entry from :data:`ORIENTATIONS`.
+        ratio: An entry from :data:`RATIOS`, or anything :func:`parse_ratio` reads, width first.
         driver: An entry from :data:`DRIVERS`, naming the measurement being given.
         size: The measurement in pixels, read by every driver but ``megapixels``.
         megapixels: The measurement in millions of pixels, read by ``megapixels`` alone.
@@ -105,10 +114,6 @@ def resolve(
         ``(width, height)``, both a whole number of steps and both at least one step.
     """
     wide, high = parse_ratio(ratio)
-    if orientation == "square":
-        wide = high = 1.0
-    elif orientation == "portrait":
-        wide, high = high, wide
     shape = wide / high
 
     if driver == "megapixels":

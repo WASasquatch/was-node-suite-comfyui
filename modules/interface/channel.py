@@ -7,6 +7,7 @@ header.
 
 from __future__ import annotations
 
+import secrets
 import threading
 from collections import OrderedDict
 
@@ -26,12 +27,28 @@ __all__ = [
     "node_key",
     "subscribe",
     "subscriptions",
+    "temp_prefix",
     "unsubscribe",
     "wanted",
     "watching",
 ]
 
 logger = log.get_logger("interface.channel")
+
+#: Token in the name of every file a panel reads from the temp folder, new each time ComfyUI starts.
+RUN_TOKEN = secrets.token_hex(3)
+
+
+def temp_prefix(prefix: str) -> str:
+    """The temp folder file name prefix for this start of ComfyUI.
+
+    Args:
+        prefix: The writer's own prefix, such as ``"was.compare.image.a"``.
+
+    Returns:
+        ``prefix`` with :data:`RUN_TOKEN` joined on.
+    """
+    return f"{prefix}.{RUN_TOKEN}"
 
 #: What a channel publishes is replaced whenever the node runs again, so the browser is told to
 #: hold no copy of its own: a stale answer drawn as the last run is worse than none.

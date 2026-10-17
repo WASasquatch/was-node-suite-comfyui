@@ -188,6 +188,7 @@ class VideoTemporalUpscale(io.ComfyNode):
         from comfy_api.latest import InputImpl
 
         from ...modules.media import clip as clips
+        from ...modules.interface.channel import temp_prefix
         from ...modules.media import temp_video, temporal_upscale
         from ...modules.util import sandbox
 
@@ -201,7 +202,7 @@ class VideoTemporalUpscale(io.ComfyNode):
 
         def named(side):
             folder, name, counter, subfolder, _ = sandbox.save_image_path(
-                f"{PREFIX}.{side}", temp, int(width * factor), int(height * factor)
+                temp_prefix(f"{PREFIX}.{side}"), temp, int(width * factor), int(height * factor)
             )
             file = f"{name}_{counter:05}_.mp4"
             return os.path.join(folder, file), {"filename": file, "subfolder": subfolder, "type": "temp"}

@@ -9743,7 +9743,7 @@ Draw a random number from a seed, for a value that should vary from run to run s
 <details>
 <summary><b>Resolution Selector (Advanced)</b></summary>
 
-Pick a shape and one measurement, and get the width and height that match. Size by an edge in pixels when you know the resolution you want, such as 1024 across, and by megapixels when you are working to a budget instead. Both sides land on a whole step, so the pair is one a model will take.
+Pick a shape and one measurement, and get the width and height that match. Every shape is listed portrait and landscape, and the panel draws the frame and sets the shape by dragging its corner. Both sides land on a whole step, so the pair is one a model will take.
 
 | | |
 |---|---|
@@ -9753,12 +9753,11 @@ Pick a shape and one measurement, and get the width and height that match. Size 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `aspect_ratio` | `COMBO` | Yes | 1:1 | `1:1`, `5:4`, `4:3`, `1.43:1`, `3:2`, `16:10`, `1.66:1`, `16:9`, `1.85:1`, `2:1`, `2.2:1`, `21:9` and 2 more | The shape, widest side first. 16:9 is widescreen, 3:2 is a stills camera, 1:1 is square. Orientation below decides which way round it is applied, so each shape is listed once. |
-| `orientation` | `COMBO` | Yes | landscape | `landscape`, `portrait`, `square` | Which way round the shape goes. `portrait` swaps the two sides, and `square` ignores the ratio entirely. |
-| `size_by` | `COMBO` | Yes | long edge | `long edge`, `short edge`, `width`, `height`, `megapixels` | Which measurement you are giving. `long edge` and `short edge` fix whichever side is longer or shorter; `width` and `height` fix that side whatever the orientation; `megapixels` fixes the area instead and reads the megapixels widget rather than size. |
+| `aspect_ratio` | `COMBO` | Yes | 1:1 | `1:3`, `1:2.39`, `9:21`, `1:2.2`, `1:2`, `1:1.85`, `9:16`, `1:1.66`, `10:16`, `2:3`, `1:1.43`, `3:4` and 15 more | The shape, width:height. 16:9 is widescreen, 9:16 the same shape portrait, 1:1 square. Listed from the tallest portrait, 1:3, to the widest landscape, 3:1, each landscape shape mirroring a portrait one. |
+| `size_by` | `COMBO` | Yes | long edge | `long edge`, `short edge`, `width`, `height`, `megapixels` | Which measurement you are giving. `long edge` and `short edge` fix whichever side is longer or shorter; `width` and `height` fix that side; `megapixels` fixes the area instead and reads the megapixels widget rather than size. |
 | `size` | `INT` | Yes | 1024 |  | The measurement in pixels, read by every option but `megapixels`. 1024 on the long edge of 16:9 is 1024 by 576. |
+| `megapixels` | `FLOAT` | Yes | 1.0 |  | The area in millions of pixels, read only when size_by is `megapixels`. 1.0 at 16:9 is about 1344 by 768. |
 | `multiple_of` | `INT` | Yes | 64 |  | Step both sides land on. 8 = the least a latent takes; 64 = what most model families were trained on. Snapping moves a side by up to half a step, so the ratio output may differ slightly from the one asked for. |
-| `megapixels` | `FLOAT` | No | 1.0 |  | The area in millions of pixels, read only when size_by is `megapixels`. 1.0 at 16:9 is about 1344 by 768. |
 
 **Outputs**
 

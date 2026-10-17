@@ -37,6 +37,9 @@ const V2_WIDGET_ORDER = {
   // dropped rather than landing on the module menu.
   "WASThreeCustomMaterial": ["javascript", "module"],
   "WASImageGradientMapNative": ["flip_left_right"],
+  // Resolution Selector (Advanced) took the shape's orientation from a widget of its own. A save
+  // holding portrait opens on the landscape entry of the same shape.
+  "WASResolutionSelector": ["aspect_ratio", "orientation", "size_by", "size", "multiple_of", "megapixels"],
   // Film Grain's v2 settings name no current widget, so a v2 save opens on the defaults.
   "Image Film Grain": ["density", "intensity", "highlights", "supersample_factor"],
   "Image SSAO (Ambient Occlusion)": [
