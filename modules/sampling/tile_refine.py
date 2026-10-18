@@ -19,12 +19,15 @@ __all__ = [
     "LARGE_PIXELS",
     "VAE_OVERLAP",
     "VAE_TILE",
+    "caption_line",
     "captions_text",
     "decode",
     "encode",
     "prepare",
     "publish",
     "release",
+    "source_size",
+    "stage_sizes",
     "tracked",
     "tile_settings",
     "upscaled",
@@ -94,7 +97,51 @@ def _multiple(vae) -> int:
     return ratio * tiles.ALIGN
 
 
-def upscaled(image: torch.Tensor, upscale_by: float, upscale_model, vae) -> torch.Tensor:
+def source_size(picture, latent, vae) -> tuple[int, int]:
+    """A source's size in pixels.
+
+    Args:
+        picture: ``[1, H, W, C]``, or None for a latent.
+        latent: ``[1, C, h, w]`` read where ``picture`` is None.
+        vae: The VAE the latent decodes with.
+
+    Returns:
+        ``(height, width)``.
+    """
+    if picture is not None:
+        return int(picture.shape[1]), int(picture.shape[2])
+    try:
+        ratio = vae.spacial_compression_decode()
+    except Exception:
+        ratio = 8
+    ratio = ratio if isinstance(ratio, int) and ratio > 0 else 8
+    return int(latent.shape[-2]) * ratio, int(latent.shape[-1]) * ratio
+
+
+def stage_sizes(height: int, width: int, upscale_by: float, stages: int, vae) -> list[tuple[int, int]]:
+    """The size each pass of a staged refine lands on, the last being the size one pass reaches.
+
+    Args:
+        height: The source picture's height in pixels.
+        width: Its width in pixels.
+        upscale_by: Size of the result against the source.
+        stages: How many passes reach it, each enlarging by the same factor.
+        vae: The VAE the passes encode with.
+
+    Returns:
+        One ``(height, width)`` per pass, each side a multiple of the VAE's downscale.
+    """
+    multiple = _multiple(vae)
+    count = max(1, int(stages))
+    sizes = []
+    for stage in range(1, count + 1):
+        factor = float(upscale_by) ** (stage / count)
+        sizes.append((max(multiple, int(round(height * factor / multiple)) * multiple),
+                      max(multiple, int(round(width * factor / multiple)) * multiple)))
+    return sizes
+
+
+def upscaled(image: torch.Tensor, upscale_by: float, upscale_model, vae, size=None) -> torch.Tensor:
     """One picture enlarged by a model where given, then resized to ``upscale_by`` on whole latent pixels.
 
     Args:
@@ -102,17 +149,16 @@ def upscaled(image: torch.Tensor, upscale_by: float, upscale_model, vae) -> torc
         upscale_by: Size of the answer against the picture.
         upscale_model: An UPSCALE_MODEL run first, or None.
         vae: The VAE the answer is encoded with.
+        size: ``(height, width)`` to land on in place of ``upscale_by``, or None.
 
     Returns:
         ``[1, h, w, 3]`` with each side a multiple of the VAE's downscale.
     """
     from ..compat import operations
 
-    multiple = _multiple(vae)
     picture = image[..., :3].float()
     height, width = int(picture.shape[1]), int(picture.shape[2])
-    target_h = max(multiple, int(round(height * float(upscale_by) / multiple)) * multiple)
-    target_w = max(multiple, int(round(width * float(upscale_by) / multiple)) * multiple)
+    target_h, target_w = size if size is not None else stage_sizes(height, width, upscale_by, 1, vae)[0]
     if upscale_model is not None:
         picture = operations.upscale_with_model(upscale_model, picture)
     if tuple(picture.shape[1:3]) == (target_h, target_w):
@@ -149,13 +195,14 @@ def decode(vae, latent: torch.Tensor) -> torch.Tensor:
     return images
 
 
-def prepare(image: torch.Tensor, model, vae, upscale_by: float, upscale_model, tiling: dict,
+def prepare(image: torch.Tensor | None, model, vae, upscale_by: float, upscale_model, tiling: dict,
             clip=None, captioner=None, style: str = "", system_prompt: str = "",
-            node: str = "", context: str = "") -> Frame:
-    """Upscale, encode, tile and caption one picture.
+            node: str = "", context: str = "", seed: int = 0, latent: torch.Tensor | None = None,
+            size=None, stage: tuple = (1, 1)) -> Frame:
+    """Upscale, encode, tile and caption one picture, given as pixels or as a latent.
 
     Args:
-        image: ``[1, H, W, C]``.
+        image: ``[1, H, W, C]``, or None where ``latent`` is given.
         model: The model patcher sampled.
         vae: The VAE.
         upscale_by: Size of the sampled picture against ``image``.
@@ -167,20 +214,42 @@ def prepare(image: torch.Tensor, model, vae, upscale_by: float, upscale_model, t
         system_prompt: The rules each caption is written under.
         node: The node's display name, for messages.
         context: The prompt the picture was made from, read by the captioner.
+        seed: Seeds the captions; the same seed on the same picture reuses them.
+        latent: A ``[1, C, H, W]`` latent refined in place of ``image``, sampled as it is at
+            ``upscale_by`` 1.0 or a ``size`` it already has, with no upscale model, and decoded
+            for the captions.
+        size: ``(height, width)`` to land on in place of ``upscale_by``, or None.
+        stage: ``(pass, passes)`` of a staged refine, announced to the node's panel.
 
     Returns:
         The frame.
 
     Raises:
-        ValueError: The latent is not a picture latent, or the captioner cannot be used.
+        ValueError: The latent is not a picture latent or holds several frames, or the
+            captioner cannot be used.
     """
     import comfy.model_management
     import comfy.utils
 
-    announce = tile_activity.Announcer([])
+    announce = tile_activity.Announcer([], stage=stage)
     announce(tile_activity.PREPARE)
-    pixels = upscaled(image, upscale_by, upscale_model, vae)
-    latent = encode(vae, pixels)
+    as_is = False
+    if latent is not None:
+        image = decode(vae, latent)
+        if int(image.shape[0]) != 1:
+            raise ValueError(
+                f"{node} refines one picture at a time, and this latent decodes to "
+                f"{int(image.shape[0])} frames. Pick one frame of it, or decode it and wire the "
+                "frames into source"
+            )
+        kept = (tuple(int(v) for v in image.shape[1:3]) == tuple(size) if size is not None
+                else abs(float(upscale_by) - 1.0) < 1e-6)
+        as_is = kept and upscale_model is None
+    if as_is:
+        pixels = image[..., :3].float().clamp(0.0, 1.0)
+    else:
+        pixels = upscaled(image, upscale_by, upscale_model, vae, size)
+        latent = encode(vae, pixels)
     if getattr(latent, "is_nested", False) or latent.ndim not in (4, 5):
         raise ValueError(
             f"{node} samples picture latents, and this VAE encodes to a {latent.ndim}-axis latent. "
@@ -199,7 +268,8 @@ def prepare(image: torch.Tensor, model, vae, upscale_by: float, upscale_model, t
     progress = comfy.utils.ProgressBar(grid.count + 1)
     release(captioner)
     frame.overview, frame.captions = tile_captions.caption_tiles(
-        captioner, pixels, grid, system_prompt, progress, frame.announce, context)
+        captioner, pixels, grid, system_prompt, progress, frame.announce, context, seed,
+        source=image, written=lambda tile, text: announce.wrote(tile, caption_line(grid, tile, text)))
     release(clip)
     suffix = str(style or "").strip()
     texts = []
@@ -258,15 +328,17 @@ def _publish_plan(picture: torch.Tensor, grid: tiles.Grid) -> None:
         logger.debug("The tile plan could not be published: %s", error)
 
 
-def publish(frames: list, sampler: str, affine: dict | None = None, picture=None) -> None:
+def publish(frames: list, sampler: str, affine: dict | None = None, picture=None, stages: int = 1) -> None:
     """Publish the tile plan of the last frame and its captions, for the node's own panel.
 
     Args:
-        frames: The frames sampled, in order.
+        frames: The last stage's frames, in order.
         sampler: The sampler's name.
-        affine: What the affine reported, ``{"applied": steps, "gain": factor}``, or None.
+        affine: What the affine reported, ``{"applied": steps, "gain": factor, "acts_on": name}``,
+            or None.
         picture: The last refined picture, ``[1, H, W, C]``, the tiles are drawn over; the
             picture sampled when left out.
+        stages: Passes each picture took to reach its size.
     """
     from ..interface import preview, run_result
 
@@ -288,10 +360,13 @@ def publish(frames: list, sampler: str, affine: dict | None = None, picture=None
             "overlap": int(round(shared * grid.scale)),
             "pictures": len(frames),
         }
+        if stages > 1:
+            counts["stages"] = int(stages)
         facts = {"size": f"{width}x{height} px", "sampler": sampler}
         if affine is not None:
             counts["affine steps"] = int(affine.get("applied", 0))
-            facts["affine"] = f"picture {(float(affine.get('gain', 1.0)) - 1.0) * 100.0:+.1f}%"
+            scaled = "noise" if affine.get("acts_on") == "noise" else "picture"
+            facts["affine"] = f"{scaled} {(float(affine.get('gain', 1.0)) - 1.0) * 100.0:+.1f}%"
         captioned = sum(1 for caption in last.captions if caption)
         if last.captions:
             summary = f"{grid.count} tiles, {captioned} captioned, over {width}x{height} px"
@@ -322,8 +397,24 @@ def captions_text(frames: list) -> str:
     for number, frame in enumerate(frames, start=1):
         if not frame.captions:
             continue
-        lines = [f"picture {number}" if len(frames) > 1 else "", f"overview: {frame.overview}"]
-        lines += [f"{index + 1} {tiles.position(frame.grid, index)}: {caption or '(positive prompt)'}"
-                  for index, caption in enumerate(frame.captions)]
+        lines = [f"picture {number}" if len(frames) > 1 else "",
+                 caption_line(frame.grid, -1, frame.overview)]
+        lines += [caption_line(frame.grid, index, caption) for index, caption in enumerate(frame.captions)]
         blocks.append("\n".join(line for line in lines if line))
     return "\n\n".join(blocks)
+
+
+def caption_line(grid: tiles.Grid, tile: int, caption: str) -> str:
+    """One numbered line of the captions output.
+
+    Args:
+        grid: The tiling the caption belongs to.
+        tile: The tile from 0, or ``-1`` for the overview.
+        caption: What the captioner wrote, empty where it wrote nothing.
+
+    Returns:
+        The line.
+    """
+    if tile < 0:
+        return f"overview: {caption}"
+    return f"{tile + 1} {tiles.position(grid, tile)}: {caption or '(positive prompt)'}"

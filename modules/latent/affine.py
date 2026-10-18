@@ -17,6 +17,7 @@ from .filters import gaussian_blur_depthwise
 
 __all__ = [
     "BIAS_FIELDS",
+    "COLOUR_HOLDS",
     "CONTENT_GATES",
     "DEFAULTS",
     "SCHEDULE_DEFAULTS",
@@ -107,6 +108,16 @@ CONTENT_GATES = ["off", *patterns.CONTENT_PATTERNS]
 
 #: What the bias adds where the mask is white.
 BIAS_FIELDS = ["constant", "gaussian"]
+
+#: What the multiplier's change keeps of the colour it would shift: ``off`` adds it whole,
+#: ``average`` holds every channel's mean, ``regional`` holds the blurred latent too.
+COLOUR_HOLDS = ["off", "average", "regional"]
+
+#: Blur radius of ``regional``, in latent pixels, as a share of the shorter side.
+REGIONAL_SHARE = 1.0 / 48.0
+
+#: Narrowest blur radius of ``regional``, in latent pixels.
+REGIONAL_MIN = 2.0
 
 
 #: Options that size an allocation, held to the range Affine Options declares for them
@@ -608,6 +619,28 @@ def _operand(value, like: torch.Tensor, flat: bool):
     return out.unsqueeze(-2) if flat and out.ndim == like.ndim - 1 else out
 
 
+def _without_colour(change: torch.Tensor, hold: str, flat: bool) -> torch.Tensor:
+    """A change to a latent with the part that would shift its colour taken out.
+
+    Args:
+        change: ``[B, C, H, W]`` or ``[B, C, T, H, W]``, what the multiplier adds.
+        hold: A name from :data:`COLOUR_HOLDS`.
+        flat: Whether a 3D latent was widened to 4D, which ``regional`` holds by its mean.
+
+    Returns:
+        The change, same shape.
+    """
+    if hold == "average" or (hold == "regional" and flat):
+        return change - change.mean(dim=(-2, -1), keepdim=True)
+    if hold != "regional":
+        return change
+    height, width = int(change.shape[-2]), int(change.shape[-1])
+    radius = max(REGIONAL_MIN, min(height, width) * REGIONAL_SHARE)
+    planes = change.reshape(change.shape[0], -1, height, width)
+    broad = gaussian_blur_depthwise(planes.float(), radius).to(change.dtype)
+    return (planes - broad).reshape(change.shape)
+
+
 def apply_plane(
     x: torch.Tensor,
     scale,
@@ -620,6 +653,7 @@ def apply_plane(
     content: torch.Tensor | None = None,
     bias_dc=0.0,
     signal: torch.Tensor | None = None,
+    keep_colour: str = "off",
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Run the affine over one latent tensor.
 
@@ -642,9 +676,10 @@ def apply_plane(
             through a run is mostly noise and has no detail to find.
         bias_dc: A further offset added where the mask is 1.0, in the same two forms as
             ``bias``. A ``bias_field`` of ``"gaussian"`` leaves this one flat.
-        signal: The part of the latent that is picture rather than noise, the same shape.
-            Given one, the multiplier is applied to it alone and the latent's noise is left
-            as it was. Without one the multiplier is applied to the whole latent.
+        signal: The part of the latent the multiplier is applied to, the same shape: the
+            picture, or the noise. Without one the multiplier is applied to the whole latent.
+        keep_colour: A name from :data:`COLOUR_HOLDS`, taken out of the multiplier's change
+            and ``bias_dc`` before they are added. ``bias`` is added whole.
 
     Returns:
         ``(latent, mask)``. The mask is ``[B, H, W]`` for a 4D latent, ``[B * T, H, W]``
@@ -660,7 +695,10 @@ def apply_plane(
     offset = _operand(bias, work, flat)
     if str(params.get("bias_field", "constant")) == "gaussian":
         offset = offset * _noise_field(work, seed)
-    offset = offset + _operand(bias_dc, work, flat)
+    dc = _operand(bias_dc, work, flat)
+    hold = str(keep_colour or "off")
+    if hold not in COLOUR_HOLDS:
+        raise ValueError(f"keep_colour must be one of {', '.join(COLOUR_HOLDS)}, not {hold!r}")
     read = content
     if read is not None and flat:
         read = read.unsqueeze(-2)
@@ -673,10 +711,14 @@ def apply_plane(
         picture = None
 
     def combine(latent, mask):
-        """The affine over one masked plane, on the picture alone where one was given."""
+        """The affine over one masked plane, on the given part alone where one was given."""
+        if hold != "off":
+            scaled = latent if picture is None else picture
+            change = _without_colour((gain - 1.0) * mask * scaled + dc * mask, hold, flat)
+            return latent + change + offset * mask
         if picture is None:
-            return latent * ((1.0 - mask) + mask * gain) + offset * mask
-        return latent + (gain - 1.0) * mask * picture + offset * mask
+            return latent * ((1.0 - mask) + mask * gain) + (offset + dc) * mask
+        return latent + (gain - 1.0) * mask * picture + (offset + dc) * mask
 
     if work.ndim == 4:
         mask = _mask_for_plane(work, pattern, params, seed, external_mask, read)

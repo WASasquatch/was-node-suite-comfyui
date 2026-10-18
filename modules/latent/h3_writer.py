@@ -258,8 +258,8 @@ TEXT_MODE = ("T2VA mode", ("integrated_multimodal_description", "overall_soundsc
 #: A section name run on inside a line, as the ``non_diegetic_music:`` in ``... gulls. non_diegetic_music: N/A``.
 RUN_ON_SECTION = re.compile(r"[ \t]+(?=[a-z]+(?:_[a-z]+)+:\s)")
 
-#: A subject, picture, video or audio tag in a prompt, as ``<Picture 2>``.
-TAG = re.compile(r"<(Subject|Picture|Video|Audio) (\d+)>")
+#: A subject, picture, video or audio tag in a prompt, as ``<Picture 2>`` or ``<Subject 1: He-Man>``.
+TAG = re.compile(r"<(Subject|Picture|Video|Audio) (\d+)(?:\s*:[^<>\n]*)?>")
 
 
 class Member(NamedTuple):

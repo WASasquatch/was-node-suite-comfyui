@@ -39,6 +39,27 @@ rows itself.
 
 Every input, output and tooltip is in [`NODES.md`](../NODES.md) under **WAS Suite/Latent/Video**.
 
+### Named tags
+
+A reference tag takes a name after a colon, in the header or in a scene. The name then stands
+for the tag anywhere in that scene's prompt, the header and the footer.
+
+| Written | Sent to the model |
+|---|---|
+| `<Subject 1: He-Man> is the muscular hero in <Picture 1>, ...` | `<Subject 1> is the muscular hero in <Picture 1>, ...` |
+| `<Subject 1: He-Man> is He-Man, the muscular hero in <Picture 1>, ...` | `<Subject 1> is He-Man, the muscular hero in <Picture 1>, ...` |
+| `He-Man sits at a chair.` | `<Subject 1> sits at a chair.` |
+| `He-Man's sword glows.` | `<Subject 1>'s sword glows.` |
+| `He-Man (S1) says, <d>[English] I am He-Man!</d>` | `<Subject 1> (S1) says, <d>[English] I am He-Man!</d>` |
+| `a banner reading "He-Man Fan Club"` | unchanged |
+
+- Names match whole words and are case sensitive. `<Picture N>`, `<Video N>` and `<Audio N>`
+  take names the same way.
+- Spoken lines, quoted on-screen text, other tags and the line that gives the name keep it as
+  written. The model reads the name only where it is kept.
+- A name a scene gives takes precedence over the same name in the header.
+- The node's report lists every name and the tag it became.
+
 ## The window
 
 | Area | Shows |
@@ -61,11 +82,17 @@ Every input, output and tooltip is in [`NODES.md`](../NODES.md) under **WAS Suit
 | Scenes | Drag the round button | Sets the overlap; dragged to the edge it makes a hard cut |
 | Scenes | Right-click a scene | Insert, duplicate, delete, colour |
 | Pinned frames | Drop a picture | Pins it at that moment; near a scene's start or end it becomes the opening or closing frame |
-| Pinned frames | Drag a keyframe marker | Moves it to another frame |
+| Pinned frames | Drag a pinned frame along the track | Moves it; near a scene's start or end it becomes the opening or closing frame, elsewhere a keyframe |
+| Pinned frames | Drag a pinned frame onto References or All scenes | Makes it a reference of that scene, or of every scene |
 | References | Drop a picture, clip or sound | The scene's prompt names it as `<Picture N>`, `<Video N>` or `<Audio N>` |
-| References | Drag a reference | Moves it to another scene, or onto All scenes |
+| References, All scenes | Drag a reference | Moves it to another scene, or onto All scenes |
+| References, All scenes | Drag a reference onto Scenes or Pinned frames | Pins it as an opening frame, closing frame or keyframe, the same as a file dropped there |
 | All scenes | Drop a file | Every scene's prompt can name it |
 | Any | Click an asset | Shows it full size in the monitor |
+| Any | Right-click an asset | Gives it another part from the role list |
+
+A frame of the video being made is saved as a picture in `input/` when it is pinned. It can be
+pinned once a preview or the Final video has drawn it.
 | Ruler | Click or drag | Moves the playhead |
 
 <img src="images/h3-timeline/transition-menu.jpg" alt="The transition menu" width="900">
@@ -244,3 +271,5 @@ the asset reads the frame from the video as it is made, and reaches the scenes a
 | A saved frame still shows the old render after a new run | The saved picture keeps the frame it was saved from; use Reference frame again on the new Final |
 | Final shows Different length | The saved video came from a run before the scenes changed length; run again |
 | The window opens on an empty Scene tab | The node has no prompt yet; write one or use Write scenes |
+| An asset is missing from the timeline | Its MiniMax H3 Asset node is bypassed or muted, and the run leaves it out. A muted one also cuts off every asset chained before it; bypass it (Ctrl+B) to leave out only that one |
+| A name stays as text in the prompt | The name is spelled or capitalised differently from its tag, or sits inside a spoken line or quotes; the report's `names` lists what was matched |

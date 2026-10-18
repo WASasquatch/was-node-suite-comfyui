@@ -48,8 +48,9 @@ RATIOS: tuple[str, ...] = (
     "3:1",
 )
 
-#: Which measurement is being given, and so what the other one is worked out from.
-DRIVERS: tuple[str, ...] = ("long edge", "short edge", "width", "height", "megapixels")
+#: Which measurement is being given, and so what the other one is worked out from. The area
+#: comes first, then the edges set by hand.
+DRIVERS: tuple[str, ...] = ("megapixels", "long edge", "short edge", "width", "height")
 
 #: Steps a side may land on. 8 is what a latent needs; 64 is what most model families
 #: were trained on.
@@ -96,7 +97,7 @@ def _snap(value: float, multiple: int) -> int:
 
 def resolve(
     ratio: str,
-    driver: str = "long edge",
+    driver: str = "megapixels",
     size: int = 1024,
     megapixels: float = 1.0,
     multiple: int = 64,

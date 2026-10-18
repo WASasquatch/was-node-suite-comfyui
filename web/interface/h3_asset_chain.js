@@ -17,6 +17,11 @@ export const CHAIN_OUTPUT = 0;
 // Longest chain followed, so a loop in the graph cannot hold the page.
 const MOST_LINKS = 512;
 
+/** Node modes a run reads differently: a muted node answers nothing, a bypassed one passes an
+ * input through in place of its output. */
+export const MUTED_MODE = 2;
+export const BYPASSED_MODE = 4;
+
 // Space left between a placed node and its neighbours, in graph units.
 const PLACE_GAP = 40;
 
@@ -94,18 +99,96 @@ export function inputLink(node, slot) {
 }
 
 /**
- * Whether anything is wired into one of a node's inputs.
+ * Whether two socket types may be joined, as LiteGraph reads them.
  *
- * @param {object} node - The node.
- * @param {string} name - The input's name.
- * @returns {boolean} True when a link lands on it.
+ * @param {string} a - One type.
+ * @param {string} b - The other.
+ * @returns {boolean} True when a link between them is valid.
  */
-export function wiredInto(node, name) {
-  return inputLink(node, slotOf(node, name)) !== null;
+function fits(a, b) {
+  const check = window.LiteGraph?.isValidConnection;
+  if (typeof check === "function") return check.call(window.LiteGraph, a, b);
+  return a === b || a === "*" || b === "*" || !a || !b;
 }
 
 /**
- * The asset nodes chained into a node's `assets` input.
+ * The input a bypassed node passes through in place of one of its outputs.
+ *
+ * @param {object} node - The bypassed node.
+ * @param {number} slot - The output being read.
+ * @param {string} type - The type the reader asks for.
+ * @returns {number} The input slot, or -1 where none fits.
+ */
+function bypassInput(node, slot, type) {
+  const inputs = node.inputs ?? [];
+  if (type === "*" || type === "") return inputs.length > slot ? slot : 0;
+  const same = inputs[slot];
+  const given = node.outputs?.[slot]?.type;
+  if (same && fits(same.type, given) && fits(same.type, type)) return slot;
+  const named = inputs.findIndex((input) => input.type === type);
+  return named >= 0 ? named : inputs.findIndex((input) => fits(input.type, given) && fits(input.type, type));
+}
+
+/**
+ * The node a link carries a run's value from, once muted and bypassed nodes are resolved.
+ *
+ * @param {object} graph - The graph the link is in.
+ * @param {object|null} link - The link.
+ * @param {string} type - The type the reading input takes.
+ * @returns {{node: object, slot: number}|null} The node and output a run reads, or null where a
+ *   muted node, or a bypassed one with nothing to pass, ends the link.
+ */
+export function liveOrigin(graph, link, type = "*") {
+  let current = link;
+  for (let step = 0; step < MOST_LINKS && current; step += 1) {
+    const origin = graph?.getNodeById?.(current.origin_id);
+    if (!origin || origin.mode === MUTED_MODE) return null;
+    if (origin.mode !== BYPASSED_MODE) return { node: origin, slot: current.origin_slot };
+    const through = bypassInput(origin, current.origin_slot, type);
+    if (through < 0) return null;
+    current = inputLink(origin, through);
+  }
+  return null;
+}
+
+/**
+ * Whether a run receives anything on one of a node's inputs.
+ *
+ * @param {object} node - The node.
+ * @param {string} name - The input's name.
+ * @returns {boolean} True when a link lands on it from a node that is neither muted nor bypassed
+ *   with nothing to pass.
+ */
+export function wiredInto(node, name) {
+  const slot = slotOf(node, name);
+  const link = inputLink(node, slot);
+  return link !== null && liveOrigin(node.graph, link, node.inputs?.[slot]?.type ?? "*") !== null;
+}
+
+/**
+ * The asset nodes whose assets a run hands to a node's `assets` input.
+ *
+ * @param {object} node - The node the chain ends on.
+ * @returns {object[]} The asset nodes, upstream first. A bypassed one is passed over; a muted one
+ *   ends the chain, and every node before it is cut off with it.
+ */
+export function liveChainOf(node) {
+  const found = [];
+  const seen = new Set();
+  let current = node;
+  for (let step = 0; step < MOST_LINKS && current; step += 1) {
+    const slot = slotOf(current, CHAIN_INPUT);
+    const live = liveOrigin(current.graph, inputLink(current, slot), current.inputs?.[slot]?.type ?? "*");
+    if (!live || live.node.type !== ASSET_NODE_ID || seen.has(live.node.id)) break;
+    seen.add(live.node.id);
+    found.push(live.node);
+    current = live.node;
+  }
+  return found.reverse();
+}
+
+/**
+ * The asset nodes chained into a node's `assets` input, whatever their mode.
  *
  * @param {object} node - The node the chain ends on.
  * @returns {object[]} The asset nodes, upstream first. The walk stops at anything else.

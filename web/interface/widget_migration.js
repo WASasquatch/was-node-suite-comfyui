@@ -60,6 +60,47 @@ function namesArray(named, saved) {
 }
 
 /**
+ * The first input spec named `key` anywhere under a part of a node definition.
+ *
+ * @param {*} scope - Part of the definition's `input`.
+ * @param {string} key - The input's name.
+ * @returns {Array|null} The `[type, options]` spec, or null.
+ */
+function findSpec(scope, key) {
+  const stack = [scope];
+  while (stack.length) {
+    const value = stack.shift();
+    if (!value || typeof value !== "object") continue;
+    if (!Array.isArray(value) && Array.isArray(value[key])) return value[key];
+    for (const child of Object.values(value)) {
+      if (child && typeof child === "object") stack.push(child);
+    }
+  }
+  return null;
+}
+
+/**
+ * The default a node's definition declares for one widget, a dynamic group's included.
+ *
+ * @param {object} node - The node.
+ * @param {string} name - The widget's name, as `affine.affine_keep_colour` inside a group.
+ * @returns {*} The default, or undefined where none is declared.
+ */
+function declaredDefault(node, name) {
+  let scope = node?.constructor?.nodeData?.input;
+  let spec = null;
+  for (const part of String(name).split(".")) {
+    spec = findSpec(scope, part);
+    if (!spec) return undefined;
+    scope = spec;
+  }
+  const options = spec[1] ?? {};
+  if ("default" in options) return options.default;
+  if (Array.isArray(spec[0])) return spec[0][0];
+  return Array.isArray(options.options) ? options.options[0] : undefined;
+}
+
+/**
  * Restore an earlier save's widget values onto a node that has since gained or lost widgets.
  *
  * @param {object} node - The node being created.
@@ -93,31 +134,24 @@ export function migrateWidgetValues(node, order) {
       const saved = arrived ?? info?.widgets_values;
       const named = arrivedNamed ?? (isRecord(info?.widgets_values_named) ? info.widgets_values_named : null);
       const current = (this.widgets ?? []).filter(serialised);
-      const byName = new Map(current.map((widget) => [widget.name, widget]));
-      const restoreDefaults = () => {
-        for (const widget of current) {
-          if (defaults.has(widget.name)) widget.value = defaults.get(widget.name);
-        }
-      };
       const byNames = Array.isArray(saved) && named && saved.length !== current.length
         && namesArray(named, saved);
-      if (byNames) {
-        restoreDefaults();
-        for (const [name, value] of Object.entries(named)) {
-          const widget = byName.get(name);
-          if (widget) widget.value = value;
-        }
-      }
       const candidates = orders.flatMap((each) => [withLinked(current, each), each]);
       const matched = Array.isArray(saved) && !byNames
         ? candidates.find((names) => names.length === saved.length && current.length !== names.length)
         : null;
-      if (matched) {
-        restoreDefaults();
-        matched.forEach((name, index) => {
-          const widget = byName.get(name);
-          if (widget) widget.value = saved[index];
-        });
+      const target = byNames ? new Map(Object.entries(named))
+        : matched ? new Map(matched.map((name, index) => [name, saved[index]])) : null;
+      if (target) {
+        // Writes only the values that differ, leaving a dynamic group's switch and its widgets as built.
+        for (const name of current.map((widget) => widget.name)) {
+          const widget = (this.widgets ?? []).find((each) => each.name === name);
+          if (!widget) continue;
+          const wanted = target.has(name) ? target.get(name)
+            : defaults.has(name) ? defaults.get(name) : declaredDefault(this, name);
+          if (wanted === undefined || JSON.stringify(widget.value) === JSON.stringify(wanted)) continue;
+          widget.value = wanted;
+        }
       }
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to migrate ${node?.type}'s saved values:`, error);

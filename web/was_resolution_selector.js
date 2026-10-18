@@ -23,11 +23,11 @@ const UI_WIDGET_TYPE = "was_resolution_frame";
 
 /** size_by -> the measurement widget it reads, under the name drawn for it. */
 const MODES = {
+  "megapixels": { megapixels: { label: "megapixels" } },
   "long edge": { size: { label: "long_edge" } },
   "short edge": { size: { label: "short_edge" } },
   "width": { size: { label: "width" } },
   "height": { size: { label: "height" } },
-  "megapixels": { megapixels: { label: "megapixels" } },
 };
 
 // Widgets the readout and the frame are worked out from.
@@ -186,7 +186,7 @@ function createFramePanel(node) {
     const value = (name, fallback) => widgetOf(node, name)?.value ?? fallback;
     const ratio = shownRatio();
     const [width, height] = resolve(
-      ratio, value("size_by", "long edge"), value("size", 1024), value("megapixels", 1), value("multiple_of", 64),
+      ratio, value("size_by", "megapixels"), value("size", 1024), value("megapixels", 1), value("multiple_of", 64),
     );
     readout.textContent = "";
     const size = document.createElement("span");

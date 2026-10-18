@@ -25,10 +25,10 @@ class ResolutionSelector(io.ComfyNode):
             ],
             category="WAS Suite/Number",
             description=(
-                "Pick a shape and one measurement, and get the width and height that match. "
-                "Every shape is listed portrait and landscape, and the panel draws the frame "
-                "and sets the shape by dragging its corner. Both sides land on a whole step, so "
-                "the pair is one a model will take."
+                "Pick a shape and an area in megapixels, and get the width and height that "
+                "match. Every shape is listed portrait and landscape, and the panel draws the "
+                "frame and sets the shape by dragging its corner. An edge in pixels can set the "
+                "size instead, and both sides land on a whole step."
             ),
             inputs=[
                 io.Combo.Input(
@@ -44,12 +44,11 @@ class ResolutionSelector(io.ComfyNode):
                 io.Combo.Input(
                     "size_by",
                     options=list(resolution.DRIVERS),
-                    default="long edge",
+                    default="megapixels",
                     tooltip=(
-                        "Which measurement you are giving. `long edge` and `short edge` fix "
-                        "whichever side is longer or shorter; `width` and `height` fix that "
-                        "side; `megapixels` fixes the area instead and reads the megapixels "
-                        "widget rather than size."
+                        "How the size is set. `megapixels` holds the area at the megapixels "
+                        "widget whatever the shape. `long edge`, `short edge`, `width` and "
+                        "`height` hold that side at the pixels typed in size instead."
                     ),
                 ),
                 io.Int.Input(
@@ -59,8 +58,8 @@ class ResolutionSelector(io.ComfyNode):
                     max=resolution.MAX_EDGE,
                     step=8,
                     tooltip=(
-                        "The measurement in pixels, read by every option but `megapixels`. "
-                        "1024 on the long edge of 16:9 is 1024 by 576."
+                        "The side in pixels, read when size_by is `long edge`, `short edge`, "
+                        "`width` or `height`. 1024 on the long edge of 16:9 is 1024 by 576."
                     ),
                 ),
                 io.Float.Input(
@@ -70,8 +69,8 @@ class ResolutionSelector(io.ComfyNode):
                     max=64.0,
                     step=0.01,
                     tooltip=(
-                        "The area in millions of pixels, read only when size_by is "
-                        "`megapixels`. 1.0 at 16:9 is about 1344 by 768."
+                        "The area in millions of pixels, read when size_by is `megapixels`. "
+                        "1.0 is 1024 by 1024 at 1:1 and 1344 by 768 at 16:9."
                     ),
                 ),
                 io.Int.Input(
@@ -122,7 +121,7 @@ class ResolutionSelector(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, aspect_ratio, size_by="long edge", size=1024, megapixels=1.0, multiple_of=64,
+        cls, aspect_ratio, size_by="megapixels", size=1024, megapixels=1.0, multiple_of=64,
     ) -> io.NodeOutput:
         """Work out the pair and describe it.
 

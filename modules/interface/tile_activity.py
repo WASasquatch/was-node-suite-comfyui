@@ -1,7 +1,8 @@
-"""The tiles a tiled sampler is working on, announced as they change.
+"""The tiles and captions a tiled sampler is working on, announced as they change.
 
 :data:`EVENT` carries ``node_id``, ``prompt_id``, ``phase``, ``tiles``, ``step``, ``steps``,
-``visited`` and ``boxes``, each box ``[top, bottom, left, right]`` in fractions of the frame.
+``visited``, ``stage``, ``stages`` and ``boxes`` as ``[top, bottom, left, right]`` fractions; a
+caption adds ``written`` and ``line``.
 """
 
 from __future__ import annotations
@@ -27,14 +28,16 @@ DONE = "done"
 class Announcer:
     """Sends the active tiles of one node's run, skipping a message that repeats the last."""
 
-    def __init__(self, boxes: list, node_id=None, prompt_id=None):
+    def __init__(self, boxes: list, node_id=None, prompt_id=None, stage=(1, 1)):
         """Bind the announcer to the executing node.
 
         Args:
             boxes: ``[top, bottom, left, right]`` of every tile as fractions of the frame.
             node_id: The node's id, read from the execution context when left out.
             prompt_id: The prompt's id, read from the execution context when left out.
+            stage: ``(pass, passes)`` of a staged run, sent with every message.
         """
+        self.stage = (int(stage[0]), int(stage[1]))
         self.boxes = [[round(float(v), 5) for v in box] for box in boxes]
         self.node_id = node_id if node_id is not None else executing_node_id()
         self.prompt_id = prompt_id if prompt_id is not None else executing_prompt_id()
@@ -80,10 +83,28 @@ class Announcer:
         if key == self.last:
             return
         self.last = key
+        self._send(phase, active, step, steps)
+
+    def wrote(self, tile: int, line: str) -> None:
+        """Announce a caption the moment it is written, under the phase last announced.
+
+        Args:
+            tile: The tile it describes, from 0, or ``-1`` for the overview.
+            line: The caption as the captions output writes it.
+        """
+        if self.node_id is None:
+            return
+        phase, active, step = self.last or (CAPTION, (), self.step)
+        self._send(phase, list(active), step, self.steps, {"written": int(tile), "line": str(line)})
+
+    def _send(self, phase: str, active: list, step: int, steps: int, extra=None) -> None:
+        """Send one message to the node's panel."""
         fields = {
             "node_id": str(self.node_id), "prompt_id": self.prompt_id or "", "phase": phase,
             "tiles": active, "step": step, "steps": steps, "boxes": self.boxes,
             "visited": len(self.visited) if phase == SAMPLE else 0,
+            "stage": self.stage[0], "stages": self.stage[1],
+            **(extra or {}),
         }
         try:
             from server import PromptServer

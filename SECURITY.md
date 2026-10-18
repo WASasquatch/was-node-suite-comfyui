@@ -163,7 +163,7 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/interface/api/preview` | node id, slot, side, frame, workflow, channel | an in-memory store |
 | `POST /was/interface/api/preview/subscribe` | node id | an in-memory store |
 | `POST /was/interface/api/preview/discard` | a list of mask editor upload names | deletes those files: names matching `clipspace-…-<digits>.png`, directly in `input/clipspace/`, written in the last ten minutes, at most eight a call |
-| `GET /was/interface/api/run_result`, `/run_result_page` | node id | an in-memory store |
+| `GET /was/interface/api/run_result`, `/run_result_page` | node id, workflow | an in-memory store |
 | `GET /was/interface/api/text_lines` | menu label | the file listing, then the allowlist |
 | `GET /was/interface/api/font` | font name | the font catalog |
 | `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most |

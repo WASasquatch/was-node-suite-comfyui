@@ -29,10 +29,37 @@ function h3Layout(fields, refSize) {
   ];
 }
 
+// The Tiled Captioned samplers' `tiling: manual` and `affine: on` widgets, as their groups hold them.
+const TILED_TILING = ["tiling.tile_width", "tiling.tile_height", "tiling.overlap"];
+const TILED_AFFINE = [
+  "affine.affine_interval", "affine.max_scale", "affine.max_bias", "affine.pattern", "affine.affine_seed",
+  "affine.affine_seed_increment", "affine.temporal_mode", "affine.affine_space", "affine.affine_acts_on",
+];
+
+/**
+ * A Tiled Captioned sampler's widget orders from before `affine_keep_colour`, its affine group open.
+ *
+ * @param {string[]} lead - The widgets ahead of `tiling`.
+ * @returns {string[][]} The order with tiling `auto`, then with tiling `manual`.
+ */
+function tiledLayouts(lead) {
+  return [false, true].map((manual) => [
+    ...lead, "tiling", ...(manual ? TILED_TILING : []), "affine", ...TILED_AFFINE,
+    "prompt", "style", "system_prompt",
+  ]);
+}
+
 // Node id -> the widgets an earlier save's `widgets_values` holds, in the order it holds them. Read
 // left to right against the node's current widgets: anything the node has that is not named here
 // is new, and takes its default rather than a value that was meant for the widget before it.
 const V2_WIDGET_ORDER = {
+  // The Tiled Captioned samplers' affine group gained `affine_keep_colour`. A save made with the
+  // group open puts its prompt, style and system prompt back on those widgets.
+  // `control_after_generate` rides on `seed`, and the migration adds it after `seed` itself.
+  "WASTiledCaptionedKSampler": tiledLayouts([
+    "upscale_by", "seed", "steps", "cfg", "sampler_name", "scheduler", "denoise",
+  ]),
+  "WASTiledCaptionedCustomSampler": tiledLayouts(["upscale_by"]),
   // Three Custom Material took a typed body before it took a module file. The saved body is
   // dropped rather than landing on the module menu.
   "WASThreeCustomMaterial": ["javascript", "module"],

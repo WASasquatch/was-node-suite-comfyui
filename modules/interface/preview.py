@@ -28,10 +28,12 @@ from .channel import (
     executing_prompt_id,
     executing_workflow_id,
     node_key,
+    scoped_key,
     subscribe,
     temp_prefix,
     unsubscribe,
     wanted,
+    workflow_param,
     watching,
 )
 
@@ -243,12 +245,6 @@ _thumbnails: OrderedDict[str, OrderedDict[tuple[str, str], _Held]] = OrderedDict
 #: Node id to the store key it last published under, for a reader that names no workflow.
 _latest: dict[str, str] = {}
 
-#: What joins a workflow id to a node id in a store key.
-_SCOPE = "\x00"
-
-#: The longest workflow id a request may name. The browser's are 36 character UUIDs.
-MAX_WORKFLOW_ID = 128
-
 #: The slot a node with one picture publishes under, and the one a request naming no slot
 #: reads. A name is stripped of surrounding space, so a blank one is this.
 _DEFAULT_SLOT = ""
@@ -438,7 +434,7 @@ def _publish(tensor, node_id, slot, side, kind, first_only) -> int:
                 key, side, kind, name,
             )
             return 0
-        _store(_scoped(key, executing_workflow_id()), (side, name), _Held(
+        _store(scoped_key(key, executing_workflow_id()), (side, name), _Held(
             tuple(pictures), total, sum(len(one.data) for one in pictures),
         ), node=key)
         return len(pictures)
@@ -560,37 +556,6 @@ def _store(key, inner, held, node=None) -> None:
                 del _latest[name]
 
 
-def _scoped(key, workflow) -> str:
-    """The store key one node publishes under in one workflow.
-
-    Args:
-        key: The node's id, as :func:`node_key` reads it.
-        workflow: The workflow id the run was queued from, or None.
-
-    Returns:
-        The workflow and node ids joined by :data:`_SCOPE`, or ``key`` alone without a workflow.
-    """
-    return f"{workflow}{_SCOPE}{key}" if workflow else key
-
-
-def _workflow(value) -> str | None:
-    """A workflow id from a request, or None when it names none.
-
-    Args:
-        value: The raw query value.
-
-    Returns:
-        The id stripped of surrounding space, or None when it is empty, longer than
-        :data:`MAX_WORKFLOW_ID` or carries the scope separator.
-    """
-    if not isinstance(value, str):
-        return None
-    text = value.strip()
-    if not text or len(text) > MAX_WORKFLOW_ID or _SCOPE in text:
-        return None
-    return text
-
-
 def _resolve(key, workflow) -> str | None:
     """The store key a read lands on. Called with :data:`_lock` held.
 
@@ -604,7 +569,7 @@ def _resolve(key, workflow) -> str | None:
         None when nothing matches.
     """
     if workflow:
-        scoped = _scoped(key, workflow)
+        scoped = scoped_key(key, workflow)
         if scoped in _thumbnails:
             return scoped
         return key if key in _thumbnails else None
@@ -694,7 +659,7 @@ def held_bytes(node_id=None, slot=None, side=None, workflow=None) -> int:
         return 0
     with _lock:
         if key is not None:
-            slots = _thumbnails.get(_resolve(key, _workflow(workflow)))
+            slots = _thumbnails.get(_resolve(key, workflow_param(workflow)))
             return 0 if slots is None else sum(one.cost for one in slots.values())
         return sum(one.cost for slots in _thumbnails.values() for one in slots.values())
 
@@ -717,7 +682,7 @@ def _held(node_id, slot, side, workflow=None) -> _Held | None:
     if key is None or name is None or which is None:
         return None
     with _lock:
-        store_key = _resolve(key, _workflow(workflow))
+        store_key = _resolve(key, workflow_param(workflow))
         slots = _thumbnails.get(store_key)
         if slots is None:
             return None
@@ -749,7 +714,7 @@ def _read(node_id, slot, side, frame, workflow=None) -> tuple[Picture | None, in
     if key is None or name is None or which is None:
         return None, 0, 0
     with _lock:
-        store_key = _resolve(key, _workflow(workflow))
+        store_key = _resolve(key, workflow_param(workflow))
         slots = _thumbnails.get(store_key)
         if slots is None:
             return None, 0, 0

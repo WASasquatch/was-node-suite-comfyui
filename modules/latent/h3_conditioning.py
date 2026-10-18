@@ -34,6 +34,12 @@ SECTION_LINE = re.compile(r"^([a-z][a-z0-9_]*):(?:\s|$)")
 #: The tag opening a spoken line, which the text encoder reads as one token.
 DIALOGUE_OPEN = "<d>"
 
+#: A reference tag carrying a name, as ``<Subject 1: He-Man>``.
+NAMED_TAG = re.compile(r"<(Subject|Picture|Video|Audio) (\d+)\s*:\s*([^<>\n]*?[^<>\s][^<>\n]*?)\s*>")
+
+#: Spans a name is never replaced inside: spoken lines, quoted on-screen text and tags.
+KEPT_SPANS = re.compile(r"<d>.*?</d>|\"[^\"\n]*\"|“[^”\n]*”|<[^<>\n]*>", re.S)
+
 #: A shot heading in a prompt, as ``[Shot 2]``.
 SHOT_HEADING = re.compile(r"\[Shot (\d+)\]")
 
@@ -672,6 +678,59 @@ def without_sections(text: str, names: set[str]) -> str:
     return "\n".join(kept).strip()
 
 
+def tag_names(*texts: str) -> dict[str, str]:
+    """The names given to reference tags, as ``{"He-Man": "<Subject 1>"}``.
+
+    Args:
+        *texts: Texts in rising precedence; a name given again takes the later tag.
+
+    Returns:
+        Each name and the plain tag it stands for.
+    """
+    names = {}
+    for text in texts:
+        for kind, number, name in NAMED_TAG.findall(str(text or "")):
+            names[name] = f"<{kind} {number}>"
+    return names
+
+
+def with_names(text: str, names: dict[str, str]) -> str:
+    """Text with its named tags written plainly and each name replaced by its tag.
+
+    Args:
+        text: A prompt, or a header or footer.
+        names: Name to tag, as :func:`tag_names` answers.
+
+    Returns:
+        The text. A name inside a ``<d>`` line, quotes or a tag, or on the line that gives
+        it, is left as written.
+    """
+    source = str(text or "")
+    if names:
+        alternatives = "|".join(re.escape(name) for name in sorted(names, key=len, reverse=True))
+        word = re.compile(rf"(?<![\w-])({alternatives})(?![\w-])")
+        # Line start to the names given on that line.
+        given = {}
+        for match in NAMED_TAG.finditer(source):
+            given.setdefault(source.rfind("\n", 0, match.start()) + 1, set()).add(match.group(3))
+
+        def swapped(start: int, end: int) -> str:
+            """One stretch outside the kept spans with its names replaced."""
+            def tag(match):
+                line = source.rfind("\n", 0, start + match.start()) + 1
+                name = match.group(1)
+                return match.group(0) if name in given.get(line, ()) else names[name]
+            return word.sub(tag, source[start:end])
+
+        out, at = [], 0
+        for span in KEPT_SPANS.finditer(source):
+            out += [swapped(at, span.start()), span.group(0)]
+            at = span.end()
+        out.append(swapped(at, len(source)))
+        source = "".join(out)
+    return NAMED_TAG.sub(lambda match: f"<{match.group(1)} {match.group(2)}>", source)
+
+
 def composed(header: str, prompt: str, footer: str) -> str:
     """One row's prompt inside the header and footer, less any section the row names itself.
 
@@ -681,14 +740,37 @@ def composed(header: str, prompt: str, footer: str) -> str:
         footer: Text placed after the row's prompt, or blank for none.
 
     Returns:
-        Whichever of the three carry text, in that order, joined by a blank line.
+        Whichever of the three carry text, in that order, joined by a blank line, with every
+        name a tag was given replaced by that tag; the row's own names take precedence.
     """
+    header, footer = _kept(header, prompt, footer)
+    names = tag_names(footer, header, prompt)
+    parts = [with_names(part, names).strip() for part in (header, prompt, footer)]
+    return "\n\n".join(part for part in parts if part)
+
+
+def names_in(header: str, prompt: str, footer: str) -> dict[str, str]:
+    """The names one row's prompt resolves, as :func:`composed` reads them.
+
+    Args:
+        header: Text placed before the row's prompt, or blank for none.
+        prompt: The row's own prompt.
+        footer: Text placed after the row's prompt, or blank for none.
+
+    Returns:
+        Each name and the plain tag it stands for.
+    """
+    header, footer = _kept(header, prompt, footer)
+    return tag_names(footer, header, prompt)
+
+
+def _kept(header: str, prompt: str, footer: str) -> tuple[str, str]:
+    """The header and footer less every section the row's prompt names itself."""
     own = {name for name, unused in sections(prompt) if name}
     if own:
         header = without_sections(header, own)
         footer = without_sections(footer, own)
-    parts = [str(part or "").strip() for part in (header, prompt, footer)]
-    return "\n\n".join(part for part in parts if part)
+    return header, footer
 
 
 def snap_segment(frames: int, overlap: int = 0, continuity: str = DEFAULT_CONTINUITY) -> int:

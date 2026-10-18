@@ -25,13 +25,21 @@ __all__ = [
     "executing_prompt_id",
     "executing_workflow_id",
     "node_key",
+    "scoped_key",
     "subscribe",
     "subscriptions",
     "temp_prefix",
     "unsubscribe",
     "wanted",
     "watching",
+    "workflow_param",
 ]
+
+#: What joins a workflow id to a node id in a store key.
+WORKFLOW_SCOPE = "\x00"
+
+#: The longest workflow id a request may name. The browser's are 36 character UUIDs.
+MAX_WORKFLOW_ID = 128
 
 logger = log.get_logger("interface.channel")
 
@@ -283,6 +291,38 @@ def executing_workflow_id() -> str | None:
     except Exception as error:
         logger.debug("the executing workflow id could not be read (%s)", error)
     return None
+
+
+def scoped_key(key, workflow) -> str:
+    """The store key one node publishes under in one workflow.
+
+    Args:
+        key: The node's id, as :func:`node_key` reads it.
+        workflow: The workflow id the run was queued from, or None.
+
+    Returns:
+        The workflow and node ids joined by :data:`WORKFLOW_SCOPE`, or ``key`` alone without a
+        workflow.
+    """
+    return f"{workflow}{WORKFLOW_SCOPE}{key}" if workflow else key
+
+
+def workflow_param(value) -> str | None:
+    """A workflow id from a request, or None when it names none.
+
+    Args:
+        value: The raw query value.
+
+    Returns:
+        The id stripped of surrounding space, or None when it is empty, longer than
+        :data:`MAX_WORKFLOW_ID` or carries the scope separator.
+    """
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text or len(text) > MAX_WORKFLOW_ID or WORKFLOW_SCOPE in text:
+        return None
+    return text
 
 
 def executing_class_type(node_id=None) -> str | None:

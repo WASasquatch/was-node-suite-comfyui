@@ -1,4 +1,6 @@
-"""Captions for the tiles of a picture, written by a vision language model and cached per picture.
+"""Captions for the tiles of a picture, written by a vision language model.
+
+Answers are cached per captioner, source picture, enlarged size, tile, seed and rules.
 
 Pictures are IMAGE tensors ``[1, H, W, C]`` in ``[0, 1]``.
 """
@@ -251,11 +253,9 @@ def _tidy(text: str) -> str:
     return reply
 
 
-def _ask(write, store: OrderedDict, pictures: list, question: str, system: str,
-         budget: int, ruled: bool) -> str:
-    """One answer about pictures, read from the cache where the same question was asked before."""
-    key = (tuple(_digest(picture) for picture in pictures), question, system if ruled else "",
-           int(budget))
+def _ask(write, store: OrderedDict, key: tuple, pictures: list, question: str, budget: int,
+         ruled: bool) -> str:
+    """One answer about pictures, read from the cache where the same key was asked before."""
     if key in store:
         store.move_to_end(key)
         return store[key]
@@ -271,7 +271,8 @@ def _ask(write, store: OrderedDict, pictures: list, question: str, system: str,
 
 
 def caption_tiles(captioner, image: torch.Tensor, grid: tiles.Grid, system_prompt: str,
-                  progress=None, announce=None, context: str = "") -> tuple:
+                  progress=None, announce=None, context: str = "", seed: int = 0, source=None,
+                  written=None) -> tuple:
     """An overview of a picture, then one caption for each tile of it.
 
     Args:
@@ -284,6 +285,11 @@ def caption_tiles(captioner, image: torch.Tensor, grid: tiles.Grid, system_promp
             ``announce("caption", [tile])`` before each tile, or None.
         context: The prompt the picture was made from, given to the overview and every
             caption, empty for none.
+        seed: Seeds the words each answer is drawn with.
+        source: The picture before enlargement, ``[1, h, w, C]``, whose pixels identify the
+            answers in the cache; ``image`` when None.
+        written: Called as ``written(tile, caption)`` once each answer is in, ``tile`` being
+            ``-1`` for the overview, or None.
 
     Returns:
         ``(overview, captions)``, ``captions`` holding one string per tile, row by row, empty
@@ -295,14 +301,18 @@ def caption_tiles(captioner, image: torch.Tensor, grid: tiles.Grid, system_promp
     system = str(system_prompt or "")
     if context:
         system += SYSTEM_CONTEXT.format(context=context)
-    write = h3_writer.make_writer(captioner, 0, SAMPLING, system)
+    write = h3_writer.make_writer(captioner, int(seed), SAMPLING, system)
     store = _store(captioner)
+    ident = (_digest(image if source is None else source), tuple(image.shape), int(seed), system)
     lead = OVERVIEW_CONTEXT.format(context=context) if context else ""
     tile_lead = TILE_CONTEXT.format(context=context) if context else ""
     if announce is not None:
         announce("overview")
-    overview = _ask(write, store, [_fit(image, OVERVIEW_SIDE)], lead + OVERVIEW_QUESTION, system,
-                    OVERVIEW_TOKENS, ruled=False)
+    question = lead + OVERVIEW_QUESTION
+    overview = _ask(write, store, (ident, "overview", question, OVERVIEW_TOKENS),
+                    [_fit(image, OVERVIEW_SIDE)], question, OVERVIEW_TOKENS, ruled=False)
+    if written is not None:
+        written(-1, overview)
     if progress is not None:
         progress.update(1)
     height, width = int(image.shape[1]), int(image.shape[2])
@@ -321,7 +331,10 @@ def caption_tiles(captioner, image: torch.Tensor, grid: tiles.Grid, system_promp
         pictures = [context_picture, crop] if several else [_panels(context_picture, crop)]
         question = tile_lead + template.format(overview=overview or "not available",
                                                number=index + 1, place=tiles.position(grid, index))
-        captions.append(_ask(write, store, pictures, question, system, TILE_TOKENS, ruled=True))
+        key = (ident, (h0, h1, w0, w1), float(grid.scale), question, TILE_TOKENS)
+        captions.append(_ask(write, store, key, pictures, question, TILE_TOKENS, ruled=True))
+        if written is not None:
+            written(index, captions[-1])
         if progress is not None:
             progress.update(1)
     return overview, captions

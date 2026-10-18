@@ -209,8 +209,23 @@ export const ROLE_NAMES = Object.freeze({
 // What a gesture is doing.
 const GRIP = {
   PLAYHEAD: "playhead", END: "end", SEAM: "seam", HEAD: "head", CLIP: "clip", PIN: "pin",
-  BAR: "bar",
+  BAR: "bar", ASSET: "asset",
 };
+
+// Roles a prompt names as a tag rather than holding the scene to.
+const REFERENCING = new Set(["reference picture", "reference clip", "reference audio"]);
+
+/**
+ * Whether dropping an asset on a target changes its part, its scene or its moment.
+ *
+ * @param {object} asset - `{role, segment, frame}` as it stands.
+ * @param {object} target - `{role, segment, frame}` where it was dropped.
+ * @returns {boolean} True where anything would be written.
+ */
+function placementChanged(asset, target) {
+  if (asset.role !== target.role || asset.segment !== target.segment) return true;
+  return target.role === "keyframe" && Number(asset.frame) !== Number(target.frame);
+}
 
 /**
  * The continuity a row's setting comes to, with an overlap of 0 read as a cut.
@@ -372,14 +387,16 @@ function kindGlyph(kind) {
  * @param {() => object} options.read - Answers `{rows, assets, selected, selectedAsset,
  *   playhead, dragging}`: `rows` as `[{seconds, overlap, continuity, source, title, colour,
  *   model, warning}]`, `assets` as `[{id, segment, role, frame, name, kind, thumb, frames,
- *   tag}]`, `selected` a row index or null, `selectedAsset` an asset id or null, `playhead` in
+ *   tag, moment, pinnable}]` (`pinnable` false for a frame of the video not drawn yet),
+ *   `selected` a row index or null, `selectedAsset` an asset id or null, `playhead` in
  *   seconds, `dragging` the `{kind}` of a file being dragged from the media bin, or null.
  * @param {(index: number) => void} options.onSelect - A scene was pressed.
  * @param {(id: number|null) => void} options.onSelectAsset - An asset was pressed.
  * @param {(change: object) => void} options.onChange - A gesture finished, as
  *   `{type: "duration", index, seconds}`, `{type: "overlap", index, frames}`,
- *   `{type: "move", from, to}`, `{type: "keyframe", id, frame}`, `{type: "playhead", seconds}`,
- *   `{type: "add"}` or `{type: "edit", index}`.
+ *   `{type: "move", from, to}`, `{type: "asset", id, role, segment, frame, label}` for an asset
+ *   dragged to another part, scene or moment, `{type: "playhead", seconds}`, `{type: "add"}` or
+ *   `{type: "edit", index}`.
  * @param {(target: object, event: DragEvent) => void} options.onDrop - A file was dropped, with
  *   where it lands: `{action, scene, segment, role, frame, label}`, `action` one of `pin`,
  *   `reference` and `new-scene`.
@@ -1106,7 +1123,11 @@ export function createTimeline(options = {}) {
         const outside = placedAt === null;
         let at = outside ? entry.start : placedAt.at;
         const guide = outside ? 1 : placedAt.guide;
-        if (drag?.grip === GRIP.PIN && drag.id === asset.id && drag.moved) at = entry.start + drag.frame;
+        // A keyframe dragged along its own scene slides with the pointer.
+        const sliding = drag?.grip === GRIP.ASSET && drag.id === asset.id && drag.moved ? drag.target : null;
+        if (sliding?.valid && sliding.role === "keyframe" && asset.role === "keyframe" && sliding.segment === index + 1) {
+          at = entry.start + sliding.frame;
+        }
         const mx = xOf(at);
         let px = mx - PIN_WIDTH / 2;
         if (asset.role === "first frame") px = mx + 1;
@@ -1159,11 +1180,10 @@ export function createTimeline(options = {}) {
         const role = ROLE_NAMES[asset.role] ?? asset.role;
         regions.unshift({
           kind: GRIP.PIN, id: asset.id, index, x: px, y, w: PIN_WIDTH, h: PIN_HEIGHT + 16,
-          cursor: asset.role === "keyframe" ? "ew-resize" : "pointer",
+          cursor: "grab",
           title: `${role} of scene ${index + 1}: ${asset.name}`
             + (outside ? ". It lands outside the scene" : "")
-            + (asset.role === "keyframe" ? ". Drag to move it" : ""),
-          draggable: asset.role === "keyframe",
+            + ". Drag along the track to move it, or onto References to make it a reference",
         });
       }
     });
@@ -1261,9 +1281,9 @@ export function createTimeline(options = {}) {
           return;
         }
         regions.unshift({
-          kind: "ref", id: asset.id, index, x, y, w: used, h: CHIP_HEIGHT, cursor: "pointer",
+          kind: "ref", id: asset.id, index, x, y, w: used, h: CHIP_HEIGHT, cursor: "grab",
           title: `${ROLE_NAMES[asset.role] ?? asset.role} in scene ${index + 1}, named ${asset.tag} `
-            + `in its prompt: ${asset.name}. Drag to another scene`,
+            + `in its prompt: ${asset.name}. Drag to another scene, or onto Pinned frames to pin it`,
         });
         x += used + 4;
       });
@@ -1295,9 +1315,9 @@ export function createTimeline(options = {}) {
         const used = chip(pen, theme, state, asset, x, y, w - x - 8);
         if (!used) break;
         regions.unshift({
-          kind: "ref", id: asset.id, index: null, x, y, w: used, h: CHIP_HEIGHT, cursor: "pointer",
+          kind: "ref", id: asset.id, index: null, x, y, w: used, h: CHIP_HEIGHT, cursor: "grab",
           title: `${ROLE_NAMES[asset.role] ?? asset.role} in every scene, named ${asset.tag}: ${asset.name}. `
-            + "Drag to one scene",
+            + "Drag to one scene, or onto Pinned frames to pin it",
         });
         x += used + 4;
       }
@@ -1526,20 +1546,41 @@ export function createTimeline(options = {}) {
   };
 
   /**
-   * The scene a dragged reference would move to.
+   * Where a placed asset dragged to a point would land, and what it would become.
    *
    * @param {object} state - What `current` answered.
    * @param {number} x - Across the tracks.
    * @param {number} y - Down the tracks.
-   * @returns {number|null} The scene from 1, 0 for every scene, or null over no scene.
+   * @param {object} asset - The asset being dragged.
+   * @returns {object} What `dropTarget` answers, `valid` false where it cannot go.
    */
-  const referenceTarget = (state, x, y) => {
-    const lane = laneAt(y);
-    if (lane === "shared") return 0;
-    if (!lane) return null;
-    const frame = frameAt(x);
-    const index = state.layout.findIndex((entry, at) => entry && frame >= entry.start && frame < drawnEnd(state, at));
-    return index >= 0 ? index + 1 : null;
+  const assetTarget = (state, x, y, asset) => {
+    const target = dropTarget(state, x, y, asset.kind || "picture");
+    if (!target.valid) return target;
+    const refused = (label) => ({ ...target, valid: false, label });
+    if (target.action === "new-scene") return refused("Drop it on a scene");
+    const where = target.segment === 0 ? "every scene" : `scene ${target.segment}`;
+    if (target.action === "pin") {
+      if (asset.pinnable === false) return refused(`Frame ${asset.frame} is not drawn yet. Run the graph to pin it`);
+      const entry = state.layout[target.scene];
+      if (target.role === "keyframe" && entry && asset.frames > 1) {
+        const most = Math.max(0, entry.window - entry.head - guideLength(asset.frames));
+        target.frame = Math.min(target.frame, most);
+        target.x = xOf(entry.start + target.frame);
+        target.label = `Keyframe at ${durationOf(target.frame).toFixed(2)}s in scene ${target.segment}`;
+      }
+      return target;
+    }
+    // A reference moved between scenes keeps its kind.
+    if (REFERENCING.has(asset.role)) {
+      target.role = asset.role;
+      target.label = `${ROLE_NAMES[asset.role] ?? asset.role} in ${where}`;
+    }
+    const entry = target.segment > 0 ? state.layout[target.segment - 1] : null;
+    if (asset.moment && entry && entry.start <= asset.frame) {
+      return refused(`Frame ${asset.frame} plays in or after scene ${target.segment}`);
+    }
+    return target;
   };
 
   /**
@@ -1554,7 +1595,7 @@ export function createTimeline(options = {}) {
 
   canvas.addEventListener("pointerdown", (event) => {
     root.focus({ preventScroll: true });
-    const { region, x } = regionAt(event.clientX, event.clientY);
+    const { region, x, y } = regionAt(event.clientX, event.clientY);
     if (event.button === 2) {
       if (!region) return;
       if (region.kind === GRIP.CLIP || region.kind === GRIP.END || region.kind === GRIP.HEAD) {
@@ -1584,16 +1625,12 @@ export function createTimeline(options = {}) {
       drag = { grip: region.kind, index: region.index, x, downX: x, moving: region.kind === GRIP.HEAD,
         frames: state.rows[region.index].overlap, edgeX: xOf(entry.start),
         continuity: state.rows[region.index].continuity, readout: "" };
-    } else if (region.kind === GRIP.PIN) {
+    } else if (region.kind === GRIP.PIN || region.kind === "ref") {
       onSelectAsset(region.id);
-      if (!region.draggable) return;
       const asset = state.assets.find((each) => each.id === region.id);
-      drag = { grip: GRIP.PIN, id: region.id, index: region.index, x, downX: x, moved: false,
-        frame: Number(asset?.frame) || 0, entry: state.layout[region.index], asset, readout: "" };
-    } else if (region.kind === "ref") {
-      onSelectAsset(region.id);
-      drag = { grip: "ref", id: region.id, index: region.index, x, downX: x, downY: regionAt(event.clientX, event.clientY).y,
-        moved: false, segment: null, readout: "" };
+      if (!asset) return;
+      drag = { grip: GRIP.ASSET, id: region.id, asset, x, downX: x, downY: y, moved: false,
+        target: null, readout: "" };
     } else if (region.kind === GRIP.CLIP) {
       onSelect(region.index);
       drag = { grip: GRIP.CLIP, index: region.index, to: region.index, x, downX: x, moving: false,
@@ -1662,23 +1699,13 @@ export function createTimeline(options = {}) {
           drag.readout = `${drag.frames} frames carried (${durationOf(drag.frames)}s)`;
         }
       }
-    } else if (drag.grip === GRIP.PIN) {
-      if (!drag.moved && Math.abs(x - drag.downX) > MOVE_THRESHOLD) drag.moved = true;
-      if (drag.moved) {
-        const entry = drag.entry;
-        const guide = drag.asset?.frames > 1 ? guideLength(drag.asset.frames) : 1;
-        const most = Math.max(0, entry.window - entry.head - guide);
-        drag.frame = Math.max(0, Math.min(most, Math.round(frameAt(x) - entry.start)));
-        drag.readout = `Keyframe at ${durationOf(drag.frame).toFixed(2)}s into scene ${drag.index + 1}`;
-      }
-    } else if (drag.grip === "ref") {
+    } else if (drag.grip === GRIP.ASSET) {
       if (!drag.moved && Math.abs(x - drag.downX) + Math.abs(y - drag.downY) > MOVE_THRESHOLD) drag.moved = true;
       if (drag.moved) {
         const state = current();
-        drag.segment = state ? referenceTarget(state, x, y) : null;
-        canvas.style.cursor = drag.segment === null ? "no-drop" : "grabbing";
-        drag.readout = drag.segment === null ? "Drop on a scene or on All scenes"
-          : drag.segment === 0 ? "Move to every scene" : `Move to scene ${drag.segment}`;
+        drag.target = state ? assetTarget(state, x, y, drag.asset) : null;
+        dropping = drag.target ? { kind: drag.asset.kind || "picture", target: drag.target, x } : null;
+        canvas.style.cursor = drag.target?.valid ? "grabbing" : "no-drop";
       }
     } else if (drag.grip === GRIP.CLIP) {
       if (!drag.moving && Math.abs(x - drag.downX) > MOVE_THRESHOLD) drag.moving = true;
@@ -1714,13 +1741,15 @@ export function createTimeline(options = {}) {
         if (event) onTransitionMenu(done.index, event);
       } else if (done.grip === GRIP.SEAM || done.grip === GRIP.HEAD) {
         if (done.moving) onChange({ type: "overlap", index: done.index, frames: done.frames });
-      } else if (done.grip === GRIP.PIN) {
-        if (done.moved) onChange({ type: "keyframe", id: done.id, frame: done.frame });
+      } else if (done.grip === GRIP.ASSET) {
+        dropping = null;
+        const target = done.target;
+        if (done.moved && target?.valid && placementChanged(done.asset, target)) {
+          onChange({ type: "asset", id: done.id, role: target.role, segment: target.segment,
+            frame: target.frame, label: target.label });
+        }
       } else if (done.grip === GRIP.CLIP && done.moving && done.to !== done.index) {
         onChange({ type: "move", from: done.index, to: done.to });
-      } else if (done.grip === "ref" && done.moved && done.segment !== null
-        && done.segment !== (done.index === null ? 0 : done.index + 1)) {
-        onChange({ type: "reference", id: done.id, segment: done.segment });
       }
     } catch (error) {
       console.error(`[${logName}] A timeline change failed:`, error);

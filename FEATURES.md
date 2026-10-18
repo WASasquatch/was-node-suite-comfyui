@@ -219,8 +219,9 @@ For graphs that vary per iteration, or that skip work a condition rules out.
 23 nodes. **Number Expression** evaluates a formula, **Number Operation** and **Number
 Easing** shape a value, **Number Counter** and **Number Range** step one per run, and
 **Number List Statistics** summarises many. **Image Size to Number**, **Latent Size to
-Number** and **Image Aspect Ratio** read a size. **Resolution Selector (Advanced)** picks one:
-every shape listed portrait and landscape, set by dragging the corner of the frame it draws.
+Number** and **Image Aspect Ratio** read a size. **Resolution Selector (Advanced)** picks one
+from a shape and an area in megapixels, or from one edge in pixels, with every shape listed
+portrait and landscape and set by dragging the corner of the frame it draws.
 **Curve to Numbers** turns a drawn curve into values.
 
 For driving a setting from something the graph worked out rather than a typed constant.
@@ -314,7 +315,9 @@ one to music.
 one segment with its own prompt, length, transition, overlap, source, header and footer choice,
 model, hold, sound and seed, and a new row appears as the last one is filled. `prompt_header`
 and `prompt_footer` wrap the rows; a section a row writes itself, as `overall_soundscape:`,
-replaces theirs for that row, and `header_footer_N` takes either, both or neither. `t2va` takes
+replaces theirs for that row, and `header_footer_N` takes either, both or neither. A tag written
+`<Subject 1: He-Man>` gives `<Subject 1>` a name the prompts can use in its place
+([named tags](docs/H3_COND_TIMELINE.md#named-tags)). `t2va` takes
 no pictures, `i2va` opens on a first frame, `fl2va` closes on a last one, `fl2va_batched` runs
 every segment between a neighbouring pair out of one batch, and `ref2va` builds every segment on
 shared references: up to 9 pictures, 3 clips each with its own soundtrack, and 3 sounds, named
@@ -492,8 +495,9 @@ in: 26 patterns, each with its settings on **Affine Options**.
 
 The same transform runs during sampling on **Affine Sampler**, **KSampler Affine Advanced** and
 **Custom Sampler Affine Advanced**, on a curve **Affine Schedule** defines. `affine_acts_on`
-chooses between the picture the model has resolved and the whole latent. On a video model,
-prefer `content`.
+chooses the picture the model has resolved, the noise alone or the whole latent, and
+`affine_keep_colour` holds the overall or regional colour while the multiplier scales detail.
+On a video model, prefer `content`.
 
 For adding grain, fabric and surface detail that a prompt will not reach.
 

@@ -63,13 +63,13 @@ function snap(value, multiple) {
  * The width and height a ratio and one measurement come to.
  *
  * @param {string} ratio - A menu entry, width first.
- * @param {string} driver - `long edge`, `short edge`, `width`, `height` or `megapixels`.
+ * @param {string} driver - `megapixels`, `long edge`, `short edge`, `width` or `height`.
  * @param {number} size - The measurement in pixels, read by every driver but `megapixels`.
  * @param {number} megapixels - The measurement in millions of pixels.
  * @param {number} multiple - Step both sides land on.
  * @returns {number[]} `[width, height]`, both a whole number of steps.
  */
-export function resolve(ratio, driver = "long edge", size = 1024, megapixels = 1.0, multiple = 64) {
+export function resolve(ratio, driver = "megapixels", size = 1024, megapixels = 1.0, multiple = 64) {
   const [wide, high] = parseRatio(ratio);
   const shape = wide / high;
   let width;

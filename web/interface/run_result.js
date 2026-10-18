@@ -7,7 +7,7 @@
 
 import { api } from "../../../scripts/api.js";
 import { fetchWithin } from "./request.js";
-import { LABELS, PREVIEW_STATE, connected, executionId, placed } from "./preview.js";
+import { LABELS, PREVIEW_STATE, connected, executionId, placed, workflowId } from "./preview.js";
 
 const LOG_PREFIX = "[WASNodeSuite.RunResult]";
 
@@ -135,8 +135,11 @@ export async function fetchRunResult(nodeOrId) {
   // A graph id is handed out again after a graph is cleared, so the kind of node asking goes
   // with the id and a report published by another kind is answered as no report at all.
   const kind = String(node?.comfyClass ?? node?.type ?? "").trim();
+  // The workflow open on the canvas, which the store files each run under.
+  const workflow = workflowId();
   const asks = `${ROUTE}?node_id=${encodeURIComponent(id)}`
-    + (kind ? `&node_type=${encodeURIComponent(kind)}` : "");
+    + (kind ? `&node_type=${encodeURIComponent(kind)}` : "")
+    + (workflow ? `&workflow=${encodeURIComponent(workflow)}` : "");
 
   try {
     const response = await fetchWithin(asks, {
@@ -174,7 +177,8 @@ export async function fetchRunResultPage(nodeOrId, body = 0, start = 0, count = 
   const kind = String(node?.comfyClass ?? node?.type ?? "").trim();
   const asks = `${PAGE_ROUTE}?node_id=${encodeURIComponent(id)}`
     + `&body=${whole(body)}&start=${whole(start)}&count=${whole(count)}`
-    + (kind ? `&node_type=${encodeURIComponent(kind)}` : "");
+    + (kind ? `&node_type=${encodeURIComponent(kind)}` : "")
+    + (workflowId() ? `&workflow=${encodeURIComponent(workflowId())}` : "");
 
   try {
     const response = await fetchWithin(asks, { cache: "no-store" });

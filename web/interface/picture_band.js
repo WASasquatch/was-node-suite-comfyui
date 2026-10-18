@@ -7,6 +7,7 @@
 
 import { LABELS, PREVIEW_STATE, fetchOutputPreview, watchPreviews } from "./preview.js";
 import { onNodeFinished, onRunEnded } from "./run_events.js";
+import { whenReadable } from "./run_result.js";
 import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onThemeChange, readTheme, themeVar } from "./theme.js";
 
@@ -29,8 +30,9 @@ const MAX_EDGE = 4096;
  *   word drawn under it, `height` overrides the band height in CSS pixels, and `overlay` is
  *   called as `overlay(pen, {x, y, width, height, ratio})` after the picture is drawn.
  * @returns {{element: HTMLElement, update: Function, clear: Function, dispose: Function,
- *   show: Function}} The band, in the shape a report panel's sketch takes; `show(image, text)`
- *   draws a picture handed to it until the node next answers.
+ *   show: Function, refresh: Function}} The band, in the shape a report panel's sketch takes;
+ *   `show(image, text)` draws a picture handed to it until the node next answers, and
+ *   `refresh` reads the node's picture again.
  */
 export function createPictureBand(node, options = {}) {
   const slot = String(options.slot ?? "");
@@ -181,12 +183,15 @@ export function createPictureBand(node, options = {}) {
   resize?.observe(frame);
 
   load();
+  // A band built while its workflow loads has no node id yet, so it reads again once it has one.
+  const stopSettling = whenReadable(node, () => load());
 
   return {
     element: band,
     update() {
       paint();
     },
+    refresh: load,
     clear() {
       picture = null;
       words = "";
@@ -205,6 +210,7 @@ export function createPictureBand(node, options = {}) {
       try { release(); } catch (error) { /* the subscription is already gone */ }
       try { stopFinished(); } catch (error) { /* the listener is already gone */ }
       try { stopEnded(); } catch (error) { /* the listener is already gone */ }
+      try { stopSettling(); } catch (error) { /* the wait is already over */ }
       try { stopRatio(); } catch (error) { /* the watcher is already gone */ }
       try { stopTheme(); } catch (error) { /* the listener is already gone */ }
       resize?.disconnect();

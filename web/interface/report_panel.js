@@ -186,6 +186,19 @@ function scrollable(region) {
 }
 
 /**
+ * A key that changes whenever a report's texts would draw differently.
+ *
+ * @param {object[]} carried - The report's bodies.
+ * @param {*} run - The run the report was published on.
+ * @returns {string} The key.
+ */
+function bodySignature(carried, run) {
+  return JSON.stringify([run ?? null, ...carried.map((body) => [
+    body?.name, body?.text, body?.whole, body?.lines, body?.offset,
+  ])]);
+}
+
+/**
  * The report inside whatever the caller handed over.
  *
  * @param {object|null} answer - A `fetchRunResult` envelope, or a bare report.
@@ -217,7 +230,7 @@ function reportOf(answer) {
  * @param {Function} [options.sketch] - A factory called once, answering
  *   `{element, update, clear, dispose}` in the same shape this panel answers. Its element is
  *   drawn between the counts and the facts, its `update` takes the report on every draw, and
- *   its `clear` and `dispose` are called with the panel's own.
+ *   its `clear`, `dispose` and an optional `refresh` are called with the panel's own.
  * @param {number} [options.height] - Height in node units the panel opens at.
  * @param {number} [options.maxHeight] - The tallest it may be dragged to. Unbounded by default,
  *   so the node's spare room reaches the panel.
@@ -333,6 +346,8 @@ export function createReportPanel(node, options = {}) {
 
   // The listings the last report was drawn with, each holding a page reader of its own.
   const drawn = [];
+  // The texts those listings were drawn from, as `bodySignature` keys them.
+  let drawnSignature = null;
 
   /**
    * Drop the listings the last report was drawn with.
@@ -386,6 +401,7 @@ export function createReportPanel(node, options = {}) {
       table.textContent = "";
       release();
       bodies.textContent = "";
+      drawnSignature = null;
       bodies.style.flex = idleFlex;
       band?.clear?.();
       node.setDirtyCanvas?.(true, false);
@@ -422,9 +438,19 @@ export function createReportPanel(node, options = {}) {
       table.appendChild(row);
     }
 
+    const carriedBodies = withBodies ? report.bodies ?? [] : [];
+    const signature = bodySignature(carriedBodies, report.run);
+    // A report carrying the texts already drawn leaves them where the reader has scrolled.
+    if (signature === drawnSignature) {
+      node.setDirtyCanvas?.(true, false);
+      return;
+    }
+    const regions = () => [bodies, ...bodies.querySelectorAll("[data-was-listing]")];
+    const scrolled = regions().map((region) => region.scrollTop);
     release();
     bodies.textContent = "";
-    (withBodies ? report.bodies ?? [] : []).forEach((carried, index) => {
+    drawnSignature = signature;
+    carriedBodies.forEach((carried, index) => {
       const { name, text, whole, lines, offset } = carried;
       if (!text) return;
       const listing = createListing(text, {
@@ -453,6 +479,10 @@ export function createReportPanel(node, options = {}) {
       bodies.appendChild(block);
     });
     bodies.style.flex = bodies.childElementCount > 0 ? "1 1 auto" : idleFlex;
+    // Redrawn texts open where the last ones were scrolled to.
+    regions().forEach((region, at) => {
+      if (scrolled[at]) region.scrollTop = scrolled[at];
+    });
     node.setDirtyCanvas?.(true, false);
   };
 
@@ -520,7 +550,11 @@ export function createReportPanel(node, options = {}) {
     minWidth,
     update: draw,
     clear: () => draw(null),
-    refresh,
+    // Read again from outside, as after a workflow load, so the sketch reads its own picture too.
+    refresh: () => {
+      band?.refresh?.();
+      return refresh();
+    },
     dispose() {
       if (disposed) return;
       disposed = true;

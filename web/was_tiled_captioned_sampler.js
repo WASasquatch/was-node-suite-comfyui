@@ -1,8 +1,8 @@
 /**
  * The tiles and captions drawn on Tiled Captioned KSampler and Tiled Captioned Custom Sampler.
  *
- * While the node runs, the tiles being captioned or sampled are lit over its step preview;
- * afterwards the numbered tiles, the run's figures and each caption.
+ * While it runs, active tiles are lit over the step preview and captions listed as written;
+ * afterwards, the numbered tiles, figures and captions.
  */
 
 import { app } from "../../scripts/app.js";
@@ -95,7 +95,11 @@ function liveReport(live) {
     counts.push({ name: "step", value: `${live.step + 1} of ${live.steps}` });
     counts.push({ name: "done this step", value: `${Math.min(live.visited, count)} of ${count}` });
   }
-  return { status: "ok", summary: lines[live.phase] || "running", counts };
+  const written = live.lines.filter(Boolean).join("\n");
+  const bodies = written ? [{ name: "captions", text: written }] : [];
+  const staged = live.stages > 1 ? `stage ${live.stage} of ${live.stages}: ` : "";
+  if (live.stages > 1) counts.unshift({ name: "stage", value: `${live.stage} of ${live.stages}` });
+  return { status: "ok", summary: staged + (lines[live.phase] || "running"), counts, bodies };
 }
 
 /**
@@ -152,8 +156,10 @@ app.registerExtension({
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
         const node = this;
+        // `lines` holds the overview first, then each tile's caption in its tile's place.
         const live = {
           on: false, prompt: "", phase: "", tiles: [], boxes: [], step: 0, steps: 0, visited: 0,
+          stage: 1, stages: 1, lines: [],
         };
         let band = null;
         let panel = null;
@@ -179,8 +185,16 @@ app.registerExtension({
           live.step = Number(fields.step) || 0;
           live.steps = Number(fields.steps) || 0;
           live.visited = Number(fields.visited) || 0;
+          live.stage = Number(fields.stage) || 1;
+          live.stages = Number(fields.stages) || 1;
           live.on = live.phase !== "done";
           if (fresh) shown = null;
+          // Each picture of a batch opens on the prepare phase and is captioned afresh.
+          if (fresh || live.phase === "prepare") live.lines = [];
+          const tile = Number(fields.written);
+          if (fields.written !== undefined && Number.isInteger(tile) && tile >= -1) {
+            live.lines[tile + 1] = String(fields.line ?? "");
+          }
           if (!shown && live.boxes.length) {
             // The tile plan is published as soon as the tiles are planned.
             const answer = await fetchOutputPreview(node, "", 0, live.prompt);

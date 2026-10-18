@@ -100,10 +100,9 @@ REFERENCE_INPUTS = [
 ]
 
 PROMPT_HEADER_HINT = (
-    "Text put before every segment's prompt, as `subject_definitions:` and wardrobe lines "
-    "for the whole run. Blank adds nothing. A section a row writes itself, as "
-    "`visual_style:`, replaces the header's for that row. A `<d>` line here is spoken in "
-    "every segment."
+    "Text put before every segment's prompt, as the run's `subject_definitions:`. A tag "
+    "written `<Subject 1: He-Man>` lets every prompt say He-Man for it. A section a row "
+    "writes replaces the header's; a `<d>` line here is spoken in every segment."
 )
 
 PROMPT_FOOTER_HINT = (
@@ -131,9 +130,9 @@ BATCH_HINT = (
 )
 
 SEGMENT_PROMPT_HINT = (
-    "One segment of the video, as `a lone astronaut walks across a red desert plain`. The "
-    "first segment starts the clip and each one after it continues where the last left off. "
-    "A blank row is skipped."
+    "One segment of the video, as `a lone astronaut walks across a red desert plain`. Each "
+    "continues where the last left off; a blank row is skipped. A name given as "
+    "`<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears."
 )
 
 SEGMENT_DURATION_HINT = (
@@ -1466,13 +1465,20 @@ class MiniMaxH3Conditioning(io.ComfyNode):
              count, overlap, choice)
             for index, (text, count, overlap, choice) in enumerate(filled)
         ]
+        wrapped = [
+            (prompt_header if h3_conditioning.takes_header(wrap) else "",
+             text,
+             prompt_footer if h3_conditioning.takes_footer(wrap) else "")
+            for (text, _, _, _), wrap in zip(filled, wraps)
+        ]
+        named: dict[str, list[str]] = {}
+        for parts in wrapped:
+            for name, tag in h3_conditioning.names_in(*parts).items():
+                if tag not in named.setdefault(name, []):
+                    named[name].append(tag)
         filled = [
-            (h3_conditioning.composed(
-                prompt_header if h3_conditioning.takes_header(wrap) else "",
-                text,
-                prompt_footer if h3_conditioning.takes_footer(wrap) else "",
-            ), count, overlap, choice)
-            for (text, count, overlap, choice), wrap in zip(filled, wraps)
+            (h3_conditioning.composed(*parts), count, overlap, choice)
+            for parts, (_, count, overlap, choice) in zip(wrapped, filled)
         ]
 
         pictures = (images, first_frame, last_frame)
@@ -1641,6 +1647,9 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             + f", {h3_conditioning.duration_of(total)}s ({total} frames) in total"
             + "".join(f"; {note}" for note in notes if note)
         )
+        if named:
+            report += "; names " + ", ".join(
+                f"{name} = {' or '.join(tags)}" for name, tags in named.items())
         shared_dialogue = {
             name: h3_conditioning.dialogue_blocks(text)
             for name, text in (("prompt_header", prompt_header), ("prompt_footer", prompt_footer))

@@ -33,9 +33,16 @@ SPACE_HINT = (
 
 #: What every Affine sampler says about what the multiplier reaches.
 ACTS_ON_HINT = (
-    "What max_scale multiplies: 'content' = only the picture the model has resolved, "
-    "leaving the sampler's noise alone; 'latent' = the whole latent, noise included, which "
-    "prints as fixed grain on a model that holds noise for most of its run."
+    "What max_scale multiplies: 'content' = only the picture the model has resolved; "
+    "'latent' = the whole latent, noise included; 'noise' = only the noise, which the model "
+    "turns into extra detail. Scaled noise can print as fixed grain and shift colour."
+)
+
+#: What every Affine sampler says about its colour hold.
+KEEP_COLOUR_HINT = (
+    "What colour max_scale is kept from shifting: 'off' = none; 'average' = each latent "
+    "channel's average stays put, so no overall cast; 'regional' = the broad colour and "
+    "shading stay put too, and only fine detail is scaled. max_bias is added either way."
 )
 
 #: What every Affine sampler says about its debug switch.
@@ -150,6 +157,13 @@ AFFINE_OPTIONAL = [
         optional=True,
         tooltip=ACTS_ON_HINT,
     ),
+    io.Combo.Input(
+        "affine_keep_colour",
+        options=affine.COLOUR_HOLDS,
+        default="off",
+        optional=True,
+        tooltip=KEEP_COLOUR_HINT,
+    ),
 ]
 
 
@@ -194,6 +208,7 @@ def build_spec(values: dict, total_steps=None, step_offset=0) -> AffineSpec:
         options=options,
         space=values.get("affine_space", "latent"),
         acts_on=values.get("affine_acts_on", "content"),
+        keep_colour=values.get("affine_keep_colour", "off"),
         total_steps=total_steps,
         step_offset=step_offset,
         debug=values.get("debug", False),
@@ -286,8 +301,9 @@ def report(spec: AffineSpec, holder: dict, sampler_name: str) -> None:
             counts["last sigma"] = round(landed[-1][1], 4)
         picture = (float(holder.get("gain", 1.0)) - 1.0) * 100.0
         reach = float(holder.get("reach", 1.0)) * 100.0
+        scaled = "noise" if spec.acts_on == "noise" else "picture"
         if applied:
-            counts["picture gain %"] = round(picture, 2)
+            counts[f"{scaled} gain %"] = round(picture, 2)
             counts["reach %"] = round(reach, 1)
         inert = spec.inert()
         if supported and spec.is_noop:
@@ -297,7 +313,7 @@ def report(spec: AffineSpec, holder: dict, sampler_name: str) -> None:
         elif not applied:
             summary = "no step carried the affine"
         else:
-            summary = (f"{spec.pattern} on {applied} step(s): picture {picture:+.1f}%, "
+            summary = (f"{spec.pattern} on {applied} step(s): {scaled} {picture:+.1f}%, "
                        f"reach {reach:.0f}%")
         facts = {
             "pattern": spec.pattern,
@@ -305,6 +321,7 @@ def report(spec: AffineSpec, holder: dict, sampler_name: str) -> None:
             "streams": spec.streams,
             "values read in": spec.space,
             "multiplies": spec.acts_on,
+            "keeps colour": spec.keep_colour,
         }
         if landed:
             facts["steps"] = ", ".join(str(step) for step, _ in landed)
@@ -400,6 +417,7 @@ class AffineSampler(io.ComfyNode):
         affine_options=None,
         debug=False,
         affine_acts_on="content",
+        affine_keep_colour="off",
     ) -> io.NodeOutput:
         spec = build_spec(_settings(locals()))
         patched, holder = patch_sampler(sampler, spec)
@@ -598,6 +616,7 @@ class KSamplerAffineAdvanced(io.ComfyNode):
         affine_options=None,
         debug=False,
         affine_acts_on="content",
+        affine_keep_colour="off",
     ) -> io.NodeOutput:
         values = _settings(locals())
         import comfy.model_management
@@ -773,6 +792,7 @@ class CustomSamplerAffineAdvanced(io.ComfyNode):
         affine_options=None,
         debug=False,
         affine_acts_on="content",
+        affine_keep_colour="off",
     ) -> io.NodeOutput:
         values = _settings(locals())
         import comfy.model_management

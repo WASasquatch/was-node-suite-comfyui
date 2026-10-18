@@ -18,22 +18,6 @@ const RUN_ENDED = ["execution_success", "execution_error", "execution_interrupte
 // four values the frontend passes through untouched.
 const FINISHED = "finished";
 
-// Which (prompt, node) pairs have already been reported, so a level signal is delivered as an
-// edge. Cleared when a run starts, which is the point the server resets its own registry.
-const latched = new Set();
-
-let latchInstalled = false;
-
-/**
- * Start clearing the latch at the beginning of every run.
- *
- * @returns {void}
- */
-function installLatchReset() {
-  if (latchInstalled) return;
-  latchInstalled = true;
-  api.addEventListener("execution_start", () => latched.clear());
-}
 
 /**
  * Read the state one node is reported in by a `progress_state` message.
@@ -59,17 +43,20 @@ function stateOf(detail, id) {
  */
 export function onNodeFinished(node, handler) {
   if (typeof handler !== "function") return () => {};
-  installLatchReset();
 
   // Node ids served from cache in the current run, so a handler can tell a fresh picture from
   // one the store is still holding. `execution_cached` arrives before any node finishes.
   let cached = new Set();
+  // The (prompt, node) pairs this subscription has already been told about, one set per
+  // subscription, cleared when a run starts.
+  const latched = new Set();
   const onCached = (event) => {
     const ids = event?.detail?.nodes;
     cached = new Set(Array.isArray(ids) ? ids.map((one) => String(one)) : []);
   };
   const onStart = () => {
     cached = new Set();
+    latched.clear();
   };
 
   const onState = (event) => {

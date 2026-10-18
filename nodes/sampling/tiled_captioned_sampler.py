@@ -7,12 +7,14 @@ import copy
 from comfy_api.latest import io
 
 from ...modules.compat.types import DICT
+from ...modules.latent.affine import COLOUR_HOLDS
 from ...modules.sampling import tile_captions, tile_refine, tiles
 from ...modules.sampling.affine import ACTS_ON, patch_sampler
 from ..latent.latent_affine import OPTIONS_HINT
 from .affine_sampler import (
     ACTS_ON_HINT,
     AFFINE_INPUTS,
+    KEEP_COLOUR_HINT,
     SAMPLER_HINT,
     SCHEDULE_HINT,
     SPACE_HINT,
@@ -66,6 +68,8 @@ AFFINE_INPUTS_COMBO = [io.DynamicCombo.Input(
                            tooltip=SPACE_HINT),
             io.Combo.Input("affine_acts_on", options=ACTS_ON, default="content",
                            tooltip=ACTS_ON_HINT),
+            io.Combo.Input("affine_keep_colour", options=COLOUR_HOLDS, default="off",
+                           tooltip=KEEP_COLOUR_HINT),
         ]),
     ],
     tooltip=(
@@ -76,10 +80,19 @@ AFFINE_INPUTS_COMBO = [io.DynamicCombo.Input(
 
 #: The picture and its enlargement, which both samplers take.
 PICTURE_INPUTS = [
-    io.Vae.Input("vae", tooltip="The VAE of the model, which encodes the picture and decodes the answer."),
-    io.Image.Input(
+    io.Vae.Input(
+        "vae",
+        tooltip="The VAE of the model, which encodes the picture, decodes a LATENT source and decodes the answer.",
+    ),
+    io.MultiType.Input(
         "image",
-        tooltip="The picture or batch of pictures to refine, each sampled on its own.",
+        [io.Image, io.Latent],
+        display_name="source",
+        tooltip=(
+            "The picture to refine, as IMAGE, or a LATENT straight from a sampler; each one of a "
+            "batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model is "
+            "sampled as it is, keeping its noise_mask."
+        ),
     ),
     io.Float.Input(
         "upscale_by", default=2.0, min=0.25, max=8.0, step=0.05,
@@ -132,6 +145,14 @@ CAPTION_INPUTS = [
             "species you can identify.` adds a rule."
         ),
     ),
+    io.Int.Input(
+        "stages", default=1, min=1, max=8, optional=True, advanced=True,
+        tooltip=(
+            "Passes that reach upscale_by, each enlarging by the same factor and re-captioning "
+            "before it refines: `1` = one pass; `2` at upscale_by `4.0` = two 2x passes. At "
+            "upscale_by `1.0` each stage refines the last one again at the same size."
+        ),
+    ),
 ]
 
 #: What both samplers answer.
@@ -168,22 +189,52 @@ def _affine_report(holder) -> dict | None:
     """What the affine did over a run, for the panel."""
     if holder is None:
         return None
-    return {"applied": holder.get("applications", 0), "gain": holder.get("gain", 1.0)}
+    return {"applied": holder.get("applications", 0), "gain": holder.get("gain", 1.0),
+            "acts_on": holder.get("acts_on", "content")}
 
 
-def _frames(image):
-    """The pictures of a batch, one ``[1, H, W, C]`` at a time."""
-    for index in range(int(image.shape[0])):
-        yield index, image[index:index + 1]
+def _frames(source):
+    """Each picture of an IMAGE or LATENT batch, as ``(index, picture, latent)``, one of the two None."""
+    if isinstance(source, dict) and "samples" in source:
+        samples = source["samples"]
+        if getattr(samples, "is_nested", False):
+            raise ValueError(
+                "Tiled Captioned sampling refines picture latents, and this LATENT packs several "
+                "streams, as an audio and video model's does. Decode it and wire the picture into source"
+            )
+        for index in range(int(samples.shape[0])):
+            yield index, None, samples[index:index + 1]
+        return
+    for index in range(int(source.shape[0])):
+        yield index, source[index:index + 1], None
 
 
-def _answer(frames: list, latents: list, vae, name: str, holder) -> io.NodeOutput:
+def _mask_of(source, index: int):
+    """The part of a LATENT's noise_mask one picture of its batch takes, or None."""
+    mask = source.get("noise_mask") if isinstance(source, dict) else None
+    if mask is None:
+        return None
+    if mask.ndim >= 3 and int(mask.shape[0]) > 1:
+        at = index % int(mask.shape[0])
+        return mask[at:at + 1]
+    return mask
+
+
+def _sizes(picture, given, vae, upscale_by: float, stages: int) -> list:
+    """The size each stage lands on, or ``[None]`` for one pass sized by upscale_by."""
+    if stages <= 1:
+        return [None]
+    height, width = tile_refine.source_size(picture, given, vae)
+    return tile_refine.stage_sizes(height, width, upscale_by, stages, vae)
+
+
+def _answer(frames: list, latents: list, vae, name: str, holder, stages: int = 1) -> io.NodeOutput:
     """The node's outputs from the sampled latents, with the tile report published."""
     import torch
 
     tile_refine.release(vae)
     pictures = torch.cat([tile_refine.decode(vae, latent) for latent in latents], dim=0)
-    tile_refine.publish(frames, name, _affine_report(holder), pictures[-1:])
+    tile_refine.publish(frames, name, _affine_report(holder), pictures[-1:], stages)
     return io.NodeOutput(pictures, {"samples": torch.cat(latents, dim=0)},
                          tile_refine.captions_text(frames))
 
@@ -208,7 +259,7 @@ class TiledCaptionedKSampler(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Upscale and refine a picture in overlapping tiles sampled together, so no seam "
+                "Upscale and refine a picture or latent in overlapping tiles sampled together, so no seam "
                 "shows and any sampler works. A vision model can caption each tile, so a tile "
                 "is prompted only with what it holds. Affine can push texture in as it runs."
             ),
@@ -225,7 +276,11 @@ class TiledCaptionedKSampler(io.ComfyNode):
                 *PICTURE_INPUTS,
                 io.Int.Input(
                     "seed", default=0, min=0, max=0xFFFFFFFFFFFFFFFF, control_after_generate=True,
-                    tooltip="Seeds the noise laid over the whole picture, `0` as good as any.",
+                    tooltip=(
+                        "Seeds the noise and the captions, `0` as good as any. Captions are "
+                        "written again only when the seed, picture, captioner, prompt or tiling "
+                        "changes; set the control to `fixed` to keep them between runs."
+                    ),
                 ),
                 io.Int.Input(
                     "steps", default=20, min=1, max=10000,
@@ -261,7 +316,7 @@ class TiledCaptionedKSampler(io.ComfyNode):
     def execute(cls, model, positive, negative, vae, image, upscale_by, seed, steps, cfg,
                 sampler_name, scheduler, denoise, tiling, affine, clip=None, captioner=None,
                 prompt="", style="", upscale_model=None, affine_schedule=None, affine_options=None,
-                system_prompt=tile_captions.DEFAULT_SYSTEM_PROMPT) -> io.NodeOutput:
+                system_prompt=tile_captions.DEFAULT_SYSTEM_PROMPT, stages=1) -> io.NodeOutput:
         import comfy.model_management
         import comfy.sample
         import comfy.samplers
@@ -281,30 +336,36 @@ class TiledCaptionedKSampler(io.ComfyNode):
         ).sigmas
 
         frames, latents = [], []
-        for index, picture in _frames(image):
-            frame = tile_refine.prepare(picture, model, vae, upscale_by, upscale_model, tiling,
-                                        clip, captioner, style, system_prompt, KSAMPLER_NAME, prompt)
+        count = max(1, int(stages or 1))
+        for index, picture, given in _frames(image):
+            sizes = _sizes(picture, given, vae, upscale_by, count)
+            for stage, size in enumerate(sizes, start=1):
+                frame = tile_refine.prepare(picture, model, vae, upscale_by, upscale_model, tiling,
+                                            clip, captioner, style, system_prompt, KSAMPLER_NAME, prompt,
+                                            int(seed), latent=given, size=size, stage=(stage, len(sizes)))
+                samples = comfy.sample.fix_empty_latent_channels(model, frame.latent)
+                if sigmas.shape[-1] >= 2:
+                    controls = {}
+                    tiled = tiles.tiled_model(model, frame.grid, frame.announce)
+                    tile_positive = tiles.tiled_conditioning(positive, frame.grid, frame.masks, frame.texts, controls)
+                    tile_negative = tiles.tiled_conditioning(negative, frame.grid, frame.masks, None, controls)
+                    noise = comfy.sample.prepare_noise(samples, int(seed), [index])
+                    tile_refine.release(model)
+                    callback = tile_refine.tracked(preview.prepare_callback(tiled, int(sigmas.shape[-1]) - 1),
+                                                   frame.announce, int(sigmas.shape[-1]) - 1)
+                    result = comfy.samplers.sample(
+                        tiled, noise, tile_positive, tile_negative, float(cfg), tiled.load_device, sampler,
+                        sigmas, model_options=tiled.model_options, latent_image=samples,
+                        denoise_mask=_mask_of(image, index), callback=callback,
+                        disable_pbar=not comfy.utils.PROGRESS_BAR_ENABLED, seed=int(seed),
+                    )
+                    samples = result.to(comfy.model_management.intermediate_device())
+                    frame.announce("done")
+                # The next stage enlarges and refines this one's result.
+                picture, given = None, samples
             frames.append(frame)
-            samples = comfy.sample.fix_empty_latent_channels(model, frame.latent)
-            if sigmas.shape[-1] < 2:
-                latents.append(samples)
-                continue
-            controls = {}
-            tiled = tiles.tiled_model(model, frame.grid, frame.announce)
-            tile_positive = tiles.tiled_conditioning(positive, frame.grid, frame.masks, frame.texts, controls)
-            tile_negative = tiles.tiled_conditioning(negative, frame.grid, frame.masks, None, controls)
-            noise = comfy.sample.prepare_noise(samples, int(seed), [index])
-            tile_refine.release(model)
-            callback = tile_refine.tracked(preview.prepare_callback(tiled, int(sigmas.shape[-1]) - 1),
-                                           frame.announce, int(sigmas.shape[-1]) - 1)
-            result = comfy.samplers.sample(
-                tiled, noise, tile_positive, tile_negative, float(cfg), tiled.load_device, sampler,
-                sigmas, model_options=tiled.model_options, latent_image=samples, callback=callback,
-                disable_pbar=not comfy.utils.PROGRESS_BAR_ENABLED, seed=int(seed),
-            )
-            latents.append(result.to(comfy.model_management.intermediate_device()))
-            frame.announce("done")
-        return _answer(frames, latents, vae, str(sampler_name), holder)
+            latents.append(samples)
+        return _answer(frames, latents, vae, str(sampler_name), holder, count)
 
 
 class TiledCaptionedCustomSampler(io.ComfyNode):
@@ -327,12 +388,19 @@ class TiledCaptionedCustomSampler(io.ComfyNode):
             ],
             category="WAS Suite/Sampling",
             description=(
-                "Upscale and refine a picture in overlapping tiles from a guider, sampler and "
+                "Upscale and refine a picture or latent in overlapping tiles from a guider, sampler and "
                 "sigmas, every tile sampled together so no seam shows. A vision model can "
                 "caption each tile in place of the guider's positive prompt."
             ),
             inputs=[
-                io.Noise.Input("noise", tooltip="Where the noise laid over the whole picture comes from."),
+                io.Noise.Input(
+                    "noise",
+                    tooltip=(
+                        "Where the noise laid over the whole picture comes from. Its seed also "
+                        "seeds the captions, written again only when the seed, picture, "
+                        "captioner, prompt or tiling changes."
+                    ),
+                ),
                 io.Guider.Input(
                     "guider",
                     tooltip=(
@@ -359,7 +427,8 @@ class TiledCaptionedCustomSampler(io.ComfyNode):
     @classmethod
     def execute(cls, noise, guider, sampler, sigmas, vae, image, upscale_by, tiling, affine,
                 clip=None, captioner=None, prompt="", style="", upscale_model=None, affine_schedule=None,
-                affine_options=None, system_prompt=tile_captions.DEFAULT_SYSTEM_PROMPT) -> io.NodeOutput:
+                affine_options=None, system_prompt=tile_captions.DEFAULT_SYSTEM_PROMPT,
+                stages=1) -> io.NodeOutput:
         import comfy.model_management
         import comfy.sample
         import comfy.utils
@@ -382,35 +451,42 @@ class TiledCaptionedCustomSampler(io.ComfyNode):
             )
 
         frames, latents = [], []
-        for index, picture in _frames(image):
-            frame = tile_refine.prepare(picture, model, vae, upscale_by, upscale_model, tiling,
-                                        clip, captioner, style, system_prompt, CUSTOM_NAME, prompt)
+        count = max(1, int(stages or 1))
+        for index, picture, given in _frames(image):
+            sizes = _sizes(picture, given, vae, upscale_by, count)
+            for stage, size in enumerate(sizes, start=1):
+                frame = tile_refine.prepare(picture, model, vae, upscale_by, upscale_model, tiling,
+                                            clip, captioner, style, system_prompt, CUSTOM_NAME, prompt,
+                                            int(getattr(noise, "seed", 0) or 0), latent=given, size=size,
+                                            stage=(stage, len(sizes)))
+                samples = comfy.sample.fix_empty_latent_channels(model, frame.latent)
+                if sigmas.shape[-1] >= 2:
+                    controls = {}
+                    tiled_guider = copy.copy(guider)
+                    tiled_guider.model_patcher = tiles.tiled_model(model, frame.grid, frame.announce)
+                    tiled_guider.model_options = tiled_guider.model_patcher.model_options
+                    tiled_guider.original_conds = {}
+                    for key, entries in conds.items():
+                        conditioning = [[entry.get("cross_attn"),
+                                         {k: v for k, v in entry.items() if k not in ("cross_attn", "uuid")}]
+                                        for entry in entries]
+                        texts = frame.texts if key == text_key else None
+                        tiled_guider.inner_set_conds(
+                            {key: tiles.tiled_conditioning(conditioning, frame.grid, frame.masks, texts, controls)})
+                    latent = {"samples": samples, "batch_index": [index]}
+                    tile_refine.release(model)
+                    callback = tile_refine.tracked(
+                        preview.prepare_callback(tiled_guider.model_patcher, int(sigmas.shape[-1]) - 1),
+                        frame.announce, int(sigmas.shape[-1]) - 1)
+                    result = tiled_guider.sample(
+                        noise.generate_noise(latent), samples, sampler, sigmas,
+                        denoise_mask=_mask_of(image, index), callback=callback,
+                        disable_pbar=not comfy.utils.PROGRESS_BAR_ENABLED, seed=noise.seed,
+                    )
+                    samples = result.to(comfy.model_management.intermediate_device())
+                    frame.announce("done")
+                # The next stage enlarges and refines this one's result.
+                picture, given = None, samples
             frames.append(frame)
-            samples = comfy.sample.fix_empty_latent_channels(model, frame.latent)
-            if sigmas.shape[-1] < 2:
-                latents.append(samples)
-                continue
-            controls = {}
-            tiled_guider = copy.copy(guider)
-            tiled_guider.model_patcher = tiles.tiled_model(model, frame.grid, frame.announce)
-            tiled_guider.model_options = tiled_guider.model_patcher.model_options
-            tiled_guider.original_conds = {}
-            for key, entries in conds.items():
-                conditioning = [[entry.get("cross_attn"),
-                                 {k: v for k, v in entry.items() if k not in ("cross_attn", "uuid")}]
-                                for entry in entries]
-                texts = frame.texts if key == text_key else None
-                tiled_guider.inner_set_conds(
-                    {key: tiles.tiled_conditioning(conditioning, frame.grid, frame.masks, texts, controls)})
-            latent = {"samples": samples, "batch_index": [index]}
-            tile_refine.release(model)
-            callback = tile_refine.tracked(
-                preview.prepare_callback(tiled_guider.model_patcher, int(sigmas.shape[-1]) - 1),
-                frame.announce, int(sigmas.shape[-1]) - 1)
-            result = tiled_guider.sample(
-                noise.generate_noise(latent), samples, sampler, sigmas, callback=callback,
-                disable_pbar=not comfy.utils.PROGRESS_BAR_ENABLED, seed=noise.seed,
-            )
-            latents.append(result.to(comfy.model_management.intermediate_device()))
-            frame.announce("done")
-        return _answer(frames, latents, vae, name, holder)
+            latents.append(samples)
+        return _answer(frames, latents, vae, name, holder, count)

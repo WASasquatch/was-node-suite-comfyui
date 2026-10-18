@@ -22,7 +22,7 @@ __all__ = [
 logger = log.get_logger("sampling.affine")
 
 #: What the multiplier is applied to at a scheduled step.
-ACTS_ON = ["content", "latent"]
+ACTS_ON = ["content", "latent", "noise"]
 
 #: Sampler functions whose model call does not carry the sampler's own state, keyed by the
 #: ``__name__`` a KSAMPLER wraps.
@@ -71,7 +71,10 @@ class AffineSpec:
         space: ``"latent"`` to read the values against a node-space latent, ``"model"`` to
             apply them to the sampler's own latent.
         acts_on: ``"content"`` to multiply only the part of the latent that is picture,
-            ``"latent"`` to multiply the whole latent, noise included.
+            ``"latent"`` to multiply the whole latent, noise included, ``"noise"`` to
+            multiply only the part that is noise.
+        keep_colour: A name from :data:`modules.latent.affine.COLOUR_HOLDS`, the colour
+            the multiplier is kept from shifting.
         total_steps: Steps the schedule spans, where the run covers only part of it.
         step_offset: Where in that schedule the run starts.
         debug: Whether every application is logged.
@@ -96,6 +99,7 @@ class AffineSpec:
         step_offset=0,
         debug=False,
         pattern_asked=None,
+        keep_colour="off",
     ):
         self.pattern_asked = None if pattern_asked is None else str(pattern_asked)
         self.schedule = dict(schedule) if isinstance(schedule, dict) else dict(affine.SCHEDULE_DEFAULTS)
@@ -111,6 +115,7 @@ class AffineSpec:
         self.options = affine.resolve(options)
         self.space = str(space or "latent")
         self.acts_on = str(acts_on or "content")
+        self.keep_colour = str(keep_colour or "off")
         self.total_steps = None if total_steps is None else int(total_steps)
         self.step_offset = int(step_offset)
         self.debug = bool(debug)
@@ -147,6 +152,10 @@ class AffineSpec:
         if str(self.options.get("content_gate", "off")) != "off" and self.pattern in patterns.CONTENT_PATTERNS:
             out.append(
                 f"content_gate not read: '{self.pattern}' already reads the picture"
+            )
+        if self.keep_colour != "off" and abs(self.max_scale - 1.0) < 1e-8:
+            out.append(
+                f"keep_colour '{self.keep_colour}' not read: max_scale 1.0 shifts no colour"
             )
         return out
 
@@ -534,7 +543,7 @@ class _Run:
                 continue
             content = clean[index] if index < len(clean) else None
             picture = self._picture(source, content, step)
-            if picture is None and spec.acts_on == "content":
+            if picture is None and spec.acts_on != "latent":
                 continue
             transformed, mask = self._one_stream(
                 source, index, scale, bias, seed, content, picture
@@ -573,7 +582,7 @@ class _Run:
         return out[0]
 
     def _picture(self, source: torch.Tensor, content, step: int):
-        """The part of one stream that is picture rather than noise.
+        """The part of one stream the multiplier is applied to: its picture, or its noise.
 
         Args:
             source: The stream's tensor.
@@ -581,18 +590,20 @@ class _Run:
             step: The step index, which sets the noise level.
 
         Returns:
-            The scaled clean estimate, or None where the whole latent is to be multiplied
-            or the estimate is not there yet.
+            The scaled clean estimate on ``content``, the stream less it on ``noise``, or None
+            where the whole latent is to be multiplied or the estimate is not there yet.
         """
-        if self.spec.acts_on != "content":
+        acts_on = self.spec.acts_on
+        if acts_on not in ("content", "noise"):
             return None
         if content is None:
             if not self.waited:
                 self.waited = True
                 logger.warning(
-                    "affine_acts_on is 'content', which multiplies the picture the model "
-                    "has resolved so far, and no step has finished yet, so this step was "
-                    "left alone. Start the schedule a step or two later."
+                    "affine_acts_on is '%s', which is told apart from the rest of the latent "
+                    "by the picture the model has resolved so far, and no step has finished "
+                    "yet, so this step was left alone. Start the schedule a step or two later.",
+                    acts_on,
                 )
             return None
         share = _signal_coefficient(self.model, self.sigma_values[step], source)
@@ -606,7 +617,8 @@ class _Run:
                     "to multiply the whole latent instead."
                 )
             return None
-        return content * share
+        picture = content * share
+        return source - picture if acts_on == "noise" else picture
 
     def _clean_streams(self, x: torch.Tensor) -> list:
         """The model's clean estimate, split the way the latent is.
@@ -648,8 +660,8 @@ class _Run:
             bias: Node-space offset.
             seed: Seeds the mask.
             content: The model's clean estimate for this stream, for a content-aware pattern.
-            picture: The part of the stream that is picture, where the multiplier is to be
-                applied to that alone.
+            picture: The part of the stream the multiplier is applied to alone, its picture
+                or its noise, or None for the whole stream.
 
         Returns:
             ``(latent, mask)``, or ``(None, None)`` where the transform raised.
@@ -689,6 +701,7 @@ class _Run:
                 content,
                 offset_dc,
                 picture,
+                spec.keep_colour,
             )
         except Exception as error:
             if index not in self.failed:
@@ -726,6 +739,7 @@ def patch_sampler(sampler, spec: AffineSpec):
         "gain": 1.0,
         "reach": 1.0,
         "reason": None,
+        "acts_on": spec.acts_on,
     }
 
     inner = getattr(sampler, "sampler_function", None)

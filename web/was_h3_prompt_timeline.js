@@ -11,7 +11,8 @@ import { KIND_EXTENSIONS, createAssetBrowser, kindOf as entryKind } from "./inte
 import { addButton } from "./interface/decoration.js";
 import { createFloatingWindow } from "./interface/floating_window.js";
 import {
-  ASSET_NODE_ID, appendToChain, chainNumberedSockets, chainOf, placeInChain, removeFromChain,
+  ASSET_NODE_ID, BYPASSED_MODE, MUTED_MODE, appendToChain, chainNumberedSockets, chainOf, liveChainOf, placeInChain,
+  removeFromChain,
   wiredInto,
 } from "./interface/h3_asset_chain.js";
 import {
@@ -384,13 +385,14 @@ function readScenes(node) {
 }
 
 /**
- * The assets on a node's chain, read from the asset nodes behind its `assets` input.
+ * The assets a run hands the node, read from the asset nodes behind its `assets` input.
  *
  * @param {object} node - The conditioning node.
- * @returns {object[]} One entry per asset node, upstream first.
+ * @returns {object[]} One entry per asset node that is neither muted, bypassed nor cut off by a
+ *   muted one, upstream first.
  */
 function readAssets(node) {
-  return chainOf(node).map((origin, place) => {
+  return liveChainOf(node).map((origin, place) => {
     const file = String(valueOf(origin, "file", WIRED) ?? WIRED);
     const moment = file === MOMENT;
     const fromFile = Boolean(file) && file !== WIRED && !moment;
@@ -2355,7 +2357,7 @@ function createPromptTimeline(first) {
         source: scene.source, title: scene.title, colour: scene.colour, model: scene.model,
         warning: scene.warning, preview: previewOf(index), sound: scene.sound,
       })),
-      assets: state.assets,
+      assets: state.assets.map((asset) => (asset.moment ? { ...asset, pinnable: frameDrawn(asset.frame) } : asset)),
       selected,
       selectedAsset,
       playhead,
@@ -2564,6 +2566,18 @@ function createPromptTimeline(first) {
       }
       if (asset.name === "nothing chosen") add("An asset node has no file chosen and nothing wired", scene, asset.id);
     }
+    // A muted asset ends the chain a run reads, so every asset chained before it is lost too.
+    const chain = chainOf(node);
+    const live = new Set(state.assets.map((asset) => asset.id));
+    chain.forEach((origin, at) => {
+      if (origin.mode !== MUTED_MODE) return;
+      const lost = chain.slice(0, at).filter((before) => !live.has(before.id) && before.mode !== MUTED_MODE
+        && before.mode !== BYPASSED_MODE).length;
+      if (!lost) return;
+      const name = baseName(String(valueOf(origin, "file", "") ?? "")) || "An asset";
+      add(`${name} is muted, which cuts off the ${lost} asset${lost === 1 ? "" : "s"} chained before it. `
+        + "Bypass it (Ctrl+B) to leave out only that one");
+    });
     return found;
   }
 
@@ -3046,9 +3060,12 @@ function createPromptTimeline(first) {
     role.style.width = "auto";
     role.style.padding = "4px 8px";
     role.title = "Its part in the scene";
+    if (asset.moment && !frameDrawn(asset.frame)) {
+      for (const option of role.options) option.disabled = PINNING.has(option.value);
+      role.title = "Frame not drawn yet";
+    }
     role.addEventListener("change", () => {
-      commit(node, () => write(asset.node, "role", role.value));
-      refresh();
+      if (role.value !== asset.role) placeAsset(asset, withRole(asset, role.value));
     });
     top.appendChild(role);
     const where = [[String(EVERY_SEGMENT), "Every scene"]];
@@ -3194,7 +3211,8 @@ function createPromptTimeline(first) {
     }
     pane.appendChild(grid);
     for (const [label, name, hint] of [
-      ["Header", "prompt_header", "Put before every scene's prompt, as the cast and wardrobe that hold for the whole video."],
+      ["Header", "prompt_header", "Put before every scene's prompt, as the cast and wardrobe that hold for the whole video. "
+        + "Name a tag as <Subject 1: He-Man> and any scene can say He-Man for it."],
       ["Footer", "prompt_footer", "Put after every scene's prompt, as the soundscape and music for the whole video."],
     ]) {
       const box = focusRing(el("textarea", `${FIELD};resize:vertical;font:13px/1.5 ${SANS};min-height:90px;width:100%;padding:10px 12px`));
@@ -3291,24 +3309,78 @@ function createPromptTimeline(first) {
     } else if (change.type === "move") {
       moveScene(change.from, change.to);
       return;
-    } else if (change.type === "keyframe") {
+    } else if (change.type === "asset") {
       const asset = state.assets.find((each) => each.id === change.id);
-      if (asset) commit(node, () => write(asset.node, "frame", change.frame));
-    } else if (change.type === "reference") {
-      const asset = state.assets.find((each) => each.id === change.id);
-      if (!asset) return;
-      const entry = change.segment > 0 ? state.layout[change.segment - 1] : null;
-      if (asset.moment && entry && entry.start <= asset.frame) {
-        say(`Frame ${asset.frame} of the video plays in or after scene ${change.segment}. `
-          + "Reference frame saves it as a picture for an earlier scene");
+      if (asset) placeAsset(asset, change);
+      return;
+    }
+    refresh();
+  }
+
+  /**
+   * Whether a frame of the video is drawn, by the Final video or its scene's preview.
+   *
+   * @param {number} frame - The frame of the video.
+   * @returns {boolean} True where it can be saved as a picture.
+   */
+  function frameDrawn(frame) {
+    return Boolean(finished) || sheets.previews.has(sceneAt(state.layout, frame));
+  }
+
+  /**
+   * Give an asset another part, scene or moment, as one undo entry.
+   *
+   * @param {object} asset - The asset.
+   * @param {{role: string, segment: number, frame: number, label?: string}} to - Where it goes.
+   * @returns {Promise<void>}
+   */
+  async function placeAsset(asset, to) {
+    const pinning = PINNING.has(to.role);
+    const where = to.segment === EVERY_SEGMENT ? (asset.moment && !pinning ? "every later scene" : "every scene")
+      : `scene ${to.segment}`;
+    const told = to.label || `${ROLE_NAMES[to.role] ?? to.role} in ${where}`;
+    const entry = to.segment > 0 ? state.layout[to.segment - 1] : null;
+    if (asset.moment && !pinning && entry && entry.start <= asset.frame) {
+      say(`Frame ${asset.frame} of the video plays in or after scene ${to.segment}. `
+        + "Reference frame saves it as a picture for an earlier scene");
+      refresh(true);
+      return;
+    }
+    // A frame of the video being made is saved as a picture before it is pinned.
+    let file = "";
+    if (asset.moment && pinning) {
+      if (!frameDrawn(asset.frame)) {
+        say(`Frame ${asset.frame} of the video is not drawn yet. Run the graph, then pin it`);
         refresh(true);
         return;
       }
-      commit(node, () => write(asset.node, "segment", change.segment));
-      say(`${asset.name} moved to ${change.segment === EVERY_SEGMENT ? (asset.moment ? "every later scene" : "every scene")
-        : `scene ${change.segment}`}`);
+      file = await savedFrame(asset.frame);
+      if (!file || disposed) return;
     }
-    refresh();
+    commit(node, () => {
+      if (file) write(asset.node, "file", file);
+      write(asset.node, "role", to.role);
+      write(asset.node, "segment", to.segment);
+      if (pinning) write(asset.node, "frame", to.role === "keyframe" ? Math.max(0, Number(to.frame) || 0) : 0);
+      // A file taken back to a reference drops the moment it was pinned at; a frame of the video keeps its own.
+      else if (!asset.moment) write(asset.node, "frame", 0);
+    });
+    say(file ? `Frame ${asset.frame} saved as ${baseName(file)}: ${told}` : `${asset.name}: ${told}`);
+    refresh(true);
+  }
+
+  /**
+   * Where an asset goes when only its part is changed, keeping its scene where the part allows.
+   *
+   * @param {object} asset - The asset.
+   * @param {string} role - The part it takes.
+   * @returns {{role: string, segment: number, frame: number}} Its placement.
+   */
+  function withRole(asset, role) {
+    const pinning = PINNING.has(role);
+    const segment = pinning && asset.segment === EVERY_SEGMENT ? (selected ?? 0) + 1 : asset.segment;
+    const frame = role === "keyframe" && asset.role === "keyframe" ? asset.frame : 0;
+    return { role, segment, frame };
   }
 
   /**
@@ -3778,11 +3850,12 @@ function createPromptTimeline(first) {
     const items = [{ header: asset.name }];
     for (const role of ROLES) {
       if (asset.kind && !ROLE_KINDS[role].includes(asset.kind)) continue;
+      const undrawn = asset.moment && PINNING.has(role) && !frameDrawn(asset.frame);
       items.push({
-        label: ROLE_NAMES[role], checked: role === asset.role,
+        label: ROLE_NAMES[role], checked: role === asset.role, disabled: undrawn,
+        detail: undrawn ? "Run the graph first" : asset.moment && PINNING.has(role) ? "Saves the frame" : "",
         onSelect: () => {
-          commit(node, () => write(asset.node, "role", role));
-          refresh();
+          if (role !== asset.role) placeAsset(asset, withRole(asset, role));
         },
       });
     }
