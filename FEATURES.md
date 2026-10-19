@@ -573,6 +573,61 @@ For the distilled model's look with CFG, on the base model.
 
 ---
 
+## A large frame sampled in tiles
+
+**Tiled Diffusion Model Patch** makes a model denoise the latent as overlapping tiles inside any
+sampler, each tile a picture the model's native size, blended where they meet. `start_percent`
+and `end_percent` are shares of the model's own noise schedule: the steps before `start_percent`
+lay out the whole frame, and the tiles take over from there. A shift set on the model before the
+patch, by **Flow Shift** or ModelSamplingFlux, lays out only those whole-frame steps, and the
+tiles run at the model's own shift.
+
+For detail across a frame larger than the model's native size, with one composition and no
+repeated subjects.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graphs:
+[`flux3-klein-tiled-diffusion.json`](docs/workflows/flux3-klein-tiled-diffusion.json),
+[`moss-image-high-res.json`](docs/workflows/moss-image-high-res.json). Files:
+[`docs/MODELS.md`](docs/MODELS.md#flux-3-image-klein),
+[`docs/MODELS.md`](docs/MODELS.md#moss-image).
+
+---
+
+## A flow model's shift and schedule
+
+**Flow Shift** sets the shift of a flow model, such as FLUX 3 Image Klein, MOSS-Image, FLUX or
+SD3, as a plain factor, or grows it with the square root of the picture's area. **Shifted Tangent
+Scheduler** makes the two-stage arctangent schedule of RES4LYF's `bong_tangent` in the model's
+own time, so the shift moves where the steps fall, with every setting of the curve exposed. The
+same schedule is `shifted_tangent` in every KSampler's scheduler menu.
+
+For more steps on the layout of a large frame, and a tangent schedule that follows the model's
+shift.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
+[`flux3-klein-tiled-diffusion.json`](docs/workflows/flux3-klein-tiled-diffusion.json).
+
+---
+
+## MOSS-Image without banding, and past its native size
+
+**Model Block Restore** puts a range of a model's transformer blocks back to another checkpoint of
+the same model, with the LoRAs on the model still applied. Blocks 32 to 41 from MOSS-Image Base
+remove the vertical banding MOSS-Image SFT draws across skies and smooth backgrounds.
+
+**RoPE Extension Patch** scales a model's RoPE on every call longer than its native side.
+MOSS-Image widens its RoPE frequencies and FLUX compresses its positions. Tiles at native size
+from Tiled Diffusion Model Patch stay unscaled.
+
+For MOSS-Image SFT pictures with clean gradients, and for frames longer than the model's native
+side.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
+[`moss-image-high-res.json`](docs/workflows/moss-image-high-res.json). Files:
+[`docs/MODELS.md`](docs/MODELS.md#moss-image).
+
+---
+
 ## Models and LoRA
 
 16 nodes. **Power LoRA Loader** stacks LoRAs on one node, **Power LoRA Merger** bakes a stack

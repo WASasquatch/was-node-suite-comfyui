@@ -37,8 +37,8 @@ class ResolutionSelector(io.ComfyNode):
                     default="1:1",
                     tooltip=(
                         "The shape, width:height. 16:9 is widescreen, 9:16 the same shape "
-                        "portrait, 1:1 square. Listed from the tallest portrait, 1:3, to the "
-                        "widest landscape, 3:1, each landscape shape mirroring a portrait one."
+                        "portrait, 1:1 square. Listed square first, then landscape from 5:4 to "
+                        "3:1 and the film ratios 1.43:1 to 2.39:1, then the same shapes portrait."
                     ),
                 ),
                 io.Combo.Input(

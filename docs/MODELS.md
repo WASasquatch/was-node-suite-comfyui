@@ -448,8 +448,9 @@ before it serves `flux-2-klein-9b-fp8.safetensors`.
 
 ### FLUX 3 Image Klein
 
-Graph: `flux3-klein-distill-lora.json`. Hugging Face asks for a signed-in account that has
-accepted the terms before it serves the `black-forest-labs` files.
+Graphs: `flux3-klein-distill-lora.json`, `flux3-klein-tiled-diffusion.json`. Hugging Face asks
+for a signed-in account that has accepted the terms before it serves the `black-forest-labs`
+files.
 
 | File | Goes in | Size | Download | Licence |
 |---|---|--:|---|---|
@@ -473,6 +474,28 @@ two `ref_time_in` weights from `flux3_image_klein_sd_bf16.safetensors` or
 | A fine stripe every 4 pixels down the rows, and a blue cast | The LoRA is on the base without **Flux 3 Flow Map Patch**. Put the patch between the LoRA and the sampler |
 | `holds no ref_time_in weights` | The checkpoint menu names a base file. Pick a file with `_sd_` in its name |
 | `takes a FLUX 3 Image model` | The model wired in is another architecture. Wire the Load Diffusion Model on `flux3_image_klein_bf16.safetensors` |
+
+### MOSS-Image
+
+Graph: `moss-image-high-res.json`.
+
+| File | Goes in | Size | Download | Licence |
+|---|---|--:|---|---|
+| `moss_image_sft_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 5.4 GB | [Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/diffusion_models/moss_image_sft_int8_convrot.safetensors) | Apache-2.0 |
+| `moss_image_base_int8_convrot.safetensors` | `ComfyUI/models/diffusion_models` | 5.4 GB | [Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/diffusion_models/moss_image_base_int8_convrot.safetensors) | Apache-2.0 |
+| `qwen3.5_9b_int8_convrot.safetensors` | `ComfyUI/models/text_encoders` | 9.7 GB | [Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors) | Apache-2.0 |
+| `flux2-vae.safetensors` | `ComfyUI/models/vae` | 336 MB | [Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/vae/flux2-vae.safetensors) | Apache-2.0, as the repository is labelled |
+
+**Model Block Restore** reads only the restored blocks from `moss_image_base_int8_convrot.safetensors`
+or `moss_image_base_bf16.safetensors`, so the Base file stays in `ComfyUI/models/diffusion_models`
+beside the SFT.
+
+| What you see | What it means |
+|---|---|
+| `holds no layers.32 weights` | The checkpoint menu names another model. Pick `moss_image_base_int8_convrot.safetensors` |
+| Faint vertical stripes across a smooth sky on MOSS-Image SFT | The model runs without **Model Block Restore**, or with `first_block` above 32. Restore blocks 32 to 41 from the Base file |
+| `reads no RoPE scale` | **RoPE Extension Patch** is on a model other than MOSS-Image or FLUX 1 and 2. Leave the patch out |
+| `has no shift to set` | **Flow Shift** is on a model that is not a flow model. Leave Flow Shift out for it |
 
 ### The other graphs
 

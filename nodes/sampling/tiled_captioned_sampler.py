@@ -28,33 +28,39 @@ from .affine_sampler import (
 KSAMPLER_NAME = "Tiled Captioned KSampler"
 CUSTOM_NAME = "Tiled Captioned Custom Sampler"
 
+#: The tile size and overlap a manual tiling sets.
+TILE_SIZE_INPUTS = [
+    io.Int.Input(
+        "tile_width", default=1024, min=128, max=16384, step=16,
+        tooltip="Pixels a tile spans across the picture, as `1024`, or `512` for an SD1 model.",
+    ),
+    io.Int.Input(
+        "tile_height", default=1024, min=128, max=16384, step=16,
+        tooltip="Pixels a tile spans down the picture, as `1024`.",
+    ),
+    io.Int.Input(
+        "overlap", default=256, min=0, max=8192, step=16,
+        tooltip=(
+            "Least pixels neighbouring tiles share, blended across. `256` suits 1024 "
+            "tiles; raise it if a seam shows at a large upscale."
+        ),
+    ),
+]
+
+#: Tooltip of the tiling choice.
+TILING_HINT = (
+    "`auto` = tiles the size the model was trained at, 512 for SD1 and 1024 for the rest, "
+    "sharing a quarter of a tile; `manual` = set the tile size and overlap."
+)
+
 #: The tiling choices both samplers offer.
 TILING_INPUTS = [io.DynamicCombo.Input(
     "tiling",
     options=[
         io.DynamicCombo.Option(key="auto", inputs=[]),
-        io.DynamicCombo.Option(key="manual", inputs=[
-            io.Int.Input(
-                "tile_width", default=1024, min=128, max=16384, step=16,
-                tooltip="Pixels a tile spans across the picture, as `1024`, or `512` for an SD1 model.",
-            ),
-            io.Int.Input(
-                "tile_height", default=1024, min=128, max=16384, step=16,
-                tooltip="Pixels a tile spans down the picture, as `1024`.",
-            ),
-            io.Int.Input(
-                "overlap", default=256, min=0, max=8192, step=16,
-                tooltip=(
-                    "Least pixels neighbouring tiles share, blended across. `256` suits 1024 "
-                    "tiles; raise it if a seam shows at a large upscale."
-                ),
-            ),
-        ]),
+        io.DynamicCombo.Option(key="manual", inputs=TILE_SIZE_INPUTS),
     ],
-    tooltip=(
-        "`auto` = tiles the size the model was trained at, 512 for SD1 and 1024 for the rest, "
-        "sharing a quarter of a tile; `manual` = set the tile size and overlap."
-    ),
+    tooltip=TILING_HINT,
 )]
 
 #: The affine choices both samplers offer.

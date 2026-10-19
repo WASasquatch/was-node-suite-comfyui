@@ -18,11 +18,13 @@ __all__ = [
     "TILES_WRAPPER",
     "Grid",
     "auto_tile",
+    "crop_plane",
     "masks",
     "numbered",
     "plan",
     "plot",
     "position",
+    "tile_weights",
     "tiled_conditioning",
     "tiled_model",
     "with_text",
@@ -117,8 +119,13 @@ def _spans(length: int, tile: int, overlap: int, align: int = ALIGN) -> tuple:
         return ((0, length),)
     overlap = max(0, min(int(overlap), tile - align))
     pieces = max(2, math.ceil((length - overlap) / max(1, tile - overlap)))
-    stride = max(align, (length - overlap) // pieces // align * align)
-    size = length - (pieces - 1) * stride
+    while True:
+        stride = max(align, (length - overlap) // pieces // align * align)
+        size = length - (pieces - 1) * stride
+        # A stride rounded down to the alignment lengthens the ranges; one more range shortens them.
+        if size <= tile or stride <= align:
+            break
+        pieces += 1
     return tuple((index * stride, index * stride + size) for index in range(pieces))
 
 
@@ -135,7 +142,7 @@ def auto_tile(model) -> int:
     return SD1_TILE if type(latent_format).__name__ == "SD15" else NATIVE_TILE
 
 
-def plan(latent_size: tuple, scale: float, tile: tuple, overlap: int) -> Grid:
+def plan(latent_size: tuple, scale: float, tile: tuple, overlap: int, align: int = ALIGN) -> Grid:
     """The tiling of a latent from tile sizes in image pixels.
 
     Args:
@@ -143,20 +150,22 @@ def plan(latent_size: tuple, scale: float, tile: tuple, overlap: int) -> Grid:
         scale: Image pixels per latent pixel.
         tile: ``(height, width)`` of the largest tile in image pixels.
         overlap: Image pixels neighbouring tiles share.
+        align: Tile starts and sizes fall on multiples of this many latent pixels.
 
     Returns:
         The grid.
     """
     height, width = (int(v) for v in latent_size)
     scale = max(float(scale), 1e-6)
+    align = max(1, int(align))
 
     def latent(pixels):
-        return max(ALIGN, int(round(float(pixels) / scale / ALIGN)) * ALIGN)
+        return max(align, int(round(float(pixels) / scale / align)) * align)
 
     shared = max(0, int(round(float(overlap) / scale)))
     return Grid(
-        _spans(height, latent(tile[0]), shared),
-        _spans(width, latent(tile[1]), shared),
+        _spans(height, latent(tile[0]), shared, align),
+        _spans(width, latent(tile[1]), shared, align),
         (height, width),
         scale,
     )
@@ -208,6 +217,23 @@ def masks(grid: Grid, dims: tuple) -> list:
     return out
 
 
+def tile_weights(grid: Grid) -> list:
+    """One blend weight per tile over the tile alone; overlapping weights sum to one.
+
+    Args:
+        grid: The tiling.
+
+    Returns:
+        ``[height, width]`` float tensors, row by row.
+    """
+    out = []
+    for h_index in range(len(grid.heights)):
+        down = _ramp(grid.heights, h_index)
+        for w_index in range(len(grid.widths)):
+            out.append(down[:, None] * _ramp(grid.widths, w_index)[None, :])
+    return out
+
+
 def position(grid: Grid, index: int) -> str:
     """Where a tile sits in the frame, in words.
 
@@ -239,6 +265,20 @@ def position(grid: Grid, index: int) -> str:
         return "centre"
     words = " ".join(word for word in (vertical, horizontal) if word)
     return words or "whole frame"
+
+
+def crop_plane(tensor: torch.Tensor, box: tuple, size: tuple) -> torch.Tensor:
+    """The part of a picture-shaped tensor under a tile, cut in proportion to its own size.
+
+    Args:
+        tensor: Any tensor whose last two axes are height and width.
+        box: ``(top, bottom, left, right)`` of the tile in latent pixels.
+        size: ``(height, width)`` of the latent.
+
+    Returns:
+        A view of ``tensor``.
+    """
+    return _crop_plane(tensor, box, size)
 
 
 def _crop_plane(tensor: torch.Tensor, box: tuple, size: tuple) -> torch.Tensor:

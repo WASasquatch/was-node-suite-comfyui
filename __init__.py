@@ -259,6 +259,18 @@ def register_models() -> None:
         logger.debug("%s", traceback.format_exc())
 
 
+def register_schedulers() -> None:
+    """Add the pack's noise schedules to every scheduler menu."""
+    # Imported inside the call and guarded: load_custom_node turns anything escaping
+    # comfy_entrypoint into zero registered nodes.
+    try:
+        from .modules.sampling.schedules import register
+        register()
+    except Exception as error:
+        logger.warning("shifted_tangent will not appear in scheduler menus (%s)", error)
+        logger.debug("%s", traceback.format_exc())
+
+
 def register_viewer_nodes(config: Mapping, reserved: set[str]) -> None:
     """Register the nodes shipped by installed view extensions, when that group is on.
 
@@ -618,6 +630,7 @@ else:
             register_interface_routes()
             register_loop_errors()
             register_models()
+            register_schedulers()
             await register_replacements()
 
         async def get_node_list(self) -> list[type[io.ComfyNode]]:

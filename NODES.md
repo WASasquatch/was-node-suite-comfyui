@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **522** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **527** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-515 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+520 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 398 |
+| [Always loaded](#always-loaded) | always on | 403 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-398 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+403 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (19)
+- [WAS Suite/Sampling](#was-suitesampling) (24)
 - [WAS Suite/Text](#was-suitetext) (8)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -9753,7 +9753,7 @@ Pick a shape and an area in megapixels, and get the width and height that match.
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `aspect_ratio` | `COMBO` | Yes | 1:1 | `1:3`, `1:2.39`, `9:21`, `1:2.2`, `1:2`, `1:1.85`, `9:16`, `1:1.66`, `10:16`, `2:3`, `1:1.43`, `3:4` and 15 more | The shape, width:height. 16:9 is widescreen, 9:16 the same shape portrait, 1:1 square. Listed from the tallest portrait, 1:3, to the widest landscape, 3:1, each landscape shape mirroring a portrait one. |
+| `aspect_ratio` | `COMBO` | Yes | 1:1 | `1:1`, `5:4`, `4:3`, `3:2`, `16:10`, `16:9`, `2:1`, `21:9`, `3:1`, `1.43:1`, `1.66:1`, `1.85:1` and 15 more | The shape, width:height. 16:9 is widescreen, 9:16 the same shape portrait, 1:1 square. Listed square first, then landscape from 5:4 to 3:1 and the film ratios 1.43:1 to 2.39:1, then the same shapes portrait. |
 | `size_by` | `COMBO` | Yes | megapixels | `megapixels`, `long edge`, `short edge`, `width`, `height` | How the size is set. `megapixels` holds the area at the megapixels widget whatever the shape. `long edge`, `short edge`, `width` and `height` hold that side at the pixels typed in size instead. |
 | `size` | `INT` | Yes | 1024 |  | The side in pixels, read when size_by is `long edge`, `short edge`, `width` or `height`. 1024 on the long edge of 16:9 is 1024 by 576. |
 | `megapixels` | `FLOAT` | Yes | 1.0 |  | The area in millions of pixels, read when size_by is `megapixels`. 1.0 is 1024 by 1024 at 1:1 and 1344 by 768 at 16:9. |
@@ -10492,6 +10492,32 @@ Denoise a latent exactly as core KSampler does, with the live preview made cheap
 
 </details>
 
+<a id="node-wasflowshift"></a>
+<details>
+<summary><b>Flow Shift</b></summary>
+
+Set a flow model's shift, such as FLUX 3 Image Klein's or MOSS-Image's, optionally grown with the picture's size. Higher spends more steps on layout and lower on detail, under schedulers that read the model, as simple and shifted_tangent do. Beside Tiled Diffusion Model Patch it lays out only the whole-frame steps.
+
+| | |
+|---|---|
+| Node id | `WASFlowShift` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | A flow model: FLUX 3 Image Klein, MOSS-Image, FLUX, SD3 and alike; MODEL. |
+| `shift` | `FLOAT` | Yes | 0.0 |  | Shift as a factor. 0 = the model's own: 6.93 on Flux 3 Klein, 5 on MOSS-Image; 3 = more steps on detail; 12 = more on layout. |
+| `resolution` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `fixed` = the shift as set; `scaled` = the shift times the square root of the area over 1024 x 1024, so MOSS-Image's 5 becomes 7.1 at 1088 x 1856. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model sampling at the new shift; MODEL. |
+
+</details>
+
 <a id="node-wasflux3flowmappatch"></a>
 <details>
 <summary><b>Flux 3 Flow Map Patch</b></summary>
@@ -10832,6 +10858,92 @@ Sample a latent over several cycles, enlarging it between passes by an even shar
 
 </details>
 
+<a id="node-wasmodelblockrestore"></a>
+<details>
+<summary><b>Model Block Restore</b></summary>
+
+Put a range of a model's transformer blocks back to another checkpoint of the same model, such as the Base weights under a fine-tune. Blocks 32 to 41 from MOSS-Image Base remove the vertical banding MOSS-Image SFT draws across skies and smooth backgrounds. LoRAs on the model stay applied.
+
+| | |
+|---|---|
+| Node id | `WASModelBlockRestore` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The model to restore, such as MOSS-Image SFT with its LoRAs; MODEL. |
+| `checkpoint` | `COMBO` | Yes |  |  | The checkpoint the blocks are read from, the same model before fine-tuning: moss_image_base_int8_convrot or moss_image_base_bf16 for MOSS-Image SFT. Only the chosen blocks are read. |
+| `first_block` | `INT` | Yes | 32 |  | First block restored, from 0. 32 = MOSS-Image SFT's banding blocks, 32 to 41; 37 = the top five only, which leaves part of the banding. |
+| `last_block` | `INT` | Yes | 41 |  | Last block restored. 41 = MOSS-Image's last block. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | Share of the checkpoint's weights. 1 = its blocks exactly; 0.5 = halfway; 0 = no change. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with those blocks restored and its LoRAs still applied; MODEL. |
+
+</details>
+
+<a id="node-wasropeextensionpatch"></a>
+<details>
+<summary><b>RoPE Extension Patch</b></summary>
+
+Scale a model's RoPE on every call longer than its native side, so a large frame stays in the range of positions it learned. MOSS-Image widens its RoPE frequencies and FLUX compresses its positions. Tiles at native size from Tiled Diffusion Model Patch are left unscaled, on either side of it.
+
+| | |
+|---|---|
+| Node id | `WASRoPEExtensionPatch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | A MOSS-Image or FLUX 1 or 2 model; MODEL. |
+| `native_side` | `INT` | Yes | 2160 |  | Longest side in pixels sampled unscaled. 2160 = MOSS-Image's widest 2 MP size, 21:9; a side past it is scaled, as 0.94 at 2304. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with RoPE scaled on large calls, for any sampler; MODEL. |
+
+</details>
+
+<a id="node-wasshiftedtangentscheduler"></a>
+<details>
+<summary><b>Shifted Tangent Scheduler</b></summary>
+
+Make the noise schedule of RES4LYF's bong_tangent in the model's own time, so the model's flow shift moves where the steps fall. It is also offered as shifted_tangent in every KSampler's scheduler menu, at these defaults.
+
+| | |
+|---|---|
+| Node id | `WASShiftedTangentScheduler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The model the schedule is read through; MODEL. |
+| `steps` | `INT` | Yes | 20 |  | Sampling steps, as `20`. |
+| `denoise` | `FLOAT` | Yes | 1.0 |  | Share of the schedule run. 1 = from pure noise; 0.5 = the second half only, for a picture already made. |
+| `start` | `FLOAT` | Yes | 1.0 |  | Share of the model's time the first step starts from. 1 = full noise. |
+| `middle` | `FLOAT` | Yes | 0.5 |  | Share of the model's time where the second stage takes over, as `0.5`. |
+| `end` | `FLOAT` | Yes | 0.0 |  | Share of the model's time the last step ends at. 0 = clean. |
+| `pivot_1` | `FLOAT` | Yes | 0.6 |  | Share of the steps where the first stage turns, as `0.6`. |
+| `pivot_2` | `FLOAT` | Yes | 0.6 |  | Share of the steps where the second stage turns, as `0.6`. |
+| `slope_1` | `FLOAT` | Yes | 0.2 |  | Steepness of the first stage. 0.2 = gentle; 1 = abrupt. |
+| `slope_2` | `FLOAT` | Yes | 0.2 |  | Steepness of the second stage. 0.2 = gentle; 1 = abrupt. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `sigmas` | `SIGMAS` | The schedule, steps + 1 values ending at 0, for SamplerCustom; SIGMAS. |
+
+</details>
+
 <a id="node-wasspeedsampler"></a>
 <details>
 <summary><b>SPEED Sampler</b></summary>
@@ -10976,6 +11088,33 @@ Upscale and refine a picture or latent in overlapping tiles sampled together, so
 | `image` | `IMAGE` | The refined pictures. |
 | `latent` | `LATENT` | The refined latents, for a further pass. |
 | `captions` | `STRING` | The overview and every tile's caption, one numbered line each. Empty with no captioner. |
+
+</details>
+
+<a id="node-wastileddiffusionmodelpatch"></a>
+<details>
+<summary><b>Tiled Diffusion Model Patch</b></summary>
+
+Make a model denoise the latent as overlapping tiles inside any sampler, each tile a picture the model's native size, blended where they meet. Background and small detail get the attention a whole frame would. Start it partway in to keep the whole frame's composition; a shift set before it lays out only those whole-frame steps.
+
+| | |
+|---|---|
+| Node id | `WASTiledDiffusionModelPatch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The diffusion model to patch; MODEL, such as from Load Diffusion Model. |
+| `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` = tiles the size the model was trained at, 512 for SD1 and 1024 for the rest, sharing a quarter of a tile; `manual` = set the tile size and overlap. |
+| `start_percent` | `FLOAT` | Yes | 0.3 |  | Share of the model's own noise schedule laid out whole before the tiles take over. 0 = tiled from the first step; 0.3 = the first 6 of 20 steps on simple; 0.5 = from sigma 0.87 on Flux 3 Klein. |
+| `end_percent` | `FLOAT` | Yes | 1.0 |  | Share of the model's own noise schedule where the tiles stop. 1 = tiled to the last step; 0.9 = the last 2 of 20 steps on simple run whole. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The patched model, for KSampler or any sampler; MODEL. A latent no bigger than one tile is not tiled. |
 
 </details>
 

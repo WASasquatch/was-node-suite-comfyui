@@ -16,36 +16,15 @@ __all__ = [
     "resolve",
 ]
 
-#: Every shape offered, from the tallest portrait down to square, then each landscape shape in
-#: the place mirroring its portrait one.
+#: Every shape offered: square, then landscape, then portrait in the same order. Each
+#: orientation lists the screen and photo ratios from nearest square outward, then the film
+#: ratios the same way.
 RATIOS: tuple[str, ...] = (
-    "1:3",
-    "1:2.39",
-    "9:21",
-    "1:2.2",
-    "1:2",
-    "1:1.85",
-    "9:16",
-    "1:1.66",
-    "10:16",
-    "2:3",
-    "1:1.43",
-    "3:4",
-    "4:5",
     "1:1",
-    "5:4",
-    "4:3",
-    "1.43:1",
-    "3:2",
-    "16:10",
-    "1.66:1",
-    "16:9",
-    "1.85:1",
-    "2:1",
-    "2.2:1",
-    "21:9",
-    "2.39:1",
-    "3:1",
+    "5:4", "4:3", "3:2", "16:10", "16:9", "2:1", "21:9", "3:1",
+    "1.43:1", "1.66:1", "1.85:1", "2.2:1", "2.39:1",
+    "4:5", "3:4", "2:3", "10:16", "9:16", "1:2", "9:21", "1:3",
+    "1:1.43", "1:1.66", "1:1.85", "1:2.2", "1:2.39",
 )
 
 #: Which measurement is being given, and so what the other one is worked out from. The area
