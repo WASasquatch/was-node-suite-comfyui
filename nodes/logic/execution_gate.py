@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules import log
+
+logger = log.get_logger("nodes.logic.execution_gate")
+
 #: Stands in for a socket nothing is wired to, which None cannot say on a lazy input.
 UNWIRED = object()
 
@@ -30,8 +34,8 @@ class ExecutionGate(io.ComfyNode):
             category="WAS Suite/Logic",
             description=(
                 "Pass a value of any type on only while a switch is on. Switched off, the "
-                "branch feeding the gate never runs and every node after it stops; "
-                "bypass_downstream draws those nodes as bypassed instead."
+                "branch feeding the gate and every node after it are skipped while the rest "
+                "of the graph finishes; bypass_downstream also draws those nodes bypassed."
             ),
             inputs=[
                 io.Boolean.Input(
@@ -39,7 +43,7 @@ class ExecutionGate(io.ComfyNode):
                     default=True,
                     tooltip=(
                         "Whether the branch runs. `true` passes value on. `false` skips "
-                        "everything wired into value and stops every node after the gate."
+                        "everything wired into value and every node after the gate."
                     ),
                 ),
                 io.MatchType.Input(
@@ -59,8 +63,7 @@ class ExecutionGate(io.ComfyNode):
                     tooltip=(
                         "`true` = every node after the gate is drawn bypassed while open is "
                         "off; `false` = they stay as they are. Read only when open is set on "
-                        "the gate: with open wired, the run stops them and the first shows "
-                        "as failed."
+                        "the gate: with open wired, the run skips them."
                     ),
                 ),
                 io.String.Input(
@@ -68,9 +71,9 @@ class ExecutionGate(io.ComfyNode):
                     default="",
                     optional=True,
                     tooltip=(
-                        "Empty stops the run quietly. Any text, such as `no face found, "
-                        "nothing to upscale`, is drawn on the first blocked node as an "
-                        "error and raised as a notification."
+                        "A line written to the console while the gate is closed, such as "
+                        "`no face found, nothing to upscale`. Empty writes nothing. The "
+                        "branch is skipped either way and the run finishes."
                     ),
                 ),
             ],
@@ -119,9 +122,14 @@ class ExecutionGate(io.ComfyNode):
             closed_message: What a closed gate reports.
 
         Returns:
-            The value while open, otherwise an output that blocks every node after it.
+            The value while open, otherwise an output that skips every node after it.
         """
         if not open:
-            # The placeholder fills the output slot the blocker replaces.
-            return io.NodeOutput(None, block_execution=str(closed_message))
+            from comfy_execution.graph_utils import ExecutionBlocker
+
+            message = str(closed_message or "").strip()
+            if message:
+                logger.info("Execution Gate closed: %s", message)
+            # A blocker without a message skips its readers instead of failing the run.
+            return io.NodeOutput(ExecutionBlocker(None))
         return io.NodeOutput(None if value is UNWIRED else value)

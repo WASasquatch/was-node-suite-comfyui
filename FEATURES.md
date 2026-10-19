@@ -25,7 +25,8 @@ For seeing whether a node did what was wanted without wiring a preview to find o
 
 ## Masking and regions
 
-34 nodes. **CLIPSeg Masking** and **SAM Image Mask** make a mask from a prompt or from points.
+36 nodes. **CLIPSeg Masking** and **SAM Image Mask** make a mask from a prompt or from points,
+and **Image Skin Mask** and **Image Simple Skin Mask** from the people in a picture.
 **Mask Crop Region**, **Mask Dominant Region**, **Mask Minority Region** and **Mask Arbitrary
 Region** isolate part of one. **Mask Grow**, **Mask Feather**, **Mask Dilate Region**, **Mask
 Erode Region**, **Mask Smooth Region**, **Mask Fill Holes** and **Mask Guided Filter** shape it.
@@ -37,6 +38,25 @@ For building a mask inside the graph rather than painting one by hand.
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Masking**. Graphs:
 [`mask-bounds.json`](docs/workflows/mask-bounds.json),
 [`mask-rect-area.json`](docs/workflows/mask-rect-area.json).
+
+---
+
+## Skin masks
+
+**Image Skin Mask** and **Image Simple Skin Mask** mask the bare skin of every person in a
+picture and leave out clothes, hair, background, eyes, brows and the inside of the mouth, with
+an edge that follows the picture. Image Skin Mask reads each body part with Meta's Sapiens2
+network and holds bare torsos, highlights and tattoos on one or two people close up. Image
+Simple Skin Mask reads a small clothing model, is the lighter of the two, and holds small
+figures in a crowd or a wide shot. In both, each person's own skin colour settles
+what the network takes for clothing. Both keep all skin, the face alone or the body alone, and
+draw the picture with its skin tinted.
+
+For retouching, grading or inpainting skin without touching what is around it.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Masking**. Graph:
+[`image-skin-mask.json`](docs/workflows/image-skin-mask.json). The models, and the terms the
+Sapiens2 weights come with: [`docs/MODELS.md`](docs/MODELS.md#skin-masks).
 
 ---
 
@@ -570,6 +590,21 @@ Weights ship with the pack or download on first use to a stated folder:
 **WAS Suite/Image/AI**. Graphs:
 [`face-detection.json`](docs/workflows/face-detection.json),
 [`power-lora-stack.json`](docs/workflows/power-lora-stack.json).
+
+---
+
+## A model quantized in ComfyUI's own formats
+
+**Quantize Model** turns a loaded diffusion model into int8 convrot, w6a8, w4a8, int8, fp8, mxfp8
+or nvfp4, with any LoRAs applied before it merged in, and writes the file Load Diffusion Model
+reads. Set to `like Comfy-Org`, it makes the file Comfy-Org publishes for that model and format.
+Its panel shows the size before and after, what every other format would come to, and the layers
+that lost the most.
+
+For a smaller, faster copy of any finetune or merge, laid out as the official releases are.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Utilities**. Formats and releases:
+[`docs/MODELS.md`](docs/MODELS.md#quantized-models).
 
 ---
 

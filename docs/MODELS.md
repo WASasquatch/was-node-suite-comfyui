@@ -209,6 +209,43 @@ and each one after that about 0.8 seconds a frame.
 | Depth flat or inverted | The answer already turns log depth over, so no invert node is wanted after it. |
 | The `conditioning` menu is empty | The files are not in `ComfyUI/models/embeddings`. Put them there and reload the page. |
 
+## Skin masks
+
+**Image Skin Mask** reads a Sapiens2 body-part network from `ComfyUI/models/sapiens`.
+**Image Simple Skin Mask** reads a clothing model from `ComfyUI/models/segmentation`. Both find
+faces with `ViTPose Wholebody` from `ComfyUI/models/pose`, the file in the Power Preprocessor
+table. With `features.network: true`, a file is fetched by the first run that picks it. Graph:
+[`image-skin-mask.json`](workflows/image-skin-mask.json).
+
+| File | Node | Size | Download | Licence |
+|---|---|--:|---|---|
+| `sapiens2_1b_seg.safetensors` | Image Skin Mask, the default | 5.9 GB | [facebook/sapiens2-seg-1b](https://huggingface.co/facebook/sapiens2-seg-1b/blob/main/sapiens2_1b_seg.safetensors) | Sapiens2 License |
+| `sapiens2_0.4b_seg.safetensors` | Image Skin Mask, lighter, less sure of unusual bodies | 1.6 GB | [facebook/sapiens2-seg-0.4b](https://huggingface.co/facebook/sapiens2-seg-0.4b/blob/main/sapiens2_0.4b_seg.safetensors) | Sapiens2 License |
+| `sapiens2_0.8b_seg.safetensors` | Image Skin Mask | 3.3 GB | [facebook/sapiens2-seg-0.8b](https://huggingface.co/facebook/sapiens2-seg-0.8b/blob/main/sapiens2_0.8b_seg.safetensors) | Sapiens2 License |
+| `sapiens2_5b_seg.safetensors` | Image Skin Mask, about 10 GB of VRAM | 20.4 GB | [facebook/sapiens2-seg-5b](https://huggingface.co/facebook/sapiens2-seg-5b/blob/main/sapiens2_5b_seg.safetensors) | Sapiens2 License |
+| `segformer_b3_clothes`, the whole repository | Image Simple Skin Mask | 190 MB | [sayeed99/segformer_b3_clothes](https://huggingface.co/sayeed99/segformer_b3_clothes) | MIT |
+
+A Sapiens2 network runs in bfloat16 on a GPU that computes in it, so it holds about half its
+file size in VRAM.
+
+The [Sapiens2 License](https://github.com/facebookresearch/sapiens2/blob/main/LICENSE.md) binds
+whoever runs the weights:
+
+| | |
+|---|---|
+| Allows | Use, changes and redistribution, with a copy of the licence |
+| Forbids | Surveillance, biometric processing, identifying people, deepfakes and impersonation, pornographic or defamatory use, and inferring health or other sensitive traits without consent |
+| Also | Meta may audit a user and require the weights deleted, and may change the terms |
+
+| Trouble | Cause |
+|---|---|
+| The model menu reads `put a sapiens2 seg checkpoint in models/sapiens` | Nothing on disk and `features.network` off. Turn it on, or place a file from the table and press **R** |
+| `is not a Sapiens2 body-part checkpoint` | The file is another Sapiens2 task, such as pose or normals. Pick a `_seg` file |
+| An arm or torso comes out half masked | `sapiens2_0.4b_seg` is unsure of that body. Pick `sapiens2_1b_seg` |
+| Arms and legs of small, far-off figures are left out | Image Skin Mask reads them poorly in a crowd or a wide shot. Image Simple Skin Mask holds them |
+| The top of a bald head is left out | Image Skin Mask reads a bald crown as hair. Image Simple Skin Mask keeps it |
+| A bright highlight on skin is left out | Image Simple Skin Mask reads colour, and a highlight carries little. Image Skin Mask keeps it |
+
 ## PS-SR video super resolution
 
 **Video Super Resolution (PS-SR)** reads a checkout placed by hand. Nothing here is fetched,
@@ -280,6 +317,52 @@ are.
 | `clip_l.safetensors` | MIT, OpenAI |
 | `kandinsky6_audio_vae.safetensors` | **CC BY-NC 4.0, non-commercial use only**, the MMAudio autoencoder in it; MIT, the BigVGAN vocoder |
 | `hunyuan_video_vae_bf16.safetensors` | Tencent Hunyuan Community License, which does not apply in the European Union, the United Kingdom or South Korea |
+
+## Quantized models
+
+**Quantize Model** writes to `ComfyUI/output/diffusion_models/` by default, numbered
+`quantized_00001.safetensors` onward. Load Diffusion Model reads the file once it is in
+`ComfyUI/models/diffusion_models`. Each quantized layer carries its own `comfy_quant` tag, so the
+file loads with no loader setting.
+
+| Format | Weights | Runs natively on |
+|---|---|---|
+| `int8 convrot` | 8-bit, each row rotated by a Hadamard block of 256, 64 or 16 | RTX 20 series and newer |
+| `w6a8` | 6-bit in groups of 32, with 8-bit activations | RTX 30 series and newer |
+| `w4a8` | 4-bit in groups of 16 with a codebook, with 8-bit activations | RTX 30 series and newer |
+| `int8` | 8-bit, unrotated | RTX 20 series and newer |
+| `fp8 e4m3fn` | 8-bit float, one scale per layer | RTX 40 series and newer |
+| `mxfp8` | 8-bit float, a power-of-two scale per 32 weights | RTX 50 series, emulated on older cards |
+| `nvfp4` | 4-bit float, a scale per 16 weights and one per layer | RTX 50 series, emulated on older cards |
+
+With `layers`, `scales` and `attention` on `like Comfy-Org`, these releases come out tensor for
+tensor from the bfloat16 file beside them in the same repository, apart from the hardware
+differences below:
+
+| Release | Layers quantized | Scales | Other tensors |
+|---|---|---|---|
+| [`flux3_image_klein_sd_int8_convrot.safetensors`](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy) | The transformer blocks, with `qkv` on `fused` | Each row's maximum | As loaded |
+| [`krea2_raw_int8_convrot.safetensors`](https://huggingface.co/Comfy-Org/Krea-2/tree/main/diffusion_models) | The 28 transformer blocks | Each row's lowest error | Float32 as bfloat16, norm scales kept |
+| [`krea2_raw_fp8_scaled.safetensors`](https://huggingface.co/Comfy-Org/Krea-2/tree/main/diffusion_models) | The transformer and text-fusion blocks | One per layer | All bfloat16 |
+| [`krea2_turbo_mxfp8.safetensors`](https://huggingface.co/Comfy-Org/Krea-2/tree/main/diffusion_models) | The transformer and text-fusion blocks | One per 32 weights | All bfloat16 |
+| [`krea2_turbo_nvfp4.safetensors`](https://huggingface.co/Comfy-Org/Krea-2/tree/main/diffusion_models) | The transformer and text-fusion blocks | One per 16 weights and one per layer | All bfloat16 |
+
+The Krea 2 fp8, mxfp8 and nvfp4 releases tag each block's attention gate, attention output and
+feed-forward output to multiply at full precision, and so does Quantize Model. A model with no
+release here takes the layers Comfy-Org's quantizer picks, scaled by row maximum.
+
+Results depend on the hardware in two places:
+
+| Where | What differs |
+|---|---|
+| `lowest error` row scales | Each row's error is a float32 sum. Where two clips tie to the last bit, the order the processor adds in picks between them, so a file made on other hardware can differ in those rows. Krea 2 Raw int8 convrot made on an RTX 4090 and a 24-thread desktop CPU differs from Comfy-Org's in 10 of its 1,691,648 rows. |
+| `nvfp4` weights | A weight that lands exactly between two 4-bit levels rounds by the GPU's own division. Made without a GPU, those weights round to even and differ from Comfy-Org's. |
+
+| Trouble | Cause |
+|---|---|
+| The file is not in Load Diffusion Model's menu | It is in the output folder. Move it into `ComfyUI/models/diffusion_models` and press **R** |
+| Save Model fails with `Only Tensors of floating point and complex dtype can require gradients` | Core Save Model cannot write a quantized model. Give Quantize Model a `filename_prefix` instead |
+| `is not available in this ComfyUI` | ComfyUI or comfy-kitchen is older than the format. Update both, or pick `int8 convrot` |
 
 ## The gated model nodes
 

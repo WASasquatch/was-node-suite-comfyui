@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **519** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **522** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-512 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+515 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 397 |
+| [Always loaded](#always-loaded) | always on | 398 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -24,7 +24,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 | [`features.extras`](#featuresextras) | on | 27 |
 | [`features.midas`](#featuresmidas) | on | 2 |
 | [`features.photoshop`](#featuresphotoshop) | on | 2 |
-| [`features.preprocessors`](#featurespreprocessors) | on | 4 |
+| [`features.preprocessors`](#featurespreprocessors) | on | 6 |
 | [`features.sam`](#featuressam) | on | 4 |
 | [`features.threejs`](#featuresthreejs) | on | 43 |
 | [`features.viewer`](#featuresviewer) | on | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-397 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+398 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -82,7 +82,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Text/Styles](#was-suitetextstyles) (5)
 - [WAS Suite/Text/Terminology](#was-suitetextterminology) (4)
 - [WAS Suite/Text/Tokens](#was-suitetexttokens) (3)
-- [WAS Suite/Utilities](#was-suiteutilities) (10)
+- [WAS Suite/Utilities](#was-suiteutilities) (11)
 - [WAS Suite/Workflow](#was-suiteworkflow) (1)
 
 ### WAS Suite/Animation
@@ -8490,7 +8490,7 @@ Pick an installed checkpoint, LoRA, VAE, ControlNet, upscale model, sampler or s
 <details>
 <summary><b>Execution Gate</b></summary>
 
-Pass a value of any type on only while a switch is on. Switched off, the branch feeding the gate never runs and every node after it stops; bypass_downstream draws those nodes as bypassed instead.
+Pass a value of any type on only while a switch is on. Switched off, the branch feeding the gate and every node after it are skipped while the rest of the graph finishes; bypass_downstream also draws those nodes bypassed.
 
 | | |
 |---|---|
@@ -8500,10 +8500,10 @@ Pass a value of any type on only while a switch is on. Switched off, the branch 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `open` | `BOOLEAN` | Yes | True |  | Whether the branch runs. `true` passes value on. `false` skips everything wired into value and stops every node after the gate. |
+| `open` | `BOOLEAN` | Yes | True |  | Whether the branch runs. `true` passes value on. `false` skips everything wired into value and every node after the gate. |
 | `value` | `COMFY_MATCHTYPE_V3` | No |  |  | What to pass on, of any type. The first connection fixes the type. Nothing wired here is evaluated while the gate is closed. |
-| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` = every node after the gate is drawn bypassed while open is off; `false` = they stay as they are. Read only when open is set on the gate: with open wired, the run stops them and the first shows as failed. |
-| `closed_message` | `STRING` | No |  |  | Empty stops the run quietly. Any text, such as `no face found, nothing to upscale`, is drawn on the first blocked node as an error and raised as a notification. |
+| `bypass_downstream` | `BOOLEAN` | No | False |  | `true` = every node after the gate is drawn bypassed while open is off; `false` = they stay as they are. Read only when open is set on the gate: with open wired, the run skips them. |
+| `closed_message` | `STRING` | No |  |  | A line written to the console while the gate is closed, such as `no face found, nothing to upscale`. Empty writes nothing. The branch is skipped either way and the run finishes. |
 
 **Outputs**
 
@@ -8597,7 +8597,7 @@ Pass a value on only when a condition holds. When it does not, everything downst
 |---|---|---|---|---|---|
 | `value` | `COMFY_MATCHTYPE_V3` | Yes |  |  | What to pass on. It is only worked out when the gate opens, so a closed gate also skips the work behind it. |
 | `open` | `BOOLEAN` | Yes | True |  | true lets the value through; false stops every node downstream. Wire it from Compare, Boolean Reduce or any test. |
-| `message` | `STRING` | No |  |  | Shown on the blocked nodes as `Execution Blocked: <message>`. Left empty the branch stops quietly, which is what a routine skip wants. |
+| `message` | `STRING` | No |  |  | A line written to the console while the gate is closed, such as `no face found`. Empty writes nothing. The branch is skipped either way and the run finishes. |
 
 **Outputs**
 
@@ -12833,6 +12833,39 @@ Say which model is on a wire and how big it is: its class, as `SDXL` or `Autoenc
 
 </details>
 
+<a id="node-wasquantizemodel"></a>
+<details>
+<summary><b>Quantize Model</b></summary>
+
+Quantize a diffusion model's weights to int8 convrot, w6a8, w4a8, fp8, mxfp8 or nvfp4, the formats ComfyUI runs natively, with any LoRAs applied before it merged in. Set like Comfy-Org, it makes the same file Comfy-Org publishes for that model. It writes the file itself when given a name and hands the model on to a sampler.
+
+| | |
+|---|---|
+| Node id | `WASQuantizeModel` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The diffusion model to quantize; MODEL, such as from Load Diffusion Model. LoRAs applied before this node are merged in at full precision first. |
+| `format` | `COMBO` | Yes | int8 convrot |  | 'int8 convrot' = half of bf16, close to lossless, fast on RTX 20 series and newer; 'w6a8' = about 40%; 'w4a8' = about 30%, the most loss; 'fp8 e4m3fn' = RTX 40 and newer; 'mxfp8', 'nvfp4' = fast on RTX 50 only. |
+| `layers` | `COMBO` | Yes | like Comfy-Org | `like Comfy-Org`, `transformer blocks`, `every linear layer` | 'like Comfy-Org' = the layers Comfy-Org's quantizer picks, or the layers and precision of Comfy-Org's own file for this model and format; 'transformer blocks' = every layer of the repeated blocks; 'every linear layer' = embeddings and final layer too, smaller, less faithful. |
+| `qkv` | `COMBO` | Yes | as loaded | `as loaded`, `fused`, `separate` | 'as loaded' = the model's own form; 'fused' = query, key and value in one layer, one matmul, as Comfy-Org ships its files; 'separate' = three layers, as LoRAs for split projections expect. Flux 3 and MOSS-Image have both. |
+| `attention` | `COMBO` | Yes | as loaded | `as loaded`, `like Comfy-Org`, `int8 everywhere`, `clear` | Kernel each attention layer is set to run. 'as loaded' = what the model already carries; 'like Comfy-Org' = int8 attention where Comfy-Org's own release sets it; 'int8 everywhere' = on every layer; 'clear' = none set. |
+| `protect` | `FLOAT` | Yes | 0.0 |  | Share of the quantized layers with the largest error kept one step finer. 0 = none; 0.1 = the worst tenth. w6a8, w4a8, mxfp8 and nvfp4 layers go to int8 convrot; int8 and fp8 layers stay at the model's precision. |
+| `filename_prefix` | `STRING` | Yes | diffusion_models/quantized |  | Where the quantized file is written in ComfyUI's output folder, such as `diffusion_models/flux3_int8`, numbered like `flux3_int8_00001.safetensors`. Empty = no file. Move it into models/diffusion_models to load it. |
+| `group_size` | `INT` | Yes | 0 |  | Weights sharing one scale in w6a8 and w4a8. 0 = 32 for w6a8 and 16 for w4a8; 64 = smaller, a little less faithful. A layer it does not divide falls back to int8 convrot. |
+| `scales` | `COMBO` | Yes | like Comfy-Org | `like Comfy-Org`, `row maximum`, `lowest error` | How each int8 row's scale is set. 'row maximum' = its largest weight, nothing clipped; 'lowest error' = the clip of 55% to 100% with the least error, slower; 'like Comfy-Org' = what Comfy-Org's release of this model used, else row maximum. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The quantized model; MODEL, ready for a sampler. |
+
+</details>
+
 <a id="node-wassleep"></a>
 <details>
 <summary><b>Sleep</b></summary>
@@ -14649,7 +14682,7 @@ Write a layer stack to a file that Photoshop, Affinity Photo, GIMP or Krita open
 
 ## `features.preprocessors`
 
-4 nodes. On in a fresh install: set `features.preprocessors: false` in `config.yaml` and restart ComfyUI to leave these out.
+6 nodes. On in a fresh install: set `features.preprocessors: false` in `config.yaml` and restart ComfyUI to leave these out.
 
 ### WAS Suite/Image/AI
 
@@ -14714,6 +14747,69 @@ Rebuild the light a clipped highlight lost, handing on linear light with everyth
 |---|---|---|
 | `images` | `IMAGE` | The reconstruction, as linear light on a 0 to 1 scale with the recovered highlights above it. A preview clips it back to white, so tone map it or write it to EXR to see the range. |
 | `peak` | `FLOAT` | The largest value anywhere in the result. 40.07 = a clipped disc rebuilt to 40 times white; 1.0 = nothing above white was recovered. Divide by it to scale the frame back into range. |
+
+</details>
+
+### WAS Suite/Image/Masking
+
+<a id="node-wasimagesimpleskinmask"></a>
+<details>
+<summary><b>Image Simple Skin Mask</b></summary>
+
+Mask the bare skin of every person in a picture, leaving out clothes, hair, background, eyes, brows and the inside of the mouth. A small clothing model and each person's own skin colour decide it, so it is quick and light. Image Skin Mask reads each body part instead and holds bare torsos better.
+
+| | |
+|---|---|
+| Node id | `WASImageSimpleSkinMask` |
+| Turn off with | `features.preprocessors: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures to find skin in; IMAGE. Each picture of a batch is masked on its own. |
+| `areas` | `COMBO` | Yes | all skin | `all skin`, `face`, `body` | Which skin the mask keeps. 'all skin' = face and body; 'face' = from the jaw to the forehead; 'body' = everything below the jaw. |
+| `eyes` | `COMBO` | Yes | remove with brows | `remove with brows`, `remove`, `keep` | 'remove with brows' = cut out the eyes and the eyebrows; 'remove' = the eyes alone; 'keep' = leave both in the mask. |
+| `mouth` | `COMBO` | Yes | remove inside | `remove inside`, `remove lips`, `keep` | 'remove inside' = cut out the teeth and tongue between the lips; 'remove lips' = the lips as well; 'keep' = leave the mouth in the mask. |
+| `tolerance` | `FLOAT` | Yes | 1.0 |  | How far a colour may sit from each person's own skin and still count. 1.0 = as measured; 1.5 = takes in deep shadow and flushed skin; 0.7 = stricter, for beige or tan clothing being caught. |
+| `person_threshold` | `FLOAT` | Yes | 0.4 |  | How sure the person detector has to be. 0.4 = most people in a crowd; 0.7 = only clear, large figures. Skin outside every person found is left out. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | The skin; MASK at the picture's size with a soft edge. 1 = skin, 0 = everything else. |
+
+</details>
+
+<a id="node-wasimageskinmask"></a>
+<details>
+<summary><b>Image Skin Mask</b></summary>
+
+Mask the bare skin of every person in a picture, leaving out clothes, hair, background, eyes, brows and the inside of the mouth. A body-part network labels each person's face, torso and limbs, and their own skin colour settles what it takes for clothing. Good for retouching, grading or inpainting skin.
+
+| | |
+|---|---|
+| Node id | `WASImageSkinMask` |
+| Turn off with | `features.preprocessors: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures to find skin in; IMAGE. Each picture of a batch is masked on its own. |
+| `model` | `COMBO` | Yes |  |  | Body-part network from ComfyUI/models/sapiens. `sapiens2_1b_seg` = sure of unusual bodies and poses, 3 GB of VRAM; `0.4b` and `0.8b` = lighter, less sure of them; `5b` = about 10 GB. Downloaded on first use. |
+| `areas` | `COMBO` | Yes | all skin | `all skin`, `face`, `body` | Which skin the mask keeps. 'all skin' = face and body; 'face' = from the jaw to the forehead; 'body' = everything below the jaw. |
+| `eyes` | `COMBO` | Yes | remove with brows | `remove with brows`, `remove`, `keep` | 'remove with brows' = cut out the eyes and the eyebrows; 'remove' = the eyes alone; 'keep' = leave both in the mask. |
+| `mouth` | `COMBO` | Yes | remove inside | `remove inside`, `remove lips`, `keep` | 'remove inside' = cut out the teeth and tongue; 'remove lips' = the lips as well; 'keep' = leave the whole mouth in the mask. |
+| `tolerance` | `FLOAT` | Yes | 1.0 |  | How far a colour labelled as clothing may sit from each person's own skin and still count as skin. 1.0 = as measured; 1.5 = takes in deep shadow; 0.7 = stricter, for beige or tan clothing being caught. |
+| `person_threshold` | `FLOAT` | Yes | 0.4 |  | How sure the person detector has to be. 0.4 = most people in a crowd; 0.7 = only clear, large figures. Each person found is read up close; with nobody found the whole picture is read. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | The skin; MASK at the picture's size with a soft edge. 1 = skin, 0 = everything else. |
 
 </details>
 

@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ....modules import log
+
+logger = log.get_logger("nodes.logic.condition.any_gate")
+
 
 class AnyGate(io.ComfyNode):
     """Pass a value on when a condition holds, and block the branch when it does not."""
@@ -52,8 +56,9 @@ class AnyGate(io.ComfyNode):
                     multiline=False,
                     optional=True,
                     tooltip=(
-                        "Shown on the blocked nodes as `Execution Blocked: <message>`. Left "
-                        "empty the branch stops quietly, which is what a routine skip wants."
+                        "A line written to the console while the gate is closed, such as "
+                        "`no face found`. Empty writes nothing. The branch is skipped either "
+                        "way and the run finishes."
                     ),
                 ),
             ],
@@ -73,7 +78,7 @@ class AnyGate(io.ComfyNode):
         Args:
             open: Whether the gate lets the value through.
             value: The value, present once it has been evaluated.
-            message: Shown on the blocked nodes.
+            message: Written to the console while the gate is closed.
 
         Returns:
             ``["value"]`` while the gate is open and the value has not arrived.
@@ -89,13 +94,17 @@ class AnyGate(io.ComfyNode):
         Args:
             open: Whether the gate lets the value through.
             value: What to pass on.
-            message: Shown on the blocked nodes, empty to block quietly.
+            message: Written to the console while the gate is closed.
 
         Returns:
-            The value, or an ``ExecutionBlocker`` that stops everything downstream.
+            The value, or an ``ExecutionBlocker`` that skips everything downstream.
         """
         from comfy_execution.graph_utils import ExecutionBlocker
 
         if open:
             return io.NodeOutput(value)
-        return io.NodeOutput(ExecutionBlocker(message.strip() or None))
+        note = str(message or "").strip()
+        if note:
+            logger.info("Any Gate closed: %s", note)
+        # A blocker without a message skips its readers instead of failing the run.
+        return io.NodeOutput(ExecutionBlocker(None))

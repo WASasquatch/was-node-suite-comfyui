@@ -417,15 +417,10 @@ class _Run:
         if step >= 1 and self.matches >= 1:
             learned = self.matches
             if self.occurrence is None and learned > 1 and self.guessed:
-                logger.warning(
-                    "The affine on step 1 may have landed on a substep: this sampler "
-                    "evaluates the model %s times at each step's own noise level, and the "
-                    "first of those belongs to the step before. Every later step is exact.",
-                    learned,
-                )
+                logger.warning("Affine step 1 may have landed on a substep (%s calls a step)", learned)
             self.occurrence = learned
         if step in self.targets and step not in self.applied and self.spec.debug:
-            logger.info("Affine step %s was scheduled but no model call matched it.", step)
+            logger.info("Affine step %s missed: no model call matched", step)
         self.callbacks += 1
         self.matches = 0
 
@@ -486,7 +481,7 @@ class _Run:
             self.probed = True
             self.space = _probe_space(self.model, self.x, self.shapes)
             if self.space is None and self.spec.debug:
-                logger.info("The latent-space probe failed; applying the raw values instead.")
+                logger.info("Affine latent-space probe failed; raw values used")
         if not self.space or index >= len(self.space):
             return scale, bias, 0.0
         slope, offset = self.space[index]
@@ -599,23 +594,14 @@ class _Run:
         if content is None:
             if not self.waited:
                 self.waited = True
-                logger.warning(
-                    "affine_acts_on is '%s', which is told apart from the rest of the latent "
-                    "by the picture the model has resolved so far, and no step has finished "
-                    "yet, so this step was left alone. Start the schedule a step or two later.",
-                    acts_on,
-                )
+                logger.info("Affine step %s skipped: nothing resolved yet", step)
             return None
         share = _signal_coefficient(self.model, self.sigma_values[step], source)
         self.share = 1.0 if share is None else float(share)
         if share is None:
             if not self.uncoupled:
                 self.uncoupled = True
-                logger.warning(
-                    "The model would not say how much of a clean latent survives at this "
-                    "noise level, so nothing was applied. Set affine_acts_on to 'latent' "
-                    "to multiply the whole latent instead."
-                )
+                logger.warning("Affine skipped: no signal share from this model; use 'latent'")
             return None
         picture = content * share
         return source - picture if acts_on == "noise" else picture
@@ -671,21 +657,12 @@ class _Run:
         if pattern in patterns.CONTENT_PATTERNS and content is None:
             if not self.waited:
                 self.waited = True
-                logger.warning(
-                    "'%s' reads the picture the model has resolved so far, and no step has "
-                    "finished yet, so this one was left alone. Start the schedule a step or "
-                    "two later to give it something to read.",
-                    pattern,
-                )
+                logger.info("Affine step skipped: '%s' has nothing resolved yet", pattern)
             return None, None
         if pattern in patterns.CONTENT_PATTERNS and not affine.content_pattern_fits(source):
             if index not in self.degraded:
                 self.degraded.add(index)
-                logger.info(
-                    "Stream %s is too small for '%s', so 'solid' was used on it instead.",
-                    index,
-                    pattern,
-                )
+                logger.info("Affine stream %s too small for '%s'; used 'solid'", index, pattern)
             pattern = "solid"
         value, offset, offset_dc = self._space_for(index, scale, bias)
         try:
@@ -706,11 +683,7 @@ class _Run:
         except Exception as error:
             if index not in self.failed:
                 self.failed.add(index)
-                logger.error(
-                    "The affine on stream %s failed and that stream was left as it was: %s",
-                    index,
-                    error,
-                )
+                logger.error("Affine on stream %s failed, stream left as is: %s", index, error)
             return None, None
 
 
@@ -763,14 +736,11 @@ def patch_sampler(sampler, spec: AffineSpec):
         run = _Run(spec, model, x, sigmas, holder)
         if not run.stream_ids:
             logger.warning(
-                "No affine was applied: streams is '%s' but this latent carries %s stream(s), "
-                "so nothing was selected. Set streams to 'video' or 'both'.",
-                spec.streams,
-                len(run.shapes),
+                "No affine applied: streams '%s' selects none of %s", spec.streams, len(run.shapes)
             )
         if not run.targets:
             if spec.debug:
-                logger.info("No step is scheduled for an affine; the sampler runs untouched.")
+                logger.info("No affine step scheduled")
             return inner(
                 model, x, sigmas, extra_args=extra_args, callback=callback, disable=disable, **kwargs
             )
@@ -800,18 +770,9 @@ def patch_sampler(sampler, spec: AffineSpec):
         missed = sorted(run.targets - run.applied)
         holder["missed"] = missed
         if run.applications == 0:
-            logger.warning(
-                "No affine was applied: %s step(s) were scheduled but no model call opened "
-                "one. Turn on debug for the per-step detail.",
-                len(run.targets),
-            )
+            logger.warning("No affine applied: %s step(s) scheduled, none matched", len(run.targets))
         elif missed:
-            logger.warning(
-                "The affine skipped step(s) %s: no model call opened them. The other %s "
-                "step(s) carried it.",
-                missed,
-                run.applications,
-            )
+            logger.info("Affine skipped step(s) %s; %s applied", missed, run.applications)
         return result
 
     affine_sampler.__name__ = f"affine_{name or 'sampler'}"
