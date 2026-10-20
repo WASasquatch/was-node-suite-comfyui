@@ -15,9 +15,11 @@ __all__ = [
     "SEPARATORS",
     "STEP_TOLERANCE",
     "UNREADABLE",
+    "WHOLE_TOLERANCE",
     "as_number",
     "as_numbers",
     "split_values",
+    "whole",
     "whole_steps",
 ]
 
@@ -37,6 +39,27 @@ SEPARATORS = re.compile(r"[\s,]+")
 #: ``1.0 // 0.1`` is 9 where ten steps fit end to end, and a quotient this close to a whole
 #: number is read as that number.
 STEP_TOLERANCE = 1e-9
+
+#: Distance from a whole number within which :func:`whole` reads a value as that number, as a
+#: share of the value above 1 and as an absolute amount below it.
+WHOLE_TOLERANCE = 1e-9
+
+
+def whole(value: float) -> int:
+    """A value cut off at the decimal point.
+
+    Args:
+        value: The value to cut.
+
+    Returns:
+        The value with its decimal part dropped, towards zero, with a value within
+        :data:`WHOLE_TOLERANCE` of a whole number read as that number, so 57.99999999999999
+        answers 58.
+    """
+    nearest = round(value)
+    if abs(value - nearest) <= WHOLE_TOLERANCE * max(1.0, abs(value)):
+        return int(nearest)
+    return int(value)
 
 
 def whole_steps(span: float, step: float) -> int:

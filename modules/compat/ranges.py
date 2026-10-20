@@ -28,9 +28,11 @@ def _collected(inputs, found: dict) -> dict:
     from comfy_api.latest import io
 
     for item in inputs or ():
-        if isinstance(item, (io.Int.Input, io.Float.Input)):
-            if item.min is not None or item.max is not None:
-                found[item.id] = (item.min, item.max, isinstance(item, io.Float.Input))
+        # A socket taking several types keeps the number widget it was built from.
+        widget = getattr(item, "input_override", None) if isinstance(item, io.MultiType.Input) else item
+        if isinstance(widget, (io.Int.Input, io.Float.Input)):
+            if widget.min is not None or widget.max is not None:
+                found[item.id] = (widget.min, widget.max, isinstance(widget, io.Float.Input))
         elif isinstance(item, io.DynamicCombo.Input):
             nested: dict = {}
             for option in item.options:

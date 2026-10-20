@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **527** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **532** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-520 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+525 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 403 |
+| [Always loaded](#always-loaded) | always on | 408 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,11 +39,11 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-403 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+408 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
-- [WAS Suite/Conditioning](#was-suiteconditioning) (1)
+- [WAS Suite/Conditioning](#was-suiteconditioning) (2)
 - [WAS Suite/Debug](#was-suitedebug) (4)
 - [WAS Suite/Document](#was-suitedocument) (6)
 - [WAS Suite/History](#was-suitehistory) (2)
@@ -71,9 +71,9 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
-- [WAS Suite/Number/Operations](#was-suitenumberoperations) (17)
-- [WAS Suite/Sampling](#was-suitesampling) (24)
-- [WAS Suite/Text](#was-suitetext) (8)
+- [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
+- [WAS Suite/Sampling](#was-suitesampling) (25)
+- [WAS Suite/Text](#was-suitetext) (9)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (6)
@@ -1204,6 +1204,45 @@ Encode a prompt with CLIP after substituting Noodle Soup Prompts terminology or 
 | `conditioning` | `CONDITIONING` | The encoded prompt, for a sampler's positive or negative input. |
 | `parsed_text` | `STRING` | The prompt after substitution, the words that were actually encoded. Worth saving alongside the image, since a new seed produces different words. |
 | `raw_text` | `STRING` | The prompt exactly as typed, markup and all, before any substitution. |
+
+</details>
+
+<a id="node-wastextencodefibo2"></a>
+<details>
+<summary><b>Text Encode Fibo 2</b></summary>
+
+Turn a Fibo 2.0 caption into conditioning, with up to five images to edit. Hands on the prompt and negative for the sampler, and an empty latent at the size Fibo 2.0 was trained for.
+
+| | |
+|---|---|
+| Node id | `WASTextEncodeFibo2` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | qwen3vl_4b_bf16.safetensors from Load CLIP, with type fibo2 where ComfyUI offers it, otherwise krea2. |
+| `prompt` | `STRING` | Yes |  |  | A JSON caption, as Generate Fibo 2 Prompt writes, or plain text. To edit: the instruction, as 'make the sky stormy', or a caption with an edit_instruction key. |
+| `negative_prompt` | `STRING` | Yes |  |  | What guidance steers away from, as a JSON caption such as {"style_medium":"cartoon"}. Empty = Bria's own: its detailed negative caption to generate, the empty caption to edit. |
+| `width` | `INT` | Yes | 0 |  | 0 = 1024 to generate, or image_1's trained size to edit, about one megapixel at its shape. Multiples of 16. |
+| `height` | `INT` | Yes | 0 |  | 0 = 1024 to generate, or image_1's trained size to edit, about one megapixel at its shape. Multiples of 16. |
+| `batch_size` | `INT` | Yes | 1 |  | Images sampled per run from the one prompt: 1 = one image, 4 = four variations. |
+| `text_images` | `BOOLEAN` | Yes | True |  | true = Qwen3-VL also sees each text_render text drawn as a picture, as in training, for cleaner lettering; false = the words alone. |
+| `vae` | `VAE` | No |  |  | flux2-vae.safetensors from Load VAE. Needed to edit. |
+| `image_1` | `IMAGE` | No |  |  | An image to edit. A batch counts as several images; five at most in all. |
+| `image_2` | `IMAGE` | No |  |  | Another image the edit reads, as image_2 in the prompt. |
+| `image_3` | `IMAGE` | No |  |  | Another image the edit reads, as image_3 in the prompt. |
+| `image_4` | `IMAGE` | No |  |  | Another image the edit reads, as image_4 in the prompt. |
+| `image_5` | `IMAGE` | No |  |  | Another image the edit reads, as image_5 in the prompt. |
+| `mask` | `MASK` | No |  |  | White where image_1 is repainted, the rest kept. Needs exactly one image. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | The prompt, for the sampler's positive. |
+| `negative` | `CONDITIONING` | The negative, for the sampler's negative. |
+| `latent` | `LATENT` | An empty latent at the image size, to sample into. |
 
 </details>
 
@@ -8253,7 +8292,7 @@ Writes a whole MiniMax H3 video from an idea: a language model outlines the stor
 <details>
 <summary><b>Power LoRA Loader</b></summary>
 
-Apply any number of LoRAs in one node. Each row names a file, carries its own strength and has a switch, so a LoRA is muted without unwiring anything. The lora_stack output hands the same rows to Power LoRA Merger, which bakes them into a single file.
+Apply any number of LoRAs in one node. Each row names a file, carries its own strength and has a switch, and a list on a row's weight or on strength sets it at every sampling step. The lora_stack output hands the rows to Power LoRA Merger, which bakes them into a single file.
 
 | | |
 |---|---|
@@ -8266,85 +8305,85 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 | `model` | `MODEL` | No |  |  | The diffusion model the LoRAs are applied to, in row order. Needed only where the model output is wired; lora_stack alone needs none. |
 | `clip` | `CLIP` | No |  |  | The text encoder the LoRAs are applied to. Optional: left unconnected the model alone is patched, which is what a workflow encoding its prompt elsewhere wants. |
 | `fuse` | `BOOLEAN` | No | False |  | `false` = one patch per row; `true` = every row joined into one patch, cheaper on a long stack, near-identical results within float rounding. A row whose format cannot be joined is carried through, scaled. |
-| `strength` | `FLOAT` | No | 1.0 |  | Multiplies every row's own strength, so the whole stack is turned up or down together. 1.0 leaves each row as it is set. |
+| `strength` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | Multiplies every row's strength; 1.0 leaves the rows as set. A list, as Number Sequence's values, sets it per sampling step, stretched to fit; the text encoder takes the first value, and steps away from it run slower. |
 | `lora_1_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_1` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_1_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_1_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_2_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_2` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_2_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_2_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_3_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_3` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_3_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_3_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_4_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_4` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_4_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_4_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_5_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_5` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_5_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_5_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_6_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_6` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_6_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_6_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_7_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_7` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_7_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_7_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_8_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_8` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_8_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_8_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_9_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_9` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_9_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_9_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_10_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_10` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_10_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_10_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_11_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_11` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_11_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_11_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_12_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_12` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_12_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_12_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_13_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_13` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_13_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_13_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_14_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_14` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_14_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_14_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_15_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_15` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_15_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_15_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_16_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_16` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_16_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_16_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_17_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_17` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_17_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_17_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_18_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_18` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_18_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_18_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_19_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_19` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_19_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_19_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_20_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_20` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_20_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_20_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_21_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_21` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_21_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_21_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_22_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_22` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_22_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_22_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_23_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_23` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_23_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_23_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_24_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_24` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_24_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_24_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_25_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_25` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_25_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_25_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_26_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_26` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
-| `lora_26_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
+| `lora_26_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 
 **Outputs**
 
@@ -8352,8 +8391,8 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 |---|---|---|
 | `model` | `MODEL` | The model with every switched-on row applied, in order. |
 | `clip` | `CLIP` | The text encoder with the same rows applied. The input passes through untouched when no CLIP was connected. |
-| `lora_stack` | `LORA_STACK` | The switched-on rows as a LoRA stack, each at its strength times strength, for the stack_data input of Power LoRA Merger. Empty when every row is off. |
-| `names` | `STRING` | The LoRAs that were applied, one per line, as name and strength. Empty when every row is off. |
+| `lora_stack` | `LORA_STACK` | The switched-on rows as a LoRA stack, each at its strength times strength, a list counting at its first value, for the stack_data input of Power LoRA Merger. Empty when every row is off. |
+| `names` | `STRING` | The LoRAs that were applied, one per line, as name and strength, or under a list as name, `per step` and the strength at step 1. Empty when every row is off. |
 | `name_1` | `STRING` | File name of applied LoRA 1, without its folder or its extension, the same name that appears in the names output. Empty when the stack applies fewer LoRAs than that. |
 | `name_2` | `STRING` | File name of applied LoRA 2, without its folder or its extension, the same name that appears in the names output. Empty when the stack applies fewer LoRAs than that. |
 | `name_3` | `STRING` | File name of applied LoRA 3, without its folder or its extension, the same name that appears in the names output. Empty when the stack applies fewer LoRAs than that. |
@@ -9960,7 +9999,7 @@ Convert numbers from one range to another through an easing curve. Type one numb
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `value` | `STRING,NUMBER,FLOAT,INT,ARRAY` | Yes |  |  | The numbers to convert, one to a line or separated by commas. A comma is a separator rather than a thousands mark, so 1,000 reads as two values. |
-| `easing` | `COMBO` | Yes |  |  | `linear` = a plain range conversion; `ease_in` = starts slow; `ease_out` = finishes slow; `ease_in_out` = both; `back`, `elastic` = overshoot the output range; `bounce` = settles in shrinking hops, never leaving it. |
+| `easing` | `COMBO` | Yes |  |  | `linear` = a plain range conversion; `ease_in_*` = starts slow; `ease_out_*` = finishes slow; `ease_in_out_*` = both; `*_back`, `*_elastic` = overshoot the output range; `*_bounce` = settles in shrinking hops, never leaving it. |
 | `input_min` | `FLOAT` | Yes | 0.0 |  | Start of the input range, shared by every value; values outside it are pulled to the nearest end. Match the source: 0 and 23 for a 24-frame counter, or the start and stop of the Number Range feeding it. |
 | `input_max` | `FLOAT` | Yes | 1.0 |  | The value that counts as the end of the input range. Equal to input_min stops with an error, since a range of no width cannot say where a value sits in it. |
 | `output_min` | `FLOAT` | Yes | 0.0 |  | What the start of the input range becomes. Larger than output_max runs the result backwards, which is how a fade-out is written without touching the curve. |
@@ -10031,6 +10070,28 @@ Work out a formula over up to 24 numbers, such as `(a * b) / 2 + c` or `clamp(a,
 | `int` | `INT` | The same answer with its fraction cut off rather than rounded, so 3.9 leaves here as 3. Held to the range a whole-number socket carries. |
 | `boolean` | `BOOLEAN` | false when the answer is 0, true for anything else. Wire it to a switch to branch on `a > b`. |
 | `text` | `STRING` | The answer written out, as `4.5` or `7`. Feed it to a filename prefix or a text join. |
+
+</details>
+
+<a id="node-wasnumberlistplot"></a>
+<details>
+<summary><b>Number List Plot</b></summary>
+
+Draw up to four lists of numbers as lines on the node, with each list's length, lowest and highest value, to check a schedule, a curve or a sweep before it drives a render. Takes a LIST, a per-run list or one number.
+
+| | |
+|---|---|
+| Node id | `WASNumberListPlot` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `values` | `ARRAY,NUMBER,FLOAT,INT` | Yes |  |  | The list to draw: a LIST such as Number Sequence's values, a per-run output such as its floats, or one number. Entry 1 is drawn on the left. |
+| `values_b` | `ARRAY,NUMBER,FLOAT,INT` | No |  |  | Another list drawn over the first in its own colour, to compare two schedules, as the strengths of two LoRAs. |
+| `values_c` | `ARRAY,NUMBER,FLOAT,INT` | No |  |  | Another list drawn over the first in its own colour, to compare two schedules, as the strengths of two LoRAs. |
+| `values_d` | `ARRAY,NUMBER,FLOAT,INT` | No |  |  | Another list drawn over the first in its own colour, to compare two schedules, as the strengths of two LoRAs. |
 
 </details>
 
@@ -10141,7 +10202,7 @@ Generate a series of numbers between two values, by count or by step, shaped by 
 | `mode` | `COMBO` | Yes |  | `count`, `step` | `count` = exactly that many values spread across the span, when the frame count is fixed; `step` = walks start towards stop by a fixed gap, as many as fit, when the spacing matters. |
 | `count` | `INT` | Yes | 10 |  | How many values to produce, read in `count` mode. A count of 1 gives start alone. Every node below this one runs this many times, so a large count is a large queue. |
 | `step` | `FLOAT` | Yes | 0.1 |  | The gap between values in `step` mode; its sign follows start to stop, so 0.1 and -0.1 match. The series ends on stop or the last whole step before it. 0 stops with an error. |
-| `easing` | `COMBO` | Yes |  |  | In `count` mode only. `linear` = even spacing; `ease_in` = starts slow, accelerates; `ease_out` = the reverse; `ease_in_out` = both; `back`, `elastic` = overshoot past start and stop. |
+| `easing` | `COMBO` | Yes |  |  | In `count` mode only. `linear` = even spacing; `ease_in_*` = starts slow, accelerates; `ease_out_*` = the reverse; `ease_in_out_*` = both; `*_back`, `*_elastic` = overshoot past start and stop. |
 | `endpoint` | `BOOLEAN` | Yes | True |  | Whether the last value is exactly stop, in `count` mode. Turn it off for a seamless loop: the final frame of a loop is the first frame of the next pass, so emitting both repeats it. |
 | `decimals` | `INT` | Yes | 6 |  | How many decimal places each value is rounded to. This is what keeps 0.30000000000000004 out of a filename or a log line. 0 rounds to whole numbers. |
 
@@ -10154,6 +10215,44 @@ Generate a series of numbers between two values, by count or by step, shaped by 
 | `floats` | `FLOAT` | The same values as decimals, one per run. |
 | `ints` | `INT` | The same values as whole numbers, cut off rather than rounded, one per run. For a step count, a frame number or a seed. |
 | `count` | `INT` | How many values were produced, which is how many times the graph below this node runs. |
+
+</details>
+
+<a id="node-wasnumbersequence"></a>
+<details>
+<summary><b>Number Sequence</b></summary>
+
+Build a list of numbers from a start and end or from typed values, shaped by a curve, repeated and looped, and drawn on the node where its points can be dragged. The values output is a per-step strength for Power LoRA Loader; the other outputs run the graph once per number.
+
+| | |
+|---|---|
+| Node id | `WASNumberSequence` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `mode` | `COMBO` | Yes |  | `range`, `values` | `range` = from start to end; `values` = through the numbers typed in values, evenly spaced, as `1, 1, 0` for a strength that holds and then fades. |
+| `start` | `FLOAT,NUMBER,INT` | Yes | 1.0 |  | The first value in `range` mode, as `1.0` for a strength that starts full. |
+| `end` | `FLOAT,NUMBER,INT` | Yes | 0.0 |  | The last value in `range` mode. Below start counts down, as `0.0` for a fade-out. |
+| `values` | `STRING,ARRAY,NUMBER,FLOAT,INT` | Yes | 1, 1, 0 |  | The values `values` mode passes through, separated by commas, spaces or lines, as `1, 1, 0.5, 0`. A LIST can be wired in instead. |
+| `count` | `INT` | Yes | 20 |  | Entries in the list; set it to the sampler's steps for a per-step strength. 0 = one entry per value: start and end, or each typed value. |
+| `curve` | `COMBO` | Yes |  |  | `linear` = straight; `ease_in_*` = starts slow; `ease_out_*` = finishes slow; `ease_in_out_*` = both; `*_back`, `*_elastic` = overshoot; `*_bounce` = settles in hops; `hold` = each value kept until the next. |
+| `curve_on` | `COMBO` | Yes |  | `transitions`, `values` | `transitions` = each move from one value to the next follows the curve; `values` = the values themselves are bent between the lowest and highest, which also shapes a list typed one entry per step. |
+| `repeat` | `INT` | Yes | 1 |  | How many times the shape plays across the list, as `4` for four pulses. The entries are shared out, so 20 over 4 repeats is 5 each. |
+| `loop` | `COMBO` | Yes |  | `restart`, `ping_pong`, `continue` | How each repeat follows the last. `restart` = from the first value again, a sawtooth; `ping_pong` = backwards every other time, a wave; `continue` = on from where the last ended, a staircase. |
+| `reverse` | `BOOLEAN` | Yes | False |  | `true` = the finished list runs back to front, so a fade-in becomes a fade-out. |
+| `decimals` | `INT` | Yes | 6 |  | Decimal places each value is rounded to, which keeps 0.30000000000000004 out of a filename. 0 = whole numbers. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `values` | `ARRAY` | The whole list on one wire: a per-step strength for Power LoRA Loader, or a list for Number List Plot and the other list nodes. |
+| `<output1>` | `NUMBER` | One NUMBER per entry. A node reading it runs once for each, for a series of renders. |
+| `floats` | `FLOAT` | The same entries as decimals, one per run. |
+| `ints` | `INT` | The same entries as whole numbers, one per run, cut off rather than rounded, so 7.6 arrives as 7. |
+| `count` | `INT` | How many entries the list holds, which is how many runs the per-run outputs drive. |
 
 </details>
 
@@ -10489,6 +10588,33 @@ Denoise a latent exactly as core KSampler does, with the live preview made cheap
 | Name | Type | What it is |
 |---|---|---|
 | `LATENT` | `LATENT` | The denoised latent. |
+
+</details>
+
+<a id="node-wasfibo2scheduler"></a>
+<details>
+<summary><b>Fibo 2 Scheduler</b></summary>
+
+The sampling schedule Fibo 2.0 was released with, shifted for the image size. Hands sigmas to SamplerCustomAdvanced; Dev runs 50 steps at CFG 5, Edit Turbo 4 at CFG 1.
+
+| | |
+|---|---|
+| Node id | `WASFibo2Scheduler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `steps` | `INT` | Yes | 50 |  | Denoising steps: 50 for Dev, 30 for a faster draft, 4 for Edit Turbo. |
+| `width` | `INT` | Yes | 1024 |  | Image width in pixels, as 1024 or 1216. Ignored when latent is connected. |
+| `height` | `INT` | Yes | 1024 |  | Image height in pixels, as 1024 or 832. Ignored when latent is connected. |
+| `latent` | `LATENT` | No |  |  | The latent being sampled, as Text Encode Fibo 2 hands on; its size replaces width and height. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `SIGMAS` | steps + 1 sigmas from 1 down to 0. |
 
 </details>
 
@@ -11019,7 +11145,7 @@ Upscale and refine a picture or latent in overlapping tiles from a guider, sampl
 | `sampler` | `SAMPLER` | Yes |  |  | The sampler to wrap, from KSamplerSelect or any other SAMPLER source. Every stock sampler carries the affine except dpm_fast, dpm_adaptive, uni_pc and uni_pc_bh2, which is reported in the console rather than failing the run. |
 | `sigmas` | `SIGMAS` | Yes |  |  | The noise levels to step through, as BasicScheduler gives them. Its denoise sets how much of the picture is redrawn. |
 | `vae` | `VAE` | Yes |  |  | The VAE of the model, which encodes the picture, decodes a LATENT source and decodes the answer. |
-| `image` | `IMAGE,LATENT` | Yes |  |  | The picture to refine, as IMAGE, or a LATENT straight from a sampler; each one of a batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model is sampled as it is, keeping its noise_mask. |
+| `image` | `IMAGE,LATENT` | Yes |  |  | The picture to refine, as IMAGE, or a LATENT made with the VAE wired to vae; each one of a batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model is sampled as it is, keeping its noise_mask. |
 | `upscale_by` | `FLOAT` | Yes | 2.0 |  | Size of the answer against the picture. `1.0` = refine at the same size; `2.0` = twice as wide and tall. The upscale model runs first where one is wired. |
 | `tiling` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `auto` = tiles the size the model was trained at, 512 for SD1 and 1024 for the rest, sharing a quarter of a tile; `manual` = set the tile size and overlap. |
 | `affine` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `off` = sample as it is; `on` = scale and offset the whole picture from inside the sampler's loop, which pushes texture and contrast in as the tiles refine. |
@@ -11061,7 +11187,7 @@ Upscale and refine a picture or latent in overlapping tiles sampled together, so
 | `positive` | `CONDITIONING` | Yes |  |  | The prompt for the whole picture. With a captioner each tile takes its own caption in place of this text, keeping its other settings. |
 | `negative` | `CONDITIONING` | Yes |  |  | What every tile should avoid. |
 | `vae` | `VAE` | Yes |  |  | The VAE of the model, which encodes the picture, decodes a LATENT source and decodes the answer. |
-| `image` | `IMAGE,LATENT` | Yes |  |  | The picture to refine, as IMAGE, or a LATENT straight from a sampler; each one of a batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model is sampled as it is, keeping its noise_mask. |
+| `image` | `IMAGE,LATENT` | Yes |  |  | The picture to refine, as IMAGE, or a LATENT made with the VAE wired to vae; each one of a batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model is sampled as it is, keeping its noise_mask. |
 | `upscale_by` | `FLOAT` | Yes | 2.0 |  | Size of the answer against the picture. `1.0` = refine at the same size; `2.0` = twice as wide and tall. The upscale model runs first where one is wired. |
 | `seed` | `INT` | Yes | 0 |  | Seeds the noise and the captions, `0` as good as any. Captions are written again only when the seed, picture, captioner, prompt or tiling changes; set the control to `fixed` to keep them between runs. |
 | `steps` | `INT` | Yes | 20 |  | Steps over the whole schedule, as `20`, or `8` for a turbo model. |
@@ -11151,6 +11277,41 @@ Write text with the language model inside a loaded CLIP, as core Generate Text d
 | Name | Type | What it is |
 |---|---|---|
 | `generated_text` | `STRING` | What the model wrote, special tokens removed. |
+
+</details>
+
+<a id="node-wasgeneratefibo2prompt"></a>
+<details>
+<summary><b>Generate Fibo 2 Prompt</b></summary>
+
+Write the JSON caption Fibo 2.0 reads, with the language model inside a CLIP: from a short idea, from pictures to edit or caption, or by revising a caption. Hands it to Text Encode Fibo 2.
+
+| | |
+|---|---|
+| Node id | `WASGenerateFibo2Prompt` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | A Qwen-VL model from Load CLIP, as qwen3vl_4b_bf16.safetensors. A text-only model writes from ideas and captions, not pictures. |
+| `prompt` | `STRING` | Yes |  |  | The idea, as 'a lighthouse on a stormy night', or the edit, as 'make it winter'. Empty with an image = describe the image. |
+| `task` | `COMBO` | Yes | auto | `auto`, `generate`, `edit`, `inspire`, `caption`, `refine` | auto = edit with images, caption with an image alone, refine with a caption alone, else generate; inspire = a new scene borrowing from image_1; refine = revise caption. |
+| `style` | `STRING` | Yes |  |  | Style guidelines for generate and inspire, as 'muted film colours, soft grain'. |
+| `max_length` | `INT` | Yes | 4096 |  | The most tokens the caption may run to. A full caption takes 800 to 2000. |
+| `sampling_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | on = draws each token within the limits below; off = always the likeliest token. |
+| `image_1` | `IMAGE` | No |  |  | A picture to edit, caption or borrow from. |
+| `image_2` | `IMAGE` | No |  |  | Another picture an edit reads, as image 2. |
+| `image_3` | `IMAGE` | No |  |  | Another picture an edit reads, as image 3. |
+| `image_4` | `IMAGE` | No |  |  | Another picture an edit reads, as image 4. |
+| `mask` | `MASK` | No |  |  | White where image_1 is filled, for an edit of one picture. |
+| `caption` | `STRING` | No |  |  | A caption to revise, or image_1's own caption for an edit to start from. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `prompt` | `STRING` | One line of JSON, for Text Encode Fibo 2's prompt. |
 
 </details>
 

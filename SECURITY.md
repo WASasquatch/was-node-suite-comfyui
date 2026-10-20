@@ -26,8 +26,9 @@ stops the run before the node does any work.
 Image Resize, Image Padding, Image Transpose, Image Perspective, the layer nodes and Bounded
 Image Blend refuse an output past 30000 pixels a side or 268435456 pixels before allocating it,
 and name the input to lower. An empty Kandinsky 6 latent and a MiniMax H3 segment are refused
-past 2147483648 values, Number Range makes at most 10000 values, and every LUT a node builds is
-at most 256 a side.
+past 2147483648 values, Number Range and Number Sequence make at most 10000 values, Power LoRA
+Loader takes at most 10000 values in one strength or weight list, and every LUT a node builds
+is at most 256 a side.
 
 ## Network
 

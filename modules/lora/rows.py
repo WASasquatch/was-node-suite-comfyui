@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping
 
-__all__ = ["NAME_KEY", "Row", "rows_from_inputs", "to_bool"]
+__all__ = ["NAME_KEY", "Row", "first_weight", "rows_from_inputs", "to_bool", "weight_list"]
 
 #: ``lora_3_enabled`` -> slot 3. Matched on the whole key, lowercased.
 ENABLED_KEY = re.compile(r"lora_(\d+)_enabled")
@@ -33,12 +33,13 @@ class Row:
         on: Whether the slot's checkbox is ticked. A slot that is off is kept in the list
             so the numbering is unchanged, and dropped by :func:`rows_from_inputs`.
         lora: File name as it appears in the LoRA folder, or ``None`` for an empty slot.
-        weight: Multiplier applied to this LoRA's contribution.
+        weight: Multiplier applied to this LoRA's contribution, or a list of them, one per
+            sampling step.
     """
 
     __slots__ = ("on", "lora", "weight")
 
-    def __init__(self, on: bool = True, lora: str | None = None, weight: float = 1.0):
+    def __init__(self, on: bool = True, lora: str | None = None, weight: float | list[float] = 1.0):
         self.on = on
         self.lora = lora
         self.weight = weight
@@ -82,7 +83,7 @@ def _widget_rows(values: Mapping[str, Any]) -> list[Row]:
     """Rows from the per-widget keys, ordered by slot number."""
     enabled: dict[int, bool] = {}
     names: dict[int, str | None] = {}
-    weights: dict[int, float] = {}
+    weights: dict[int, float | list[float]] = {}
 
     for key, value in values.items():
         if not isinstance(key, str):
@@ -98,10 +99,14 @@ def _widget_rows(values: Mapping[str, Any]) -> list[Row]:
 
         match = WEIGHT_KEY.fullmatch(name)
         if match:
+            slot = int(match.group(1))
+            if isinstance(value, (list, tuple)):
+                weights[slot] = _listed_weight(slot, value)
+                continue
             try:
-                weights[int(match.group(1))] = float(value)
+                weights[slot] = float(value)
             except (TypeError, ValueError):
-                weights[int(match.group(1))] = 1.0
+                weights[slot] = 1.0
             continue
 
         match = NAME_KEY.fullmatch(name)
@@ -134,4 +139,63 @@ def rows_from_inputs(values: Mapping[str, Any]) -> list[Row]:
         how a row is muted without deleting it.
     """
     rows = _widget_rows(values)
-    return [row for row in rows if row.on and row.lora and row.lora != "None" and row.weight != 0.0]
+    return [
+        row for row in rows
+        if row.on and row.lora and row.lora != "None" and any(value != 0.0 for value in weight_list(row.weight))
+    ]
+
+
+def _listed_weight(slot: int, value) -> float | list[float]:
+    """A row's weight from a list: the number itself when the list holds one.
+
+    Args:
+        slot: The row's number, for the message.
+        value: The list as it arrived.
+
+    Returns:
+        A number, or a list of at least two numbers.
+
+    Raises:
+        ValueError: The list is empty or holds an entry that is not a number.
+    """
+    from ..util.numbers import as_number
+
+    numbers = []
+    for position, entry in enumerate(value, 1):
+        number = as_number(entry)
+        if number is None:
+            raise ValueError(
+                f"Row {slot}'s weight list holds {str(entry)[:40]!r} at entry {position}, which is "
+                f"not a number. Every entry has to be a strength, as 0.8."
+            )
+        numbers.append(number)
+    if not numbers:
+        raise ValueError(
+            f"Row {slot}'s weight received an empty list. Check the node wired into lora_{slot}_weight, "
+            f"or disconnect it to type one weight."
+        )
+    return numbers[0] if len(numbers) == 1 else numbers
+
+
+def weight_list(weight: float | list[float]) -> list[float]:
+    """A row's weight as a list, one entry for a single number.
+
+    Args:
+        weight: A row's weight.
+
+    Returns:
+        The weights in order.
+    """
+    return list(weight) if isinstance(weight, list) else [float(weight)]
+
+
+def first_weight(weight: float | list[float]) -> float:
+    """The weight a row starts at.
+
+    Args:
+        weight: A row's weight.
+
+    Returns:
+        The number, or the first entry of a list.
+    """
+    return weight_list(weight)[0]

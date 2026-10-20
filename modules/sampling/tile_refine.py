@@ -23,6 +23,8 @@ __all__ = [
     "captions_text",
     "decode",
     "encode",
+    "fitted",
+    "model_channels",
     "prepare",
     "publish",
     "release",
@@ -195,6 +197,41 @@ def decode(vae, latent: torch.Tensor) -> torch.Tensor:
     return images
 
 
+def fitted(vae, latent: torch.Tensor, node: str = "") -> torch.Tensor:
+    """A source latent checked against the VAE and shaped for it.
+
+    Args:
+        vae: The VAE the latent decodes with.
+        latent: ``[1, C, H, W]`` or ``[1, C, T, H, W]``.
+        node: The node's display name, for messages.
+
+    Returns:
+        The latent, with a frame axis added where the VAE decodes video latents.
+
+    Raises:
+        ValueError: The latent's channel count is not the one the VAE decodes.
+    """
+    channels = getattr(vae, "latent_channels", None)
+    if isinstance(channels, int) and latent.ndim in (4, 5) and int(latent.shape[1]) != channels:
+        raise ValueError(
+            f"{node} decodes a LATENT source with the VAE wired to vae, which reads {channels}-channel "
+            f"latents, and this latent has {int(latent.shape[1])} channels, so another model's VAE "
+            "made it. Keep vae as it is, decode this latent with the VAE that made it, and wire that "
+            "picture into source as IMAGE"
+        )
+    if getattr(vae, "latent_dim", 2) == 3 and latent.ndim == 4:
+        return latent.unsqueeze(2)
+    return latent
+
+
+def model_channels(model) -> int | None:
+    """The channel count of the latents a model samples, or None where it is not known."""
+    try:
+        return int(model.get_model_object("latent_format").latent_channels)
+    except Exception:
+        return None
+
+
 def prepare(image: torch.Tensor | None, model, vae, upscale_by: float, upscale_model, tiling: dict,
             clip=None, captioner=None, style: str = "", system_prompt: str = "",
             node: str = "", context: str = "", seed: int = 0, latent: torch.Tensor | None = None,
@@ -225,8 +262,8 @@ def prepare(image: torch.Tensor | None, model, vae, upscale_by: float, upscale_m
         The frame.
 
     Raises:
-        ValueError: The latent is not a picture latent or holds several frames, or the
-            captioner cannot be used.
+        ValueError: The latent is not a picture latent, came from another VAE or holds several
+            frames, the VAE does not belong to the model, or the captioner cannot be used.
     """
     import comfy.model_management
     import comfy.utils
@@ -235,6 +272,7 @@ def prepare(image: torch.Tensor | None, model, vae, upscale_by: float, upscale_m
     announce(tile_activity.PREPARE)
     as_is = False
     if latent is not None:
+        latent = fitted(vae, latent, node)
         image = decode(vae, latent)
         if int(image.shape[0]) != 1:
             raise ValueError(
@@ -254,6 +292,12 @@ def prepare(image: torch.Tensor | None, model, vae, upscale_by: float, upscale_m
         raise ValueError(
             f"{node} samples picture latents, and this VAE encodes to a {latent.ndim}-axis latent. "
             "Use the VAE of an image or video model"
+        )
+    expected = model_channels(model)
+    if expected is not None and int(latent.shape[1]) != expected and bool(torch.count_nonzero(latent)):
+        raise ValueError(
+            f"{node} samples {expected}-channel latents with this model, and the VAE wired to vae "
+            f"makes {int(latent.shape[1])}-channel ones. Wire the VAE that belongs to the model into vae"
         )
     scale = pixels.shape[1] / latent.shape[-2]
     tile, overlap = tile_settings(tiling, model)

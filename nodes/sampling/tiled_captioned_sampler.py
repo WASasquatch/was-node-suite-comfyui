@@ -95,9 +95,9 @@ PICTURE_INPUTS = [
         [io.Image, io.Latent],
         display_name="source",
         tooltip=(
-            "The picture to refine, as IMAGE, or a LATENT straight from a sampler; each one of a "
-            "batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model is "
-            "sampled as it is, keeping its noise_mask."
+            "The picture to refine, as IMAGE, or a LATENT made with the VAE wired to vae; each one "
+            "of a batch is sampled on its own. A LATENT at upscale_by `1.0` with no upscale model "
+            "is sampled as it is, keeping its noise_mask."
         ),
     ),
     io.Float.Input(

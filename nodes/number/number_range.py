@@ -91,9 +91,9 @@ class NumberRange(io.ComfyNode):
                     "easing",
                     options=list(EASING_NAMES),
                     tooltip=(
-                        "In `count` mode only. `linear` = even spacing; `ease_in` = starts "
-                        "slow, accelerates; `ease_out` = the reverse; `ease_in_out` = both; "
-                        "`back`, `elastic` = overshoot past start and stop."
+                        "In `count` mode only. `linear` = even spacing; `ease_in_*` = starts "
+                        "slow, accelerates; `ease_out_*` = the reverse; `ease_in_out_*` = both; "
+                        "`*_back`, `*_elastic` = overshoot past start and stop."
                     ),
                 ),
                 io.Boolean.Input(

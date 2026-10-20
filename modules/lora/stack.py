@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from typing import Any, Iterable, Mapping
 
-from .rows import NAME_KEY, Row, rows_from_inputs, to_bool
+from .rows import NAME_KEY, WEIGHT_KEY, Row, first_weight, rows_from_inputs, to_bool
 
 __all__ = ["Entry", "consumed", "entries", "from_rows", "resolve"]
 
@@ -22,6 +22,7 @@ def from_rows(rows: Iterable[Row], strength: float = 1.0) -> list[Entry]:
 
     Args:
         rows: Switched-on rows, as :func:`~modules.lora.rows.rows_from_inputs` returns them.
+            A row carrying a list of weights counts at its first.
         strength: Multiplier over every row's weight.
 
     Returns:
@@ -29,7 +30,7 @@ def from_rows(rows: Iterable[Row], strength: float = 1.0) -> list[Entry]:
     """
     stack = []
     for row in rows:
-        weight = float(row.weight) * float(strength)
+        weight = first_weight(row.weight) * float(strength)
         if weight != 0.0:
             stack.append((row.lora, weight, weight))
     return stack
@@ -66,6 +67,15 @@ def _power_lora_rows(inputs: Mapping[str, Any]) -> list[Entry] | None:
     if not any(NAME_KEY.fullmatch(str(key).lower()) and isinstance(value, str)
                for key, value in inputs.items()):
         return None
+    for key, value in inputs.items():
+        match = WEIGHT_KEY.fullmatch(str(key).lower())
+        wired = isinstance(value, (list, tuple)) and len(value) == 2 and isinstance(value[0], str)
+        if (match or str(key).lower() == "strength") and wired:
+            raise ValueError(
+                f"The Power LoRA node read here takes {key} from a wire, and a wire's value cannot "
+                f"be read from the prompt. Wire that node's lora_stack output into stack_data "
+                f"instead."
+            )
     return from_rows(rows_from_inputs(inputs), _number(inputs.get("strength", 1.0), 1.0))
 
 

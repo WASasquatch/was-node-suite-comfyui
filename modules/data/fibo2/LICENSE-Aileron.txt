@@ -1,0 +1,12 @@
+Aileron Regular, version 1.102 (Aileron-Regular.otf)
+Author: Sora Sagano (dot colon), https://www.dotcolon.net/font/aileron
+Downloaded 2026-09-15 from https://www.dotcolon.net/files/fonts/aileron_0102.zip
+
+Licence: CC0 1.0 Universal (Public Domain Dedication)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The font's own name table (nameID 0) reads: "No Rights Reserved."
+
+To the extent possible under law, the author has waived all copyright and related or neighboring
+rights to this work. You can copy, modify, distribute and perform the work, even for commercial
+purposes, all without asking permission. The work is provided "as is", without warranty of any kind.

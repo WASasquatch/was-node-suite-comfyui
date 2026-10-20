@@ -236,9 +236,12 @@ For graphs that vary per iteration, or that skip work a condition rules out.
 
 ## Numbers
 
-23 nodes. **Number Expression** evaluates a formula, **Number Operation** and **Number
+25 nodes. **Number Expression** evaluates a formula, **Number Operation** and **Number
 Easing** shape a value, **Number Counter** and **Number Range** step one per run, and
-**Number List Statistics** summarises many. **Image Size to Number**, **Latent Size to
+**Number List Statistics** summarises many. **Number Sequence** builds a list from a start and
+end or from typed values, shaped by a curve, repeated as a sawtooth, a wave or a staircase, and
+drawn on the node with its points dragged into place. **Number List Plot** draws up to four
+lists on the node. **Image Size to Number**, **Latent Size to
 Number** and **Image Aspect Ratio** read a size. **Resolution Selector (Advanced)** picks one
 from a shape and an area in megapixels, or from one edge in pixels, with every shape listed
 portrait and landscape and set by dragging the corner of the frame it draws.
@@ -471,6 +474,26 @@ settings: [`docs/MODELS.md`](docs/MODELS.md#kandinsky-6). Graphs:
 
 ---
 
+## Fibo 2.0 images and edits
+
+Bria's Fibo 2.0 runs in ComfyUI: **Load Diffusion Model** loads Dev or Edit Turbo, **Load CLIP**
+loads Qwen3-VL 4B, and **Text Encode Fibo 2** turns a structured JSON caption into the prompt and
+negative, with up to five images to edit and a mask to repaint one. Captions that ask for text are
+shown to the model as pictures of that text, as in training. **Fibo 2 Scheduler** gives the
+released sampling schedule for the image size, and **Generate Fibo 2 Prompt** writes the caption
+from a short idea, from pictures, or by revising an earlier caption, on the same Qwen3-VL. The
+weights are Comfy-Org's, and Comfy-Org's Load CLIP type `fibo2` and its Fibo 2.0 model work with
+these nodes too.
+
+For photographs and designs that follow a long description closely, legible lettering, and edits
+that change one thing and keep the rest.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Conditioning**, **WAS Suite/Sampling** and **WAS
+Suite/Text**. Weights and settings: [`docs/MODELS.md`](docs/MODELS.md#fibo-20). Graph:
+[`fibo2-generate-edit.json`](docs/workflows/fibo2-generate-edit.json).
+
+---
+
 ## Fast motion held for a refining pass
 
 **H3 De-RoPE Stretch** finds where a MiniMax H3 clip moves fastest from its own latent, shows
@@ -631,8 +654,12 @@ side.
 ## Models and LoRA
 
 16 nodes. **Power LoRA Loader** stacks LoRAs on one node, **Power LoRA Merger** bakes a stack
-into a model, and **Apply Reweighted LoRA** reweights one. Power LoRA Loader hands its rows on
-a LoRA stack wire, and Power LoRA Merger merges a stack from that wire, from the loader's model
+into a model, and **Apply Reweighted LoRA** reweights one. A list on Power LoRA Loader's
+strength or on one row's weight, such as Number Sequence's, sets it at every sampling step, for
+a LoRA that fades out once the layout is set, comes in only for the detail, or hands over to
+another LoRA partway through. Graph:
+[`number-sequence-lora-schedule.json`](docs/workflows/number-sequence-lora-schedule.json). Power LoRA Loader
+hands its rows on a LoRA stack wire, and Power LoRA Merger merges a stack from that wire, from the loader's model
 output or from another pack's stack nodes in place of its own rows. **BLIP Analyze Image** captions,
 **MiDaS Depth Approximation** estimates depth, **Image Remove Background** cuts a subject out
 and hands on its mask for compositing, and **CLIPSeg Model Loader** and **SAM Model Loader** feed the masking nodes. **Model Info**

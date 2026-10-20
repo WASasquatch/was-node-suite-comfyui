@@ -28,11 +28,13 @@ runs.
 | [KaTeX fonts](https://katex.org/) | SIL Open Font License 1.1, Design Science, Inc. and Khan Academy | The six `.woff2` faces KaTeX sets maths in, in [`web/viewer/fonts/`](../web/viewer/fonts/) | [`fonts/LICENSE`](../web/viewer/fonts/LICENSE) |
 | [DejaVu](https://github.com/dejavu-fonts/dejavu-fonts) 2.37 | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | Four faces **Image Draw Text** renders with, in [`modules/data/fonts/dejavu/`](../modules/data/fonts/dejavu/) | [`dejavu/LICENSE`](../modules/data/fonts/dejavu/LICENSE), [`AUTHORS`](../modules/data/fonts/dejavu/AUTHORS) |
 | [Liberation](https://github.com/liberationfonts/liberation-fonts) 2.1.5 | SIL Open Font License 1.1, Red Hat, Inc., with digitized data copyright Google Corporation | Four faces metric-compatible with Arial, Times New Roman and Courier New, in [`modules/data/fonts/liberation/`](../modules/data/fonts/liberation/) | [`liberation/LICENSE`](../modules/data/fonts/liberation/LICENSE), [`AUTHORS`](../modules/data/fonts/liberation/AUTHORS) |
+| [Aileron](https://www.dotcolon.net/font/aileron) 1.102 | CC0 1.0, public domain, Sora Sagano (dot colon) | The first font **Text Encode Fibo 2** draws a caption's text with where Pillow's built-in font lacks a character, as Fibo 2.0's training did, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-Aileron.txt`](../modules/data/fibo2/LICENSE-Aileron.txt) |
+| [DejaVu Sans](https://github.com/dejavu-fonts/dejavu-fonts), Bria's copy | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | The second font it draws with, the file Bria publishes beside Fibo 2.0, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-DejaVu.txt`](../modules/data/fibo2/LICENSE-DejaVu.txt) |
 
 Twelve of the components are MIT in their own code, and two of those compile in a copy of
 DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, three are Apache-2.0, one
-is BSD-3-Clause, two are under the SIL Open Font License, one is Bitstream Vera with Arev, and one
-is Open RAIL++-M.
+is BSD-3-Clause, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
+is public domain under CC0, and one is Open RAIL++-M.
 All of those permit redistribution. MPL-2.0 is the only copyleft licence here and its conditions
 are file level, reaching the two files DOMPurify is compiled into and nothing beside them;
 complying with Apache-2.0 instead satisfies the same component. Open RAIL++-M covers 8 KB of
@@ -41,7 +43,7 @@ restrictions. The two font licences ask that the licence and copyright travel wi
 which is what the `LICENSE` and `AUTHORS` beside each family are, and the OFL reserves the
 Liberation names against modified copies. These are unmodified.
 
-Counting every file rather than every component, the pack carries 162 third-party files, 26.7 MB
+Counting every file rather than every component, the pack carries 166 third-party files, 27.5 MB
 of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
 five networks.
 

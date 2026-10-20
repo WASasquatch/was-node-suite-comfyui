@@ -6,32 +6,10 @@ from comfy_api.latest import io
 
 from ...modules.compat.types import LIST, NUMBER
 from ...modules.util.easing import EASING_NAMES, ease
-from ...modules.util.numbers import UNREADABLE, as_numbers, split_values
+from ...modules.util.numbers import UNREADABLE, as_numbers, split_values, whole
 
 #: Display name, written into the messages this node raises.
 NAME = "Number Easing"
-
-#: Slack allowed when a converted value is cut off for the ``ints`` socket, as a share of
-#: the value above 1 and as an absolute amount below it. A remap that lands on a whole
-#: number lands on 57.99999999999999 as readily as on 58.0, and cutting that off loses a
-#: whole unit, so a value this close to a whole number is cut off to that number.
-WHOLE_TOLERANCE = 1e-9
-
-
-def _whole(value: float) -> int:
-    """Cut a converted value off at the decimal point.
-
-    Args:
-        value: One converted value.
-
-    Returns:
-        The value with its decimal part dropped, towards zero, with a value within
-        :data:`WHOLE_TOLERANCE` of a whole number read as that number.
-    """
-    nearest = round(value)
-    if abs(value - nearest) <= WHOLE_TOLERANCE * max(1.0, abs(value)):
-        return int(nearest)
-    return int(value)
 
 
 class NumberEasing(io.ComfyNode):
@@ -86,10 +64,10 @@ class NumberEasing(io.ComfyNode):
                     "easing",
                     options=list(EASING_NAMES),
                     tooltip=(
-                        "`linear` = a plain range conversion; `ease_in` = starts slow; "
-                        "`ease_out` = finishes slow; `ease_in_out` = both; `back`, `elastic` = "
-                        "overshoot the output range; `bounce` = settles in shrinking hops, "
-                        "never leaving it."
+                        "`linear` = a plain range conversion; `ease_in_*` = starts slow; "
+                        "`ease_out_*` = finishes slow; `ease_in_out_*` = both; `*_back`, "
+                        "`*_elastic` = overshoot the output range; `*_bounce` = settles in "
+                        "shrinking hops, never leaving it."
                     ),
                 ),
                 io.Float.Input(
@@ -221,10 +199,10 @@ class NumberEasing(io.ComfyNode):
             float(output_max),
             clamp,
         )
-        whole = [_whole(number) for number in eased]
+        whole_numbers = [whole(number) for number in eased]
         # A list of its own per slot, so a node that edits the one it was handed does not
         # change what the other slots emit or how many times the graph below them runs.
-        return io.NodeOutput(eased, list(eased), list(eased), whole, len(eased))
+        return io.NodeOutput(eased, list(eased), list(eased), whole_numbers, len(eased))
 
     @staticmethod
     def nothing_to_convert(entries: int, typed: bool) -> str:

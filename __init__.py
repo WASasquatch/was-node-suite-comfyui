@@ -257,6 +257,12 @@ def register_models() -> None:
     except Exception as error:
         logger.warning("Kandinsky 6 checkpoints will not load (%s)", error)
         logger.debug("%s", traceback.format_exc())
+    try:
+        from .modules.model.fibo2 import register as register_fibo2
+        register_fibo2()
+    except Exception as error:
+        logger.warning("Fibo 2.0 checkpoints will not load (%s)", error)
+        logger.debug("%s", traceback.format_exc())
 
 
 def register_schedulers() -> None:

@@ -318,6 +318,41 @@ are.
 | `kandinsky6_audio_vae.safetensors` | **CC BY-NC 4.0, non-commercial use only**, the MMAudio autoencoder in it; MIT, the BigVGAN vocoder |
 | `hunyuan_video_vae_bf16.safetensors` | Tencent Hunyuan Community License, which does not apply in the European Union, the United Kingdom or South Korea |
 
+## Fibo 2.0
+
+ComfyUI's own loaders read every file, and nothing is fetched. The transformers are Comfy-Org's
+repackaging at <https://huggingface.co/Comfy-Org/Fibo-2.0>. Bria's own Diffusers transformer, the
+`transformer/` folder of either Fibo-2.0 repository joined into one file, loads too.
+
+| File | Goes in | Size | Loaded by |
+|---|---|--:|---|
+| [`fibo2_dev_bf16.safetensors`](https://huggingface.co/Comfy-Org/Fibo-2.0/blob/main/diffusion_models/fibo2_dev_bf16.safetensors) | `ComfyUI/models/diffusion_models` | 16.5 GB | Load Diffusion Model |
+| [`fibo2_dev_int8_convrot.safetensors`](https://huggingface.co/Comfy-Org/Fibo-2.0/blob/main/diffusion_models/fibo2_dev_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 8.4 GB | Load Diffusion Model |
+| [`fibo2_edit_turbo_bf16.safetensors`](https://huggingface.co/Comfy-Org/Fibo-2.0/blob/main/diffusion_models/fibo2_edit_turbo_bf16.safetensors) | `ComfyUI/models/diffusion_models` | 16.5 GB | Load Diffusion Model |
+| [`fibo2_edit_turbo_int8_convrot.safetensors`](https://huggingface.co/Comfy-Org/Fibo-2.0/blob/main/diffusion_models/fibo2_edit_turbo_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 8.4 GB | Load Diffusion Model |
+| [`qwen3vl_4b_bf16.safetensors`](https://huggingface.co/Comfy-Org/Fibo-2.0/blob/main/text_encoders/qwen3vl_4b_bf16.safetensors) | `ComfyUI/models/text_encoders` | 8.9 GB | Load CLIP, type `fibo2` where ComfyUI offers it, otherwise `krea2` |
+| [`flux2-vae.safetensors`](https://huggingface.co/Comfy-Org/Fibo-2.0/blob/main/vae/flux2-vae.safetensors) | `ComfyUI/models/vae` | 336 MB | Load VAE |
+
+| Transformer | Fibo 2 Scheduler | CFGGuider |
+|---|---|---|
+| Dev | 50 steps, 30 for a draft | CFG 5 |
+| Edit Turbo | 4 steps | CFG 1 |
+
+Sample with `euler` in SamplerCustomAdvanced. Dev generates and edits; Edit Turbo edits.
+
+| File | Licence |
+|---|---|
+| The Fibo 2.0 transformers | **CC BY-NC 4.0, non-commercial use only**, Bria AI; commercial use needs an agreement with Bria at <https://platform.bria.ai/licensing/pricing?model=fibo-2> |
+| `qwen3vl_4b_bf16.safetensors` | Apache-2.0, Alibaba Cloud |
+| `flux2-vae.safetensors` | Apache-2.0, Black Forest Labs |
+
+| What you see | What it means |
+|---|---|
+| `Fibo 2.0 reads its prompt with Qwen3-VL 4B` | Load CLIP holds another text encoder. Load `qwen3vl_4b_bf16.safetensors` |
+| `An edit encodes its images with the FLUX.2 VAE` | An image is connected and `vae` is not. Connect Load VAE with `flux2-vae.safetensors` |
+| `samples a FLUX.2 latent of 128 channels` | The latent came from another node. Sample the latent Text Encode Fibo 2 hands on |
+| Lettering comes out garbled | The prompt is plain text. Write a JSON caption with a `text_render` entry, or let Generate Fibo 2 Prompt write one |
+
 ## Quantized models
 
 **Quantize Model** writes to `ComfyUI/output/diffusion_models/` by default, numbered

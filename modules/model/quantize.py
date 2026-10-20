@@ -119,8 +119,13 @@ KREA2_FLOAT_RELEASE = Release(
     lowered=(), full_precision=re.compile(r"\.(attn\.gate|attn\.wo|mlp\.down)$"),
 )
 
+#: Fibo 2.0's int8 release, and the same layers for the grouped formats: every block layer but the modulation.
+FIBO2_INT8_RELEASE = Release(re.compile(r"^(layers|noise_refiner|perceiver\.layers)\.\d+\.(?!adaLN_modulation)"))
+
 #: Model module -> menu name -> how Comfy-Org's own release in that format was made.
 COMFY_ORG = {
+    "comfy.ldm.fibo2.model": {"int8 convrot": FIBO2_INT8_RELEASE, "w6a8": FIBO2_INT8_RELEASE,
+                              "w4a8": FIBO2_INT8_RELEASE},
     "comfy.ldm.krea2.model": {
         "int8 convrot": Release(re.compile(r"^blocks\.\d+\."), searched=True, lowered=(".scale",)),
         "fp8 e4m3fn": KREA2_FLOAT_RELEASE,
@@ -152,6 +157,7 @@ INT8_ATTENTION = {"attention": "comfy_kitchen_int8"}
 #: Model module -> the attention layers Comfy-Org's own quantized release sets to int8.
 COMFY_ORG_ATTENTION = {
     "comfy.ldm.flux3.model": re.compile(r"^(content_mode_blocks\.image\.\d+|single_blocks\.\d+)$"),
+    "comfy.ldm.fibo2.model": re.compile(r"^layers\.([0-9]|[1-3][0-9])\.attention$"),
 }
 
 #: Model module -> key endings renamed back to the release's own names when written.
@@ -251,7 +257,7 @@ def quantize(patcher, menu_name: str, layers: str, protect: float, group_size: i
     group = int(group_size) or GROUP_DEFAULT.get(menu_name, 16)
 
     model = patcher.model.diffusion_model
-    release = COMFY_ORG.get(type(model).__module__, {}).get(menu_name) if layers == LAYERS[0] else None
+    release = COMFY_ORG.get(_family(model), {}).get(menu_name) if layers == LAYERS[0] else None
     searched = scales == "lowest error" or (scales == SCALES[0] and release is not None and release.searched)
     lowered = release.lowered if release is not None else None
     tagged = release.full_precision if release is not None else None
@@ -351,6 +357,11 @@ def quantize(patcher, menu_name: str, layers: str, protect: float, group_size: i
     return state, report
 
 
+def _family(model) -> str:
+    """The module a model's rules are kept under: its own, or the ComfyUI module it stands in for."""
+    return getattr(model, "comfy_family", type(model).__module__)
+
+
 def _attention(model, state: dict, choice: str) -> str:
     """Write each attention layer's kernel setting as asked, and say what was done.
 
@@ -376,7 +387,7 @@ def _attention(model, state: dict, choice: str) -> str:
     if choice == "int8 everywhere":
         chosen = layers
     else:
-        rule = COMFY_ORG_ATTENTION.get(type(model).__module__)
+        rule = COMFY_ORG_ATTENTION.get(_family(model))
         if rule is None:
             return "no Comfy-Org pattern for this model, none set"
         chosen = [layer for layer in layers if rule.match(layer)]
@@ -388,7 +399,7 @@ def _attention(model, state: dict, choice: str) -> str:
 
 def _release_names(model, state: dict) -> dict:
     """The state dict with keys ComfyUI renamed on loading given their release names again."""
-    renames = RELEASE_NAMES.get(type(model).__module__, ())
+    renames = RELEASE_NAMES.get(_family(model), ())
     if not renames:
         return state
     named = {}
@@ -408,7 +419,7 @@ def _plan(model, qkv: str):
         ``(plan, words)``: output layer path -> ``[(source path, chunk or None), ...]``, and a
         short line for the report.
     """
-    names = SPLIT_NAMES.get(type(model).__module__)
+    names = SPLIT_NAMES.get(_family(model))
     if qkv == QKV[0]:
         return {}, "as loaded"
     if names is None:

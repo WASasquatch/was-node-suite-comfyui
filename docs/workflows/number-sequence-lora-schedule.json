@@ -1,0 +1,3680 @@
+{
+  "revision": 0,
+  "last_node_id": 115,
+  "last_link_id": 212,
+  "nodes": [
+    {
+      "id": 95,
+      "type": "UNETLoader",
+      "pos": [
+        0,
+        70
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            188,
+            200
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux-2-klein-9b-fp8.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "flux-2-klein-9b-fp8.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 96,
+      "type": "CLIPLoader",
+      "pos": [
+        0,
+        206
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            183,
+            184
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen_3_8b_fp8mixed.safetensors",
+        "flux2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen_3_8b_fp8mixed.safetensors",
+        "type": "flux2",
+        "device": "default"
+      }
+    },
+    {
+      "id": 97,
+      "type": "VAELoader",
+      "pos": [
+        0,
+        366
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            199,
+            210
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "flux2-vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "flux2-vae.safetensors"
+      }
+    },
+    {
+      "id": 98,
+      "type": "CLIPTextEncode",
+      "pos": [
+        360,
+        70
+      ],
+      "size": [
+        400,
+        220
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 183
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            191,
+            202
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "a fishing harbour at dawn with wooden boats, gulls over the water and a stone lighthouse on the breakwater, impressionist painting, visible brush strokes"
+      ],
+      "widgets_values_named": {
+        "text": "a fishing harbour at dawn with wooden boats, gulls over the water and a stone lighthouse on the breakwater, impressionist painting, visible brush strokes"
+      }
+    },
+    {
+      "id": 99,
+      "type": "CLIPTextEncode",
+      "pos": [
+        360,
+        344
+      ],
+      "size": [
+        400,
+        120
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 184
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            192,
+            203
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "text": ""
+      }
+    },
+    {
+      "id": 100,
+      "type": "PrimitiveInt",
+      "pos": [
+        0,
+        478
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "INT",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "INT",
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            185,
+            186
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        24,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "value": 24,
+        "fixed": "fixed"
+      }
+    },
+    {
+      "id": 101,
+      "type": "EmptyFlux2LatentImage",
+      "pos": [
+        0,
+        614
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            197,
+            208
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "EmptyFlux2LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    {
+      "id": 102,
+      "type": "Flux2Scheduler",
+      "pos": [
+        0,
+        774
+      ],
+      "size": [
+        300,
+        106
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": 185
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "SIGMAS",
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            196,
+            207
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Flux2Scheduler"
+      },
+      "widgets_values": [
+        24,
+        1024,
+        1024
+      ],
+      "widgets_values_named": {
+        "steps": 24,
+        "width": 1024,
+        "height": 1024
+      }
+    },
+    {
+      "id": 103,
+      "type": "RandomNoise",
+      "pos": [
+        0,
+        934
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "noise_seed",
+          "name": "noise_seed",
+          "type": "INT",
+          "widget": {
+            "name": "noise_seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "NOISE",
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            193,
+            204
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        20261020,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 20261020,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 104,
+      "type": "KSamplerSelect",
+      "pos": [
+        0,
+        1070
+      ],
+      "size": [
+        300,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "SAMPLER",
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            195,
+            206
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "euler"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "euler"
+      }
+    },
+    {
+      "id": 105,
+      "type": "WASNumberSequence",
+      "pos": [
+        812.727272727272,
+        53.63636363636375
+      ],
+      "size": [
+        380,
+        534
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end",
+          "name": "end",
+          "type": "FLOAT,NUMBER,INT",
+          "widget": {
+            "name": "end"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "values",
+          "name": "values",
+          "type": "STRING,ARRAY,NUMBER,FLOAT,INT",
+          "widget": {
+            "name": "values"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "widget": {
+            "name": "count"
+          },
+          "link": 186
+        },
+        {
+          "localized_name": "curve",
+          "name": "curve",
+          "type": "COMBO",
+          "widget": {
+            "name": "curve"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "curve_on",
+          "name": "curve_on",
+          "type": "COMBO",
+          "widget": {
+            "name": "curve_on"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "repeat",
+          "name": "repeat",
+          "type": "INT",
+          "widget": {
+            "name": "repeat"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "loop",
+          "name": "loop",
+          "type": "COMBO",
+          "widget": {
+            "name": "loop"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "reverse",
+          "name": "reverse",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "reverse"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decimals",
+          "name": "decimals",
+          "type": "INT",
+          "widget": {
+            "name": "decimals"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "values",
+          "name": "values",
+          "type": "ARRAY",
+          "links": [
+            187,
+            189
+          ]
+        },
+        {
+          "localized_name": "NUMBER",
+          "name": "NUMBER",
+          "shape": 6,
+          "type": "NUMBER",
+          "links": null
+        },
+        {
+          "localized_name": "floats",
+          "name": "floats",
+          "shape": 6,
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "localized_name": "ints",
+          "name": "ints",
+          "shape": 6,
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASNumberSequence"
+      },
+      "widgets_values": [
+        "values",
+        1,
+        0,
+        "0, 0, 1",
+        20,
+        "ease_in_out_sine",
+        "transitions",
+        1,
+        "restart",
+        false,
+        6
+      ],
+      "widgets_values_named": {
+        "mode": "values",
+        "start": 1,
+        "end": 0,
+        "values": "0, 0, 1",
+        "count": 20,
+        "curve": "ease_in_out_sine",
+        "curve_on": "transitions",
+        "repeat": 1,
+        "loop": "restart",
+        "reverse": false,
+        "decimals": 6
+      }
+    },
+    {
+      "id": 106,
+      "type": "WASNumberListPlot",
+      "pos": [
+        820,
+        658
+      ],
+      "size": [
+        380,
+        260
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "values",
+          "name": "values",
+          "type": "ARRAY,NUMBER,FLOAT,INT",
+          "link": 187
+        },
+        {
+          "localized_name": "values_b",
+          "name": "values_b",
+          "shape": 7,
+          "type": "ARRAY,NUMBER,FLOAT,INT",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASNumberListPlot"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 107,
+      "type": "WASPowerLoraLoader",
+      "pos": [
+        1300,
+        70
+      ],
+      "size": [
+        340,
+        454
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 188
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "localized_name": "fuse",
+          "name": "fuse",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fuse"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,ARRAY",
+          "widget": {
+            "name": "strength"
+          },
+          "link": 189
+        },
+        {
+          "localized_name": "lora_1_enabled",
+          "name": "lora_1_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_1_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1",
+          "name": "lora_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_weight",
+          "name": "lora_1_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_1_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_enabled",
+          "name": "lora_2_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_2_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2",
+          "name": "lora_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_weight",
+          "name": "lora_2_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_2_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_enabled",
+          "name": "lora_3_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_3_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3",
+          "name": "lora_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_weight",
+          "name": "lora_3_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_3_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_enabled",
+          "name": "lora_4_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_4_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4",
+          "name": "lora_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_weight",
+          "name": "lora_4_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_4_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_enabled",
+          "name": "lora_5_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_5_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5",
+          "name": "lora_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_weight",
+          "name": "lora_5_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_5_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_enabled",
+          "name": "lora_6_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_6_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6",
+          "name": "lora_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_weight",
+          "name": "lora_6_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_6_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_enabled",
+          "name": "lora_7_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_7_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7",
+          "name": "lora_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_weight",
+          "name": "lora_7_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_7_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_enabled",
+          "name": "lora_8_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_8_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8",
+          "name": "lora_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_weight",
+          "name": "lora_8_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_8_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_enabled",
+          "name": "lora_9_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_9_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9",
+          "name": "lora_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_weight",
+          "name": "lora_9_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_9_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_enabled",
+          "name": "lora_10_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_10_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10",
+          "name": "lora_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_weight",
+          "name": "lora_10_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_10_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_enabled",
+          "name": "lora_11_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_11_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11",
+          "name": "lora_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_weight",
+          "name": "lora_11_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_11_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_enabled",
+          "name": "lora_12_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_12_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12",
+          "name": "lora_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_weight",
+          "name": "lora_12_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_12_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_enabled",
+          "name": "lora_13_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_13_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13",
+          "name": "lora_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_weight",
+          "name": "lora_13_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_13_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_enabled",
+          "name": "lora_14_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_14_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14",
+          "name": "lora_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_weight",
+          "name": "lora_14_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_14_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_enabled",
+          "name": "lora_15_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_15_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15",
+          "name": "lora_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_weight",
+          "name": "lora_15_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_15_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_enabled",
+          "name": "lora_16_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_16_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16",
+          "name": "lora_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_weight",
+          "name": "lora_16_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_16_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_enabled",
+          "name": "lora_17_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_17_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17",
+          "name": "lora_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_weight",
+          "name": "lora_17_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_17_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_enabled",
+          "name": "lora_18_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_18_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18",
+          "name": "lora_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_weight",
+          "name": "lora_18_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_18_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_enabled",
+          "name": "lora_19_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_19_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19",
+          "name": "lora_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_weight",
+          "name": "lora_19_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_19_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_enabled",
+          "name": "lora_20_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_20_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20",
+          "name": "lora_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_weight",
+          "name": "lora_20_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_20_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_enabled",
+          "name": "lora_21_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_21_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21",
+          "name": "lora_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_weight",
+          "name": "lora_21_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_21_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_enabled",
+          "name": "lora_22_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_22_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22",
+          "name": "lora_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_weight",
+          "name": "lora_22_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_22_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_enabled",
+          "name": "lora_23_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_23_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23",
+          "name": "lora_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_weight",
+          "name": "lora_23_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_23_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_enabled",
+          "name": "lora_24_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_24_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24",
+          "name": "lora_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_weight",
+          "name": "lora_24_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_24_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_enabled",
+          "name": "lora_25_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_25_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25",
+          "name": "lora_25",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_25"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_weight",
+          "name": "lora_25_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_25_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_enabled",
+          "name": "lora_26_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_26_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26",
+          "name": "lora_26",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_26"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_weight",
+          "name": "lora_26_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_26_weight"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            190
+          ]
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "lora_stack",
+          "name": "lora_stack",
+          "type": "LORA_STACK",
+          "links": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "name_1",
+          "name": "name_1",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASPowerLoraLoader"
+      },
+      "widgets_values": [
+        false,
+        1,
+        true,
+        "Klein9b\\impressionist-k9_2.safetensors",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1
+      ],
+      "widgets_values_named": {
+        "fuse": false,
+        "strength": 1,
+        "lora_1_enabled": true,
+        "lora_1": "Klein9b\\impressionist-k9_2.safetensors",
+        "lora_1_weight": 1,
+        "lora_2_enabled": true,
+        "lora_2": "None",
+        "lora_2_weight": 1,
+        "lora_3_enabled": true,
+        "lora_3": "None",
+        "lora_3_weight": 1,
+        "lora_4_enabled": true,
+        "lora_4": "None",
+        "lora_4_weight": 1,
+        "lora_5_enabled": true,
+        "lora_5": "None",
+        "lora_5_weight": 1,
+        "lora_6_enabled": true,
+        "lora_6": "None",
+        "lora_6_weight": 1,
+        "lora_7_enabled": true,
+        "lora_7": "None",
+        "lora_7_weight": 1,
+        "lora_8_enabled": true,
+        "lora_8": "None",
+        "lora_8_weight": 1,
+        "lora_9_enabled": true,
+        "lora_9": "None",
+        "lora_9_weight": 1,
+        "lora_10_enabled": true,
+        "lora_10": "None",
+        "lora_10_weight": 1,
+        "lora_11_enabled": true,
+        "lora_11": "None",
+        "lora_11_weight": 1,
+        "lora_12_enabled": true,
+        "lora_12": "None",
+        "lora_12_weight": 1,
+        "lora_13_enabled": true,
+        "lora_13": "None",
+        "lora_13_weight": 1,
+        "lora_14_enabled": true,
+        "lora_14": "None",
+        "lora_14_weight": 1,
+        "lora_15_enabled": true,
+        "lora_15": "None",
+        "lora_15_weight": 1,
+        "lora_16_enabled": true,
+        "lora_16": "None",
+        "lora_16_weight": 1,
+        "lora_17_enabled": true,
+        "lora_17": "None",
+        "lora_17_weight": 1,
+        "lora_18_enabled": true,
+        "lora_18": "None",
+        "lora_18_weight": 1,
+        "lora_19_enabled": true,
+        "lora_19": "None",
+        "lora_19_weight": 1,
+        "lora_20_enabled": true,
+        "lora_20": "None",
+        "lora_20_weight": 1,
+        "lora_21_enabled": true,
+        "lora_21": "None",
+        "lora_21_weight": 1,
+        "lora_22_enabled": true,
+        "lora_22": "None",
+        "lora_22_weight": 1,
+        "lora_23_enabled": true,
+        "lora_23": "None",
+        "lora_23_weight": 1,
+        "lora_24_enabled": true,
+        "lora_24": "None",
+        "lora_24_weight": 1,
+        "lora_25_enabled": true,
+        "lora_25": "None",
+        "lora_25_weight": 1,
+        "lora_26_enabled": true,
+        "lora_26": "None",
+        "lora_26_weight": 1
+      }
+    },
+    {
+      "id": 108,
+      "type": "CFGGuider",
+      "pos": [
+        1700,
+        70
+      ],
+      "size": [
+        300,
+        98
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 190
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 191
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 192
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "GUIDER",
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            194
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CFGGuider"
+      },
+      "widgets_values": [
+        1
+      ],
+      "widgets_values_named": {
+        "cfg": 1
+      }
+    },
+    {
+      "id": 109,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1700,
+        222
+      ],
+      "size": [
+        300,
+        326
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "noise",
+          "name": "noise",
+          "type": "NOISE",
+          "link": 193
+        },
+        {
+          "localized_name": "guider",
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 194
+        },
+        {
+          "localized_name": "sampler",
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 195
+        },
+        {
+          "localized_name": "sigmas",
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 196
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 197
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "output",
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            198
+          ]
+        },
+        {
+          "localized_name": "denoised_output",
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "SamplerCustomAdvanced"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 110,
+      "type": "VAEDecode",
+      "pos": [
+        1700,
+        602
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 198
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 199
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            211
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 111,
+      "type": "WASPowerLoraLoader",
+      "pos": [
+        1300,
+        782
+      ],
+      "size": [
+        340,
+        454
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 200
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "localized_name": "fuse",
+          "name": "fuse",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fuse"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "shape": 7,
+          "type": "FLOAT,NUMBER,ARRAY",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_enabled",
+          "name": "lora_1_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_1_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1",
+          "name": "lora_1",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_1"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_1_weight",
+          "name": "lora_1_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_1_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_enabled",
+          "name": "lora_2_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_2_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2",
+          "name": "lora_2",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_2"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_2_weight",
+          "name": "lora_2_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_2_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_enabled",
+          "name": "lora_3_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_3_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3",
+          "name": "lora_3",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_3"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_3_weight",
+          "name": "lora_3_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_3_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_enabled",
+          "name": "lora_4_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_4_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4",
+          "name": "lora_4",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_4"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_4_weight",
+          "name": "lora_4_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_4_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_enabled",
+          "name": "lora_5_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_5_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5",
+          "name": "lora_5",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_5"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_5_weight",
+          "name": "lora_5_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_5_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_enabled",
+          "name": "lora_6_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_6_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6",
+          "name": "lora_6",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_6"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_6_weight",
+          "name": "lora_6_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_6_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_enabled",
+          "name": "lora_7_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_7_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7",
+          "name": "lora_7",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_7"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_7_weight",
+          "name": "lora_7_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_7_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_enabled",
+          "name": "lora_8_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_8_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8",
+          "name": "lora_8",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_8"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_8_weight",
+          "name": "lora_8_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_8_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_enabled",
+          "name": "lora_9_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_9_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9",
+          "name": "lora_9",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_9"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_9_weight",
+          "name": "lora_9_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_9_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_enabled",
+          "name": "lora_10_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_10_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10",
+          "name": "lora_10",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_10"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_10_weight",
+          "name": "lora_10_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_10_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_enabled",
+          "name": "lora_11_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_11_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11",
+          "name": "lora_11",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_11"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_11_weight",
+          "name": "lora_11_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_11_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_enabled",
+          "name": "lora_12_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_12_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12",
+          "name": "lora_12",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_12"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_12_weight",
+          "name": "lora_12_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_12_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_enabled",
+          "name": "lora_13_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_13_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13",
+          "name": "lora_13",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_13"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_13_weight",
+          "name": "lora_13_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_13_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_enabled",
+          "name": "lora_14_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_14_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14",
+          "name": "lora_14",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_14"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_14_weight",
+          "name": "lora_14_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_14_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_enabled",
+          "name": "lora_15_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_15_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15",
+          "name": "lora_15",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_15"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_15_weight",
+          "name": "lora_15_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_15_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_enabled",
+          "name": "lora_16_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_16_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16",
+          "name": "lora_16",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_16"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_16_weight",
+          "name": "lora_16_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_16_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_enabled",
+          "name": "lora_17_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_17_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17",
+          "name": "lora_17",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_17"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_17_weight",
+          "name": "lora_17_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_17_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_enabled",
+          "name": "lora_18_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_18_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18",
+          "name": "lora_18",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_18"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_18_weight",
+          "name": "lora_18_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_18_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_enabled",
+          "name": "lora_19_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_19_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19",
+          "name": "lora_19",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_19"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_19_weight",
+          "name": "lora_19_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_19_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_enabled",
+          "name": "lora_20_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_20_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20",
+          "name": "lora_20",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_20"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_20_weight",
+          "name": "lora_20_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_20_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_enabled",
+          "name": "lora_21_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_21_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21",
+          "name": "lora_21",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_21"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_21_weight",
+          "name": "lora_21_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_21_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_enabled",
+          "name": "lora_22_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_22_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22",
+          "name": "lora_22",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_22"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_22_weight",
+          "name": "lora_22_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_22_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_enabled",
+          "name": "lora_23_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_23_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23",
+          "name": "lora_23",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_23"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_23_weight",
+          "name": "lora_23_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_23_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_enabled",
+          "name": "lora_24_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_24_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24",
+          "name": "lora_24",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_24"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_24_weight",
+          "name": "lora_24_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_24_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_enabled",
+          "name": "lora_25_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_25_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25",
+          "name": "lora_25",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_25"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_25_weight",
+          "name": "lora_25_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_25_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_enabled",
+          "name": "lora_26_enabled",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lora_26_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26",
+          "name": "lora_26",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_26"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_26_weight",
+          "name": "lora_26_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "lora_26_weight"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            201
+          ]
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "lora_stack",
+          "name": "lora_stack",
+          "type": "LORA_STACK",
+          "links": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "name_1",
+          "name": "name_1",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASPowerLoraLoader"
+      },
+      "widgets_values": [
+        false,
+        1,
+        true,
+        "Klein9b\\impressionist-k9_2.safetensors",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1,
+        true,
+        "None",
+        1
+      ],
+      "widgets_values_named": {
+        "fuse": false,
+        "strength": 1,
+        "lora_1_enabled": true,
+        "lora_1": "Klein9b\\impressionist-k9_2.safetensors",
+        "lora_1_weight": 1,
+        "lora_2_enabled": true,
+        "lora_2": "None",
+        "lora_2_weight": 1,
+        "lora_3_enabled": true,
+        "lora_3": "None",
+        "lora_3_weight": 1,
+        "lora_4_enabled": true,
+        "lora_4": "None",
+        "lora_4_weight": 1,
+        "lora_5_enabled": true,
+        "lora_5": "None",
+        "lora_5_weight": 1,
+        "lora_6_enabled": true,
+        "lora_6": "None",
+        "lora_6_weight": 1,
+        "lora_7_enabled": true,
+        "lora_7": "None",
+        "lora_7_weight": 1,
+        "lora_8_enabled": true,
+        "lora_8": "None",
+        "lora_8_weight": 1,
+        "lora_9_enabled": true,
+        "lora_9": "None",
+        "lora_9_weight": 1,
+        "lora_10_enabled": true,
+        "lora_10": "None",
+        "lora_10_weight": 1,
+        "lora_11_enabled": true,
+        "lora_11": "None",
+        "lora_11_weight": 1,
+        "lora_12_enabled": true,
+        "lora_12": "None",
+        "lora_12_weight": 1,
+        "lora_13_enabled": true,
+        "lora_13": "None",
+        "lora_13_weight": 1,
+        "lora_14_enabled": true,
+        "lora_14": "None",
+        "lora_14_weight": 1,
+        "lora_15_enabled": true,
+        "lora_15": "None",
+        "lora_15_weight": 1,
+        "lora_16_enabled": true,
+        "lora_16": "None",
+        "lora_16_weight": 1,
+        "lora_17_enabled": true,
+        "lora_17": "None",
+        "lora_17_weight": 1,
+        "lora_18_enabled": true,
+        "lora_18": "None",
+        "lora_18_weight": 1,
+        "lora_19_enabled": true,
+        "lora_19": "None",
+        "lora_19_weight": 1,
+        "lora_20_enabled": true,
+        "lora_20": "None",
+        "lora_20_weight": 1,
+        "lora_21_enabled": true,
+        "lora_21": "None",
+        "lora_21_weight": 1,
+        "lora_22_enabled": true,
+        "lora_22": "None",
+        "lora_22_weight": 1,
+        "lora_23_enabled": true,
+        "lora_23": "None",
+        "lora_23_weight": 1,
+        "lora_24_enabled": true,
+        "lora_24": "None",
+        "lora_24_weight": 1,
+        "lora_25_enabled": true,
+        "lora_25": "None",
+        "lora_25_weight": 1,
+        "lora_26_enabled": true,
+        "lora_26": "None",
+        "lora_26_weight": 1
+      }
+    },
+    {
+      "id": 112,
+      "type": "CFGGuider",
+      "pos": [
+        1700,
+        782
+      ],
+      "size": [
+        300,
+        98
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 201
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 202
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 203
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "GUIDER",
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            205
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CFGGuider"
+      },
+      "widgets_values": [
+        1
+      ],
+      "widgets_values_named": {
+        "cfg": 1
+      }
+    },
+    {
+      "id": 113,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1700,
+        934
+      ],
+      "size": [
+        300,
+        326
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "noise",
+          "name": "noise",
+          "type": "NOISE",
+          "link": 204
+        },
+        {
+          "localized_name": "guider",
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 205
+        },
+        {
+          "localized_name": "sampler",
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 206
+        },
+        {
+          "localized_name": "sigmas",
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 207
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 208
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "output",
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            209
+          ]
+        },
+        {
+          "localized_name": "denoised_output",
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "SamplerCustomAdvanced"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 114,
+      "type": "VAEDecode",
+      "pos": [
+        1700,
+        1314
+      ],
+      "size": [
+        300,
+        46
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 209
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 210
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            212
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 115,
+      "type": "WASImageCompare",
+      "pos": [
+        2100,
+        70
+      ],
+      "size": [
+        760,
+        900
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 211
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 212
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageCompare",
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "was.compare.image.a.70cf81_00001_.png",
+              "subfolder": "",
+              "type": "temp",
+              "width": 1024,
+              "height": 1024,
+              "mode": "RGB",
+              "bytes": 2082477,
+              "total": 1,
+              "workflow": "5b9dedbb-4617-495b-8a55-eb7573ce3ce7",
+              "metadata": {
+                "kind": "image",
+                "width": 1024,
+                "height": 1024
+              },
+              "id": "2df88180-3713-454a-b476-97e897c4d959"
+            }
+          ],
+          "b": [
+            {
+              "filename": "was.compare.image.b.70cf81_00001_.png",
+              "subfolder": "",
+              "type": "temp",
+              "width": 1024,
+              "height": 1024,
+              "mode": "RGB",
+              "bytes": 1864279,
+              "total": 1,
+              "workflow": "5b9dedbb-4617-495b-8a55-eb7573ce3ce7",
+              "metadata": {
+                "kind": "image",
+                "width": 1024,
+                "height": 1024
+              },
+              "id": "9297ce43-5843-41fa-8708-a683e78cf2d5"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      183,
+      96,
+      0,
+      98,
+      0,
+      "CLIP"
+    ],
+    [
+      184,
+      96,
+      0,
+      99,
+      0,
+      "CLIP"
+    ],
+    [
+      185,
+      100,
+      0,
+      102,
+      0,
+      "INT"
+    ],
+    [
+      186,
+      100,
+      0,
+      105,
+      4,
+      "INT"
+    ],
+    [
+      188,
+      95,
+      0,
+      107,
+      0,
+      "MODEL"
+    ],
+    [
+      189,
+      105,
+      0,
+      107,
+      3,
+      "ARRAY"
+    ],
+    [
+      190,
+      107,
+      0,
+      108,
+      0,
+      "MODEL"
+    ],
+    [
+      191,
+      98,
+      0,
+      108,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      192,
+      99,
+      0,
+      108,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      193,
+      103,
+      0,
+      109,
+      0,
+      "NOISE"
+    ],
+    [
+      194,
+      108,
+      0,
+      109,
+      1,
+      "GUIDER"
+    ],
+    [
+      195,
+      104,
+      0,
+      109,
+      2,
+      "SAMPLER"
+    ],
+    [
+      196,
+      102,
+      0,
+      109,
+      3,
+      "SIGMAS"
+    ],
+    [
+      197,
+      101,
+      0,
+      109,
+      4,
+      "LATENT"
+    ],
+    [
+      198,
+      109,
+      0,
+      110,
+      0,
+      "LATENT"
+    ],
+    [
+      199,
+      97,
+      0,
+      110,
+      1,
+      "VAE"
+    ],
+    [
+      200,
+      95,
+      0,
+      111,
+      0,
+      "MODEL"
+    ],
+    [
+      201,
+      111,
+      0,
+      112,
+      0,
+      "MODEL"
+    ],
+    [
+      202,
+      98,
+      0,
+      112,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      203,
+      99,
+      0,
+      112,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      204,
+      103,
+      0,
+      113,
+      0,
+      "NOISE"
+    ],
+    [
+      205,
+      112,
+      0,
+      113,
+      1,
+      "GUIDER"
+    ],
+    [
+      206,
+      104,
+      0,
+      113,
+      2,
+      "SAMPLER"
+    ],
+    [
+      207,
+      102,
+      0,
+      113,
+      3,
+      "SIGMAS"
+    ],
+    [
+      208,
+      101,
+      0,
+      113,
+      4,
+      "LATENT"
+    ],
+    [
+      209,
+      113,
+      0,
+      114,
+      0,
+      "LATENT"
+    ],
+    [
+      210,
+      97,
+      0,
+      114,
+      1,
+      "VAE"
+    ],
+    [
+      211,
+      110,
+      0,
+      115,
+      0,
+      "IMAGE"
+    ],
+    [
+      212,
+      114,
+      0,
+      115,
+      1,
+      "IMAGE"
+    ],
+    [
+      187,
+      105,
+      0,
+      106,
+      0,
+      "ARRAY"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Model, prompt and steps",
+      "bounding": [
+        -16,
+        -4,
+        792,
+        1148
+      ],
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Strength per step",
+      "bounding": [
+        804,
+        -4,
+        412,
+        938
+      ],
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "LoRA held back until the layout is set",
+      "bounding": [
+        1284,
+        -4,
+        732,
+        668
+      ],
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Same LoRA at full strength from step 1",
+      "bounding": [
+        1284,
+        708,
+        732,
+        668
+      ],
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Compare",
+      "bounding": [
+        2084,
+        -4,
+        792,
+        990
+      ],
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        40,
+        60
+      ]
+    },
+    "ue_links": [],
+    "links_added_by_ue": []
+  },
+  "version": 0.4
+}
