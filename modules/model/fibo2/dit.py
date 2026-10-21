@@ -232,8 +232,7 @@ class Fibo2(nn.Module):
                                                      transformer_options),
         ).execute(x, timestep, context, transformer_options, **kwargs)
 
-    def _forward(self, x, timestep, context=None, transformer_options={}, ref_latents=None, fibo2_gist=None,
-                 fibo2_text_kv=None, **kwargs):
+    def _forward(self, x, timestep, context=None, transformer_options={}, ref_latents=None, **kwargs):
         batch, channels, height, width = x.shape
         dtype, device = x.dtype, x.device
         if channels != self.in_channels:
@@ -241,13 +240,11 @@ class Fibo2(nn.Module):
                 f"Fibo 2.0 samples a FLUX.2 latent of {self.in_channels} channels and was given one of {channels}. "
                 "Start from the latent Text Encode Fibo 2 hands on, or encode with the FLUX.2 VAE."
             )
+        if context is None:
+            raise ValueError("Fibo 2.0 needs a prompt from Text Encode Fibo 2.")
         transformer_options = transformer_options.copy()
-        if fibo2_gist is None:
-            if context is None:
-                raise ValueError("Fibo 2.0 needs a prompt from Text Encode Fibo 2.")
-            fibo2_gist, fibo2_text_kv = self.preprocess_conds(context.to(dtype), transformer_options)
-        gist = comfy.utils.repeat_to_batch_size(fibo2_gist, batch).to(dtype)
-        text_kv = comfy.utils.repeat_to_batch_size(fibo2_text_kv, batch)
+        context = comfy.utils.repeat_to_batch_size(context, batch).to(dtype)
+        gist, text_kv = self.preprocess_conds(context, transformer_options)
 
         # The noisy image reads the first half of the modulation batch, every clean token the second.
         adaln = self.t_embedder(torch.cat((timestep * T_SCALE, torch.zeros_like(timestep))), dtype)

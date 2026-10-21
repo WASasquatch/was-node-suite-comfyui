@@ -24,10 +24,6 @@ CORE_IMAGE_MODEL = "fibo2"
 #: The flow shift a one megapixel image samples at.
 SHIFT = 1.15
 
-#: Conditioning keys the text-only work travels under once it has run.
-GIST_KEY = "fibo2_gist"
-TEXT_KV_KEY = "fibo2_text_kv"
-
 #: The multiple the feed-forward width is padded to.
 FFN_MULTIPLE = 256
 
@@ -190,16 +186,9 @@ class Fibo2Model(comfy.model_base.BaseModel):
         if references is not None:
             out["ref_latents"] = comfy.conds.CONDList([self.process_latent_in(latent) for latent in references])
         text = kwargs.get("cross_attn", None)
-        if text is None:
-            return out
-        # Cond and uncond of different lengths run apart: the gist count follows the text's length.
-        out["c_crossattn"] = comfy.conds.CONDRegular(text)
-        if torch.is_inference_mode_enabled() and kwargs.get("hooks") is None:
-            device, dtype = kwargs["device"], self.get_dtype_inference()
-            gist, text_kv = self.diffusion_model.preprocess_conds(text.to(device=device, dtype=dtype))
-            del out["c_crossattn"]
-            out[GIST_KEY] = comfy.conds.CONDRegular(gist)
-            out[TEXT_KV_KEY] = comfy.conds.CONDRegular(text_kv)
+        if text is not None:
+            # Cond and uncond of different lengths run apart: the gist count follows the text's length.
+            out["c_crossattn"] = comfy.conds.CONDRegular(text)
         return out
 
     def extra_conds_shapes(self, **kwargs):

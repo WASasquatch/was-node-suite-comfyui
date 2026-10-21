@@ -29,8 +29,8 @@ class TextEncodeFibo2(io.ComfyNode):
             category="WAS Suite/Conditioning",
             description=(
                 "Turn a Fibo 2.0 caption into conditioning, with up to five images to edit. Hands on "
-                "the prompt and negative for the sampler, and an empty latent at image_1's size for an "
-                "edit, 1024 square otherwise."
+                "the prompt and negative for the sampler, and an empty latent of about one megapixel in "
+                "image_1's shape, or 1024 square to generate."
             ),
             inputs=[
                 io.Clip.Input(
@@ -71,15 +71,15 @@ class TextEncodeFibo2(io.ComfyNode):
                 io.Int.Input(
                     "width", default=0, min=0, max=max_resolution(), step=16,
                     tooltip=(
-                        "0 = 1024 to generate, or image_1's own width to edit, scaled down when image_1 is "
-                        "over about one megapixel. Multiples of 16."
+                        "0 = 1024 to generate, or about one megapixel in image_1's shape to edit, the area "
+                        "Fibo 2.0 was trained at. Multiples of 16."
                     ),
                 ),
                 io.Int.Input(
                     "height", default=0, min=0, max=max_resolution(), step=16,
                     tooltip=(
-                        "0 = 1024 to generate, or image_1's own height to edit, scaled down when image_1 is "
-                        "over about one megapixel. Multiples of 16."
+                        "0 = 1024 to generate, or about one megapixel in image_1's shape to edit, the area "
+                        "Fibo 2.0 was trained at. Multiples of 16."
                     ),
                 ),
                 io.Int.Input(

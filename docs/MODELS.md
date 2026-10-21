@@ -352,7 +352,8 @@ Sample with `euler` in SamplerCustomAdvanced. Dev generates and edits; Edit Turb
 | `An edit encodes its images with the FLUX.2 VAE` | An image is connected and `vae` is not. Connect Load VAE with `flux2-vae.safetensors` |
 | `samples a FLUX.2 latent of 128 channels` | The latent came from another node. Sample the latent Text Encode Fibo 2 hands on |
 | Lettering comes out garbled | The prompt is plain text. Write a JSON caption with a `text_render` entry, or let Generate Fibo 2 Prompt write one |
-| An edit comes out smaller than 1024 | `width` and `height` at 0 keep image_1's own size, and scale only a picture over about one megapixel down. Type a size to sample larger |
+| Edit Turbo comes out oversaturated and harsh | It is sampled off its settings. Give it 4 steps, CFG 1 and `euler` |
+| An edit comes out cropped or soft | `width` and `height` are typed. At 0 an edit samples about one megapixel in image_1's shape |
 
 ## Quantized models
 

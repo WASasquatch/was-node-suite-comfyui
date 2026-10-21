@@ -210,23 +210,6 @@ def trained_size(aspect: float, area: int = AREA) -> tuple[int, int]:
     return best
 
 
-def edit_size(width: int, height: int, area: int = AREA) -> tuple[int, int]:
-    """The ``(width, height)`` an image is edited at.
-
-    Args:
-        width: The image's width in pixels.
-        height: The image's height in pixels.
-        area: Images up to 10% past this keep their own size.
-
-    Returns:
-        The image's own size cut to multiples of 16, or :func:`trained_size` for a larger image.
-    """
-    if width * height <= 1.1 * area:
-        smallest = 4 * MULTIPLE
-        return max(smallest, width // MULTIPLE * MULTIPLE), max(smallest, height // MULTIPLE * MULTIPLE)
-    return trained_size(width / height, area)
-
-
 def sigmas(steps: int, tokens: int) -> list[float]:
     """The released schedule: ``linspace(1, 1 / steps)`` shifted for the image size, then 0.
 
