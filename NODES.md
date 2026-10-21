@@ -1211,7 +1211,7 @@ Encode a prompt with CLIP after substituting Noodle Soup Prompts terminology or 
 <details>
 <summary><b>Text Encode Fibo 2</b></summary>
 
-Turn a Fibo 2.0 caption into conditioning, with up to five images to edit. Hands on the prompt and negative for the sampler, and an empty latent at the size Fibo 2.0 was trained for.
+Turn a Fibo 2.0 caption into conditioning, with up to five images to edit. Hands on the prompt and negative for the sampler, and an empty latent at image_1's size for an edit, 1024 square otherwise.
 
 | | |
 |---|---|
@@ -1224,8 +1224,8 @@ Turn a Fibo 2.0 caption into conditioning, with up to five images to edit. Hands
 | `clip` | `CLIP` | Yes |  |  | qwen3vl_4b_bf16.safetensors from Load CLIP, with type fibo2 where ComfyUI offers it, otherwise krea2. |
 | `prompt` | `STRING` | Yes |  |  | A JSON caption, as Generate Fibo 2 Prompt writes, or plain text. To edit: the instruction, as 'make the sky stormy', or a caption with an edit_instruction key. |
 | `negative_prompt` | `STRING` | Yes |  |  | What guidance steers away from, as a JSON caption such as {"style_medium":"cartoon"}. Empty = Bria's own: its detailed negative caption to generate, the empty caption to edit. |
-| `width` | `INT` | Yes | 0 |  | 0 = 1024 to generate, or image_1's trained size to edit, about one megapixel at its shape. Multiples of 16. |
-| `height` | `INT` | Yes | 0 |  | 0 = 1024 to generate, or image_1's trained size to edit, about one megapixel at its shape. Multiples of 16. |
+| `width` | `INT` | Yes | 0 |  | 0 = 1024 to generate, or image_1's own width to edit, scaled down when image_1 is over about one megapixel. Multiples of 16. |
+| `height` | `INT` | Yes | 0 |  | 0 = 1024 to generate, or image_1's own height to edit, scaled down when image_1 is over about one megapixel. Multiples of 16. |
 | `batch_size` | `INT` | Yes | 1 |  | Images sampled per run from the one prompt: 1 = one image, 4 = four variations. |
 | `text_images` | `BOOLEAN` | Yes | True |  | true = Qwen3-VL also sees each text_render text drawn as a picture, as in training, for cleaner lettering; false = the words alone. |
 | `vae` | `VAE` | No |  |  | flux2-vae.safetensors from Load VAE. Needed to edit. |

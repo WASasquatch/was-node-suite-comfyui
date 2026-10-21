@@ -83,6 +83,9 @@ _RULES = (
 #: Values a language model writes for a key that does not apply.
 PLACEHOLDERS = {"n/a", "na", "none", "null", "not applicable", "unknown", "-", "nothing"}
 
+#: Keys a reply may hold the edit instruction under, lowercased with spaces and hyphens as underscores.
+INSTRUCTION_KEYS = ("edit_instruction", "editinstruction", "instruction", "edit")
+
 _GENERATE = (
     "You are an art director turning a short idea into a complete description of one image for an image "
     "generator. Invent the concrete details the idea leaves open: setting, light, composition, colour and "
@@ -224,14 +227,40 @@ def _ordered(value: dict, keys) -> dict:
     return {key: value[key] for key in keys if key in value}
 
 
-def tidy(found: dict, edit: bool) -> dict:
+def instruction_of(found: dict) -> str:
+    """The edit instruction a reply holds under any of :data:`INSTRUCTION_KEYS`, or ``""``."""
+    named = {str(key).strip().lower().replace(" ", "_").replace("-", "_"): value for key, value in found.items()}
+    for key in INSTRUCTION_KEYS:
+        value = named.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def as_instruction(prompt: str) -> str:
+    """A prompt as one sentence: whitespace collapsed, first letter capitalised, closed with a full stop."""
+    text = " ".join(prompt.split())
+    if not text:
+        return ""
+    text = text[0].upper() + text[1:]
+    return text if text[-1] in ".!?" else f"{text}."
+
+
+def tidy(found: dict, edit: bool, instruction: str = "") -> dict:
     """A parsed reply as a caption: known keys only, in training's order, empty values dropped.
 
+    Args:
+        found: The parsed reply.
+        edit: Whether the caption carries an ``edit_instruction``.
+        instruction: The edit as asked, used when the reply holds no instruction.
+
     Raises:
-        ValueError: The reply is not a JSON object, or has no short_description.
+        ValueError: The reply is not a JSON object, has no short_description, or an edit has no
+            instruction from either source.
     """
     if not isinstance(found, dict):
         raise ValueError("the model answered with JSON that is not an object")
+    given = instruction_of(found) if edit else ""
     found = _drop_empty(found)
     keys = [key for key, _ in FIELDS] + (["edit_instruction"] if edit else [])
     caption = _ordered(found, keys)
@@ -247,8 +276,10 @@ def tidy(found: dict, edit: bool) -> dict:
     caption = _drop_empty(caption)
     if not caption.get("short_description"):
         raise ValueError("the model's JSON has no short_description")
-    if edit and not caption.get("edit_instruction"):
-        raise ValueError("the model's JSON has no edit_instruction")
+    if edit:
+        caption["edit_instruction"] = given or as_instruction(instruction)
+        if not caption["edit_instruction"]:
+            raise ValueError("the model's JSON has no edit_instruction")
     return caption
 
 
@@ -330,7 +361,7 @@ def write(clip, task: str, prompt: str, pictures=(), mask: Image.Image | None = 
     ids, report = text_decode.generate(clip, tokens, int(max_length), fast=fast, **options)
     reply = clip.decode(ids)
     try:
-        found = tidy(json_of(reply), edit=task == "edit")
+        found = tidy(json_of(reply), edit=task == "edit", instruction=prompt)
     except ValueError as error:
         raise ValueError(
             f"The language model's reply is not a Fibo 2.0 caption ({error}). Raise max_length if the reply was "

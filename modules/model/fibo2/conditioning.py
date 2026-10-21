@@ -119,12 +119,12 @@ def encode(clip, text: str, images=()) -> torch.Tensor:
 
 
 def edit_images(pictures, width: int | None, height: int | None, mask: Image.Image | None):
-    """The images to edit as training saw them: crops for the VAE and copies for Qwen3-VL.
+    """The images to edit: crops for the VAE and copies for Qwen3-VL.
 
     Args:
         pictures: 1 to 5 RGB pictures.
-        width: Crop width for a single picture, ``None`` for its trained size.
-        height: Crop height for a single picture, ``None`` for its trained size.
+        width: Crop width for a single picture, ``None`` for :func:`prompts.edit_size`.
+        height: Crop height for a single picture, ``None`` for :func:`prompts.edit_size`.
         mask: White where the single picture is repainted, or ``None``.
 
     Returns:
@@ -136,10 +136,10 @@ def edit_images(pictures, width: int | None, height: int | None, mask: Image.Ima
         pictures = [Image.composite(grey, pictures[0].convert("RGB"), binary)]
     if len(pictures) == 1:
         if width is None and height is None:
-            width, height = prompts.trained_size(pictures[0].width / pictures[0].height)
+            width, height = prompts.edit_size(pictures[0].width, pictures[0].height)
         sizes = [(width or 1024, height or 1024)]
     else:
-        sizes = [prompts.trained_size(picture.width / picture.height) for picture in pictures]
+        sizes = [prompts.edit_size(picture.width, picture.height) for picture in pictures]
     crops = []
     for picture, (crop_width, crop_height) in zip(pictures, sizes):
         picture = picture.convert("RGB")
@@ -171,8 +171,8 @@ def conditioning(clip, prompt: str, negative_prompt: str = "", images=(), mask=N
         images: IMAGE tensors to edit, every frame an image, at most 5 in all.
         mask: A MASK, white where the single image to edit is repainted.
         vae: The FLUX.2 VAE, needed to edit.
-        width: Image width, 0 for 1024 or the first image's trained size.
-        height: Image height, 0 for 1024 or the first image's trained size.
+        width: Image width, 0 for 1024 or the first image's :func:`prompts.edit_size`.
+        height: Image height, 0 for 1024 or the first image's :func:`prompts.edit_size`.
         batch_size: Latents in the batch.
         draw_text: Whether Qwen3-VL also sees pictures of the caption's text.
 
@@ -216,7 +216,7 @@ def conditioning(clip, prompt: str, negative_prompt: str = "", images=(), mask=N
         if len(crops) == 1:
             width, height = crops[0].size
         elif not (width or height):
-            width, height = prompts.trained_size(pictures[0].width / pictures[0].height)
+            width, height = prompts.edit_size(pictures[0].width, pictures[0].height)
         text = prompts.CHAT.format(prompts.edit(prompt, len(pictures), bool(drawn)))
         positive_cond = encode(clip, text, [vision_image(thumbnail) for thumbnail in thumbnails] + drawn)
         negative_cond = encode(clip, prompts.CHAT.format(negative_prompt.strip() or prompts.NULL_CAPTION))
