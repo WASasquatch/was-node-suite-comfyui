@@ -7,6 +7,7 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
+import { addressOf, hold, release } from "./compare_media.js";
 import { createMetricsSection } from "./metrics_panel.js";
 import { captureWheel, wheelPixels } from "./pointer.js";
 import { executionId, nodeLocator, ownOutput } from "./preview.js";
@@ -45,39 +46,25 @@ const OUTPUT_B = "b_images";
 const REMEMBERED_KEY = "was_compare_images";
 
 /**
- * The address a written frame is served from.
- *
- * @param {object} entry - A frame's filename, subfolder and type.
- * @returns {string} The view address, or an empty string.
- */
-function addressOf(entry) {
-  if (!entry?.filename) return "";
-  const parts = new URLSearchParams({
-    filename: entry.filename,
-    subfolder: entry.subfolder ?? "",
-    type: entry.type ?? "temp",
-  });
-  return `/api/view?${parts.toString()}`;
-}
-
-/**
- * Decode one written frame.
+ * Decode one written frame, held in the page while it decodes.
  *
  * @param {string} address - Where it is served from.
- * @returns {Promise<HTMLImageElement|null>} The image, or null when it could not be loaded,
- *   which is what a frame cleared from the temp folder by a restart answers.
+ * @returns {Promise<HTMLImageElement|null>} The image, or null when it could not be read or
+ *   decoded.
  */
-function loadImage(address) {
-  return new Promise((resolve) => {
-    if (!address) {
-      resolve(null);
-      return;
-    }
-    const picture = new Image();
-    picture.onload = () => resolve(picture);
-    picture.onerror = () => resolve(null);
-    picture.src = address;
-  });
+async function loadImage(address) {
+  const shown = await hold(address);
+  if (!shown) return null;
+  try {
+    return await new Promise((resolve) => {
+      const picture = new Image();
+      picture.onload = () => resolve(picture);
+      picture.onerror = () => resolve(null);
+      picture.src = shown;
+    });
+  } finally {
+    release(address);
+  }
 }
 
 /**
@@ -445,6 +432,19 @@ export function createImageComparePanel(node) {
   // The store is read again whenever a run ends, however it ended.
   const stopWatchingRuns = onRunEnded(() => refresh());
 
+  // A frame the server could not answer while it was away is read again once it is back.
+  const onReconnected = async () => {
+    let missing = false;
+    for (const [address, decoding] of [...decoded.entries()]) {
+      if (!(await decoding)) {
+        decoded.delete(address);
+        missing = true;
+      }
+    }
+    if (missing && !disposed) show(current);
+  };
+  api.addEventListener("reconnected", onReconnected);
+
   // The divider is drawn into a canvas, where a custom property means nothing, so the palette
   // is subscribed to and the pair drawn again.
   const stopTheme = onThemeChange(() => draw());
@@ -466,6 +466,7 @@ export function createImageComparePanel(node) {
       try {
         if (typeof stopWatchingRuns === "function") stopWatchingRuns();
         api.removeEventListener?.("executed", onExecuted);
+        api.removeEventListener?.("reconnected", onReconnected);
         decoded.clear();
         metrics.dispose();
         observer?.disconnect();

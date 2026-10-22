@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ....modules.interface import preview
+from ....modules.interface.compare_files import keep_ui
 
 #: What each side's frames are written under in the temp folder.
 PREFIX_A = "was.compare.image.a"
@@ -87,8 +88,8 @@ class ImageCompare(io.ComfyNode):
             )
 
         # Each side is written with its own byte budget.
-        sides = {
+        sides = keep_ui({
             "a_images": preview.write_frames(image_a, PREFIX_A),
             "b_images": preview.write_frames(image_b, PREFIX_B),
-        }
+        })
         return io.NodeOutput(image_a, image_b, max(count_a, count_b), ui=sides)

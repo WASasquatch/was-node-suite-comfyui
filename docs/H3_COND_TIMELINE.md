@@ -22,7 +22,7 @@ rows itself.
 | `continuity_N` | The transition into it, from the table under [Transitions](#transitions) |
 | `source_N` | The segment it continues from: `-1` the one before, `2` segment 2 |
 | `header_footer_N` | `both`, `header only`, `footer only` or `neither` of `prompt_header` and `prompt_footer` |
-| `model_N` | `auto`, `fl2va` or `ref2va` |
+| `model_N` | `auto`, `fl2va` or `ref2va`; `auto` is ref2va where the scene or its transition references anything, fl2va otherwise |
 | `strength_N` | How firmly it holds its pinned frames and references, `1.0` as given |
 | `sound_N` | `auto`, `carry` or `fresh` |
 | `seed_N` | `0` for the run's seed plus the segment number, any other value its own |
@@ -128,7 +128,8 @@ sampled and carried.
 | Sound | `sound_N`: As the transition, Carry over, Fresh |
 | Carried frames, Sound carried, Referenced frames | `overlap_N`, named for what the transition reads |
 | Hold | `strength_N` |
-| More options | Continues from `source_N`, Shared text `header_footer_N`, Seed `seed_N`, Model `model_N` |
+| Model | `model_N`; the line under it and the scene's subtitle name the model the scene samples on |
+| More options | Continues from `source_N`, Shared text `header_footer_N`, Seed `seed_N` |
 | In this scene | Every asset placed on the scene, with its role and scene |
 
 ## Video settings tab
@@ -207,7 +208,7 @@ is never given a cast transition.
 | Preview | Each segment as it samples, from a `taeh3` decoder in `ComfyUI/models/vae_approx` ([`MODELS.md`](MODELS.md#minimax-h3)); the last step stays |
 | Final | The video the run saved, with its sound, on the same playhead |
 | Play, previous scene, next scene | Space, Home, End |
-| Ready, N to fix | Lists what needs fixing before a run |
+| Ready, N to fix, N to check | Lists what needs fixing before a run, then what runs as it stands and is worth checking, such as `ref2va` with nothing to reference |
 | Stop, Run | Stops the sampling run; queues the graph |
 | Reference frame | Makes the frame under the playhead a picture reference |
 

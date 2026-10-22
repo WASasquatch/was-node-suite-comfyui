@@ -35,7 +35,7 @@ MARKER = "_was_token_expansion"
 
 #: Node id -> the inputs on it that must reach ``execute`` exactly as the user wrote them.
 #:
-#: Five kinds of field are listed, and nothing else is:
+#: Six kinds of field are listed, and nothing else is:
 #:
 #: * the token-definition widgets. `Text Add Tokens` reads ``[name]: value`` lines and
 #:   `Text Add Token by Input` takes a name and a value, so expanding either would define
@@ -57,6 +57,8 @@ MARKER = "_was_token_expansion"
 #:   those names would rewrite the tag, after which the label names no file at all. The
 #:   terminology pick list is the same: each line names a stored terminology and one of its
 #:   words, and a rewritten name matches nothing in the pantry.
+#: * library text stored for later runs. A saved system prompt keeps its tokens as written,
+#:   and they expand on the node it is wired into when it is used.
 LITERAL_INPUTS = {
     "WASComfyViewer": ("manual_content", "viewer_meta", "view_state"),
     "WASImageCurves": ("curve_points",),
@@ -81,6 +83,7 @@ LITERAL_INPUTS = {
     "WASDrawImageBounds": ("color",),
     "WASImagePaletteMap": ("palette",),
     "WASNoodleSoupPick": ("picked",),
+    "WASSaveSystemPrompt": ("system_prompt", "model_family", "description"),
     "WASZipSave": ("files",),
     "WASLoadImagesFromZIP": ("pad_color",),
 }

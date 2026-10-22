@@ -28,6 +28,13 @@ PATH_GRAPH = "graph decode"
 PATH_FIXED = "fixed cache decode"
 PATH_CORE = "core decode"
 
+#: The tags a reasoning model writes its thinking between.
+THINK_OPEN = "<think>"
+THINK_CLOSE = "</think>"
+
+#: Prompt tokens decoded to find a thinking block the chat template left open.
+TEMPLATE_TAIL_TOKENS = 4
+
 
 @dataclass
 class DecodeReport:
@@ -36,24 +43,34 @@ class DecodeReport:
     Attributes:
         path: One of ``PATH_GRAPH``, ``PATH_FIXED`` or ``PATH_CORE``.
         reason: Why the fast path was not taken, empty when it was.
+        graph_reason: Why the fast path ran without decode graphs, empty when it had them.
         prompt_tokens: Embedding positions handed to the model, images included.
-        new_tokens: Tokens generated.
-        seconds: Wall time of the generate call, prompt pass included.
+        new_tokens: Tokens generated, the stop token included.
+        seconds: Wall time of the whole generate call.
+        load_seconds: Loading the model and embedding the prompt, before the prompt pass.
+        prompt_seconds: The prompt pass, up to the first token.
+        decode_seconds: Every token after the first. 0 when the first token was not timed.
         switched: True when this run set the switches, False when the model already had them.
     """
 
     path: str = PATH_CORE
     reason: str = ""
+    graph_reason: str = ""
     prompt_tokens: int = 0
     new_tokens: int = 0
     seconds: float = 0.0
+    load_seconds: float = 0.0
+    prompt_seconds: float = 0.0
+    decode_seconds: float = 0.0
     switched: bool = False
     extras: dict = field(default_factory=dict)
 
     @property
     def tokens_per_second(self) -> float:
-        """Generated tokens over wall time, 0 for an empty run."""
-        return self.new_tokens / self.seconds if self.seconds > 0 else 0.0
+        """Tokens after the first over the time they took, 0 when that was not timed."""
+        if self.decode_seconds <= 0 or self.new_tokens < 2:
+            return 0.0
+        return (self.new_tokens - 1) / self.decode_seconds
 
 
 def decoder_of(clip):
@@ -176,6 +193,41 @@ def split_rope(model) -> bool:
     return isinstance(theta, (list, tuple)) and len(theta) > 1
 
 
+def graph_refusal(clip, model, device) -> str:
+    """Say why the fast path would run without decode graphs, or nothing when it would have them.
+
+    Args:
+        clip: The CLIP being generated with.
+        model: The layer stack.
+        device: The device it runs on.
+
+    Returns:
+        A reason written for the person running the node, empty when graphs apply.
+    """
+    if device is None:
+        return "the device the model runs on is unknown"
+    if split_rope(model):
+        return "the model keeps two rotary tables, local and global"
+    if getattr(comfy.model_management.args, "disable_cuda_graphs", False):
+        return "ComfyUI was started with --disable-cuda-graphs"
+    if not comfy.model_prefetch.malloc_graph_enabled(device):
+        return "graph allocation is not available on this device"
+    if not clip.patcher.is_dynamic():
+        return "the model is not loaded with dynamic VRAM"
+    return ""
+
+
+def _synchronize(device) -> None:
+    """Wait for queued work on a CUDA device, so a clock read afterwards counts it."""
+    try:
+        import torch
+
+        if device is not None and getattr(device, "type", "") == "cuda":
+            torch.cuda.synchronize(device)
+    except Exception as error:
+        logger.debug("the device could not be synchronised (%s)", error)
+
+
 def release_graphs():
     """Drop the decode graphs, prefetch queues and cast buffers a generation left on the device."""
     import comfy.memory_management
@@ -244,14 +296,8 @@ def generate(clip, tokens, max_length, fast=True, **options):
             f"{getattr(model.config, 'head_dim', '?')}"
         )
 
-    graphs = bool(
-        not reason
-        and device is not None
-        and not split_rope(model)
-        and comfy.model_prefetch.malloc_graph_enabled(device)
-        and not getattr(comfy.model_management.args, "disable_cuda_graphs", False)
-        and clip.patcher.is_dynamic()
-    )
+    graph_reason = "" if reason else graph_refusal(clip, model, device)
+    graphs = not reason and not graph_reason
 
     values = {}
     if not reason and not already:
@@ -260,10 +306,14 @@ def generate(clip, tokens, max_length, fast=True, **options):
 
     window = smallest_window(model) if model is not None else None
     original = getattr(transformer, "generate", None) if transformer is not None else None
+    sample = getattr(transformer, "sample_token", None) if transformer is not None else None
+    marks = {}
 
     def guarded(embeds=None, *args, **kwargs):
+        marks["entered"] = time.perf_counter()
         # The prompt length is known only here, after images have become embeddings.
-        length = int(embeds.shape[-2]) if embeds is not None and embeds.ndim >= 2 else 0
+        shape = getattr(embeds, "shape", None)
+        length = int(shape[-2]) if shape is not None and len(shape) >= 2 else 0
         report.prompt_tokens = length
         limit = kwargs.get("max_length", args[1] if len(args) > 1 else max_length)
         if values and window is not None and length + int(limit) > window:
@@ -276,16 +326,32 @@ def generate(clip, tokens, max_length, fast=True, **options):
                 return original(embeds, *args, **kwargs)
         return original(embeds, *args, **kwargs)
 
+    def timed_sample(*args, **kwargs):
+        token = sample(*args, **kwargs)
+        if "first" not in marks:
+            _synchronize(device)
+            marks["first"] = time.perf_counter()
+        return token
+
     started = time.perf_counter()
     with contextlib.ExitStack() as stack:
         if values:
             # Set before the model loads, so each block is registered as a graph unit.
             stack.enter_context(switched(model, values))
+        if original is not None:
             stack.enter_context(_shadow(transformer, "generate", guarded))
+        if sample is not None:
+            stack.enter_context(_shadow(transformer, "sample_token", timed_sample))
         ids = clip.generate(tokens, **options, max_length=max_length)
+        finished = time.perf_counter()
     release_graphs()
     report.seconds = time.perf_counter() - started
     report.new_tokens = len(ids)
+    if "entered" in marks:
+        report.load_seconds = marks["entered"] - started
+        if "first" in marks:
+            report.prompt_seconds = marks["first"] - marks["entered"]
+            report.decode_seconds = finished - marks["first"]
     if model is not None:
         report.extras["graph_units"] = sum(
             1 for layer in getattr(model, "layers", []) if getattr(layer, "_v_block", None) is not None
@@ -298,7 +364,77 @@ def generate(clip, tokens, max_length, fast=True, **options):
         report.path = PATH_CORE
     elif already or report.switched:
         report.path = PATH_GRAPH if (graphs or getattr(model, "graph_dynamic_vbar_blocks", False)) else PATH_FIXED
+    if report.path == PATH_FIXED:
+        report.graph_reason = graph_reason
     return ids, report
+
+
+def figures(report: DecodeReport) -> tuple[str, dict, dict]:
+    """What a panel shows of one generation.
+
+    Args:
+        report: The report :func:`generate` answered.
+
+    Returns:
+        ``(summary, counts, facts)``: one line, the figures, and the rows naming the decode
+        path, why it was not faster, and where the time went.
+    """
+    rate = report.tokens_per_second
+    if rate > 0:
+        summary = f"{report.new_tokens} tokens, written at {rate:.1f} tokens/s"
+    else:
+        summary = f"{report.new_tokens} tokens in {report.seconds:.2f} s"
+    counts = {"tokens": report.new_tokens, "tokens/s": round(rate, 1), "seconds": round(report.seconds, 2)}
+    facts = {"decode": report.path}
+    if report.reason:
+        facts["why not fast"] = report.reason
+    if report.graph_reason:
+        facts["no graphs"] = report.graph_reason
+    if report.load_seconds >= 0.05:
+        facts["load"] = f"{report.load_seconds:.2f} s"
+    facts["prompt"] = (
+        f"{report.prompt_tokens} tokens in {report.prompt_seconds:.2f} s"
+        if report.prompt_seconds > 0 else f"{report.prompt_tokens} tokens"
+    )
+    if report.decode_seconds > 0:
+        facts["writing"] = f"{max(0, report.new_tokens - 1)} tokens in {report.decode_seconds:.2f} s"
+    if report.extras.get("graph_units"):
+        facts["graph blocks"] = report.extras["graph_units"]
+    return summary, counts, facts
+
+
+def split_reasoning(clip, tokens, prompt: str, text: str) -> tuple[str, str]:
+    """Separate a reasoning model's thinking from its answer.
+
+    Args:
+        clip: The CLIP that decoded ``text``.
+        tokens: What ``clip.tokenize`` returned for the prompt.
+        prompt: The prompt as typed.
+        text: The decoded generation.
+
+    Returns:
+        ``(answer, thinking)``, each stripped. Thinking the length limit cut off before it
+        closed is all thinking and no answer.
+    """
+    head, mark, tail = text.partition(THINK_CLOSE)
+    if mark:
+        return tail.strip(), head.replace(THINK_OPEN, "", 1).strip()
+    if head.lstrip().startswith(THINK_OPEN) or _opens_thinking(clip, tokens, prompt):
+        return "", head.replace(THINK_OPEN, "", 1).strip()
+    return text.strip(), ""
+
+
+def _opens_thinking(clip, tokens, prompt: str) -> bool:
+    """Whether the prompt, chat template included, ends inside a thinking block."""
+    if str(prompt or "").rstrip().endswith(THINK_OPEN):
+        return True
+    try:
+        batch = next(iter(tokens.values())) if isinstance(tokens, dict) else tokens
+        ids = [item[0] for item in batch[-1] if isinstance(item, tuple) and isinstance(item[0], int)]
+        return clip.decode(ids[-TEMPLATE_TAIL_TOKENS:]).rstrip().endswith(THINK_OPEN)
+    except Exception as error:
+        logger.debug("the end of the prompt could not be decoded (%s)", error)
+        return False
 
 
 @contextlib.contextmanager

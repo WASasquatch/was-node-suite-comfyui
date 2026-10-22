@@ -198,6 +198,18 @@ def register_interface_routes() -> None:
     else:
         register_pantry()
     try:
+        from .modules.interface.system_prompts import register_routes as register_system_prompts
+    except Exception as error:
+        logger.debug("the interface system prompt library channel is unavailable (%s)", error)
+    else:
+        register_system_prompts()
+    try:
+        from .modules.interface.compare_files import register_routes as register_compare_files
+    except Exception as error:
+        logger.debug("the interface compare file channel is unavailable (%s)", error)
+    else:
+        register_compare_files()
+    try:
         from .modules.interface.video_probe import register_routes as register_video_probe
     except Exception as error:
         logger.debug("the interface video measurement channel is unavailable (%s)", error)

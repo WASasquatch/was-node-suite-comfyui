@@ -17,7 +17,7 @@ import {
 } from "./interface/h3_asset_chain.js";
 import {
   AUDIO_REFERENCE, BRIDGING, CONTINUITY, resolvedTransition, CUT_LIKE, EVERY_SEGMENT, FPS, MAX_ROWS, PREVIOUS_SOURCE,
-  REFERENCE_FRAMES, REFERENCE_VIDEO, ROW_CONTINUITY, bridgeFrames, durationOf, framesOf, guideLength, resolvedIndex, snapClip, snapOverlap,
+  REFERENCE_FRAMES, REFERENCE_VIDEO, REFERENCING_PICTURES, ROW_CONTINUITY, bridgeFrames, durationOf, framesOf, guideLength, resolvedIndex, snapClip, snapOverlap,
   snapOverlapFor, timeline,
 } from "./interface/h3_extend.js";
 import {
@@ -157,7 +157,7 @@ const MODE_HINTS = {
   i2va: "Opens on the picture wired into first_frame.",
   fl2va: "Opens on first_frame and closes on last_frame.",
   fl2va_batched: "Each scene runs between two neighbouring pictures of images.",
-  ref2va: "Every scene is built on the ref inputs, named <Picture 1>, <Video 1>, <Audio 1>.",
+  ref2va: "The ref inputs are added to every scene, named <Picture 1>, <Video 1>, <Audio 1>.",
 };
 const MODEL_NAMES = { auto: "Automatic", fl2va: "fl2va", ref2va: "ref2va" };
 
@@ -423,6 +423,41 @@ function readAssets(node) {
   });
 }
 
+// The asset roles a scene's prompt names as references.
+const REFERENCE_ROLES = new Set(["reference picture", "reference clip", "reference audio"]);
+
+/**
+ * The model a scene samples with, picked as the node picks it.
+ *
+ * @param {object} node - The conditioning node.
+ * @param {object} scene - The scene, with `model`, `continuity` and `sound`.
+ * @param {number} index - Its place in the video, from 0.
+ * @param {object[]} assets - The chain's assets, each with `role` and `segment`.
+ * @returns {{kind: string, reason: string, referenced: boolean}} `fl2va` or `ref2va`, empty where
+ *   the model it needs is not wired; a short reason; whether the scene carries references.
+ */
+function sceneModel(node, scene, index, assets) {
+  const fl = wiredInto(node, "model_fl2va");
+  const rf = wiredInto(node, "model_ref2va");
+  const sockets = socketReferences(node);
+  const shared = sockets.pictures.length + sockets.videos.length + sockets.sounds.length;
+  const own = assets.filter((asset) => REFERENCE_ROLES.has(asset.role)
+    && (asset.segment === index + 1 || asset.segment === EVERY_SEGMENT)).length;
+  const transition = index > 0
+    && REFERENCING_PICTURES.includes(resolvedTransition(scene.continuity, scene.sound).picture);
+  const referenced = transition || own > 0 || shared > 0;
+  if (scene.model === "fl2va") return { kind: fl ? "fl2va" : "", reason: fl ? "chosen" : "model_fl2va not wired", referenced };
+  if (scene.model === "ref2va") return { kind: rf ? "ref2va" : "", reason: rf ? "chosen" : "model_ref2va not wired", referenced };
+  if (fl && rf) {
+    const reason = transition ? "transition references the scene before"
+      : own ? `${own} reference${own === 1 ? "" : "s"}` : shared ? "ref inputs" : "no references";
+    return { kind: referenced ? "ref2va" : "fl2va", reason, referenced };
+  }
+  if (rf) return { kind: "ref2va", reason: "only model wired", referenced };
+  if (fl) return { kind: "fl2va", reason: "only model wired", referenced };
+  return { kind: "", reason: "no model wired", referenced };
+}
+
 /**
  * The references a `ref2va` node's own sockets put ahead of every asset.
  *
@@ -671,7 +706,7 @@ function createPromptTimeline(first) {
     + "flex:0 1 auto;white-space:nowrap;overflow:hidden");
   const legend = el("div", "display:flex;align-items:center;gap:14px;min-width:0;flex:0 1 auto;overflow:hidden;"
     + `white-space:nowrap;font:11px ${SANS};color:${LOOK.muted}`);
-  const issuesButton = makeButton("", () => toggleIssues(), { kind: "tool", hint: "What needs fixing before a run" });
+  const issuesButton = makeButton("", () => toggleIssues(), { kind: "tool", hint: "What needs fixing, and what is worth checking, before a run" });
   const zoomOut = makeButton("−", () => strip.zoomBy(1 / 1.3), { kind: "tool", hint: "Zoom out (-)" });
   const fitButton = makeButton("Fit", () => strip.fit(), { kind: "tool", hint: "Fit the whole video (F)" });
   const zoomIn = makeButton("+", () => strip.zoomBy(1.3), { kind: "tool", hint: "Zoom in (+)" });
@@ -1347,14 +1382,19 @@ function createPromptTimeline(first) {
         popover.appendChild(tip);
       }
     } else if (popoverFor === "issues") {
-      const found = state.warnings;
+      const fixes = state.warnings.filter((issue) => issue.level !== "check");
+      const checks = state.warnings.filter((issue) => issue.level === "check");
       popover.appendChild(el("div", `font:600 15px ${SANS};margin-bottom:10px`,
-        found.length ? `${found.length} to fix before a run` : "Nothing to fix"));
-      
+        fixes.length ? `${fixes.length} to fix before a run` : "Nothing to fix"));
+
       const list = el("div", "display:flex;flex-direction:column;gap:4px");
       popover.appendChild(list);
-      for (const issue of found) {
-        const row = makeButton(`⚠  ${issue.text}`, () => {
+      for (const issue of [...fixes, ...checks]) {
+        const advice = issue.level === "check";
+        if (advice && issue === checks[0]) {
+          list.appendChild(el("div", `${LABEL};margin:${fixes.length ? "10px" : "0"} 0 2px`, "Worth checking"));
+        }
+        const row = makeButton(`${advice ? "ⓘ" : "⚠"}  ${issue.text}`, () => {
           if (issue.scene !== null && issue.scene !== undefined) selectScene(issue.scene);
           if (issue.asset !== null && issue.asset !== undefined) selectedAsset = issue.asset;
           popoverFor = "";
@@ -1362,7 +1402,8 @@ function createPromptTimeline(first) {
           refresh(true);
         }, { kind: "plain" });
         row.style.cssText += `;width:100%;justify-content:flex-start;text-align:left;white-space:normal;`
-          + `padding:7px 10px;font-size:12px;border-left:3px solid ${LOOK.warning}`;
+          + `padding:7px 10px;font-size:12px;border-left:3px solid ${advice ? LOOK.accent : LOOK.warning}`;
+        if (issue.hint) row.title = issue.hint;
         list.appendChild(row);
       }
     }
@@ -2473,6 +2514,7 @@ function createPromptTimeline(first) {
     state = { scenes, assets, layout, warnings: [] };
     state.warnings = warnings();
     for (const issue of state.warnings) {
+      if (issue.level === "check") continue;
       const scene = scenes[issue.scene ?? -1];
       if (scene && !scene.warning) scene.warning = issue.text;
     }
@@ -2511,16 +2553,22 @@ function createPromptTimeline(first) {
   /**
    * Everything worth fixing, in the order it is worth saying.
    *
-   * @returns {Array<{text: string, scene: number|null, asset: number|null}>} The issues.
+   * @returns {Array<{text: string, scene: number|null, asset: number|null, level: string, hint: string}>}
+   *   The issues, `level` being `fix` for what stops a run and `check` for what runs as it stands.
    */
   function warnings() {
     const found = [];
-    const add = (text, scene = null, asset = null) => found.push({ text, scene, asset });
+    const add = (text, scene = null, asset = null, level = "fix", hint = "") => found.push({ text, scene, asset, level, hint });
     const fl = wiredInto(node, "model_fl2va");
     const rf = wiredInto(node, "model_ref2va");
     const mode = String(valueOf(node, "mode", "t2va"));
     const refused = state.layout.indexOf(null);
     if (refused >= 0) add(`Scene ${refused + 1} cannot continue from the scene it names`, refused);
+    if (mode === "ref2va" && state.scenes.length
+      && !state.scenes.some((scene, index) => sceneModel(node, scene, index, state.assets).referenced)) {
+      add("Mode is ref2va and no scene references anything", null, null, "check",
+        "The scenes sample as t2va or fl2va on the models wired. Add a reference, or set the mode to t2va.");
+    }
     state.scenes.forEach((scene, index) => {
       const named = `Scene ${index + 1}`;
       if (scene.model === "fl2va" && !fl) add(`${named} asks for fl2va and model_fl2va is not wired`, index);
@@ -2598,9 +2646,10 @@ function createPromptTimeline(first) {
     setDisabled(duplicateButton, selected === null || state.scenes.length >= MAX_ROWS);
     setDisabled(deleteButton, selected === null && selectedAsset === null);
     setDisabled(addButtonEl, state.scenes.length >= MAX_ROWS);
-    const count = state.warnings.length;
-    issuesButton.textContent = count ? `⚠  ${count} to fix` : "✓  Ready";
-    issuesButton.style.color = count ? LOOK.warning : LOOK.success;
+    const count = state.warnings.filter((issue) => issue.level !== "check").length;
+    const notes = state.warnings.length - count;
+    issuesButton.textContent = count ? `⚠  ${count} to fix` : notes ? `ⓘ  Ready, ${notes} to check` : "✓  Ready";
+    issuesButton.style.color = count ? LOOK.warning : notes ? LOOK.accent : LOOK.success;
     issuesButton.style.fontWeight = "600";
   }
 
@@ -2810,11 +2859,13 @@ function createPromptTimeline(first) {
     head.appendChild(el("span", "flex:1 1 auto"));
     head.appendChild(makeButton("More ▾", (event) => openSceneMenu(index, event), { kind: "tool", hint: "Insert, duplicate, delete, colour" }));
     pane.appendChild(head);
+    const sampler = sceneModel(node, scene, index, state.assets);
     if (entry) {
       const end = drawnEndOf(state.layout, index);
       pane.appendChild(el("div", `font:12px ${SANS};color:${LOOK.muted};margin-top:-8px`,
         `${clockOf(entry.start / FPS)} → ${clockOf(end / FPS)}  ·  ${end - entry.start} frames on screen`
-        + `  ·  ${entry.window} sampled` + (entry.head ? `, ${entry.head} carried` : "")));
+        + `  ·  ${entry.window} sampled` + (entry.head ? `, ${entry.head} carried` : "")
+        + (sampler.kind ? `  ·  on ${sampler.kind}` : "")));
     }
 
     // The prompt on the left, everything else on the right, one column when narrow.
@@ -2929,6 +2980,14 @@ function createPromptTimeline(first) {
     timing.appendChild(field("Hold", hold.box, scene.hold >= 1 ? "as given" : `loosened to ${scene.hold.toFixed(2)}`,
       "How firmly this scene holds its pinned frames and references, transition references included. "
       + "1.0 holds them as given; lower values add noise to them before sampling."));
+    const model = makeSelect(optionsOf(node, `model_${scene.row}`).map((value) => [value, MODEL_NAMES[value] ?? value]), scene.model);
+    model.addEventListener("change", () => {
+      commit(node, () => write(node, `model_${scene.row}`, model.value));
+      refresh();
+    });
+    timing.appendChild(field("Model", model,
+      sampler.kind ? `${sampler.kind} · ${sampler.reason}` : sampler.reason,
+      "Automatic samples on ref2va where the scene or its transition references anything, on fl2va otherwise."));
     right.appendChild(timing);
 
     // More options, folded.
@@ -2960,13 +3019,6 @@ function createPromptTimeline(first) {
         refresh();
       });
       extra.appendChild(field("Shared text", wrap, "", "Which of the video's header and footer wrap this prompt."));
-      const model = makeSelect(optionsOf(node, `model_${scene.row}`).map((value) => [value, MODEL_NAMES[value] ?? value]), scene.model);
-      model.addEventListener("change", () => {
-        commit(node, () => write(node, `model_${scene.row}`, model.value));
-        refresh();
-      });
-      const fl = wiredInto(node, "model_fl2va");
-      const rf = wiredInto(node, "model_ref2va");
       const seed = makeNumber(scene.seed, { min: 0, max: 2 ** 32 - 1, step: 1 }, "");
       seed.input.addEventListener("change", () => {
         const value = Math.max(0, Math.round(Number(seed.input.value) || 0));
@@ -2975,8 +3027,6 @@ function createPromptTimeline(first) {
       });
       extra.appendChild(field("Seed", seed.box, scene.seed > 0 ? "its own" : "run seed + scene",
         "0 samples this scene from H3 Extend Window's seed plus its number; any other value is its own seed."));
-      extra.appendChild(field("Model", model, `fl2va ${fl ? "wired" : "not wired"} · ref2va ${rf ? "wired" : "not wired"}`,
-        "Automatic picks ref2va for a scene carrying references, fl2va otherwise."));
       right.appendChild(extra);
     }
 
@@ -3238,8 +3288,8 @@ function createPromptTimeline(first) {
     ];
     const assets = `${state.assets.length} asset${state.assets.length === 1 ? "" : "s"}`;
     for (const [name, meta, tip] of [
-      ["model_fl2va", "wired", "Samples the scenes set to fl2va."],
-      ["model_ref2va", "wired", "Samples the scenes set to ref2va."],
+      ["model_fl2va", "wired", "Samples scenes set to fl2va, and Automatic scenes with no references."],
+      ["model_ref2va", "wired", "Samples scenes set to ref2va, and Automatic scenes carrying references."],
       ["audio_vae", "wired", "Encodes clips and sounds."],
       ["assets", assets, "The asset chain."],
       ["first_frame", "wired", "The frame scene 1 opens on."],

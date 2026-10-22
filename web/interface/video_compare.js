@@ -7,6 +7,7 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
+import { addressOf, hold, release } from "./compare_media.js";
 import { executionId, nodeLocator, ownOutput } from "./preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
@@ -49,22 +50,6 @@ const GRIP_WIDTH = 14;
 // Where the last pair of written sides is kept. `properties` is serialised with the node and no
 // python reads it.
 const REMEMBERED_KEY = "was_compare_sides";
-
-/**
- * The address a written side is served from.
- *
- * @param {object} entry - A side's filename, subfolder and type.
- * @returns {string} The view address, or an empty string.
- */
-function addressOf(entry) {
-  if (!entry?.filename) return "";
-  const parts = new URLSearchParams({
-    filename: entry.filename,
-    subfolder: entry.subfolder ?? "",
-    type: entry.type ?? "temp",
-  });
-  return `/api/view?${parts.toString()}`;
-}
 
 /**
  * Build the two-video panel for one node.
@@ -343,8 +328,26 @@ export function createVideoComparePanel(node) {
 
   let loaded = "";
 
+  // The address each player shows from a `hold`, released when the player is pointed elsewhere.
+  const holding = new Map([[left, ""], [right, ""]]);
+  let turn = 0;
+
+  const letGo = (el) => {
+    const address = holding.get(el);
+    if (address) release(address);
+    holding.set(el, "");
+  };
+
+  /** Show the prompt in place of the players. */
+  const blank = () => {
+    loaded = "";
+    empty.style.display = "flex";
+    divider.style.display = "none";
+    grip.style.display = "none";
+  };
+
   /**
-   * Point both players at one pair of written sides.
+   * Point both players at one pair of written sides, once the page holds them.
    *
    * @param {object} sides - `a` and `b`, each a written file's entry or nothing.
    * @returns {boolean} True when the pair named at least one file.
@@ -356,25 +359,40 @@ export function createVideoComparePanel(node) {
     const pair = `${a}|${b}`;
     if (pair === loaded) return true;
     loaded = pair;
-    held.set(left, null);
-    held.set(right, null);
-    const stamp = `&rand=${Math.random()}`;
-    for (const [el, address] of [[left, a], [right, b]]) {
-      if (address) {
-        el.src = address + stamp;
-        el.style.display = "block";
-      } else {
-        el.removeAttribute("src");
-        el.style.display = "none";
+    const mine = ++turn;
+    Promise.all([hold(a), hold(b)]).then(([shownA, shownB]) => {
+      if (mine !== turn) {
+        if (shownA) release(a);
+        if (shownB) release(b);
+        return;
       }
-    }
-    paired = Boolean(a && b);
-    empty.style.display = "none";
-    divider.style.display = paired ? "block" : "none";
-    grip.style.display = paired ? "block" : "none";
-    readout.textContent = "0.00 / 0.00 s";
-    scrub.value = "0";
-    paint();
+      letGo(left);
+      letGo(right);
+      held.set(left, null);
+      held.set(right, null);
+      for (const [el, address, shown] of [[left, a, shownA], [right, b, shownB]]) {
+        if (shown) {
+          holding.set(el, address);
+          el.src = shown;
+          el.style.display = "block";
+        } else {
+          el.removeAttribute("src");
+          el.style.display = "none";
+        }
+      }
+      paired = Boolean(shownA && shownB);
+      readout.textContent = "0.00 / 0.00 s";
+      scrub.value = "0";
+      // A side that could not be read is read again on the next refresh.
+      if ((a && !shownA) || (b && !shownB)) loaded = "";
+      if (!shownA && !shownB) blank();
+      else {
+        empty.style.display = "none";
+        divider.style.display = paired ? "block" : "none";
+        grip.style.display = paired ? "block" : "none";
+      }
+      paint();
+    });
     return true;
   }
 
@@ -430,19 +448,22 @@ export function createVideoComparePanel(node) {
   };
   api.addEventListener("executed", onExecuted);
 
-  // A side that no longer exists, such as a temp file cleared by a restart, leaves the prompt.
+  // A side that cannot be played leaves the prompt, and is read again on the next refresh.
   for (const el of [left, right]) {
     el.addEventListener("error", () => {
+      if (!el.getAttribute("src")) return;
       el.style.display = "none";
-      if (left.style.display === "none" && right.style.display === "none") {
-        loaded = "";
-        empty.style.display = "flex";
-        divider.style.display = "none";
-        grip.style.display = "none";
-      }
+      loaded = "";
+      if (left.style.display === "none" && right.style.display === "none") blank();
       schedule();
     });
   }
+
+  // A side the server could not answer while it was away is read again once it is back.
+  const onReconnected = () => {
+    if (!loaded) refresh();
+  };
+  api.addEventListener("reconnected", onReconnected);
 
   // A pasted node reads its kept pair here; a loaded graph is read once its outputs are back.
   const originalOnConfigure = node.onConfigure;
@@ -460,6 +481,8 @@ export function createVideoComparePanel(node) {
     try {
       stop?.();
       api.removeEventListener?.("executed", onExecuted);
+      api.removeEventListener?.("reconnected", onReconnected);
+      turn += 1;
       stopRatio();
       resized.disconnect();
       if (pending) cancelAnimationFrame(pending);
@@ -467,6 +490,7 @@ export function createVideoComparePanel(node) {
       for (const el of [left, right]) {
         el.pause();
         el.removeAttribute("src");
+        letGo(el);
       }
       held.clear();
     } catch (error) {

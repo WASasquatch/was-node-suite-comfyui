@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules.interface.compare_files import keep_ui
 from ...modules.media.temp_video import to_temp
 
 #: What each side is written under in the temp folder.
@@ -53,7 +54,7 @@ class VideoCompare(io.ComfyNode):
 
     @classmethod
     def execute(cls, video_a=None, video_b=None) -> io.NodeOutput:
-        """Write both sides to the temp folder for the node's own player.
+        """Write both sides for the node's own player.
 
         Args:
             video_a: The video drawn left of the divider, or None.
@@ -72,4 +73,4 @@ class VideoCompare(io.ComfyNode):
             written = to_temp(video, prefix)
             if written is not None:
                 sides[key].append(written)
-        return io.NodeOutput(ui=sides)
+        return io.NodeOutput(ui=keep_ui(sides))

@@ -189,6 +189,7 @@ class VideoTemporalUpscale(io.ComfyNode):
 
         from ...modules.media import clip as clips
         from ...modules.interface.channel import temp_prefix
+        from ...modules.interface.compare_files import keep_ui
         from ...modules.media import temp_video, temporal_upscale
         from ...modules.util import sandbox
 
@@ -238,5 +239,5 @@ class VideoTemporalUpscale(io.ComfyNode):
             result.frames, result.size[0], result.size[1], float(result.rate), result.tile,
             result.precision,
         )
-        ui = {"a_video": [before] if before else [], "b_video": [after]}
+        ui = keep_ui({"a_video": [before] if before else [], "b_video": [after]})
         return io.NodeOutput(InputImpl.VideoFromFile(target), result.frames, ui=ui)

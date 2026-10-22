@@ -50,6 +50,9 @@ export const CONTINUITY = Object.freeze([
 /** Picture transitions that hold the last frames of the shot they continue. */
 export const CARRIED_PICTURES = Object.freeze(["carry", "refresh", CARRY_REFERENCE]);
 
+/** Picture transitions that give their scene the frames before it as references. */
+export const REFERENCING_PICTURES = Object.freeze([REFERENCE_VIDEO, REFERENCE_SAMPLE, CARRY_REFERENCE]);
+
 /** Continuities that carry the soundtrack across a cut to new picture. */
 export const BRIDGING = Object.freeze([AUDIO_CARRY, AUDIO_REFERENCE]);
 

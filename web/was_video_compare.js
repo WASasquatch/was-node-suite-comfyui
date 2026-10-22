@@ -1,7 +1,7 @@
 /**
  * The two-video player drawn on Compare Video and on the nodes that work along a clip's motion.
  *
- * Both sides are written to the temp folder by the node and played from one clock, split by
+ * Both sides are written by the node and played from one clock, split by
  * a divider that drags across.
  */
 

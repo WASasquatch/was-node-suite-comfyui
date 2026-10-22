@@ -268,6 +268,7 @@ class H3UpscaleVideo(io.ComfyNode):
         """
         from ...modules.latent import h3_extend
         from ...modules.media import clip as clips
+        from ...modules.interface.compare_files import keep_ui
         from ...modules.media import frame_cache, temp_video
 
         if not h3_extend.samples_sound(model):
@@ -342,5 +343,5 @@ class H3UpscaleVideo(io.ComfyNode):
         before = temp_video.to_temp(shown, f"{PREFIX}.source")
         with video.keeping():
             after = temp_video.to_temp(video, f"{PREFIX}.result")
-        ui = {"a_video": [before] if before else [], "b_video": [after] if after else []}
+        ui = keep_ui({"a_video": [before] if before else [], "b_video": [after] if after else []})
         return io.NodeOutput(video, {"samples": result.latent}, result.frames, report, ui=ui)

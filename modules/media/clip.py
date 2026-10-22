@@ -265,6 +265,7 @@ def compare(before, after, prefix: str) -> dict:
     Returns:
         The ``ui`` mapping the player reads, ``a_video`` and ``b_video``.
     """
+    from ..interface.compare_files import keep_ui
     from .temp_video import to_temp
 
     sides = {"a_video": [], "b_video": []}
@@ -272,7 +273,7 @@ def compare(before, after, prefix: str) -> dict:
         written = to_temp(video, f"{prefix}.{side}")
         if written is not None:
             sides[key].append(written)
-    return sides
+    return keep_ui(sides)
 
 
 def stretch(values, count: int) -> list[float]:

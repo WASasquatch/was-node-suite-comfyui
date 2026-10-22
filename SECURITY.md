@@ -147,6 +147,7 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/archive/save.py` | The `.part` file Zip Save writes, renamed over the archive once complete or removed when the write fails, and a leftover `.part` of the same name |
 | `modules/latent/h3_clip_file.py` | The `.part` file H3 Save Clip writes, renamed over the clip once complete |
 | `modules/interface/preview.py` | Mask editor uploads in `input/clipspace/` written in the last ten minutes, as the route table below states |
+| `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4` or `.png`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
 | `modules/viewer/parsers/canvas_parser.py` | The `.part` file the Content Viewer writes a picture into, renamed to `input/was_viewer/<md5>.png` once complete |
 | `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
 
@@ -171,6 +172,8 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/interface/api/file_thumbnail` | menu label, a size | the file listing, then the allowlist; a picture of the file or a video's first frame, 512 pixels a side at most. A source over 64 megapixels is refused before it is decoded |
 | `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
+| `GET /was/interface/api/system_prompts` | library key | the `system_prompts` folder in the state directory; a key its own listing does not hold reads nothing. 2000 entries and 256 KB of text at most, read off the server's event loop |
+| `GET /was/interface/api/compare_file` | a kept file's name | the `compare` folder in the state directory; a name other than 32 hex digits and `.mp4` or `.png`, or a link, reads nothing |
 | `GET /was/interface/api/video_probe` | menu label | the file listing of video files, then the allowlist; read off the server's event loop |
 | `GET`, `POST /was/interface/api/pause` | node id, client id, value | an in-memory hold. GET lists only the holds queued under the asking client id, and POST releases a hold only for that id |
 | `GET /was/interface/api/app_exposure` | saved workflow name | the workflows folder, a name leaving it refused before it is read. A file over 16 MB, a subgraph holding itself, nesting past 32 levels or more than 20000 nodes is refused, and the work runs off the server's event loop |

@@ -1,8 +1,8 @@
 /**
- * What an edit did to the terminology pantry or the style library, drawn on the node.
+ * What an edit did to the terminology pantry, the style library or the system prompt library,
+ * drawn on the node.
  *
- * Both families publish their counts, the term or file, and the entries through
- * `run_result`, and the shared report panel draws them.
+ * Each family publishes counts, the term or file, and the entries through `run_result`.
  */
 
 import { app } from "../../scripts/app.js";
@@ -21,6 +21,7 @@ const NODES = [
   "WASPromptStyleSave",
   "WASPromptStylesImport",
   "WASPromptStylesExport",
+  "WASSaveSystemPrompt",
 ];
 
 // Tall enough for the summary, a row of count tiles, two fact rows and a listing under them.
@@ -59,11 +60,11 @@ app.registerExtension({
     {
       id: SETTING_ID,
       category: ["WAS Node Suite", "Prompt library", "Show what an edit did"],
-      name: "Show the pantry and style report",
+      name: "Show the pantry, style and system prompt report",
       tooltip:
         "Draw what was added, removed and stored, and list the entries themselves, on the "
-        + "Noodle Soup terminology and prompt style nodes. The nodes run the same either way. "
-        + "This applies to nodes added after the setting changes.",
+        + "Noodle Soup terminology, prompt style and Save System Prompt nodes. The nodes run the "
+        + "same either way. This applies to nodes added after the setting changes.",
       type: "boolean",
       defaultValue: true,
     },

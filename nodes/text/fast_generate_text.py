@@ -121,13 +121,29 @@ class FastGenerateText(io.ComfyNode):
                 ),
                 io.Boolean.Input(
                     "fast_decode", default=True, optional=True,
-                    tooltip="`true` decodes on the fixed cache graph path where the model allows it; `false` runs exactly as core Generate Text.",
+                    tooltip=(
+                        "`true` decodes on the fixed cache graph path where the model allows it; "
+                        "`false` runs exactly as core Generate Text. With sampling on, the same "
+                        "seed can write different text on the two paths."
+                    ),
+                ),
+                io.String.Input(
+                    "system_prompt", force_input=True, optional=True,
+                    tooltip=(
+                        "Instructions that replace the system prompt in the model's chat template, "
+                        "such as from Load System Prompt. Read only while use_default_template is "
+                        "`true`."
+                    ),
                 ),
             ],
             outputs=[
                 io.String.Output(
                     display_name="generated_text",
-                    tooltip="What the model wrote, special tokens removed.",
+                    tooltip="What the model answered, special tokens and its thinking removed.",
+                ),
+                io.String.Output(
+                    display_name="thinking",
+                    tooltip="What a reasoning model thought before answering, with thinking `true`. Empty otherwise.",
                 ),
             ],
         )
@@ -146,6 +162,7 @@ class FastGenerateText(io.ComfyNode):
         use_default_template=True,
         mtp="auto",
         fast_decode=True,
+        system_prompt="",
     ) -> io.NodeOutput:
         """Tokenize, generate and decode.
 
@@ -161,18 +178,20 @@ class FastGenerateText(io.ComfyNode):
             use_default_template: Whether the model's chat template wraps the prompt.
             mtp: Multi-token prediction depth.
             fast_decode: Whether to take the fast decode path.
+            system_prompt: Instructions replacing the template's system prompt.
 
         Returns:
-            The generated text.
+            The answer and the thinking before it.
         """
         if clip is None:
             raise ValueError(
                 "Fast Generate Text needs a CLIP. Connect Load CLIP with a language model such "
                 "as qwen_3_4b.safetensors."
             )
+        system = str(system_prompt or "") if use_default_template else ""
         tokens = clip.tokenize(
             prompt, image=image, skip_template=not use_default_template, min_length=1,
-            thinking=thinking, video=video, audio=audio,
+            thinking=thinking, video=video, audio=audio, system_prompt=system,
         )
         sampling_mode = sampling_mode or {}
         options = {
@@ -188,25 +207,26 @@ class FastGenerateText(io.ComfyNode):
         }
 
         ids, report = text_decode.generate(clip, tokens, max_length, fast=fast_decode, **options)
-        text = clip.decode(ids)
+        text, reasoning = text_decode.split_reasoning(clip, tokens, prompt, clip.decode(ids))
 
-        rate = report.tokens_per_second
+        summary, counts, facts = text_decode.figures(report)
         logger.info(
-            "Fast Generate Text wrote %d token(s) in %.2fs, %.1f tokens/s, on %s%s",
-            report.new_tokens, report.seconds, rate, report.path,
+            "Fast Generate Text wrote %d token(s) in %.2fs (load %.2fs, prompt %.2fs, writing %.2fs at "
+            "%.1f tokens/s) on %s%s",
+            report.new_tokens, report.seconds, report.load_seconds, report.prompt_seconds,
+            report.decode_seconds, report.tokens_per_second, report.path,
             f" ({report.reason})" if report.reason else "",
         )
-        facts = {"decode": report.path}
-        if report.reason:
-            facts["why not fast"] = report.reason
-        facts["prompt tokens"] = report.prompt_tokens
-        if report.extras.get("graph_units") is not None:
-            facts["graph blocks"] = report.extras["graph_units"]
+        if system:
+            facts["system prompt"] = f"{len(system)} characters"
+        bodies = [run_result.body("text", text)]
+        if reasoning:
+            bodies.append(run_result.body("thinking", reasoning))
         run_result.publish(
             status=run_result.OK if not report.reason or not fast_decode else run_result.WARNING,
-            summary=f"{report.new_tokens} tokens at {rate:.1f} tokens/s",
-            counts={"tokens": report.new_tokens, "seconds": round(report.seconds, 2)},
+            summary=summary,
+            counts=counts,
             facts=facts,
-            bodies=run_result.body("text", text),
+            bodies=bodies,
         )
-        return io.NodeOutput(text)
+        return io.NodeOutput(text, reasoning)

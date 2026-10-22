@@ -7,6 +7,7 @@ import json
 from comfy_api.latest import io
 
 from ...modules.interface import run_result
+from ...modules.model import text_decode
 from ...modules.model.fibo2 import conditioning, writer
 
 NODE_NAME = "Generate Fibo 2 Prompt"
@@ -144,10 +145,11 @@ class GenerateFibo2Prompt(io.ComfyNode):
             clip, task, prompt, pictures, mask=layer, caption=caption or "", style=style or "",
             max_length=max_length, sampling=sampling,
         )
+        summary, counts, facts = text_decode.figures(report)
         run_result.publish(
-            summary=f"{ran.capitalize()}: {report.new_tokens} tokens at {report.tokens_per_second:.1f} tokens/s",
-            counts={"tokens": report.new_tokens, "seconds": round(report.seconds, 2)},
-            facts={"task": ran, "decode": report.path},
+            summary=f"{ran.capitalize()}: {summary}",
+            counts=counts,
+            facts={"task": ran, **facts},
             bodies=run_result.body("caption", json.dumps(json.loads(text), indent=2, ensure_ascii=False)),
         )
         return io.NodeOutput(text)

@@ -13,7 +13,7 @@ from ...modules.latent import h3_assets, h3_conditioning, h3_extend, h3_referenc
 MODE_HINT = (
     "`t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, "
     "closes on last_frame; `fl2va_batched` = each segment between two neighbouring images; "
-    "`ref2va` = every segment built on the ref inputs. Assets add to any mode."
+    "`ref2va` = the ref inputs added to every segment. Assets add to any mode."
 )
 
 REF_IMAGE_HINT = (
@@ -183,10 +183,10 @@ SEGMENT_SEED_HINT = (
 )
 
 SEGMENT_MODEL_HINT = (
-    "Which wired model samples this segment, sent out on H3 Extend Window's model output. "
-    "`auto` = ref2va where the segment references anything, else fl2va, or the one model "
-    "wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = model_ref2va. "
-    "Ignored with no model wired."
+    "The model this segment samples with, sent out on H3 Extend Window's model output. "
+    "`auto` = ref2va where the segment or its transition references anything, else fl2va, "
+    "or the one model wired; `fl2va` = model_fl2va, holds pinned frames exactly; `ref2va` = "
+    "model_ref2va."
 )
 
 
@@ -1424,8 +1424,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
 
         Raises:
             ValueError: No row carries a prompt, there is no size to work from, a
-                batched mode was given too few pictures for the rows written, ``ref2va``
-                was given no reference, audio arrived without an audio VAE, or an asset
+                batched mode was given too few pictures for the rows written, audio
+                arrived without an audio VAE, or an asset
                 names a segment the run does not have or lands outside its window, or
                 assets carries something other than a chain of assets.
         """
@@ -1483,16 +1483,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
 
         pictures = (images, first_frame, last_frame)
         ref_images, ref_videos, ref_audios = [], [], []
-        referencing = [asset for asset in assets if asset.role in h3_assets.REFERENCING]
         if mode in h3_conditioning.REFERENCE_MODES:
             ref_images, ref_videos, ref_audios = h3_references.collect(rows)
-            if not (ref_images or ref_videos or ref_audios or referencing):
-                raise ValueError(
-                    "MiniMax H3 Conditioning is set to `ref2va` and no reference is wired. "
-                    "Wire a picture into ref_image_1, a clip into ref_video_1 or a sound "
-                    "into ref_audio_1, wire a MiniMax H3 Asset set to a reference role into "
-                    "assets, or set mode to `t2va`"
-                )
             pictures = (*ref_images, *(frames for _, frames, _ in ref_videos))
         pictures = (*pictures, *(asset.frames for asset in assets if asset.frames is not None))
 

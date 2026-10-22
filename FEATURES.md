@@ -263,7 +263,8 @@ value pairs. **Prompt Parse**, **Prompt Tag Cleanup**, **Text Parse A1111 Embedd
 Add Tokens** and **Text Parse Tokens** handle prompt syntax. **Text Load Line From File**,
 **Text Random Line** and **Load Text File** read from disk. **Fast Generate Text** writes text
 with the language model in a loaded CLIP, as core Generate Text does, on ComfyUI's graph captured
-decode, and shows tokens per second on the node.
+decode, takes a system prompt, hands a reasoning model's thinking out on its own socket, and shows
+on the node how long loading, reading the prompt and writing each took.
 
 For prompt sets, per-run variation, and carrying structured values between nodes as text.
 
@@ -286,6 +287,23 @@ For prompt variation without editing the prompt, and for carrying a style set ac
 [`NODES.md`](NODES.md) under **WAS Suite/Text/Terminology** and **WAS Suite/Text/Styles**.
 Graphs: [`noodle-soup-pick.json`](docs/workflows/noodle-soup-pick.json),
 [`prompt-library.json`](docs/workflows/prompt-library.json).
+
+---
+
+## A system prompt library
+
+System prompts and skill files are `.txt` and `.md` files in
+`ComfyUI/user/was-node-suite/system_prompts`, in folders of any depth, each carrying its name,
+model family and description as front matter. **Load System Prompt** draws the library on the node,
+searched and filtered by folder and model family, with the chosen prompt's text, and hands that
+text to a model's `system_prompt` input. **Save System Prompt** files a prompt into it.
+
+For keeping the instructions that steer Qwen, Gemma and other language models in one place, and
+picking one per node instead of pasting it.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Text/System Prompts**. Files and front matter:
+[`docs/SYSTEM_PROMPTS.md`](docs/SYSTEM_PROMPTS.md). Graph:
+[`system-prompt-library.json`](docs/workflows/system-prompt-library.json).
 
 ---
 
