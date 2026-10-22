@@ -473,6 +473,25 @@ For faster, lighter H3 sampling where the speed is worth some softness.
 
 ---
 
+## MiniMax H3 in four to eight steps
+
+**H3 PTD Patch** gives MiniMax H3 a Parametric Trajectory Distillation file's per-step adapters
+and output heads. The file is picked in ComfyUI's own **Load Model Patch**, and a stock sampler
+on euler, scheduler `simple` and cfg 1 then finishes a clip with sound in the steps the file was
+trained for, which the node hands to the scheduler. It reads the Ref2VA release on a ref2va
+transformer and the fl2va release on an fl2va one, in bf16 or int8, on pruned and quantized
+transformers, with other LoRAs still applied. Its panel shows the release, the steps, the
+trained sigmas and what it checked about the transformer. A sampler given sigmas other than the
+file's steps, such as the other release's, stops before its first step and names the right ones.
+
+For finished H3 clips at a fraction of the usual steps.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Files:
+[`docs/MODELS.md`](docs/MODELS.md#minimax-h3). Graph:
+[`minimax-h3-ptd.json`](docs/workflows/minimax-h3-ptd.json).
+
+---
+
 ## Kandinsky 6 video with sound
 
 Kandinsky 6 runs on ComfyUI's own nodes: **Load Diffusion Model** loads the transformer,
@@ -678,7 +697,10 @@ a LoRA that fades out once the layout is set, comes in only for the detail, or h
 another LoRA partway through. Graph:
 [`number-sequence-lora-schedule.json`](docs/workflows/number-sequence-lora-schedule.json). Power LoRA Loader
 hands its rows on a LoRA stack wire, and Power LoRA Merger merges a stack from that wire, from the loader's model
-output or from another pack's stack nodes in place of its own rows. **BLIP Analyze Image** captions,
+output or from another pack's stack nodes in place of its own rows. The pack's LoRA nodes leave
+out any part of a LoRA that does not fit the model, with one line in the console naming it: a
+LoRA trained on a pruned MiniMax H3 applies to an unpruned one without its time modulation, and
+the reverse. **BLIP Analyze Image** captions,
 **MiDaS Depth Approximation** estimates depth, **Image Remove Background** cuts a subject out
 and hands on its mask for compositing, and **CLIPSeg Model Loader** and **SAM Model Loader** feed the masking nodes. **Model Info**
 reports what a loaded model is.

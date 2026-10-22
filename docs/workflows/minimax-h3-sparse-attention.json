@@ -69,7 +69,7 @@
       "type": "LoraLoaderModelOnly",
       "pos": [
         0,
-        140
+        172
       ],
       "size": [
         270,
@@ -135,7 +135,7 @@
       "type": "ModelAttentionBackend",
       "pos": [
         0,
-        300
+        344
       ],
       "size": [
         270,
@@ -192,7 +192,7 @@
       "type": "WASH3SparseAttention",
       "pos": [
         0,
-        420
+        492
       ],
       "size": [
         270,
@@ -323,7 +323,7 @@
       "type": "PreviewAny",
       "pos": [
         0,
-        760
+        830
       ],
       "size": [
         210,
@@ -363,7 +363,7 @@
       "type": "CLIPLoader",
       "pos": [
         0,
-        960
+        1042
       ],
       "size": [
         270,
@@ -435,7 +435,7 @@
       "type": "VAELoader",
       "pos": [
         0,
-        1100
+        1238
       ],
       "size": [
         270,
@@ -486,7 +486,7 @@
       "type": "VAELoader",
       "pos": [
         0,
-        1220
+        1386
       ],
       "size": [
         270,
@@ -706,7 +706,7 @@
       "type": "KSamplerSelect",
       "pos": [
         420,
-        140
+        172
       ],
       "size": [
         270,
@@ -756,7 +756,7 @@
       "type": "BasicScheduler",
       "pos": [
         420,
-        260
+        320
       ],
       "size": [
         270,
@@ -883,8 +883,8 @@
         0
       ],
       "size": [
-        212.3638671875,
-        326
+        320,
+        330
       ],
       "flags": {},
       "order": 14,
@@ -951,7 +951,7 @@
       "id": 15,
       "type": "WASFreeMemory",
       "pos": [
-        1440,
+        1500,
         0
       ],
       "size": [
@@ -1078,7 +1078,7 @@
       "id": 16,
       "type": "VAEDecode",
       "pos": [
-        1780,
+        1850,
         0
       ],
       "size": [
@@ -1124,8 +1124,8 @@
       "id": 17,
       "type": "VAEDecodeAudio",
       "pos": [
-        1780,
-        120
+        1850,
+        136
       ],
       "size": [
         164.2388671875,
@@ -1170,7 +1170,7 @@
       "id": 18,
       "type": "CreateVideo",
       "pos": [
-        2080,
+        2094.24,
         0
       ],
       "size": [
@@ -1269,7 +1269,7 @@
       "id": 19,
       "type": "SaveVideo",
       "pos": [
-        2380,
+        2444.24,
         0
       ],
       "size": [
@@ -1406,8 +1406,8 @@
         560
       ],
       "size": [
-        212.3638671875,
-        326
+        320,
+        330
       ],
       "flags": {},
       "order": 15,
@@ -1474,7 +1474,7 @@
       "id": 22,
       "type": "WASFreeMemory",
       "pos": [
-        1440,
+        1500,
         560
       ],
       "size": [
@@ -1601,7 +1601,7 @@
       "id": 23,
       "type": "VAEDecode",
       "pos": [
-        1780,
+        1850,
         560
       ],
       "size": [
@@ -1647,8 +1647,8 @@
       "id": 24,
       "type": "VAEDecodeAudio",
       "pos": [
-        1780,
-        680
+        1850,
+        696
       ],
       "size": [
         164.2388671875,
@@ -1693,7 +1693,7 @@
       "id": 25,
       "type": "CreateVideo",
       "pos": [
-        2080,
+        2094.24,
         560
       ],
       "size": [
@@ -1792,7 +1792,7 @@
       "id": 26,
       "type": "SaveVideo",
       "pos": [
-        2380,
+        2444.24,
         560
       ],
       "size": [
@@ -1879,7 +1879,7 @@
       "id": 27,
       "type": "WASVideoCompare",
       "pos": [
-        2700,
+        2794.24,
         200
       ],
       "size": [

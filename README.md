@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **534 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **535 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
 
 ### See [`NODES.md`](NODES.md) for reference.
@@ -51,13 +51,13 @@ Then set `document_export: true` under `features:` in `config.yaml`.
 
 # What changed since v2
 
-534 nodes across a package of source files. The pack itself needs no packages, and nothing is
+535 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 534 |
+| Nodes | 220 | 535 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 143 files: browser libraries, fonts, eight face cascades, three sets of weights and two networks, each with its licence |
@@ -88,7 +88,7 @@ What each area does: [`FEATURES.md`](FEATURES.md).
 
 No node id is renamed. Two nodes are now a different node under the same menu name, two ids
 are gone and another node does the job of each, and ComfyUI offers to swap all four in. Five
-ids are removed with nothing in their place. Widgets, slot counts, three menu labels and five
+ids are removed with nothing in their place. Widgets, slot counts, three menu labels and six
 results changed, and a workflow saved before v3 is carried across as it loads.
 
 **Four retired ids.** Each one opens listed in ComfyUI's missing-node dialog. Tick it, press
@@ -123,7 +123,8 @@ are now checkboxes, and fourteen nodes that stopped at four to eight slots now d
 twenty-four or twenty-six, drawing one empty slot below the last one filled. Saved settings are
 read back onto the new widgets and everything wired stays wired. The three batchers each gain a
 `count` output below the one they had. `Image Save`'s `prefix_as_filename` is now
-`overwrite_mode`, ticked where it read `true`.
+`overwrite_mode`, ticked where it read `true`. `Logic Boolean`'s 0 to 1 slider is a checkbox,
+ticked where it read above 0.5.
 
 **Three Custom Material takes a module file.** Its `javascript` box is gone. The node now picks
 a `.js` or `.txt` module from ComfyUI's `input` folder or a folder under `paths.allow_read`, and
@@ -137,13 +138,14 @@ that permits a module to run at all.
 `Seed (Number Outputs)` and `Save Video` is `Save Video (Advanced)`, so none shares a name with
 a core ComfyUI node. Only the label changed, and the old names still find them in search.
 
-**Five changed results.**
+**Six changed results.**
 
 | Node | What changed | What to do |
 |---|---|---|
 | `Image Blending Mode` | 26 blend modes instead of 14, in linear light on the GPU, keeping values above white. `add` now adds the two layers rather than painting `image_b` over `image_a` | A graph using `add` comes out brighter. Switch it to `normal` for what it did before |
 | `Image Style Filter` | 37 looks, every graded one finished with a halation. The 26 period looks keep the colour their name has always meant | Nothing. A saved workflow opens on the same style |
 | `Image Film Grain` | Adds grain that follows the picture's brightness and keeps its colour, instead of blending a grey, sharpened noise layer over it. `density`, `intensity`, `highlights` and `supersample_factor` are replaced by `strength`, `grain_size`, `color` and `seed` | Nothing. A saved workflow opens on the new defaults, which give fine film grain |
+| `Logic Boolean` | Its input takes a wired INT, FLOAT, NUMBER or text as well as the checkbox, and reads a number as true unless it is 0, where it rounded at 0.5. The FLOAT output gives 1.0 or 0.0 instead of the slider's value | A FLOAT between 0 and 0.5 wired into it now reads true. Put **Logic Compare Numbers** in front of it, `a > b` against 0.5, for the old answer |
 | `Mask Erode Region` | Holds the frame edge instead of treating outside the frame as unset | A mask that touched an edge comes out wider. One with a clear margin is unchanged |
 | `Image SSAO (Ambient Occlusion)` | Traces rays across the map as real relief instead of averaging neighbouring pixels, so the shading follows the surface and no longer reacts to the image's own colour. The `depth_images` input is now `height_maps`, `tile_size` is gone, and `height_scale`, `ray_count`, `step_count` and `angle_bias` set the relief and the tracing. The whole body is float now, so linear light above 1.0 is shaded rather than clipped, and a `precision` widget writes 8, 16 or 32 bit for EXR Save | Re-wire the depth map into `height_maps`, which opens unconnected. The other settings are read back onto the new widgets. Highlight masking now starts off, so the node shades as soon as it is dropped, and `strength` at 0 leaves the image untouched rather than black |
 
@@ -151,7 +153,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**534 nodes** across 49 categories. [`NODES.md`](NODES.md) carries every input, output and
+**535 nodes** across 49 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 

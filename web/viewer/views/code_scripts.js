@@ -112,12 +112,14 @@ export function getPrismTheme(theme) {
 
 /**
  * Get Prism script tags for iframe injection
+ * @param {string} [nonce] - A nonce each tag carries, or none.
  * @returns {string}
  */
-export function getPrismScriptTags() {
+export function getPrismScriptTags(nonce = "") {
   if (!prismScripts) return "";
+  const attribute = /^[0-9a-f]+$/.test(nonce) ? ` nonce="${nonce}"` : "";
   return `
-    <script>${prismScripts}<\/script>
-    <script>document.addEventListener('DOMContentLoaded', () => Prism.highlightAll());<\/script>
+    <script${attribute}>${prismScripts}<\/script>
+    <script${attribute}>document.addEventListener('DOMContentLoaded', () => Prism.highlightAll());<\/script>
   `;
 }

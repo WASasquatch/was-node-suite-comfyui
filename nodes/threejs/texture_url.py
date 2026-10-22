@@ -63,7 +63,8 @@ class ThreeTextureURL(io.ComfyNode):
                     multiline=False,
                     tooltip=(
                         "Where to read from, as a `data:image/png;base64,` string, or "
-                        "`https://example.com/wood.jpg` with features.network on."
+                        "`https://example.com/wood.jpg` with features.network on. Tokens "
+                        "such as [time] are left as typed."
                     ),
                 ),
                 io.Combo.Input(

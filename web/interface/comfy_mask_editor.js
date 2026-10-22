@@ -8,7 +8,7 @@
 import { api } from "../../../scripts/api.js";
 import { fetchWithin } from "./request.js";
 import { app } from "../../../scripts/app.js";
-import { executionId, nodeLocator, placed } from "./preview.js";
+import { clientId, executionId, nodeLocator, placed, workflowId } from "./preview.js";
 
 const LOG_NAME = "WASNodeSuite.ComfyMaskEditor";
 
@@ -98,14 +98,17 @@ function report(detail) {
  * The address the editor loads a node's published mask from.
  *
  * @param {object} node - The node the mask was published by.
- * @returns {string} The preview route with the parameters that loader requires, or the empty
- *   string for a node carrying no execution id.
+ * @returns {string} The preview route with the parameters that loader requires, this tab's
+ *   client id and the open workflow, or the empty string for a node carrying no execution id.
  */
 function previewUrl(node) {
   const id = executionId(node);
   if (!placed(id)) return "";
+  const workflow = workflowId();
   return api.apiURL(
     `${PREVIEW_ROUTE}?node_id=${encodeURIComponent(id)}&side=output`
+      + (workflow ? `&workflow=${encodeURIComponent(workflow)}` : "")
+      + `&client_id=${encodeURIComponent(clientId())}`
       + `&filename=${encodeURIComponent(SOURCE_FILENAME)}`
       + `&type=${encodeURIComponent(SOURCE_TYPE)}`,
   );

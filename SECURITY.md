@@ -13,7 +13,7 @@ input that reaches it is fixed fastest.
 |---|---|
 | Start a process | No `subprocess`, `multiprocessing` or `pty`, and no `os.system`, `os.popen`, `os.exec*`, `os.spawn*`, `os.posix_spawn`, `os.startfile`, `os.fork` or `asyncio.create_subprocess_*`, in any import form |
 | Install a package | Nothing runs `pip`. A feature group that needs a library names it in the log with the command to run |
-| Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in three places, all below: Three.js scenes while `threejs.allow_scripts` is on, the page Three Compile writes under the same setting, and the Content Viewer's sandboxed frame |
+| Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in three places, all below: Three.js scenes while `threejs.allow_scripts` is on, the page Three Compile writes under the same setting, and the Content Viewer's sandboxed frame while `viewer.allow_scripts` is on, which it is not by default |
 | Load arbitrary pickles | Every `torch.load` passes `weights_only=True`, and Load Cache, which reads a file a person picks, refuses torch older than 2.6. Every `comfy.utils.load_torch_file` passes `safe_load=True`. Diffusers Hub Model Down-Loader fetches and loads `.safetensors` weights only, and BLIP and CLIPSeg load `model.safetensors` only. The checkpoint and Diffusers model loaders hand a model-folder file to ComfyUI's own loading code, as ComfyUI's loader nodes do |
 | Require any package | The default node set installs nothing, and `requirements.txt` names no package. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group. Nothing installs them: the group prints the command for a person to run |
 
@@ -45,7 +45,9 @@ address the node was given. The browser learns whether `features.network` is on 
 server sends with a scene, never from the scene itself. Every other address the browser is
 handed is the pack's own asset route, a `data:` URL, a `blob:` URL or one of the ten fixed
 Marigold v2 downloads below, and the Three.js runtime turns any other address a scene or a model
-names into an empty file.
+names into an empty file. Content shown in the Content Viewer reaches no other address while
+`viewer.allow_scripts` is off, whatever `features.network` is set to: it runs no script of its
+own and cannot move its frame.
 
 Choosing `Marigold v2` on Power Preprocessor names any of its ten files the model folders lack
 in ComfyUI's missing models list, each with its fixed address under
@@ -57,15 +59,28 @@ outside address appears in the pack's own browser code.
 No Python code here is an HTTP client: nothing imports `requests`, `httpx`, `urllib.request`,
 `http.client`, `urllib3` or `websockets`, and nothing opens a socket. Three related names do
 appear, and none of them reaches the network. `aiohttp.web` registers this pack's own inbound
-routes in fourteen modules, and its client half is never used. `urllib.parse` reads strings in
+routes in sixteen modules, and its client half is never used. `urllib.parse` reads strings in
 three files: it decodes a `data:` URI and a picture's name in the document exporter, unescapes
 the file names a 3D model refers to, and splits the address Three Texture URL is given.
-`socket.gethostname()` fills the `[hostname]` token.
+`socket.gethostname()` fills the `[hostname]` token. Tokens are not expanded in the address
+Three Texture URL is given, so no token value reaches another host through it.
 
 The PDF export hands its document to xhtml2pdf with every picture already inside it as a `data:`
 URL. Stylesheet imports, `url()` references and `<link>` tags are removed first, every file
 request is answered with an empty inline file, and xhtml2pdf's resource policy refuses network
 and local reads wherever the installed version has one.
+
+## Text tokens
+
+`[hostname]` and `[user]` expand to this computer's name and the login running ComfyUI, kept to
+letters, digits, `.`, `_` and `-`, without leading dots, and to 64 characters. Built-in and
+custom tokens expand in every text input except the ones the token module lists as literal:
+token definitions, repository ids, colours, state a node's own frontend writes, listing keys,
+stored system prompts and Three Texture URL's address.
+
+A custom token's value is placed into any text input that names it, so anyone who can queue a
+prompt can read it, and a token is no place for a secret. Text Add Tokens and Text Add Token by
+Input log the names of the custom tokens defined, never their values.
 
 ## Three.js scenes
 
@@ -95,13 +110,24 @@ them only through wrappers that refuse first; a subfolder in a file name prefix 
 ComfyUI creates it. Model files are found with ComfyUI's `get_full_path`, which keeps a name
 inside its model folder.
 
+The pack teaches ComfyUI's Load Model Patch node one more kind of file: a safetensors file whose
+header, read up to 64 MB and never past the file's size, names a Parametric Trajectory
+Distillation release. It loads with `safe_load`, and every other file goes to ComfyUI's own
+loader unchanged.
+
 A glob pattern, a file name prefix, a frame cache name, and a name or folder typed below a
 folder the node has already chosen are refused before anything is listed or resolved when they
 name another machine, carry a drive, start at a root, or hold a segment of dots and spaces alone
 such as `..`. On Windows they are refused as well when a segment holds `:`, which names a stream
-of another file, or names a device such as `NUL` or `COM1`, and so is any write target. A frame
-cache name is refused when it holds a folder separator. Whatever they match stays inside that
-folder.
+of another file, or names a device such as `NUL` or `COM1`, and so is any path a node reads or
+writes. A frame cache name is refused when it holds a folder separator. Whatever they match stays
+inside that folder.
+
+A refusal repeats the value as it was given, cut to 240 characters, and names the permitted
+folders as `input`, `output`, `temp`, `ComfyUI/user/was-node-suite` and the number of folders
+`paths.allow_read` or `paths.allow_write` lists. It never names a resolved path, a link's target
+or a folder's full path, and its text is the same whether anything is at the refused path or not.
+Path Exists answers a refused path as not existing, with `resolved` empty.
 
 A node input naming a file or directory is resolved and checked against an allowlist before it
 is opened, listed or written, whatever value arrives: a menu offers labels, and a linked input
@@ -109,20 +135,31 @@ or an expanded App Workflow can still deliver any string. ComfyUI's `input/`, `o
 `temp/`, the pack's state directory `ComfyUI/user/was-node-suite`, and anything in
 `paths.allow_read` or `paths.allow_write` are permitted; everything else is refused. Both sides
 of the comparison are resolved, which covers `..` segments and symlinks. Model files are read
-from ComfyUI's model folders, saved workflows from its workflows folder and fonts from the font
-catalog, each by a name that cannot leave its folder. A glob pattern holding `**` lists through
+from ComfyUI's model folders, saved workflows from a user's workflows folder (the App Workflow
+node and its menu read the default user's; the route reads the asking user's) and fonts from the
+font catalog, each by a name that cannot leave its folder. A glob pattern holding `**` lists through
 links the user placed inside a permitted folder; every match it returns is checked again before
-it is read. A folder in `paths.allow_read` is listed, previewed and read by the routes below for
+it is read. The file listing and the pack's folder and file menus follow no symlink or Windows
+junction out of the folder they list. A folder in `paths.allow_read` is listed, previewed and read by the routes below for
 any client that can reach ComfyUI, the same as `input/`.
 
 A video, sound or picture the pack opens with FFmpeg, through PyAV, opens only as a single-file
 container, stream or picture from local disk. A playlist, a concatenation list and any network
 protocol are refused.
 
-No node writes the pack's settings. `config.yaml`, `config.json`, the config file `WAS_CONFIG`
-names, and the `viewer-extensions/` folder are refused as write targets, even inside the state
-directory, compared without regard to case and to trailing dots and spaces.
+No node reads or writes the pack's settings. In the state directory, every file whose name
+begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`,
+`was_suite_settings.json` or `was_history.json` is refused as a read and a write target. So are
+the config file in use and the one `WAS_CONFIG` names, with every file beside them whose name
+begins with theirs, and the `viewer-extensions/` folder as a write target. Names are compared
+after links are resolved, without regard to case and to trailing dots and spaces. Custom tokens
+are the exception: Text Add Tokens and Text Add Token by Input store them in the state database.
 [docs/CONFIG.md](docs/CONFIG.md#containment) has the table.
+
+Power LoRA Merger records each source in the merged file's header by its name inside the LoRA
+folder, and leaves out any value from the first source's header that names a path on disk.
+In `obfuscate` mode the header keeps nothing from the sources but what model and network the
+file is for.
 
 A frame cache picked from a folder no node writes to, such as `input/` or a `paths.allow_read`
 folder, is read and never added to or deleted.
@@ -162,24 +199,28 @@ folder that is refused if it would leave it. None takes a path to open.
 
 | Route | Takes | Answers from |
 |---|---|---|
-| `GET /was/interface/api/preview` | node id, slot, side, frame, workflow, channel | an in-memory store |
+| `GET /was/interface/api/preview` | node id, slot, side, frame, workflow, channel, client id | an in-memory store, served only to the client id that queued the run, or to any client for a run queued without one |
 | `POST /was/interface/api/preview/subscribe` | node id | an in-memory store |
 | `POST /was/interface/api/preview/discard` | a list of mask editor upload names | deletes those files: names matching `clipspace-…-<digits>.png`, directly in `input/clipspace/`, written in the last ten minutes, at most eight a call |
-| `GET /was/interface/api/run_result`, `/run_result_page` | node id, workflow | an in-memory store |
+| `GET /was/interface/api/run_result`, `/run_result_page` | node id, workflow, client id | an in-memory store, served only to the client id that queued the run, or to any client for a run queued without one |
 | `GET /was/interface/api/text_lines` | menu label | the file listing, then the allowlist |
 | `GET /was/interface/api/font` | font name | the font catalog |
-| `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most |
+| `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most. Symlinks and Windows junctions are not followed |
 | `GET /was/interface/api/file_thumbnail` | menu label, a size | the file listing, then the allowlist; a picture of the file or a video's first frame, 512 pixels a side at most. A source over 64 megapixels is refused before it is decoded |
-| `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run |
+| `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run, or to any client for a run queued without one |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
 | `GET /was/interface/api/system_prompts` | library key | the `system_prompts` folder in the state directory; a key its own listing does not hold reads nothing. 2000 entries and 256 KB of text at most, read off the server's event loop |
 | `GET /was/interface/api/compare_file` | a kept file's name | the `compare` folder in the state directory; a name other than 32 hex digits and `.mp4` or `.png`, or a link, reads nothing |
 | `GET /was/interface/api/video_probe` | menu label | the file listing of video files, then the allowlist; read off the server's event loop |
 | `GET`, `POST /was/interface/api/pause` | node id, client id, value | an in-memory hold. GET lists only the holds queued under the asking client id, and POST releases a hold only for that id |
-| `GET /was/interface/api/app_exposure` | saved workflow name | the workflows folder, a name leaving it refused before it is read. A file over 16 MB, a subgraph holding itself, nesting past 32 levels or more than 20000 nodes is refused, and the work runs off the server's event loop |
+| `GET /was/interface/api/app_exposure` | saved workflow name | the asking user's workflows folder, `ComfyUI/user/<user>/workflows`, where `--multi-user` takes the user from the `Comfy-User` header and an unknown user reads nothing. A name leaving it is refused before it is read. A file over 16 MB, a subgraph holding itself, nesting past 32 levels or more than 20000 nodes is refused with fixed text, and the work runs off the server's event loop |
 | `GET /was/threejs/api/asset` | key | an in-memory store |
 | `GET`, `POST /was/threejs/api/render` | client id, token, frames | an in-memory job queue |
-| `GET /was/threejs/api/module` | menu label | the file listing, then the allowlist; refused while `threejs.allow_scripts` is off |
+| `GET /was/threejs/api/module` | menu label | the file listing, then the allowlist; refused while `threejs.allow_scripts` is off. A module that cannot be read is answered with fixed text naming no path |
+
+Messages the pack sends over ComfyUI's socket about a run (tile captions, segment previews, held
+runs, render progress notes) go only to the client id that queued it. A run queued without one
+is announced to every tab, as ComfyUI's own messages are.
 
 A client id is not a secret: ComfyUI lists them on its `/queue` route. The routes that answer by
 client id keep one tab from reading or releasing another's run; they authenticate no one.
@@ -199,8 +240,15 @@ comes from a frame the viewer created, with that frame's own origin, and only fo
 own node and the view it is showing, so framed content cannot read another node's pictures,
 change its settings or release its held run. A canvas frame is handed only the pictures the
 Content Viewer wrote for it, and the page draws only `data:` and `blob:` pictures and those from
-it. A document inside a frame carries a policy limiting what it may load and connect to; it can
-still navigate its own frame to another address.
+it. A document inside a frame carries a policy limiting what it may load and connect to.
+
+While `viewer.allow_scripts` is off, the default, a document built from a node is placed with its
+scripts, event handlers, forms, `<base>` and refresh markup removed, under a policy that runs only
+the viewer's own scripts, each carrying a nonce the document cannot know. It can neither run
+supplied code nor move its own frame, and a link in it opens in a new tab only after the address
+is confirmed. With the setting on, the document runs its own scripts and can navigate its own
+frame. The browser learns the setting from a Content Viewer node's run, never from the workflow,
+and holds it off until a run says otherwise.
 
 The rich text editor shows a document in a frame of this page's origin, under a content policy
 that allows no scripts, plugins, frames, forms or connections, and loads images, fonts, media
@@ -298,6 +346,7 @@ whole tree.
 | Dynamic import | `modules/model/pssr.py` | With `features.pssr` on, which is off by default, importing the PS-SR checkout the user places in `models/PS-SR` or names with `PSSR_ROOT`. That code and the `diffsynth` package it uses run as published, outside this pack's checks |
 | Environment access | `modules/config/paths.py`, `prestartup_script.py` | Reading eight variables and writing none: `WAS_CONFIG` and `WAS_CONFIG_DIR` relocate the config file, `LOCALAPPDATA` and `XDG_DATA_HOME` locate user data, `HF_HOME`, `HF_HUB_CACHE` and `HUGGINGFACE_HUB_CACHE` find weights already on disk, and `PSSR_ROOT` finds one model. Every read in `modules/` goes through one function, `paths.env_value`. Python's `Path.home()` and `expanduser()` read the user's home directory, and `tempfile.gettempdir()` reads `TMPDIR`, `TEMP` and `TMP` to find the scratch folder |
 | Sensitive file access | `modules/image/exr.py`, `modules/image/psd.py` | Reading the image file chosen in the node, resolved through the allowlist above whatever value arrives. See the section above for what bounds the parse |
+| Blacklisted URL | `modules/model/flow_networks.py` | The two Google Drive pages where FlowSeek's authors publish its checkpoints, quoted as text in the message a missing checkpoint raises. Nothing opens them: the pack fetches FlowSeek's weights from Hugging Face only, with `features.network` on, and no other shipped file names Google Drive |
 
 JavaScript files are reported under Python rule names by some scanners without proper filtering
 enabled. `connect` and `bind` are ordinary JavaScript methods and carry no network meaning.

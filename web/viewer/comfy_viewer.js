@@ -48,7 +48,30 @@ const STATE = {
   themeSyncAttached: false,
   lastThemeCssVars: "",
   themeUpdatePending: false,
+  // The server's `viewer.allow_scripts`, as the last Content Viewer run reported it.
+  allowScripts: false,
 };
+
+/**
+ * Record the server's `viewer.allow_scripts` and rebuild every viewer when it changes.
+ *
+ * @param {boolean} allowed - The value a Content Viewer run reported.
+ */
+function setAllowScripts(allowed) {
+  const next = allowed === true;
+  if (next === STATE.allowScripts) return;
+  STATE.allowScripts = next;
+  refreshAllViewers();
+}
+
+// The setting is forgotten whenever the server reconnects, until a run reports it again.
+api.addEventListener("reconnected", () => {
+  try {
+    setAllowScripts(false);
+  } catch (e) {
+    console.error("[WAS Viewer] reconnect reset error:", e);
+  }
+});
 
 function getThemeCssVars() {
   try {
@@ -485,7 +508,7 @@ function ensureElementsForNode(node) {
   `;
 
   const iframe = document.createElement("iframe");
-  iframe.setAttribute("sandbox", getViewSandboxAttributes("html"));
+  iframe.setAttribute("sandbox", getViewSandboxAttributes("html", STATE.allowScripts));
   iframe.setAttribute("allow", "fullscreen");
   iframe.style.cssText = `
     position: absolute;
@@ -501,7 +524,7 @@ function ensureElementsForNode(node) {
   contentWrapper.appendChild(iframe);
   elements.iframe = iframe;
 
-  const initialHtml = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>No content. Click Edit to add content or connect a STRING input.</p>", "html", theme);
+  const initialHtml = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>No content. Click Edit to add content or connect a STRING input.</p>", "html", theme, [], key, { allowScripts: STATE.allowScripts });
   iframe.srcdoc = initialHtml;
 
   const textarea = document.createElement("textarea");
@@ -766,7 +789,7 @@ function updateIframeContent(node, elements, forceView = null) {
   // Store desired sandbox attrs, applied in processIframeQueue right before
   // loading new content, so we never change sandbox on an already-loaded iframe
   // (which would trigger an unwanted browser reload).
-  elements.pendingSandbox = getViewSandboxAttributes(contentType);
+  elements.pendingSandbox = getViewSandboxAttributes(contentType, STATE.allowScripts);
   
   elements.contentType = contentType;
   updateControlsForUI(elements, isViewUI(contentType));
@@ -797,10 +820,11 @@ function updateIframeContent(node, elements, forceView = null) {
 
   let html;
   const nodeId = String(node.id);
+  const frameOptions = { allowScripts: STATE.allowScripts };
   if (!displayContent && !manualViewType) {
-    html = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>No content. Click Edit to add content or connect a STRING input.</p>", "html", theme, [], nodeId);
+    html = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>No content. Click Edit to add content or connect a STRING input.</p>", "html", theme, [], nodeId, frameOptions);
   } else {
-    html = buildIframeContent(finalContent || '', contentType, theme, excluded, nodeId);
+    html = buildIframeContent(finalContent || '', contentType, theme, excluded, nodeId, frameOptions);
   }
   
   // Check if the view provides a direct URL (e.g. OpenReel app served by its own endpoint).
@@ -819,8 +843,8 @@ function updateIframeContent(node, elements, forceView = null) {
   // For OpenReel: defer loading until we have actual content to avoid hard refresh race conditions
   if (directUrl && !displayContent && !elements.directUrlLoaded && !manualViewType) {
     // Show placeholder, don't load the app yet
-    const placeholderHtml = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>Waiting for video content...</p>", "html", theme, [], nodeId);
-    const placeholderSandbox = getViewSandboxAttributes("html");
+    const placeholderHtml = buildIframeContent("<p style='opacity:0.5;text-align:center;margin-top:40px;'>Waiting for video content...</p>", "html", theme, [], nodeId, frameOptions);
+    const placeholderSandbox = getViewSandboxAttributes("html", STATE.allowScripts);
     if (elements.iframe.getAttribute("sandbox") !== placeholderSandbox) {
       elements.iframe.setAttribute("sandbox", placeholderSandbox);
     }
@@ -835,7 +859,7 @@ function updateIframeContent(node, elements, forceView = null) {
       const contentMsg = getViewContentMessage(contentType, displayContent);
       if (contentMsg) {
         try {
-          elements.iframe.contentWindow.postMessage(contentMsg, '*');
+          elements.iframe.contentWindow.postMessage(contentMsg, contentTarget(elements));
         } catch (e) {}
       }
     }
@@ -925,6 +949,19 @@ function isFrameOrigin(event, elements) {
   return sandbox.includes("allow-same-origin");
 }
 
+/**
+ * The target origin for a message carrying a node's content into its viewer frame.
+ *
+ * @param {object} elements - The surface whose frame is addressed.
+ * @returns {string} This page's origin for a frame its sandbox lets hold that origin, so a
+ *   frame that has navigated elsewhere receives nothing, and `"*"` for an opaque frame, which
+ *   no origin string can name.
+ */
+function contentTarget(elements) {
+  const sandbox = String(elements?.iframe?.getAttribute("sandbox") || "").split(/\s+/);
+  return sandbox.includes("allow-same-origin") ? window.location.origin : "*";
+}
+
 window.addEventListener("message", (event) => {
   const messageType = event.data?.type;
   if (!messageType) return;
@@ -967,7 +1004,7 @@ window.addEventListener("message", (event) => {
         const contentMsg = getViewContentMessage(elements.contentType, content);
         if (contentMsg) {
           try {
-            elements.iframe.contentWindow.postMessage(contentMsg, '*');
+            elements.iframe.contentWindow.postMessage(contentMsg, contentTarget(elements));
           } catch (e) {}
         }
       }
@@ -1171,6 +1208,13 @@ app.registerExtension({
     const oldOnExecuted = nodeType.prototype.onExecuted;
     nodeType.prototype.onExecuted = function (message) {
       const r = oldOnExecuted ? oldOnExecuted.apply(this, arguments) : undefined;
+      try {
+        if (Array.isArray(message?.allow_scripts) && typeof message.allow_scripts[0] === "boolean") {
+          setAllowScripts(message.allow_scripts[0]);
+        }
+      } catch (e) {
+        console.error("[WAS Viewer] allow_scripts error:", e);
+      }
       try {
         const displayText = message?.text?.[0];
         const sourceContent = message?.source_content?.[0] || "";

@@ -80,8 +80,8 @@
       "id": 3,
       "type": "WASImageStatistics",
       "pos": [
-        640,
-        1480
+        660,
+        1523
       ],
       "size": [
         280,
@@ -182,8 +182,8 @@
       "id": 4,
       "type": "WASComfyViewer",
       "pos": [
-        936,
-        790
+        1020,
+        811
       ],
       "size": [
         560,
@@ -224,7 +224,7 @@
       "type": "LoadImage",
       "pos": [
         60,
-        790
+        811
       ],
       "size": [
         520,
@@ -262,7 +262,7 @@
       "type": "WASComfyViewer",
       "pos": [
         1711,
-        791
+        811
       ],
       "size": [
         1112,
@@ -344,7 +344,7 @@
       "type": "WASTextToDOC",
       "pos": [
         60,
-        1320
+        1361
       ],
       "size": [
         520,
@@ -389,7 +389,7 @@
       "type": "WASComfyViewer",
       "pos": [
         681,
-        1850
+        1913
       ],
       "size": [
         700,
@@ -429,8 +429,8 @@
       "id": 10,
       "type": "WASLoadDocument",
       "pos": [
-        1624,
-        1483
+        1640,
+        1523
       ],
       "size": [
         340,
@@ -461,7 +461,7 @@
       "id": 11,
       "type": "WASComfyViewer",
       "pos": [
-        2027,
+        2060,
         1643
       ],
       "size": [

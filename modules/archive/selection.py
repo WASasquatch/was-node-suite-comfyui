@@ -73,8 +73,9 @@ def sources(entries: Iterable[str]) -> tuple[list[Source], dict[str, str]]:
         chosen, and a path naming a folder.
 
     Raises:
-        PathNotAllowed: An entry named a path outside every readable root. The message names
-            the path, the roots and the config key that would permit it.
+        PathNotAllowed: An entry named a path outside every readable root, or one of the
+            pack's own settings files. The message names the entry as written, the roots by
+            name and the config key that would permit it.
     """
     found: list[Source] = []
     missing: dict[str, str] = {}

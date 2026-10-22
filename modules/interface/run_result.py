@@ -1,8 +1,8 @@
 """What a node's last run did, as JSON that node's interface can draw.
 
-``GET /was/interface/api/run_result?node_id=<id>`` answers a status, counts, facts, bodies and
-sampled items, or 204. ``GET /was/interface/api/run_result_page`` answers a range of one body's
-lines. :data:`MAX_ENTRIES` nodes hold a result.
+``GET /was/interface/api/run_result?node_id=&client_id=`` answers a status, counts, facts, bodies
+and sampled items, or 204. ``GET /was/interface/api/run_result_page`` answers a range of one
+body's lines. :data:`MAX_ENTRIES` nodes hold a result.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from .channel import (
     NO_STORE,
     REFUSAL_HEADER,
     executing_class_type,
+    executing_client_id,
     executing_node_id,
     executing_workflow_id,
     node_key,
@@ -70,11 +71,13 @@ __all__ = [
 
 logger = log.get_logger("interface.run_result")
 
-#: The one route serving what a node published, keyed by a ``node_id`` query parameter.
+#: The one route serving what a node published, keyed by a ``node_id`` query parameter and the
+#: asking tab's ``client_id``. A tab is answered the results of the runs it queued and of runs
+#: queued with no client id, never another tab's.
 ROUTE = "/was/interface/api/run_result"
 
 #: The route serving a range of lines from one body of what a node published, keyed by the same
-#: ``node_id`` and by the body's place in the report.
+#: ``node_id`` and ``client_id`` and by the body's place in the report.
 PAGE_ROUTE = "/was/interface/api/run_result_page"
 
 #: Answered for a node that has published nothing, and for a report filed under its id by a node
@@ -199,17 +202,20 @@ _LONE_SURROGATE = re.compile("[\ud800-\udfff]")
 # every read and write of the store below goes through this.
 _lock = threading.Lock()
 
-#: Store key, the workflow and node ids joined, to the result that node last published there,
-#: most recently used last.
-_results: OrderedDict[str, dict] = OrderedDict()
+#: Store key, ``(client id, workflow and node ids joined)``, to the result that node last
+#: published there, most recently used last. The client id is the tab that queued the run,
+#: ``""`` for a run queued with none.
+_results: OrderedDict[tuple[str, str], dict] = OrderedDict()
 
-#: Node id to the store key it last published under, for a reader that names no workflow.
-_latest: dict[str, str] = {}
+#: ``(client id, node id)`` to the store key that client's run last published the node under,
+#: for a reader that names no workflow.
+_latest: dict[tuple[str, str], tuple[str, str]] = {}
 
-#: Node id to the lines of each body of that result, in the same order the report carries them,
-#: as ``{"bodies": [[line, ...], ...], "chars": int}``. Held beside the report rather than in it,
-#: so what a first draw fetches is the report alone, and dropped with the report it belongs to.
-_pages: OrderedDict[str, dict] = OrderedDict()
+#: Store key to the lines of each body of that result, in the same order the report carries
+#: them, as ``{"bodies": [[line, ...], ...], "chars": int}``. Held beside the report rather than
+#: in it, so what a first draw fetches is the report alone, and dropped with the report it
+#: belongs to.
+_pages: OrderedDict[tuple[str, str], dict] = OrderedDict()
 
 #: Counts every result stored in this process, so an interface polling the route can tell a
 #: fresh answer from the one it already drew.
@@ -278,7 +284,8 @@ def publish(
         if node is None:
             logger.debug("a run result was published with no node id to file it under")
             return False
-        key = scoped_key(node, executing_workflow_id())
+        client = executing_client_id()
+        key = (client, scoped_key(node, executing_workflow_id()))
         payload, sources = _payload(
             status, summary, counts, tallies, tallies_total, facts, items, items_total,
             bodies, inputs,
@@ -300,7 +307,7 @@ def publish(
             # recent and the oldest is the one evicted.
             _results.pop(key, None)
             _results[key] = payload
-            _latest[node] = key
+            _latest[(client, node)] = key
             # The bodies the fit dropped are dropped from what is held too, so a page index is
             # the body's place in the report that was sent.
             _keep(key, sources[: len(payload["bodies"])])
@@ -315,30 +322,35 @@ def publish(
         return False
 
 
-def _resolve(node, workflow) -> str | None:
+def _owners(client) -> tuple[str, ...]:
+    """The client ids a reader is answered for: its own, then a run queued with none."""
+    asked = client.strip() if isinstance(client, str) else ""
+    return (asked, "") if asked else ("",)
+
+
+def _resolve(node, workflow, client=None) -> tuple[str, str] | None:
     """The store key a read lands on. Called with :data:`_lock` held.
 
     Args:
         node: The node's id, as :func:`node_key` reads it.
         workflow: The workflow the reader belongs to, or None.
+        client: The reader's client id, or None for a reader naming none.
 
     Returns:
-        With a workflow, that workflow's key, else the key of a publish made outside any
-        workflow; never another workflow's. Without one, whatever the node published last.
-        None when nothing matches.
+        A key published by a run the reader queued, else by a run queued with no client id;
+        never another client's. With a workflow, that workflow's key, else the key of a publish
+        made outside any workflow; never another workflow's. Without one, whatever the node
+        published last. None when nothing matches.
     """
-    if workflow:
-        scoped = scoped_key(node, workflow)
-        if scoped in _results:
-            return scoped
-        return node if node in _results else None
-    held = _latest.get(node)
-    if held in _results:
-        return held
-    return node if node in _results else None
+    for owner in _owners(client):
+        named = (owner, scoped_key(node, workflow)) if workflow else _latest.get((owner, node))
+        for held in (named, (owner, node)):
+            if held in _results:
+                return held
+    return None
 
 
-def result(node_id, workflow=None) -> dict | None:
+def result(node_id, workflow=None, client=None) -> dict | None:
     """The result a node published on its last run.
 
     Args:
@@ -346,6 +358,8 @@ def result(node_id, workflow=None) -> dict | None:
             missing or malformed query value, answers None.
         workflow: The workflow id the reader has open, as :func:`_resolve` reads it. Left out,
             the node's latest result from any workflow.
+        client: The reader's client id, as :func:`_resolve` reads it. Left out, only a run
+            queued with no client id is read.
 
     Returns:
         The stored result object, or None when that node has published nothing in this
@@ -355,7 +369,7 @@ def result(node_id, workflow=None) -> dict | None:
     if node is None:
         return None
     with _lock:
-        key = _resolve(node, workflow_param(workflow))
+        key = _resolve(node, workflow_param(workflow), client)
         payload = _results.get(key) if key is not None else None
         if payload is not None:
             _results.move_to_end(key)
@@ -366,7 +380,9 @@ def result(node_id, workflow=None) -> dict | None:
     return payload
 
 
-def page(node_id, body=0, start=0, count=MAX_PAGE_LINES, node_type=None, workflow=None) -> dict | None:
+def page(
+    node_id, body=0, start=0, count=MAX_PAGE_LINES, node_type=None, workflow=None, client=None,
+) -> dict | None:
     """A range of lines from one body of the result a node published on its last run.
 
     Args:
@@ -378,6 +394,7 @@ def page(node_id, body=0, start=0, count=MAX_PAGE_LINES, node_type=None, workflo
         node_type: The asking node's class. A report filed by a node of another kind answers
             None. Left out, whatever is filed under the id is read.
         workflow: The workflow id the reader has open, read as :func:`result` reads it.
+        client: The reader's client id, read as :func:`result` reads it.
 
     Returns:
         ``{"name", "start", "lines", "total", "held", "clipped", "run"}``: the body's name, the
@@ -388,7 +405,7 @@ def page(node_id, body=0, start=0, count=MAX_PAGE_LINES, node_type=None, workflo
         published nothing in this session and when what it published was published by a node of
         another kind.
     """
-    payload = result(node_id, workflow)
+    payload = result(node_id, workflow, client)
     if payload is None or _mismatched(payload, node_type):
         return None
     try:
@@ -398,7 +415,7 @@ def page(node_id, body=0, start=0, count=MAX_PAGE_LINES, node_type=None, workflo
         blocks = payload.get("bodies") or []
         block = blocks[index] if index < len(blocks) else None
         with _lock:
-            key = _resolve(node_key(node_id), workflow_param(workflow))
+            key = _resolve(node_key(node_id), workflow_param(workflow), client)
             entry = _pages.get(key) if key is not None else None
             kept = (entry or {}).get("bodies") or []
             held = kept[index] if index < len(kept) else []
@@ -584,7 +601,11 @@ def register_routes() -> bool:
 
         @PromptServer.instance.routes.get(ROUTE)
         async def get_run_result(request):
-            payload = result(request.query.get("node_id"), request.query.get("workflow"))
+            payload = result(
+                request.query.get("node_id"),
+                request.query.get("workflow"),
+                request.query.get("client_id"),
+            )
             if payload is not None and _mismatched(payload, request.query.get("node_type")):
                 payload = None
             if payload is None:
@@ -600,6 +621,7 @@ def register_routes() -> bool:
                 count=_query_int(request.query.get("count"), MAX_PAGE_LINES),
                 node_type=request.query.get("node_type"),
                 workflow=request.query.get("workflow"),
+                client=request.query.get("client_id"),
             )
             if answer is None:
                 return web.Response(status=204, headers={**NO_STORE, REFUSAL_HEADER: NO_REPORT})
@@ -720,7 +742,7 @@ def _fit(payload: dict) -> bool:
     return True
 
 
-def _keep(key: str, sources) -> None:
+def _keep(key: tuple[str, str], sources) -> None:
     """Hold the lines of one report's bodies, replacing whatever that node held before.
 
     Args:

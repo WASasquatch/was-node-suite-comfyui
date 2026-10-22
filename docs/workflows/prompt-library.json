@@ -91,7 +91,7 @@
       "id": 2,
       "type": "Text Concatenate",
       "pos": [
-        500,
+        520,
         60
       ],
       "size": [
@@ -360,7 +360,7 @@
       "id": 3,
       "type": "Text Parse Noodle Soup Prompts",
       "pos": [
-        960,
+        1000,
         60
       ],
       "size": [
@@ -431,7 +431,7 @@
       "id": 4,
       "type": "WASPromptStyleSave",
       "pos": [
-        1420,
+        1480,
         60
       ],
       "size": [
@@ -505,7 +505,7 @@
       "id": 5,
       "type": "Text Concatenate",
       "pos": [
-        1880,
+        1960,
         60
       ],
       "size": [
@@ -776,7 +776,7 @@
       "id": 6,
       "type": "WASPromptStylesExport",
       "pos": [
-        2340,
+        2440,
         60
       ],
       "size": [
@@ -831,7 +831,7 @@
       "id": 7,
       "type": "WASNoodleSoupPick",
       "pos": [
-        500,
+        520,
         560
       ],
       "size": [
@@ -909,7 +909,7 @@
       "id": 8,
       "type": "Text Concatenate",
       "pos": [
-        960,
+        1000,
         560
       ],
       "size": [
@@ -1180,8 +1180,8 @@
       "id": 9,
       "type": "WASNoodleSoupPantryExport",
       "pos": [
-        1420,
-        576
+        1480,
+        596
       ],
       "size": [
         400,
@@ -1252,7 +1252,7 @@
       "id": 10,
       "type": "WASNoodleSoupPantryImport",
       "pos": [
-        1880,
+        1960,
         560
       ],
       "size": [
@@ -1314,7 +1314,7 @@
       "id": 11,
       "type": "WASPromptStylesImport",
       "pos": [
-        2340,
+        2440,
         560
       ],
       "size": [

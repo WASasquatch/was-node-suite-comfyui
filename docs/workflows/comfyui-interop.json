@@ -51,7 +51,7 @@
       "type": "Text Multiline",
       "pos": [
         80,
-        464
+        484
       ],
       "size": [
         340,
@@ -84,7 +84,7 @@
       "type": "RepeatImageBatch",
       "pos": [
         80,
-        654
+        694
       ],
       "size": [
         340,
@@ -122,7 +122,7 @@
       "type": "WASBoundingBoxesFilter",
       "pos": [
         80,
-        860
+        904
       ],
       "size": [
         340,
@@ -187,7 +187,7 @@
       "type": "WASBoundingBoxesToBounds",
       "pos": [
         80,
-        1256
+        1320
       ],
       "size": [
         340,
@@ -284,7 +284,7 @@
       "type": "WASBoundsToMask",
       "pos": [
         540,
-        552
+        572
       ],
       "size": [
         340,
@@ -333,7 +333,7 @@
       "type": "LayersFromBoundingBoxes",
       "pos": [
         540,
-        744
+        784
       ],
       "size": [
         340,
@@ -388,7 +388,7 @@
       "type": "WASLayersToImageBatch",
       "pos": [
         540,
-        980
+        1040
       ],
       "size": [
         340,
@@ -455,7 +455,7 @@
       "type": "Image Analyze",
       "pos": [
         540,
-        1332
+        1412
       ],
       "size": [
         340,
@@ -626,7 +626,7 @@
       "type": "PreviewImage",
       "pos": [
         1000,
-        1080
+        1100
       ],
       "size": [
         340,
@@ -660,7 +660,7 @@
       "type": "MaskPreview",
       "pos": [
         1000,
-        1270
+        1310
       ],
       "size": [
         340,
@@ -694,7 +694,7 @@
       "type": "PreviewAny",
       "pos": [
         1000,
-        1460
+        1520
       ],
       "size": [
         340,
@@ -830,7 +830,7 @@
       "type": "PreviewImage",
       "pos": [
         1460,
-        860
+        904
       ],
       "size": [
         340,

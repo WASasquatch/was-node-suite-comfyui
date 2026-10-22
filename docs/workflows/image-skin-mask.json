@@ -67,7 +67,7 @@
       "id": 3,
       "type": "WASImageSimpleSkinMask",
       "pos": [
-        880,
+        922.8,
         60
       ],
       "size": [
@@ -155,8 +155,8 @@
       "id": 4,
       "type": "MaskToImage",
       "pos": [
-        400,
-        720
+        402.8,
+        770
       ],
       "size": [
         193.2779296875,
@@ -191,8 +191,8 @@
       "id": 5,
       "type": "MaskToImage",
       "pos": [
-        880,
-        720
+        922.8,
+        770
       ],
       "size": [
         193.2779296875,
@@ -227,7 +227,7 @@
       "id": 6,
       "type": "WASImageCompare",
       "pos": [
-        1360,
+        1442.8,
         60
       ],
       "size": [
@@ -280,7 +280,7 @@
       "id": 7,
       "type": "WASImageSkinMask",
       "pos": [
-        400,
+        402.8,
         60
       ],
       "size": [

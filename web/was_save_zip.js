@@ -7,14 +7,12 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { createListing } from "./interface/listing.js";
-import { fetchWithin } from "./interface/request.js";
-import { fetchRunResultPage } from "./interface/run_result.js";
-import { placed } from "./interface/preview.js";
+import { fetchRunResult, fetchRunResultPage, whenReadable } from "./interface/run_result.js";
+import { PREVIEW_STATE } from "./interface/preview.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
 const EXT_NAME = "WASNodeSuite.SaveZip";
 const NODE = "WASSaveZip";
-const ROUTE = "/was/interface/api/run_result";
 
 const UI_WIDGET_NAME = "was_save_zip_ui";
 const UI_WIDGET_TYPE = "was_save_zip";
@@ -24,24 +22,7 @@ const PANEL_MAX_HEIGHT = 900;
 const PANEL_MIN_WIDTH = 300;
 
 const IDLE_LABEL = "Run the node to see what it wrote.";
-
-/**
- * What a node published, or null when it has published nothing this session.
- *
- * @param {string|number} nodeId - The node to ask about.
- * @returns {Promise<object|null>} The stored result, or null.
- */
-async function published(nodeId) {
-  if (!placed(nodeId)) return null;
-  try {
-    const response = await fetchWithin(`${ROUTE}?node_id=${encodeURIComponent(nodeId)}`);
-    if (!response.ok) return null;
-    return await response.json();
-  } catch (error) {
-    console.error(`[${EXT_NAME}] Failed to read what the node wrote:`, error);
-    return null;
-  }
-}
+const NOTHING_LABEL = "This node has written nothing this session.";
 
 /**
  * Read a range of lines from one body of what a node published.
@@ -107,8 +88,7 @@ function createContents(node) {
 
   const show = (result) => {
     summary.textContent = result?.summary || "wrote an archive";
-    const facts = result?.facts ?? {};
-    const folder = facts.folder ?? facts.Folder ?? "";
+    const folder = (result?.facts ?? []).find((fact) => fact?.name === "folder")?.value ?? "";
     where.textContent = folder;
     where.title = folder;
 
@@ -148,6 +128,7 @@ function createContents(node) {
   };
 }
 
+// Node id to the node and the panel drawn on it.
 const panels = new Map();
 
 /**
@@ -157,11 +138,14 @@ const panels = new Map();
  * @returns {Promise<void>}
  */
 async function refresh(nodeId) {
-  const panel = panels.get(String(nodeId));
-  if (!panel) return;
-  const result = await published(nodeId);
-  if (result) panel.show(result);
-  else panel.idle("This node has written nothing this session.");
+  const held = panels.get(String(nodeId));
+  if (!held) return;
+  const answer = await fetchRunResult(held.node);
+  // A closed socket keeps whatever the panel already shows.
+  if (answer.state === PREVIEW_STATE.CONNECTING) return;
+  if (answer.state === PREVIEW_STATE.READY && answer.result) held.panel.show(answer.result);
+  else if (answer.state === PREVIEW_STATE.WAITING) held.panel.idle(NOTHING_LABEL);
+  else held.panel.idle(answer.label || NOTHING_LABEL);
 }
 
 app.registerExtension({
@@ -169,7 +153,7 @@ app.registerExtension({
 
   async setup() {
     api.addEventListener("execution_start", () => {
-      for (const panel of panels.values()) panel.idle("Running…");
+      for (const { panel } of panels.values()) panel.idle("Running…");
     });
     api.addEventListener("executed", ({ detail }) => {
       if (panels.has(String(detail?.node))) refresh(detail.node);
@@ -194,17 +178,20 @@ app.registerExtension({
           name: UI_WIDGET_NAME,
           type: UI_WIDGET_TYPE,
         });
-        const register = () => panels.set(String(this.id), panel);
+        const register = () => panels.set(String(this.id), { node: this, panel });
         register();
+        let cancelRead = () => {};
         const originalOnAdded = this.onAdded;
         this.onAdded = function (...args) {
           const added = originalOnAdded?.apply(this, args);
           register();
-          refresh(this.id);
+          cancelRead();
+          cancelRead = whenReadable(this, () => refresh(this.id));
           return added;
         };
         const originalOnRemoved = this.onRemoved;
         this.onRemoved = function (...args) {
+          cancelRead();
           panels.delete(String(this.id));
           return originalOnRemoved?.apply(this, args);
         };

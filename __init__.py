@@ -275,6 +275,12 @@ def register_models() -> None:
     except Exception as error:
         logger.warning("Fibo 2.0 checkpoints will not load (%s)", error)
         logger.debug("%s", traceback.format_exc())
+    try:
+        from .modules.model.ptd import register as register_ptd
+        register_ptd()
+    except Exception as error:
+        logger.warning("Load Model Patch will not load PTD files (%s)", error)
+        logger.debug("%s", traceback.format_exc())
 
 
 def register_schedulers() -> None:

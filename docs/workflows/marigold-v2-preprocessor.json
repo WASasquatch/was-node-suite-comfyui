@@ -9,7 +9,7 @@
       "type": "UNETLoader",
       "pos": [
         40,
-        430
+        470
       ],
       "size": [
         340,
@@ -51,7 +51,7 @@
       "id": 246,
       "type": "VAELoader",
       "pos": [
-        440,
+        460,
         40
       ],
       "size": [
@@ -127,8 +127,8 @@
       "id": 249,
       "type": "VAELoader",
       "pos": [
-        440,
-        500
+        460,
+        520
       ],
       "size": [
         340,
@@ -166,8 +166,8 @@
       "id": 250,
       "type": "WASPowerPreprocessor",
       "pos": [
-        840,
-        500
+        880,
+        520
       ],
       "size": [
         211.080078125,
@@ -254,7 +254,7 @@
       "type": "PreviewImage",
       "pos": [
         1220,
-        500
+        520
       ],
       "size": [
         300,
@@ -290,8 +290,8 @@
       "id": 252,
       "type": "VAELoader",
       "pos": [
-        440,
-        960
+        460,
+        1000
       ],
       "size": [
         340,
@@ -329,8 +329,8 @@
       "id": 253,
       "type": "WASPowerPreprocessor",
       "pos": [
-        840,
-        960
+        880,
+        1000
       ],
       "size": [
         211.080078125,
@@ -417,7 +417,7 @@
       "type": "PreviewImage",
       "pos": [
         1220,
-        960
+        1000
       ],
       "size": [
         300,
@@ -501,7 +501,7 @@
       "id": 247,
       "type": "WASPowerPreprocessor",
       "pos": [
-        840,
+        880,
         40
       ],
       "size": [

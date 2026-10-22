@@ -1,8 +1,6 @@
 /**
- * Saved v2 widget values, put back on the widget they were written for.
- *
- * `V2_WIDGET_ORDER` holds each node's earlier widget order. `V2_BOOLEAN_WIDGETS` names widgets that
- * took "false" and "true" before becoming a checkbox. `RENAMED_OPTIONS` maps renamed options.
+ * Saved v2 widget values, put back on the widget they were written for: earlier widget orders,
+ * former combos and sliders that are now checkboxes, and renamed options.
  */
 
 import { app } from "../../scripts/app.js";
@@ -166,6 +164,12 @@ const V2_BOOLEAN_WIDGETS = {
   "Text Concatenate": ["clean_whitespace"],
 };
 
+// Node id -> widgets that took a number from 0 to 1 before becoming a checkbox, read as ticked
+// above 0.5. A saved 0.3 is truthy, so it would arrive ticked without this.
+const V2_NUMBER_BOOLEAN_WIDGETS = {
+  "Logic Boolean": ["boolean"],
+};
+
 // Continuity menus on the H3 nodes, and the options each once offered under another name.
 const H3_CONTINUITY_RENAMED = { reference: "reference (video)" };
 
@@ -225,14 +229,28 @@ function coerceBooleans(node, entries) {
   }
 }
 
+/**
+ * Read the saved numbers of a node's former 0 to 1 sliders back as booleans.
+ *
+ * @param {object} node - The node being configured.
+ * @param {string[]} names - The widgets to coerce.
+ * @returns {void}
+ */
+function numbersToBooleans(node, names) {
+  for (const widget of node.widgets ?? []) {
+    if (names.includes(widget?.name) && typeof widget.value === "number") widget.value = widget.value > 0.5;
+  }
+}
+
 app.registerExtension({
   name: EXT_NAME,
 
   async beforeRegisterNodeDef(nodeType, nodeData) {
     const order = V2_WIDGET_ORDER[nodeData?.name];
     const booleans = V2_BOOLEAN_WIDGETS[nodeData?.name];
+    const numbers = V2_NUMBER_BOOLEAN_WIDGETS[nodeData?.name];
     const renamed = RENAMED_OPTIONS[nodeData?.name];
-    if (!order && !booleans && !renamed) return;
+    if (!order && !booleans && !numbers && !renamed) return;
 
     const proto = nodeType.prototype;
     // Definitions are registered again on a refresh, which would otherwise wrap `onConfigure`
@@ -245,11 +263,12 @@ app.registerExtension({
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
         if (order) migrateWidgetValues(this, order);
-        if (booleans || renamed) {
+        if (booleans || numbers || renamed) {
           const originalOnConfigure = this.onConfigure;
           this.onConfigure = function (...args) {
             const configured = originalOnConfigure?.apply(this, args);
             if (booleans) coerceBooleans(this, booleans);
+            if (numbers) numbersToBooleans(this, numbers);
             if (renamed) renameOptions(this, renamed);
             return configured;
           };

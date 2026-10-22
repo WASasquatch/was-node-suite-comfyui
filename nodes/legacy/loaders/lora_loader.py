@@ -129,8 +129,9 @@ class LoraLoader(io.ComfyNode):
         Raises:
             ValueError: Nothing is connected to the model or clip input.
         """
-        import comfy.sd
         import folder_paths
+
+        from ....modules.lora import fit
 
         require_input(model, DISPLAY_NAME, "model", "model", "checkpoint loader", "MODEL")
         require_input(clip, DISPLAY_NAME, "clip", "text encoder", "checkpoint loader", "CLIP")
@@ -140,7 +141,7 @@ class LoraLoader(io.ComfyNode):
             return io.NodeOutput(model, clip, name)
 
         lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
-        model_lora, clip_lora = comfy.sd.load_lora_for_models(
-            model, clip, lora_state_dict(lora_path), strength_model, strength_clip
+        model_lora, clip_lora = fit.load_lora_for_models(
+            model, clip, lora_state_dict(lora_path), strength_model, strength_clip, name
         )
         return io.NodeOutput(model_lora, clip_lora, name)

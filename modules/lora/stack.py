@@ -11,7 +11,7 @@ from typing import Any, Iterable, Mapping
 
 from .rows import NAME_KEY, WEIGHT_KEY, Row, first_weight, rows_from_inputs, to_bool
 
-__all__ = ["Entry", "consumed", "entries", "from_rows", "resolve"]
+__all__ = ["Entry", "consumed", "entries", "from_rows", "locate"]
 
 #: One stacked LoRA: its name in the LoRA folder, its model strength and its clip strength.
 Entry = tuple[str, float, float]
@@ -153,24 +153,32 @@ def consumed(prompt: Any, unique_id: Any, slot: int, ignore: Iterable[str] = ("s
     return False
 
 
-def resolve(name: str) -> str | None:
-    """The full path of a LoRA named relative to the LoRA folder, found by file name if it moved.
+def locate(name: str) -> tuple[str, str] | None:
+    """A LoRA named relative to the LoRA folder, found by file name if it moved.
 
     Args:
         name: The name as a stack carries it.
 
     Returns:
-        The path, or ``None`` where no LoRA of that name is on disk.
+        ``(relative, path)``: the file's name inside the LoRA folder with ``/`` separators,
+        and its full path. ``None`` where no LoRA of that name is on disk.
     """
     import folder_paths
 
     if not isinstance(name, str) or name in ("", "None"):
         return None
-    found = folder_paths.get_full_path("loras", name)
+    try:
+        # The same normalisation get_full_path applies before joining the name to a folder.
+        relative = os.path.relpath(os.path.join("/", name), "/")
+        found = folder_paths.get_full_path("loras", name)
+    except ValueError:
+        found = None
     if found is not None:
-        return found
+        return relative.replace("\\", "/"), found
     wanted = os.path.basename(name.replace("\\", "/")).lower()
     for candidate in folder_paths.get_filename_list("loras"):
         if os.path.basename(candidate.replace("\\", "/")).lower() == wanted:
-            return folder_paths.get_full_path("loras", candidate)
+            found = folder_paths.get_full_path("loras", candidate)
+            if found is not None:
+                return candidate.replace("\\", "/"), found
     return None

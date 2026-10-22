@@ -75,7 +75,7 @@
       "type": "CLIPTextEncode",
       "pos": [
         20,
-        220
+        228
       ],
       "size": [
         400,
@@ -130,7 +130,7 @@
       "type": "CLIPTextEncode",
       "pos": [
         20,
-        440
+        518
       ],
       "size": [
         400,
@@ -185,7 +185,7 @@
       "type": "EmptyLatentImage",
       "pos": [
         20,
-        660
+        808
       ],
       "size": [
         270,
@@ -255,7 +255,7 @@
       "id": 5,
       "type": "WASFastKSampler",
       "pos": [
-        420,
+        500,
         40
       ],
       "size": [
@@ -397,7 +397,7 @@
       "id": 6,
       "type": "VAEDecode",
       "pos": [
-        800,
+        850,
         40
       ],
       "size": [
@@ -443,8 +443,8 @@
       "id": 7,
       "type": "WASImageQuantize",
       "pos": [
-        800,
-        160
+        850,
+        176
       ],
       "size": [
         270,
@@ -510,7 +510,7 @@
       "id": 8,
       "type": "Image Save",
       "pos": [
-        1180,
+        1200,
         40
       ],
       "size": [
@@ -741,7 +741,7 @@
       "id": 9,
       "type": "WASFastSaveAnimatedWEBP",
       "pos": [
-        1534.15234375,
+        1594.15,
         40
       ],
       "size": [

@@ -20,22 +20,27 @@ STAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 NOTHING = (False, False, False, 0, 0.0, "")
 
 
-def probe(path: str) -> tuple[bool, bool, bool, int, float, str, str]:
+def probe(path: str, report: bool = False) -> tuple[bool, bool, bool, int, float, str, str]:
     """Stat a path through the containment layer.
 
     Args:
         path: The raw widget value.
+        report: Log the refusal for a path containment refuses.
 
     Returns:
         Whether anything is there, whether it is a file, whether it is a directory, its
         size in bytes, its modification time as epoch seconds and as a local
-        ``YYYY-MM-DD HH:MM:SS`` string, and the absolute path that was probed, or the
-        refusal text where containment refused it.
+        ``YYYY-MM-DD HH:MM:SS`` string, and the absolute path that was probed. An empty or
+        refused path answers :data:`NOTHING` with an empty path, whatever is on disk.
     """
+    if not str(path or "").strip():
+        return NOTHING + ("",)
     try:
         resolved = sandbox.resolve_read(path)
     except sandbox.PathNotAllowed as refusal:
-        return NOTHING + (str(refusal),)
+        if report:
+            logger.warning("Path Exists answers not existing. %s", refusal)
+        return NOTHING + ("",)
 
     try:
         status = os.stat(resolved)
@@ -83,8 +88,7 @@ class PathExists(io.ComfyNode):
                 "Check whether a file or folder is on disk before anything reads or writes "
                 "it, with its kind, size in bytes and last change time. Use it to skip frames "
                 "already rendered or to test a cache against its source. A path outside the "
-                "folders the pack may read answers not existing, with the refusal on "
-                "'resolved'."
+                "folders the pack may read answers not existing, with 'resolved' empty."
             ),
             inputs=[
                 io.String.Input(
@@ -93,9 +97,9 @@ class PathExists(io.ComfyNode):
                     multiline=False,
                     tooltip=(
                         "The file or folder to look for, such as "
-                        "'C:/renders/frame_0001.png', or a path relative to the folder "
-                        "ComfyUI was started in. Nothing is opened, read or written; the "
-                        "path is only asked about."
+                        "'ComfyUI/output/renders/frame_0001.png'. A full path must lie inside "
+                        "input, output, temp or a folder paths.allow_read adds. "
+                        "Nothing is opened, read or written; the path is only asked about."
                     ),
                 ),
             ],
@@ -151,9 +155,9 @@ class PathExists(io.ComfyNode):
                 io.String.Output(
                     display_name="resolved",
                     tooltip=(
-                        "The absolute path that was probed. For a path outside the folders "
-                        "this pack may read, nothing is probed and this carries the refusal "
-                        "instead, naming every permitted folder and the config key that "
+                        "The absolute path that was probed. Empty for an empty path and for "
+                        "a path outside the folders this pack may read, which is not probed; "
+                        "the log then names the permitted folders and the config key that "
                         "would allow it."
                     ),
                 ),
@@ -177,4 +181,4 @@ class PathExists(io.ComfyNode):
             Existence, whether it is a file, whether it is a directory, its size, its
             modification time as epoch seconds and as text, and the path that was probed.
         """
-        return io.NodeOutput(*probe(path))
+        return io.NodeOutput(*probe(path, report=True))

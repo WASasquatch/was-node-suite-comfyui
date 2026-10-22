@@ -8,7 +8,7 @@
       "id": 1,
       "type": "LoadImage",
       "pos": [
-        40,
+        42,
         40
       ],
       "size": [
@@ -74,8 +74,8 @@
       "id": 2,
       "type": "LoadImage",
       "pos": [
-        40,
-        432
+        42,
+        452
       ],
       "size": [
         330,
@@ -331,7 +331,7 @@
       "type": "AddLayer",
       "pos": [
         516,
-        524
+        544
       ],
       "size": [
         330,
@@ -617,7 +617,7 @@
       "type": "WASLayerTrim",
       "pos": [
         1006,
-        392
+        412
       ],
       "size": [
         354,
@@ -894,7 +894,7 @@
       "type": "WASLayerAlign",
       "pos": [
         1544,
-        560
+        580
       ],
       "size": [
         354,
@@ -1049,7 +1049,7 @@
       "type": "SolidMask",
       "pos": [
         1544,
-        1056
+        1096
       ],
       "size": [
         330,
@@ -1232,7 +1232,7 @@
       "type": "WASImageVignette",
       "pos": [
         2068,
-        420
+        440
       ],
       "size": [
         364,
@@ -1511,7 +1511,7 @@
       "type": "WASLayersToImageBatch",
       "pos": [
         2654,
-        416
+        440
       ],
       "size": [
         330,
@@ -1605,7 +1605,7 @@
       "type": "WASLayersFromImageBatch",
       "pos": [
         3201,
-        244
+        264
       ],
       "size": [
         354,
@@ -1809,7 +1809,7 @@
       "type": "WASLayersMerge",
       "pos": [
         3201,
-        708
+        748
       ],
       "size": [
         354,
@@ -1904,7 +1904,7 @@
       "type": "WASLayersMerge",
       "pos": [
         3845,
-        244
+        264
       ],
       "size": [
         354,
@@ -1998,7 +1998,7 @@
       "id": 19,
       "type": "WASImageCompare",
       "pos": [
-        4259,
+        4279,
         40
       ],
       "size": [
@@ -2056,7 +2056,7 @@
       "id": 20,
       "type": "EmptyImage",
       "pos": [
-        40,
+        42,
         1640
       ],
       "size": [
@@ -2309,8 +2309,8 @@
       "id": 22,
       "type": "EmptyImage",
       "pos": [
-        40,
-        2052
+        42,
+        2072
       ],
       "size": [
         270,
@@ -2386,7 +2386,7 @@
       "type": "AddLayer",
       "pos": [
         456,
-        2048
+        2072
       ],
       "size": [
         270,
@@ -2675,7 +2675,7 @@
       "type": "WASLayerGlow",
       "pos": [
         906,
-        2048
+        2072
       ],
       "size": [
         354,
@@ -2797,7 +2797,7 @@
       "type": "WASLayerShadow",
       "pos": [
         906,
-        2480
+        2524
       ],
       "size": [
         354,
@@ -3034,7 +3034,7 @@
       "id": 29,
       "type": "Image Load",
       "pos": [
-        40,
+        42,
         3040
       ],
       "size": [
@@ -3152,7 +3152,7 @@
       "type": "Image Load",
       "pos": [
         31,
-        3806
+        3826
       ],
       "size": [
         354,
@@ -3271,7 +3271,7 @@
       "type": "Image Load",
       "pos": [
         42,
-        4572
+        4612
       ],
       "size": [
         354,
@@ -3690,7 +3690,7 @@
       "type": "AddLayer",
       "pos": [
         946,
-        3524
+        3544
       ],
       "size": [
         270,
@@ -3867,7 +3867,7 @@
       "type": "AddLayer",
       "pos": [
         946,
-        4008
+        4048
       ],
       "size": [
         270,
@@ -4156,7 +4156,7 @@
       "type": "WASLayerGlow",
       "pos": [
         1460,
-        3448
+        3468
       ],
       "size": [
         354,
@@ -4278,7 +4278,7 @@
       "type": "WASLayerShadow",
       "pos": [
         1460,
-        3880
+        3920
       ],
       "size": [
         354,
@@ -4564,7 +4564,7 @@
       "type": "WASLayersInfo",
       "pos": [
         2492,
-        3520
+        3544
       ],
       "size": [
         225,
@@ -4628,8 +4628,8 @@
       "id": 42,
       "type": "WASDisplayAny",
       "pos": [
-        3068,
-        3750
+        3075,
+        3758
       ],
       "size": [
         340,

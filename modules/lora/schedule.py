@@ -348,6 +348,8 @@ def attach(
     import torch
     from comfy.patcher_extension import PatcherInjection, WrappersMP
 
+    from . import fit
+
     try:
         import comfy.weight_adapter.bypass  # noqa: F401
     except ImportError as error:
@@ -377,6 +379,9 @@ def attach(
         for key, patch in loaded.items():
             name, offset = (key, None) if isinstance(key, str) else (key[0], key[1])
             function = key[2] if not isinstance(key, str) and len(key) > 2 else None
+            # A part that does not fit was already left out of the merge at step 1.
+            if not fit.fits(model, name, patch, offset):
+                continue
             if (
                 function is not None
                 or not name.endswith(".weight")

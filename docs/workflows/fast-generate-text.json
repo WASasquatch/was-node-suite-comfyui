@@ -308,7 +308,7 @@
       "type": "TextGenerate",
       "pos": [
         420,
-        860
+        890
       ],
       "size": [
         400,
@@ -562,7 +562,7 @@
       "type": "PreviewAny",
       "pos": [
         900,
-        860
+        890
       ],
       "size": [
         210,

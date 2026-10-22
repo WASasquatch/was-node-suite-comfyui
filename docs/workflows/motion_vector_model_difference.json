@@ -90,7 +90,7 @@
       "id": 3,
       "type": "WASVideoMotion",
       "pos": [
-        360,
+        382.8,
         40
       ],
       "size": [
@@ -160,8 +160,8 @@
       "id": 4,
       "type": "WASVideoMotion",
       "pos": [
-        360,
-        580
+        382.8,
+        630
       ],
       "size": [
         620,
@@ -232,8 +232,8 @@
       "id": 5,
       "type": "WASVideoMotionBlur",
       "pos": [
-        1010,
-        580
+        1082.8,
+        630
       ],
       "size": [
         620,

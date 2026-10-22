@@ -21,6 +21,16 @@ LIST_SEPARATOR = "\n---LIST_SEPARATOR---\n"
 #: documents and whole image tensors, and neither belongs in a log line.
 LOG_EXCERPT = 256
 
+#: The config key that lets content shown in the viewer run its own scripts.
+ALLOW_SCRIPTS = "viewer.allow_scripts"
+
+
+def scripts_allowed() -> bool:
+    """Whether ``viewer.allow_scripts`` is on in the config the server loaded."""
+    from ...modules.config import group_enabled
+
+    return group_enabled(ALLOW_SCRIPTS)
+
 
 def to_string(value) -> str:
     """One input value as text the viewer can render.
@@ -313,6 +323,7 @@ class WASComfyViewer(io.ComfyNode):
                     "text": (stored["display_text"],),
                     "source_content": (stored["display_text"],),
                     "content_hash": (stored["content_hash"],),
+                    "allow_scripts": (scripts_allowed(),),
                 },
             )
 
@@ -378,7 +389,7 @@ class WASComfyViewer(io.ComfyNode):
 
     @classmethod
     def _output(cls, display, source, digest, values, current) -> io.NodeOutput:
-        """One return, so every path reports the same four fields to the frontend."""
+        """The node's output, with the five fields the frontend reads."""
         return io.NodeOutput(
             values,
             ui={
@@ -386,5 +397,6 @@ class WASComfyViewer(io.ComfyNode):
                 "source_content": (source,),
                 "content_hash": (digest,),
                 "input_hash": (current,),
+                "allow_scripts": (scripts_allowed(),),
             },
         )

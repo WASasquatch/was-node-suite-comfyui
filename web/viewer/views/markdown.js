@@ -9,6 +9,45 @@ const MERMAID_FILE = "mermaid.min.txt";
 const KATEX_FILES = ["katex.min.txt", "katex-auto-render.min.txt"];
 const KATEX_CSS_FILE = "katex-with-fonts.min.css.txt";
 
+/** Schemes a link may name. An address with no scheme is relative to the frame. */
+const LINK_SCHEMES = new Set(["http", "https", "mailto"]);
+
+/** Schemes a picture may name. A `data:` address is a picture only. */
+const IMAGE_SCHEMES = new Set(["http", "https", "data", "blob"]);
+
+/**
+ * Text written inside a double-quoted attribute value.
+ * @param {string} value
+ * @returns {string} `value` with `&`, `"`, `'`, `<` and `>` as entities, and the characters
+ *   later markdown passes match (`*`, `_`, `~`, `|`, `[`, `]`, `(`, `)`) as numeric entities.
+ */
+function attribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/[*_~|[\]()]/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+/**
+ * An address from markdown text, or null when its scheme is not one offered.
+ * @param {string} value - The text between the parentheses.
+ * @param {Set<string>} schemes - Schemes accepted.
+ * @returns {string|null} The trimmed address, or null.
+ */
+function address(value, schemes) {
+  const text = String(value).trim();
+  // Control characters and spaces are dropped before the scheme is read.
+  const bare = text.replace(/[\x00-\x20\x7f]/g, "").toLowerCase();
+  const scheme = /^([a-z][a-z0-9+.-]*):/.exec(bare);
+  if (!scheme) return text;
+  if (!schemes.has(scheme[1])) return null;
+  if (scheme[1] === "data" && !bare.startsWith("data:image/")) return null;
+  return text;
+}
+
 class MarkdownView extends BaseView {
   static id = "markdown";
   static displayName = "Markdown";
@@ -136,7 +175,7 @@ class MarkdownView extends BaseView {
     html = html.replace(/^[ \t]*```(?:mermaid|flow|flex)(?:\[([^\]]*)\])?\n([\s\S]*?)^[ \t]*```$/gm, (_, options, code) => {
       const centered = options && options.toLowerCase().includes('center');
       const style = centered ? 'text-align:center;' : 'text-align:left;';
-      const rendered = `<div class="mermaid" style="${style}">${code.trim()}</div>`;
+      const rendered = `<div class="mermaid" style="${style}">${escapeHtml(code.trim())}</div>`;
       codeBlocks.push(rendered);
       return `${PLACEHOLDER}${codeBlocks.length - 1}\x00`;
     });
@@ -171,10 +210,16 @@ class MarkdownView extends BaseView {
     html = html.replace(/^##\s*(.+)$/gm, (_, t) => `<h2 id="${slugify(t)}">${t}</h2>`);
     html = html.replace(/^#\s*(.+)$/gm, (_, t) => `<h1 id="${slugify(t)}">${t}</h1>`);
 
-    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;">');
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
+      const source = address(src, IMAGE_SCHEMES);
+      if (source === null) return attribute(alt);
+      return `<img src="${attribute(source)}" alt="${attribute(alt)}" style="max-width:100%;">`;
+    });
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
-      const target = href.startsWith('#') ? '' : ' target="_blank"';
-      return `<a href="${href}"${target}>${text}</a>`;
+      const link = address(href, LINK_SCHEMES);
+      if (link === null) return text;
+      const target = link.startsWith('#') ? '' : ' target="_blank" rel="noopener noreferrer"';
+      return `<a href="${attribute(link)}"${target}>${text}</a>`;
     });
 
     html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");

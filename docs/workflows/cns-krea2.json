@@ -41,7 +41,7 @@
    "type": "CLIPLoader",
    "pos": [
     20,
-    200
+    250
    ],
    "size": [
     320,
@@ -75,7 +75,7 @@
    "type": "VAELoader",
    "pos": [
     20,
-    380
+    460
    ],
    "size": [
     320,
@@ -107,7 +107,7 @@
    "id": 4,
    "type": "CLIPTextEncode",
    "pos": [
-    380,
+    420,
     40
    ],
    "size": [
@@ -146,8 +146,8 @@
    "id": 5,
    "type": "CLIPTextEncode",
    "pos": [
-    380,
-    240
+    420,
+    290
    ],
    "size": [
     400,
@@ -186,7 +186,7 @@
    "type": "EmptyLatentImage",
    "pos": [
     20,
-    560
+    670
    ],
    "size": [
     320,
@@ -221,7 +221,7 @@
    "type": "BasicScheduler",
    "pos": [
     20,
-    740
+    880
    ],
    "size": [
     320,
@@ -261,8 +261,8 @@
    "id": 8,
    "type": "WASCNSModelPatch",
    "pos": [
-    380,
-    560
+    420,
+    670
    ],
    "size": [
     320,
@@ -306,8 +306,8 @@
    "id": 9,
    "type": "RandomNoise",
    "pos": [
-    380,
-    800
+    420,
+    960
    ],
    "size": [
     320,
@@ -340,7 +340,7 @@
    "id": 10,
    "type": "CFGGuider",
    "pos": [
-    820,
+    900,
     40
    ],
    "size": [
@@ -387,8 +387,8 @@
    "id": 11,
    "type": "KSamplerSelect",
    "pos": [
-    820,
-    190
+    900,
+    250
    ],
    "size": [
     320,
@@ -418,11 +418,11 @@
    "id": 12,
    "type": "SamplerCustomAdvanced",
    "pos": [
-    1180,
+    1300,
     40
    ],
    "size": [
-    300,
+    320,
     330
    ],
    "flags": {},
@@ -478,7 +478,7 @@
    "id": 13,
    "type": "VAEDecode",
    "pos": [
-    1520,
+    1700,
     40
    ],
    "size": [
@@ -519,7 +519,7 @@
    "id": 14,
    "type": "SaveImage",
    "pos": [
-    1860,
+    2100,
     40
    ],
    "size": [
@@ -554,8 +554,8 @@
    "id": 15,
    "type": "CFGGuider",
    "pos": [
-    820,
-    520
+    900,
+    550
    ],
    "size": [
     320,
@@ -601,8 +601,8 @@
    "id": 16,
    "type": "KSamplerSelect",
    "pos": [
-    820,
-    670
+    900,
+    760
    ],
    "size": [
     320,
@@ -632,11 +632,11 @@
    "id": 17,
    "type": "SamplerCustomAdvanced",
    "pos": [
-    1180,
-    520
+    1300,
+    550
    ],
    "size": [
-    300,
+    320,
     330
    ],
    "flags": {},
@@ -692,8 +692,8 @@
    "id": 18,
    "type": "VAEDecode",
    "pos": [
-    1520,
-    520
+    1700,
+    550
    ],
    "size": [
     320,
@@ -733,8 +733,8 @@
    "id": 19,
    "type": "SaveImage",
    "pos": [
-    1860,
-    520
+    2100,
+    550
    ],
    "size": [
     380,
@@ -768,8 +768,8 @@
    "id": 20,
    "type": "CFGGuider",
    "pos": [
-    820,
-    1000
+    900,
+    1060
    ],
    "size": [
     320,
@@ -815,8 +815,8 @@
    "id": 21,
    "type": "KSamplerSelect",
    "pos": [
-    820,
-    1150
+    900,
+    1270
    ],
    "size": [
     320,
@@ -846,11 +846,11 @@
    "id": 22,
    "type": "SamplerCustomAdvanced",
    "pos": [
-    1180,
-    1000
+    1300,
+    1060
    ],
    "size": [
-    300,
+    320,
     330
    ],
    "flags": {},
@@ -906,8 +906,8 @@
    "id": 23,
    "type": "VAEDecode",
    "pos": [
-    1520,
-    1000
+    1700,
+    1060
    ],
    "size": [
     320,
@@ -946,8 +946,8 @@
    "id": 24,
    "type": "SaveImage",
    "pos": [
-    1860,
-    1000
+    2100,
+    1060
    ],
    "size": [
     380,
@@ -981,7 +981,7 @@
    "id": 25,
    "type": "WASImageCompare",
    "pos": [
-    2280,
+    2560,
     40
    ],
    "size": [

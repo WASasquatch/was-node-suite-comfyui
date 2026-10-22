@@ -76,7 +76,7 @@
       "id": 2,
       "type": "WASExecutionGate",
       "pos": [
-        400,
+        402.8,
         40
       ],
       "size": [
@@ -156,7 +156,7 @@
       "id": 3,
       "type": "WASExecutionGate",
       "pos": [
-        400,
+        402.8,
         260
       ],
       "size": [
@@ -236,7 +236,7 @@
       "id": 4,
       "type": "WASAnyGate",
       "pos": [
-        400,
+        402.8,
         480
       ],
       "size": [
@@ -303,7 +303,7 @@
       "id": 5,
       "type": "PreviewImage",
       "pos": [
-        760,
+        763.18,
         40
       ],
       "size": [
@@ -341,7 +341,7 @@
       "id": 6,
       "type": "PreviewImage",
       "pos": [
-        760,
+        763.18,
         300
       ],
       "size": [
@@ -379,7 +379,7 @@
       "id": 7,
       "type": "PreviewImage",
       "pos": [
-        760,
+        763.18,
         560
       ],
       "size": [

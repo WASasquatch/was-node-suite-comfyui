@@ -117,7 +117,6 @@ class CanvasView extends BaseView {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
     return `
-      <script></script>
       <div id="canvas-composer" data-images='${imagesJson}' data-origin="${origin}" data-saved-state='${savedStateJson}'>
         <div class="canvas-toolbar">
           <div class="toolbar-group tools-group">
@@ -1860,13 +1859,33 @@ class CanvasView extends BaseView {
             return null;
           }
           
+          // Text written into markup, with every character that could open or close markup as an entity.
+          function markupText(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+              return '&#' + c.charCodeAt(0) + ';';
+            });
+          }
+
+          // An address written inside a quoted CSS url() in an attribute.
+          function cssAddress(value) {
+            var text = String(value == null ? '' : value);
+            var out = '';
+            for (var i = 0; i < text.length; i++) {
+              var code = text.charCodeAt(i);
+              var c = text.charAt(i);
+              var quoted = code <= 32 || code === 92 || c === "'" || c === '"' || c === '(' || c === ')';
+              out += quoted ? '%' + (code < 16 ? '0' : '') + code.toString(16) : c;
+            }
+            return markupText(out);
+          }
+
           let draggedLayerId = null;
           
           function updateLayersList() {
             const list = document.getElementById('layers-list');
             const layerOrder = state.layers.slice().reverse();
             list.innerHTML = layerOrder.map(function(layer, displayIdx) {
-              var thumbStyle = layer.imageUrl ? 'style="background-image: url(' + "'" + layer.imageUrl + "'" + ')"' : '';
+              var thumbStyle = layer.imageUrl ? 'style="background-image: url(' + "'" + cssAddress(layer.imageUrl) + "'" + ')"' : '';
               var selectedClass = layer.id === state.selectedLayerId ? 'selected' : '';
               var drawClass = layer.type === 'draw' ? 'draw-layer' : '';
               var visClass = !layer.visible ? 'visibility-off' : '';
@@ -1877,19 +1896,19 @@ class CanvasView extends BaseView {
               var hasMask = layer.maskCanvas ? 'has-mask' : '';
               var maskEditClass = (state.editingMask && layer.id === state.selectedLayerId) ? 'editing-mask' : '';
               var maskBtn = layer.maskCanvas 
-                ? '<button class="layer-btn mask-edit-btn ' + maskEditClass + '" data-id="' + layer.id + '" title="Edit Mask">🎭</button>'
-                : '<button class="layer-btn mask-add-btn" data-id="' + layer.id + '" title="Add Mask">➕🎭</button>';
-              return '<div class="layer-item ' + selectedClass + ' ' + hasMask + '" data-id="' + layer.id + '" data-order="' + displayIdx + '" draggable="true">' +
+                ? '<button class="layer-btn mask-edit-btn ' + maskEditClass + '" data-id="' + markupText(layer.id) + '" title="Edit Mask">🎭</button>'
+                : '<button class="layer-btn mask-add-btn" data-id="' + markupText(layer.id) + '" title="Add Mask">➕🎭</button>';
+              return '<div class="layer-item ' + selectedClass + ' ' + hasMask + '" data-id="' + markupText(layer.id) + '" data-order="' + displayIdx + '" draggable="true">' +
                 '<div class="layer-thumb ' + drawClass + '" ' + thumbStyle + '></div>' +
                 '<div class="layer-info">' +
-                  '<div class="layer-name">' + layer.name + '</div>' +
+                  '<div class="layer-name">' + markupText(layer.name) + '</div>' +
                   '<div class="layer-type">' + typeText + '</div>' +
                 '</div>' +
                 '<div class="layer-controls">' +
                   maskBtn +
-                  '<button class="layer-btn effects-btn ' + effectsClass + '" data-id="' + layer.id + '" title="Layer Effects">⚙</button>' +
-                  '<button class="layer-btn visibility-btn ' + visClass + '" data-id="' + layer.id + '" title="Toggle Visibility">' + visIcon + '</button>' +
-                  '<button class="layer-btn delete-btn" data-id="' + layer.id + '" title="Delete Layer">🗑</button>' +
+                  '<button class="layer-btn effects-btn ' + effectsClass + '" data-id="' + markupText(layer.id) + '" title="Layer Effects">⚙</button>' +
+                  '<button class="layer-btn visibility-btn ' + visClass + '" data-id="' + markupText(layer.id) + '" title="Toggle Visibility">' + visIcon + '</button>' +
+                  '<button class="layer-btn delete-btn" data-id="' + markupText(layer.id) + '" title="Delete Layer">🗑</button>' +
                 '</div>' +
               '</div>';
             }).join('');
@@ -1996,7 +2015,7 @@ class CanvasView extends BaseView {
             list.innerHTML = imagesData.map(function(fileInfo, idx) {
               var imgUrl = getImageUrl(fileInfo);
               return '<div class="image-item" data-idx="' + idx + '" draggable="true">' +
-                '<div class="layer-thumb" style="background-image: url(' + "'" + imgUrl + "'" + ')"></div>' +
+                '<div class="layer-thumb" style="background-image: url(' + "'" + cssAddress(imgUrl) + "'" + ')"></div>' +
                 '<div class="layer-info">' +
                   '<div class="layer-name">Image ' + (idx + 1) + '</div>' +
                 '</div>' +

@@ -8,7 +8,7 @@
       "id": 1,
       "type": "CLIPLoader",
       "pos": [
-        1600,
+        1660,
         390
       ],
       "size": [
@@ -200,7 +200,7 @@
       "id": 3,
       "type": "WASLoadSystemPrompt",
       "pos": [
-        560,
+        580,
         60
       ],
       "size": [
@@ -255,7 +255,7 @@
       "id": 4,
       "type": "WASFastGenerateText",
       "pos": [
-        1080,
+        1120,
         60
       ],
       "size": [
@@ -493,7 +493,7 @@
       "id": 5,
       "type": "PreviewAny",
       "pos": [
-        1600,
+        1660,
         60
       ],
       "size": [
@@ -652,7 +652,7 @@
       "id": 7,
       "type": "WASLoadSystemPrompt",
       "pos": [
-        560,
+        580,
         832
       ],
       "size": [
@@ -707,7 +707,7 @@
       "id": 8,
       "type": "WASFastGenerateText",
       "pos": [
-        1080,
+        1120,
         832
       ],
       "size": [
@@ -945,7 +945,7 @@
       "id": 9,
       "type": "PreviewAny",
       "pos": [
-        1600,
+        1660,
         832
       ],
       "size": [

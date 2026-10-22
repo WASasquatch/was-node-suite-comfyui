@@ -14,7 +14,7 @@ import time
 
 from .database import WASDatabase, get_settings_db
 
-__all__ = ["ESCAPED", "TextTokens"]
+__all__ = ["ESCAPED", "TextTokens", "workstation_name"]
 
 #: A bracketed run a backslash marks as text. The backslash is left in place, and
 #: :func:`modules.compat.tokens.expand` drops it after the tokens around it are replaced.
@@ -28,6 +28,26 @@ HOLD = "\x00was-escape-{0}\x00"
 #: another token is replaced again by every later token in the pass, so a short value can
 #: grow by a multiple on each one.
 MAX_EXPANDED = 1 << 20
+
+#: Longest the ``[user]`` and ``[hostname]`` values may be.
+MAX_NAME = 64
+
+#: A character a ``[user]`` or ``[hostname]`` value may not hold, replaced with ``_``.
+UNSAFE_NAME = re.compile(r"[^\w.-]")
+
+
+def workstation_name(value: str | None) -> str:
+    """Return a login or host name as letters, digits, ``.``, ``_`` and ``-`` only.
+
+    Args:
+        value: The name the system reports, or ``None``.
+
+    Returns:
+        The name with any other character replaced by ``_``, leading dots removed and cut to
+        :data:`MAX_NAME` characters, or ``"null"`` when nothing is left.
+    """
+    cleaned = UNSAFE_NAME.sub("_", str(value or "")).lstrip(".")[:MAX_NAME].rstrip(".")
+    return cleaned or "null"
 
 
 class TextTokens:
@@ -57,7 +77,7 @@ class TextTokens:
 
         self.tokens = {
             "[time]": str(time.time()).replace(".", "_"),
-            "[hostname]": socket.gethostname(),
+            "[hostname]": workstation_name(socket.gethostname()),
             "[cuda_device]": str(comfy.model_management.get_torch_device()),
             "[cuda_name]": str(comfy.model_management.get_torch_device_name(device=comfy.model_management.get_torch_device())),
         }
@@ -66,7 +86,7 @@ class TextTokens:
             self.tokens["[time]"] = self.tokens["[time]"].split(".")[0]
 
         try:
-            self.tokens["[user]"] = os.getlogin() if os.getlogin() else "null"
+            self.tokens["[user]"] = workstation_name(os.getlogin())
         except Exception:
             self.tokens["[user]"] = "null"
 

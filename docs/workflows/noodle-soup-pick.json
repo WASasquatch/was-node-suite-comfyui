@@ -91,7 +91,7 @@
       "id": "2",
       "type": "Text List to Text",
       "pos": [
-        520,
+        540,
         60
       ],
       "size": [
@@ -139,7 +139,7 @@
       "id": "3",
       "type": "WASDisplayAny",
       "pos": [
-        960,
+        980,
         60
       ],
       "size": [
@@ -174,8 +174,8 @@
       "id": "4",
       "type": "Text Random Line",
       "pos": [
-        520,
-        230
+        540,
+        250
       ],
       "size": [
         360,
@@ -226,8 +226,8 @@
       "id": "5",
       "type": "WASDisplayAny",
       "pos": [
-        960,
-        300
+        980,
+        320
       ],
       "size": [
         360,
@@ -262,7 +262,7 @@
       "type": "WASNoodleSoupTermEdit",
       "pos": [
         40,
-        690
+        710
       ],
       "size": [
         420,
@@ -343,7 +343,7 @@
       "id": "7",
       "type": "Text Concatenate",
       "pos": [
-        520,
+        540,
         680
       ],
       "size": [
@@ -612,7 +612,7 @@
       "id": "8",
       "type": "Text Parse Noodle Soup Prompts",
       "pos": [
-        980,
+        1000,
         680
       ],
       "size": [
@@ -684,7 +684,7 @@
       "id": "9",
       "type": "WASDisplayAny",
       "pos": [
-        1460,
+        1500,
         680
       ],
       "size": [
@@ -720,7 +720,7 @@
       "type": "WASNoodleSoupPick",
       "pos": [
         40,
-        1230
+        1270
       ],
       "size": [
         420,
@@ -799,7 +799,7 @@
       "id": "11",
       "type": "WASDisplayAny",
       "pos": [
-        520,
+        540,
         1200
       ],
       "size": [
@@ -834,7 +834,7 @@
       "id": "12",
       "type": "WASNoodleSoupPick",
       "pos": [
-        980,
+        1000,
         1200
       ],
       "size": [
@@ -914,7 +914,7 @@
       "id": "13",
       "type": "WASDisplayAny",
       "pos": [
-        1460,
+        1500,
         1200
       ],
       "size": [

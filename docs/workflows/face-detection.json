@@ -67,7 +67,7 @@
       "id": 2,
       "type": "WASImageCropFaceNative",
       "pos": [
-        400,
+        403,
         200
       ],
       "size": [
@@ -134,7 +134,7 @@
       "id": 3,
       "type": "PreviewImage",
       "pos": [
-        400,
+        403,
         600
       ],
       "size": [
@@ -340,7 +340,7 @@
       "id": 5,
       "type": "Image Paste Face",
       "pos": [
-        1320,
+        1324,
         200
       ],
       "size": [
@@ -416,7 +416,7 @@
       "id": 6,
       "type": "PreviewImage",
       "pos": [
-        1760,
+        1768,
         200
       ],
       "size": [

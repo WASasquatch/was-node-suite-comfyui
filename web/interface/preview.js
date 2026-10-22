@@ -83,6 +83,16 @@ export function workflowId() {
 }
 
 /**
+ * This tab's client id, which the server answers a run's pictures and reports to.
+ *
+ * @returns {string} The id a prompt queued from this tab carries, or an empty string before the
+ *   socket has given one.
+ */
+export function clientId() {
+  return String(api?.clientId || api?.initialClientId || "");
+}
+
+/**
  * Whether a written run output belongs to the workflow open on the canvas.
  *
  * @param {object} entry - One entry a node named in its `ui`.
@@ -122,8 +132,8 @@ export const PREVIEW_STATE = {
   LOADING: "loading",
   // The answer carries the image.
   READY: "ready",
-  // The store answered with a picture from a run this page did not ask for, which is what a
-  // second tab publishing under the same node id produces. Not a fault, and not this run.
+  // The store answered with a picture from a run this page did not ask for: an earlier run of
+  // this tab, or a run queued with no client id. Not a fault, and not this run.
   FOREIGN: "foreign",
   // A request or a decode that did not work, which is the only one of these that is a fault.
   FAILED: "failed",
@@ -197,17 +207,20 @@ function postSubscription(ids, keep) {
 }
 
 /**
- * Re-send every live registration at the start of a run.
+ * Re-send every live registration at the start of a run and when the socket comes back.
  *
  * @returns {void}
  */
 function installRefresh() {
   if (refreshInstalled) return;
   refreshInstalled = true;
-  api.addEventListener("execution_start", () => {
+  const resend = () => {
     if (!watched.size) return;
     postSubscription([...watched.keys()].map((node) => executionId(node)), true);
-  });
+  };
+  api.addEventListener("execution_start", resend);
+  // Sent again when the socket reopens, as it does after a server restart.
+  api.addEventListener("reconnected", resend);
 }
 
 /**
@@ -247,7 +260,7 @@ export function watchPreviews(node) {
  *   Which picture to ask for. `slot` names the input it arrived on or the output it left on,
  *   `frame` counts from 0, `side` is a value of `PREVIEW_SIDE`, and `expectedPromptId` is the
  *   run this page is asking about: an answer from any other run is `FOREIGN` rather than
- *   `READY`, which is what a second tab publishing under the same node id produces.
+ *   `READY`, which is what an earlier run, or a run queued with no client id, produces.
  * @returns {Promise<{state: string, label: string, image: HTMLImageElement|null,
  *   sourceWidth?: number, sourceHeight?: number, scale?: number, frameCount?: number,
  *   frameTotal?: number, mode?: string, kind?: string, bytes?: number, promptId?: string,
@@ -269,13 +282,15 @@ async function fetchPreview(nodeOrId, options = {}) {
   // The frame parameter is left off for the first one, so the request an interface written
   // before batches existed sends is the one it always sent.
   const index = Number(options.frame) || 0;
-  // The workflow open on the canvas, which the store files each run under.
+  // The workflow open on the canvas and this tab's client id, which the store files each run
+  // under.
   const workflow = workflowId();
   const query = `${ROUTE}?node_id=${encodeURIComponent(id)}`
     + (name ? `&slot=${encodeURIComponent(name)}` : "")
     + (index ? `&frame=${encodeURIComponent(index)}` : "")
     + (side === PREVIEW_SIDE.OUTPUT ? `&side=${side}` : "")
-    + (workflow ? `&workflow=${encodeURIComponent(workflow)}` : "");
+    + (workflow ? `&workflow=${encodeURIComponent(workflow)}` : "")
+    + `&client_id=${encodeURIComponent(clientId())}`;
 
   let blob = null;
   let source = { width: null, height: null };
@@ -322,9 +337,7 @@ async function fetchPreview(nodeOrId, options = {}) {
   if (!blob?.size) return result(PREVIEW_STATE.WAITING, null, side);
   const image = await decode(blob);
   if (!image) return result(PREVIEW_STATE.FAILED, null, side);
-  // A picture whose run is known and is not the one asked for is drawn as its own state. The
-  // store has no per-page scope, so two tabs whose graphs both hold a node numbered 5 file
-  // under the same key, and the picture that comes back is whichever ran last.
+  // A picture whose run is known and is not the one asked for is drawn as its own state.
   const expected = String(options.expectedPromptId ?? "").trim();
   const foreign = !!expected && !!promptId && expected !== promptId;
   // The picture is reduced to fit inside the node, so a gesture on it means nothing in

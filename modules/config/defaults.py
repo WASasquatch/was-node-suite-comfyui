@@ -325,8 +325,12 @@ DEFAULTS = {
     #: ``install_extensions`` unpacks ``.zip`` view extensions for the content viewer at
     #: startup. Off leaves a view extension to be installed by copying two files. Read
     #: straight off disk at startup, before ComfyUI imports any custom node.
+    #: ``allow_scripts`` lets content shown in the Content Viewer run its own scripts, submit
+    #: forms and move its frame to another address. Off shows the content with all of that
+    #: taken out, and only the viewer's own scripts run in the frame.
     "viewer": {
         "install_extensions": False,
+        "allow_scripts": False,
     },
     "features": dict(FEATURE_DEFAULTS),
     "legacy": dict(LEGACY_DEFAULTS),

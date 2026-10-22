@@ -92,7 +92,7 @@
       "type": "LoadImage",
       "pos": [
         40,
-        500
+        504
       ],
       "size": [
         283,
@@ -130,7 +130,7 @@
       "type": "LoadImage",
       "pos": [
         40,
-        900
+        908
       ],
       "size": [
         283,
@@ -199,7 +199,7 @@
       "id": 5,
       "type": "WASPowerPreprocessor",
       "pos": [
-        700,
+        760,
         100
       ],
       "size": [
@@ -246,7 +246,7 @@
       "id": 6,
       "type": "PreviewImage",
       "pos": [
-        1030,
+        1110,
         100
       ],
       "size": [
@@ -279,7 +279,7 @@
       "id": 7,
       "type": "WASPowerPreprocessor",
       "pos": [
-        700,
+        760,
         340
       ],
       "size": [
@@ -326,8 +326,8 @@
       "id": 8,
       "type": "PreviewImage",
       "pos": [
-        1030,
-        416
+        1110,
+        436
       ],
       "size": [
         140,
@@ -359,7 +359,7 @@
       "id": 9,
       "type": "WASPowerPreprocessor",
       "pos": [
-        700,
+        760,
         580
       ],
       "size": [
@@ -406,8 +406,8 @@
       "id": 10,
       "type": "PreviewImage",
       "pos": [
-        1030,
-        732
+        1110,
+        772
       ],
       "size": [
         140,
@@ -439,7 +439,7 @@
       "id": 11,
       "type": "WASPowerPreprocessor",
       "pos": [
-        700,
+        760,
         820
       ],
       "size": [
@@ -486,8 +486,8 @@
       "id": 12,
       "type": "PreviewImage",
       "pos": [
-        1030,
-        1048
+        1110,
+        1108
       ],
       "size": [
         140,
@@ -519,7 +519,7 @@
       "id": 13,
       "type": "WASPowerPreprocessor",
       "pos": [
-        700,
+        760,
         1060
       ],
       "size": [
@@ -566,8 +566,8 @@
       "id": 14,
       "type": "PreviewImage",
       "pos": [
-        1030,
-        1364
+        1110,
+        1444
       ],
       "size": [
         140,
@@ -646,7 +646,7 @@
       "id": 16,
       "type": "PreviewImage",
       "pos": [
-        1790,
+        1810,
         100
       ],
       "size": [
@@ -726,8 +726,8 @@
       "id": 18,
       "type": "PreviewImage",
       "pos": [
-        1790,
-        416
+        1810,
+        436
       ],
       "size": [
         140,
@@ -806,8 +806,8 @@
       "id": 20,
       "type": "PreviewImage",
       "pos": [
-        1790,
-        732
+        1810,
+        772
       ],
       "size": [
         140,
@@ -886,8 +886,8 @@
       "id": 22,
       "type": "PreviewImage",
       "pos": [
-        1790,
-        1048
+        1810,
+        1108
       ],
       "size": [
         140,
@@ -966,8 +966,8 @@
       "id": 24,
       "type": "PreviewImage",
       "pos": [
-        1790,
-        1364
+        1810,
+        1444
       ],
       "size": [
         140,
@@ -1046,7 +1046,7 @@
       "id": 26,
       "type": "PreviewImage",
       "pos": [
-        2550,
+        2570,
         100
       ],
       "size": [
@@ -1080,7 +1080,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         2220,
-        340
+        344
       ],
       "size": [
         270,
@@ -1126,8 +1126,8 @@
       "id": 28,
       "type": "PreviewImage",
       "pos": [
-        2550,
-        416
+        2570,
+        436
       ],
       "size": [
         140,
@@ -1160,7 +1160,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         2220,
-        580
+        588
       ],
       "size": [
         270,
@@ -1206,8 +1206,8 @@
       "id": 30,
       "type": "PreviewImage",
       "pos": [
-        2550,
-        732
+        2570,
+        772
       ],
       "size": [
         140,
@@ -1240,7 +1240,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         2220,
-        820
+        832
       ],
       "size": [
         270,
@@ -1286,8 +1286,8 @@
       "id": 32,
       "type": "PreviewImage",
       "pos": [
-        2550,
-        1048
+        2570,
+        1108
       ],
       "size": [
         140,
@@ -1320,7 +1320,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         2220,
-        1060
+        1076
       ],
       "size": [
         270,
@@ -1366,8 +1366,8 @@
       "id": 34,
       "type": "PreviewImage",
       "pos": [
-        2550,
-        1364
+        2570,
+        1444
       ],
       "size": [
         140,
@@ -1446,7 +1446,7 @@
       "id": 36,
       "type": "PreviewImage",
       "pos": [
-        3310,
+        3330,
         100
       ],
       "size": [
@@ -1526,8 +1526,8 @@
       "id": 38,
       "type": "PreviewImage",
       "pos": [
-        3310,
-        416
+        3330,
+        436
       ],
       "size": [
         140,
@@ -1606,8 +1606,8 @@
       "id": 40,
       "type": "PreviewImage",
       "pos": [
-        3310,
-        732
+        3330,
+        772
       ],
       "size": [
         140,
@@ -1686,8 +1686,8 @@
       "id": 42,
       "type": "PreviewImage",
       "pos": [
-        3310,
-        1048
+        3330,
+        1108
       ],
       "size": [
         140,
@@ -1766,7 +1766,7 @@
       "id": 44,
       "type": "PreviewImage",
       "pos": [
-        4070,
+        4090,
         100
       ],
       "size": [
@@ -1846,8 +1846,8 @@
       "id": 46,
       "type": "PreviewImage",
       "pos": [
-        4070,
-        416
+        4090,
+        436
       ],
       "size": [
         140,
@@ -1926,8 +1926,8 @@
       "id": 48,
       "type": "PreviewImage",
       "pos": [
-        4070,
-        732
+        4090,
+        772
       ],
       "size": [
         140,
@@ -2006,7 +2006,7 @@
       "id": 50,
       "type": "PreviewImage",
       "pos": [
-        4830,
+        4850,
         100
       ],
       "size": [
@@ -2086,8 +2086,8 @@
       "id": 52,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        416
+        4850,
+        436
       ],
       "size": [
         140,
@@ -2166,8 +2166,8 @@
       "id": 54,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        732
+        4850,
+        772
       ],
       "size": [
         140,
@@ -2246,8 +2246,8 @@
       "id": 56,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        1048
+        4850,
+        1108
       ],
       "size": [
         140,
@@ -2326,8 +2326,8 @@
       "id": 58,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        1364
+        4850,
+        1444
       ],
       "size": [
         140,
@@ -2406,8 +2406,8 @@
       "id": 60,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        1680
+        4850,
+        1780
       ],
       "size": [
         140,
@@ -2486,8 +2486,8 @@
       "id": 62,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        1996
+        4850,
+        2116
       ],
       "size": [
         140,
@@ -2566,8 +2566,8 @@
       "id": 64,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        2312
+        4850,
+        2452
       ],
       "size": [
         140,
@@ -2646,8 +2646,8 @@
       "id": 66,
       "type": "PreviewImage",
       "pos": [
-        4830,
-        2628
+        4850,
+        2788
       ],
       "size": [
         140,
@@ -2726,7 +2726,7 @@
       "id": 68,
       "type": "PreviewImage",
       "pos": [
-        5590,
+        5610,
         100
       ],
       "size": [
@@ -2760,7 +2760,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         5260,
-        340
+        344
       ],
       "size": [
         270,
@@ -2806,8 +2806,8 @@
       "id": 70,
       "type": "PreviewImage",
       "pos": [
-        5590,
-        416
+        5610,
+        436
       ],
       "size": [
         140,
@@ -2840,7 +2840,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         5260,
-        580
+        588
       ],
       "size": [
         270,
@@ -2886,8 +2886,8 @@
       "id": 72,
       "type": "PreviewImage",
       "pos": [
-        5590,
-        732
+        5610,
+        772
       ],
       "size": [
         140,
@@ -2966,7 +2966,7 @@
       "id": 74,
       "type": "PreviewImage",
       "pos": [
-        6350,
+        6370,
         100
       ],
       "size": [
@@ -3046,8 +3046,8 @@
       "id": 76,
       "type": "PreviewImage",
       "pos": [
-        6350,
-        416
+        6370,
+        436
       ],
       "size": [
         140,
@@ -3126,8 +3126,8 @@
       "id": 78,
       "type": "PreviewImage",
       "pos": [
-        6350,
-        732
+        6370,
+        772
       ],
       "size": [
         140,
@@ -3206,7 +3206,7 @@
       "id": 80,
       "type": "PreviewImage",
       "pos": [
-        7110,
+        7130,
         100
       ],
       "size": [
@@ -3286,8 +3286,8 @@
       "id": 82,
       "type": "PreviewImage",
       "pos": [
-        7110,
-        416
+        7130,
+        436
       ],
       "size": [
         140,
@@ -3366,8 +3366,8 @@
       "id": 84,
       "type": "PreviewImage",
       "pos": [
-        7110,
-        732
+        7130,
+        772
       ],
       "size": [
         140,
@@ -3446,7 +3446,7 @@
       "id": 86,
       "type": "PreviewImage",
       "pos": [
-        7870,
+        7890,
         100
       ],
       "size": [
@@ -3526,8 +3526,8 @@
       "id": 88,
       "type": "PreviewImage",
       "pos": [
-        7870,
-        416
+        7890,
+        436
       ],
       "size": [
         140,
@@ -3646,7 +3646,7 @@
       "id": 91,
       "type": "PreviewImage",
       "pos": [
-        8630,
+        8650,
         340
       ],
       "size": [
@@ -3726,7 +3726,7 @@
       "id": 93,
       "type": "PreviewImage",
       "pos": [
-        9350,
+        9370,
         100
       ],
       "size": [
@@ -3760,7 +3760,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        348
+        368
       ],
       "size": [
         270,
@@ -3806,8 +3806,8 @@
       "id": 95,
       "type": "PreviewImage",
       "pos": [
-        9350,
-        416
+        9370,
+        436
       ],
       "size": [
         140,
@@ -3840,7 +3840,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        596
+        636
       ],
       "size": [
         270,
@@ -3886,8 +3886,8 @@
       "id": 97,
       "type": "PreviewImage",
       "pos": [
-        9350,
-        732
+        9370,
+        772
       ],
       "size": [
         140,
@@ -3920,7 +3920,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        844
+        904
       ],
       "size": [
         270,
@@ -3966,8 +3966,8 @@
       "id": 99,
       "type": "PreviewImage",
       "pos": [
-        9350,
-        1048
+        9370,
+        1108
       ],
       "size": [
         140,
@@ -4000,7 +4000,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        1092
+        1172
       ],
       "size": [
         270,
@@ -4046,8 +4046,8 @@
       "id": 101,
       "type": "PreviewImage",
       "pos": [
-        9350,
-        1364
+        9370,
+        1444
       ],
       "size": [
         140,
@@ -4126,7 +4126,7 @@
       "id": 103,
       "type": "PreviewImage",
       "pos": [
-        10110,
+        10130,
         100
       ],
       "size": [
@@ -4206,8 +4206,8 @@
       "id": 105,
       "type": "PreviewImage",
       "pos": [
-        10110,
-        416
+        10130,
+        436
       ],
       "size": [
         140,
@@ -4286,8 +4286,8 @@
       "id": 107,
       "type": "PreviewImage",
       "pos": [
-        10110,
-        732
+        10130,
+        772
       ],
       "size": [
         140,
@@ -4320,7 +4320,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9780,
-        820
+        888
       ],
       "size": [
         270,
@@ -4366,8 +4366,8 @@
       "id": 109,
       "type": "PreviewImage",
       "pos": [
-        10110,
-        828
+        10130,
+        888
       ],
       "size": [
         140,
@@ -4400,7 +4400,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9780,
-        1060
+        1108
       ],
       "size": [
         270,
@@ -4446,8 +4446,8 @@
       "id": 111,
       "type": "PreviewImage",
       "pos": [
-        10110,
-        1144
+        10130,
+        1224
       ],
       "size": [
         140,
@@ -4480,7 +4480,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9780,
-        1300
+        1328
       ],
       "size": [
         270,
@@ -4526,8 +4526,8 @@
       "id": 113,
       "type": "PreviewImage",
       "pos": [
-        10110,
-        1460
+        10130,
+        1560
       ],
       "size": [
         140,
@@ -4606,7 +4606,7 @@
       "id": 115,
       "type": "PreviewImage",
       "pos": [
-        10870,
+        10890,
         100
       ],
       "size": [
@@ -4640,7 +4640,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         10540,
-        340
+        344
       ],
       "size": [
         270,
@@ -4686,8 +4686,8 @@
       "id": 117,
       "type": "PreviewImage",
       "pos": [
-        10870,
-        416
+        10890,
+        436
       ],
       "size": [
         140,
@@ -4720,7 +4720,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         10540,
-        580
+        588
       ],
       "size": [
         270,
@@ -4766,8 +4766,8 @@
       "id": 119,
       "type": "PreviewImage",
       "pos": [
-        10870,
-        732
+        10890,
+        772
       ],
       "size": [
         140,
@@ -4800,7 +4800,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        1340
+        1444
       ],
       "size": [
         270,
@@ -4846,8 +4846,8 @@
       "id": 121,
       "type": "PreviewImage",
       "pos": [
-        9350,
-        1680
+        9370,
+        1780
       ],
       "size": [
         140,
@@ -4880,7 +4880,7 @@
       "type": "WASPowerPreprocessor",
       "pos": [
         9020,
-        1588
+        1712
       ],
       "size": [
         270,
@@ -4926,8 +4926,8 @@
       "id": 123,
       "type": "PreviewImage",
       "pos": [
-        9350,
-        1996
+        9370,
+        2116
       ],
       "size": [
         140,
@@ -5924,9 +5924,9 @@
       "title": "Sources and what to look for",
       "bounding": [
         0,
-        14,
-        626,
-        1660
+        -20,
+        640,
+        1710
       ],
       "color": "#3f789e",
       "flags": {}
@@ -5935,10 +5935,10 @@
       "id": 2,
       "title": "No model needed",
       "bounding": [
-        660,
-        14,
-        700,
-        1622
+        720,
+        -20,
+        570,
+        1780
       ],
       "color": "#3f789e",
       "flags": {}
@@ -5948,9 +5948,9 @@
       "title": "Depth",
       "bounding": [
         1420,
-        14,
-        700,
-        1622
+        -20,
+        570,
+        1780
       ],
       "color": "#88A",
       "flags": {}
@@ -5960,9 +5960,9 @@
       "title": "Normals",
       "bounding": [
         2180,
-        14,
-        700,
-        1622
+        -20,
+        570,
+        1780
       ],
       "color": "#88A",
       "flags": {}
@@ -5972,9 +5972,9 @@
       "title": "Pose",
       "bounding": [
         2940,
-        14,
-        700,
-        1306
+        -20,
+        570,
+        1444
       ],
       "color": "#8A8",
       "flags": {}
@@ -5984,9 +5984,9 @@
       "title": "Segments",
       "bounding": [
         3700,
-        14,
-        700,
-        990
+        -20,
+        570,
+        1108
       ],
       "color": "#8A8",
       "flags": {}
@@ -5996,9 +5996,9 @@
       "title": "Soft edges and lines",
       "bounding": [
         4460,
-        14,
-        700,
-        2886
+        -20,
+        570,
+        3124
       ],
       "color": "#A88",
       "flags": {}
@@ -6008,9 +6008,9 @@
       "title": "Sweep: relief must keep rising",
       "bounding": [
         5220,
-        14,
-        700,
-        990
+        -20,
+        570,
+        1108
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6020,9 +6020,9 @@
       "title": "Sweep: edges must thin out",
       "bounding": [
         5980,
-        14,
-        700,
-        990
+        -20,
+        570,
+        1108
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6032,9 +6032,9 @@
       "title": "Sweep: confidence, blank at 0.95 is correct",
       "bounding": [
         6740,
-        14,
-        700,
-        990
+        -20,
+        570,
+        1108
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6044,9 +6044,9 @@
       "title": "Resolution",
       "bounding": [
         7500,
-        14,
-        700,
-        674
+        -20,
+        570,
+        772
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6056,9 +6056,9 @@
       "title": "Batch of two, frames must differ",
       "bounding": [
         8260,
-        14,
-        700,
-        598
+        -20,
+        570,
+        676
       ],
       "color": "#b58b2a",
       "flags": {}
@@ -6068,9 +6068,9 @@
       "title": "Intrinsics, a decomposition",
       "bounding": [
         8980,
-        14,
-        700,
-        2254
+        -20,
+        570,
+        2452
       ],
       "color": "#3f789e",
       "flags": {}
@@ -6080,9 +6080,9 @@
       "title": "Restoration, the picture repaired",
       "bounding": [
         9740,
-        14,
-        700,
-        1718
+        -20,
+        570,
+        1896
       ],
       "color": "#3f789e",
       "flags": {}
@@ -6091,9 +6091,9 @@
       "title": "Sweep: smoothing must reduce grain",
       "bounding": [
         10500,
-        14,
-        700,
-        990
+        -20,
+        570,
+        1108
       ],
       "color": "#3f789e",
       "font_size": 24,

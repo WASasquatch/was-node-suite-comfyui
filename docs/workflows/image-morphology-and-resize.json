@@ -210,7 +210,7 @@
       "type": "ImageScale",
       "pos": [
         420,
-        760
+        810
       ],
       "size": [
         270,
@@ -298,7 +298,7 @@
       "type": "Image Resize",
       "pos": [
         420,
-        980
+        1030
       ],
       "size": [
         270,
@@ -467,7 +467,7 @@
       "id": 6,
       "type": "PreviewImage",
       "pos": [
-        1000,
+        1080,
         40
       ],
       "size": [
@@ -507,8 +507,8 @@
       "id": 7,
       "type": "PreviewImage",
       "pos": [
-        1000,
-        760
+        1080,
+        810
       ],
       "size": [
         140,
@@ -547,8 +547,8 @@
       "id": 8,
       "type": "PreviewImage",
       "pos": [
-        1000,
-        1100
+        1080,
+        1146
       ],
       "size": [
         140,
@@ -587,7 +587,7 @@
       "id": 9,
       "type": "PreviewImage",
       "pos": [
-        820,
+        860,
         300
       ],
       "size": [

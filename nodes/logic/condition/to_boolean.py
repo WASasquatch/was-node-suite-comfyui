@@ -37,8 +37,8 @@ class ToBoolean(io.ComfyNode):
                     [io.String, io.Int, io.Float, NUMBER, io.Boolean],
                     tooltip=(
                         "What to read. A number is true when it is not 0. Text is read as a "
-                        "word first, so `true`, `yes`, `on` and `1` are true and `false`, "
-                        "`no`, `off`, `0` and empty are false."
+                        "word, then as a number, so `true`, `yes`, `on` and `2` are true and "
+                        "`false`, `no`, `off`, `0` and empty are false."
                     ),
                 ),
                 io.Boolean.Input(

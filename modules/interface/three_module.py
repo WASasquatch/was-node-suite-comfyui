@@ -5,7 +5,7 @@ The canvas labels a node's slots from this, so a module names its inputs once in
 
 from __future__ import annotations
 
-__all__ = ["ROUTE", "declaration", "register_routes"]
+__all__ = ["ROUTE", "UNREADABLE", "declaration", "register_routes"]
 
 from ..log import get_logger
 
@@ -13,6 +13,9 @@ logger = get_logger("interface.three_module")
 
 #: Where the canvas asks what a module declares.
 ROUTE = "/was/threejs/api/module"
+
+#: The one answer a module that could not be read gets, whatever the cause.
+UNREADABLE = "the module could not be read. Queue the node to see why in its error"
 
 
 def declaration(label: str) -> dict:
@@ -23,7 +26,7 @@ def declaration(label: str) -> dict:
 
     Returns:
         ``{"ok": True, "kind": ..., "wires": [...], "values": [...]}`` where the module was
-        read, otherwise ``{"ok": False, "error": ...}``.
+        read, otherwise ``{"ok": False, "error": UNREADABLE}``.
     """
     from ..threejs import module_file
 
@@ -32,7 +35,8 @@ def declaration(label: str) -> dict:
     try:
         declared = module_file.load(label)
     except Exception as error:
-        return {"ok": False, "error": str(error)}
+        logger.debug("module %r could not be read (%s: %s)", label, type(error).__name__, error)
+        return {"ok": False, "error": UNREADABLE}
     return {
         "ok": True,
         "kind": declared.kind,

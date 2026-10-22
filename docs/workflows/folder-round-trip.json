@@ -318,7 +318,7 @@
       "id": 3,
       "type": "Image Save",
       "pos": [
-        884,
+        904,
         40
       ],
       "size": [
@@ -526,8 +526,8 @@
       "id": 4,
       "type": "PreviewImage",
       "pos": [
-        884,
-        780
+        904,
+        800
       ],
       "size": [
         330,

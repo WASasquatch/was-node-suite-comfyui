@@ -1,4 +1,4 @@
-"""The tiles and captions a tiled sampler is working on, announced as they change.
+"""The tiles and captions a tiled sampler is working on, sent to the queuing tab.
 
 :data:`EVENT` carries ``node_id``, ``prompt_id``, ``phase``, ``tiles``, ``step``, ``steps``,
 ``visited``, ``stage``, ``stages`` and ``boxes`` as ``[top, bottom, left, right]`` fractions; a
@@ -8,7 +8,7 @@ caption adds ``written`` and ``line``.
 from __future__ import annotations
 
 from .. import log
-from .channel import executing_node_id, executing_prompt_id
+from .channel import executing_client_id, executing_node_id, executing_prompt_id
 
 __all__ = ["CAPTION", "DONE", "EVENT", "OVERVIEW", "PREPARE", "SAMPLE", "Announcer"]
 
@@ -41,6 +41,7 @@ class Announcer:
         self.boxes = [[round(float(v), 5) for v in box] for box in boxes]
         self.node_id = node_id if node_id is not None else executing_node_id()
         self.prompt_id = prompt_id if prompt_id is not None else executing_prompt_id()
+        self.client = executing_client_id()
         self.last = None
         self.step = 0
         self.steps = 0
@@ -98,7 +99,7 @@ class Announcer:
         self._send(phase, list(active), step, self.steps, {"written": int(tile), "line": str(line)})
 
     def _send(self, phase: str, active: list, step: int, steps: int, extra=None) -> None:
-        """Send one message to the node's panel."""
+        """Send one message to the tab that queued the run, or to every tab without one."""
         fields = {
             "node_id": str(self.node_id), "prompt_id": self.prompt_id or "", "phase": phase,
             "tiles": active, "step": step, "steps": steps, "boxes": self.boxes,
@@ -109,6 +110,6 @@ class Announcer:
         try:
             from server import PromptServer
 
-            PromptServer.instance.send_sync(EVENT, fields)
+            PromptServer.instance.send_sync(EVENT, fields, self.client or None)
         except Exception as error:
             logger.debug("the active tiles could not be announced (%s)", error)

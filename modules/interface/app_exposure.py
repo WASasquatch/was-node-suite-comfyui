@@ -1,18 +1,28 @@
 """What a saved app workflow offers, as JSON.
 
 ``GET /was/interface/api/app_exposure?app=<name>`` answers the exposed inputs, the results
-and the node types the workflow needs that are not registered here.
+and the node types the workflow needs that are not registered here, read from the asking
+user's own workflows folder.
 """
 
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from .. import log
 from ..workflow.apps import MAX_WORKFLOW_BYTES
 from .channel import NO_STORE
 
-__all__ = ["MAX_WORKFLOW_BYTES", "ROUTE", "SLOTS", "exposure_payload", "register_routes"]
+__all__ = [
+    "MAX_WORKFLOW_BYTES",
+    "REFUSED",
+    "ROUTE",
+    "SLOTS",
+    "exposure_payload",
+    "register_routes",
+    "request_directory",
+]
 
 logger = log.get_logger("interface.app_exposure")
 
@@ -21,6 +31,9 @@ ROUTE = "/was/interface/api/app_exposure"
 
 #: Exposed inputs the node gives a socket of its own, matching its declared slots.
 SLOTS = 4
+
+#: The one answer a workflow that was refused gets, whatever the cause. The server log names it.
+REFUSED = "that app workflow was refused. The ComfyUI log names the reason"
 
 
 _registered = False
@@ -74,30 +87,57 @@ def declared(class_type, widget):
     return found
 
 
-def file_size(name):
+def request_directory(request) -> Path | None:
+    """The workflows directory of the user a request is made as.
+
+    Args:
+        request: The request, whose ``Comfy-User`` header names the user when ComfyUI runs
+            with ``--multi-user``.
+
+    Returns:
+        That user's ``workflows`` folder, or ``None`` when the user is unknown or ComfyUI
+        names no folder for them.
+    """
+    try:
+        from server import PromptServer
+
+        found = PromptServer.instance.user_manager.get_request_user_filepath(
+            request, "workflows", create_dir=False,
+        )
+    except Exception as error:
+        logger.debug("no workflows folder was found for an app request (%s)", error)
+        return None
+    return Path(found) if found else None
+
+
+def file_size(name, root):
     """Size of a saved app workflow file, in bytes.
 
     Args:
-        name: A saved workflow's name, relative to the workflows directory.
+        name: A saved workflow's name, relative to ``root``.
+        root: The workflows directory, or ``None`` for none.
 
     Returns:
-        Its size, or ``None`` when the name leaves the directory or names no file.
+        Its size, or ``None`` when the name leaves the directory, resolves outside it or
+        names no file.
     """
     from ..util import sandbox
-    from ..workflow import apps
 
-    root = apps.directory()
     if root is None or sandbox.leaves_folder(name) is not None:
         return None
-    target = os.path.join(root, name)
-    return os.path.getsize(target) if os.path.isfile(target) else None
+    base = os.path.realpath(root)
+    target = os.path.realpath(os.path.join(base, name))
+    if not sandbox.contains(Path(base), Path(target)) or not os.path.isfile(target):
+        return None
+    return os.path.getsize(target)
 
 
-def exposure_payload(name):
+def exposure_payload(name, root):
     """What one app workflow offers.
 
     Args:
-        name: A saved workflow's name, relative to the workflows directory.
+        name: A saved workflow's name, relative to ``root``.
+        root: The workflows directory to read in, or ``None``, which reads nothing.
 
     Returns:
         ``{"app", "inputs", "results", "panels", "nodes", "missing"}``, or ``None`` when
@@ -107,11 +147,11 @@ def exposure_payload(name):
         ValueError: The file is larger than ``MAX_WORKFLOW_BYTES``, or the workflow
             cannot be flattened.
     """
-    if not name:
+    if not name or root is None:
         return None
     from ..workflow import apps, convert
 
-    size = file_size(name)
+    size = file_size(name, root)
     if size is not None and size > MAX_WORKFLOW_BYTES:
         raise ValueError(
             f"{name!r} is {size / (1024 * 1024):.1f} MiB, larger than the "
@@ -119,7 +159,7 @@ def exposure_payload(name):
             f"smaller workflow"
         )
     try:
-        workflow = apps.load(name)
+        workflow = apps.load(name, root)
     except (FileNotFoundError, ValueError):
         return None
 
@@ -205,13 +245,14 @@ def register_routes():
         @PromptServer.instance.routes.get(ROUTE)
         async def get_app_exposure(request):
             name = request.query.get("app")
+            root = request_directory(request)
             try:
-                payload = await asyncio.to_thread(exposure_payload, name)
-            except ValueError as error:
-                logger.warning("app workflow %r was refused: %s", name, error)
-                return web.json_response(
-                    {"error": str(error)}, status=422, headers=NO_STORE
+                payload = await asyncio.to_thread(exposure_payload, name, root)
+            except Exception as error:
+                logger.warning(
+                    "app workflow %r was refused (%s: %s)", name, type(error).__name__, error,
                 )
+                return web.json_response({"error": REFUSED}, status=422, headers=NO_STORE)
             if payload is None:
                 return web.json_response(
                     {"error": "no such app workflow"}, status=404, headers=NO_STORE

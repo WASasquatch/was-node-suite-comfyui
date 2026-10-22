@@ -103,8 +103,9 @@ written.
 | ComfyUI `input/` | yes | **no**, a write there is moved to `temp/`, below |
 | ComfyUI `output/` | yes | yes |
 | ComfyUI `temp/` | yes | yes |
-| The pack's own directory, `<user_dir>/was-node-suite/`, or `$WAS_CONFIG_DIR` | yes | yes, except the entries below |
-| `config.yaml`, `config.json` and `viewer-extensions/` in that directory, and the file `WAS_CONFIG` names | yes | **no** |
+| The pack's own directory, `<user_dir>/was-node-suite/`, or `$WAS_CONFIG_DIR` | yes, except the entries below | yes, except the entries below |
+| Every file in that directory whose name begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`, `was_suite_settings.json` or `was_history.json`; the config file in use and the file `WAS_CONFIG` names, with every file beside them whose name begins with theirs | **no** | **no** |
+| `viewer-extensions/` in that directory | yes | **no** |
 | Anything in `paths.allow_read` | yes, and listed, previewed and read by the pack's routes for any client that reaches ComfyUI | no |
 | Anything in `paths.allow_write` | no | yes |
 
@@ -116,7 +117,9 @@ Both sides of a comparison are fully resolved first, which covers `..` segments 
 symlink inside a root pointing outside it does not widen the boundary. Comparison is
 case-folded on Windows. Every entry must be an existing directory.
 
-A refusal names the path, every permitted root and the key that would permit it.
+A refusal names the path as it was given, the permitted roots as `input`, `output`, `temp`,
+`ComfyUI/user/was-node-suite` and how many folders the key lists, and the key that would
+permit it. Its text is the same whether anything is at the refused path or not.
 
 ---
 
@@ -224,6 +227,18 @@ Set this to `true` only for workflows you wrote or have read.
 | Key | Type | Default | Does |
 |---|---|---|---|
 | `viewer.install_extensions` | bool | `false` | Unpacks `.zip` view extensions dropped in `<user_dir>/was-node-suite/viewer-extensions/` at startup. Also copies in view extensions cloned into `custom_nodes` as `ComfyUI_Viewer_*`. A package that needs python libraries has them named in the log; install those yourself. |
+| `viewer.allow_scripts` | bool | `false` | Lets content shown in **Content Viewer** run its own scripts, submit forms and move its frame to another address. `false` shows the content with all of that taken out, and a note above it naming this key. |
+
+Content Viewer shows whatever a workflow wires into it, including text a loader node read from
+your disk. Left `false`, that content cannot run code or send anything to another address, and
+a link in it opens in a new tab only after you confirm the address. Diagrams, maths,
+highlighted code, list tick boxes, the image canvas and the object inspector keep working.
+View extensions you installed yourself are unaffected.
+
+The browser learns this setting from each run of a Content Viewer node. Content restored from a
+saved workflow shows with its scripts off until the node has run once since ComfyUI started.
+
+Set this to `true` only for workflows you wrote or have read.
 
 ---
 

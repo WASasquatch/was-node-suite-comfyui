@@ -35,7 +35,7 @@ MARKER = "_was_token_expansion"
 
 #: Node id -> the inputs on it that must reach ``execute`` exactly as the user wrote them.
 #:
-#: Six kinds of field are listed, and nothing else is:
+#: Seven kinds of field are listed, and nothing else is:
 #:
 #: * the token-definition widgets. `Text Add Tokens` reads ``[name]: value`` lines and
 #:   `Text Add Token by Input` takes a name and a value, so expanding either would define
@@ -59,6 +59,8 @@ MARKER = "_was_token_expansion"
 #:   words, and a rewritten name matches nothing in the pantry.
 #: * library text stored for later runs. A saved system prompt keeps its tokens as written,
 #:   and they expand on the node it is wired into when it is used.
+#: * an address the browser fetches from another host. Three Texture URL's ``url`` reaches
+#:   that host as written, so no token value is placed in a request to it.
 LITERAL_INPUTS = {
     "WASComfyViewer": ("manual_content", "viewer_meta", "view_state"),
     "WASImageCurves": ("curve_points",),
@@ -86,6 +88,7 @@ LITERAL_INPUTS = {
     "WASSaveSystemPrompt": ("system_prompt", "model_family", "description"),
     "WASZipSave": ("files",),
     "WASLoadImagesFromZIP": ("pad_color",),
+    "WASThreeTextureURL": ("url",),
 }
 
 

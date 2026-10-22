@@ -69,7 +69,7 @@
       "type": "CLIPLoader",
       "pos": [
         0,
-        206
+        242
       ],
       "size": [
         300,
@@ -142,7 +142,7 @@
       "type": "VAELoader",
       "pos": [
         0,
-        366
+        438
       ],
       "size": [
         300,
@@ -191,7 +191,7 @@
       "id": 98,
       "type": "CLIPTextEncode",
       "pos": [
-        360,
+        380,
         70
       ],
       "size": [
@@ -247,8 +247,8 @@
       "id": 99,
       "type": "CLIPTextEncode",
       "pos": [
-        360,
-        344
+        380,
+        380
       ],
       "size": [
         400,
@@ -304,7 +304,7 @@
       "type": "PrimitiveInt",
       "pos": [
         0,
-        478
+        586
       ],
       "size": [
         300,
@@ -356,7 +356,7 @@
       "type": "EmptyFlux2LatentImage",
       "pos": [
         0,
-        614
+        758
       ],
       "size": [
         300,
@@ -428,7 +428,7 @@
       "type": "Flux2Scheduler",
       "pos": [
         0,
-        774
+        1274
       ],
       "size": [
         300,
@@ -500,7 +500,7 @@
       "type": "RandomNoise",
       "pos": [
         0,
-        934
+        954
       ],
       "size": [
         300,
@@ -552,7 +552,7 @@
       "type": "KSamplerSelect",
       "pos": [
         0,
-        1070
+        1126
       ],
       "size": [
         300,
@@ -601,8 +601,8 @@
       "id": 105,
       "type": "WASNumberSequence",
       "pos": [
-        812.727272727272,
-        53.63636363636375
+        940,
+        53.64
       ],
       "size": [
         380,
@@ -788,8 +788,8 @@
       "id": 106,
       "type": "WASNumberListPlot",
       "pos": [
-        820,
-        658
+        940,
+        677.64
       ],
       "size": [
         380,
@@ -828,7 +828,7 @@
       "id": 107,
       "type": "WASPowerLoraLoader",
       "pos": [
-        1300,
+        1480,
         70
       ],
       "size": [
@@ -1864,7 +1864,7 @@
       "id": 108,
       "type": "CFGGuider",
       "pos": [
-        1700,
+        1900,
         70
       ],
       "size": [
@@ -1931,12 +1931,12 @@
       "id": 109,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        1700,
-        222
+        1900,
+        258
       ],
       "size": [
-        300,
-        326
+        320,
+        330
       ],
       "flags": {},
       "order": 18,
@@ -2003,8 +2003,8 @@
       "id": 110,
       "type": "VAEDecode",
       "pos": [
-        1700,
-        602
+        1900,
+        678
       ],
       "size": [
         300,
@@ -2049,8 +2049,8 @@
       "id": 111,
       "type": "WASPowerLoraLoader",
       "pos": [
-        1300,
-        782
+        1480,
+        1034
       ],
       "size": [
         340,
@@ -3085,8 +3085,8 @@
       "id": 112,
       "type": "CFGGuider",
       "pos": [
-        1700,
-        782
+        1900,
+        1034
       ],
       "size": [
         300,
@@ -3152,12 +3152,12 @@
       "id": 113,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        1700,
-        934
+        1900,
+        1222
       ],
       "size": [
-        300,
-        326
+        320,
+        330
       ],
       "flags": {},
       "order": 15,
@@ -3224,8 +3224,8 @@
       "id": 114,
       "type": "VAEDecode",
       "pos": [
-        1700,
-        1314
+        1900,
+        1642
       ],
       "size": [
         300,
@@ -3270,7 +3270,7 @@
       "id": 115,
       "type": "WASImageCompare",
       "pos": [
-        2100,
+        2380,
         70
       ],
       "size": [
@@ -3612,10 +3612,10 @@
       "id": 1,
       "title": "Model, prompt and steps",
       "bounding": [
-        -16,
-        -4,
-        792,
-        1148
+        -40,
+        -50,
+        860,
+        1500
       ],
       "flags": {}
     },
@@ -3623,10 +3623,10 @@
       "id": 2,
       "title": "Strength per step",
       "bounding": [
-        804,
-        -4,
-        412,
-        938
+        900,
+        -66.36,
+        460,
+        1074
       ],
       "flags": {}
     },
@@ -3634,10 +3634,10 @@
       "id": 3,
       "title": "LoRA held back until the layout is set",
       "bounding": [
-        1284,
-        -4,
-        732,
-        668
+        1440,
+        -50,
+        820,
+        844
       ],
       "flags": {}
     },
@@ -3645,10 +3645,10 @@
       "id": 4,
       "title": "Same LoRA at full strength from step 1",
       "bounding": [
-        1284,
-        708,
-        732,
-        668
+        1440,
+        914,
+        820,
+        844
       ],
       "flags": {}
     },
@@ -3656,10 +3656,10 @@
       "id": 5,
       "title": "Compare",
       "bounding": [
-        2084,
-        -4,
-        792,
-        990
+        2340,
+        -50,
+        840,
+        1090
       ],
       "flags": {}
     }

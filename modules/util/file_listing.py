@@ -8,6 +8,7 @@ at least :data:`LISTING_TTL` seconds.
 from __future__ import annotations
 
 import os
+import stat
 import threading
 import time
 from collections import deque
@@ -33,6 +34,7 @@ __all__ = [
     "configured",
     "find",
     "labels",
+    "linked",
     "listing",
     "resolve",
     "reuse_until",
@@ -505,10 +507,9 @@ def _walk(directory: Path, tag: str, order: int, budget: int) -> tuple[list[Entr
                 if budget <= 0:
                     return found, True
                 budget -= 1
-                # A dotted name is editor and tool state, and a symlink is skipped whether it
-                # names a directory or a file: it resolves wherever it likes, and one pointing
-                # out of the root becomes a label the containment layer then refuses.
-                if entry.name.startswith("."):
+                # A dotted name is editor and tool state. A symlink and a junction are skipped,
+                # whether they name a folder or a file.
+                if entry.name.startswith(".") or linked(entry):
                     continue
                 try:
                     if entry.is_dir(follow_symlinks=False):
@@ -517,7 +518,7 @@ def _walk(directory: Path, tag: str, order: int, budget: int) -> tuple[list[Entr
                         continue
                     if not entry.is_file(follow_symlinks=False):
                         continue
-                    stat = entry.stat(follow_symlinks=False)
+                    info = entry.stat(follow_symlinks=False)
                 except OSError:
                     continue
                 # Built with '/' rather than os.sep or os.path.join: the label is the value
@@ -531,11 +532,35 @@ def _walk(directory: Path, tag: str, order: int, budget: int) -> tuple[list[Entr
                         relative=relative,
                         label=f"{relative} [{tag}]",
                         path=entry.path,
-                        mtime=stat.st_mtime,
-                        size=max(0, int(stat.st_size)),
+                        mtime=info.st_mtime,
+                        size=max(0, int(info.st_size)),
                     )
                 )
     return found, False
+
+
+def linked(entry: os.DirEntry) -> bool:
+    """Whether a directory entry is a symlink or a Windows junction.
+
+    Args:
+        entry: One entry of an ``os.scandir`` listing.
+
+    Returns:
+        True for either, and for an entry that cannot be read. A junction is read off its
+        reparse tag where ``DirEntry.is_junction`` is missing.
+    """
+    try:
+        if entry.is_symlink():
+            return True
+        check = getattr(entry, "is_junction", None)
+        if check is not None:
+            return bool(check())
+        tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", None)
+        if tag is None:
+            return False
+        return getattr(entry.stat(follow_symlinks=False), "st_reparse_tag", 0) == tag
+    except OSError:
+        return True
 
 
 def _entries(listing) -> Iterator[os.DirEntry]:

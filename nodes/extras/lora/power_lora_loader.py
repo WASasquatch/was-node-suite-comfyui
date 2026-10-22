@@ -565,7 +565,10 @@ class PowerLoraLoader(io.ComfyNode):
             name: lora_state_dict(folder_paths.get_full_path_or_raise("loras", name))
             for name, _ in shown
         }
-        model, clip = cls.apply(model, clip, [(states[name], weight) for name, weight, _ in stack], fuse)
+        model, clip = cls.apply(
+            model, clip, [(states[name], weight) for name, weight, _ in stack], fuse,
+            [os.path.splitext(os.path.basename(name))[0] for name, _, _ in stack],
+        )
         if scheduled:
             model = lora_schedule.attach(model, [(states[name], listed) for name, listed in shown], scale)
             logger.debug("applied %d lora(s) with per-step strengths", len(shown))
@@ -574,7 +577,7 @@ class PowerLoraLoader(io.ComfyNode):
         return io.NodeOutput(model, clip, stack, text, *name_slots(names))
 
     @staticmethod
-    def apply(model, clip, loaded: list, fuse: bool):
+    def apply(model, clip, loaded: list, fuse: bool, names: list | None = None):
         """Patch a model and text encoder with LoRAs, each at its own strength.
 
         Args:
@@ -582,12 +585,15 @@ class PowerLoraLoader(io.ComfyNode):
             clip: The text encoder to patch, or None.
             loaded: ``(state_dict, strength)`` per LoRA, in row order.
             fuse: Join the LoRAs into one patch before applying.
+            names: One name per LoRA, for the message about parts that do not fit.
 
         Returns:
             The patched model and text encoder.
         """
-        import comfy.sd
+        from ....modules.lora import fit
 
+        names = list(names or [])
+        names += [f"LoRA {index + 1}" for index in range(len(names), len(loaded))]
         if not loaded:
             return model, clip
         if fuse and len(loaded) > 1:
@@ -596,13 +602,13 @@ class PowerLoraLoader(io.ComfyNode):
             combined, paired, carried = fuse_state_dicts(loaded)
             logger.debug("fused %d module(s), carried %d key(s)", paired, carried)
             # Strength 1.0: every row's own weight is already folded into the factors.
-            return comfy.sd.load_lora_for_models(
-                model, clip, combined, 1.0, 1.0 if clip is not None else 0.0
+            return fit.load_lora_for_models(
+                model, clip, combined, 1.0, 1.0 if clip is not None else 0.0, " + ".join(names)
             )
-        for state, weight in loaded:
+        for (state, weight), name in zip(loaded, names):
             # Each row patches the answer of the one before it, so the stack composes in the
             # order the rows are drawn rather than every row patching the original.
-            model, clip = comfy.sd.load_lora_for_models(
-                model, clip, state, weight, weight if clip is not None else 0.0
+            model, clip = fit.load_lora_for_models(
+                model, clip, state, weight, weight if clip is not None else 0.0, name
             )
         return model, clip

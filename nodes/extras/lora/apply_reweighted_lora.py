@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import torch
 from comfy_api.latest import io
 
@@ -265,11 +267,10 @@ class ApplyReweightedLoRA(io.ComfyNode):
         from pathlib import Path
 
         import folder_paths
-        from comfy import sd as comfy_sd
         from comfy.utils import load_torch_file
         from safetensors.torch import load_file, save_file
 
-        from ....modules.lora import reweight
+        from ....modules.lora import fit, reweight
         from ....modules.util import sandbox
         from ....modules.util.hashing import get_sha256
 
@@ -305,8 +306,9 @@ class ApplyReweightedLoRA(io.ComfyNode):
             preset=preset,
         )
 
-        patched_model, patched_clip = comfy_sd.load_lora_for_models(
-            model.clone(), clip.clone(), scaled, strength_model, strength_clip
+        patched_model, patched_clip = fit.load_lora_for_models(
+            model.clone(), clip.clone(), scaled, strength_model, strength_clip,
+            os.path.splitext(os.path.basename(lora_name))[0],
         )
 
         saved_path = ""

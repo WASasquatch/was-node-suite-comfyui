@@ -62,7 +62,7 @@
       "id": 2,
       "type": "WASImageAutoLevels",
       "pos": [
-        430,
+        450,
         40
       ],
       "size": [
@@ -152,7 +152,7 @@
       "id": 3,
       "type": "WASImageColorBalance",
       "pos": [
-        854,
+        894,
         40
       ],
       "size": [
@@ -290,7 +290,7 @@
       "id": 4,
       "type": "WASImageVignette",
       "pos": [
-        1278,
+        1338,
         40
       ],
       "size": [
@@ -388,7 +388,7 @@
       "id": 5,
       "type": "PreviewImage",
       "pos": [
-        1702,
+        1782,
         40
       ],
       "size": [
@@ -423,7 +423,7 @@
       "id": 6,
       "type": "WASImageLensDistortion",
       "pos": [
-        430,
+        450,
         560
       ],
       "size": [
@@ -511,8 +511,8 @@
       "id": 7,
       "type": "PreviewImage",
       "pos": [
-        854,
-        588
+        894,
+        608
       ],
       "size": [
         330,
@@ -546,8 +546,8 @@
       "id": 8,
       "type": "WASImageDirectionalBlur",
       "pos": [
-        430,
-        1000
+        450,
+        1008
       ],
       "size": [
         364,
@@ -654,8 +654,8 @@
       "id": 9,
       "type": "PreviewImage",
       "pos": [
-        854,
-        1000
+        894,
+        1008
       ],
       "size": [
         330,
@@ -689,8 +689,8 @@
       "id": 10,
       "type": "WASImagePerspective",
       "pos": [
-        430,
-        1476
+        450,
+        1504
       ],
       "size": [
         330,
@@ -845,7 +845,7 @@
       "id": 11,
       "type": "PreviewImage",
       "pos": [
-        854,
+        894,
         1440
       ],
       "size": [
@@ -880,7 +880,7 @@
       "id": 12,
       "type": "MaskPreview",
       "pos": [
-        854,
+        894,
         1780
       ],
       "size": [
@@ -915,7 +915,7 @@
       "id": 13,
       "type": "WASLinearLight",
       "pos": [
-        2092,
+        2192,
         40
       ],
       "size": [
@@ -974,7 +974,7 @@
       "id": 14,
       "type": "WASImageToneMap",
       "pos": [
-        2482,
+        2602,
         40
       ],
       "size": [
@@ -1074,7 +1074,7 @@
       "id": 15,
       "type": "PreviewImage",
       "pos": [
-        2906,
+        3046,
         40
       ],
       "size": [
@@ -1109,7 +1109,7 @@
       "id": 16,
       "type": "WASImageToneMap",
       "pos": [
-        2482,
+        2602,
         560
       ],
       "size": [
@@ -1209,7 +1209,7 @@
       "id": 17,
       "type": "PreviewImage",
       "pos": [
-        2906,
+        3046,
         560
       ],
       "size": [
@@ -1244,8 +1244,8 @@
       "id": 18,
       "type": "ImageToMask",
       "pos": [
-        2092,
-        1000
+        2192,
+        1008
       ],
       "size": [
         330,
@@ -1292,8 +1292,8 @@
       "id": 19,
       "type": "ThresholdMask",
       "pos": [
-        2482,
-        1028
+        2602,
+        1048
       ],
       "size": [
         330,
@@ -1340,8 +1340,8 @@
       "id": 20,
       "type": "WASImageMatte",
       "pos": [
-        2906,
-        1000
+        3046,
+        1008
       ],
       "size": [
         344,
@@ -1438,8 +1438,8 @@
       "id": 21,
       "type": "MaskPreview",
       "pos": [
-        3310,
-        1000
+        3470,
+        1008
       ],
       "size": [
         330,
@@ -1473,7 +1473,7 @@
       "id": 22,
       "type": "PreviewImage",
       "pos": [
-        3310,
+        3470,
         1340
       ],
       "size": [

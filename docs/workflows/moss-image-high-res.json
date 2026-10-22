@@ -65,7 +65,7 @@
       "type": "CLIPLoader",
       "pos": [
         0,
-        192
+        202
       ],
       "size": [
         270,
@@ -134,7 +134,7 @@
       "type": "VAELoader",
       "pos": [
         0,
-        378
+        398
       ],
       "size": [
         270,
@@ -232,7 +232,7 @@
       "type": "CLIPTextEncode",
       "pos": [
         450,
-        330
+        340
       ],
       "size": [
         420,
@@ -284,7 +284,7 @@
       "type": "EmptyFlux2LatentImage",
       "pos": [
         450,
-        630
+        650
       ],
       "size": [
         270,
@@ -352,7 +352,7 @@
       "type": "PrimitiveInt",
       "pos": [
         0,
-        516
+        546
       ],
       "size": [
         270,
@@ -484,7 +484,7 @@
       "type": "WASModelBlockRestore",
       "pos": [
         960,
-        240
+        250
       ],
       "size": [
         270,
@@ -568,7 +568,7 @@
       "type": "WASFlowShift",
       "pos": [
         960,
-        450
+        470
       ],
       "size": [
         270,
@@ -652,7 +652,7 @@
       "type": "WASTiledDiffusionModelPatch",
       "pos": [
         960,
-        660
+        690
       ],
       "size": [
         282,
@@ -725,7 +725,7 @@
       "type": "WASRoPEExtensionPatch",
       "pos": [
         960,
-        846
+        886
       ],
       "size": [
         270,
@@ -776,7 +776,7 @@
       "type": "SkipLayerGuidanceDiTSimple",
       "pos": [
         960,
-        984
+        1034
       ],
       "size": [
         296,
@@ -860,7 +860,7 @@
       "type": "WASResolutionSelector",
       "pos": [
         0,
-        678
+        718
       ],
       "size": [
         360,
@@ -1195,7 +1195,7 @@
       "type": "KSampler",
       "pos": [
         1346,
-        650
+        660
       ],
       "size": [
         340,
@@ -1321,7 +1321,7 @@
       "type": "VAEDecode",
       "pos": [
         1776,
-        650
+        660
       ],
       "size": [
         140,
@@ -1364,7 +1364,7 @@
       "type": "SaveImage",
       "pos": [
         2006,
-        650
+        660
       ],
       "size": [
         460,

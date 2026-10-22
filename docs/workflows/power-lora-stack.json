@@ -1052,7 +1052,7 @@
       "id": 2,
       "type": "WASNSPowerLoraMerger",
       "pos": [
-        520,
+        540,
         40
       ],
       "size": [
@@ -2127,7 +2127,7 @@
       "id": 3,
       "type": "WASNSPowerLoraMerger",
       "pos": [
-        520,
+        540,
         620
       ],
       "size": [
@@ -3202,7 +3202,7 @@
       "id": 4,
       "type": "PreviewAny",
       "pos": [
-        980,
+        1040,
         40
       ],
       "size": [
@@ -3242,7 +3242,7 @@
       "id": 5,
       "type": "PreviewAny",
       "pos": [
-        980,
+        1040,
         620
       ],
       "size": [

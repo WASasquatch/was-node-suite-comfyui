@@ -193,13 +193,14 @@ def _below(root: Path, tag: str, budget: int) -> tuple[list[str], int]:
             # scandir rather than iterdir: the directory read already carries each entry's
             # type, where Path.is_dir stats every name one at a time, and a root holding a
             # hundred thousand files is a hundred thousand stat calls per menu. A dotted
-            # name is editor and tool state, and a symlink resolves wherever it likes.
+            # name is editor and tool state, and a symlink or a junction is skipped.
             with os.scandir(directory) as listing:
                 entries = sorted(
                     (
                         entry
                         for entry in listing
                         if not entry.name.startswith(".")
+                        and not file_listing.linked(entry)
                         and entry.is_dir(follow_symlinks=False)
                     ),
                     key=lambda entry: entry.name.casefold(),
@@ -231,6 +232,7 @@ def _own(extensions, extra):
             continue
         try:
             entries = sorted(root.rglob("*"))
+            resolved = Path(os.path.realpath(root))
         except OSError as error:
             logger.debug("%s could not be listed: %s", root, error)
             continue
@@ -238,6 +240,9 @@ def _own(extensions, extra):
             if not entry.is_file():
                 continue
             if wanted and entry.suffix.lower() not in wanted:
+                continue
+            # A file a link or a junction leads to outside the folder is left out.
+            if not sandbox.contains(resolved, Path(os.path.realpath(entry))):
                 continue
             relative = entry.relative_to(root).as_posix()
             out.append((f"{relative} [{tag}]", entry))

@@ -42,6 +42,7 @@ threejs:
 
 viewer:
   install_extensions: false  # unpack .zip view extensions; what they need is named in the log
+  allow_scripts: false       # let content in the Content Viewer run its own scripts and forms
 
 features:                # optional node groups
   extras:      true      # 27 nodes: LUTs, tiling, LoRA merging, sequence samplers, latent upscalers

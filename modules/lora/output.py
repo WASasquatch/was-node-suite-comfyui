@@ -97,9 +97,8 @@ def resolve_output(directory: Path, filename: str) -> tuple[Path, str]:
     target = directory.joinpath(*relative.parts).resolve(strict=False)
     if not contains(directory, target):
         raise PathNotAllowed(
-            f"refusing to write {target}\n"
-            f"  `{text}` leaves {directory}, which it was to be written inside, through a "
-            f"symlink that points out of that directory."
+            f"refusing to write `{text}` in the LoRA folder\n"
+            f"  It leaves that folder through a link that points out of it."
         )
     return target, "/".join(relative.parts)
 

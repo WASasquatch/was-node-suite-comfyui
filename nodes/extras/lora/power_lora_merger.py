@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 from comfy_api.latest import io
 
@@ -69,6 +70,55 @@ EXACT_COUNTS = {
 
 #: Modes that measure later LoRAs against the first, so they need at least two.
 NEEDS_TWO = ("add-diff", "add-orth", "diff-export")
+
+#: Header keys an `obfuscate` merge keeps from the first source: what model and network the
+#: file is for, never what it was made from.
+STRUCTURAL_KEYS = frozenset({
+    "_was_lora_key_style",
+    "format",
+    "modelspec.architecture",
+    "modelspec.implementation",
+    "modelspec.sai_model_spec",
+    "ss_base_model_version",
+    "ss_network_module",
+    "ss_v2",
+})
+
+#: A path to somewhere on disk inside one string: a drive, a network share, a ``file:`` address,
+#: or a folder below a root, such as ``C:\Users``, ``\\server\share\``, ``/home/name/``.
+ABSOLUTE_PATH = re.compile(
+    r"(?<![A-Za-z0-9])[A-Za-z]:[\\/]"
+    r"|\\\\[^\\\s]+\\"
+    r"|(?i:\bfile:)"
+    r"|(?:^|[\s\"'=(\[,;:])/[^\s/\"']+/"
+)
+
+
+def holds_path(value) -> bool:
+    """Whether a header value names a path on disk, looking inside it where it holds JSON.
+
+    Args:
+        value: One safetensors metadata value.
+
+    Returns:
+        True where any string in it, or any key or string in the JSON it decodes to, holds
+        :data:`ABSOLUTE_PATH`.
+    """
+    try:
+        pending = [json.loads(value)]
+    except (TypeError, ValueError, RecursionError):
+        pending = [value]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, str):
+            if ABSOLUTE_PATH.search(item):
+                return True
+        elif isinstance(item, dict):
+            pending.extend(item.keys())
+            pending.extend(item.values())
+        elif isinstance(item, list):
+            pending.extend(item)
+    return False
 
 
 class PowerLoraMerger(io.ComfyNode):
@@ -139,8 +189,8 @@ class PowerLoraMerger(io.ComfyNode):
                         "`svd` recompresses to one rank, small; `add` stacks exactly, largest; "
                         "`rebase` recompresses one LoRA; `add-diff` first plus the others' "
                         "differences; `add-orth` orthogonalises them; `diff-export` saves the "
-                        "first two's difference; `moe` picks or blends the strongest per "
-                        "module; `obfuscate` rewrites factors, same effect; `block-mix` "
+                        "first two's difference; `moe` blends the strongest per module; "
+                        "`obfuscate` rewrites factors, names no source; `block-mix` "
                         "follows block_mix_recipe."
                     ),
                 ),
@@ -580,8 +630,8 @@ class PowerLoraMerger(io.ComfyNode):
         for name, weight, clip_weight in stack:
             if weight == 0.0:
                 continue
-            full_path = lora_stack.resolve(name)
-            if full_path is None:
+            found = lora_stack.locate(name)
+            if found is None:
                 raise ValueError(
                     f"The LoRA `{name}` is not in your LoRA folder. Refresh the list on "
                     f"the node, or pick another file."
@@ -589,7 +639,7 @@ class PowerLoraMerger(io.ComfyNode):
             if clip_weight != weight:
                 logger.info("%s carries clip strength %g; it merges at its model strength %g",
                             name, clip_weight, weight)
-            sources.append((full_path, weight))
+            sources.append((*found, weight))
 
         exact = EXACT_COUNTS.get(mode)
         if exact is not None and len(sources) != exact[0]:
@@ -614,7 +664,7 @@ class PowerLoraMerger(io.ComfyNode):
             mode, sources, settings, out_dtype, compute_dtype, block_mix_recipe
         )
         if output.built_from(target, identity):
-            logger.info("%s already holds this merge, so it is served as it stands", target)
+            logger.info("%s already holds this merge, so it is served as it stands", relative)
             return cls._from_file(
                 model, clip, relative, output_model_strength, output_clip_strength
             )
@@ -671,6 +721,30 @@ class PowerLoraMerger(io.ComfyNode):
             if mode == "obfuscate":
                 for key in ("mode", "merged_from", "include_patterns", "exclude_patterns"):
                     metadata.pop(key, None)
+                inherited = sorted(
+                    key for key in metadata
+                    if key not in identity and key not in STRUCTURAL_KEYS
+                )
+                for key in inherited:
+                    metadata.pop(key)
+                if inherited:
+                    logger.info(
+                        "obfuscate leaves %d key(s) carried over from the first source out of "
+                        "the merged LoRA's header: %s",
+                        len(inherited), ", ".join(inherited),
+                    )
+            pathed = sorted(
+                key for key, value in metadata.items()
+                if key not in identity and holds_path(value)
+            )
+            for key in pathed:
+                metadata.pop(key)
+            if pathed:
+                logger.info(
+                    "the merged LoRA's header leaves out %s, carried over from %s, because "
+                    "each names a file or folder on disk",
+                    ", ".join(pathed), sources[0][0],
+                )
 
             target.parent.mkdir(parents=True, exist_ok=True)
             try:
@@ -683,19 +757,19 @@ class PowerLoraMerger(io.ComfyNode):
                     f"  Give output_filename a name that is not in use, or restart ComfyUI "
                     f"to let go of it. The merge itself finished, so only the save was lost."
                 ) from refused
-            logger.info("saved the merged LoRA to %s", target)
+            logger.info("saved the merged LoRA as %s", relative)
 
             progress.update_absolute(progress.total)
         finally:
             progress.close()
 
         if model is not None:
-            import comfy.sd
+            from ....modules.lora import fit
 
             # Applied from the tensors in hand rather than from the saved file.
-            model, patched = comfy.sd.load_lora_for_models(
+            model, patched = fit.load_lora_for_models(
                 model, clip, state, output_model_strength,
-                output_clip_strength if clip is not None else 0.0,
+                output_clip_strength if clip is not None else 0.0, relative,
             )
             if clip is not None:
                 clip = patched
@@ -734,7 +808,8 @@ class PowerLoraMerger(io.ComfyNode):
         """Read every selected LoRA off disk.
 
         Args:
-            sources: ``(path, weight)`` per selected row, in row order.
+            sources: ``(name, path, weight)`` per selected row, in row order, ``name``
+                relative to the LoRA folder.
             device: Where the tensors are loaded to.
             compute_dtype: Precision the summary statistics are worked out in.
             settings: The merge settings, for the module filters.
@@ -749,7 +824,7 @@ class PowerLoraMerger(io.ComfyNode):
 
         loaded = []
         reference_metadata = {}
-        for index, (path, weight) in enumerate(sources):
+        for index, (name, path, weight) in enumerate(sources):
             pairs, metadata = merge_loras_z.load_lora_pairs(
                 path,
                 device=device,
@@ -758,7 +833,7 @@ class PowerLoraMerger(io.ComfyNode):
             if index == 0:
                 reference_metadata = metadata if isinstance(metadata, dict) else {}
             loaded.append((pairs, weight))
-            cls._report("input", pairs, weight, compute_dtype, settings, path=path, mode=mode)
+            cls._report("input", pairs, weight, compute_dtype, settings, name=name, mode=mode)
         return loaded, reference_metadata
 
     @classmethod
@@ -868,7 +943,7 @@ class PowerLoraMerger(io.ComfyNode):
         return merge_loras_z.merge_mode_block_mix(loaded, **shared)
 
     @classmethod
-    def _report(cls, stage, pairs, weight, compute_dtype, settings, path=None, mode=None):
+    def _report(cls, stage, pairs, weight, compute_dtype, settings, name=None, mode=None):
         """Log what a set of LoRA pairs contains.
 
         Args:
@@ -877,7 +952,7 @@ class PowerLoraMerger(io.ComfyNode):
             weight: Weight the pairs are counted at.
             compute_dtype: Precision the statistics are worked out in.
             settings: The merge settings, for the module filters.
-            path: Source file, for an input report.
+            name: Source file relative to the LoRA folder, for an input report.
             mode: Merge mode, for an input report.
         """
         from ....modules.lora import merge_loras_z
@@ -894,8 +969,8 @@ class PowerLoraMerger(io.ComfyNode):
             logger.warning("the %s report could not be built: %s", stage, error)
             return
         report = {"stats": stats}
-        if path is not None:
-            report = {"path": path, "weight": float(weight), "mode": mode, "stats": stats}
+        if name is not None:
+            report = {"lora": name, "weight": float(weight), "mode": mode, "stats": stats}
         logger.info("%s report:\n%s", stage, json.dumps(report, indent=2))
 
     @classmethod
@@ -904,7 +979,8 @@ class PowerLoraMerger(io.ComfyNode):
 
         Args:
             mode: The merge mode used.
-            sources: ``(path, weight)`` per source file.
+            sources: ``(name, path, weight)`` per source file. Only ``name``, relative to
+                the LoRA folder, and ``weight`` are recorded.
             settings: The merge settings.
             out_dtype: Precision the tensors were saved in.
             compute_dtype: Precision the arithmetic ran in, or ``None`` for automatic.
@@ -918,7 +994,9 @@ class PowerLoraMerger(io.ComfyNode):
 
         note = f"Created by {TOOL_NAME}"
         return {
-            "merged_from": str([(path, weight) for path, weight in sources] if mode != "obfuscate" else None),
+            "merged_from": str(
+                [(name, weight) for name, _, weight in sources] if mode != "obfuscate" else None
+            ),
             "mode": mode,
             "block_mix_recipe": str(block_mix_recipe) if mode == "block-mix" else "None",
             "rank": str(settings.rank),

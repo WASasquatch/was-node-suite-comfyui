@@ -86,7 +86,7 @@ class Exposure:
 
 
 def directory() -> Path | None:
-    """The directory saved workflows are kept in, or ``None`` when ComfyUI is absent."""
+    """The default user's saved workflows directory, or ``None`` when ComfyUI is absent."""
     user = paths.comfyui_user_directory()
     return None if user is None else user / "default" / "workflows"
 
@@ -104,11 +104,12 @@ def discover() -> list[str]:
 MAX_WORKFLOW_BYTES = 16 * 1024 * 1024
 
 
-def load(name: str) -> dict:
+def load(name: str, root: Path | None = None) -> dict:
     """Read one app workflow.
 
     Args:
         name: A path relative to the workflows directory.
+        root: The workflows directory to read in. Left out, :func:`directory`.
 
     Returns:
         The saved workflow.
@@ -118,7 +119,7 @@ def load(name: str) -> dict:
         ValueError: The path leaves the workflows directory, the file is larger than
             :data:`MAX_WORKFLOW_BYTES`, or it is not JSON.
     """
-    root = directory()
+    root = Path(root) if root is not None else directory()
     if root is None:
         raise FileNotFoundError(
             "no ComfyUI user directory was found, so no saved workflow can be read"

@@ -58,7 +58,7 @@ class ExportAPI(io.ComfyNode):
                     tooltip=(
                         "Whether to write the file. Both entries of this menu read `true`, so "
                         "there is no way to turn writing off; the JSON is always written and "
-                        "always printed to the console."
+                        "always shown on the node."
                     ),
                 ),
                 io.Combo.Input(
@@ -148,7 +148,6 @@ class ExportAPI(io.ComfyNode):
                 prompt = parse_tokens(prompt, tokens)
 
             prompt_json = json.dumps(prompt, indent=4)
-            logger.info("Prompt API JSON:\n%s", prompt_json)
 
             if save_prompt_api == "true":
                 with open(output_file, "w", encoding="utf-8") as handle:

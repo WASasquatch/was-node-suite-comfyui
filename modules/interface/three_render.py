@@ -299,19 +299,20 @@ def _progress_bar(node_id: str):
         return None
 
 
-def _tell(node_id: str, note: str) -> None:
+def _tell(node_id: str, note: str, client: str = "") -> None:
     """Put a line under a node's progress bar, where this ComfyUI offers one.
 
     Args:
         node_id: Which node the line is drawn on.
         note: The line.
+        client: The tab that queued the run, or ``""`` to tell every tab.
     """
     if not node_id:
         return
     try:
         from server import PromptServer
 
-        PromptServer.instance.send_progress_text(note, node_id)
+        PromptServer.instance.send_progress_text(note, node_id, client or None)
     except Exception:
         logger.debug("no progress line is available", exc_info=True)
 
@@ -349,11 +350,12 @@ def wait_for_frames(
                 have = {kind: dict(frames) for kind, frames in job["frames"].items()}
                 error = job["error"]
                 standing, total, note = job["done"], job["total"], job["note"]
+                client = job["client"]
             if bar is not None:
                 bar.update_absolute(standing, total)
             if note and note != told:
                 told = note
-                _tell(node_id, note)
+                _tell(node_id, note, client)
             if error:
                 return FAILED, {}, error
             if all(len(frames) >= wanted for frames in have.values()):

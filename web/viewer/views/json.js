@@ -36,7 +36,7 @@ class JsonView extends BaseView {
         const comma = i < data.length - 1 ? "," : "";
         return `${childIndent}${this.renderTree(item, depth + 1)}${comma}`;
       }).join("\n");
-      return `<span class="json-node"><span class="json-toggle" onclick="toggleJson('${id}')"><span class="json-arrow">▼</span><span class="json-bracket">[</span><span class="json-collapsed-preview">${data.length} items</span></span><span id="${id}" class="json-collapsible">
+      return `<span class="json-node"><span class="json-toggle" data-json-toggle="${id}"><span class="json-arrow">▼</span><span class="json-bracket">[</span><span class="json-collapsed-preview">${data.length} items</span></span><span id="${id}" class="json-collapsible">
 ${items}
 ${indent}<span class="json-bracket">]</span></span><span class="json-collapsed-bracket">]</span></span>`;
     }
@@ -49,7 +49,7 @@ ${indent}<span class="json-bracket">]</span></span><span class="json-collapsed-b
         const comma = i < keys.length - 1 ? "," : "";
         return `${childIndent}<span class="json-key">"${escapeHtml(key)}"</span>: ${this.renderTree(data[key], depth + 1)}${comma}`;
       }).join("\n");
-      return `<span class="json-node"><span class="json-toggle" onclick="toggleJson('${id}')"><span class="json-arrow">▼</span><span class="json-bracket">{</span><span class="json-collapsed-preview">${keys.length} keys</span></span><span id="${id}" class="json-collapsible">
+      return `<span class="json-node"><span class="json-toggle" data-json-toggle="${id}"><span class="json-arrow">▼</span><span class="json-bracket">{</span><span class="json-collapsed-preview">${keys.length} keys</span></span><span id="${id}" class="json-collapsible">
 ${items}
 ${indent}<span class="json-bracket">}</span></span><span class="json-collapsed-bracket">}</span></span>`;
     }
@@ -121,10 +121,12 @@ ${indent}<span class="json-bracket">}</span></span><span class="json-collapsed-b
   static getScripts() {
     return `
       <script>
-        function toggleJson(id) {
-          const el = document.getElementById(id);
+        document.addEventListener('click', function (event) {
+          var toggle = event.target && event.target.closest ? event.target.closest('[data-json-toggle]') : null;
+          if (!toggle) return;
+          var el = document.getElementById(toggle.getAttribute('data-json-toggle'));
           if (el) el.classList.toggle('collapsed');
-        }
+        });
       <\/script>
     `;
   }

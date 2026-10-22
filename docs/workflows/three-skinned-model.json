@@ -739,7 +739,7 @@
       "type": "WASThreeLight",
       "pos": [
         40,
-        1420
+        1440
       ],
       "size": [
         270,
@@ -1436,7 +1436,7 @@
       "type": "Note",
       "pos": [
         40,
-        1812
+        2062
       ],
       "size": [
         720,
@@ -1622,7 +1622,7 @@
       "type": "WASThreeRender",
       "pos": [
         2320,
-        730
+        750
       ],
       "size": [
         364,
@@ -2102,7 +2102,7 @@
       "id": 20,
       "type": "WASSaveVideo",
       "pos": [
-        2700,
+        2764,
         1246
       ],
       "size": [
@@ -2402,9 +2402,9 @@
       "title": "Skinned model, animated and rendered",
       "bounding": [
         0,
-        -26,
-        3100,
-        1894
+        -60,
+        3118,
+        1972
       ],
       "flags": {}
     }

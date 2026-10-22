@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 
 from ..util import patterns
@@ -57,9 +58,10 @@ def to_boolean(value, default: bool = False) -> bool:
         default: Answer for a word that reads as neither.
 
     Returns:
-        The truth of the value. A number is true when it is not zero, text is read as a
-        word first and falls back to whether it is empty, and a container is true when it
-        holds anything.
+        The truth of the value. A number is true when it is not zero. Text is read as a
+        word, then as a number, so ``"2"`` is true and ``"0.0"`` false, and otherwise
+        answers ``default``, or whether it holds anything when ``default`` is None. A
+        container is true when it holds anything.
     """
     if value is None:
         return False
@@ -73,6 +75,12 @@ def to_boolean(value, default: bool = False) -> bool:
             return True
         if word in FALSE_WORDS:
             return False
+        try:
+            number = float(word)
+        except ValueError:
+            number = math.nan
+        if math.isfinite(number):
+            return number != 0
         return default if default is not None else bool(word)
     try:
         return len(value) > 0

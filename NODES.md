@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **534** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **535** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-527 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+528 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 410 |
+| [Always loaded](#always-loaded) | always on | 411 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-410 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+411 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (25)
+- [WAS Suite/Sampling](#was-suitesampling) (26)
 - [WAS Suite/Text](#was-suitetext) (9)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -2018,7 +2018,7 @@ Pick a frame cache written by Video Cache or H3 Decode Video and use it as a cli
 <details>
 <summary><b>Path Exists</b></summary>
 
-Check whether a file or folder is on disk before anything reads or writes it, with its kind, size in bytes and last change time. Use it to skip frames already rendered or to test a cache against its source. A path outside the folders the pack may read answers not existing, with the refusal on 'resolved'.
+Check whether a file or folder is on disk before anything reads or writes it, with its kind, size in bytes and last change time. Use it to skip frames already rendered or to test a cache against its source. A path outside the folders the pack may read answers not existing, with 'resolved' empty.
 
 | | |
 |---|---|
@@ -2028,7 +2028,7 @@ Check whether a file or folder is on disk before anything reads or writes it, wi
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `path` | `STRING` | Yes |  |  | The file or folder to look for, such as 'C:/renders/frame_0001.png', or a path relative to the folder ComfyUI was started in. Nothing is opened, read or written; the path is only asked about. |
+| `path` | `STRING` | Yes |  |  | The file or folder to look for, such as 'ComfyUI/output/renders/frame_0001.png'. A full path must lie inside input, output, temp or a folder paths.allow_read adds. Nothing is opened, read or written; the path is only asked about. |
 
 **Outputs**
 
@@ -2040,7 +2040,7 @@ Check whether a file or folder is on disk before anything reads or writes it, wi
 | `size_bytes` | `INT` | Bytes the file holds. 0 for a folder, 0 when nothing is there, and 0 for an empty file, so 'size_bytes > 0' is the test for a render that finished writing rather than one cut off at the start. |
 | `modified_epoch` | `FLOAT` | When it last changed, in seconds since 1970, as 1755864000.0. 0.0 when nothing is there. Feed two of these to Compare to tell which of a source and a cache is the newer. |
 | `modified` | `STRING` | The same moment in local time, as '2026-08-22 11:57:03'. Empty when nothing is there. For reading and for naming a file; compare modified_epoch instead of this. |
-| `resolved` | `STRING` | The absolute path that was probed. For a path outside the folders this pack may read, nothing is probed and this carries the refusal instead, naming every permitted folder and the config key that would allow it. |
+| `resolved` | `STRING` | The absolute path that was probed. Empty for an empty path and for a path outside the folders this pack may read, which is not probed; the log then names the permitted folders and the config key that would allow it. |
 
 </details>
 
@@ -8833,7 +8833,7 @@ Test conditions in order and answer the position of the first one that holds. Wi
 <details>
 <summary><b>Logic Boolean</b></summary>
 
-Turn a value between 0.0 and 1.0 into a true/false switch and the numbers that stand for it, which is how the Input Switch nodes and any node with a reset or toggle input get fed from one control.
+One true/false switch for the Input Switch nodes and any node with a toggle or reset input, also given as 1 or 0. Wire a number or text into it to decide from that instead: 0 is false and any other number true, so a loop index reads false on its first pass only.
 
 | | |
 |---|---|
@@ -8843,16 +8843,16 @@ Turn a value between 0.0 and 1.0 into a true/false switch and the numbers that s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `boolean` | `FLOAT` | Yes | 1 |  | The value to decide on, between 0.0 and 1.0. Anything above 0.5 counts as true and anything at or below 0.5 as false, so 0.5 itself is false. |
+| `boolean` | `INT,FLOAT,NUMBER,STRING` | Yes | True |  | Ticked is true. A wired number is true unless it is 0, so index 0 is false and every later index true. Text reads `true`, `yes`, `on` or a non-zero number as true; `false`, `no`, `off`, `0`, empty or any other word is false. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `<output0>` | `BOOLEAN` | True or false, for the boolean input of an Input Switch node. |
-| `<output1>` | `NUMBER` | The same decision as 1 or 0, for a NUMBER input such as a reset. |
-| `<output2>` | `INT` | The same decision as 1 or 0, on an INT socket. |
-| `<output3>` | `FLOAT` | The widget value itself, not rounded, so 0.35 leaves here as 0.35 while the other three outputs read false. |
+| `<output1>` | `NUMBER` | The same answer as 1 or 0, for a NUMBER input such as a reset. |
+| `<output2>` | `INT` | The same answer as 1 or 0, on an INT socket. |
+| `<output3>` | `FLOAT` | The same answer as 1.0 or 0.0, on a FLOAT socket. |
 
 </details>
 
@@ -9046,7 +9046,7 @@ Read any value as true or false, so a count, a size or a line of text can drive 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `value` | `STRING,INT,FLOAT,NUMBER,BOOLEAN` | Yes |  |  | What to read. A number is true when it is not 0. Text is read as a word first, so `true`, `yes`, `on` and `1` are true and `false`, `no`, `off`, `0` and empty are false. |
+| `value` | `STRING,INT,FLOAT,NUMBER,BOOLEAN` | Yes |  |  | What to read. A number is true when it is not 0. Text is read as a word, then as a number, so `true`, `yes`, `on` and `2` are true and `false`, `no`, `off`, `0` and empty are false. |
 | `unreadable` | `BOOLEAN` | Yes | False |  | Answer for text that is neither, such as `maybe`. false treats it as false; true treats any unrecognised word as true. |
 | `invert` | `BOOLEAN` | Yes | False |  | Flip the answer, saving a Logic NOT after it. |
 
@@ -10694,6 +10694,33 @@ Set a MiniMax H3 model up to sample long clips in less VRAM, with the same resul
 | Name | Type | What it is |
 |---|---|---|
 | `model` | `MODEL` | The model for every H3 sampler in the graph. |
+
+</details>
+
+<a id="node-wash3ptdpatch"></a>
+<details>
+<summary><b>H3 PTD Patch</b></summary>
+
+Make MiniMax H3 generate video and sound in 4 to 8 steps from a PTD file loaded with Load Model Patch, on the Ref2VA or fl2va transformer the file was trained on. Sample with euler, scheduler simple, cfg 1 and the steps shown, or with this node's sigmas. LoRAs still apply.
+
+| | |
+|---|---|
+| Node id | `WASH3PTDPatch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | A plain MiniMax H3 transformer of the kind the file was trained on, ref2va or fl2va, pruned and quantized ones included, after any LoRA. |
+| `model_patch` | `MODEL_PATCH` | Yes |  |  | A PTD file from Load Model Patch, kept in ComfyUI/models/model_patches or ComfyUI/models/ptd: bf16 or int8, Ref2VA or fl2va. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with the file's step adapters, for a sampler at the steps below. |
+| `sigmas` | `SIGMAS` | The trained step times, for SamplerCustomAdvanced: `1.0, 0.988, ...` for Ref2VA, `0.999, 0.947, 0.857, 0.667, 0` for fl2va 4 step. A sampler given any other sigmas stops before its first step. |
+| `steps` | `INT` | Steps the file was trained for: `4`, `6` or `8`, for KSampler's steps. |
 
 </details>
 
@@ -12919,7 +12946,7 @@ Define a single custom token from a linked name and a linked value, for Text Par
 |---|---|---|---|---|---|
 | `token_name` | `STRING` | Yes |  |  | Token name, no brackets; STRING. Expands as [name] in every text node. Empty adds nothing. Eg: season |
 | `token_value` | `STRING` | Yes |  |  | What the token expands to; STRING. Empty expands to nothing. Eg: late autumn |
-| `print_current_tokens` | `BOOLEAN` | Yes | False |  | `on` logs every custom token now defined and shows them on the node, which is how to check what a previous run left behind; `off` stores the token silently. |
+| `print_current_tokens` | `BOOLEAN` | Yes | False |  | `on` shows every custom token now defined on the node, with its value, and logs their names only, which is how to check what a previous run left behind; `off` stores the token silently. |
 
 </details>
 
@@ -12939,7 +12966,7 @@ Define custom tokens, one 'name: value' pair per line, for Text Parse Tokens and
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `tokens` | `STRING` | Yes | [hello]: world |  | One token per line, written as 'name: value', so '[hello]: world' turns [hello] into world in every later node that expands tokens. |
-| `print_current_tokens` | `BOOLEAN` | Yes | False |  | `on` logs every custom token now defined and shows them on the node, which is how to check what a previous run left behind; `off` stores them silently. |
+| `print_current_tokens` | `BOOLEAN` | Yes | False |  | `on` shows every custom token now defined on the node, with its value, and logs their names only, which is how to check what a previous run left behind; `off` stores them silently. |
 
 </details>
 
@@ -13456,7 +13483,7 @@ Deprecated: use ComfyUI's Workflow > Export (API) menu item instead. Writes the 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `save_prompt_api` | `COMBO` | Yes |  | `true`, `true` | Whether to write the file. Both entries of this menu read `true`, so there is no way to turn writing off; the JSON is always written and always printed to the console. |
+| `save_prompt_api` | `COMBO` | Yes |  | `true`, `true` | Whether to write the file. Both entries of this menu read `true`, so there is no way to turn writing off; the JSON is always written and always shown on the node. |
 | `root` | `COMBO` | Yes |  |  | Which folder the JSON lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename_prefix names the part below it, so '[time(%Y-%m-%d)]/prompt' files each day's under a dated folder. |
 | `filename_prefix` | `STRING` | Yes | ComfyUI_Prompt |  | The name part of the file, before the number. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_Prompt_0001.json' with the default. |
@@ -14673,7 +14700,7 @@ Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads
 | `output_filename` | `STRING` | Yes | merged_lora.safetensors |  | Name to save the merged LoRA under, inside your LoRA folder. Sub-folders are allowed, for example 'styles/mixed.safetensors'. '.safetensors' is added when it is missing, and the name cannot step outside the LoRA folder. A LoRA this node did not write is never replaced. |
 | `output_model_strength` | `FLOAT` | Yes | 1.0 |  | How strongly the merged LoRA is applied to the model output, if a model is connected. 1.0 is full strength, 0.5 is half. This does not change the saved file, only what comes out of the model socket. |
 | `output_clip_strength` | `FLOAT` | Yes | 1.0 |  | The same for the clip output: how strongly the merged LoRA is applied to the connected clip. Lower it when a LoRA's trigger words are overwhelming the rest of the prompt. Ignored where no clip is connected, as with a diffusion transformer. |
-| `mode` | `COMBO` | Yes | svd | `svd`, `rebase`, `add`, `add-diff`, `add-orth`, `diff-export`, `moe`, `obfuscate`, `block-mix` | `svd` recompresses to one rank, small; `add` stacks exactly, largest; `rebase` recompresses one LoRA; `add-diff` first plus the others' differences; `add-orth` orthogonalises them; `diff-export` saves the first two's difference; `moe` picks or blends the strongest per module; `obfuscate` rewrites factors, same effect; `block-mix` follows block_mix_recipe. |
+| `mode` | `COMBO` | Yes | svd | `svd`, `rebase`, `add`, `add-diff`, `add-orth`, `diff-export`, `moe`, `obfuscate`, `block-mix` | `svd` recompresses to one rank, small; `add` stacks exactly, largest; `rebase` recompresses one LoRA; `add-diff` first plus the others' differences; `add-orth` orthogonalises them; `diff-export` saves the first two's difference; `moe` blends the strongest per module; `obfuscate` rewrites factors, names no source; `block-mix` follows block_mix_recipe. |
 | `block_mix_recipe` | `COMBO` | Yes | concept_a_style_b | `all_a`, `all_b`, `concept_a_style_b`, `concept_b_style_a`, `attn_a_ffn_b`, `attn_b_ffn_a`, `img_a_txt_b`, `img_b_txt_a` | Only read in `block-mix` mode: which of the two LoRAs each part of the model comes from. `all_a` and `all_b` route everything one way. |
 | `model` | `MODEL` | No |  |  | Optional. A model to apply the merged LoRA to once it is saved, so the merge can be tested in the same run. Leave it unconnected to only write the file. |
 | `clip` | `CLIP` | No |  |  | Optional, and only used when a model is connected too: the clip the merged LoRA's text-encoder half is applied to. |
@@ -16598,7 +16625,7 @@ A texture the browser reads for itself, from a data URL already holding the byte
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `url` | `STRING` | Yes |  |  | Where to read from, as a `data:image/png;base64,` string, or `https://example.com/wood.jpg` with features.network on. |
+| `url` | `STRING` | Yes |  |  | Where to read from, as a `data:image/png;base64,` string, or `https://example.com/wood.jpg` with features.network on. Tokens such as [time] are left as typed. |
 | `color_space` | `COMBO` | Yes | srgb | `srgb`, `linear-srgb`, `none` | 'srgb' for a colour map such as albedo; 'linear-srgb' for normal, roughness, metalness or alpha. |
 | `wrap_s` | `COMBO` | Yes | clamp | `clamp`, `repeat`, `mirrored-repeat` | What happens past the horizontal edge. 'clamp' stretches the edge pixel, 'repeat' tiles. |
 | `wrap_t` | `COMBO` | Yes | clamp | `clamp`, `repeat`, `mirrored-repeat` | What happens past the vertical edge. 'clamp' stretches the edge pixel, 'repeat' tiles. |

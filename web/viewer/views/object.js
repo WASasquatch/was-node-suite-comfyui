@@ -9,6 +9,30 @@
 
 import { BaseView, escapeHtml } from "./base_view.js";
 
+/**
+ * Text written into markup, inside an element or a quoted attribute.
+ * @param {unknown} value
+ * @returns {string} `value` as text with `&`, `<`, `>`, `"` and `'` as entities.
+ */
+function markup(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * A list of values as one line of text.
+ * @param {unknown} value - An array, or a single value.
+ * @param {string} [separator]
+ * @returns {string}
+ */
+function listed(value, separator = ", ") {
+  return Array.isArray(value) ? value.map((item) => String(item)).join(separator) : String(value ?? "");
+}
+
 class ObjectView extends BaseView {
   static id = "object";
   static displayName = "Object";
@@ -51,64 +75,7 @@ class ObjectView extends BaseView {
       return `<div class="object-viewer"><p>No objects to display</p></div>`;
     }
 
-    // Include inline scripts for toggle functions and histogram drawing
-    let html = `
-      <script>
-        function toggleObjectSection(id) {
-          var el = document.getElementById(id);
-          if (el) el.classList.toggle('collapsed');
-        }
-        function toggleSection(id) {
-          var el = document.getElementById(id);
-          if (el) el.classList.toggle('collapsed');
-        }
-        function drawHistograms() {
-          var canvases = document.querySelectorAll('.histogram-canvas');
-          canvases.forEach(function(canvas) {
-            var ctx = canvas.getContext('2d');
-            var data = JSON.parse(canvas.dataset.histogram || '[]');
-            var color = canvas.dataset.color || '#888888';
-            
-            if (!data || data.length === 0) return;
-            
-            var w = canvas.width;
-            var h = canvas.height;
-            var max = Math.max.apply(null, data);
-            var barWidth = w / data.length;
-            
-            ctx.clearRect(0, 0, w, h);
-            
-            // Draw bars
-            ctx.fillStyle = color;
-            ctx.globalAlpha = 0.7;
-            
-            for (var i = 0; i < data.length; i++) {
-              var barHeight = (data[i] / max) * h;
-              ctx.fillRect(i * barWidth, h - barHeight, barWidth - 0.5, barHeight);
-            }
-            
-            // Draw outline
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, h);
-            for (var i = 0; i < data.length; i++) {
-              var barHeight = (data[i] / max) * h;
-              ctx.lineTo(i * barWidth + barWidth / 2, h - barHeight);
-            }
-            ctx.lineTo(w, h);
-            ctx.stroke();
-          });
-        }
-        // Draw histograms when DOM is ready
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', drawHistograms);
-        } else {
-          setTimeout(drawHistograms, 0);
-        }
-      <\/script>
-      <div class="object-viewer">`;
+    let html = `<div class="object-viewer">`;
     
     for (const obj of objects) {
       html += this.renderObject(obj);
@@ -121,14 +88,14 @@ class ObjectView extends BaseView {
   static renderObject(obj) {
     const id = `obj-${Math.random().toString(36).slice(2, 9)}`;
     const categoryIcon = this.getCategoryIcon(obj.category);
-    const categoryClass = `category-${obj.category}`;
+    const categoryClass = `category-${String(obj.category ?? "").replace(/[^\w-]/g, "")}`;
     
     let html = `
       <div class="object-card ${categoryClass}">
-        <div class="object-header" onclick="toggleObjectSection('${id}')">
+        <div class="object-header" data-object-toggle="${id}">
           <span class="object-icon">${categoryIcon}</span>
           <span class="object-type">${escapeHtml(obj.full_type || obj.type_name)}</span>
-          <span class="object-category">${escapeHtml(obj.category)}</span>
+          <span class="object-category">${escapeHtml(String(obj.category ?? ""))}</span>
           <span class="object-toggle">▼</span>
         </div>
         <div class="object-content" id="${id}">
@@ -185,7 +152,7 @@ class ObjectView extends BaseView {
     
     let html = `
       <div class="object-section">
-        <div class="section-header" onclick="toggleSection('${id}')">
+        <div class="section-header" data-object-toggle="${id}">
           <span class="section-title">📊 Metrics</span>
           <span class="section-toggle">▼</span>
         </div>
@@ -218,7 +185,7 @@ class ObjectView extends BaseView {
     
     // Primary info row
     if (metrics.shape) {
-      html += `<div class="metric-item highlight"><span class="metric-label">Shape</span><span class="metric-value">[${metrics.shape.join(", ")}]</span></div>`;
+      html += `<div class="metric-item highlight"><span class="metric-label">Shape</span><span class="metric-value">[${markup(listed(metrics.shape))}]</span></div>`;
     }
     if (metrics.dtype) {
       html += `<div class="metric-item"><span class="metric-label">DType</span><span class="metric-value dtype">${escapeHtml(metrics.dtype)}</span></div>`;
@@ -227,7 +194,7 @@ class ObjectView extends BaseView {
       html += `<div class="metric-item highlight"><span class="metric-label">Resolution</span><span class="metric-value">${escapeHtml(metrics.resolution)}</span></div>`;
     }
     if (metrics.channels) {
-      html += `<div class="metric-item"><span class="metric-label">Channels</span><span class="metric-value">${metrics.channels}</span></div>`;
+      html += `<div class="metric-item"><span class="metric-label">Channels</span><span class="metric-value">${markup(metrics.channels)}</span></div>`;
     }
     if (metrics.image_format) {
       html += `<div class="metric-item"><span class="metric-label">Format</span><span class="metric-value">${escapeHtml(metrics.image_format)}</span></div>`;
@@ -239,16 +206,16 @@ class ObjectView extends BaseView {
       html += `<div class="metric-item"><span class="metric-label">Device</span><span class="metric-value device">${escapeHtml(metrics.device)}</span></div>`;
     }
     if (metrics.numel) {
-      html += `<div class="metric-item"><span class="metric-label">Elements</span><span class="metric-value">${metrics.numel.toLocaleString()}</span></div>`;
+      html += `<div class="metric-item"><span class="metric-label">Elements</span><span class="metric-value">${markup(this.formatNumber(metrics.numel))}</span></div>`;
     }
 
     // Statistics
     if (metrics.stats) {
       html += `<div class="metric-divider"></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Min</span><span class="metric-value">${this.formatNumber(metrics.stats.min)}</span></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Max</span><span class="metric-value">${this.formatNumber(metrics.stats.max)}</span></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Mean</span><span class="metric-value">${this.formatNumber(metrics.stats.mean)}</span></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Std</span><span class="metric-value">${this.formatNumber(metrics.stats.std)}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Min</span><span class="metric-value">${markup(this.formatNumber(metrics.stats.min))}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Max</span><span class="metric-value">${markup(this.formatNumber(metrics.stats.max))}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Mean</span><span class="metric-value">${markup(this.formatNumber(metrics.stats.mean))}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Std</span><span class="metric-value">${markup(this.formatNumber(metrics.stats.std))}</span></div>`;
     }
 
     return html;
@@ -264,10 +231,10 @@ class ObjectView extends BaseView {
       html += `<div class="metric-item"><span class="metric-label">Mode</span><span class="metric-value">${escapeHtml(metrics.mode)}</span></div>`;
     }
     if (metrics.channels) {
-      html += `<div class="metric-item"><span class="metric-label">Channels</span><span class="metric-value">${metrics.channels}</span></div>`;
+      html += `<div class="metric-item"><span class="metric-label">Channels</span><span class="metric-value">${markup(metrics.channels)}</span></div>`;
     }
     if (metrics.bands) {
-      html += `<div class="metric-item"><span class="metric-label">Bands</span><span class="metric-value">${metrics.bands.join(", ")}</span></div>`;
+      html += `<div class="metric-item"><span class="metric-label">Bands</span><span class="metric-value">${markup(listed(metrics.bands))}</span></div>`;
     }
     if (metrics.format) {
       html += `<div class="metric-item"><span class="metric-label">Format</span><span class="metric-value">${escapeHtml(metrics.format || "N/A")}</span></div>`;
@@ -276,7 +243,7 @@ class ObjectView extends BaseView {
       html += `<div class="metric-item"><span class="metric-label">Memory</span><span class="metric-value">${escapeHtml(metrics.memory_human)}</span></div>`;
     }
     if (metrics.dpi) {
-      html += `<div class="metric-item"><span class="metric-label">DPI</span><span class="metric-value">${metrics.dpi}</span></div>`;
+      html += `<div class="metric-item"><span class="metric-label">DPI</span><span class="metric-value">${markup(listed(metrics.dpi))}</span></div>`;
     }
     if (metrics.has_icc_profile) {
       html += `<div class="metric-item"><span class="metric-label">ICC Profile</span><span class="metric-value">✓</span></div>`;
@@ -288,10 +255,10 @@ class ObjectView extends BaseView {
     // Statistics
     if (metrics.stats) {
       html += `<div class="metric-divider"></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Min</span><span class="metric-value">${metrics.stats.min}</span></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Max</span><span class="metric-value">${metrics.stats.max}</span></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Mean</span><span class="metric-value">${this.formatNumber(metrics.stats.mean)}</span></div>`;
-      html += `<div class="metric-item stat"><span class="metric-label">Std</span><span class="metric-value">${this.formatNumber(metrics.stats.std)}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Min</span><span class="metric-value">${markup(metrics.stats.min)}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Max</span><span class="metric-value">${markup(metrics.stats.max)}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Mean</span><span class="metric-value">${markup(this.formatNumber(metrics.stats.mean))}</span></div>`;
+      html += `<div class="metric-item stat"><span class="metric-label">Std</span><span class="metric-value">${markup(this.formatNumber(metrics.stats.std))}</span></div>`;
     }
 
     return html;
@@ -301,7 +268,7 @@ class ObjectView extends BaseView {
     let html = "";
     
     if (metrics.tensor_count !== undefined) {
-      html += `<div class="metric-item highlight"><span class="metric-label">Tensors</span><span class="metric-value">${metrics.tensor_count.toLocaleString()}</span></div>`;
+      html += `<div class="metric-item highlight"><span class="metric-label">Tensors</span><span class="metric-value">${markup(this.formatNumber(metrics.tensor_count))}</span></div>`;
     }
     if (metrics.total_params_human) {
       html += `<div class="metric-item highlight"><span class="metric-label">Parameters</span><span class="metric-value">${escapeHtml(metrics.total_params_human)}</span></div>`;
@@ -321,9 +288,9 @@ class ObjectView extends BaseView {
         } else if (tensor.error) {
           html += `<tr class="error-row"><td>${escapeHtml(tensor.name)}</td><td colspan="3" class="error">${escapeHtml(tensor.error)}</td></tr>`;
         } else {
-          const shape = tensor.shape ? `[${tensor.shape.join(", ")}]` : "?";
-          const params = tensor.params ? tensor.params.toLocaleString() : "?";
-          html += `<tr><td class="tensor-name">${escapeHtml(tensor.name)}</td><td>${shape}</td><td>${escapeHtml(tensor.dtype || "?")}</td><td>${params}</td></tr>`;
+          const shape = tensor.shape ? `[${listed(tensor.shape)}]` : "?";
+          const params = tensor.params ? this.formatNumber(tensor.params) : "?";
+          html += `<tr><td class="tensor-name">${escapeHtml(tensor.name)}</td><td>${markup(shape)}</td><td>${escapeHtml(tensor.dtype || "?")}</td><td>${markup(params)}</td></tr>`;
         }
       }
       
@@ -361,7 +328,7 @@ class ObjectView extends BaseView {
     
     let html = `
       <div class="object-section spectral-section">
-        <div class="section-header" onclick="toggleSection('${id}')">
+        <div class="section-header" data-object-toggle="${id}">
           <span class="section-title">📈 ${spectral.type === "spectral" ? "Channel Histograms" : "Histogram"}</span>
           <span class="section-toggle">▼</span>
         </div>
@@ -380,7 +347,7 @@ class ObjectView extends BaseView {
           <div class="channel-histogram">
             <div class="channel-label" style="color: ${color}">${escapeHtml(channel.name)}</div>
             <canvas id="${canvasId}" class="histogram-canvas" width="200" height="60" 
-              data-histogram='${JSON.stringify(channel.histogram)}'
+              data-histogram="${markup(JSON.stringify(channel.histogram ?? []))}"
               data-color="${color}"></canvas>
           </div>
         `;
@@ -393,7 +360,7 @@ class ObjectView extends BaseView {
       html += `
         <div class="single-histogram">
           <canvas id="${canvasId}" class="histogram-canvas wide" width="400" height="80"
-            data-histogram='${JSON.stringify(spectral.data)}'
+            data-histogram="${markup(JSON.stringify(spectral.data ?? []))}"
             data-color="#888888"></canvas>
         </div>
       `;
@@ -423,7 +390,7 @@ class ObjectView extends BaseView {
     
     let html = `
       <div class="object-section">
-        <div class="section-header" onclick="toggleSection('${id}')">
+        <div class="section-header" data-object-toggle="${id}">
           <span class="section-title">🏷️ Attributes (${Object.keys(attributes).length})</span>
           <span class="section-toggle">▼</span>
         </div>
@@ -456,7 +423,7 @@ class ObjectView extends BaseView {
     
     let html = `
       <div class="object-section">
-        <div class="section-header" onclick="toggleSection('${id}')">
+        <div class="section-header" data-object-toggle="${id}">
           <span class="section-title">📁 Source Info</span>
           <span class="section-toggle">▼</span>
         </div>
@@ -468,10 +435,10 @@ class ObjectView extends BaseView {
       html += `<div class="source-item"><span class="source-label">File:</span><span class="source-value path">${escapeHtml(sourceInfo.file)}</span></div>`;
     }
     if (sourceInfo.source_lines) {
-      html += `<div class="source-item"><span class="source-label">Lines:</span><span class="source-value">${sourceInfo.source_lines}</span></div>`;
+      html += `<div class="source-item"><span class="source-label">Lines:</span><span class="source-value">${markup(sourceInfo.source_lines)}</span></div>`;
     }
     if (sourceInfo.bases && sourceInfo.bases.length > 0) {
-      html += `<div class="source-item"><span class="source-label">Bases:</span><span class="source-value">${sourceInfo.bases.join(" → ")}</span></div>`;
+      html += `<div class="source-item"><span class="source-label">Bases:</span><span class="source-value">${markup(listed(sourceInfo.bases, " → "))}</span></div>`;
     }
 
     html += `
@@ -504,7 +471,7 @@ class ObjectView extends BaseView {
     
     return `
       <div class="object-section">
-        <div class="section-header" onclick="toggleSection('${id}')">
+        <div class="section-header" data-object-toggle="${id}">
           <span class="section-title">📄 Serialized Data${truncated ? " (truncated)" : ""}</span>
           <span class="section-toggle">▼</span>
         </div>
@@ -831,9 +798,62 @@ class ObjectView extends BaseView {
     `;
   }
 
-  // Scripts are included inline in render() to ensure they're available immediately
   static getScripts() {
-    return "";
+    return `
+      <script>
+        document.addEventListener('click', function (event) {
+          var toggle = event.target && event.target.closest ? event.target.closest('[data-object-toggle]') : null;
+          if (!toggle) return;
+          var el = document.getElementById(toggle.getAttribute('data-object-toggle'));
+          if (el) el.classList.toggle('collapsed');
+        });
+        function drawHistograms() {
+          var canvases = document.querySelectorAll('.histogram-canvas');
+          canvases.forEach(function(canvas) {
+            var ctx = canvas.getContext('2d');
+            var data = JSON.parse(canvas.dataset.histogram || '[]');
+            var color = canvas.dataset.color || '#888888';
+            
+            if (!data || data.length === 0) return;
+            
+            var w = canvas.width;
+            var h = canvas.height;
+            var max = Math.max.apply(null, data);
+            var barWidth = w / data.length;
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw bars
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.7;
+            
+            for (var i = 0; i < data.length; i++) {
+              var barHeight = (data[i] / max) * h;
+              ctx.fillRect(i * barWidth, h - barHeight, barWidth - 0.5, barHeight);
+            }
+            
+            // Draw outline
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h);
+            for (var i = 0; i < data.length; i++) {
+              var barHeight = (data[i] / max) * h;
+              ctx.lineTo(i * barWidth + barWidth / 2, h - barHeight);
+            }
+            ctx.lineTo(w, h);
+            ctx.stroke();
+          });
+        }
+        // Draw histograms when DOM is ready
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', drawHistograms);
+        } else {
+          setTimeout(drawHistograms, 0);
+        }
+      <\/script>
+    `;
   }
 }
 

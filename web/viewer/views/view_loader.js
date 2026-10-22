@@ -271,20 +271,47 @@ const DEFAULT_SANDBOX = "allow-scripts allow-forms allow-popups allow-modals all
 // and reads what ComfyUI serves it directly, which a null origin is answered 403 for.
 export const DIRECT_URL_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-downloads";
 
+// Permissions a frame never holds while `viewer.allow_scripts` is off.
+const NAVIGATING = new Set([
+  "allow-forms",
+  "allow-popups-to-escape-sandbox",
+  "allow-top-navigation",
+  "allow-top-navigation-by-user-activation",
+  "allow-top-navigation-to-custom-protocols",
+]);
+
 /**
  * Get sandbox attributes for the Content Viewer iframe based on the current view.
  * Views can declare additional sandbox permissions via a static getSandboxAttributes() method.
- * @param {string} contentType 
+ * @param {string} contentType
+ * @param {boolean} [allowScripts=false] - Whether the server's `viewer.allow_scripts` is on.
  * @returns {string} sandbox attribute value
  */
-export function getViewSandboxAttributes(contentType) {
+export function getViewSandboxAttributes(contentType, allowScripts = false) {
   const view = VIEW_REGISTRY.get(contentType);
   const asked = view && typeof view.getSandboxAttributes === 'function'
     ? view.getSandboxAttributes()
     : DEFAULT_SANDBOX;
   // A view may ask for further permissions, and never for this one: the document here is
   // built from what a node holds, which arrives with whatever workflow was opened.
-  return withoutSameOrigin(asked);
+  const framed = withoutSameOrigin(asked);
+  return allowScripts === true ? framed : withoutNavigation(framed);
+}
+
+/**
+ * The sandbox a frame of inert content runs under: the frame's own scripts, and no forms or
+ * navigation past it.
+ *
+ * @param {string} attributes
+ * @returns {string} `attributes` without form submission or top-level navigation, with
+ *   `allow-scripts` present.
+ */
+function withoutNavigation(attributes) {
+  const kept = String(attributes || "")
+    .split(/\s+/)
+    .filter((token) => token && !NAVIGATING.has(token));
+  if (!kept.includes("allow-scripts")) kept.unshift("allow-scripts");
+  return kept.join(" ");
 }
 
 /**

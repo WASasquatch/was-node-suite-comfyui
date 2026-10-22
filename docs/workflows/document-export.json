@@ -9,7 +9,7 @@
       "type": "Text Dictionary New",
       "pos": [
         60,
-        710
+        730
       ],
       "size": [
         400,
@@ -354,7 +354,7 @@
       "type": "WASViewDOCMetadata",
       "pos": [
         800,
-        700
+        710
       ],
       "size": [
         380,
@@ -486,7 +486,7 @@
       "type": "WASDisplayAny",
       "pos": [
         1410,
-        700
+        710
       ],
       "size": [
         420,
@@ -911,7 +911,7 @@
       "type": "WASLoadDocument",
       "pos": [
         60,
-        1540
+        1580
       ],
       "size": [
         460,
@@ -965,7 +965,7 @@
       "type": "WASViewDOCMetadata",
       "pos": [
         680,
-        1250
+        1280
       ],
       "size": [
         330,
@@ -1097,7 +1097,7 @@
       "type": "WASDisplayAny",
       "pos": [
         680,
-        1800
+        1850
       ],
       "size": [
         330,
@@ -1132,7 +1132,7 @@
       "type": "WASComfyViewer",
       "pos": [
         1260,
-        1250
+        1280
       ],
       "size": [
         660,

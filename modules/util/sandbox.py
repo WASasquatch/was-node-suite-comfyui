@@ -43,9 +43,27 @@ COMFY_DIRECTORY = "ComfyUI"
 READ = "read"
 WRITE = "write"
 
+#: Config key naming the extra roots for each purpose.
+KEYS = {READ: "paths.allow_read", WRITE: "paths.allow_write"}
+
 #: Entries of the pack's state directory no node writes: its settings, and the folder view
 #: extensions are installed from.
 PROTECTED = ("config.yaml", "config.json", "viewer-extensions")
+
+#: Names in the pack's state directory no node reads or writes, each with what it holds. A
+#: name ending in ``*`` stands for every name that begins with the rest of it, so
+#: ``config.yaml*`` covers ``config.yaml.bak`` and ``was_state.db*`` covers ``was_state.db-wal``.
+PRIVATE = {
+    "config.yaml*": "settings",
+    "config.json*": "settings",
+    "was_state.db*": "settings database",
+    "was_suite_config.json*": "v2 settings",
+    "was_suite_settings.json*": "v2 settings",
+    "was_history.json*": "v2 file history",
+}
+
+#: Characters of a refused value repeated in the refusal.
+SHOWN_LENGTH = 240
 
 #: Names Windows opens as a device in every folder, whatever extension follows them.
 DEVICE_NAMES = frozenset({
@@ -59,7 +77,24 @@ MAX_LINKS = 16
 
 
 class PathNotAllowed(ValueError):
-    """A user-supplied path resolved outside every permitted root."""
+    """A user-supplied path the containment layer refuses."""
+
+
+def _shown(value) -> str:
+    """A refused value as given, for the refusal to repeat.
+
+    Args:
+        value: The value as it reached the containment layer.
+
+    Returns:
+        The value stripped, with each unprintable character written as an escape, cut to
+        :data:`SHOWN_LENGTH` characters.
+    """
+    text = "".join(
+        character if character.isprintable() else f"\\u{ord(character):04x}"
+        for character in str(value).strip()
+    )
+    return text if len(text) <= SHOWN_LENGTH else text[:SHOWN_LENGTH] + "..."
 
 
 def _comfy_directory(name: str) -> Path | None:
@@ -258,6 +293,81 @@ def write_roots() -> list[Path]:
     return [root for root in roots if root is not None] + _pack_roots() + _configured("allow_write")
 
 
+def _state_label() -> str:
+    """The pack's state directory as a refusal names it."""
+    if paths.env_value(paths.ENV_CONFIG_DIR):
+        return f"${paths.ENV_CONFIG_DIR}"
+    return f"{COMFY_DIRECTORY}/user/{paths.CONFIG_DIR_NAME}"
+
+
+def _named_roots() -> list[tuple[str, Path]]:
+    """Every permitted root with the name a message gives it in place of its full path."""
+    named = []
+    for name, getter in (
+        ("input", "get_input_directory"),
+        ("output", "get_output_directory"),
+        ("temp", "get_temp_directory"),
+    ):
+        directory = _comfy_directory(getter)
+        if directory is not None:
+            named.append((name, directory))
+    named.extend((_state_label(), root) for root in _pack_roots())
+    for root in (*_configured("allow_read"), *_configured("allow_write")):
+        named.append((root.name or "a configured folder", root))
+    return named
+
+
+def _label(folder: str | os.PathLike) -> str:
+    """A folder named by the permitted root it sits in and the path below that root.
+
+    Args:
+        folder: An absolute folder, normally one already resolved inside a root.
+
+    Returns:
+        Such as ``output/renders``, or ``the folder it was given`` for one outside every
+        root. Never the full path.
+    """
+    try:
+        target = Path(os.path.abspath(os.fspath(folder)))
+    except (TypeError, ValueError):
+        return "the folder it was given"
+    best: tuple[str, Path] | None = None
+    for name, root in _named_roots():
+        if contains(root, target) and (best is None or len(root.parts) > len(best[1].parts)):
+            best = (name, root)
+    if best is None:
+        return "the folder it was given"
+    below = os.path.relpath(target, best[1]).replace("\\", "/")
+    return best[0] if below == "." else f"{best[0]}/{below}"
+
+
+def _permitted(purpose: str) -> str:
+    """The roots a refusal lists, by name, with how many folders the config key adds.
+
+    Args:
+        purpose: :data:`READ` or :data:`WRITE`.
+
+    Returns:
+        Such as ``input, output, temp, ComfyUI/user/was-node-suite, and the 2 folders
+        paths.allow_read lists``.
+    """
+    getters = [("output", "get_output_directory"), ("temp", "get_temp_directory")]
+    if purpose == READ:
+        getters.insert(0, ("input", "get_input_directory"))
+    names = [name for name, getter in getters if _comfy_directory(getter) is not None]
+    if _pack_roots():
+        names.append(_state_label())
+    key = KEYS[purpose]
+    count = len(_configured(key.rsplit(".", 1)[-1]))
+    if count == 0:
+        listed = f"{key} lists no folder"
+    elif count == 1:
+        listed = f"the 1 folder {key} lists"
+    else:
+        listed = f"the {count} folders {key} lists"
+    return f"{', '.join(names)}, and {listed}" if names else listed
+
+
 def contains(root: Path, target: Path) -> bool:
     """Report whether ``target`` is ``root`` or lies beneath it.
 
@@ -362,13 +472,13 @@ def glob_read(directory: str | os.PathLike, pattern: str, recursive: bool = Fals
     """
     text = str(pattern).strip()
     if not text:
-        raise PathNotAllowed(f"no pattern given to match in `{directory}`")
+        raise PathNotAllowed(f"no pattern given to match in {_label(directory)}")
     reason = leaves_folder(text)
     if reason is not None:
         raise PathNotAllowed(
-            f"the pattern `{text}` {reason}, so it would match outside `{directory}`. A "
-            f"pattern matches inside the folder it is given, such as `*.png` or "
-            f"`shots/*.png`; pick the outer folder as the folder instead."
+            f"the pattern `{_shown(text)}` {reason}, so it would match outside "
+            f"{_label(directory)}. A pattern matches inside the folder it is given, such as "
+            f"`*.png` or `shots/*.png`; pick the outer folder as the folder instead."
         )
     base = os.path.normpath(str(directory))
     found = glob.glob(os.path.join(glob.escape(base), text), recursive=recursive)
@@ -418,8 +528,8 @@ def save_image_path(prefix: str, directory: str | os.PathLike, width: int = 0, h
     reason = leaves_folder(prefix)
     if reason is not None:
         raise PathNotAllowed(
-            f"the filename prefix `{prefix}` {reason}, so it would be written outside "
-            f"`{directory}`. Use a prefix such as `renders/shot`"
+            f"the filename prefix `{_shown(prefix)}` {reason}, so it would be written outside "
+            f"{_label(directory)}. Use a prefix such as `renders/shot`"
         )
     below = os.path.dirname(str(prefix).replace("\\", "/"))
     if below:
@@ -447,17 +557,16 @@ def _host_permitted(text: str, roots: list[Path]) -> bool:
     )
 
 
-def _rebased(text: str) -> Path | None:
-    """Read ``./ComfyUI/output/x`` against ComfyUI's own root.
+def _comfy_relative(text: str) -> tuple[Path, tuple[str, ...]] | None:
+    """Split ``./ComfyUI/output/x`` into ComfyUI's root and the segments below it.
 
     Args:
         text: The raw widget value, stripped.
 
     Returns:
-        The value with its leading ``ComfyUI`` component replaced by ComfyUI's root, so the
-        frozen defaults name ComfyUI's own tree whatever directory the process was started
-        in. ``None`` when the value is absolute or carries a drive, when its leading
-        component is not ComfyUI's directory, or when that directory is unknown.
+        ``(root, segments)``, read from the text alone. ``None`` when the value is absolute
+        or carries a drive, when its leading component is not ComfyUI's directory, or when
+        that directory is unknown.
     """
     relative = PureWindowsPath(text)
     if relative.drive or relative.root:
@@ -470,10 +579,28 @@ def _rebased(text: str) -> Path | None:
         return None
     if parts[0].casefold() not in {COMFY_DIRECTORY.casefold(), root.name.casefold()}:
         return None
+    return root, parts[1:]
+
+
+def _rebased(text: str) -> Path | None:
+    """Read ``./ComfyUI/output/x`` against ComfyUI's own root.
+
+    Args:
+        text: The raw widget value, stripped.
+
+    Returns:
+        The value with its leading ``ComfyUI`` component replaced by ComfyUI's root, so the
+        frozen defaults name ComfyUI's own tree whatever directory the process was started
+        in. ``None`` where :func:`_comfy_relative` gives ``None``.
+    """
+    split = _comfy_relative(text)
+    if split is None:
+        return None
+    root, below = split
     # '..' segments in the remainder survive the join and are collapsed by resolve, so a
     # rebased value can still land above ComfyUI's root, where the root check refuses it.
-    _refuse_linked_host(Path(os.path.abspath(root.joinpath(*parts[1:]))))
-    return root.joinpath(*parts[1:]).resolve(strict=False)
+    _refuse_linked_host(Path(os.path.abspath(root.joinpath(*below))), text)
+    return root.joinpath(*below).resolve(strict=False)
 
 
 def _candidates(text: str) -> list[Path]:
@@ -489,7 +616,7 @@ def _candidates(text: str) -> list[Path]:
     """
     # strict=False so a write target that does not exist yet still resolves; parents and
     # symlinks along the existing prefix are resolved either way.
-    _refuse_linked_host(Path(os.path.abspath(os.path.expanduser(text))))
+    _refuse_linked_host(Path(os.path.abspath(os.path.expanduser(text))), text)
     found = [Path(text).expanduser().resolve(strict=False)]
     rebased = _rebased(text)
     if rebased is not None and rebased != found[0]:
@@ -516,19 +643,26 @@ def _relocated(target: Path) -> Path | None:
     return temp / os.path.relpath(target, source)
 
 
-def _refusal(candidates: list[Path], roots: list[Path], key: str, purpose: str) -> PathNotAllowed:
-    """Build the error naming the path, every permitted root and the key that permits it."""
-    listed = "\n".join(f"    {root}" for root in roots) or "    (none)"
+def _refusal(text: str, key: str, purpose: str) -> PathNotAllowed:
+    """The error for a path outside every permitted root.
+
+    Args:
+        text: The value as given.
+        key: Config key naming the list that would permit it.
+        purpose: :data:`READ` or :data:`WRITE`.
+
+    Returns:
+        An error naming the value as given, each permitted root by name, and the key. Its
+        text is the same whatever is or is not on disk at that path.
+    """
     message = (
-        f"refusing to {purpose} {candidates[0]}\n"
-        f"  It is outside every directory this pack may {purpose}:\n{listed}\n"
-        f"  Add the directory to {key} in config.yaml to permit it."
+        f"refusing to {purpose} `{_shown(text)}`\n"
+        f"  It is outside every folder this pack may {purpose}: {_permitted(purpose)}.\n"
+        f"  Add the folder to {key} in config.yaml to permit it. A link leading to another "
+        f"machine is not followed even then."
     )
-    if len(candidates) > 1:
-        message += (
-            f"\n  It was read against ComfyUI's own directory as well, as {candidates[1]}, "
-            f"and refused there too."
-        )
+    if _comfy_relative(text) is not None:
+        message += "\n  It was read against ComfyUI's own folder as well, and refused there too."
     return PathNotAllowed(message)
 
 
@@ -546,7 +680,8 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
         does not.
 
     Raises:
-        PathNotAllowed: The path is empty, or resolved outside every permitted root.
+        PathNotAllowed: The path is empty, resolved outside every permitted root, names a
+            Windows device or stream, or is one of the pack's own settings files.
     """
     text = str(value).strip()
     if not text:
@@ -555,16 +690,19 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
     reached = os.path.expanduser(text)
     if names_another_host(reached) and not _host_permitted(reached, roots):
         raise PathNotAllowed(
-            f"`{text}` names another machine. A path is {purpose} from this computer only. "
-            f"Add the share to {key} in config.yaml to reach it."
+            f"`{_shown(text)}` names another machine. A path is {purpose} from this computer "
+            f"only. Add the share to {key} in config.yaml to reach it."
         )
-    candidates = _candidates(text)
+    try:
+        candidates = _candidates(text)
+    except (OSError, RuntimeError, ValueError) as error:
+        logger.debug("refused to %s %r before resolving it: %s", purpose, text, error)
+        raise _refusal(text, key, purpose) from None
     for target in candidates:
         for root in roots:
             if contains(root, target):
-                if purpose == WRITE:
-                    _refuse_device(target)
-                    _refuse_protected(target)
+                _refuse_device(target, text, purpose)
+                _refuse_protected(target, text, purpose)
                 return target
     if purpose == WRITE:
         for target in candidates:
@@ -577,7 +715,11 @@ def _resolve(value: str | os.PathLike, roots: Iterable[Path], key: str, purpose:
                     target, moved, key,
                 )
                 return moved
-    raise _refusal(candidates, roots, key, purpose)
+    logger.debug(
+        "refused to %s %r, resolved as %s, outside %s", purpose, text,
+        ", ".join(str(target) for target in candidates), ", ".join(str(root) for root in roots),
+    )
+    raise _refusal(text, key, purpose)
 
 
 def _join(parent: Path, name: str | os.PathLike, purpose: str) -> Path:
@@ -597,42 +739,46 @@ def _join(parent: Path, name: str | os.PathLike, purpose: str) -> Path:
     """
     text = str(name).strip()
     if not text:
-        raise PathNotAllowed(f"no file name given to {purpose} in {parent}")
+        raise PathNotAllowed(f"no file name given to {purpose} in {_label(parent)}")
     reason = leaves_folder(text)
     if reason is not None:
         raise PathNotAllowed(
-            f"refusing to {purpose} `{text}` in {parent}\n"
+            f"refusing to {purpose} `{_shown(text)}` in {_label(parent)}\n"
             f"  A file name is a name inside that directory, and this one {reason}.\n"
             f"  Joining it onto the directory would discard the directory and "
             f"{purpose} somewhere else entirely."
         )
-    _refuse_linked_host(Path(os.path.abspath(parent.joinpath(*PureWindowsPath(text).parts))))
+    _refuse_linked_host(
+        Path(os.path.abspath(parent.joinpath(*PureWindowsPath(text).parts))), text)
     target = parent.joinpath(*PureWindowsPath(text).parts).resolve(strict=False)
     if not contains(parent, target):
+        logger.debug("refused to %s %r in %s, resolved as %s", purpose, text, parent, target)
         raise PathNotAllowed(
-            f"refusing to {purpose} {target}\n"
-            f"  `{text}` leaves {parent}, which it was to be placed inside, through a "
-            f"symlink that points out of that directory."
+            f"refusing to {purpose} `{_shown(text)}` in {_label(parent)}\n"
+            f"  It leaves that folder through a link that points out of it."
         )
     if purpose == WRITE:
-        _refuse_device(target)
-        _refuse_protected(target)
+        _refuse_device(target, text, purpose)
+        _refuse_protected(target, text, purpose)
     return target
 
 
-def _refuse_linked_host(path: Path, depth: int = 0) -> None:
+def _refuse_linked_host(path: Path, shown: str, depth: int = 0) -> None:
     """Refuse a path whose links lead to another machine, reading each link without following it.
 
     Args:
         path: An absolute path, as written; nothing along it is resolved.
+        shown: The value as given, which a refusal names in place of ``path``.
         depth: Links already followed to reach it.
 
     Raises:
         PathNotAllowed: A link along ``path`` points at another machine, or links nest past
-            :data:`MAX_LINKS`.
+            :data:`MAX_LINKS`. The message names ``shown`` and never a link's target.
     """
     if depth > MAX_LINKS:
-        raise PathNotAllowed(f"{path} goes through more than {MAX_LINKS} links, so it is not read")
+        logger.debug("%s goes through more than %d links", path, MAX_LINKS)
+        raise PathNotAllowed(
+            f"`{_shown(shown)}` goes through more than {MAX_LINKS} links, so it is not read")
     junction = getattr(os.path, "isjunction", None)
     # From the root down, so every link above a step is read before the step is looked at.
     for step in reversed((path, *path.parents)):
@@ -644,12 +790,13 @@ def _refuse_linked_host(path: Path, depth: int = 0) -> None:
         if not target:
             continue
         if names_another_host(target):
+            logger.debug("%s is a link to %s, which names another machine", step, target)
             raise PathNotAllowed(
-                f"{step} is a link to `{target}`, which names another machine, so it is not "
+                f"`{_shown(shown)}` reaches another machine through a link, so it is not "
                 f"followed"
             )
         nested = Path(target) if os.path.isabs(target) else step.parent / target
-        _refuse_linked_host(Path(os.path.abspath(nested)), depth + 1)
+        _refuse_linked_host(Path(os.path.abspath(nested)), shown, depth + 1)
 
 
 def refuse_linked_host(path: str | os.PathLike, trusted: str | os.PathLike | None = None) -> None:
@@ -661,21 +808,28 @@ def refuse_linked_host(path: str | os.PathLike, trusted: str | os.PathLike | Non
             configured directory can be; only links are then checked.
 
     Raises:
-        PathNotAllowed: It names another machine, or a link along it points at one.
+        PathNotAllowed: It names another machine, or a link along it points at one. The
+            message names the path below ``trusted`` where it sits there, and never a link's
+            target.
     """
     text = str(path)
     inside = trusted is not None and contains(
         Path(os.path.abspath(str(trusted))), Path(os.path.abspath(text)))
+    shown = text
+    if inside:
+        shown = os.path.relpath(os.path.abspath(text), os.path.abspath(str(trusted)))
     if names_another_host(text) and not inside:
-        raise PathNotAllowed(f"`{text}` names another machine, so it is not read")
-    _refuse_linked_host(Path(os.path.abspath(text)))
+        raise PathNotAllowed(f"`{_shown(shown)}` names another machine, so it is not read")
+    _refuse_linked_host(Path(os.path.abspath(text)), shown)
 
 
-def _refuse_device(target: Path) -> None:
-    """Refuse a write target any segment of which names a stream or a device on Windows.
+def _refuse_device(target: Path, shown: str, purpose: str) -> None:
+    """Refuse a target any segment of which names a stream or a device on Windows.
 
     Args:
-        target: The resolved write target.
+        target: The resolved target.
+        shown: The value as given, which the refusal names.
+        purpose: :data:`READ` or :data:`WRITE`.
 
     Raises:
         PathNotAllowed: A segment holds ``:`` past the drive, or names a device such as ``NUL``.
@@ -683,44 +837,128 @@ def _refuse_device(target: Path) -> None:
     for part in target.parts[1:]:
         reason = _windows_name(part)
         if reason is not None:
-            raise PathNotAllowed(f"refusing to write {target}\n  `{part}` {reason}.")
+            raise PathNotAllowed(
+                f"refusing to {purpose} `{_shown(shown)}`\n  A part of it {reason}.")
 
 
 def _folded(path: Path) -> tuple[str, ...]:
     """A path's segments casefolded, trailing dots and spaces dropped, for comparing names."""
-    return tuple(part.rstrip(" .").casefold() for part in Path(path).parts)
+    return tuple(_fold(part) for part in Path(path).parts)
 
 
-def _refuse_protected(target: Path) -> None:
-    """Refuse a write to the pack's settings or to its view extension folder.
+def _fold(name: str) -> str:
+    """One name casefolded, trailing dots and spaces dropped, for comparing names."""
+    return name.rstrip(" .").casefold()
+
+
+def _matches(name: str, pattern: str) -> bool:
+    """Whether a folded name is a folded pattern, or begins with it where it ends in ``*``."""
+    return name.startswith(pattern[:-1]) if pattern.endswith("*") else name == pattern
+
+
+def _private(purpose: str) -> dict[str, str]:
+    """The names in the state directory a node may not reach, each with what it holds.
 
     Args:
-        target: The resolved write target.
+        purpose: :data:`READ` or :data:`WRITE`.
 
-    Raises:
-        PathNotAllowed: ``target`` is one of :data:`PROTECTED` in the state directory, is
-            inside the extension folder, or is the config file in use.
+    Returns:
+        :data:`PRIVATE`, with :data:`PROTECTED` added for a write.
+    """
+    held = dict(PRIVATE)
+    if purpose == WRITE:
+        held.update(
+            (name, PRIVATE.get(f"{name}*", "installed view extensions")) for name in PROTECTED)
+    return held
+
+
+def _config_files() -> list[Path]:
+    """The config file in use and the one ``WAS_CONFIG`` names, resolved."""
+    configs = []
+    explicit = paths.env_value(paths.ENV_CONFIG_FILE)
+    if explicit:
+        configs.append(Path(explicit).expanduser())
+    try:
+        found = paths.find_config_file()
+        if found is not None:
+            configs.append(found)
+    except Exception as error:
+        logger.debug("the config file could not be located (%s)", error)
+    resolved = []
+    for config in configs:
+        try:
+            resolved.append(config.resolve())
+        except (OSError, RuntimeError, ValueError):
+            continue
+    return resolved
+
+
+def _patterns(purpose: str) -> set[str]:
+    """Folded patterns some segment of a target must match for :func:`_guarded` to be read.
+
+    Args:
+        purpose: :data:`READ` or :data:`WRITE`.
+
+    Returns:
+        The names :func:`_private` gives, and the name of the file ``WAS_CONFIG`` names, as
+        given and resolved, with every name beginning with it.
+    """
+    patterns = set(_private(purpose))
+    explicit = paths.env_value(paths.ENV_CONFIG_FILE)
+    if explicit:
+        given = Path(explicit).expanduser()
+        patterns.add(f"{given.name}*")
+        try:
+            patterns.add(f"{given.resolve().name}*")
+        except (OSError, RuntimeError, ValueError):
+            pass
+    return {_fold(pattern) for pattern in patterns}
+
+
+def _guarded(purpose: str) -> list[tuple[Path, str, str]]:
+    """The pack's own files and folders a node may not reach.
+
+    Args:
+        purpose: :data:`READ` or :data:`WRITE`.
+
+    Returns:
+        ``(folder, pattern, what)`` triples, the folder resolved: the names :func:`_private`
+        gives in the state directory, and the config file in use and the one ``WAS_CONFIG``
+        names, each with every name beginning with its own.
     """
     guarded = []
     try:
         state = paths.config_directory().resolve()
-        guarded.extend(state / name for name in PROTECTED)
+        guarded.extend((state, name, what) for name, what in _private(purpose).items())
     except Exception as error:
         logger.debug("the state directory could not be resolved (%s)", error)
-    try:
-        found = paths.find_config_file()
-        if found is not None:
-            guarded.append(found.resolve())
-    except Exception as error:
-        logger.debug("the config file could not be located (%s)", error)
+    guarded.extend((config.parent, f"{config.name}*", "settings") for config in _config_files())
+    return guarded
+
+
+def _refuse_protected(target: Path, shown: str, purpose: str) -> None:
+    """Refuse the pack's settings, and for a write its view extension folder as well.
+
+    Args:
+        target: The resolved target.
+        shown: The value as given, which the refusal names.
+        purpose: :data:`READ` or :data:`WRITE`.
+
+    Raises:
+        PathNotAllowed: ``target`` is, or lies inside, one of the entries :func:`_guarded`
+            gives.
+    """
     held = _folded(target)
-    for entry in guarded:
-        mark = _folded(entry)
-        if held[:len(mark)] == mark:
+    patterns = _patterns(purpose)
+    if not any(_matches(part, pattern) for part in held for pattern in patterns):
+        return
+    for folder, pattern, what in _guarded(purpose):
+        mark = _folded(folder)
+        if (len(held) > len(mark) and held[:len(mark)] == mark
+                and _matches(held[len(mark)], _fold(pattern))):
             raise PathNotAllowed(
-                f"refusing to write {target}\n"
-                f"  It is this pack's {entry.name}, which holds its settings or its installed "
-                f"view extensions, and no node writes there."
+                f"refusing to {purpose} `{_shown(shown)}`\n"
+                f"  It is this pack's {what}, which no node {purpose}s."
             )
 
 
@@ -734,7 +972,9 @@ def resolve_read(value: str | os.PathLike) -> Path:
         The resolved absolute path, inside a permitted read root.
 
     Raises:
-        PathNotAllowed: The path resolved outside every permitted root.
+        PathNotAllowed: The path resolved outside every permitted root, names a Windows
+            device or stream, or is one of :data:`PRIVATE` or a copy of the config file in
+            use.
     """
     return _resolve(value, read_roots(), "paths.allow_read", READ)
 
@@ -749,7 +989,9 @@ def resolve_write(value: str | os.PathLike) -> Path:
         The resolved absolute path, inside a permitted write root. The file need not exist.
 
     Raises:
-        PathNotAllowed: The path resolved outside every permitted root.
+        PathNotAllowed: The path resolved outside every permitted root, names a Windows
+            device or stream, or is one of :data:`PRIVATE`, :data:`PROTECTED` or a copy of
+            the config file in use.
     """
     return _resolve(value, write_roots(), "paths.allow_write", WRITE)
 
