@@ -483,6 +483,8 @@ transformer and the fl2va release on an fl2va one, in bf16 or int8, on pruned an
 transformers, with other LoRAs still applied. Its panel shows the release, the steps, the
 trained sigmas and what it checked about the transformer. A sampler given sigmas other than the
 file's steps, such as the other release's, stops before its first step and names the right ones.
+The adapters stay in system memory and reach the GPU one block at a time, tens of megabytes on
+top of what the plain transformer needs.
 
 For finished H3 clips at a fraction of the usual steps.
 

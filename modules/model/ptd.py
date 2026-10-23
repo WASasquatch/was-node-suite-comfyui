@@ -209,18 +209,58 @@ class Factor(torch.nn.Module):
         self.scale = None if scale is None else torch.nn.Parameter(
             scale.reshape(-1, 1).to(torch.float32), requires_grad=False)
 
-    def on(self, device) -> tuple[torch.Tensor, torch.Tensor | None]:
-        """The weight and scale copied to ``device``."""
-        weight = self.weight.to(device, non_blocking=True)
-        scale = None if self.scale is None else self.scale.to(device, non_blocking=True)
-        return weight, scale
+
+#: Byte alignment of each tensor in the GPU slot a block's factors are copied into.
+_ALIGN = 256
+
+#: Rows of the feed-forward activation formed at a time for fc2's update.
+_ACT_ROWS = 2048
+
+
+def _dequant(weight: torch.Tensor, scale: torch.Tensor | None, dtype) -> torch.Tensor:
+    """A staged factor's weight in ``dtype``, an int8 weight's rows scaled back."""
+    if scale is not None:
+        return (weight.to(torch.float32) * scale).to(dtype)
+    return weight.to(dtype)
 
 
 def _through(x: torch.Tensor, weight: torch.Tensor, scale: torch.Tensor | None) -> torch.Tensor:
     """``x`` through a staged factor, in ``x``'s precision."""
-    if scale is not None:
-        weight = (weight.to(torch.float32) * scale).to(x.dtype)
-    return F.linear(x, weight.to(x.dtype))
+    return F.linear(x, _dequant(weight, scale, x.dtype))
+
+
+def _add_low(rows: torch.Tensor, low: torch.Tensor, up: torch.Tensor, up_scale, part, scale: float):
+    """Add ``low`` through an up factor into ``rows``, or one third of its columns, in place.
+
+    Args:
+        rows: The projection's output as ``(tokens, width)``.
+        low: The input through the down factor, ``(tokens, rank)``.
+        up: The staged up factor.
+        up_scale: Its int8 row scales, or None.
+        part: The third of ``rows`` the update fills, or None for all of it.
+        scale: Multiplier on the update.
+    """
+    weight = _dequant(up, up_scale, rows.dtype)
+    width = weight.shape[0]
+    target = rows if part is None else rows[:, part * width:(part + 1) * width]
+    target.addmm_(low.to(rows.dtype), weight.t(), alpha=scale)
+
+
+def _act_low(h: torch.Tensor, down: torch.Tensor, down_scale, act) -> torch.Tensor:
+    """``act(h)`` through a down factor, the activation formed a slice of rows at a time."""
+    flat = h.reshape(-1, h.shape[-1])
+    weight = _dequant(down, down_scale, h.dtype)
+    low = flat.new_empty((flat.shape[0], weight.shape[0]))
+    for start in range(0, flat.shape[0], _ACT_ROWS):
+        stop = min(start + _ACT_ROWS, flat.shape[0])
+        torch.mm(act(flat[start:stop]), weight.t(), out=low[start:stop])
+    return low
+
+
+def _block_of(path: str) -> str:
+    """The block a native module path belongs to, such as ``blocks.12`` or ``final_layer``."""
+    match = re.match(r"^((?:token_refiner\.)?blocks\.\d+)\.", path)
+    return match.group(1) if match else path.rsplit(".", 1)[0]
 
 
 class HeadBank(torch.nn.Module):
@@ -263,10 +303,16 @@ class HeadBank(torch.nn.Module):
 
 
 class Target(torch.nn.Module):
-    """Every step's low-rank update for one native projection."""
+    """Every step's low-rank update for one native projection.
 
-    def __init__(self, hops: int):
+    Attributes:
+        block: The block the projection belongs to, whose factors share one GPU copy.
+        staged: The current step's factors on the GPU while its block is loaded, else empty.
+    """
+
+    def __init__(self, hops: int, block: str = ""):
         super().__init__()
+        self.block = block
         self.downs = torch.nn.ModuleList(torch.nn.ModuleList() for _ in range(hops))
         self.ups = torch.nn.ModuleList(torch.nn.ModuleList() for _ in range(hops))
         self.parts: list[list[int | None]] = [[] for _ in range(hops)]
@@ -278,22 +324,26 @@ class Target(torch.nn.Module):
         self.ups[hop].append(up)
         self.parts[hop].append(part)
 
-    def stage(self, hop: int, device) -> None:
-        """Copy step ``hop``'s factors to ``device`` for the model call about to run."""
-        self.staged = [(*down.on(device), *up.on(device), part)
-                       for down, up, part in zip(self.downs[hop], self.ups[hop], self.parts[hop])]
+    def update(self, x: torch.Tensor, out: torch.Tensor, scale: float, factors: list) -> torch.Tensor:
+        """``out`` with the step's update for input ``x`` added in place.
 
-    def update(self, x: torch.Tensor, out: torch.Tensor, scale: float) -> torch.Tensor:
-        """``out`` with the staged step's update for input ``x`` added."""
-        for down, down_scale, up, up_scale, part in self.staged:
-            delta = _through(_through(x, down, down_scale), up, up_scale).to(out.dtype)
-            if scale != 1.0:
-                delta = delta * scale
-            if part is None:
-                out = out + delta
-            else:
-                width = delta.shape[-1]
-                out[..., part * width:(part + 1) * width] += delta
+        Args:
+            x: The projection's input.
+            out: Its output.
+            scale: Multiplier on the update.
+            factors: The step's staged factors, from :meth:`Bank.factors`.
+
+        Returns:
+            ``out``, or a contiguous copy of it where it was not contiguous.
+        """
+        if not factors:
+            return out
+        if not out.is_contiguous():
+            out = out.contiguous()
+        rows = out.view(-1, out.shape[-1])
+        flat = x.reshape(-1, x.shape[-1])
+        for down, down_scale, up, up_scale, part in factors:
+            _add_low(rows, _through(flat, down, down_scale), up, up_scale, part, scale)
         return out
 
 
@@ -313,6 +363,7 @@ class Bank(torch.nn.Module):
         video_bank: Ref2VA's video head bank, or None.
         audio_bank: Ref2VA's audio head bank, or None.
         base_heads: fl2va's reference video head weight and bias, or None.
+        slot_bytes: Bytes of the GPU slot one block's factors for one step are copied into.
     """
 
     def __init__(self, release: str, name: str, hops: int, grid, shift: float,
@@ -330,12 +381,17 @@ class Bank(torch.nn.Module):
         self.video_bank: HeadBank | None = None
         self.audio_bank: HeadBank | None = None
         self.base_heads: tuple[torch.Tensor, torch.Tensor] | None = None
+        self.slot_bytes = 0
+        self._layout: dict[tuple[int, str], list] = {}
+        self._slot: torch.Tensor | None = None
+        self._hop: int | None = None
+        self._loaded: str | None = None
 
     def target(self, path: str) -> Target:
         """The :class:`Target` for a native module path, made when new."""
         key = path.replace(".", "/")
         if key not in self.targets:
-            self.targets[key] = Target(self.hops)
+            self.targets[key] = Target(self.hops, _block_of(path))
         return self.targets[key]
 
     def paths(self):
@@ -343,25 +399,83 @@ class Bank(torch.nn.Module):
         for key, target in self.targets.items():
             yield key.replace("/", "."), target
 
+    def plan(self) -> None:
+        """Group each step's factors by block and size the GPU slot the largest group needs."""
+        self._layout = {}
+        for target in self.targets.values():
+            for hop in range(self.hops):
+                pieces = list(zip(target.downs[hop], target.ups[hop], target.parts[hop]))
+                if pieces:
+                    self._layout.setdefault((hop, target.block), []).append((target, pieces))
+        largest = 0
+        for entries in self._layout.values():
+            offset = 0
+            for _, pieces in entries:
+                for down, up, _ in pieces:
+                    for tensor in (down.weight, down.scale, up.weight, up.scale):
+                        if tensor is not None:
+                            offset += -(-tensor.numel() * tensor.element_size() // _ALIGN) * _ALIGN
+            largest = max(largest, offset)
+        self.slot_bytes = largest
+
     def stage(self, hop: int, device) -> tuple[HeadBank, HeadBank] | None:
-        """Copy step ``hop``'s factors, and any head bank, to ``device`` for one model call.
+        """Ready step ``hop`` for one model call: a GPU slot for its blocks, and any head bank.
 
         Returns:
             The video and audio head banks on ``device``, or None for a file with none.
         """
+        if not self._layout:
+            self.plan()
         for target in self.targets.values():
-            target.stage(hop, device)
+            target.staged = []
+        self._slot = torch.empty(self.slot_bytes, dtype=torch.uint8, device=device)
+        self._hop = hop
+        self._loaded = None
         if self.video_bank is None:
             return None
         return self.video_bank.on(device), self.audio_bank.on(device)
 
+    def factors(self, target: Target) -> list:
+        """The staged step's factors for ``target``, copying its block to the GPU if another is there."""
+        if self._hop is None or self._slot is None:
+            return []
+        if self._loaded != target.block:
+            self._load(target.block)
+        return target.staged
+
+    def _load(self, block: str) -> None:
+        """Copy one block's factors for the staged step into the GPU slot."""
+        if self._loaded is not None:
+            for target, _ in self._layout.get((self._hop, self._loaded), ()):
+                target.staged = []
+        offset = 0
+        for target, pieces in self._layout.get((self._hop, block), ()):
+            staged = []
+            for down, up, part in pieces:
+                views = []
+                for tensor in (down.weight, down.scale, up.weight, up.scale):
+                    if tensor is None:
+                        views.append(None)
+                        continue
+                    size = tensor.numel() * tensor.element_size()
+                    view = self._slot[offset:offset + size].view(tensor.dtype).view(tensor.shape)
+                    view.copy_(tensor, non_blocking=True)
+                    views.append(view)
+                    offset += -(-size // _ALIGN) * _ALIGN
+                staged.append((*views, part))
+            target.staged = staged
+        self._loaded = block
+
     def unstage(self) -> None:
-        """Release what :meth:`stage` copied."""
+        """Release the GPU slot and every staged factor."""
         for target in self.targets.values():
             target.staged = []
+        self._slot = None
+        self._hop = None
+        self._loaded = None
 
     def pin(self) -> bool:
-        """Move every tensor to page-locked memory, so a step's copy to the GPU is fast.
+        """Move every tensor to page-locked memory, so a block's copy to the GPU is fast.
 
         Returns:
             True when every tensor was pinned. False when the system refused, in which case
@@ -527,8 +641,9 @@ def load(path):
     del sd
     if comfy.model_management.get_torch_device().type == "cuda":
         bank.pin()
-    logger.info("loaded %s: %s, %d steps, %s, %.2f GB", name, bank.release, bank.hops,
-                bank.storage, bank.nbytes() / 1e9)
+    bank.plan()
+    logger.info("loaded %s: %s, %d steps, %s, %.2f GB, %.0f MB on the GPU per block", name,
+                bank.release, bank.hops, bank.storage, bank.nbytes() / 1e9, bank.slot_bytes / 1e6)
     return comfy.model_patcher.CoreModelPatcher(
         bank, load_device=comfy.model_management.get_torch_device(),
         offload_device=comfy.model_management.unet_offload_device())
@@ -545,19 +660,59 @@ class _State:
         self.warned: set[int] = set()
 
 
-def _adapted(original, target: Target, state: _State, scale: float, audio: bool):
+def _adapted(original, target: Target, bank: Bank, state: _State, scale: float, audio: bool):
     """A forward that adds ``target``'s update for the current step to ``original``'s output."""
 
     def forward(x, *args, **kwargs):
         out = original(x, *args, **kwargs)
-        if state.hop is None or not target.staged:
+        if state.hop is None:
             return out
-        out = target.update(x, out, scale)
+        out = target.update(x, out, scale, bank.factors(target))
         if audio and state.audio_rate != 1.0:
-            out = out * state.audio_rate
+            out = out.mul_(state.audio_rate)
         return out
 
     return forward
+
+
+def _kept(original, held: dict):
+    """A forward that leaves its output in ``held`` for the feed-forward wrapper to read."""
+
+    def forward(x, *args, **kwargs):
+        out = original(x, *args, **kwargs)
+        held["out"] = out
+        return out
+
+    return forward
+
+
+def _feed_forward(original, target: Target, bank: Bank, state: _State, scale: float, act, held: dict):
+    """A feed-forward whose fused fc2 runs as ComfyUI runs it, with fc2's update added after."""
+
+    def forward(x, *args, **kwargs):
+        held.pop("out", None)
+        out = original(x, *args, **kwargs)
+        h = held.pop("out", None)
+        if state.hop is None or h is None:
+            return out
+        factors = bank.factors(target)
+        if not factors:
+            return out
+        if not out.is_contiguous():
+            out = out.contiguous()
+        rows = out.view(-1, out.shape[-1])
+        for down, down_scale, up, up_scale, part in factors:
+            _add_low(rows, _act_low(h, down, down_scale, act), up, up_scale, part, scale)
+        return out
+
+    return forward
+
+
+def _swiglu():
+    """ComfyUI's eager SwiGLU, the activation H3's fused fc2 applies, or None where it has none."""
+    import comfy.ops
+
+    return getattr(comfy.ops, "INPUT_ACT_EAGER", {}).get("swiglu")
 
 
 def _raw_text(text_states):
@@ -646,18 +801,34 @@ def apply(model, bank: Bank):
 
     state = _State()
     saved: list = []
+    act = _swiglu()
+
+    def keep(module):
+        saved.append((module, module.__dict__.get("forward", _MISSING),
+                      module.__dict__.get("comfy_force_forward", _MISSING)))
 
     def inject(model_patcher):
         diffusion = model_patcher.model.diffusion_model
-        for path, target in bank.paths():
+        targets = dict(bank.paths())
+        # A fused fc2 takes its update from the feed-forward around it.
+        fused = {path[:-len(".fc2")]: target for path, target in targets.items()
+                 if act is not None and path.endswith(".mlp.fc2")}
+        for path, target in targets.items():
+            if path.endswith(".mlp.fc2") and path[:-len(".fc2")] in fused:
+                continue
             module = diffusion.get_submodule(path)
-            saved.append((module, module.__dict__.get("forward", _MISSING),
-                          module.__dict__.get("comfy_force_forward", _MISSING)))
+            keep(module)
             audio = bank.release == FL2VA and path == AUDIO_HEAD
-            module.forward = _adapted(module.forward, target, state, bank.scale, audio)
-            # fc2 runs inside a fused activation unless forced through its own forward.
+            module.forward = _adapted(module.forward, target, bank, state, bank.scale, audio)
             if path.endswith(".mlp.fc2"):
                 module.comfy_force_forward = True
+        for path, target in fused.items():
+            mlp = diffusion.get_submodule(path)
+            held: dict = {}
+            keep(mlp.fc1)
+            mlp.fc1.forward = _kept(mlp.fc1.forward, held)
+            keep(mlp)
+            mlp.forward = _feed_forward(mlp.forward, target, bank, state, bank.scale, act, held)
 
     def eject(model_patcher):
         while saved:
@@ -778,7 +949,8 @@ def describe(bank: Bank) -> dict:
         "file": bank.name,
         "steps": str(bank.hops),
         "sigmas": ", ".join(f"{s:.4f}" for s in bank.grid),
-        "adapters": f"{bank.storage}, {bank.nbytes() / 1e9:.2f} GB in system memory",
+        "adapters": (f"{bank.storage}, {bank.nbytes() / 1e9:.2f} GB in system memory, "
+                     f"{bank.slot_bytes / 1e6:.0f} MB on the GPU per block"),
         "sampler": f"euler, scheduler simple, {bank.hops} steps, cfg 1",
     }
 
