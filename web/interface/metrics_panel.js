@@ -250,6 +250,8 @@ export function createMetricsSection(options = {}) {
   const stopWatching = watchSurfaceRatio(plot, () => drawPlot());
   // The plot is a canvas, which takes literal colours, so a palette change redraws it.
   const stopTheme = onThemeChange(() => drawPlot());
+  // A canvas the browser gave back after losing it comes back blank.
+  plot.addEventListener("contextrestored", () => drawPlot());
 
   return {
     element: root,

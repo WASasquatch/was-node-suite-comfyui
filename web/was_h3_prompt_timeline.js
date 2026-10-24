@@ -161,6 +161,22 @@ const MODE_HINTS = {
 };
 const MODEL_NAMES = { auto: "Automatic", fl2va: "fl2va", ref2va: "ref2va" };
 
+// The socket each model choice samples on.
+const MODEL_SOCKETS = { fl2va: "model_fl2va", ref2va: "model_ref2va" };
+
+/**
+ * A model choice as a menu lists it, marked where its socket has nothing wired.
+ *
+ * @param {object} node - The conditioning node.
+ * @param {string} value - `auto`, `fl2va` or `ref2va`.
+ * @returns {string} The label.
+ */
+function modelLabel(node, value) {
+  const name = MODEL_NAMES[value] ?? value;
+  const socket = MODEL_SOCKETS[value];
+  return socket && !wiredInto(node, socket) ? `${name} · not wired` : name;
+}
+
 // The length line of a prompt, as `duration_seconds: 8`.
 const DURATION_LINE = /^[ \t]*duration_seconds:[ \t]*(\d+(?:\.\d+)?)[ \t]*$/m;
 
@@ -453,8 +469,8 @@ function sceneModel(node, scene, index, assets) {
       : own ? `${own} reference${own === 1 ? "" : "s"}` : shared ? "ref inputs" : "no references";
     return { kind: referenced ? "ref2va" : "fl2va", reason, referenced };
   }
-  if (rf) return { kind: "ref2va", reason: "only model wired", referenced };
-  if (fl) return { kind: "fl2va", reason: "only model wired", referenced };
+  if (rf) return { kind: "ref2va", reason: "model_fl2va not wired", referenced };
+  if (fl) return { kind: "fl2va", reason: "model_ref2va not wired", referenced };
   return { kind: "", reason: "no model wired", referenced };
 }
 
@@ -2980,7 +2996,7 @@ function createPromptTimeline(first) {
     timing.appendChild(field("Hold", hold.box, scene.hold >= 1 ? "as given" : `loosened to ${scene.hold.toFixed(2)}`,
       "How firmly this scene holds its pinned frames and references, transition references included. "
       + "1.0 holds them as given; lower values add noise to them before sampling."));
-    const model = makeSelect(optionsOf(node, `model_${scene.row}`).map((value) => [value, MODEL_NAMES[value] ?? value]), scene.model);
+    const model = makeSelect(optionsOf(node, `model_${scene.row}`).map((value) => [value, modelLabel(node, value)]), scene.model);
     model.addEventListener("change", () => {
       commit(node, () => write(node, `model_${scene.row}`, model.value));
       refresh();
@@ -3844,7 +3860,7 @@ function createPromptTimeline(first) {
     items.push({ header: "Model" });
     for (const value of optionsOf(node, `model_${scene.row}`)) {
       items.push({
-        label: MODEL_NAMES[value] ?? value, checked: value === scene.model,
+        label: modelLabel(node, value), checked: value === scene.model,
         onSelect: () => {
           commit(node, () => write(node, `model_${scene.row}`, value));
           refresh();
@@ -4009,7 +4025,8 @@ function createPromptTimeline(first) {
     strip.fit();
     let keyed = false;
     withGraphChange(() => {
-      keyed = ensurePreviewKey(node);
+      const others = (app?.extensionManager?.workflow?.openWorkflows ?? []).filter((open) => open !== workflow);
+      keyed = ensurePreviewKey(node, others);
     });
     // A property is not a widget or a link, so the workflow is told it changed.
     if (keyed) workflow?.changeTracker?.checkState?.();

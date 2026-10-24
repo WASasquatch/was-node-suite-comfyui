@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **535** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **536** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-528 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+529 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 411 |
+| [Always loaded](#always-loaded) | always on | 412 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-411 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+412 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -66,7 +66,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent/Video](#was-suitelatentvideo) (21)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (3)
-- [WAS Suite/Logic](#was-suitelogic) (5)
+- [WAS Suite/Logic](#was-suitelogic) (6)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
@@ -8499,6 +8499,31 @@ Build a SEA-RAFT or FlowSeek optical flow network for the motion_model input of 
 </details>
 
 ### WAS Suite/Logic
+
+<a id="node-wascomboprimitive"></a>
+<details>
+<summary><b>Combo Primitive</b></summary>
+
+A dropdown that copies the options and the current choice of any dropdown its output is connected to, so one choice can be set in one place and drive several nodes. Connect combo to a dropdown's input, then pick from the copied list.
+
+| | |
+|---|---|
+| Node id | `WASComboPrimitive` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `value` | `COMBO` | Yes | connect combo to a dropdown | `connect combo to a dropdown` | The choice sent on, from the options of the dropdown combo is connected to, such as euler, karras or sd_xl_base_1.0.safetensors. With several connected, the first one's options are listed. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `combo` | `*` | The choice, on a wire any dropdown takes: connect it to sampler_name, ckpt_name or a node's mode. |
+| `text` | `STRING` | The choice as text: euler, karras, sd_xl_base_1.0.safetensors. |
+
+</details>
 
 <a id="node-wascomboselector"></a>
 <details>

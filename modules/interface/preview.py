@@ -147,6 +147,20 @@ MAX_FRAME_BYTES = 8 * 1024 * 1024
 #: The first frame of a key is always stored, whatever it costs.
 MAX_KEY_BYTES = 8 * 1024 * 1024
 
+#: Longest edge of a picture :func:`write_frames` writes to a file: the picture's own size up to
+#: this, whatever the configured preview edge is.
+WRITTEN_MAX_EDGE = 8192
+
+#: The most one written picture may cost uncompressed: a :data:`WRITTEN_MAX_EDGE` square with
+#: alpha.
+WRITTEN_FRAME_BYTES = WRITTEN_MAX_EDGE * WRITTEN_MAX_EDGE * 4
+
+#: The encoded bytes one written batch holds before :func:`write_frames` stops encoding.
+WRITTEN_BATCH_BYTES = 512 * 1024 * 1024
+
+#: PNG compression of a written picture: a temporary file, so the fastest level.
+WRITTEN_COMPRESSION = 1
+
 #: Route a panel calls to drop the files ComfyUI's own mask editor uploaded on a save. That
 #: editor writes four PNGs into the input directory whatever the caller does with the result, and
 #: an interface that uses none of them is leaving litter in a menu every Load Image node draws.
@@ -478,7 +492,11 @@ def write_frames(images, prefix: str, kind: str = IMAGE_KIND) -> list[dict]:
 
         from ..util import sandbox
 
-        pictures, total = _encode_frames(images, kind, first_only=False)
+        pictures, total = _encode_frames(
+            images, kind, first_only=False, limit=WRITTEN_MAX_EDGE,
+            frame_bytes=WRITTEN_FRAME_BYTES, key_bytes=WRITTEN_BATCH_BYTES,
+            compression=WRITTEN_COMPRESSION,
+        )
         workflow = executing_workflow_id() or ""
         folder, name, counter, subfolder, _ = sandbox.save_image_path(
             temp_prefix(prefix), folder_paths.get_temp_directory(),
@@ -911,37 +929,42 @@ def _max_edge() -> int:
     return value if value > 0 else NO_LIMIT
 
 
-def _fit_edge(width, height, channels, limit) -> int:
+def _fit_edge(width, height, channels, limit, frame_bytes=MAX_FRAME_BYTES) -> int:
     """The longest edge one picture is drawn down to before it is encoded.
 
     Args:
         width: The picture's own width in pixels.
         height: The picture's own height in pixels.
         channels: How many samples each of its pixels carries.
-        limit: The configured maximum edge, or :data:`NO_LIMIT` for none.
+        limit: The maximum edge, or :data:`NO_LIMIT` for none.
+        frame_bytes: The most the reduced picture may cost uncompressed.
 
     Returns:
         An edge no longer than the picture's own, no longer than ``limit`` where one is set,
-        and short enough that the reduced picture costs at most :data:`MAX_FRAME_BYTES`
-        uncompressed.
+        and short enough that the reduced picture costs at most ``frame_bytes`` uncompressed.
     """
     longest = max(1, int(width), int(height))
     edge = min(longest, int(limit)) if limit else longest
     edge = max(1, edge)
     source = max(1, int(width) * int(height) * int(channels))
     reduction = edge / longest
-    if source * reduction * reduction > MAX_FRAME_BYTES:
-        edge = max(1, int(longest * math.sqrt(MAX_FRAME_BYTES / source)))
+    if source * reduction * reduction > frame_bytes:
+        edge = max(1, int(longest * math.sqrt(frame_bytes / source)))
     return edge
 
 
-def _encode_frames(tensor, kind, first_only) -> tuple[list[Picture], int]:
+def _encode_frames(tensor, kind, first_only, limit=None, frame_bytes=MAX_FRAME_BYTES,
+                   key_bytes=MAX_KEY_BYTES, compression=None) -> tuple[list[Picture], int]:
     """The frames of one tensor as PNG bytes, bounded before each encode.
 
     Args:
         tensor: An ``IMAGE`` or ``MASK`` tensor, read as ``kind`` says.
         kind: :data:`IMAGE_KIND` or :data:`MASK_KIND`.
         first_only: Encode the first frame alone.
+        limit: The maximum edge, or None for the configured preview edge.
+        frame_bytes: The most one reduced frame may cost uncompressed.
+        key_bytes: The encoded bytes the frames may spend before encoding stops.
+        compression: The PNG compression level, or None for the encoder's default.
 
     Returns:
         ``(frames, batch length)``. The frames are as many as the key's budget allowed, and
@@ -966,7 +989,7 @@ def _encode_frames(tensor, kind, first_only) -> tuple[list[Picture], int]:
         )
         planes = planes[:MAX_FRAMES]
 
-    limit = _max_edge()
+    limit = _max_edge() if limit is None else limit
     prompt = executing_prompt_id() or ""
     pictures: list[Picture] = []
     spent = 0
@@ -974,27 +997,29 @@ def _encode_frames(tensor, kind, first_only) -> tuple[list[Picture], int]:
         # Asked before the encode rather than after it, so a frame that would not be kept is
         # never paid for. The first frame of a key is exempt: a slot that stored nothing is
         # an empty answer the interface draws as a node that has not run.
-        if pictures and spent >= MAX_KEY_BYTES:
+        if pictures and spent >= key_bytes:
             logger.info(
-                "a node published %d frames and %d of them fit the preview channel's %d byte "
-                "budget for one slot, so the interface shows the first %d",
-                total, len(pictures), MAX_KEY_BYTES, len(pictures),
+                "a node published %d frames and %d of them fit the %d byte budget for one "
+                "slot, so the interface shows the first %d",
+                total, len(pictures), key_bytes, len(pictures),
             )
             break
-        picture = _encode(plane, kind, limit, prompt)
+        picture = _encode(plane, kind, limit, prompt, frame_bytes, compression)
         pictures.append(picture)
         spent += len(picture.data)
     return pictures, total
 
 
-def _encode(plane, kind, limit, prompt) -> Picture:
+def _encode(plane, kind, limit, prompt, frame_bytes=MAX_FRAME_BYTES, compression=None) -> Picture:
     """One picture as PNG bytes, with the size the node held it at.
 
     Args:
         plane: One frame, as ``image_planes`` or ``mask_planes`` answers it.
         kind: :data:`IMAGE_KIND` or :data:`MASK_KIND`.
-        limit: The configured maximum edge, or :data:`NO_LIMIT` for none.
+        limit: The maximum edge, or :data:`NO_LIMIT` for none.
         prompt: The prompt id to stamp the frame with, empty outside a run.
+        frame_bytes: The most the reduced picture may cost uncompressed.
+        compression: The PNG compression level, or None for the encoder's default.
 
     Returns:
         A :class:`Picture`, its width and height being the picture the node held, which is
@@ -1008,14 +1033,17 @@ def _encode(plane, kind, limit, prompt) -> Picture:
     # Read off the tensor, so the reduction is decided before any array is materialised and
     # before the encode, which is where both the time and the stored bytes go.
     height, width, channels = plane_shape(plane)
-    edge = _fit_edge(width, height, channels, limit)
+    edge = _fit_edge(width, height, channels, limit, frame_bytes)
     picture = mask2pil(plane) if kind == MASK_KIND else plane2pil(plane)
     source = picture.size
     mode = picture.mode
     if edge < max(source):
         picture.thumbnail((edge, edge))
     buffer = BytesIO()
-    picture.save(buffer, format="PNG")
+    if compression is None:
+        picture.save(buffer, format="PNG")
+    else:
+        picture.save(buffer, format="PNG", compress_level=int(compression))
     return Picture(buffer.getvalue(), source[0], source[1], mode, kind, prompt)
 
 

@@ -200,7 +200,7 @@ already requires.
 
 | Key | Type | Default | Does |
 |---|---|---|---|
-| `interface.preview_max_edge` | int | `1024` | Longest edge, in pixels, of the picture a node publishes to its own interface. `0` publishes it at the size the node received it, up to the channel's own ceiling of 8 MB a frame. |
+| `interface.preview_max_edge` | int | `1024` | Longest edge, in pixels, of the picture a node publishes to its own interface. `0` publishes it at the size the node received it, up to the channel's own ceiling of 8 MB a frame. Image Compare (Advanced) shows both sides at full size, up to 8192 on the longest edge, whatever this is. |
 
 A 3840x2160 frame costs 7.9 MB and 315 ms to hold and encode, and 1.4 MB and 136 ms at 1024.
 

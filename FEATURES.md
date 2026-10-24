@@ -219,13 +219,15 @@ For deciding whether a change improved anything, from a number rather than an im
 
 ## Logic and flow
 
-35 nodes. **For Loop Open** and **For Loop Close**, **While Loop Open** and **While Loop
+36 nodes. **For Loop Open** and **For Loop Close**, **While Loop Open** and **While Loop
 Close** iterate, and **Collect to List** gathers the results. **Condition Chain**, **Boolean
 Reduce**, **Compare**, **Logic Comparison AND**, **Logic Comparison OR**,
 **Logic Comparison XOR** and **Logic NOT** decide.
 **Tensor Switch**, **Tensor Index Switch**, **Model Switch**, **Any Input Switch** and **Any
 Switch (First Connected)** route, evaluating only the branch they pick. **Execution Gate**
-stops a branch running at all. **Pause** holds a run for a look.
+stops a branch running at all. **Pause** holds a run for a look. **Combo Primitive** copies the
+dropdown it is connected to and sets it from one place, **Combo Selector** names a model file,
+sampler or scheduler, and **Text to Combo** chooses by name, each on a wire any dropdown takes.
 
 For graphs that vary per iteration, or that skip work a condition rules out.
 
@@ -735,7 +737,8 @@ For a smaller, faster copy of any finetune or merge, laid out as the official re
 ## One render judged against another
 
 **Compare Video** plays two videos on the node under a divider that drags left and right, both
-from one clock. **Image Compare (Advanced)** does the same for stills, with metrics.
+from one clock. **Image Compare (Advanced)** does the same for stills, with metrics, showing
+both at full resolution however far the graph is zoomed in.
 
 For settling whether a change to a graph improved anything.
 

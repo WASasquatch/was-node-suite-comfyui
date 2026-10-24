@@ -1,8 +1,8 @@
 /**
  * Two images under a divider, drawn on the node that received them.
  *
- * A canvas sized to its surface, one tab per pair of a batch, drawn from the files the node's
- * run output names.
+ * Both sides are pictures, the second clipped at the divider; one tab per pair of a batch, read
+ * from the files the node's run output names.
  */
 
 import { app } from "../../../scripts/app.js";
@@ -11,10 +11,9 @@ import { addressOf, hold, release } from "./compare_media.js";
 import { createMetricsSection } from "./metrics_panel.js";
 import { captureWheel, wheelPixels } from "./pointer.js";
 import { executionId, nodeLocator, ownOutput } from "./preview.js";
-import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
 import { createFrameTabs, readableBytes } from "./report_panel.js";
-import { onThemeChange, readTheme, themeVar } from "./theme.js";
+import { themeVar } from "./theme.js";
 import { graphLoading, keepOnNode } from "./widget.js";
 
 const LOG_NAME = "WASNodeSuite.ImageCompare";
@@ -44,6 +43,16 @@ const OUTPUT_B = "b_images";
 // Where the last pair of written sides is kept. `properties` is serialised with the node and no
 // python reads it.
 const REMEMBERED_KEY = "was_compare_images";
+
+// The divider's line and handle, in CSS pixels.
+const LINE_WIDTH = 2;
+const HANDLE_SIZE = 10;
+
+// How a side's picture sits in its layer: stretched to the stage, which is already its shape.
+const PICTURE_STYLE = [
+  "position:absolute", "inset:0", "width:100%", "height:100%", "display:block",
+  "object-fit:fill", "pointer-events:none", "user-select:none", "-webkit-user-drag:none",
+].join(";");
 
 /**
  * Decode one written frame, held in the page while it decodes.
@@ -104,9 +113,25 @@ export function createImageComparePanel(node) {
   ].join(";");
   root.appendChild(stage);
 
-  const canvas = document.createElement("canvas");
-  canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block";
-  stage.appendChild(canvas);
+  const layerA = document.createElement("div");
+  const layerB = document.createElement("div");
+  for (const layer of [layerA, layerB]) {
+    layer.style.cssText = "position:absolute;inset:0;pointer-events:none";
+    stage.appendChild(layer);
+  }
+  const line = document.createElement("div");
+  line.style.cssText = [
+    "position:absolute", "top:0", "bottom:0", `width:${LINE_WIDTH}px`,
+    `margin-left:${-LINE_WIDTH / 2}px`, `background:${themeVar("fg")}`, "pointer-events:none",
+    "display:none",
+  ].join(";");
+  const handle = document.createElement("div");
+  handle.style.cssText = [
+    "position:absolute", "top:50%", `width:${HANDLE_SIZE}px`, `height:${HANDLE_SIZE}px`,
+    `margin:${-HANDLE_SIZE / 2}px 0 0 ${-HANDLE_SIZE / 2}px`, "border-radius:50%",
+    `background:${themeVar("fg")}`, "pointer-events:none", "display:none",
+  ].join(";");
+  stage.append(line, handle);
 
   // Over the picture rather than above it. The tabs are only wanted while choosing a pair, and
   // a row of its own costs the picture that height on every node, batch or not. `show` is
@@ -152,46 +177,46 @@ export function createImageComparePanel(node) {
     return { width, height: Math.max(1, width / aspect) };
   };
 
-  /** Draw the pair, with image_b revealed to the right of the divider. */
+  // The pictures the layers hold, so a pair is put in place only when it changes.
+  let placed = { a: null, b: null };
+
+  /**
+   * Put one side's picture in its layer.
+   *
+   * @param {HTMLElement} layer - The layer.
+   * @param {HTMLImageElement|null} picture - The decoded picture, or null for none.
+   * @param {HTMLImageElement|null} other - The picture the other layer holds.
+   * @returns {void}
+   */
+  const place = (layer, picture, other) => {
+    if (!picture) {
+      layer.replaceChildren();
+      return;
+    }
+    // One element stands in one layer, so the same file on both sides is shown as a copy.
+    const shown = picture === other ? picture.cloneNode() : picture;
+    shown.style.cssText = PICTURE_STYLE;
+    shown.draggable = false;
+    layer.replaceChildren(shown);
+  };
+
+  /** Show the pair, with image_b revealed to the right of the divider. */
   const draw = () => {
     if (disposed) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const width = canvas.width;
-    const height = canvas.height;
-    const theme = readTheme();
-    ctx.clearRect(0, 0, width, height);
-
     const a = held.a;
     const b = held.b;
-    if (!a && !b) return;
-    // The stage is already the picture's shape, so both fill it corner to corner and the
-    // divider means the same thing on each even when the pair differ in size.
-    if (a) ctx.drawImage(a, 0, 0, width, height);
-    if (b) {
-      const cut = width * split;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(cut, 0, width - cut, height);
-      ctx.clip();
-      ctx.drawImage(b, 0, 0, width, height);
-      ctx.restore();
-
-      ctx.save();
-      ctx.strokeStyle = theme.fg;
-      ctx.lineWidth = Math.max(1, Math.round(width / 600));
-      ctx.beginPath();
-      ctx.moveTo(cut, 0);
-      ctx.lineTo(cut, height);
-      ctx.stroke();
-      // A handle, so the divider reads as something to drag rather than a seam.
-      ctx.fillStyle = theme.fg;
-      const r = Math.max(4, Math.round(width / 160));
-      ctx.beginPath();
-      ctx.arc(cut, height / 2, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+    if (placed.a !== a || placed.b !== b) {
+      place(layerA, a, null);
+      place(layerB, b, a);
+      placed = { a, b };
     }
+    const at = `${(split * 100).toFixed(3)}%`;
+    layerB.style.clipPath = `inset(0 0 0 ${at})`;
+    const shown = b ? "block" : "none";
+    line.style.display = shown;
+    handle.style.display = shown;
+    line.style.left = at;
+    handle.style.left = at;
   };
 
   /**
@@ -283,7 +308,7 @@ export function createImageComparePanel(node) {
       };
       footer.textContent = a.image || b.image ? describe(a, b, current, pairs, standing) : "";
       drawStrip();
-      sizeCanvas();
+      sizeStage();
       metrics.update(a.image, b.image, {
         aWidth: a.sourceWidth, aHeight: a.sourceHeight,
         bWidth: b.sourceWidth, bHeight: b.sourceHeight,
@@ -376,10 +401,9 @@ export function createImageComparePanel(node) {
     return configured;
   };
 
-  // The backing store is sized from the stage, which is laid out by flex and so has no size at
-  // all until the panel is on the page. Two things change it: the graph's zoom, which
-  // `watchSurfaceRatio` reports, and the node being resized, which only a size observer sees.
-  const sizeCanvas = () => {
+  // The stage is sized from the panel, which is laid out by flex and so has no size at all until
+  // it is on the page; a size observer reports the node being resized.
+  const sizeStage = () => {
     // Layout pixels, not `getBoundingClientRect`. The graph draws the whole panel through a CSS
     // transform, so a measured rectangle is already multiplied by the zoom; writing one back as
     // a CSS size would scale it a second time and the picture would shrink as the graph is
@@ -395,27 +419,13 @@ export function createImageComparePanel(node) {
     const box = boxFor(room, Math.max(1, root.clientHeight - taken));
     stage.style.width = `${Math.round(box.width)}px`;
     stage.style.height = `${Math.round(box.height)}px`;
-
-    // Read here rather than carried from the watcher, which calls back with no arguments. The
-    // ratio counts the graph's zoom as well as the display's density, so the backing store is
-    // rebuilt at the resolution the picture is actually being drawn at and a zoomed in
-    // comparison is sharp rather than a magnified bitmap.
-    const ratio = surfaceRatio(canvas);
-    const width = Math.max(1, Math.round(box.width * ratio));
-    const height = Math.max(1, Math.round(box.height * ratio));
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
     draw();
   };
 
-  const stopWatching = watchSurfaceRatio(canvas, () => sizeCanvas());
-
-  // The panel is watched rather than the stage, since the stage is now sized from the panel
-  // and watching it would react to its own change.
+  // The panel is watched rather than the stage, since the stage is sized from the panel and
+  // watching it would react to its own change.
   const observer = typeof ResizeObserver === "function"
-    ? new ResizeObserver(() => sizeCanvas())
+    ? new ResizeObserver(() => sizeStage())
     : null;
   observer?.observe(root);
 
@@ -445,10 +455,6 @@ export function createImageComparePanel(node) {
   };
   api.addEventListener("reconnected", onReconnected);
 
-  // The divider is drawn into a canvas, where a custom property means nothing, so the palette
-  // is subscribed to and the pair drawn again.
-  const stopTheme = onThemeChange(() => draw());
-
   refresh();
 
   return {
@@ -470,8 +476,8 @@ export function createImageComparePanel(node) {
         decoded.clear();
         metrics.dispose();
         observer?.disconnect();
-        stopWatching?.();
-        stopTheme();
+        layerA.replaceChildren();
+        layerB.replaceChildren();
       } catch (error) {
         console.error(`[${LOG_NAME}] Failed to release the comparison:`, error);
       }

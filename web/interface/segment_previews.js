@@ -42,17 +42,21 @@ function newPreviewKey() {
 }
 
 /**
- * Give a node a preview key of its own, or a new one where another node in its graph shares it.
+ * Give a node a preview key of its own, or a new one where another node shares it.
  *
  * @param {object} node - The node.
+ * @param {object[]} [workflows] - Other open workflows whose saved state may hold the key, as a
+ *   workflow saved as a copy of another does.
  * @returns {boolean} True when a key was written.
  */
-export function ensurePreviewKey(node) {
+export function ensurePreviewKey(node, workflows = []) {
   if (!node) return false;
   node.properties ??= {};
   const key = node.properties[PREVIEW_KEY];
-  const shared = Boolean(key) && (node.graph?.nodes ?? []).some(
-    (other) => other !== node && other?.properties?.[PREVIEW_KEY] === key,
+  const holds = (saved) => saved?.properties?.[PREVIEW_KEY] === key;
+  const shared = Boolean(key) && (
+    (node.graph?.nodes ?? []).some((other) => other !== node && holds(other))
+    || workflows.some((other) => (other?.changeTracker?.activeState?.nodes ?? []).some(holds))
   );
   if (key && !shared) return false;
   node.properties[PREVIEW_KEY] = newPreviewKey();
