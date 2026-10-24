@@ -610,7 +610,8 @@ step, such as `euler_ancestral`, `dpmpp_2m_sde`, `er_sde`, RES4LYF's samplers or
 instead of spreading it evenly. Each run measures how far every band had come at each step and
 the next run of that model at that size uses the measurement, so it needs no setup for any
 model. `auto` uses the published settings, one set for runs with CFG above 1 and one without;
-`manual` sets the divider, power, tilt and energy by hand. Graphs:
+`manual` sets the divider, power, tilt and energy by hand. Its panel shows how many noise draws
+the run coloured, on which sampler, or warns when the sampler adds no noise to colour. Graphs:
 [`cns-klein9b.json`](docs/workflows/cns-klein9b.json) and
 [`cns-krea2.json`](docs/workflows/cns-krea2.json).
 
@@ -670,6 +671,31 @@ shift.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
 [`flux3-klein-tiled-diffusion.json`](docs/workflows/flux3-klein-tiled-diffusion.json).
+
+---
+
+## Fewer model passes where sampling is smooth, one more where detail forms
+
+**Spectrum Forecast** runs some of a sampler's steps through the whole transformer and forecasts
+the rest from them, between `start_percent` and `end_percent` of the model's noise schedule. With
+`taper` on, the full steps sit closer together toward both ends of that window. MOSS-Image,
+FLUX.1, Fibo 2, Qwen-Image, Wan and MiniMax H3 forecast their last block; other models forecast
+their output. Forecast steps soften fine detail.
+
+**Adaptive Detail** tells the model a slightly lower noise level on the steps where detail forms,
+and the picture comes out with more fine texture in the composition its plain steps make. `detail`
+sets how much, and the push stops at `end_percent`, leaving the last steps to clean it up. `extra`
+gives the steps with the most fine-detail error a corrective second pass, picked during the run.
+It works on samplers that call the model once per step, such as euler, and after Spectrum Forecast
+on the same model, where it brings back the detail the forecasts soften.
+
+Each node's panel shows the run's steps: which ran in full or were forecast, and which were
+refined.
+
+For faster sampling, and for more fine detail from the same steps without moving the picture.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
+[`spectrum-and-adaptive-detail.json`](docs/workflows/spectrum-and-adaptive-detail.json).
 
 ---
 

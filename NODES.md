@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **536** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **538** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-529 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+531 of them load in a fresh install. The other 7 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 412 |
+| [Always loaded](#always-loaded) | always on | 414 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -39,7 +39,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-412 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+414 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -72,7 +72,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (26)
+- [WAS Suite/Sampling](#was-suitesampling) (28)
 - [WAS Suite/Text](#was-suitetext) (9)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -10404,6 +10404,34 @@ Put a whole number, a decimal or a switch onto NUMBER, the wire this pack's own 
 
 ### WAS Suite/Sampling
 
+<a id="node-wasadaptivedetail"></a>
+<details>
+<summary><b>Adaptive Detail</b></summary>
+
+Add fine detail and texture to a render by telling the model a slightly lower noise level on the steps where detail forms, and optionally by giving the steps with the most fine-detail error a corrective second pass. Works with samplers that call the model once per step, such as euler.
+
+| | |
+|---|---|
+| Node id | `WASAdaptiveDetail` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The diffusion model to sample, after any LoRAs and patches. |
+| `detail` | `FLOAT` | Yes |  |  | 0.04 = clearly more texture; 0.02 = subtle; 0.06 = strong, small objects start to change; 0 = off. How much lower a noise level the model is told. |
+| `start_percent` | `FLOAT` | Yes |  |  | Sampling percent where the push and the extra passes start: 0.3 leaves the first 8 of 25 steps, where the composition settles, alone. |
+| `end_percent` | `FLOAT` | Yes |  |  | Sampling percent where the push stops: 0.8 leaves the last 5 of 25 steps to clean it up; nearer 1.0 leaves grain. |
+| `extra` | `FLOAT` | Yes |  |  | Corrective second passes as a share of the steps, on the steps with the most fine-detail error: 0.25 adds 6 to 25 steps; 0 adds none. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model, sampling toward more detail. Connect it to the sampler. |
+
+</details>
+
 <a id="node-wasaffinepatternnoise"></a>
 <details>
 <summary><b>Affine Pattern Noise</b></summary>
@@ -11120,6 +11148,41 @@ Make the noise schedule of RES4LYF's bong_tangent in the model's own time, so th
 | Name | Type | What it is |
 |---|---|---|
 | `sigmas` | `SIGMAS` | The schedule, steps + 1 values ending at 0, for SamplerCustom; SIGMAS. |
+
+</details>
+
+<a id="node-wasspectrumforecast"></a>
+<details>
+<summary><b>Spectrum Forecast</b></summary>
+
+Make sampling faster by running some steps through the whole transformer and forecasting the rest from them, so 25 steps cost 13 full passes. MOSS-Image, FLUX.1, Fibo 2, Qwen-Image, Wan and MiniMax H3 forecast their last block; other models forecast their output.
+
+| | |
+|---|---|
+| Node id | `WASSpectrumForecast` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The diffusion model to sample, after any LoRAs and patches. |
+| `start_percent` | `FLOAT` | Yes | 0.3 |  | Sampling percent where forecasting starts. Every step before it runs in full: 0.3 is the first 8 of 25 steps, 0.2 the first 5. |
+| `end_percent` | `FLOAT` | Yes | 0.95 |  | Sampling percent where forecasting ends. Every step after it runs in full: 0.95 is the last of 25 steps, 1.0 forecasts to the end. |
+| `interval` | `FLOAT` | Yes | 2.0 |  | Steps from one full run to the next where the window starts, and where it ends when tapering: 2 runs every other step. |
+| `growth` | `FLOAT` | Yes | 2.0 |  | Steps added to the interval after each full run: 2.0 runs 13 of 25 steps in full, 1.0 runs 14, 0 keeps the interval fixed and runs 17. |
+| `taper` | `BOOLEAN` | Yes | True |  | On, the interval widens toward the middle of the window and narrows again toward end_percent. Off, it widens all the way to end_percent. |
+| `tolerance` | `FLOAT` | No | 0.0 |  | How far the curved and the straight-line forecasts of a step may disagree before it runs in full instead: 0.1 for 10%. 0 never checks. |
+| `target` | `COMBO` | No | block output | `block output`, `block residual`, `model output` | What is forecast: block output, the last block's output; block residual, its change over the step's own input; model output, the whole prediction. |
+| `coordinate` | `COMBO` | No | step | `step`, `sigma`, `log-snr` | What the fit runs over: `step` for the step number, `sigma` for the noise level, `log-snr` for the log signal-to-noise ratio. |
+| `degree` | `INT` | No | 4 |  | Highest Chebyshev degree of the fit: 4; 2 is smoother, 6 follows more closely. |
+| `ridge` | `FLOAT` | No | 0.1 |  | Ridge weight of the fit: 0.1; 0 fits the full steps exactly, 1 smooths more. |
+| `history` | `INT` | No | 8 |  | Most recent full steps the fit is taken over: 8; fewer uses less memory. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model, sampling with forecast steps. Connect it to the sampler. |
 
 </details>
 

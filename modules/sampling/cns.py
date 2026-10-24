@@ -563,11 +563,12 @@ def coloured_generator(base, run: Run):
     return Coloured
 
 
-def wrapper(settings: Settings):
+def wrapper(settings: Settings, node_id=None):
     """A ``sampler_sample`` wrapper colouring the noise of whatever sampler runs.
 
     Args:
         settings: How to colour.
+        node_id: The node to file each run's report under, or None.
 
     Returns:
         The wrapper.
@@ -619,14 +620,14 @@ def wrapper(settings: Settings):
             for registry, original in swapped:
                 registry.clear()
                 registry.update(original)
-            report(run, resolved, key, function, stochastic or bool(swapped), cfg)
+            report(run, resolved, key, function, stochastic or bool(swapped), cfg, node_id)
 
     return sample
 
 
 def report(run: Run, settings: Settings, key: tuple, function, reachable: bool,
-           cfg: float) -> None:
-    """Keep the run's measured profile and log what the run did.
+           cfg: float, node_id=None) -> None:
+    """Keep the run's measured profile, log what the run did and file it as the node's report.
 
     Args:
         run: The finished run.
@@ -635,6 +636,7 @@ def report(run: Run, settings: Settings, key: tuple, function, reachable: bool,
         function: The sampler function.
         reachable: Whether the sampler's noise could be coloured.
         cfg: The guidance scale.
+        node_id: The node to file the report under, or None.
     """
     name = getattr(function, "__name__", "the sampler").replace("sample_", "")
     agreement = run.agreement()
@@ -651,18 +653,41 @@ def report(run: Run, settings: Settings, key: tuple, function, reachable: bool,
     if run.injections:
         LOG.info("CNS: %s, %s mode%s, coloured %d noise draw(s)%s", name, settings.mode, preset,
                  run.injections, measured)
+        summary = f"{run.injections} noise draws coloured on {name}"
     elif reachable:
         LOG.info("CNS: %s drew no noise this run, so nothing was coloured%s", name, measured)
+        summary = f"{name} drew no noise this run, so nothing was coloured"
     else:
         LOG.info("CNS: %s takes no noise sampler, so nothing was coloured%s", name, measured)
+        summary = f"{name} adds no noise each step, so nothing was coloured"
+    if node_id is None:
+        return
+    try:
+        from ..interface import run_result
+
+        facts = {"sampler": name, "mode": f"{settings.mode}{preset}", "profile": source}
+        if agreement is not None:
+            facts["measured"] = f"within {agreement:.3f} of the final share"
+        if not run.injections:
+            facts["fix"] = "use euler_ancestral, dpmpp_2m_sde or er_sde"
+        run_result.publish(
+            status=run_result.OK if run.injections else run_result.WARNING,
+            summary=summary,
+            counts={"coloured draws": run.injections},
+            facts=facts,
+            node_id=node_id,
+        )
+    except Exception as error:
+        LOG.debug("the CNS report was not published (%s)", error)
 
 
-def patched(model, settings: Settings):
+def patched(model, settings: Settings, node_id=None):
     """A clone of a model whose sampling runs colour their noise.
 
     Args:
         model: A ``ModelPatcher``.
         settings: How to colour.
+        node_id: The node to file each run's report under, or None.
 
     Returns:
         The patched clone.
@@ -671,5 +696,5 @@ def patched(model, settings: Settings):
 
     clone = model.clone()
     clone.add_wrapper_with_key(
-        comfy.patcher_extension.WrappersMP.SAMPLER_SAMPLE, WRAPPER_KEY, wrapper(settings))
+        comfy.patcher_extension.WrappersMP.SAMPLER_SAMPLE, WRAPPER_KEY, wrapper(settings, node_id))
     return clone

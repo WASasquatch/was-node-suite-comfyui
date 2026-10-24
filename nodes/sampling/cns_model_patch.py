@@ -128,6 +128,7 @@ class CNSModelPatch(io.ComfyNode):
                     tooltip="The patched model, for any sampler node.",
                 ),
             ],
+            hidden=[io.Hidden.unique_id],
         )
 
     @classmethod
@@ -146,4 +147,4 @@ class CNSModelPatch(io.ComfyNode):
                 energy=float(energy),
             ),
         )
-        return io.NodeOutput(cns.patched(model, settings))
+        return io.NodeOutput(cns.patched(model, settings, node_id=cls.hidden.unique_id))
