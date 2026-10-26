@@ -5,6 +5,7 @@
  * closes, collapses, maximizes and disposes it. Sizes are in CSS pixels.
  */
 
+import { CARD_LOOK } from "./card.js";
 import { LOOK, SANS } from "./window_kit.js";
 
 const LOG_NAME = "WASNodeSuite.FloatingWindow";
@@ -331,10 +332,10 @@ export function createFloatingWindow(options = {}) {
     `z-index:${WINDOW_Z_INDEX}`,
     "overflow:hidden",
     "border-radius:10px",
-    `background:${LOOK.body}`,
+    `background:${CARD_LOOK.surface}`,
     `color:${LOOK.text}`,
-    `border:1px solid ${LOOK.border}`,
-    `box-shadow:0 10px 40px ${LOOK.shadow}`,
+    `border:1px solid ${CARD_LOOK.edge}`,
+    `box-shadow:${CARD_LOOK.shine}, 0 10px 40px ${LOOK.shadow}`,
     `font:13px/1.5 ${SANS}`,
     "outline:none",
   ].join(";");
@@ -348,8 +349,8 @@ export function createFloatingWindow(options = {}) {
     "align-items:center",
     "gap:8px",
     "padding:0 10px",
-    `background:${LOOK.surface}`,
-    `border-bottom:1px solid ${LOOK.border}`,
+    "background:transparent",
+    `border-bottom:1px solid ${CARD_LOOK.rule}`,
     "cursor:move",
     "user-select:none",
     "touch-action:none",
@@ -687,10 +688,10 @@ export function createFloatingWindow(options = {}) {
    * @returns {void}
    */
   function shade(active) {
-    titleBar.style.background = active ? LOOK.surface : LOOK.hover;
-    titleText.style.color = active ? LOOK.text : LOOK.muted;
+    titleBar.style.background = active ? "transparent" : CARD_LOOK.inset;
+    titleText.style.color = active ? CARD_LOOK.title : LOOK.muted;
     body.style.opacity = active ? "1" : INACTIVE_OPACITY;
-    root.style.borderColor = active ? LOOK.border : `color-mix(in srgb, ${LOOK.border} 60%, transparent)`;
+    root.style.borderColor = active ? CARD_LOOK.edge : `color-mix(in srgb, ${LOOK.border} 60%, transparent)`;
   }
   shading.set(root, shade);
 

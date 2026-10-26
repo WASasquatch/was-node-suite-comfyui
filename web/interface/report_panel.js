@@ -6,6 +6,7 @@
  */
 
 import { api } from "../../../scripts/api.js";
+import { CARD_LOOK, cardRule } from "./card.js";
 import { createListing } from "./listing.js";
 import { captureWheel, wheelPixels } from "./pointer.js";
 import { PREVIEW_STATE, executionId } from "./preview.js";
@@ -27,6 +28,10 @@ const TILE_GAP = 18;
 
 // Overflow values that make a region the one a wheel scrolls.
 const SCROLLS = ["auto", "scroll", "overlay"];
+
+// The type a report is set in, and the type its texts keep.
+const REPORT_FONT = "11px system-ui,sans-serif";
+const TEXT_FONT = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 
 // Height of a frame tab strip, and of a tab inside it, in CSS pixels.
 const TAB_STRIP_HEIGHT = 22;
@@ -286,12 +291,10 @@ export function createReportPanel(node, options = {}) {
       ? ["overflow:auto"]
       : ["display:flex", "flex-direction:column", `gap:${blockGap}px`, "overflow:hidden"]),
     `padding:${padding}`,
-    "font:11px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace",
+    `font:${REPORT_FONT}`,
+    "font-variant-numeric:tabular-nums",
     `line-height:${lineHeight}`,
-    "border-radius:4px",
-    `background:${themeVar("panelBg")}`,
-    `color:${themeVar("fg")}`,
-    `border:1px solid ${themeVar("border")}`,
+    `color:${CARD_LOOK.text}`,
   ].join(";");
 
   // A footer draws the same three blocks under the bodies, so they are appended to their
@@ -303,9 +306,14 @@ export function createReportPanel(node, options = {}) {
   }
 
   const summary = document.createElement("div");
-  summary.style.cssText = "font-weight:600"
-    + (flow || asFooter ? `;margin-bottom:${asFooter ? 0 : blockGap}px` : ";flex:0 0 auto");
+  summary.style.cssText = "font-weight:650;overflow:hidden;text-overflow:ellipsis"
+    + (flow || asFooter ? `;margin-bottom:${asFooter ? 0 : 2}px` : ";flex:0 0 auto");
   if (withSummary) head.appendChild(summary);
+  // The accent line under the title, shown once there is a report to title.
+  const rule = cardRule();
+  rule.style.display = "none";
+  if (flow) rule.style.marginBottom = `${blockGap}px`;
+  if (withSummary) head.appendChild(rule);
 
   // The numbers that say what happened, drawn apart from the rows so the panel is scanned
   // rather than read.
@@ -338,7 +346,7 @@ export function createReportPanel(node, options = {}) {
   // what holds it against the bottom edge.
   const idleFlex = asFooter ? "1 1 auto" : "0 0 auto";
   bodies.style.cssText = `flex:${idleFlex};min-height:0;overflow:auto;display:flex;`
-    + "flex-direction:column;gap:6px";
+    + `flex-direction:column;gap:6px;font-family:${TEXT_FONT}`;
   if (withBodies) root.appendChild(bodies);
   if (asFooter) root.appendChild(head);
 
@@ -397,6 +405,7 @@ export function createReportPanel(node, options = {}) {
       summary.textContent = (waiting ? emptyLabel : answer?.label)
         || answer?.label || emptyLabel || "no run yet";
       summary.style.color = themeVar("fgMuted");
+      rule.style.display = "none";
       counts.textContent = "";
       table.textContent = "";
       release();
@@ -408,7 +417,9 @@ export function createReportPanel(node, options = {}) {
       return;
     }
     summary.textContent = report.summary || "";
-    summary.style.color = statusColour(report.status);
+    summary.style.color = report.status === "error" || report.status === "warning"
+      ? statusColour(report.status) : CARD_LOOK.title;
+    rule.style.display = report.summary ? "" : "none";
 
     counts.textContent = "";
     const named = report.counts ?? [];

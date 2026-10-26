@@ -6,17 +6,23 @@
  */
 
 import { app } from "../../../scripts/app.js";
+import { dressPanel, unwatchCut, watchCut } from "./card.js";
 import { nodeLocator, watchPreviews } from "./preview.js";
 
-// The width a core node with widgets opens at on the canvas. No interface widens a node past it.
+// The width a core node with widgets opens at on the canvas. No interface opens a node past it.
 const NODE_WIDTH_CAP = 270;
 
-// The room the frontend adds to a widget's own minimum width for a label and its arrows, in node
-// units, when it cannot be measured. Measured on frontend 1.53.
-const FALLBACK_CHROME = 104;
+// The height a panel can be dragged down to, in node units.
+export const PANEL_FLOOR = 24;
 
-// The room measured on this page, once.
-let measuredChrome = null;
+// The node property holding the height each panel was dragged to, by widget name.
+const HELD_KEY = "was_panel_heights";
+
+// The id of the node whose corner is being dragged in Nodes 2.0, while it is.
+let draggedNodeId = null;
+
+// Whether the page-wide pointer listeners are in place.
+let watchingDrags = false;
 
 // Widget -> what its node, the zoom and its host's box were when its panel was last fitted.
 const reconciled = new WeakMap();
@@ -110,6 +116,7 @@ export function keepOnNode(node, key, value) {
  */
 export function endGraphLoad() {
   loading = false;
+  holdPanels();
   let asked = 0;
   for (const entry of [...mounted]) {
     if (!entry.node?.graph) continue;
@@ -160,26 +167,139 @@ function remountStale(frames = REMOUNT_FRAMES) {
 }
 
 /**
- * The room the frontend adds to a widget's minimum width when it sizes a node.
+ * Whether a node's corner is being dragged, in either node renderer.
  *
- * @param {object} node - A node carrying the widget.
- * @param {object} widget - A widget answering `computeLayoutSize`.
- * @returns {number} The room in node units.
+ * @param {object} node - The node.
+ * @returns {boolean} True from the press on its resize handle until the release.
  */
-function widgetChrome(node, widget) {
-  if (measuredChrome != null) return measuredChrome;
-  const probe = 100000;
-  const saved = widget.computeLayoutSize;
-  try {
-    widget.computeLayoutSize = () => ({ minHeight: 0, maxHeight: 0, minWidth: probe });
-    const measured = node?.computeSize?.()?.[0];
-    if (Number.isFinite(measured) && measured >= probe) measuredChrome = measured - probe;
-  } catch (error) {
-    console.error("[WASNodeSuite.Interface] Failed to measure the widget width room:", error);
-  } finally {
-    widget.computeLayoutSize = saved;
+function beingResized(node) {
+  if (app?.canvas?.resizing_node === node) return true;
+  return draggedNodeId !== null && draggedNodeId === String(node?.id);
+}
+
+/**
+ * The least height a panel keeps: its floor mid-drag, else its last dragged height, else the
+ * height it opens at.
+ *
+ * @param {object} node - The node the interface belongs to.
+ * @param {string} name - The interface widget's name.
+ * @param {number} height - The height the panel opens at.
+ * @param {number} floor - The panel's floor in node units.
+ * @param {number} ceiling - The tallest the panel grows to.
+ * @returns {number} The minimum in node units.
+ */
+function panelMinimum(node, name, height, floor, ceiling) {
+  if (beingResized(node)) return floor;
+  const held = Number(node?.properties?.[HELD_KEY]?.[name]);
+  if (Number.isFinite(held) && held > 0) return Math.min(Math.max(held, floor), ceiling);
+  return height;
+}
+
+/**
+ * Remember the height every panel on a node was dragged to, once the drag is over.
+ *
+ * @param {object} node - The node that was resized.
+ * @returns {void}
+ */
+function keepDraggedHeights(node) {
+  const held = { ...(node?.properties?.[HELD_KEY] ?? {}) };
+  let changed = false;
+  for (const entry of mounted) {
+    if (entry.node !== node || !entry.widget) continue;
+    // Nodes 2.0 lays the panel out itself, so its box is read rather than the canvas layout.
+    const drawn = entry.panel?.element?.offsetHeight || 0;
+    const measured = globalThis.LiteGraph?.vueNodesMode
+      ? drawn : Number(entry.widget.computedHeight) || drawn;
+    if (!(measured > 0)) continue;
+    const kept = Math.round(Math.min(Math.max(measured, entry.floor), entry.ceiling));
+    if (held[entry.name] === kept) continue;
+    held[entry.name] = kept;
+    changed = true;
   }
-  return measuredChrome ?? FALLBACK_CHROME;
+  if (changed) keepOnNode(node, HELD_KEY, held);
+}
+
+/**
+ * Size a panel's root for its renderer: under Nodes 2.0 to its dragged height, or its floor
+ * mid-drag; on the canvas, to its box.
+ *
+ * @param {{node: object, name: string, panel: object, floor: number, ceiling: number}} entry -
+ *   One mounted panel.
+ * @returns {void}
+ */
+function holdPanel(entry) {
+  const element = entry?.panel?.element;
+  if (!element?.style || !entry.widget) return;
+  let minHeight = "0";
+  let contain = "";
+  if (globalThis.LiteGraph?.vueNodesMode) {
+    // Content-sized until the node is dragged; held to a height once it has been.
+    const held = Number(entry.node?.properties?.[HELD_KEY]?.[entry.name]);
+    const dragged = beingResized(entry.node);
+    if (dragged || (Number.isFinite(held) && held > 0)) {
+      const height = dragged ? entry.floor : Math.min(Math.max(held, entry.floor), entry.ceiling);
+      minHeight = `${height}px`;
+      contain = "size";
+    } else {
+      minHeight = "";
+    }
+  }
+  if (element.style.minHeight !== minHeight) element.style.minHeight = minHeight;
+  if (element.style.contain !== contain) element.style.contain = contain;
+}
+
+/**
+ * Size the root of every panel on one node, or on every node when none is named.
+ *
+ * @param {object} [node] - The node.
+ * @returns {void}
+ */
+function holdPanels(node) {
+  for (const entry of mounted) {
+    if (node && entry.node !== node) continue;
+    try {
+      holdPanel(entry);
+    } catch (error) {
+      console.error("[WASNodeSuite.Interface] Failed to size a panel for its renderer:", error);
+    }
+  }
+}
+
+/**
+ * Listen, once for the page, for a drag on a node's resize handle, in either node renderer.
+ *
+ * @returns {void}
+ */
+function watchDrags() {
+  if (watchingDrags || typeof document === "undefined") return;
+  watchingDrags = true;
+  document.addEventListener("pointerdown", (event) => {
+    try {
+      const target = event.target instanceof Element ? event.target : null;
+      const shell = target?.closest?.("[data-node-id]");
+      if (shell && /-resize$/.test(getComputedStyle(target).cursor)) {
+        draggedNodeId = String(shell.dataset.nodeId);
+        holdPanels(app?.canvas?.graph?.getNodeById?.(draggedNodeId));
+      }
+    } catch (error) {
+      console.error("[WASNodeSuite.Interface] Failed to read a pointer press:", error);
+    }
+  }, true);
+  // Read before the frontend ends the drag, while the node still holds the size it was dragged to.
+  const release = () => {
+    const dragged = app?.canvas?.resizing_node
+      ?? (draggedNodeId !== null ? app?.canvas?.graph?.getNodeById?.(draggedNodeId) : null);
+    try {
+      if (dragged) keepDraggedHeights(dragged);
+    } catch (error) {
+      console.error("[WASNodeSuite.Interface] Failed to keep a dragged panel's height:", error);
+    } finally {
+      draggedNodeId = null;
+      if (dragged) holdPanels(dragged);
+    }
+  };
+  document.addEventListener("pointerup", release, true);
+  document.addEventListener("pointercancel", release, true);
 }
 
 /**
@@ -301,7 +421,9 @@ export function dropForeignOutputs(node) {
  * @param {{element: HTMLElement, height: number, maxHeight?: number, minWidth?: number}} panel -
  *   What the interface factory answered: the element to host, the height in node units the widget
  *   opens at, the tallest it grows to as the node is dragged taller, unbounded when left out, and
- *   optionally the narrowest the panel can be drawn in.
+ *   optionally the node width it opens at. Dragging the node's corner takes a panel down to
+ *   `PANEL_FLOOR` and the node's narrowest width, its content clipped and its cut edge faded;
+ *   the height it is left at is kept on the node.
  * @param {{name: string, type: string}} names - What to call the widget and its type. Both are
  *   the caller's to choose, since a name is a fact about the node rather than about this module.
  *   The type has to collide with no key of the frontend's widget registry, and several nodes may
@@ -319,12 +441,14 @@ export function appendInterfaceWidget(node, panel, names) {
   let release = null;
   const entry = { node, panel, name: names?.name };
   panel?.element?.setAttribute?.(INTERFACE_ATTRIBUTE, String(names?.name ?? ""));
+  dressPanel(panel?.element);
   mounted.add(entry);
   const originalOnAdded = node.onAdded;
   node.onAdded = function (...args) {
     const added = originalOnAdded?.apply(this, args);
     dropForeignOutputs(this);
     mounted.add(entry);
+    watchCut(panel?.element);
     try {
       release?.();
       release = watchPreviews(this);
@@ -336,6 +460,7 @@ export function appendInterfaceWidget(node, panel, names) {
   const originalOnRemoved = node.onRemoved;
   node.onRemoved = function (...args) {
     mounted.delete(entry);
+    unwatchCut(panel?.element);
     try {
       // A load clears the graph it replaces; that workflow's runs still publish.
       release?.({ keepRegistration: loading });
@@ -369,49 +494,51 @@ export function appendInterfaceWidget(node, panel, names) {
   const maxHeight = panel.maxHeight === undefined || panel.maxHeight === null
     ? Number.MAX_SAFE_INTEGER
     : Math.max(height, Number(panel.maxHeight) || 0);
-  // A panel that names no width is one the node may be collapsed under. The frontend sizes a node
-  // to its content whenever it refits one, and a widget answering no width at all is not counted,
-  // so the node shrinks to its sockets while the panel keeps the geometry it already had and is
-  // left standing outside the node, over whatever is behind it.
-  const minWidth = Math.max(0, Number(panel.minWidth) || 0);
+  // The width a panel names is where its node opens, never a floor: `reconcile` holds the panel
+  // to whatever width the node is dragged to, and what no longer fits is clipped.
+  const openWidth = Math.min(Math.max(0, Number(panel.minWidth) || 0), NODE_WIDTH_CAP);
+  const floor = Math.min(height, PANEL_FLOOR);
 
   // Appended after every schema widget and never inserted: `serialize` writes `widgets_values`
   // by absolute index while `configure` reads it with a compacted counter, so a widget placed
   // before a serialising one loads every later value into the wrong widget.
   const widthBefore = Number(node.size?.[0]) || 0;
+  watchDrags();
+  const minimum = () => panelMinimum(node, names.name, height, floor, maxHeight);
   const widget = node.addDOMWidget(names.name, names.type, panel.element, {
     hideOnZoom: true,
     getValue: () => "",
     setValue: () => {},
-    getMinHeight: () => height,
+    getMinHeight: minimum,
     getMaxHeight: () => maxHeight,
     getHeight: () => height,
   });
 
   // The frontend reads the range off `computeLayoutSize` when a widget defines one, and off the
-  // getters when it does not, so a panel that grows has to answer the same range both ways or
-  // the layout it gets depends on which path the release takes. The width asked for is the
-  // node's, held to what a core node opens at, less the room the frontend adds for a label.
-  const layoutWidth = () => (minWidth > 0
-    ? Math.max(1, Math.min(minWidth, NODE_WIDTH_CAP) - widgetChrome(node, widget))
-    : 0);
-  widget.computeLayoutSize = () => ({ minHeight: height, maxHeight, minWidth: layoutWidth() });
+  // getters when it does not, so a panel has to answer the same range both ways or the layout
+  // it gets depends on which path the release takes.
+  widget.computeLayoutSize = () => ({ minHeight: minimum(), maxHeight, minWidth: 0 });
 
   // Both flags are set here, since neither implies the other and passing one into
   // `addDOMWidget` sets only `options.serialize`. `widget.serialize` keeps the interface out of
   // the saved workflow and `widget.options.serialize` keeps it out of the API prompt.
   widget.serialize = false;
   widget.options.serialize = false;
+  Object.assign(entry, { widget, floor, ceiling: maxHeight });
+  holdPanel(entry);
 
-  // Adding the widget sized the node to the frontend's own minimum for it, before the one above
-  // replaced it, so the node is brought back to the wider of where it stood and what it needs.
+  // The node opens at the width the panel names, since the panel itself asks for none; a
+  // workflow being loaded sets its own size after this.
   try {
-    const needed = node.computeSize?.()?.[0];
-    if (widthBefore > 0 && Number.isFinite(needed) && node.size[0] > Math.max(widthBefore, needed)) {
-      node.size[0] = Math.max(widthBefore, needed);
+    const needed = node.computeSize?.();
+    if (needed && Number.isFinite(needed[1])) {
+      node.setSize([
+        Math.max(widthBefore || 0, openWidth, Number(needed[0]) || 0),
+        Math.max(Number(node.size?.[1]) || 0, needed[1]),
+      ]);
     }
   } catch (error) {
-    console.error("[WASNodeSuite.Interface] Failed to settle the node's width:", error);
+    console.error("[WASNodeSuite.Interface] Failed to open the node at the panel's size:", error);
   }
 
   // Installed once the widget exists, since the box is derived from it. `onDrawForeground` is

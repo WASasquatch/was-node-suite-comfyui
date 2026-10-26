@@ -50,7 +50,14 @@ const FALLBACK_THEME = {
   scrollbarTrack: "#1a1a1a",
   selection: "#4a9eff44",
   selectionText: "#ffffff",
+  cardAccent: "#4a9eff",
 };
+
+// How saturated a colour has to be, from 0 to 1, to tint a card.
+const CARD_CHROMA = 0.12;
+
+// A one-pixel surface that turns any CSS colour into its channels.
+let colourProbe = null;
 
 /** Every token name a palette carries, in the order it is published. */
 export const THEME_TOKENS = Object.freeze(Object.keys(FALLBACK_THEME));
@@ -81,12 +88,53 @@ export function readTheme() {
   if (themeCache && now - themeCacheTime < CACHE_MS) return themeCache;
   try {
     themeCache = { ...FALLBACK_THEME, ...getFullTheme() };
+    themeCache.cardAccent = cardAccent(themeCache);
   } catch (error) {
     console.error(`[${LOG_NAME}] Failed to read the theme:`, error);
     themeCache = themeCache ?? FALLBACK_THEME;
   }
   themeCacheTime = now;
   return themeCache;
+}
+
+/**
+ * The colour a card is tinted with: the palette's node title colour, else its primary colour.
+ *
+ * @param {object} theme - The tokens read so far.
+ * @returns {string} A CSS colour.
+ */
+function cardAccent(theme) {
+  const root = document.documentElement ? getComputedStyle(document.documentElement) : null;
+  const candidates = [
+    globalThis.LiteGraph?.NODE_DEFAULT_COLOR,
+    root?.getPropertyValue("--p-primary-color")?.trim(),
+    theme.accent,
+  ];
+  for (const candidate of candidates) {
+    if (candidate && chroma(candidate) >= CARD_CHROMA) return candidate;
+  }
+  return theme.accent || FALLBACK_THEME.cardAccent;
+}
+
+/**
+ * How far a colour is from grey, from 0 to 1.
+ *
+ * @param {string} colour - Any CSS colour.
+ * @returns {number} The spread between its strongest and weakest channel.
+ */
+function chroma(colour) {
+  try {
+    colourProbe ??= document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    colourProbe.clearRect(0, 0, 1, 1);
+    colourProbe.fillStyle = "#000000";
+    colourProbe.fillStyle = colour;
+    colourProbe.fillRect(0, 0, 1, 1);
+    const [red, green, blue] = colourProbe.getImageData(0, 0, 1, 1).data;
+    return (Math.max(red, green, blue) - Math.min(red, green, blue)) / 255;
+  } catch (error) {
+    console.error(`[${LOG_NAME}] Failed to read a colour:`, error);
+    return 0;
+  }
 }
 
 /**

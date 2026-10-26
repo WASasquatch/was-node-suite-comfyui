@@ -5,6 +5,7 @@
  * Colours are the palette's own `--was-*` properties. Sizes are CSS pixels.
  */
 
+import { CARD_LOOK } from "./card.js";
 import { themeVar } from "./theme.js";
 
 const LOG_NAME = "WASNodeSuite.WindowKit";
@@ -39,12 +40,12 @@ export const SELECTED_FILL = `color-mix(in srgb, ${LOOK.accent} 24%, transparent
 export const SCROLLBARS = `scrollbar-width:thin;scrollbar-color:${LOOK.muted} transparent`;
 
 /** The panel a menu, a popover or a tooltip floats in. */
-export const FLOATING_PANEL = `background:${LOOK.surface};border:1px solid ${LOOK.border};`
-  + `border-radius:8px;box-shadow:0 8px 24px ${LOOK.shadow}`;
+export const FLOATING_PANEL = `background:${CARD_LOOK.surface};border:1px solid ${CARD_LOOK.edge};`
+  + `border-radius:8px;box-shadow:${CARD_LOOK.shine}, 0 8px 24px ${LOOK.shadow}`;
 
 /** A card: a block of related controls on the surface colour. */
-export const CARD = `display:flex;flex-direction:column;gap:7px;padding:10px;border-radius:9px;`
-  + `border:1px solid ${LOOK.border};background:${LOOK.surface}`;
+export const CARD = `display:flex;flex-direction:column;gap:7px;padding:10px;border-radius:8px;`
+  + `border:1px solid ${CARD_LOOK.edge};background:${CARD_LOOK.inset}`;
 
 /** A row in a list. */
 export const ROW = `display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:7px;`
