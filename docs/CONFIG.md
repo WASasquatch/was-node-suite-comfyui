@@ -242,6 +242,19 @@ Set this to `true` only for workflows you wrote or have read.
 
 ---
 
+## `llm`
+
+| Key | Type | Default | Does |
+|---|---|---|---|
+| `llm.endpoints` | mapping | `{}` | Servers **LLM Provider** and **LLM Embedding Model** offer as `endpoint: <name>`, each `{url, api, key_env}`: `url` an `http` or `https` address, `api` `openai` or `ollama`, `key_env` the environment variable holding its key. A server at an address other than this machine needs `features.network`. |
+| `llm.mcp_servers` | mapping | `{}` | MCP servers **LLM MCP Tools** offers, by name. A program on this machine is `{command, args, env, env_from}`: `env` sets variables for it, `env_from` passes on the named variables ComfyUI started with. A server at an address is `{url, headers, bearer_env}`: `bearer_env` names the variable holding its token. An address other than this machine needs `features.network`. |
+| `llm.vector_stores` | mapping | `{}` | Servers **LLM Vector Store** offers as `server: <name>`, each `{kind, url, api_key_env}`: `kind` is `qdrant` (left out), `chroma` or `postgres`, `url` an `http` or `https` address, or `postgresql://user@host:port/database`, and `api_key_env` the variable holding its key; Postgres reads its password from `password_env`. Chroma and Postgres need `features.vector_stores`, and a server other than this machine needs `features.network`. |
+
+The keys each hosted model reads, the model folders and where indexes and conversations are
+saved: [`docs/LLM.md`](LLM.md).
+
+---
+
 ## `features`
 
 | Group | Extra install | Default | Gates |
@@ -257,6 +270,9 @@ Set this to `true` only for workflows you wrote or have read.
 | `features.pssr` | four packages, and a 22 GB checkout placed by hand<br>see [`docs/MODELS.md`](MODELS.md) | off | `Video Super Resolution (PS-SR)` |
 | `features.preprocessors` | none. Every answer runs in torch on weights the pack publishes | **on** | `Power Preprocessor`, `Image Remove Background`, `Image Remove Background Model Loader`, `HDR Reconstruct` |
 | `features.photoshop` | none. The PSD and TIFF layouts are written and read by the pack | **on** | `Layers Save`, `Layers Load` |
+| `features.llm` | the llama-index packages and their providers<br>`pip install -r requirements/llm.txt`<br>GGUF also needs a `llama-cpp-python` build, see [`docs/LLM.md`](LLM.md) | off | Every node under **WAS Suite/LLM**: models, documents, indexes, retrieval, query and chat engines, memory, agents and evaluation |
+| `features.vector_stores` | Chroma, LanceDB, FAISS and the Postgres client<br>`pip install -r requirements/vector_stores.txt` | off | No nodes. Lets **LLM Vector Store** keep an index in Chroma, LanceDB or FAISS on this machine, or on a Chroma or Postgres server |
+| `features.audio` | none. Runs on torch and scipy, which ComfyUI already installs | **on** | Every node under **WAS Suite/Audio**: editing, mixing, metering and effects |
 | `features.threejs` | none. three.js ships with the pack, and the browser fetches it only when a scene runs | **on** | The 43 `Three` nodes |
 | `features.extras` | none | **on** | The 27 WAS_Extras nodes |
 | `features.viewer` | none | **on** | `Content Viewer` and `CV Canvas Compose Batch`, the two nodes shared with the ComfyUI_Viewer pack |

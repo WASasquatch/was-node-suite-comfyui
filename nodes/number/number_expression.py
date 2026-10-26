@@ -105,8 +105,8 @@ class NumberExpression(io.ComfyNode):
                     optional=True,
                     tooltip=(
                         "Wire the number `e` stands for, as `INT`, `FLOAT`, `NUMBER` or "
-                        "`BOOLEAN`. An unwired slot counts as `0`, and a slot the expression "
-                        "never names is ignored."
+                        "`BOOLEAN`. Unwired, `e` is Euler's number, 2.71828, and a slot the "
+                        "expression never names is ignored."
                     ),
                 ),
                 io.MultiType.Input(

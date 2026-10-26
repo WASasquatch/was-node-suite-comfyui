@@ -1,0 +1,12 @@
+# features.vector_stores: the Chroma, LanceDB, FAISS and Postgres backends of LLM Vector Store.
+#
+# Qdrant needs none of these: it is in requirements/llm.txt.
+llama-index-vector-stores-chroma>=0.6,<0.7     # Chroma folders and servers
+llama-index-vector-stores-lancedb>=0.6,<0.7    # LanceDB folders
+llama-index-vector-stores-faiss>=0.7,<0.8      # FAISS folders
+faiss-cpu>=1.15                                # FAISS folders
+llama-index-vector-stores-postgres>=0.9,<0.10  # Postgres servers with pgvector
+chromadb>=1.5                                  # Chroma folders and servers
+lancedb>=0.40                                  # LanceDB folders
+pandas>=2.2                                    # LanceDB folders
+psycopg2-binary>=2.9                           # Postgres servers with pgvector

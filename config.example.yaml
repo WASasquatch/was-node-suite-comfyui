@@ -44,6 +44,17 @@ viewer:
   install_extensions: false  # unpack .zip view extensions; what they need is named in the log
   allow_scripts: false       # let content in the Content Viewer run its own scripts and forms
 
+llm:
+  endpoints: {}          # extra servers for LLM Provider, by name, e.g.
+                         # {lan-ollama: {url: "http://192.168.1.20:11434", api: ollama},
+                         #  my-vllm: {url: "http://127.0.0.1:8000/v1", api: openai, key_env: VLLM_KEY}}
+  mcp_servers: {}        # MCP servers for LLM MCP Tools, by name, e.g.
+                         # {files: {command: npx, args: [-y, "@modelcontextprotocol/server-filesystem", "C:/notes"]},
+                         #  tracker: {url: "https://mcp.example.com/mcp", bearer_env: TRACKER_TOKEN}}
+  vector_stores: {}      # Qdrant, Chroma or Postgres servers for LLM Vector Store, by name, e.g.
+                         # {team: {url: "https://qdrant.example.com:6333", api_key_env: QDRANT_API_KEY},
+                         #  warehouse: {kind: postgres, url: "postgresql://comfy@db:5432/vectors", password_env: PG_PASSWORD}}
+
 features:                # optional node groups
   extras:      true      # 27 nodes: LUTs, tiling, LoRA merging, sequence samplers, latent upscalers
   viewer:       true     #  2 nodes: Content Viewer and its canvas helper
@@ -59,6 +70,8 @@ features:                # optional node groups
   photoshop:   true      #  2 nodes: Layers Save and Layers Load, which write and read a
                          #           layered .psd and .tif. Both formats are laid out here,
                          #           so nothing is installed for them
+  audio:       true      # editing, mixing, metering and effect nodes for AUDIO, on torch
+                         #           and scipy, so nothing is installed for them
   threejs:     true      # 43 nodes: build a Three.js scene on the canvas and render it in
                          #           the browser. Three.js ships with the pack, and the browser
                          #           fetches it only when a scene runs
@@ -70,6 +83,12 @@ features:                # optional node groups
                          #           The (ComfyUI Native) node beside each loads either way
   pssr:        false     #  1 node:  PS-SR video super resolution. Needs a 22 GB checkout
                          #           placed by hand, and diffsynth; see docs/MODELS.md
+  llm:         false     # language models, documents, indexes, retrieval, chat, memory and
+                         #           agents, on llama-index. Hosted models also need network
+                         #           pip install -r requirements/llm.txt
+  vector_stores: false   #  0 nodes: lets LLM Vector Store keep indexes in Chroma, LanceDB, FAISS
+                         #           and Postgres as well as Qdrant
+                         #           pip install -r requirements/vector_stores.txt
 
                          # extras and viewer are the nodes of two other WAS packs. Set either
                          # to false to run the standalone pack instead.

@@ -204,6 +204,12 @@ def register_interface_routes() -> None:
     else:
         register_system_prompts()
     try:
+        from .modules.interface.llm_sessions import register_routes as register_llm_sessions
+    except Exception as error:
+        logger.debug("the saved conversation channel is unavailable (%s)", error)
+    else:
+        register_llm_sessions()
+    try:
         from .modules.interface.compare_files import register_routes as register_compare_files
     except Exception as error:
         logger.debug("the interface compare file channel is unavailable (%s)", error)

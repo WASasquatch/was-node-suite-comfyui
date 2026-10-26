@@ -1,7 +1,7 @@
-"""Compare panel files kept in the state directory, where a restart leaves them.
+"""Files a panel plays or compares, kept in the state directory through a restart.
 
-A kept file is named by its content hash. The folder stays under :data:`MAX_BYTES` and
-:data:`MAX_FILES`, least recently used out first, and :data:`ROUTE` serves one by name.
+A kept file is named by its content hash. The folder holds :data:`MAX_BYTES` and
+:data:`MAX_FILES` at most, least recently used out first; :data:`ROUTE` serves one.
 """
 
 from __future__ import annotations
@@ -31,6 +31,7 @@ __all__ = [
     "digest",
     "folder",
     "keep",
+    "keep_bytes",
     "keep_file",
     "keep_ui",
     "path_of",
@@ -59,10 +60,10 @@ MAX_FILES = 2000
 MAX_LISTED = MAX_FILES * 4
 
 #: Suffixes kept, each with the media type it is served as.
-MEDIA_TYPES = {".mp4": "video/mp4", ".png": "image/png"}
+MEDIA_TYPES = {".mp4": "video/mp4", ".png": "image/png", ".wav": "audio/wav"}
 
 #: The shape of a kept file's name.
-NAME = re.compile(r"[0-9a-f]{32}\.(?:mp4|png)")
+NAME = re.compile(r"[0-9a-f]{32}\.(?:mp4|png|wav)")
 
 #: Seconds after which serving a file marks it as used again.
 TOUCH_SECONDS = 3600
@@ -111,6 +112,13 @@ def digest(path: str) -> str:
     return hasher.hexdigest()[:32]
 
 
+def _reason(error: Exception) -> str:
+    """An error's cause without the paths an OSError carries."""
+    if isinstance(error, OSError):
+        return error.strerror or "the file system refused it"
+    return "the folder could not be written"
+
+
 def keep_file(source: str) -> str | None:
     """Keep a written file under its content hash, linked where the volume allows, else copied.
 
@@ -145,9 +153,44 @@ def keep_file(source: str) -> str | None:
         logger.warning(
             "%s was not kept for its compare panel (%s: %s), so the panel shows it only until "
             "ComfyUI restarts",
-            os.path.basename(source), type(error).__name__, error,
+            os.path.basename(source), type(error).__name__, _reason(error),
         )
         logger.debug("%s could not be kept", source, exc_info=True)
+        return None
+
+
+def keep_bytes(data: bytes, suffix: str) -> str | None:
+    """Keep bytes a node encoded under their content hash, writing nothing when already kept.
+
+    Args:
+        data: The encoded file.
+        suffix: Its suffix, one of :data:`MEDIA_TYPES`.
+
+    Returns:
+        The kept name, or None when the suffix is not kept or the file could not be written.
+    """
+    suffix = str(suffix).lower()
+    if suffix not in MEDIA_TYPES:
+        return None
+    try:
+        name = hashlib.sha256(data).hexdigest()[:32] + suffix
+        target = os.fspath(sandbox.resolve_write_file(folder(), name))
+        with _lock:
+            if os.path.isfile(target):
+                os.utime(target)
+                return name
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            part = f"{target}.part"
+            with open(part, "wb") as handle:
+                handle.write(data)
+            os.replace(part, target)
+        return name
+    except Exception as error:
+        logger.warning(
+            "a %s file was not kept for its panel (%s: %s), so the panel shows nothing for it",
+            suffix, type(error).__name__, _reason(error),
+        )
+        logger.debug("bytes could not be kept", exc_info=True)
         return None
 
 

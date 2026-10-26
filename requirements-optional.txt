@@ -14,11 +14,13 @@
 # Nothing in any of these is needed to load the pack's default nodes. The features table in
 # docs/CONFIG.md lists what each group gates and where its model weights go.
 #
-# The other twelve feature groups install nothing from this directory. blip, clipseg, sam
+# The other fourteen feature groups install nothing from this directory. blip, clipseg, sam
 # and midas run on transformers; diffusers goes through ComfyUI's own loader and imports no
 # diffusers package; yunet and preprocessors run their networks in torch on weights the pack
-# publishes; extras, viewer and threejs use packages the pack already requires; network is a
-# consent setting rather than an install; and pssr needs diffsynth and a 22 GB checkout
-# placed by hand, both in docs/MODELS.md.
+# publishes; extras, viewer, threejs, photoshop and audio use packages the pack already
+# requires; network is a consent setting rather than an install; and pssr needs diffsynth and
+# a 22 GB checkout placed by hand, both in docs/MODELS.md.
 #
 -r requirements/document_export.txt
+-r requirements/llm.txt
+-r requirements/vector_stores.txt

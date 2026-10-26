@@ -211,6 +211,9 @@ FEATURE_GROUPS = (
     "viewer",
     "threejs",
     "photoshop",
+    "audio",
+    "llm",
+    "vector_stores",
 )
 
 #: Groups that start on. ``extras`` and ``viewer`` are the two other packs this one
@@ -223,13 +226,15 @@ FEATURE_GROUPS = (
 #: either: its detector runs in torch on weights that ship with the pack.
 #: ``preprocessors`` is on and costs nothing either: every answer it gives runs in torch on
 #: weights the pack publishes. ``photoshop`` is on and costs nothing either: the PSD and
-#: TIFF layouts are written and read here, with no package behind them.
+#: TIFF layouts are written and read here, with no package behind them. ``audio`` is on and
+#: costs nothing either: it runs on torch and scipy, which ComfyUI already requires.
 #:
 #: Off, deliberately: network is a consent decision rather than a dependency one, since it
-#: permits outbound requests. ``document_export`` is the only group whose packages are not
-#: ComfyUI requirements, so it starts off and a fresh install brings in nothing. It gates
-#: no node at all: off refuses the three Save DOC formats written through a library, and
-#: the other seven still write.
+#: permits outbound requests. ``document_export``, ``llm`` and ``vector_stores`` are the groups
+#: whose packages are not ComfyUI requirements, so they start off and a fresh install brings in
+#: nothing. ``document_export`` gates no node at all: off refuses the three Save DOC formats
+#: written through a library, and the other seven still write. ``llm`` gates every LLM node.
+#: ``vector_stores`` gates no node either: off leaves LLM Vector Store offering Qdrant alone.
 FEATURE_DEFAULTS = {
     **dict.fromkeys(FEATURE_GROUPS, False),
     "extras": True,
@@ -243,6 +248,7 @@ FEATURE_DEFAULTS = {
     "preprocessors": True,
     "threejs": True,
     "photoshop": True,
+    "audio": True,
 }
 
 LEGACY_GROUPS = (
@@ -331,6 +337,19 @@ DEFAULTS = {
     "viewer": {
         "install_extensions": False,
         "allow_scripts": False,
+    },
+    #: ``endpoints`` names OpenAI-compatible or Ollama servers the LLM Provider node offers
+    #: beside its built-in list, each as ``{url, api, key_env}``: ``api`` is ``openai`` or
+    #: ``ollama``, and ``key_env`` names the environment variable holding the server's key.
+    #: A server on this machine answers with ``features.network`` off; any other needs it on.
+    #: ``mcp_servers`` names the MCP servers LLM MCP Tools offers, each a ``command`` with
+    #: ``args``, ``env`` and ``env_from``, or a ``url`` with ``headers`` and ``bearer_env``.
+    #: ``vector_stores`` names the servers LLM Vector Store offers, each ``{kind, url, api_key_env}``,
+    #: ``kind`` being ``qdrant``, ``chroma`` or ``postgres``; Postgres reads ``password_env`` instead.
+    "llm": {
+        "endpoints": {},
+        "mcp_servers": {},
+        "vector_stores": {},
     },
     "features": dict(FEATURE_DEFAULTS),
     "legacy": dict(LEGACY_DEFAULTS),

@@ -1,0 +1,983 @@
+{
+  "id": "2f6fabca-88ec-421b-821d-53681ee93b4c",
+  "revision": 0,
+  "last_node_id": 21,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 8,
+      "type": "WASLLMLoadDocuments",
+      "pos": [
+        0,
+        120
+      ],
+      "size": [
+        390,
+        462
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "documents",
+          "shape": 7,
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMLoadDocuments",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "llm_notes [input]",
+        ".md, .txt, .pdf, .docx",
+        true,
+        500,
+        32,
+        false
+      ],
+      "widgets_values_named": {
+        "folder": "llm_notes [input]",
+        "extensions": ".md, .txt, .pdf, .docx",
+        "recursive": true,
+        "max_files": 500,
+        "max_file_mb": 32,
+        "keep_html": false
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASLLMSplitDocuments",
+      "pos": [
+        470,
+        120
+      ],
+      "size": [
+        390,
+        430
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 1
+        },
+        {
+          "name": "embedding",
+          "shape": 7,
+          "type": "WAS_LLM_EMBEDDING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            2,
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMSplitDocuments",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "sentence",
+        256,
+        32
+      ],
+      "widgets_values_named": {
+        "splitter": "sentence",
+        "splitter.chunk_size": 256,
+        "splitter.chunk_overlap": 32
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASLLMEmbeddingModel",
+      "pos": [
+        0,
+        701.7517647058824
+      ],
+      "size": [
+        390,
+        470
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "embedding",
+          "type": "WAS_LLM_EMBEDDING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMEmbeddingModel",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "local",
+        "BAAI/bge-small-en-v1.5",
+        "auto",
+        true,
+        "",
+        "",
+        512,
+        32
+      ],
+      "widgets_values_named": {
+        "source": "local",
+        "source.model": "BAAI/bge-small-en-v1.5",
+        "source.pooling": "auto",
+        "source.normalize": true,
+        "source.query_instruction": "",
+        "source.text_instruction": "",
+        "source.max_length": 512,
+        "source.batch_size": 32
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASLLMVectorIndex",
+      "pos": [
+        940,
+        120
+      ],
+      "size": [
+        390,
+        372
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 2
+        },
+        {
+          "name": "embedding",
+          "type": "WAS_LLM_EMBEDDING",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "index",
+          "type": "WAS_LLM_INDEX",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMVectorIndex",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        64,
+        1024,
+        20
+      ],
+      "widgets_values_named": {
+        "batch_size": 64,
+        "chunk_size": 1024,
+        "chunk_overlap": 20
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASLLMBM25Retriever",
+      "pos": [
+        940,
+        582
+      ],
+      "size": [
+        390,
+        340
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "documents",
+          "shape": 7,
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 4
+        },
+        {
+          "name": "index",
+          "shape": 7,
+          "type": "WAS_LLM_INDEX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMBM25Retriever",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        4,
+        true,
+        "english",
+        1.5,
+        0.75
+      ],
+      "widgets_values_named": {
+        "top_k": 4,
+        "stemming": true,
+        "stopwords": "english",
+        "k1": 1.5,
+        "b": 0.75
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASLLMIndexRetriever",
+      "pos": [
+        1410,
+        120
+      ],
+      "size": [
+        390,
+        384
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "index",
+          "type": "WAS_LLM_INDEX",
+          "link": 5
+        },
+        {
+          "name": "llm",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "name": "embedding",
+          "shape": 7,
+          "type": "WAS_LLM_EMBEDDING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMIndexRetriever",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        4,
+        "default",
+        "",
+        "all"
+      ],
+      "widgets_values_named": {
+        "top_k": 4,
+        "mode": "default",
+        "metadata_filters": "",
+        "filters_match": "all"
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASLLMFusionRetriever",
+      "pos": [
+        1880,
+        120
+      ],
+      "size": [
+        390,
+        374
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "link": 6
+        },
+        {
+          "name": "llm",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "name": "retriever_b",
+          "shape": 7,
+          "type": "WAS_LLM_RETRIEVER",
+          "link": 7
+        },
+        {
+          "name": "retriever_c",
+          "shape": 7,
+          "type": "WAS_LLM_RETRIEVER",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMFusionRetriever",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "reciprocal_rerank",
+        6,
+        1,
+        ""
+      ],
+      "widgets_values_named": {
+        "mode": "reciprocal_rerank",
+        "top_k": 6,
+        "num_queries": 1,
+        "weights": ""
+      }
+    },
+    {
+      "id": 15,
+      "type": "WASLLMRerank",
+      "pos": [
+        0,
+        1677.75
+      ],
+      "size": [
+        390,
+        294
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "postprocessors",
+          "shape": 7,
+          "type": "WAS_LLM_POSTPROCESSORS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "postprocessors",
+          "type": "WAS_LLM_POSTPROCESSORS",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMRerank",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "cross-encoder/ms-marco-MiniLM-L-6-v2",
+        3,
+        16,
+        512
+      ],
+      "widgets_values_named": {
+        "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+        "top_n": 3,
+        "batch_size": 16,
+        "max_length": 512
+      }
+    },
+    {
+      "id": 16,
+      "type": "CLIPLoader",
+      "pos": [
+        0,
+        1481.75
+      ],
+      "size": [
+        210,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "lumina2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen_3_4b.safetensors",
+        "type": "lumina2",
+        "device": "default"
+      }
+    },
+    {
+      "id": 17,
+      "type": "WASLLMFromCLIP",
+      "pos": [
+        470,
+        1481.75
+      ],
+      "size": [
+        390,
+        294
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "llm",
+          "type": "WAS_LLM",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMFromCLIP",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "off",
+        400,
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "sampling_mode": "off",
+        "max_tokens": 400,
+        "thinking": false,
+        "fast_decode": true
+      }
+    },
+    {
+      "id": 18,
+      "type": "WASLLMChatEngine",
+      "pos": [
+        1880,
+        1481.75
+      ],
+      "size": [
+        390,
+        282
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "llm",
+          "type": "WAS_LLM",
+          "link": 9
+        },
+        {
+          "name": "retriever",
+          "shape": 7,
+          "type": "WAS_LLM_RETRIEVER",
+          "link": 10
+        },
+        {
+          "name": "system_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "postprocessors",
+          "shape": 7,
+          "type": "WAS_LLM_POSTPROCESSORS",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "chat_engine",
+          "type": "WAS_LLM_CHAT_ENGINE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMChatEngine",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "condense_plus_context"
+      ],
+      "widgets_values_named": {
+        "mode": "condense_plus_context"
+      }
+    },
+    {
+      "id": 19,
+      "type": "WASLLMMemoryBlock",
+      "pos": [
+        940,
+        1571.6
+      ],
+      "size": [
+        390,
+        358
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "blocks",
+          "shape": 7,
+          "type": "WAS_LLM_MEMORY_BLOCKS",
+          "link": null
+        },
+        {
+          "name": "llm",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "name": "embedding",
+          "shape": 7,
+          "type": "WAS_LLM_EMBEDDING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "blocks",
+          "type": "WAS_LLM_MEMORY_BLOCKS",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMMemoryBlock",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "static",
+        "The user runs the studio and wants short, exact answers taken from the notes.",
+        "core",
+        0
+      ],
+      "widgets_values_named": {
+        "kind": "static",
+        "kind.text": "The user runs the studio and wants short, exact answers taken from the notes.",
+        "name": "core",
+        "priority": 0
+      }
+    },
+    {
+      "id": 20,
+      "type": "WASLLMMemory",
+      "pos": [
+        1410,
+        1571.6
+      ],
+      "size": [
+        390,
+        314
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "blocks",
+          "shape": 7,
+          "type": "WAS_LLM_MEMORY_BLOCKS",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "memory",
+          "type": "WAS_LLM_MEMORY",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "studio notes",
+        8192,
+        0.7,
+        "system"
+      ],
+      "widgets_values_named": {
+        "session": "studio notes",
+        "token_limit": 8192,
+        "history_ratio": 0.7,
+        "insert": "system"
+      }
+    },
+    {
+      "id": 21,
+      "type": "WASLLMChatSession",
+      "pos": [
+        2350,
+        1481.75
+      ],
+      "size": [
+        390,
+        482
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "chat_engine",
+          "type": "WAS_LLM_CHAT_ENGINE",
+          "link": 13
+        },
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "memory",
+          "shape": 7,
+          "type": "WAS_LLM_MEMORY",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "reply",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "thinking",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "history",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "messages",
+          "type": "WAS_LLM_MESSAGES",
+          "links": null
+        },
+        {
+          "name": "sources",
+          "type": "WAS_LLM_SOURCES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLLMChatSession",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "",
+        false,
+        ""
+      ],
+      "widgets_values_named": {
+        "message": "What sampler/scheduler?",
+        "reset": false
+      }
+    }
+  ],
+  "links": [
+    [
+      2,
+      9,
+      0,
+      11,
+      0,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      3,
+      10,
+      0,
+      11,
+      1,
+      "WAS_LLM_EMBEDDING"
+    ],
+    [
+      4,
+      9,
+      0,
+      12,
+      0,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      6,
+      13,
+      0,
+      14,
+      0,
+      "WAS_LLM_RETRIEVER"
+    ],
+    [
+      7,
+      12,
+      0,
+      14,
+      2,
+      "WAS_LLM_RETRIEVER"
+    ],
+    [
+      9,
+      17,
+      0,
+      18,
+      0,
+      "WAS_LLM"
+    ],
+    [
+      10,
+      14,
+      0,
+      18,
+      1,
+      "WAS_LLM_RETRIEVER"
+    ],
+    [
+      11,
+      15,
+      0,
+      18,
+      3,
+      "WAS_LLM_POSTPROCESSORS"
+    ],
+    [
+      12,
+      19,
+      0,
+      20,
+      0,
+      "WAS_LLM_MEMORY_BLOCKS"
+    ],
+    [
+      13,
+      18,
+      0,
+      21,
+      0,
+      "WAS_LLM_CHAT_ENGINE"
+    ],
+    [
+      14,
+      20,
+      0,
+      21,
+      2,
+      "WAS_LLM_MEMORY"
+    ],
+    [
+      1,
+      8,
+      0,
+      9,
+      0,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      5,
+      11,
+      0,
+      13,
+      0,
+      "WAS_LLM_INDEX"
+    ],
+    [
+      8,
+      16,
+      0,
+      17,
+      0,
+      "CLIP"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Index a folder of notes: keyword and meaning search, fused",
+      "bounding": [
+        -40,
+        0,
+        2350,
+        1241.75
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Chat about the notes with a local model, kept between runs",
+      "bounding": [
+        -40,
+        1361.75,
+        2820,
+        680
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.8500000000000021,
+      "offset": [
+        597.017533841196,
+        146.17880765972123
+      ]
+    },
+    "frontendVersion": "1.55.18",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

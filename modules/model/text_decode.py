@@ -334,17 +334,20 @@ def generate(clip, tokens, max_length, fast=True, **options):
         return token
 
     started = time.perf_counter()
-    with contextlib.ExitStack() as stack:
-        if values:
-            # Set before the model loads, so each block is registered as a graph unit.
-            stack.enter_context(switched(model, values))
-        if original is not None:
-            stack.enter_context(_shadow(transformer, "generate", guarded))
-        if sample is not None:
-            stack.enter_context(_shadow(transformer, "sample_token", timed_sample))
-        ids = clip.generate(tokens, **options, max_length=max_length)
-        finished = time.perf_counter()
-    release_graphs()
+    try:
+        with contextlib.ExitStack() as stack:
+            if values:
+                # Set before the model loads, so each block is registered as a graph unit.
+                stack.enter_context(switched(model, values))
+            if original is not None:
+                stack.enter_context(_shadow(transformer, "generate", guarded))
+            if sample is not None:
+                stack.enter_context(_shadow(transformer, "sample_token", timed_sample))
+            ids = clip.generate(tokens, **options, max_length=max_length)
+            finished = time.perf_counter()
+    finally:
+        # The decode graphs a generation captured are dropped whether or not it finished.
+        release_graphs()
     report.seconds = time.perf_counter() - started
     report.new_tokens = len(ids)
     if "entered" in marks:

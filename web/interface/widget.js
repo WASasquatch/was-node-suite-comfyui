@@ -120,7 +120,43 @@ export function endGraphLoad() {
       console.error("[WASNodeSuite.Interface] A panel failed to read its node after a load:", error);
     }
   }
+  remountStale();
   return asked;
+}
+
+// The attribute an interface's element carries, naming its widget.
+const INTERFACE_ATTRIBUTE = "data-was-interface";
+
+// Frames a stale panel is looked for after a load, while the node renderer catches up.
+const REMOUNT_FRAMES = 30;
+
+/**
+ * Put each panel back where the node renderer still shows its copy from before a graph reload.
+ *
+ * @param {number} [frames] - Frames left to look in.
+ * @returns {void}
+ */
+function remountStale(frames = REMOUNT_FRAMES) {
+  let waiting = 0;
+  for (const entry of mounted) {
+    const element = entry.panel?.element;
+    const node = entry.node;
+    if (!element || element.isConnected || !node?.graph || !entry.name) continue;
+    if (node.graph !== app?.canvas?.graph) continue;
+    const shell = document.querySelector(`[data-node-id="${CSS.escape(String(node.id))}"]`);
+    const stale = shell?.querySelector?.(`[${INTERFACE_ATTRIBUTE}="${CSS.escape(entry.name)}"]`);
+    if (stale && stale !== element) {
+      try {
+        stale.replaceWith(element);
+        entry.panel.refresh?.();
+      } catch (error) {
+        console.error("[WASNodeSuite.Interface] Failed to put a panel back on its node:", error);
+      }
+    } else if (shell) {
+      waiting += 1;
+    }
+  }
+  if (waiting && frames > 0) requestAnimationFrame(() => remountStale(frames - 1));
 }
 
 /**
@@ -264,8 +300,8 @@ export function dropForeignOutputs(node) {
  * @param {object} node - The node being created.
  * @param {{element: HTMLElement, height: number, maxHeight?: number, minWidth?: number}} panel -
  *   What the interface factory answered: the element to host, the height in node units the widget
- *   is held to, optionally a maximum above it, which lets the node be dragged taller and gives the
- *   panel the extra room, and optionally the narrowest the panel can be drawn in.
+ *   opens at, the tallest it grows to as the node is dragged taller, unbounded when left out, and
+ *   optionally the narrowest the panel can be drawn in.
  * @param {{name: string, type: string}} names - What to call the widget and its type. Both are
  *   the caller's to choose, since a name is a fact about the node rather than about this module.
  *   The type has to collide with no key of the frontend's widget registry, and several nodes may
@@ -281,7 +317,8 @@ export function appendInterfaceWidget(node, panel, names) {
   // this point its id is still a placeholder, the entry to drop cannot be found, and the id the
   // channel is asked to publish under is not the one this node will run as.
   let release = null;
-  const entry = { node, panel };
+  const entry = { node, panel, name: names?.name };
+  panel?.element?.setAttribute?.(INTERFACE_ATTRIBUTE, String(names?.name ?? ""));
   mounted.add(entry);
   const originalOnAdded = node.onAdded;
   node.onAdded = function (...args) {
@@ -328,7 +365,10 @@ export function appendInterfaceWidget(node, panel, names) {
   // so the height is the floor of the range whatever the panel said. A maximum above it is only
   // half the story: the frontend hands the slack to whichever widgets will take it, so a growing
   // panel next to an uncapped multiline box splits the room with it rather than taking it.
-  const maxHeight = Math.max(height, Number(panel.maxHeight) || 0);
+  // A panel naming no maximum grows with its node; one that must hold its height names it.
+  const maxHeight = panel.maxHeight === undefined || panel.maxHeight === null
+    ? Number.MAX_SAFE_INTEGER
+    : Math.max(height, Number(panel.maxHeight) || 0);
   // A panel that names no width is one the node may be collapsed under. The frontend sizes a node
   // to its content whenever it refits one, and a widget answering no width at all is not counted,
   // so the node shrinks to its sockets while the panel keeps the geometry it already had and is

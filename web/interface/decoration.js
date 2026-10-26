@@ -179,6 +179,22 @@ function fitted(ctx, text, room) {
 }
 
 /**
+ * The width a header bar spans: the node's own on the graph canvas, the given width on a
+ * widget canvas inside a Nodes 2.0 node.
+ *
+ * @param {CanvasRenderingContext2D} ctx - The context being drawn with.
+ * @param {object} host - The node.
+ * @param {number} width - Width the renderer passed to the widget.
+ * @returns {number} Width in canvas units.
+ */
+function barRoom(ctx, host, width) {
+  const given = Math.max(0, Number(width) || 0);
+  if (ctx?.canvas?.closest?.("[data-node-id]")) return given;
+  const node = Number(host?.size?.[0]);
+  return Number.isFinite(node) && node > 0 ? Math.min(given, node) : given;
+}
+
+/**
  * Draw a titled bar immediately above one of a node's widgets.
  *
  * @param {object} node - The node to draw it on.
@@ -209,8 +225,7 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
       let saved = false;
       try {
         const h = height ?? HEADER_HEIGHT;
-        // Clamped to the node's own width.
-        const room = Math.max(0, Math.min(width ?? 0, host?.size?.[0] ?? width ?? 0));
+        const room = barRoom(ctx, host, width);
         const inset = Math.min(HEADER_INSET, room / 2);
         const bar = Math.max(0, room - inset * 2);
         const tint = typeof colour === "function" ? colour(node) : null;

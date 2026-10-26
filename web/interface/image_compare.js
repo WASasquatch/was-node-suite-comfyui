@@ -7,7 +7,7 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { addressOf, hold, release } from "./compare_media.js";
+import { addressOf, hold, keptEntry, release } from "./compare_media.js";
 import { createMetricsSection } from "./metrics_panel.js";
 import { captureWheel, wheelPixels } from "./pointer.js";
 import { executionId, nodeLocator, ownOutput } from "./preview.js";
@@ -371,8 +371,8 @@ export function createImageComparePanel(node) {
       }
       const kept = node.properties?.[REMEMBERED_KEY];
       take({
-        a: Array.isArray(kept?.a) ? kept.a : [],
-        b: Array.isArray(kept?.b) ? kept.b : [],
+        a: Array.isArray(kept?.a) ? kept.a.filter(keptEntry) : [],
+        b: Array.isArray(kept?.b) ? kept.b.filter(keptEntry) : [],
       }, false);
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to read the written sides:`, error);

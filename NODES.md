@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **538** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **657** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-531 of them load in a fresh install. The other 7 wait behind a switch that starts off.
+571 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,12 +12,14 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 414 |
+| [Always loaded](#always-loaded) | always on | 415 |
+| [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
 | [`legacy.dupes`](#legacydupes) | off | 1 |
 | [`legacy.superseded`](#legacysuperseded) | off | 1 |
+| [`features.audio`](#featuresaudio) | on | 39 |
 | [`features.blip`](#featuresblip) | on | 2 |
 | [`features.clipseg`](#featuresclipseg) | on | 3 |
 | [`features.diffusers`](#featuresdiffusers) | on | 2 |
@@ -39,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-414 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+415 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -51,7 +53,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Image](#was-suiteimage) (12)
 - [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (10)
 - [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (4)
-- [WAS Suite/Image/Bound](#was-suiteimagebound) (16)
+- [WAS Suite/Image/Bound](#was-suiteimagebound) (17)
 - [WAS Suite/Image/Filter](#was-suiteimagefilter) (23)
 - [WAS Suite/Image/Generate](#was-suiteimagegenerate) (6)
 - [WAS Suite/Image/HDR](#was-suiteimagehdr) (8)
@@ -3083,6 +3085,45 @@ Find the smallest box holding everything the mask marks, grow it by the padding 
 |---|---|---|
 | `<output0>` | `IMAGE` | The cropped regions, as a batch or as a list depending on return_list. |
 | `<output1>` | `IMAGE_BOUNDS` | One row per cropped image giving the box it was taken from, to wire into Bounded Image Blend with Mask so the result goes back in the same place. |
+
+</details>
+
+<a id="node-wasboundingboxeditor"></a>
+<details>
+<summary><b>Bounding Box Editor</b></summary>
+
+Draw layout boxes on a picture or a blank frame and give each a kind, caption, text and colour palette. Hands them on as bounding boxes, prompt elements, bounds and masks for MOSS-Image and FLUX 3 layout prompts and the cropping and masking nodes. A layout drawn at one size is refitted to another without stretching.
+
+| | |
+|---|---|
+| Node id | `WASBoundingBoxEditor` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `width` | `INT` | Yes | 1024 |  | Frame width in pixels when no image is wired. `1024` = 1024px wide. A wired image's own width replaces it. |
+| `height` | `INT` | Yes | 1024 |  | Frame height in pixels when no image is wired. `1024` = 1024px tall. A wired image's own height replaces it. |
+| `layout` | `STRING` | Yes |  |  | The boxes as JSON the panel writes, such as `{"frame": [1344, 768], "boxes": [...]}`. Empty = no boxes. Paste a layout from another Bounding Box Editor, a Create Bounding Boxes box list or a prompt element list. |
+| `on_resize` | `COMBO` | Yes | fit | `fit`, `fill`, `stretch`, `keep size` | Used when the layout was drawn at another frame size. `fit` = whole layout inside, unstretched; `fill` = covers the frame, edges may be cut; `stretch` = scaled to the frame, shapes change; `keep size` = pixel size kept, centred. |
+| `grid` | `INT` | Yes | 16 |  | Pixels box edges snap to while drawing in the panel and when a layout is refitted. `1` = no snapping; `16` = 16px steps; `64` = coarse blocks. |
+| `bboxes_mode` | `COMBO` | Yes | add | `add`, `replace`, `ignore` | `add` = incoming boxes come after the layout's own; `replace` = only the incoming boxes are output; `ignore` = the input is not read. |
+| `image` | `IMAGE` | No |  |  | Optional picture to lay boxes over. Its size replaces width and height, and its first frame is drawn behind the boxes in the panel and preview. |
+| `bboxes` | `BOUNDING_BOX,BOUNDING_BOXES,ARRAY,STRING` | No |  |  | Boxes to start from: SAM3 Detect or Run Real-Time Detection results, a Create Bounding Boxes output, prompt elements or JSON text, in the frame's pixels. bboxes_mode decides how they join the layout. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `preview` | `IMAGE` | The boxes numbered and captioned over the image, or over a dark frame, at most 1024px on the long edge. |
+| `bboxes` | `BOUNDING_BOX` | Every box in pixels, carrying its kind, caption, text and palette, for Crop By Bounding Boxes, Draw BBoxes, SAM3 Detect or another editor. |
+| `elements` | `ARRAY` | Prompt elements for MOSS-Image Layout Prompt and FLUX 3 Image Layout Prompt, numbered back to front as the preview shows. |
+| `width` | `INT` | Width of the frame the boxes are in: the image's when one is wired, otherwise the width widget. Wire it into the layout prompt's width. |
+| `height` | `INT` | Height of the frame the boxes are in: the image's when one is wired, otherwise the height widget. Wire it into the layout prompt's height. |
+| `character_boxes` | `STRING` | Numbers of the `character` boxes, such as `2, 5`, for MOSS-Image Layout Prompt's character_boxes input. Empty when there are none. |
+| `bounds` | `IMAGE_BOUNDS` | One bounds row per box, for Bounded Image Crop, Bounds to Mask or Draw Image Bounds. |
+| `masks` | `MASK` | One mask per box, white inside it, in box order. No boxes = one black mask the size of the frame. |
 
 </details>
 
@@ -8868,7 +8909,7 @@ One true/false switch for the Input Switch nodes and any node with a toggle or r
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `boolean` | `INT,FLOAT,NUMBER,STRING` | Yes | True |  | Ticked is true. A wired number is true unless it is 0, so index 0 is false and every later index true. Text reads `true`, `yes`, `on` or a non-zero number as true; `false`, `no`, `off`, `0`, empty or any other word is false. |
+| `boolean` | `BOOLEAN,INT,FLOAT,NUMBER,STRING` | Yes | True |  | Ticked is true. A wired number is true unless it is 0, so index 0 is false and every later index true. Text reads `true`, `yes`, `on` or a non-zero number as true; `false`, `no`, `off`, `0`, empty or any other word is false. |
 
 **Outputs**
 
@@ -10064,7 +10105,7 @@ Work out a formula over up to 24 numbers, such as `(a * b) / 2 + c` or `clamp(a,
 | `b` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `b` stands for. `a / b` with nothing wired to `b` divides by `0` and stops the run unless on_error is set to zero. |
 | `c` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `c` stands for. Handy as the offset in `(a * b) / 2 + c`. |
 | `d` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `d` stands for. The fourth value, free for a limit such as `clamp(a, c, d)`. |
-| `e` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `e` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
+| `e` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `e` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. Unwired, `e` is Euler's number, 2.71828, and a slot the expression never names is ignored. |
 | `f` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `f` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
 | `g` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `g` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
 | `h` | `FLOAT,NUMBER,INT,BOOLEAN` | No |  |  | Wire the number `h` stands for, as `INT`, `FLOAT`, `NUMBER` or `BOOLEAN`. An unwired slot counts as `0`, and a slot the expression never names is ignored. |
@@ -13433,6 +13474,2362 @@ Run a workflow saved in app mode as a single node. Its exposed inputs become val
 
 ---
 
+## `features.llm`
+
+79 nodes. Off in a fresh install: set `features.llm: true` in `config.yaml` and restart ComfyUI to load these.
+
+### WAS Suite/LLM/Agents
+
+<a id="node-wasllmagent"></a>
+<details>
+<summary><b>LLM Agent</b></summary>
+
+Set up one agent: the model it reasons with, the tools it may call, its instructions, and which agents it may hand the conversation to. Chain several for a team and run them with LLM Run Agent.
+
+| | |
+|---|---|
+| Node id | `WASLLMAgent` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `llm` | `WAS_LLM` | Yes |  |  | The model the agent thinks with. One that calls tools natively, such as Claude or GPT, runs as function calling; others run as ReAct. |
+| `name` | `STRING` | Yes | assistant |  | The agent's name, which other agents hand off to: a letter, then letters, digits or underscores, such as `researcher`. Different for every agent on a chain. |
+| `description` | `STRING` | Yes | Answers the user's questions, using its tools where they help. |  | What the agent does, read by the other agents to decide when to hand off to it, such as `Writes the final summary in plain English.` |
+| `system_prompt` | `STRING` | Yes |  |  | The agent's instructions, such as `You are a careful researcher. Cite the page each fact came from.` Empty leaves the model's default behaviour. |
+| `kind` | `COMBO` | Yes | auto | `auto`, `function calling`, `ReAct` | `auto` = function calling where the model has it, ReAct otherwise; `function calling` = the model's own tool calls; `ReAct` = thought and action written as text, for any model. |
+| `can_handoff_to` | `STRING` | Yes |  |  | Agents this one may pass the conversation to, comma separated, such as `writer, checker`. Empty = any agent on the chain. |
+| `tools` | `WAS_LLM_TOOLS` | No |  |  | The tools this agent may call, chained from LLM Tool, LLM Query Engine Tool or LLM Retriever Tool. Empty for an agent that only talks. |
+| `agents` | `WAS_LLM_AGENTS` | No |  |  | Agents from earlier LLM Agent nodes, kept ahead of this one. The first on the chain starts unless LLM Run Agent names another. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `agents` | `WAS_LLM_AGENTS` | The chain with this agent appended, for the next LLM Agent or LLM Run Agent. |
+
+</details>
+
+<a id="node-wasllmmcptools"></a>
+<details>
+<summary><b>LLM MCP Tools</b></summary>
+
+Give an agent the tools of an MCP server, such as a file browser, a database or a service's own tools. Servers are added under llm.mcp_servers in config.yaml and picked here by name. The panel lists each tool and what it does.
+
+| | |
+|---|---|
+| Node id | `WASLLMMCPTools` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `server` | `COMBO` | Yes |  |  | Which MCP server, by its name under llm.mcp_servers in config.yaml. Restart ComfyUI after adding one. |
+| `allowed_tools` | `STRING` | Yes |  |  | The server's tools to offer, separated by commas, such as `read_file, list_directory`. Blank = every tool it offers. |
+| `prefix` | `STRING` | Yes |  |  | Placed before every tool name, such as `notes` giving `notes_read_file`, so two servers' tools keep apart. Blank = the server's own names. |
+| `timeout_seconds` | `INT` | Yes | 60 |  | Seconds one call to the server may take: 60 = the usual; 600 for a slow job such as a build. |
+| `tools` | `WAS_LLM_TOOLS` | No |  |  | Tools from earlier tool nodes, kept ahead of these. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | The chain with the server's tools appended, for the next tool node or LLM Agent. |
+
+</details>
+
+<a id="node-wasllmqueryenginetool"></a>
+<details>
+<summary><b>LLM Query Engine Tool</b></summary>
+
+Turn a query engine into a named tool, so an agent can ask it questions or a router or sub-question engine can choose it. The description tells the model what the engine knows.
+
+| | |
+|---|---|
+| Node id | `WASLLMQueryEngineTool` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | Yes |  |  | The engine the tool asks, such as from LLM Query Engine built over the camera manuals. |
+| `name` | `STRING` | Yes | search_documents |  | The tool's name as the model sees it: a letter, then letters, digits or underscores, such as `camera_manuals`. Each tool on one chain needs its own. |
+| `description` | `STRING` | Yes | Answers questions about the documents in this index. |  | What the engine knows, read by the model to decide when to call it, such as `Answers questions about the Canon R5 and R6 manuals.` |
+| `tools` | `WAS_LLM_TOOLS` | No |  |  | Tools from earlier tool nodes, kept ahead of this one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | The chain with this tool appended, for LLM Agent, LLM Router Query Engine or LLM Sub-Question Query Engine. |
+
+</details>
+
+<a id="node-wasllmretrievertool"></a>
+<details>
+<summary><b>LLM Retriever Tool</b></summary>
+
+Turn a retriever into a named tool an agent calls to fetch the passages that best match its query, and then writes its own answer from them. The description tells the model what the passages hold.
+
+| | |
+|---|---|
+| Node id | `WASLLMRetrieverTool` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | The retriever the tool searches with, such as one built over an index of meeting notes by an LLM retriever node. |
+| `name` | `STRING` | Yes | find_passages |  | The tool's name as the model sees it: a letter, then letters, digits or underscores, such as `meeting_notes`. Each tool on one chain needs its own. |
+| `description` | `STRING` | Yes | Finds passages in the indexed documents that match a query. |  | What the passages hold, read by the model to decide when to call it, such as `Finds passages in the 2026 meeting notes.` |
+| `tools` | `WAS_LLM_TOOLS` | No |  |  | Tools from earlier tool nodes, kept ahead of this one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | The chain with this tool appended, for the next tool node or LLM Agent. |
+
+</details>
+
+<a id="node-wasllmrunagent"></a>
+<details>
+<summary><b>LLM Run Agent</b></summary>
+
+Send a message to an agent, or a team of agents that hand the conversation to each other, and get the reply. The trace lists every tool call and handoff, and the panel counts steps, tool calls and seconds.
+
+| | |
+|---|---|
+| Node id | `WASLLMRunAgent` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `agents` | `WAS_LLM_AGENTS` | Yes |  |  | The agents to run, chained from LLM Agent. One agent answers alone; several hand the conversation to each other. |
+| `message` | `STRING` | Yes |  |  | What to ask, such as `Find the R5's battery life in the manuals and convert it to hours.` With a saved memory session, running the same message again returns the saved reply without calling any tools; change the message to ask again. |
+| `root_agent` | `STRING` | Yes |  |  | The agent that reads the message first, by name, such as `researcher`. Empty = the first agent on the chain. |
+| `max_steps` | `INT` | Yes | 20 |  | Model turns allowed across every agent before the one speaking is asked for its best answer. `20` suits most questions; `5` keeps a cheap model from wandering. |
+| `timeout_seconds` | `INT` | Yes | 600 |  | Seconds the whole run may take before it stops with an error. `600` is ten minutes. |
+| `image` | `IMAGE` | No |  |  | Pictures sent with the message, for agents whose model reads images. |
+| `memory` | `WAS_LLM_MEMORY` | No |  |  | Where the conversation is kept between runs, from LLM Memory. Empty = this run only, starting fresh. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `reply` | `STRING` | The final answer, from whichever agent finished the conversation, thinking removed. |
+| `trace` | `STRING` | Every tool call with its arguments and result, and every handoff between agents, in order. |
+| `sources` | `WAS_LLM_SOURCES` | The passages the agents' query engine and retriever tools found, best first, for LLM Evaluate or LLM Sources to Text. |
+
+</details>
+
+<a id="node-wasllmtool"></a>
+<details>
+<summary><b>LLM Tool</b></summary>
+
+Give an agent a ready-made tool: a calculator, the date and time, Wikipedia, a web page reader, web search through Tavily or Brave, or a reader for one picked document. Chain several and connect the last to LLM Agent.
+
+| | |
+|---|---|
+| Node id | `WASLLMTool` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tool` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `calculator` = exact arithmetic; `date and time` = today's date and date sums; `wikipedia` = search and page summaries; `web page` = reads one address; `web search` = Tavily or Brave, keyed by TAVILY_API_KEY or BRAVE_API_KEY; `document reader` = one picked file. |
+| `tools` | `WAS_LLM_TOOLS` | No |  |  | Tools from earlier LLM Tool, LLM Query Engine Tool or LLM Retriever Tool nodes, kept ahead of this one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | The chain with this tool appended, for the next tool node or LLM Agent. |
+
+</details>
+
+### WAS Suite/LLM/Chat
+
+<a id="node-wasllmchatengine"></a>
+<details>
+<summary><b>LLM Chat Engine</b></summary>
+
+Set how LLM Chat Session answers: from the model alone, or from chunks a retriever finds for each message, so a conversation can draw on indexed documents. The condense modes first rewrite a follow-up into a question that stands on its own.
+
+| | |
+|---|---|
+| Node id | `WASLLMChatEngine` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, such as LLM OpenAI or LLM From CLIP. |
+| `mode` | `COMBO` | Yes | simple | `simple`, `context`, `condense_question`, `condense_plus_context` | `simple` = the model alone; `context` = chunks retrieved for each message go in the system prompt; `condense_question` = the follow-up is rewritten, then answered from the chunks; `condense_plus_context` = rewritten, retrieved, then answered in the conversation. |
+| `retriever` | `WAS_LLM_RETRIEVER` | No |  |  | Where chunks come from for the context, condense_question and condense_plus_context modes, such as LLM Index Retriever over a vector index. |
+| `system_prompt` | `STRING` | No |  |  | Instructions behind every answer, such as from Load System Prompt. Not read by condense_question. |
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Filters and rerankers run over the retrieved chunks before each answer, in chain order. Not read by simple. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `chat_engine` | `WAS_LLM_CHAT_ENGINE` | The chat engine, for LLM Chat Session. |
+
+</details>
+
+<a id="node-wasllmchatsession"></a>
+<details>
+<summary><b>LLM Chat Session</b></summary>
+
+Chat with a model one message per run, the reply streaming into the panel. Each conversation is saved under its name and carries on in the next run. The panel's conversation menu starts, opens, renames and deletes them.
+
+| | |
+|---|---|
+| Node id | `WASLLMChatSession` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `chat_engine` | `WAS_LLM_CHAT_ENGINE` | Yes |  |  | How each message is answered, from LLM Chat Engine. |
+| `message` | `STRING` | Yes |  |  | What to say next, such as `And what about the second chapter?` Empty sends nothing and shows the saved conversation. |
+| `image` | `IMAGE` | No |  |  | Pictures sent with the message, for a model that reads them. Only the simple chat mode passes pictures on. |
+| `memory` | `WAS_LLM_MEMORY` | No |  |  | Where the conversation is kept, from LLM Memory. Without it the conversation lasts this run only. |
+| `reset` | `BOOLEAN` | No | False |  | `true` deletes the saved conversation before this message, starting it over; `false` carries on. |
+| `conversation` | `STRING` | No |  |  | The saved conversation this message joins, such as `project notes`; a new name starts one. Empty uses the session of LLM Memory, or keeps the conversation for this run only. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `reply` | `STRING` | The model's answer to this message, its thinking removed. |
+| `thinking` | `STRING` | What a reasoning model wrote between think tags before answering. Empty otherwise. |
+| `history` | `STRING` | The whole conversation as text, one `role: text` paragraph per message, oldest first. |
+| `messages` | `WAS_LLM_MESSAGES` | The whole conversation as messages, for LLM Chat, the agents or another LLM Message. |
+| `sources` | `WAS_LLM_SOURCES` | The chunks this reply was written from, for the evaluators and LLM Sources to Text. Empty in the simple mode. |
+
+</details>
+
+### WAS Suite/LLM/Documents
+
+<a id="node-wasllmdocumentsfromdoc"></a>
+<details>
+<summary><b>LLM Documents From DOC</b></summary>
+
+Turn a DOC, such as one from Load Document or Text to DOC, into documents for splitting, indexing or a prompt, carrying its title, author and dates. It can make one document per heading.
+
+| | |
+|---|---|
+| Node id | `WASLLMDocumentsFromDOC` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `doc` | `DOC` | Yes |  |  | The document to read, from Load Document, Text to DOC or Load Documents from ZIP. |
+| `split_sections` | `BOOLEAN` | Yes | False |  | `false` = the whole DOC as one document; `true` = one document per heading, each naming its heading and level, and one for any text before the first heading. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader. The ones made here are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The DOC as documents, carrying its title, author, description, language, keywords and dates, for LLM Split Documents or an LLM index. |
+
+</details>
+
+<a id="node-wasllmdocumentstotext"></a>
+<details>
+<summary><b>LLM Documents to Text</b></summary>
+
+Join documents or chunks into one piece of text, to hand whole documents to a prompt or save them. The panel shows how many were joined and the start of the text.
+
+| | |
+|---|---|
+| Node id | `WASLLMDocumentsToText` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents or chunks to join, from an LLM document loader or LLM Split Documents. |
+| `separator` | `STRING` | Yes | \n\n |  | Written between two documents. `\n\n` = a blank line; `\n---\n` = a rule; type \n for a line break and \t for a tab. |
+| `include_metadata` | `BOOLEAN` | Yes | False |  | `true` writes each document's title, file name and other fields above its text, as a model reads them; `false` = the text alone. |
+| `max_chars` | `INT` | Yes | 100000 |  | Most characters of text handed on; the rest is cut. `100000` is about 25000 tokens, inside most models' context. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The documents joined, for a prompt input such as LLM Complete's or a text preview. |
+| `count` | `INT` | How many documents the text holds, the last one possibly cut by max_chars. |
+
+</details>
+
+<a id="node-wasllmextractmetadata"></a>
+<details>
+<summary><b>LLM Extract Metadata</b></summary>
+
+Have a language model write a title, summaries, the questions a chunk answers, keywords and the names it mentions onto each chunk, so an index finds it more often. Every chunk costs model calls. The panel shows what was written.
+
+| | |
+|---|---|
+| Node id | `WASLLMExtractMetadata` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The chunks to enrich, from LLM Split Documents, or whole documents from a loader. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the metadata, such as LLM From CLIP, LLM GGUF Loader or LLM OpenAI. |
+| `title` | `INT` | Yes | 5 |  | Chunks of each document its title is written from. `5` = the first five; `0` = no title. Every chunk of a document gets the same title. |
+| `summaries` | `COMBO` | Yes | none | `none`, `self`, `self and neighbours` | `none` = no summary; `self` = a summary of each chunk; `self and neighbours` = also the summaries of the chunks before and after it. |
+| `questions` | `INT` | Yes | 3 |  | Questions each chunk can answer, written onto it. `3` is usual; `0` = none. |
+| `keywords` | `INT` | Yes | 0 |  | Keywords written onto each chunk. `5` is usual; `0` = none. |
+| `max_chunks` | `INT` | Yes | 200 |  | Most chunks enriched in one run; more are refused rather than billed. `200` costs about 200 model calls per extractor turned on. |
+| `entities` | `BOOLEAN` | No | False |  | `true` writes the people, places, organisations and products each chunk names, such as `Mira, Northwind Films`, as entities; `false` = none. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Copies of the chunks with document_title, section_summary, questions_this_excerpt_can_answer, excerpt_keywords or entities added, for an LLM index. |
+
+</details>
+
+<a id="node-wasllmimagestodocuments"></a>
+<details>
+<summary><b>LLM Images to Documents</b></summary>
+
+Turn pictures from the graph into documents for LLM Image Index, one per frame, each with a caption from a line of text or written by a vision model. The panel shows the count and a sample of the captions.
+
+| | |
+|---|---|
+| Node id | `WASLLMImagesToDocuments` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures, one document per frame. |
+| `captions` | `STRING` | Yes |  |  | One caption per line, in frame order, such as `red car at night`. Frames past the last line get none; blank = no captions. |
+| `name` | `STRING` | Yes | picture |  | What the documents are called, numbered per frame: `reference` = reference 1, reference 2. |
+| `describe` | `WAS_LLM` | No |  |  | A vision model that writes a description of each frame into its text, after any caption. Slow: one answer per frame. |
+| `describe_prompt` | `STRING` | No | Describe this picture in one short paragraph for a search index: the subject, setting, style, colours and composition. Write only the description. |  | What the vision model is asked about each frame, such as `Name the art style of this picture.` |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader. The frames' documents are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | One picture document per frame, for LLM Image Index or LLM Index Insert. |
+
+</details>
+
+<a id="node-wasllmindexnode"></a>
+<details>
+<summary><b>LLM Index Node</b></summary>
+
+Write a chunk that, once a search finds it, hands the search on to the retriever or query engine it names, such as a summary of each manual pointing at that manual's own index. Index the chain and search it with LLM Recursive Retriever.
+
+| | |
+|---|---|
+| Node id | `WASLLMIndexNode` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING` | Yes |  |  | What is behind it, searched like any chunk, such as `The R5 camera manual: batteries, menus, video modes.` |
+| `target` | `STRING` | Yes |  |  | The name of the LLM Retriever Tool or LLM Query Engine Tool it hands on to, such as `camera_manual`. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Earlier index nodes or documents, kept ahead of this one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The chain with this index node appended, for an LLM index. |
+
+</details>
+
+<a id="node-wasllmloaddocument"></a>
+<details>
+<summary><b>LLM Load Document</b></summary>
+
+Read one file, such as a PDF, a Word document, an e-book, a slide deck or code, into documents for splitting, indexing or a prompt. A PDF can become one document per page. The panel shows what was read and a sample of the text.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoadDocument` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `file` | `COMBO` | Yes |  |  | Which file to read: every text, Markdown, HTML, code, .pdf, .docx and .odt file in ComfyUI's input, output and temp folders, tagged `[input]`, `[output]` or `[temp]`, and in folders added under paths.allow_read. |
+| `page_per_document` | `BOOLEAN` | Yes | False |  | For a PDF: `true` = one document per page, each naming its page number, so an answer can cite the page; `false` = the whole file as one document. |
+| `keep_html` | `BOOLEAN` | Yes | False |  | `false` reads an .html file as text; `true` keeps its markup, for LLM Split Documents set to html. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader, such as another LLM Load Document. The ones read here are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The file as one document, or one per PDF page, naming its folder, path, size and date, for LLM Split Documents or an LLM index. |
+
+</details>
+
+<a id="node-wasllmloaddocuments"></a>
+<details>
+<summary><b>LLM Load Documents</b></summary>
+
+Read every matching file in a folder, such as notes, PDFs, Word documents, e-books, slide decks and code, into documents for splitting and indexing. Files that cannot be read are counted and passed over. The panel shows the formats read and a sample of the text.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoadDocuments` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `folder` | `COMBO` | Yes |  |  | Which folder to read. `input` = ComfyUI's input folder itself; `notes [input]` = the notes folder inside it. A folder added under paths.allow_read in config.yaml is listed under its own name. |
+| `extensions` | `STRING` | Yes | .txt, .md, .rst, .html, .htm, .csv, .tsv, .json, .jsonl, .yaml, .yml, .xml, .py, .js, .ts, .c, .cpp, .h, .java, .cs, .go, .rs, .sh, .sql, .pdf, .docx, .odt, .epub, .pptx |  | Which files to read, separated by commas: `.md, .txt` = notes only; `.pdf` = PDFs only. An extension with no reader of its own is read as text, and a file holding binary data is passed over. |
+| `recursive` | `BOOLEAN` | Yes | True |  | `true` reads the folders inside it too, as `week 1/monday.md`; `false` reads only the files directly in it. Links and junctions are not followed. |
+| `max_files` | `INT` | Yes | 500 |  | Most files read, taken in path order. `500` covers a notes folder; the files past it are counted as skipped. |
+| `max_file_mb` | `INT` | Yes | 32 |  | Largest file read, in megabytes. A larger file is counted as skipped. `32` reads most books and reports. |
+| `keep_html` | `BOOLEAN` | Yes | False |  | `false` reads .html files as text; `true` keeps their markup, for LLM Split Documents set to html. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader, such as LLM Load Web Page. The ones read here are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | One document per file, naming its folder, path, size and date, for LLM Split Documents or an LLM index. |
+
+</details>
+
+<a id="node-wasllmloadimages"></a>
+<details>
+<summary><b>LLM Load Images</b></summary>
+
+Read every picture in a folder, such as ComfyUI's output folder, into documents for LLM Image Index, each holding the prompt it was made from. A vision model can add a description of each. The panel shows what was read and a sample of the prompts.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoadImages` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `folder` | `COMBO` | Yes |  |  | Which folder to read. `output` = ComfyUI's output folder; `faces [input]` = the faces folder inside input. A folder under paths.allow_read in config.yaml is listed under its own name. |
+| `recursive` | `BOOLEAN` | Yes | True |  | `true` reads the folders inside it too; `false` reads only the pictures directly in it. Links are not followed. |
+| `max_files` | `INT` | Yes | 500 |  | Most pictures read, taken in path order: 500 = a few days of renders. Those past it are counted as skipped. |
+| `max_file_mb` | `INT` | Yes | 64 |  | Largest picture file read, in megabytes: `64` = any render; a larger file is counted as skipped. |
+| `read_prompts` | `BOOLEAN` | Yes | True |  | `true` reads the prompt ComfyUI or A1111 saved in each file as its text, so words find it; `false` keeps pictures only. |
+| `describe` | `WAS_LLM` | No |  |  | A vision model that writes a description of each picture into its text, such as LLM From CLIP with Qwen3 VL. Slow: one answer per picture. |
+| `describe_prompt` | `STRING` | No | Describe this picture in one short paragraph for a search index: the subject, setting, style, colours and composition. Write only the description. |  | What the vision model is asked about each picture, such as `List the people and objects in this picture.` |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader. The pictures read here are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | One picture document per file, naming its folder, path, size, date and prompt, for LLM Image Index. |
+
+</details>
+
+<a id="node-wasllmloadtable"></a>
+<details>
+<summary><b>LLM Load Table</b></summary>
+
+Read a CSV, TSV, Excel sheet, JSON list or SQLite file into tables, so a language model can answer questions about them with LLM SQL Query Engine. Chain several to query them together. The panel shows each table's columns and first rows.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoadTable` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `file` | `COMBO` | Yes |  |  | The file, from ComfyUI's input, output or temp folders: `.csv`, `.tsv`, `.xlsx`, `.json`, `.jsonl`, `.sqlite` or `.db`. |
+| `table_name` | `STRING` | Yes |  |  | The table's name in questions and SQL, such as `sales`. Blank = the file's name. For a SQLite file, placed before each of its tables' names. |
+| `sheet` | `STRING` | Yes |  |  | The sheet of an .xlsx workbook, such as `Q3`. Blank = its first sheet. |
+| `max_rows` | `INT` | Yes | 100000 |  | Rows read from one table at most: 100000 = most spreadsheets; rows past it are left out. |
+| `max_file_mb` | `INT` | Yes | 64 |  | Largest file read, in megabytes: `64` = most exports; a larger file is refused. |
+| `tables` | `WAS_LLM_TABLES` | No |  |  | Tables from an earlier LLM Load Table, kept beside these so one question can join them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `tables` | `WAS_LLM_TABLES` | Every table so far, read only, for LLM SQL Query Engine, LLM Table to Documents or the next LLM Load Table. |
+
+</details>
+
+<a id="node-wasllmloadwebpage"></a>
+<details>
+<summary><b>LLM Load Web Page</b></summary>
+
+Fetch one public web page and turn its text into a document, for splitting, indexing or a prompt. Needs features.network on; addresses on this machine or a private network are refused. The panel shows the page title and a sample of the text.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoadWebPage` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `url` | `STRING` | Yes |  |  | The page to read, such as `https://en.wikipedia.org/wiki/Lighthouse`. http and https only; the address is sent exactly as typed. |
+| `readable_text` | `BOOLEAN` | Yes | True |  | `true` = the page's main text, menus, headers and footers left out; `false` = all of the page's text, link addresses included. |
+| `timeout` | `INT` | Yes | 20 |  | Seconds the fetch may take, redirects included. `20` suits most sites. |
+| `max_kb` | `INT` | Yes | 2048 |  | Most kilobytes of the page read; the rest is cut. `2048` holds a long article; `20480` is the ceiling. |
+| `keep_html` | `BOOLEAN` | Yes | False |  | `false` = the page as text; `true` = its markup, scripts and styles removed, for LLM Split Documents set to html. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader, such as another LLM Load Web Page. This page is added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The page as one document, naming its address, title and when it was fetched, for LLM Split Documents or an LLM index. |
+
+</details>
+
+<a id="node-wasllmsplitdocuments"></a>
+<details>
+<summary><b>LLM Split Documents</b></summary>
+
+Split documents into chunks an index can search, by sentences, tokens, changes of meaning, Markdown headings, HTML elements, JSON entries, nested levels or sentence windows. The panel shows how many chunks were made, their lengths and a few of them.
+
+| | |
+|---|---|
+| Node id | `WASLLMSplitDocuments` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents to split, from an LLM document loader such as LLM Load Documents. |
+| `splitter` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `sentence` = chunks of whole sentences; `token` = fixed token counts; `semantic` = cut where the meaning changes, needs embedding; `markdown` = by headings; `html` = by elements; `json` = by entries; `hierarchical` = nested sizes; `sentence window` = one sentence with its neighbours. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model the semantic splitter compares sentences with, from LLM Embedding Model. Read by semantic alone. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The chunks, each carrying its document's metadata, for an LLM index or LLM Extract Metadata. |
+
+</details>
+
+<a id="node-wasllmtabletodocuments"></a>
+<details>
+<summary><b>LLM Table to Documents</b></summary>
+
+Turn table rows into documents, each row written as `column: value` lines, so an index can search them by meaning. Use it for free text in rows; LLM SQL Query Engine suits counts and sums. The panel shows a sample.
+
+| | |
+|---|---|
+| Node id | `WASLLMTableToDocuments` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tables` | `WAS_LLM_TABLES` | Yes |  |  | The tables, from LLM Load Table. |
+| `table` | `STRING` | Yes |  |  | Which table, by name, such as `sales`. Blank = every table. |
+| `rows_per_document` | `INT` | Yes | 1 |  | Rows written into one document: 1 = one row each, best for search; 20 = runs of rows. |
+| `max_rows` | `INT` | Yes | 10000 |  | Rows read from one table at most: 10000 = a large sheet. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader. These rows are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | One document per row or run of rows, naming its table and rows, for an LLM index. |
+
+</details>
+
+<a id="node-wasllmtexttodocument"></a>
+<details>
+<summary><b>LLM Text to Document</b></summary>
+
+Make a document from text, such as notes, a transcript or another node's output, with a title and metadata, for splitting, indexing or a prompt. Chain several to build a set.
+
+| | |
+|---|---|
+| Node id | `WASLLMTextToDocument` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING` | Yes |  |  | What the document holds, such as `The lighthouse keeper logs the weather at dawn.` Wire a STRING here to make a document from another node's text. |
+| `title` | `STRING` | Yes |  |  | The document's title, such as `Keeper's log`, shown on answers that cite it. Empty = no title. |
+| `metadata` | `DICT` | No |  |  | Extra fields carried on the document and its chunks, such as `{"author": "Ada", "year": 2026}` from a dictionary node, for a retriever to filter on. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader or another LLM Text to Document. This one is added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The incoming documents followed by this one, for LLM Split Documents or an LLM index. |
+
+</details>
+
+<a id="node-wasllmtodocuments"></a>
+<details>
+<summary><b>LLM To Documents</b></summary>
+
+Turn whatever is wired in into documents for an index: text, a list of text, pictures, frames spread across a video, a DOC, a conversation, found sources or table rows. A vision model can describe the pictures. The panel shows what was made.
+
+| | |
+|---|---|
+| Node id | `WASLLMToDocuments` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `value` | `STRING,ARRAY,IMAGE,VIDEO,DOC,WAS_LLM_MESSAGES,WAS_LLM_SOURCES,WAS_LLM_TABLES` | Yes |  |  | What to turn into documents: a STRING, a list of strings (one each), an IMAGE batch (one per frame), a VIDEO, a DOC, a conversation, sources from LLM Retrieve or tables. |
+| `title` | `STRING` | Yes |  |  | What the documents are called, such as `trailer` giving `trailer 00:12.5` for a video frame. Blank = the kind wired in. A DOC, sources and tables keep their own names. |
+| `video_frames` | `INT` | Yes | 8 |  | Frames taken from a video, spread evenly from start to end: 8 = a short clip; 64 = a film's scenes. |
+| `describe` | `WAS_LLM` | No |  |  | A vision model that writes a description of each picture or video frame into its text, such as LLM From CLIP with Qwen3 VL. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader. The new ones are added after them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | The documents, for LLM Split Documents or an LLM index; pictures and frames for LLM Image Index. |
+
+</details>
+
+### WAS Suite/LLM/Evaluate
+
+<a id="node-wasllmevaluate"></a>
+<details>
+<summary><b>LLM Evaluate</b></summary>
+
+Score an answer: whether its sources back it up, whether it fits the question, how correct it is, whether it follows guidelines, how close it is to a reference, or whether it beats a second answer. Outputs the score, a pass and the judge's reasoning.
+
+| | |
+|---|---|
+| Node id | `WASLLMEvaluate` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `kind` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `faithfulness` = the sources back the answer; `relevancy` = answer and sources fit the question; `correctness` = 1 to 5 against a reference; `answer relevancy` / `context relevancy` = answer or sources on topic; `guideline` = follows rules; `semantic similarity` = meaning matches. |
+| `question` | `STRING` | Yes |  |  | What was asked, such as `How long does the R5 battery last?` Empty takes the question the connected sources were retrieved for. |
+| `answer` | `STRING` | Yes |  |  | The answer to judge, such as LLM Query's answer or `About 320 shots per charge.` Empty takes the answer the connected sources carry. |
+| `llm` | `WAS_LLM` | No |  |  | The judge model. A strong model judges best, such as Claude or GPT. Every kind but semantic similarity needs it. |
+| `sources` | `WAS_LLM_SOURCES` | No |  |  | The passages the answer was written from, from LLM Query or LLM Run Agent. Faithfulness, relevancy and context relevancy need them. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model semantic similarity compares with, from LLM Embedding Model. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `score` | `FLOAT` | The score: 0 or 1 for faithfulness, relevancy and guideline; 1 to 5 for correctness; 0 to 1 for the rest. 0 when the judge's answer could not be read. |
+| `passing` | `BOOLEAN` | `true` when the answer passed, such as to branch with a switch or to retry a failed answer. |
+| `feedback` | `STRING` | The judge's reasoning, or the similarity figure for semantic similarity. |
+
+</details>
+
+<a id="node-wasllmevaluateretriever"></a>
+<details>
+<summary><b>LLM Evaluate Retriever</b></summary>
+
+Test a retriever: a model writes questions from each chunk of the documents, the retriever is asked each one, and the node scores how often and how high it returns the chunk the question came from.
+
+| | |
+|---|---|
+| Node id | `WASLLMEvaluateRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | The retriever to test, built over an index of the same documents. |
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents the index was built from. Connect the same chunks the index holds to score by chunk, or the whole documents to score by document. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the test questions, such as LLM OpenAI or LLM GGUF Loader. |
+| `questions_per_chunk` | `INT` | Yes | 2 |  | Questions written per chunk. `2` is a quick test; `5` a closer one. |
+| `max_chunks` | `INT` | Yes | 20 |  | Chunks questions are written from, spread evenly across the documents. One model call per chunk, so `20` is twenty calls. |
+| `precision` | `BOOLEAN` | Yes | False |  | `true` adds precision to the report: the share of what was retrieved that is the source. |
+| `recall` | `BOOLEAN` | Yes | False |  | `true` adds recall to the report: whether the source was retrieved at all, per question. |
+| `average_precision` | `BOOLEAN` | Yes | False |  | `true` adds average precision to the report, which rewards finding the source near the top. |
+| `ndcg` | `BOOLEAN` | Yes | False |  | `true` adds NDCG to the report, which scores how close to first the source was ranked. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `hit_rate` | `FLOAT` | The share of questions whose source was retrieved: `1` = always, `0.5` = half the time. Always measured. |
+| `mrr` | `FLOAT` | Mean reciprocal rank: `1` = the source came first every time, `0.5` = second on average. Always measured. |
+| `report` | `STRING` | Every measure, how the source was matched, and the questions whose source was not found. |
+
+</details>
+
+<a id="node-wasllmgeneratequestions"></a>
+<details>
+<summary><b>LLM Generate Questions</b></summary>
+
+Have a model write questions that the documents answer, a few per chunk, to test a query engine or an agent with. Outputs the questions one per line and how many were written.
+
+| | |
+|---|---|
+| Node id | `WASLLMGenerateQuestions` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents or chunks to write questions about, such as from LLM Load Documents. Whole documents are split into chunks of about 1024 tokens first. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the questions, such as LLM OpenAI or LLM GGUF Loader. |
+| `questions_per_chunk` | `INT` | Yes | 2 |  | Questions asked for per chunk. `2` covers a document lightly; `5` tests it closely. |
+| `max_chunks` | `INT` | Yes | 20 |  | Chunks read at most, spread evenly across the documents. One model call per chunk, so `20` is twenty calls. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `questions` | `STRING` | The questions, one per line, such as for a For Each loop feeding LLM Query. |
+| `count` | `INT` | How many questions were written. |
+
+</details>
+
+### WAS Suite/LLM/Generate
+
+<a id="node-wasllmchat"></a>
+<details>
+<summary><b>LLM Chat</b></summary>
+
+Talk with a language model one turn at a time. Connect a memory to keep the conversation between runs, so each queue adds a turn. The reply streams onto the node, and the conversation comes out for the next node.
+
+| | |
+|---|---|
+| Node id | `WASLLMChat` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI or another LLM model node. |
+| `message` | `STRING` | No |  |  | What to say next, such as `And in winter?`. With a saved memory the same message twice in a row is answered once, so change it to ask again; left empty, nothing is asked and the newest reply comes back. |
+| `messages` | `WAS_LLM_MESSAGES` | No |  |  | The conversation before this turn, from LLM Message, such as a system message setting a persona. With a memory, messages it already holds are not added again. |
+| `image` | `IMAGE` | No |  |  | Pictures sent with the message, for a model that reads them. Every frame of a batch is sent, up to 64. |
+| `memory` | `WAS_LLM_MEMORY` | No |  |  | Where the conversation is kept, from LLM Memory. A session name keeps it between runs; left empty, the chat starts fresh every run. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `reply` | `STRING` | The model's answer to this turn, thinking removed. |
+| `thinking` | `STRING` | What a reasoning model thought before answering. Empty for a model that does not think aloud. |
+| `messages` | `WAS_LLM_MESSAGES` | The whole conversation with the reply last, for LLM Messages to Text or another LLM Chat. |
+
+</details>
+
+<a id="node-wasllmcomplete"></a>
+<details>
+<summary><b>LLM Complete</b></summary>
+
+Ask a language model one question and get its answer as text, such as turning a short idea into a detailed image prompt for CLIP Text Encode. Pictures and sound can go with the prompt. The answer streams onto the node as it is written.
+
+| | |
+|---|---|
+| Node id | `WASLLMComplete` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI or another LLM model node. |
+| `prompt` | `STRING` | Yes |  |  | What to ask, such as `Expand into a detailed photo prompt: a lighthouse in a storm`. |
+| `max_tokens` | `INT` | Yes | 0 |  | 0 = the model's own limit; 300 = about 225 words at most. Lower it to keep answers short. |
+| `system_prompt` | `STRING` | No |  |  | Standing instructions placed before the prompt, such as from Load System Prompt: `You write vivid, concise image prompts.` |
+| `image` | `IMAGE` | No |  |  | Pictures to ask about, for a model that reads them. Every frame of a batch is sent, up to 64. |
+| `audio` | `AUDIO` | No |  |  | Sound to ask about, for a model that hears it. The first clip of a batch is sent, up to 10 minutes. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The answer, thinking removed. Wire it into CLIP Text Encode to use it as an image prompt. |
+| `thinking` | `STRING` | What a reasoning model thought before answering. Empty for a model that does not think aloud. |
+
+</details>
+
+<a id="node-wasllmprompttemplate"></a>
+<details>
+<summary><b>LLM Prompt Template</b></summary>
+
+Write a prompt once with {name} fields and fill them from a DICT or from text wired in, such as one template for a whole batch of subjects. Fields with no value are listed on their own output.
+
+| | |
+|---|---|
+| Node id | `WASLLMPromptTemplate` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `template` | `STRING` | Yes | Describe {value_a} in the style of {value_b}. |  | The prompt, with fields such as `{subject}` or `{value_a}`. Write `{{` and `}}` for a brace that is not a field. |
+| `variables` | `DICT` | No |  |  | Values for the fields by name, from Text Dictionary New or LLM Structured Output: a key `subject` fills `{subject}`. A list is joined with commas. |
+| `value_a` | `STRING` | No |  |  | Text that fills `{value_a}`, and wins over a DICT key of the same name. |
+| `value_b` | `STRING` | No |  |  | Text that fills `{value_b}`, and wins over a DICT key of the same name. |
+| `value_c` | `STRING` | No |  |  | Text that fills `{value_c}`, and wins over a DICT key of the same name. |
+| `value_d` | `STRING` | No |  |  | Text that fills `{value_d}`, and wins over a DICT key of the same name. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The prompt with every field that has a value filled in, for LLM Complete or CLIP Text Encode. |
+| `missing` | `STRING` | The fields left unfilled, comma separated, such as `style, lens`. Empty when every field had a value. |
+
+</details>
+
+<a id="node-wasllmstructuredoutput"></a>
+<details>
+<summary><b>LLM Structured Output</b></summary>
+
+Have a language model fill in named fields, such as a subject, a mood and a list of colours read from a caption or a picture, and get them back as JSON and a DICT. Every answer is checked against the schema before it leaves the node.
+
+| | |
+|---|---|
+| Node id | `WASLLMStructuredOutput` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `llm` | `WAS_LLM` | Yes |  |  | The model that fills the fields, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI or another LLM model node. |
+| `text` | `STRING` | Yes |  |  | What to read the fields from, or the request itself, such as a caption, an article or `Invent a fantasy character.` |
+| `schema` | `STRING` | Yes | subject: string  The main subject, in a few words mood: one of calm, tense, joyful, gloomy  The overall mood colours: list of string  The dominant colours people: integer  How many people appear |  | One field per line, `name: type  description`, with types string, number, integer, boolean, `list of string` or `one of a, b, c`; or a JSON Schema object. At most 64 fields, nested 4 deep. |
+| `instructions` | `STRING` | No |  |  | Standing instructions placed before the text, such as `Use British spelling. Leave a field empty rather than guess.` |
+| `image` | `IMAGE` | No |  |  | Pictures to read the fields from, for a model that reads them. Every frame of a batch is sent, up to 64. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `json` | `STRING` | The filled fields as indented JSON text, such as for Save Text File or a prompt. |
+| `dict` | `DICT` | The same fields as a DICT, for Text Dictionary Get and the other dictionary nodes. |
+
+</details>
+
+<a id="node-wasllmtokencount"></a>
+<details>
+<summary><b>LLM Token Count</b></summary>
+
+Count how many tokens a text costs a language model, such as to check that a document fits before sending it. The panel names the tokenizer that counted and how much of the model's context window the text fills.
+
+| | |
+|---|---|
+| Node id | `WASLLMTokenCount` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING` | Yes |  |  | The text to count, typed here or wired in, such as `A lighthouse in a storm, oil painting` or a whole document. |
+| `llm` | `WAS_LLM` | No |  |  | The model to count for. A model on this machine counts with its own tokenizer; a hosted one, or none, counts with a bundled GPT tokenizer, which is close for most models. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `count` | `INT` | Tokens in the text. A token is about three quarters of an English word. |
+
+</details>
+
+### WAS Suite/LLM/Index
+
+<a id="node-wasllmdocumentsummaryindex"></a>
+<details>
+<summary><b>LLM Document Summary Index</b></summary>
+
+Write one summary per document and keep it beside the document's chunks, so a question first picks the documents that fit and then reads their chunks. Connect an embedding model to pick documents by meaning. The panel shows each summary.
+
+| | |
+|---|---|
+| Node id | `WASLLMDocumentSummaryIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | What to index, such as from LLM Load Documents, or chunks from LLM Split Documents. Each source document gets one summary. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the summaries, such as LLM From CLIP, LLM GGUF Loader or LLM OpenAI. A long document costs several generations. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | A model that embeds each summary, such as from LLM Embedding Model, so documents are picked by meaning. Left empty, the language model picks them. |
+| `summary_query` | `STRING` | No |  |  | What each summary is asked to say, such as `List the people, places and dates it mentions.` Empty asks what the document is about and which questions it can answer. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole documents are cut here. 1024 = a few paragraphs; 256 = finer matches with less context each. Chunks from LLM Split Documents keep their own size. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring chunks share, so a sentence cut at a border is still found whole. 20 = a little; 0 = none. Smaller than chunk_size. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The document summary index, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmimageindex"></a>
+<details>
+<summary><b>LLM Image Index</b></summary>
+
+Index pictures and text together, so a question finds the matching pictures, their prompts and passages, and a picture finds others like it. The panel shows the picture and text counts and a few entries.
+
+| | |
+|---|---|
+| Node id | `WASLLMImageIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | Pictures from LLM Load Images or LLM Images to Documents, and any text documents to search beside them. |
+| `image_embedding` | `WAS_LLM_EMBEDDING` | Yes |  |  | The picture model from LLM Image Embedding Model. Save or load the index with it. |
+| `batch_size` | `INT` | Yes | 32 |  | Pictures and chunks embedded per step: 32 = the usual; lower it if VRAM runs out. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | A text model for prompts, captions and passages, from LLM Embedding Model. Unconnected = the picture model reads the text, which suits short prompts. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole text documents are cut here: `1024` = a few paragraphs; `256` = finer matches. Pictures are never cut. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring text chunks share: 20 = a little; 0 = none. Smaller than chunk_size. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The image index, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmindexinsert"></a>
+<details>
+<summary><b>LLM Index Insert</b></summary>
+
+Add documents to an index without building it again, skipping the ones it holds unchanged and replacing the ones that changed. The index on the input is left as it was and the copy passes on. The panel shows what was added, skipped and replaced.
+
+| | |
+|---|---|
+| Node id | `WASLLMIndexInsert` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `index` | `WAS_LLM_INDEX` | Yes |  |  | The index to add to, from an LLM index node or LLM Load Index. A vector index embeds the new chunks with its own embedding model; a tree index is summarized again from all its chunks. |
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents to add, such as from LLM Load Documents. Whole documents are cut with the chunk size the index was built with. |
+| `mode` | `COMBO` | No | update | `update`, `add` | `update` = a document the index holds unchanged is skipped, and one that changed has its old chunks replaced; `add` = everything is added beside what is there. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The index with the documents added, unsaved until it reaches LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmkeywordindex"></a>
+<details>
+<summary><b>LLM Keyword Index</b></summary>
+
+Map keywords to the chunks holding them, for finding passages by the words a question uses. With a language model connected it names each chunk's keywords; without one they are counted from the text. The panel lists the keywords found.
+
+| | |
+|---|---|
+| Node id | `WASLLMKeywordIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | What to index, such as from LLM Load Documents, or chunks from LLM Split Documents. Whole documents are cut into chunks of chunk_size tokens. |
+| `max_keywords` | `INT` | Yes | 10 |  | Keywords kept for each chunk. 10 = the main topics; 30 = names and details too. |
+| `llm` | `WAS_LLM` | No |  |  | A model that names each chunk's keywords, one generation per chunk. Left empty, keywords are the chunk's most frequent words, which is instant. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole documents are cut here. 1024 = a few paragraphs; 256 = finer matches with less context each. Chunks from LLM Split Documents keep their own size. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring chunks share, so a sentence cut at a border is still found whole. 20 = a little; 0 = none. Smaller than chunk_size. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The keyword index, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmknowledgegraphindex"></a>
+<details>
+<summary><b>LLM Knowledge Graph Index</b></summary>
+
+Read entities and the relations between them out of documents into a knowledge graph, for questions about how things connect. Connect an embedding model to search the graph by meaning too. The panel lists the triplets found.
+
+| | |
+|---|---|
+| Node id | `WASLLMKnowledgeGraphIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | What to read, such as from LLM Load Documents, or chunks from LLM Split Documents. Whole documents are cut into chunks of chunk_size tokens. |
+| `extractor` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | simple = the model names (subject, relation, object) triplets; implicit = the links already between chunks, such as next and source, with no model; dynamic = the model names typed entities and relations, open schema. |
+| `llm` | `WAS_LLM` | No |  |  | The model that names the triplets, one generation per chunk, for the simple and dynamic extractors. Graph search by synonyms asks it later too. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | A model that embeds every entity and chunk, such as from LLM Embedding Model, so the graph can be searched by meaning. Left empty, it is searched by keywords only. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole documents are cut here. 1024 = a few paragraphs; 256 = more chunks and more generations. Chunks from LLM Split Documents keep their own size. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring chunks share, so a sentence cut at a border is still found whole. 20 = a little; 0 = none. Smaller than chunk_size. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The knowledge graph, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmloadindex"></a>
+<details>
+<summary><b>LLM Load Index</b></summary>
+
+Load an index saved with LLM Save Index, ready for a retriever or query engine without building it again. Vector, graph and image indexes need the models they were built with. The panel shows what the index holds and those models.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoadIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `name` | `COMBO` | Yes |  |  | Which saved index to load, by the name LLM Save Index gave it. The indexes are in ComfyUI/user/was-node-suite/llm/indexes; press R after saving a new one. |
+| `llm` | `WAS_LLM` | No |  |  | The model the index asks when searched or added to, such as for a tree, keyword or document summary index built with one. Any model works; it need not be the one it was built with. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model the index was built with, from LLM Embedding Model. Needed for a vector index, and for a graph, document summary or image index built with one. |
+| `image_embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The picture model an image index was built with, from LLM Image Embedding Model. Needed for an image index. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The loaded index, for LLM Index Retriever, a query engine or LLM Index Insert. |
+
+</details>
+
+<a id="node-wasllmsaveindex"></a>
+<details>
+<summary><b>LLM Save Index</b></summary>
+
+Save an index under a name, so a later run or workflow loads it with LLM Load Index instead of building it again. Saving under a name already used replaces that index. The index passes on unchanged.
+
+| | |
+|---|---|
+| Node id | `WASLLMSaveIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `index` | `WAS_LLM_INDEX` | Yes |  |  | The index to save, from any LLM index node, LLM Index Insert or LLM Load Index. |
+| `name` | `STRING` | Yes |  |  | What the index is saved as, such as `project notes`: letters, digits, spaces, dots, dashes and underscores. It lands in ComfyUI/user/was-node-suite/llm/indexes. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The same index, now carrying the name it was saved under. |
+
+</details>
+
+<a id="node-wasllmsummaryindex"></a>
+<details>
+<summary><b>LLM Summary Index</b></summary>
+
+Keep documents as an ordered list of chunks, read in full or filtered when a question is asked, which suits summarizing a whole document. It needs no model to build. The panel shows the chunk count and the first chunks.
+
+| | |
+|---|---|
+| Node id | `WASLLMSummaryIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | What to index, such as from LLM Load Documents, or chunks from LLM Split Documents. Whole documents are cut into chunks of chunk_size tokens. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole documents are cut here. 1024 = a few paragraphs; 256 = finer pieces with less context each. Chunks from LLM Split Documents keep their own size. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring chunks share, so a sentence cut at a border is still found whole. 20 = a little; 0 = none. Smaller than chunk_size. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The summary index, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmtreeindex"></a>
+<details>
+<summary><b>LLM Tree Index</b></summary>
+
+Summarize documents bottom up into a tree, each parent a summary of a few chunks below it, so a question can walk down from the top. The connected language model writes every summary. The panel shows how many summaries were written and the top ones.
+
+| | |
+|---|---|
+| Node id | `WASLLMTreeIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | What to index, such as from LLM Load Documents, or chunks from LLM Split Documents. Whole documents are cut into chunks of chunk_size tokens. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the summaries, such as LLM From CLIP, LLM GGUF Loader or LLM OpenAI. Each parent costs one generation. |
+| `num_children` | `INT` | Yes | 10 |  | Chunks or summaries each parent summarizes. 10 = a shallow tree and long prompts; 3 = a deeper tree, more summaries, shorter prompts. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole documents are cut here. 1024 = a few paragraphs; 256 = more chunks and more summaries. Chunks from LLM Split Documents keep their own size. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring chunks share, so a sentence cut at a border is still found whole. 20 = a little; 0 = none. Smaller than chunk_size. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The tree index, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmvectorindex"></a>
+<details>
+<summary><b>LLM Vector Index</b></summary>
+
+Embed documents into a vector index, for finding the passages closest in meaning to a question. Whole documents are cut into chunks first; chunks from LLM Split Documents are indexed as they are. The panel shows the chunk and vector counts and a few chunks.
+
+| | |
+|---|---|
+| Node id | `WASLLMVectorIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | What to index, such as from LLM Load Documents, or chunks from LLM Split Documents. From a hierarchical split only the smallest chunks are embedded and every level is kept, for LLM Auto-Merging Retriever. |
+| `embedding` | `WAS_LLM_EMBEDDING` | Yes |  |  | The model that turns each chunk into a vector, such as from LLM Embedding Model. Questions are embedded with the same model later, so save or load the index with it. |
+| `batch_size` | `INT` | Yes | 64 |  | Chunks embedded per step. 64 suits most models; 16 for a hosted model that refuses large requests. Cancel and the progress bar are checked between steps. |
+| `chunk_size` | `INT` | No | 1024 |  | Tokens in each chunk when whole documents are cut here. 1024 = a few paragraphs; 256 = finer matches with less context each. Chunks from LLM Split Documents keep their own size. |
+| `chunk_overlap` | `INT` | No | 20 |  | Tokens two neighbouring chunks share, so a sentence cut at a border is still found whole. 20 = a little; 0 = none. Smaller than chunk_size. |
+| `vector_store` | `WAS_LLM_VECTOR_STORE` | No |  |  | A collection from LLM Vector Store to keep the vectors in, in place of memory. A document it already holds has its chunks replaced. Unconnected = memory, saved with LLM Save Index. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The vector index, for LLM Index Retriever, a query engine or LLM Save Index. |
+
+</details>
+
+<a id="node-wasllmvectorstore"></a>
+<details>
+<summary><b>LLM Vector Store</b></summary>
+
+Keep an index's vectors in a Qdrant, Chroma, LanceDB or FAISS collection on this machine, or on a server named in config.yaml, so a large index is written once and opened at once. Connect it to LLM Vector Index or LLM Vector Store Index.
+
+| | |
+|---|---|
+| Node id | `WASLLMVectorStore` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `store` | `COMBO` | Yes |  |  | `qdrant`, `chroma`, `lancedb`, `faiss` = a folder in ComfyUI/user/was-node-suite/llm/vector_stores, all but qdrant with features.vector_stores on; `server: <name>` = a Qdrant, Chroma or Postgres server under llm.vector_stores. |
+| `collection` | `STRING` | Yes | documents |  | The collection's name, such as `studio_notes`: letters, digits, dashes and underscores; lower case and no dashes on Postgres. A new name starts an empty one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `vector_store` | `WAS_LLM_VECTOR_STORE` | The collection, for LLM Vector Index or LLM Vector Store Index. |
+
+</details>
+
+<a id="node-wasllmvectorstoreindex"></a>
+<details>
+<summary><b>LLM Vector Store Index</b></summary>
+
+Open the index a vector store collection already holds, without embedding anything again, for a retriever, a query engine or LLM Index Insert. Use the embedding model the collection was filled with. The panel shows its vector count.
+
+| | |
+|---|---|
+| Node id | `WASLLMVectorStoreIndex` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vector_store` | `WAS_LLM_VECTOR_STORE` | Yes |  |  | The collection, from LLM Vector Store. |
+| `embedding` | `WAS_LLM_EMBEDDING` | Yes |  |  | The embedding model the collection was filled with, from LLM Embedding Model. Questions are embedded with it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `index` | `WAS_LLM_INDEX` | The vector index over the collection, for LLM Index Retriever, a query engine or LLM Index Insert. |
+
+</details>
+
+### WAS Suite/LLM/Memory
+
+<a id="node-wasllmclearmemory"></a>
+<details>
+<summary><b>LLM Clear Memory</b></summary>
+
+Delete the conversation LLM Memory has saved under its session name, with its recalled-message files, so the next message starts fresh. Nothing is deleted until confirm is on. The memory passes through for LLM Chat Session.
+
+| | |
+|---|---|
+| Node id | `WASLLMClearMemory` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `memory` | `WAS_LLM_MEMORY` | Yes |  |  | The memory whose saved session to delete, from LLM Memory. |
+| `confirm` | `BOOLEAN` | Yes | False |  | `true` deletes the saved session every time the graph runs; `false` deletes nothing. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `memory` | `WAS_LLM_MEMORY` | The same memory, now empty while confirm is `true`, for LLM Chat Session. |
+
+</details>
+
+<a id="node-wasllmmemory"></a>
+<details>
+<summary><b>LLM Memory</b></summary>
+
+Keep a conversation between runs under a session name, for LLM Chat Session. Recent messages are handed to the model up to a token limit, and older ones move into the long-term memory blocks. The panel shows what the session holds.
+
+| | |
+|---|---|
+| Node id | `WASLLMMemory` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `session` | `STRING` | Yes |  |  | The name the conversation is saved under, such as `project notes`. The same name carries it on in later runs; empty keeps it for one run only. |
+| `token_limit` | `INT` | Yes | 30000 |  | The most tokens of conversation and memory blocks handed to the model each message. `30000` suits most models; lower it for a small context window. |
+| `history_ratio` | `FLOAT` | Yes | 0.7 |  | Share of token_limit kept for recent messages. `0.7` leaves the rest for memory blocks; `1.0` gives blocks no room of their own. |
+| `insert` | `COMBO` | Yes | system | `system`, `user` | `system` = long-term memory goes in the system prompt; `user` = it is added to the newest message, for models that ignore system prompts. |
+| `blocks` | `WAS_LLM_MEMORY_BLOCKS` | No |  |  | Long-term memory blocks chained from LLM Memory Block: fixed text, facts pulled from older messages, or older messages found by similarity. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `memory` | `WAS_LLM_MEMORY` | The memory, for LLM Chat Session, LLM Memory History or LLM Clear Memory. |
+
+</details>
+
+<a id="node-wasllmmemoryblock"></a>
+<details>
+<summary><b>LLM Memory Block</b></summary>
+
+Give LLM Memory a long-term block: fixed text shown every message, facts a model pulls out of older messages, or older messages recalled by similarity. Chain several and connect the last to LLM Memory.
+
+| | |
+|---|---|
+| Node id | `WASLLMMemoryBlock` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `kind` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `static` = fixed text shown every message; `facts` = facts pulled out of messages that leave the recent window; `vector` = older messages recalled when similar to the new one. |
+| `name` | `STRING` | Yes | core |  | The block's name, different for every block in one memory, such as `profile` or `facts`. A vector block's saved file is named after it. |
+| `priority` | `INT` | Yes | 0 |  | `0` = never cut when the memory is over its token limit; higher numbers are cut first, so `1` goes before `0`. |
+| `blocks` | `WAS_LLM_MEMORY_BLOCKS` | No |  |  | Blocks from earlier LLM Memory Block nodes, kept ahead of this one. |
+| `llm` | `WAS_LLM` | No |  |  | The model a facts block pulls facts out with. Left empty, the conversation's own model does it. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model a vector block compares messages with, from LLM Embedding Model. Required by vector. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `blocks` | `WAS_LLM_MEMORY_BLOCKS` | The chain with this block appended, for the next LLM Memory Block or LLM Memory. |
+
+</details>
+
+<a id="node-wasllmmemoryhistory"></a>
+<details>
+<summary><b>LLM Memory History</b></summary>
+
+Read a saved conversation back from LLM Memory without calling a model: the transcript, the messages and the facts its facts blocks have gathered. Useful for saving a chat to a file or handing it to another model.
+
+| | |
+|---|---|
+| Node id | `WASLLMMemoryHistory` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `memory` | `WAS_LLM_MEMORY` | Yes |  |  | The memory whose saved session to read, from LLM Memory. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `history` | `STRING` | The conversation as text, one `role: text` paragraph per message, oldest first. |
+| `messages` | `WAS_LLM_MESSAGES` | The conversation as messages, for LLM Chat, the agents or LLM Message. |
+| `facts` | `STRING` | Facts the session's facts blocks have gathered, one `block: fact` line each. Empty without a facts block. |
+
+</details>
+
+### WAS Suite/LLM/Messages
+
+<a id="node-wasllmmessage"></a>
+<details>
+<summary><b>LLM Message</b></summary>
+
+Add one message to a conversation: standing instructions, something said to the model, or an example answer, with pictures and sound if wanted. Chain several into LLM Chat or an agent. The panel shows the conversation so far.
+
+| | |
+|---|---|
+| Node id | `WASLLMMessage` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `role` | `COMBO` | Yes | user | `user`, `system`, `assistant` | `user` = something said to the model; `system` = standing instructions, such as a persona or rules; `assistant` = an answer the model gave, such as an example of the style wanted. |
+| `text` | `STRING` | Yes |  |  | The message's words, such as `Describe this picture in one sentence.` |
+| `messages` | `WAS_LLM_MESSAGES` | No |  |  | The conversation so far, from another LLM Message. Left empty, this message starts a new conversation. |
+| `image` | `IMAGE` | No |  |  | Pictures sent with the message, for a model that reads them. Every frame of a batch becomes one picture, up to 64. |
+| `audio` | `AUDIO` | No |  |  | Sound sent with the message, for a model that hears it. The first clip of a batch is sent, up to 10 minutes. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `messages` | `WAS_LLM_MESSAGES` | The conversation with this message added last, for the next LLM Message, LLM Chat or an agent. |
+
+</details>
+
+<a id="node-wasllmmessagestotext"></a>
+<details>
+<summary><b>LLM Messages to Text</b></summary>
+
+Turn a conversation into plain text, one `role: text` paragraph per message, such as to save a chat or show it. Pictures and sound are noted in brackets.
+
+| | |
+|---|---|
+| Node id | `WASLLMMessagesToText` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `messages` | `WAS_LLM_MESSAGES` | Yes |  |  | The conversation, from LLM Message or LLM Chat. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The transcript, such as `user: Hello` then `assistant: Hi there`, with thinking left out. |
+| `count` | `INT` | How many messages the conversation holds. |
+
+</details>
+
+### WAS Suite/LLM/Models
+
+<a id="node-wasllmanthropic"></a>
+<details>
+<summary><b>LLM Anthropic</b></summary>
+
+Choose a Claude model such as claude-opus-5-5 for the LLM nodes to write with. Prompts go to Anthropic's servers, so features.network must be on and ANTHROPIC_API_KEY set where ComfyUI starts. The panel shows the model, its context window and what it can do.
+
+| | |
+|---|---|
+| Node id | `WASLLMAnthropic` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `STRING` | Yes | claude-opus-5-5 |  | The Claude model id, with no date: `claude-opus-5-5` = most capable; `claude-sonnet-5-5` = balanced; `claude-haiku-5-5` = fastest; `claude-fable-5-1` also works. |
+| `effort` | `COMBO` | Yes | default | `default`, `low`, `medium`, `high`, `xhigh`, `max` | How much effort Claude puts in: `default` = the model's own, medium on Opus 5.5; `low` = quick and cheap; `max` = most thorough and slowest. |
+| `thinking_display` | `COMBO` | Yes | summarized | `summarized`, `omitted`, `default` | `summarized` = Claude thinks as it needs and the thinking output gets a summary; `omitted` = the thinking stays hidden and answers start sooner; `default` = no thinking setting, for older models such as claude-haiku-4-5. |
+| `max_tokens` | `INT` | Yes | 16000 |  | The most tokens one answer may take, thinking included. `16000` suits most prompts; raise it for long documents. |
+| `timeout` | `INT` | No | 600 |  | Seconds one request may run before it fails: `600` = ten minutes. Raise it for long answers at a high effort. |
+| `max_retries` | `INT` | No | 3 |  | Times a failed or overloaded request is tried again, waiting longer each time. `0` = fail at once. |
+| `context_window` | `INT` | No | 0 |  | Tokens the model reads at once, used to fit documents and chat history. `0` = the known figure for the model, or 200000 for a name not known yet. |
+| `cache_prompt` | `BOOLEAN` | No | False |  | `true` asks Anthropic to cache each request, so the next call sharing its long system prompt or documents within a few minutes is read faster and costs less. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, agents and the other LLM nodes. |
+
+</details>
+
+<a id="node-wasllmembeddingmodel"></a>
+<details>
+<summary><b>LLM Embedding Model</b></summary>
+
+Choose the model that turns text into vectors for indexes and retrieval: a Hugging Face folder in models/LLM, a .gguf file, or OpenAI, Gemini and other services. Build an index and search it with the same model. The panel shows the vector length, device and pooling.
+
+| | |
+|---|---|
+| Node id | `WASLLMEmbeddingModel` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `source` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | Where the vectors are made: `local` = a Hugging Face folder on this machine; `gguf` = a .gguf file through llama.cpp; `openai` and `gemini` = those services; `provider` = another service or a local server. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `embedding` | `WAS_LLM_EMBEDDING` | The embedding model, for the LLM index, retriever and other nodes that search text by meaning. |
+
+</details>
+
+<a id="node-wasllmfromclip"></a>
+<details>
+<summary><b>LLM From CLIP</b></summary>
+
+Use the language model inside a loaded CLIP, such as Qwen3 4B or Gemma 3, as the LLM for chat, retrieval and agents, with no second copy of the weights. The panel shows the chat format it uses and whether it reads pictures.
+
+| | |
+|---|---|
+| Node id | `WASLLMFromCLIP` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | A CLIP holding a language model, such as qwen_3_4b from Load CLIP with type `lumina2`, qwen3vl_4b, gemma_3_4b_it or ministral-3-3b. |
+| `sampling_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `on` draws each token at random within the limits below. `off` always takes the likeliest token and writes the same text every time. |
+| `max_tokens` | `INT` | Yes | 1024 |  | The most tokens one reply writes. A token is about three quarters of a word, so `1024` is about 750 words. |
+| `thinking` | `BOOLEAN` | No | False |  | `true` lets a model that reasons, such as Qwen3, think before answering. The thinking arrives apart from the answer. |
+| `fast_decode` | `BOOLEAN` | No | True |  | `true` writes on ComfyUI's fixed cache, graph captured decode where the model allows it; `false` runs exactly as core Generate Text. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, the query engines and the agents. |
+
+</details>
+
+<a id="node-wasllmggufloader"></a>
+<details>
+<summary><b>LLM GGUF Loader</b></summary>
+
+Load a GGUF language model from models/LLM or models/text_encoders and run it on this machine as the LLM for chat, retrieval and agents. An mmproj file lets it read pictures. The panel shows the model, its context and whether it runs on the GPU.
+
+| | |
+|---|---|
+| Node id | `WASLLMGGUFLoader` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `COMBO` | Yes |  |  | The .gguf model file, from ComfyUI/models/LLM or models/text_encoders, such as a Qwen3 4B Instruct Q8_0. |
+| `mmproj` | `COMBO` | Yes | none |  | `none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. |
+| `n_ctx` | `INT` | Yes | 8192 |  | The most tokens the model reads at once, conversation and reply together. `8192` suits chat; larger values take more memory. |
+| `gpu_layers` | `INT` | Yes | -1 |  | `-1` = every layer on the GPU; `0` = CPU only; `20` = the first 20 layers. Needs a llama-cpp-python build with GPU support. |
+| `flash_attn` | `BOOLEAN` | Yes | False |  | `true` uses flash attention, which saves memory on a long context where the build supports it. |
+| `chat_format` | `COMBO` | Yes | auto |  | `auto` = the chat template inside the file. A named format such as `chatml` or `llama-3` overrides it; `llava-1-5` or `qwen2.5-vl` places pictures for that family. |
+| `temperature` | `FLOAT` | Yes | 0.7 |  | How adventurous each pick is. `0` always takes the likeliest token, `0.7` is balanced, `1.2` wanders. |
+| `top_p` | `FLOAT` | Yes | 0.95 |  | Pick only among the likeliest tokens whose chances add up to this. `1.0` turns it off. |
+| `top_k` | `INT` | Yes | 40 |  | Pick only among this many likeliest tokens. `0` turns the limit off. |
+| `min_p` | `FLOAT` | Yes | 0.05 |  | Drop any token less likely than this fraction of the likeliest one. `0` turns it off. |
+| `repeat_penalty` | `FLOAT` | Yes | 1.1 |  | Above `1.0` makes a token already used less likely again. `1.0` turns it off. |
+| `seed` | `INT` | Yes | 0 |  | Sampling seed, such as `0` or `42`. The same seed with the same settings and conversation writes the same text. |
+| `max_tokens` | `INT` | Yes | 1024 |  | The most tokens one reply writes, within n_ctx. `1024` is about 750 words. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, the query engines and the agents. |
+
+</details>
+
+<a id="node-wasllmgemini"></a>
+<details>
+<summary><b>LLM Google Gemini</b></summary>
+
+Choose a Google Gemini model such as gemini-3.8-flash for the LLM nodes to write with. Prompts go to Google's servers, so features.network must be on and GOOGLE_API_KEY or GEMINI_API_KEY set where ComfyUI starts. The panel shows the model and what it can do.
+
+| | |
+|---|---|
+| Node id | `WASLLMGemini` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `STRING` | Yes | gemini-3.8-flash |  | The Gemini model id: `gemini-4-argon` = flagship; `gemini-3.8-flash` = fast; `gemini-3.5-flash-lite` = cheapest; `gemini-3.1-pro-preview` also works. |
+| `thinking_level` | `COMBO` | Yes | default | `default`, `minimal`, `low`, `medium`, `high` | How much Gemini thinks before answering: `default` = the model's own; `minimal` = least and fastest; `high` = most and slowest. |
+| `show_thinking` | `BOOLEAN` | Yes | True |  | `true` = summaries of Gemini's thinking come back on the thinking output; `false` = the answer alone. |
+| `max_tokens` | `INT` | Yes | 16000 |  | The most tokens one answer may take, thinking included. `16000` suits most prompts. |
+| `temperature` | `FLOAT` | Yes | 1.0 |  | `1.0` = the model's default, which Google recommends for Gemini 3 and later; `0.3` = steadier; `1.5` = looser. |
+| `timeout` | `INT` | No | 600 |  | Seconds one request may run before it fails: `600` = ten minutes. Raise it for long answers at a high thinking level. |
+| `max_retries` | `INT` | No | 3 |  | Times a failed or rate-limited request is tried again, waiting longer each time. `0` = fail at once. |
+| `context_window` | `INT` | No | 0 |  | Tokens the model reads at once, used to fit documents and chat history. `0` = 1048576, what current Gemini models read. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, agents and the other LLM nodes. |
+
+</details>
+
+<a id="node-wasllmimageembeddingmodel"></a>
+<details>
+<summary><b>LLM Image Embedding Model</b></summary>
+
+Choose a CLIP or SigLIP model that places pictures and text in the same space, so words find pictures and a picture finds others like it. Use it with LLM Image Index. The panel shows the vector length and device.
+
+| | |
+|---|---|
+| Node id | `WASLLMImageEmbeddingModel` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `COMBO` | Yes |  |  | A CLIP or SigLIP folder in models/LLM, or a suggested model downloaded there on first use with features.network on. `google/siglip2-base-patch16-224` = small and quick; `google/siglip2-so400m-patch14-384` = more exact. |
+| `batch_size` | `INT` | Yes | 16 |  | Pictures or texts embedded together: 16 = the usual; lower it if VRAM runs out. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image_embedding` | `WAS_LLM_EMBEDDING` | The picture model, for LLM Image Index or the image_embedding input of LLM Load Index. |
+
+</details>
+
+<a id="node-wasllmopenai"></a>
+<details>
+<summary><b>LLM OpenAI</b></summary>
+
+Choose an OpenAI model such as gpt-6.1-sol for the LLM nodes to write with. Prompts go to OpenAI's servers, so features.network must be on and OPENAI_API_KEY set where ComfyUI starts. The panel shows the model, its context window and what it can do.
+
+| | |
+|---|---|
+| Node id | `WASLLMOpenAI` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `STRING` | Yes | gpt-6.1-sol |  | The OpenAI model id: `gpt-6-astra` = flagship; `gpt-6.1-sol` = balanced; `gpt-6-luna` = low cost. Any id from OpenAI's models page works. |
+| `reasoning_effort` | `COMBO` | Yes | default | `default`, `none`, `low`, `medium`, `high`, `xhigh`, `max` | How long the model reasons before answering: `default` = the model's own; `low` = quickest; `max` = deepest and slowest. `none` turns reasoning off, on gpt-6-luna only. |
+| `max_tokens` | `INT` | Yes | 16000 |  | The most tokens one answer may take, reasoning included. `16000` suits most prompts; raise it for long writing at a high effort. |
+| `temperature` | `FLOAT` | Yes | 1.0 |  | Randomness, for models that take it such as gpt-4.1: `0.2` = steady; `1.0` = default; `1.5` = loose. Reasoning models such as gpt-6.1-sol ignore it. |
+| `timeout` | `INT` | No | 600 |  | Seconds one request may run before it fails: `600` = ten minutes. Raise it for long answers at a high effort. |
+| `max_retries` | `INT` | No | 3 |  | Times a failed or rate-limited request is tried again, waiting longer each time. `0` = fail at once. |
+| `context_window` | `INT` | No | 0 |  | Tokens the model reads at once, used to fit documents and chat history. `0` = the known figure for the model, or 128000 for a name not known yet. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, agents and the other LLM nodes. |
+
+</details>
+
+<a id="node-wasllmprovider"></a>
+<details>
+<summary><b>LLM Provider</b></summary>
+
+Choose a model on a hosted service such as Groq, DeepSeek or Mistral, a server on this machine such as Ollama or LM Studio, or an endpoint named in config.yaml. Hosted services need features.network on and their own key variable. The panel shows where prompts go.
+
+| | |
+|---|---|
+| Node id | `WASLLMProvider` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `provider` | `COMBO` | Yes | ollama |  | Where the model runs. `groq`, `deepseek`, `mistral` and the other services each read their own key variable, such as GROQ_API_KEY; `ollama`, `lmstudio`, `vllm` and `llama.cpp` are servers on this machine; `endpoint: name` entries come from llm.endpoints in config.yaml. |
+| `model` | `STRING` | Yes |  |  | The model id the provider uses, such as `llama3.2:3b` on Ollama or `openai/gpt-oss-120b` on Groq. Empty = the provider's default; a server on this machine has none, so type the model it serves. |
+| `temperature` | `FLOAT` | Yes | 0.7 |  | Randomness: `0.2` = steady and factual; `0.7` = balanced; `1.2` = loose. |
+| `max_tokens` | `INT` | Yes | 4096 |  | The most tokens one answer may take. `4096` is about 3000 words; a reasoning model needs more, since its thinking counts too. |
+| `context_window` | `INT` | Yes | 0 |  | Tokens the model reads at once. `0` = the provider's usual figure, 8192 for a server on this machine; set the model's real figure to fit longer documents and chats. |
+| `function_calling` | `COMBO` | Yes | auto | `auto`, `on`, `off` | Whether agents call tools through the API: `auto` = what the provider usually supports; `on` = always; `off` = agents write tool calls as text instead, which any model can do. |
+| `timeout` | `INT` | No | 600 |  | Seconds one request may run before it fails: `600` = ten minutes. A server on this machine loading a large model may need longer at first. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, agents and the other LLM nodes. |
+
+</details>
+
+<a id="node-wasllmtransformersloader"></a>
+<details>
+<summary><b>LLM Transformers Loader</b></summary>
+
+Load a Hugging Face language model folder from models/LLM and run it on this machine as the LLM for chat, retrieval and agents, its VRAM freed for other models when they need it. Picture models such as Qwen3-VL read pictures. The panel shows the model, its size and where it runs.
+
+| | |
+|---|---|
+| Node id | `WASLLMTransformersLoader` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `COMBO` | Yes |  |  | A model folder in ComfyUI/models/LLM, such as `Qwen3-4B-Instruct-2507`, or a suggested repository, downloaded on first use when features.network is on. |
+| `dtype` | `COMBO` | Yes | auto | `auto`, `bfloat16`, `float16`, `float32` | `auto` = bfloat16 or float16 on the GPU, float32 on the CPU; `float32` is exact and twice the memory. |
+| `quantize` | `COMBO` | Yes | none | `none`, `8-bit`, `4-bit` | `none` = full weights; `8-bit` about halves the memory; `4-bit` quarters it. Quantized models need an NVIDIA GPU and stay on it. |
+| `attention` | `COMBO` | Yes | sdpa | `sdpa`, `eager` | `sdpa` = PyTorch's fused attention, faster; `eager` = the plain version, for a model sdpa refuses. |
+| `temperature` | `FLOAT` | Yes | 0.7 |  | How adventurous each pick is. `0` always takes the likeliest token, `0.7` is balanced, `1.2` wanders. |
+| `top_p` | `FLOAT` | Yes | 0.95 |  | Pick only among the likeliest tokens whose chances add up to this. `1.0` turns it off. |
+| `top_k` | `INT` | Yes | 20 |  | Pick only among this many likeliest tokens. `0` turns the limit off. |
+| `min_p` | `FLOAT` | Yes | 0.0 |  | Drop any token less likely than this fraction of the likeliest one. `0` turns it off. |
+| `repetition_penalty` | `FLOAT` | Yes | 1.05 |  | Above `1.0` makes a token already used less likely again. `1.0` turns it off. |
+| `seed` | `INT` | Yes | 0 |  | Sampling seed, such as `0` or `42`. The same seed with the same settings and conversation writes the same text. |
+| `max_tokens` | `INT` | Yes | 1024 |  | The most tokens one reply writes. `1024` is about 750 words. |
+| `thinking` | `BOOLEAN` | Yes | False |  | `true` lets a model that reasons, such as SmolLM3 or Qwen3, think before answering. The thinking arrives apart from the answer. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, the query engines and the agents. |
+
+</details>
+
+<a id="node-wasllmunload"></a>
+<details>
+<summary><b>LLM Unload</b></summary>
+
+Free the memory a language model and an embedding model hold, then pass a value on unchanged, so a diffusion step after an LLM step has the VRAM. The panel shows what was released and how much memory came back.
+
+| | |
+|---|---|
+| Node id | `WASLLMUnload` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `llm` | `WAS_LLM` | No |  |  | The language model to release, from LLM From CLIP, LLM GGUF Loader or LLM Transformers Loader. It reloads if used again. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model to release, from LLM Embedding Model. It reloads if used again. |
+| `passthrough` | `*` | No |  |  | Any value, such as the text an LLM step wrote. Wiring it here makes the release wait for that step. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `passthrough` | `*` | The passthrough value, unchanged, for the step that needs the memory. |
+
+</details>
+
+### WAS Suite/LLM/Query
+
+<a id="node-wasllmquery"></a>
+<details>
+<summary><b>LLM Query</b></summary>
+
+Ask a query engine a question and get its answer with the chunks it was written from, best first. The answer streams under the node as it is written, and the panel lists the sources with their scores.
+
+| | |
+|---|---|
+| Node id | `WASLLMQuery` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | Yes |  |  | The engine to ask, such as from LLM Query Engine, LLM Query Transform or LLM Router Query Engine. |
+| `question` | `STRING` | Yes |  |  | What to ask, such as `What does the contract say about late payment?` |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `answer` | `STRING` | The engine's answer, with any thinking a reasoning model wrote removed. |
+| `sources_text` | `STRING` | The chunks the answer came from as numbered text, each headed by its score and file name. |
+| `sources` | `WAS_LLM_SOURCES` | The chunks with their scores, the question and the answer, for the evaluators and LLM Sources to Text. |
+
+</details>
+
+<a id="node-wasllmqueryengine"></a>
+<details>
+<summary><b>LLM Query Engine</b></summary>
+
+Combine a retriever and a language model into a query engine that answers questions from indexed documents. Feed it to LLM Query to ask, or to LLM Query Engine Tool to hand it to an agent. With citations on, answers cite numbered sources.
+
+| | |
+|---|---|
+| Node id | `WASLLMQueryEngine` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | Where the chunks each answer is written from come from, such as LLM Index Retriever over a vector index. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the answer from the chunks, such as LLM OpenAI or LLM From CLIP. |
+| `response_mode` | `COMBO` | Yes | compact | `compact`, `refine`, `tree_summarize`, `simple_summarize`, `accumulate`, `compact_accumulate`, `generation`, `no_text`, `context_only` | `compact` = chunks packed into few calls; `refine` = one call a chunk; `tree_summarize` = summarised upward; `simple_summarize` = one call; `accumulate` = one answer a chunk, `compact_accumulate` in fewer calls; `generation` = chunks ignored; `no_text` = chunks only; `context_only` = chunks as the answer. |
+| `citations` | `BOOLEAN` | Yes | False |  | `true` cuts the chunks into numbered sources and asks the model to cite them, such as `[1]`; `false` answers without citations. |
+| `citation_chunk_size` | `INT` | Yes | 512 |  | Tokens in one numbered source while citations is `true`. `256` cites finely, `1024` cites whole passages. |
+| `qa_prompt` | `STRING` | No |  |  | Replaces the question prompt. Must hold `{context_str}` and `{query_str}`, such as `Answer from this only:\n{context_str}\nQuestion: {query_str}`. Empty uses the built-in prompt. |
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Filters and rerankers run over the retrieved chunks before the answer is written, in chain order. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | The query engine, for LLM Query, LLM Query Transform or LLM Query Engine Tool. |
+
+</details>
+
+<a id="node-wasllmquerytransform"></a>
+<details>
+<summary><b>LLM Query Transform</b></summary>
+
+Wrap a query engine so each question is rewritten before it is answered. HyDE searches with an imagined answer, which finds passages a short question misses; decompose breaks a hard question into follow-up questions asked one after another.
+
+| | |
+|---|---|
+| Node id | `WASLLMQueryTransform` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | Yes |  |  | The engine that answers the rewritten question, such as from LLM Query Engine. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that rewrites the question, often the same one the engine answers with. |
+| `transform` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `hyde` = search with an imagined answer to the question; `decompose` = ask a chain of simpler follow-up questions, then answer from all of them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | The wrapped query engine, for LLM Query or LLM Query Engine Tool. |
+
+</details>
+
+<a id="node-wasllmretryqueryengine"></a>
+<details>
+<summary><b>LLM Retry Query Engine</b></summary>
+
+Judge each answer of another query engine and, while it fails, ask again with the question rewritten from the judge's feedback. With guidelines the answer must follow them; without, it must fit the question and its sources.
+
+| | |
+|---|---|
+| Node id | `WASLLMRetryQueryEngine` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | Yes |  |  | The engine whose answers are judged, such as LLM Query Engine. |
+| `llm` | `WAS_LLM` | Yes |  |  | The judge, which also rewrites the question, such as LLM OpenAI or LLM From CLIP. |
+| `guidelines` | `STRING` | Yes |  |  | What an answer must do, such as `Name the file it came from. Stay under 60 words.` Blank = it must fit the question and its sources. |
+| `max_retries` | `INT` | Yes | 2 |  | Further attempts after a failing answer: 2 = the usual; each costs a judgement and an answer. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | The retrying engine, for LLM Query or LLM Query Engine Tool. |
+
+</details>
+
+<a id="node-wasllmrouterqueryengine"></a>
+<details>
+<summary><b>LLM Router Query Engine</b></summary>
+
+Send each question to the query engine tool best suited to it, chosen by the model from each tool's description, such as a summary engine for overviews and a vector engine for facts. In multi mode several tools answer and the replies are combined.
+
+| | |
+|---|---|
+| Node id | `WASLLMRouterQueryEngine` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | Yes |  |  | Query engine tools to choose among, chained from LLM Query Engine Tool. The model picks from each tool's description, so describe what each one knows. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that picks the tool and combines several answers, such as LLM OpenAI or LLM From CLIP. |
+| `selector` | `COMBO` | Yes | single | `single`, `multi` | `single` = one tool answers each question; `multi` = every tool that fits answers and the replies are summarised into one. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | The router engine, for LLM Query or LLM Query Engine Tool. |
+
+</details>
+
+<a id="node-wasllmsqlqueryengine"></a>
+<details>
+<summary><b>LLM SQL Query Engine</b></summary>
+
+Answer questions about tables: the model writes a SQL query from each question, runs it, and answers from the rows. Ask with LLM Query, or give it to an agent with LLM Query Engine Tool. The tables are only read, never changed.
+
+| | |
+|---|---|
+| Node id | `WASLLMSQLQueryEngine` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tables` | `WAS_LLM_TABLES` | Yes |  |  | The tables to ask about, from LLM Load Table. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the SQL and the answer, such as LLM From CLIP or LLM OpenAI. |
+| `synthesize_response` | `BOOLEAN` | Yes | True |  | `true` = an answer in words from the rows; `false` = the rows themselves as the answer. |
+| `sample_rows` | `INT` | Yes | 3 |  | Rows of each table shown to the model beside its columns, so it sees what values look like: 3 = the usual; 0 = columns only. |
+| `max_rows` | `INT` | Yes | 200 |  | Rows one query hands back at most: 200 = a page of results; more costs more tokens. |
+| `timeout_seconds` | `INT` | Yes | 30 |  | Seconds one query may run before it is stopped: 30 = the usual. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | The engine, for LLM Query, LLM Query Engine Tool or a router. |
+
+</details>
+
+<a id="node-wasllmsubquestionqueryengine"></a>
+<details>
+<summary><b>LLM Sub-Question Query Engine</b></summary>
+
+Answer a question that spans several sources, such as comparing two reports. The model splits it into sub-questions, sends each to the query engine tool it suits, then writes one answer from all the replies.
+
+| | |
+|---|---|
+| Node id | `WASLLMSubQuestionQueryEngine` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | Yes |  |  | Query engine tools to send sub-questions to, chained from LLM Query Engine Tool. Each tool's name and description tell the model what it knows. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the sub-questions and the final answer, such as LLM OpenAI or LLM From CLIP. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `query_engine` | `WAS_LLM_QUERY_ENGINE` | The sub-question engine, for LLM Query or LLM Query Engine Tool. |
+
+</details>
+
+### WAS Suite/LLM/Retrieve
+
+<a id="node-wasllmautoretriever"></a>
+<details>
+<summary><b>LLM Auto Retriever</b></summary>
+
+Search a vector index with filters the model writes from each question, so `notes from the billing file` searches only that file's chunks. It filters on the metadata listed, or on what the index holds. The panel shows the fields.
+
+| | |
+|---|---|
+| Node id | `WASLLMAutoRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `index` | `WAS_LLM_INDEX` | Yes |  |  | A vector index, from LLM Vector Index, LLM Vector Store Index or LLM Load Index. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the filters, such as LLM From CLIP or LLM OpenAI. |
+| `content` | `STRING` | Yes |  |  | What the chunks are, read by the model, such as `studio notes on rendering, delivery and billing`. Blank = chunks of documents. |
+| `metadata_fields` | `STRING` | Yes |  |  | One field per line, `name (type): description`, such as `file_name (str): the note a chunk came from`. Blank = every key the index holds. |
+| `top_k` | `INT` | Yes | 4 |  | Chunks one search hands on: 4 = a short context. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The retriever, for LLM Retrieve, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmautomergingretriever"></a>
+<details>
+<summary><b>LLM Auto-Merging Retriever</b></summary>
+
+Search a vector index of small chunks and, where enough pieces of one larger chunk are found, hand on that larger chunk instead, so answers read whole passages. Build the index from every chunk the hierarchical splitter writes.
+
+| | |
+|---|---|
+| Node id | `WASLLMAutoMergingRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `index` | `WAS_LLM_INDEX` | Yes |  |  | A vector index built from hierarchical chunks, every level included, so its docstore holds the larger chunks. |
+| `top_k` | `INT` | Yes | 12 |  | Small chunks found before merging: 12 = the usual; more lets more parents merge. The merged result can be shorter. |
+| `merge_ratio` | `FLOAT` | Yes | 0.5 |  | Share of a larger chunk's pieces that must be found before it replaces them: 0.5 = more than half; 0.25 = merge eagerly; 0.9 = rarely. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The retriever, for LLM Retrieve, LLM Fusion Retriever, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmbm25retriever"></a>
+<details>
+<summary><b>LLM BM25 Retriever</b></summary>
+
+Rank chunks by the words they share with the question, as a search engine does, with no embedding model. It finds exact names, codes and rare terms that similarity search misses, and pairs well with a vector retriever in LLM Fusion Retriever.
+
+| | |
+|---|---|
+| Node id | `WASLLMBM25Retriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `top_k` | `INT` | Yes | 10 |  | Chunks one search hands on: 10 = the usual; 30 = broad recall for fusion or a reranker. |
+| `stemming` | `BOOLEAN` | Yes | True |  | true = word endings are dropped, so `running` matches `runs`; false = words match only as written. |
+| `stopwords` | `COMBO` | Yes | english | `english`, `none`, `albanian`, `arabic`, `azerbaijani`, `basque`, `belarusian`, `bengali`, `catalan`, `chinese`, `danish`, `dutch` and 22 more | The language whose common words are ignored, which also picks the stemmer: `english` skips `the`, `and`, `of`; `none` = every word counts. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | The chunks to rank, from an LLM splitter. Whole documents work too and are ranked whole. |
+| `index` | `WAS_LLM_INDEX` | No |  |  | An index whose stored chunks are ranked, read once when this node runs. Used with or in place of documents. |
+| `k1` | `FLOAT` | No | 1.5 |  | How much repeating a word counts: 1.5 = the usual; 0 = only whether it appears; 3 = repeats weigh heavily. |
+| `b` | `FLOAT` | No | 0.75 |  | How much long chunks are held back: 0.75 = the usual; 0 = length ignored; 1 = scaled fully by length. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The retriever, for LLM Retrieve, LLM Fusion Retriever, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmfusionretriever"></a>
+<details>
+<summary><b>LLM Fusion Retriever</b></summary>
+
+Merge the rankings of several retrievers into one, such as BM25 keywords with vector similarity. A language model can also rewrite the question into variations that every retriever searches. Connect the result to LLM Retrieve or a query engine.
+
+| | |
+|---|---|
+| Node id | `WASLLMFusionRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | The first retriever to merge, from LLM Index Retriever, LLM BM25 Retriever or another fusion. |
+| `mode` | `COMBO` | Yes | reciprocal_rerank | `reciprocal_rerank`, `relative_score`, `dist_based_score`, `simple` | How rankings merge. reciprocal_rerank = by rank position, steady across score scales; relative_score = scores scaled 0 to 1 per retriever, then weighted; dist_based_score = scaled by their spread; simple = each chunk's best score. |
+| `top_k` | `INT` | Yes | 5 |  | Chunks the merged ranking hands on: 5 = a short context; 20 = broad recall for a reranker. |
+| `num_queries` | `INT` | Yes | 1 |  | Questions searched: 1 = only the question as asked; 4 = the question plus three variations the llm writes. |
+| `llm` | `WAS_LLM` | No |  |  | The language model that writes question variations. Needed only when num_queries is above 1. |
+| `weights` | `STRING` | No |  |  | One weight per connected retriever in slot order, such as `0.6, 0.4`; blank = equal. Read by relative_score and dist_based_score. |
+| `retriever_b` | `WAS_LLM_RETRIEVER` | No |  |  | Another retriever to merge, such as LLM BM25 Retriever beside a vector one. A new slot appears as each is wired. |
+| `retriever_c` | `WAS_LLM_RETRIEVER` | No |  |  | Another retriever to merge, such as LLM BM25 Retriever beside a vector one. A new slot appears as each is wired. |
+| `retriever_d` | `WAS_LLM_RETRIEVER` | No |  |  | Another retriever to merge, such as LLM BM25 Retriever beside a vector one. A new slot appears as each is wired. |
+| `retriever_e` | `WAS_LLM_RETRIEVER` | No |  |  | Another retriever to merge, such as LLM BM25 Retriever beside a vector one. A new slot appears as each is wired. |
+| `retriever_f` | `WAS_LLM_RETRIEVER` | No |  |  | Another retriever to merge, such as LLM BM25 Retriever beside a vector one. A new slot appears as each is wired. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The merged retriever, for LLM Retrieve, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmindexretriever"></a>
+<details>
+<summary><b>LLM Index Retriever</b></summary>
+
+Search a built index for the chunks that answer a question: by similarity, by keywords, by a language model's choice, down a tree or across a graph, with optional metadata filters. Connect the retriever to LLM Retrieve, LLM Fusion Retriever or a query engine.
+
+| | |
+|---|---|
+| Node id | `WASLLMIndexRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `index` | `WAS_LLM_INDEX` | Yes |  |  | The index to search, from an LLM index node such as LLM Vector Index, or a saved one loaded back. |
+| `top_k` | `INT` | Yes | 4 |  | Chunks one search hands on: 4 = a short context; 20 = broad recall for a reranker to narrow. Document summary modes count documents; a tree's root and all_leaf modes hand on everything; an image index's default mode finds this many of each. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | How the index is searched. vector: default, mmr. summary: default, embedding, llm. keyword: default, simple, rake. tree: select_leaf, select_leaf_embedding, root, all_leaf. document summary: default, embedding, llm. graph: default, graph_synonyms, graph_vector. image: default = text and pictures, pictures, text. |
+| `metadata_filters` | `STRING` | Yes |  |  | One filter per line: `file_type = application/pdf`, `page_label != 1`, `file_size > 20000`, `file_name in a.txt, b.txt`, `tags contains draft`. Quote a value to compare it as text. Blank = no filter. |
+| `filters_match` | `COMBO` | No | all | `all`, `any` | `all` = a chunk passes every filter line; `any` = passing one line is enough. |
+| `llm` | `WAS_LLM` | No |  |  | A language model for the modes that call one (summary llm, keyword default, tree select_leaf, graph), in place of the index's own. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | An embedding model for the modes that compare vectors, in place of the index's own. Use the model the index was built with. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The retriever, for LLM Retrieve, LLM Fusion Retriever, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmpostprocessor"></a>
+<details>
+<summary><b>LLM Postprocessor</b></summary>
+
+Add a step that filters, reorders or rewrites retrieved chunks before they reach a prompt: a score cutoff, required or banned keywords, newest first, neighbouring chunks, sentence windows, or a rerank by a language or embedding model. Steps chain and run in order.
+
+| | |
+|---|---|
+| Node id | `WASLLMPostprocessor` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `kind` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | What the step does. `similarity cutoff`, `keywords`, `long context reorder`, `sentence window` and `recency` read the chunks alone; the reranks, `sentence optimizer` and `auto` neighbours call a model; `previous and next` reads the index or documents the chunks came from. |
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Steps that run before this one, from another LLM Postprocessor or LLM Rerank. |
+| `llm` | `WAS_LLM` | No |  |  | The language model for rerank with llm and for previous and next set to auto. |
+| `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model for rerank with embedding and the sentence optimizer. |
+| `index` | `WAS_LLM_INDEX` | No |  |  | The index the chunks come from: previous and next reads its stored chunks, and its models stand in for llm and embedding. |
+| `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | The split chunks the retrieved ones come from, for previous and next when no index is connected. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | The chain with this step added, for LLM Retrieve, a query engine, a chat engine or the next step. |
+
+</details>
+
+<a id="node-wasllmrecursiveretriever"></a>
+<details>
+<summary><b>LLM Recursive Retriever</b></summary>
+
+Search a root retriever, and where it finds an index node, hand the search on to the retriever or query engine that node names: first pick the right manual by its summary, then search inside it. Build the root from LLM Index Node.
+
+| | |
+|---|---|
+| Node id | `WASLLMRecursiveRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `root` | `WAS_LLM_RETRIEVER` | Yes |  |  | The retriever searched first, over an index of LLM Index Node chunks and any other text. |
+| `tools` | `WAS_LLM_TOOLS` | Yes |  |  | The retriever and query engine tools the index nodes name, chained from LLM Retriever Tool and LLM Query Engine Tool. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The recursive retriever, for LLM Retrieve, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmrerank"></a>
+<details>
+<summary><b>LLM Rerank</b></summary>
+
+Reorder retrieved chunks by how well each one answers the question, read by a cross-encoder reranker on this machine, and keep the best. Retrieve broadly, then rerank to a few.
+
+| | |
+|---|---|
+| Node id | `WASLLMRerank` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `COMBO` | Yes |  |  | A reranker folder in ComfyUI/models/LLM holding config.json and model.safetensors, or a suggested one, downloaded on first use only with features.network on. bge-reranker-v2-m3 reads many languages; ms-marco-MiniLM is small and fast, English. |
+| `top_n` | `INT` | Yes | 5 |  | Chunks kept after reranking, best first: 5 = a short context; 1 = only the best. |
+| `batch_size` | `INT` | Yes | 16 |  | Question and chunk pairs scored at once: 16 = the usual; lower it when memory runs short. |
+| `max_length` | `INT` | Yes | 512 |  | Most tokens of one question and chunk pair read; the rest is cut. 512 suits most rerankers; bge-reranker-v2-m3 reads up to 8192. |
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Steps that run before the rerank, from LLM Postprocessor or another LLM Rerank. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | The chain with the rerank added, for LLM Retrieve, a query engine, a chat engine or the next step. |
+
+</details>
+
+<a id="node-wasllmretrieve"></a>
+<details>
+<summary><b>LLM Retrieve</b></summary>
+
+Find the chunks that answer a question, or the pictures most like a picture, and hand them on as numbered text for a prompt and as sources with their scores. The panel lists each find with its score and the file it came from.
+
+| | |
+|---|---|
+| Node id | `WASLLMRetrieve` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | What searches, from LLM Index Retriever, LLM BM25 Retriever, LLM Fusion Retriever or LLM Auto-Merging Retriever. |
+| `query` | `STRING` | Yes |  |  | The question to find chunks for, such as `What does the warranty cover?` |
+| `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Steps run over the found chunks in order, from LLM Postprocessor or LLM Rerank: a cutoff, a rerank, neighbouring chunks. |
+| `image` | `IMAGE` | No |  |  | A picture to search by in place of the question; the first frame is used. Needs LLM Index Retriever over an LLM Image Index. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The chunks as `[1] file, page` blocks with their text, separated by blank lines, ready to place in a prompt. |
+| `sources` | `WAS_LLM_SOURCES` | The chunks with their scores, best first, for LLM Sources to Text or an evaluator. |
+
+</details>
+
+<a id="node-wasllmrouterretriever"></a>
+<details>
+<summary><b>LLM Router Retriever</b></summary>
+
+Search only the retriever suited to each question, chosen by the model from each tool's description, such as the manuals for how-to questions and the invoices for billing. In multi mode every fitting retriever searches and their chunks are joined.
+
+| | |
+|---|---|
+| Node id | `WASLLMRouterRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tools` | `WAS_LLM_TOOLS` | Yes |  |  | Retriever tools to choose among, chained from LLM Retriever Tool. Describe what each one finds. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that picks, such as LLM From CLIP or LLM OpenAI. |
+| `selector` | `COMBO` | Yes | single | `single`, `multi` | `single` = one retriever searches each question; `multi` = every retriever that fits searches. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The router, for LLM Retrieve, a query engine or a chat engine. |
+
+</details>
+
+<a id="node-wasllmsourcestoimages"></a>
+<details>
+<summary><b>LLM Sources to Images</b></summary>
+
+Hand on the pictures a search found as one image batch, best first, at their full size where the files are still there. Use them as references or compare them; the node previews them.
+
+| | |
+|---|---|
+| Node id | `WASLLMSourcesToImages` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `sources` | `WAS_LLM_SOURCES` | Yes |  |  | What was found, from LLM Retrieve or a query engine over an LLM Image Index. Text chunks are passed over. |
+| `full_size` | `BOOLEAN` | Yes | True |  | `true` reads each picture's file again at its own size where it is still there; `false` uses the 384 pixel copy the index stores. |
+| `width` | `INT` | Yes | 0 |  | Width every picture is brought to, in pixels: 0 = the first picture's width. |
+| `height` | `INT` | Yes | 0 |  | Height every picture is brought to, in pixels: 0 = the first picture's height. |
+| `fit` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How a picture of another shape is brought to the size: `fit and pad` = whole picture, bars added; `fill and crop` = fills the frame, edges cut. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | The pictures found, best first, all one size. |
+| `names` | `STRING` | One line per picture, in batch order: its file name and score, such as `ComfyUI_00042_.png 0.312`. |
+| `count` | `INT` | How many pictures the batch holds. |
+
+</details>
+
+<a id="node-wasllmsourcestotext"></a>
+<details>
+<summary><b>LLM Sources to Text</b></summary>
+
+Write the chunks a retrieval or a query answered from as text, one block per chunk through a template, such as a numbered reference list or context for another prompt.
+
+| | |
+|---|---|
+| Node id | `WASLLMSourcesToText` |
+| Enable with | `features.llm: true` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `sources` | `WAS_LLM_SOURCES` | Yes |  |  | The chunks and scores, from LLM Retrieve or a query node. |
+| `template` | `STRING` | Yes | [{rank}] {file_name} ({score}) {text} |  | One block per chunk. Fields: {rank}, {score}, {text}, {file_name}, {page} and any metadata key, such as {last_modified_date}. Any other {name} is written as typed. |
+| `separator` | `STRING` | Yes | \n\n |  | Text between blocks: `\n` = a new line, `\t` = a tab, so `\n\n` = a blank line. |
+| `max_chars` | `INT` | Yes | 0 |  | Most characters written, in whole blocks unless the first alone is longer: 0 = no limit of its own; 12000 = about 3000 tokens of context. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The blocks joined by the separator. |
+| `count` | `INT` | How many blocks were written, fewer than the sources when max_chars stopped it. |
+
+</details>
+
+<a id="node-wasllmsqlretriever"></a>
+<details>
+<summary><b>LLM SQL Retriever</b></summary>
+
+Find table rows for a question: the model writes a SQL query and each row it returns becomes a chunk, so tables join documents in LLM Fusion Retriever, a query engine or an agent's retriever tool. The tables are only read.
+
+| | |
+|---|---|
+| Node id | `WASLLMSQLRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tables` | `WAS_LLM_TABLES` | Yes |  |  | The tables, from LLM Load Table. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the SQL, such as LLM From CLIP or LLM OpenAI. |
+| `max_rows` | `INT` | Yes | 50 |  | Rows one question hands on at most: 50 = a short context. |
+| `timeout_seconds` | `INT` | Yes | 30 |  | Seconds one query may run before it is stopped: 30 = the usual. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The retriever, for LLM Retrieve, LLM Fusion Retriever, a query engine or LLM Retriever Tool. |
+
+</details>
+
+<a id="node-wasllmtransformretriever"></a>
+<details>
+<summary><b>LLM Transform Retriever</b></summary>
+
+Rewrite each question before another retriever searches with it: HyDE has the model write a likely answer and searches with that, decompose asks a simpler question first. It helps where questions and documents are worded differently.
+
+| | |
+|---|---|
+| Node id | `WASLLMTransformRetriever` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | The retriever that searches, such as LLM Index Retriever. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that rewrites, such as LLM From CLIP or LLM OpenAI. |
+| `transform` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `hyde` = search with a written answer; `decompose` = search with a simpler question. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `retriever` | `WAS_LLM_RETRIEVER` | The retriever, for LLM Retrieve, a query engine or a chat engine. |
+
+</details>
+
+---
+
 ## `features.pssr`
 
 1 nodes. Off in a fresh install: set `features.pssr: true` in `config.yaml` and restart ComfyUI to load these.
@@ -13685,6 +16082,1318 @@ Deprecated: use Image Remove Background, CLIPSeg Masking or SAM Image Mask for c
 | `RESULT` | `IMAGE` | The kept half of the image. Four channels with the removed half transparent when transparency is on, three with it filled by the background colour when off. |
 | `DEPTH` | `IMAGE` | The depth map used to make the split, after levelling and blurring, as a greyscale image. White is the half that was kept. |
 | `MASK` | `MASK` | The same split as a mask, white over the half that was kept. Wire it into Image Paste Crop, a mask input or Mask Dilate Region without converting DEPTH first. |
+
+</details>
+
+---
+
+## `features.audio`
+
+39 nodes. On in a fresh install: set `features.audio: false` in `config.yaml` and restart ComfyUI to leave these out.
+
+### WAS Suite/Audio
+
+<a id="node-wasaudiochannels"></a>
+<details>
+<summary><b>Audio Channels</b></summary>
+
+Rework a clip's channels: fold to mono, spread to stereo, swap or keep one side, encode or decode mid and side, or flip polarity to fix a cancelling pair.
+
+| | |
+|---|---|
+| Node id | `WASAudioChannels` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to rework. |
+| `operation` | `COMBO` | Yes | to stereo | `to mono`, `to stereo`, `swap left and right`, `left only`, `right only`, `mid/side encode`, `mid/side decode`, `invert polarity`, `invert left`, `invert right` | to mono = average every channel; mid/side encode = left is mid, right is side; mid/side decode = back to left and right; invert = flip the waveform upside down. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The reworked clip. |
+
+</details>
+
+<a id="node-wasaudioeditor"></a>
+<details>
+<summary><b>Audio Editor</b></summary>
+
+Trim a clip, cut regions out of it and fade its ends, by dragging on its waveform. Joins left by a cut are crossfaded so they do not click, and the edited clip plays on the node beside the source.
+
+| | |
+|---|---|
+| Node id | `WASAudioEditor` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to edit. |
+| `start` | `FLOAT` | Yes | 0.0 |  | Seconds into the clip the kept part starts. 0 = the beginning. Set by dragging the left edge on the waveform. |
+| `end` | `FLOAT` | Yes | 0.0 |  | Seconds into the clip the kept part ends. 0 = the end. Set by dragging the right edge on the waveform. |
+| `cuts` | `STRING` | Yes |  |  | Regions taken out, in seconds of the source: `1.2-2.5, 4:00-4:10.5`. Empty = no cuts. Select on the waveform and press Cut, or Delete. |
+| `fade_in` | `FLOAT` | Yes | 0.0 |  | Seconds the start fades up over. 0 = no fade. Drag the handle at the kept part's top left corner. |
+| `fade_out` | `FLOAT` | Yes | 0.0 |  | Seconds the end fades down over. 0 = no fade. Drag the handle at the kept part's top right corner. |
+| `curve` | `COMBO` | Yes | equal power | `equal power`, `linear`, `s-curve`, `exponential`, `logarithmic` | Shape of the fades and cut joins. `equal power` = steady level through a join; `linear` = straight ramp; `s-curve` = soft ends; `exponential` = slow start; `logarithmic` = fast start. |
+| `crossfade` | `FLOAT` | Yes | 0.01 |  | Seconds each join left by a cut overlaps by. 0.01 = a click-free splice; 0.5 = a slow blend; 0 = a hard join that may click. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The edited clip. |
+| `duration` | `FLOAT` | Seconds the edited clip plays for. |
+
+</details>
+
+<a id="node-wasaudiofade"></a>
+<details>
+<summary><b>Audio Fade</b></summary>
+
+Fade a clip up from silence at its start and down to silence at its end, each on its own curve. The fades are drawn on the waveform and drag to length.
+
+| | |
+|---|---|
+| Node id | `WASAudioFade` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to fade. |
+| `fade_in` | `FLOAT` | Yes | 1.0 |  | Seconds the start rises over. 0 = no fade in. |
+| `fade_out` | `FLOAT` | Yes | 1.0 |  | Seconds the end falls over. 0 = no fade out. |
+| `curve_in` | `COMBO` | Yes | s-curve | `equal power`, `linear`, `s-curve`, `exponential`, `logarithmic` | Shape of the fade in. `equal power` = steady level; `linear` = straight ramp; `s-curve` = soft ends; `exponential` = slow start; `logarithmic` = fast start. |
+| `curve_out` | `COMBO` | Yes | s-curve | `equal power`, `linear`, `s-curve`, `exponential`, `logarithmic` | Shape of the fade out, read from the end: `exponential` falls fast at first, `logarithmic` holds the level longer, `s-curve` is soft at both ends. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The faded clip. |
+
+</details>
+
+<a id="node-wasaudiojoin"></a>
+<details>
+<summary><b>Audio Join</b></summary>
+
+Join clips end to end into one, overlapped by a crossfade or parted by silence. Takes the list Audio Split answers, or one clip on each input, and chains: join the result to the next clip.
+
+| | |
+|---|---|
+| Node id | `WASAudioJoin` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clips that come first, in order: a list from Audio Split, or one clip. |
+| `crossfade` | `FLOAT` | Yes | 0.0 |  | Seconds each join overlaps by. 0 = butt splice; 0.01 = click-free; 2 = a slow blend. Held to half the shorter clip. |
+| `gap` | `FLOAT` | Yes | 0.0 |  | Seconds of silence between clips. Above 0 the clips do not overlap, and crossfade becomes a fade at each side of the gap. |
+| `curve` | `COMBO` | Yes | equal power | `equal power`, `linear`, `s-curve`, `exponential`, `logarithmic` | Shape of the crossfades. `equal power` = steady level; `linear` = straight ramp; `s-curve` = soft ends; `exponential` = slow start; `logarithmic` = fast start. |
+| `append` | `AUDIO` | No |  |  | Clips joined after audio, in order. Leave empty to join only the list on audio. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | Every clip joined into one. |
+| `duration` | `FLOAT` | Seconds the joined clip plays for. |
+
+</details>
+
+<a id="node-wasaudioloop"></a>
+<details>
+<summary><b>Audio Loop</b></summary>
+
+Play a clip several times over, or as often as it takes to fill a length, with each seam crossfaded, such as stretching a music bed under a longer video.
+
+| | |
+|---|---|
+| Node id | `WASAudioLoop` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to repeat. |
+| `times` | `INT` | Yes | 2 |  | Plays in all: 2 = the clip twice. Ignored while duration is above 0. |
+| `duration` | `FLOAT` | Yes | 0.0 |  | Seconds to fill, repeating as often as needed and cutting the last play short. 0 = use times. |
+| `crossfade` | `FLOAT` | Yes | 0.05 |  | Seconds each seam overlaps by. 0.05 = click-free; 2 = a smooth blend for ambience; 0 = hard seam. |
+| `curve` | `COMBO` | Yes | equal power | `equal power`, `linear`, `s-curve`, `exponential`, `logarithmic` | Shape of the seams. `equal power` = steady level; `linear` = straight ramp; `s-curve` = soft ends; `exponential` = slow start; `logarithmic` = fast start. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The repeated clip. |
+| `duration` | `FLOAT` | Seconds the result plays for. |
+
+</details>
+
+<a id="node-wasaudioloudness"></a>
+<details>
+<summary><b>Audio Loudness</b></summary>
+
+Measure a clip's integrated loudness in LUFS, its loudness range, true peak, peak and RMS levels, to check a mix against a delivery target. The node draws the figures and the loudness over time.
+
+| | |
+|---|---|
+| Node id | `WASAudioLoudness` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to measure. The first clip of a batch is measured. |
+| `target` | `FLOAT` | Yes | -14.0 |  | Loudness the meter compares against, in LUFS. -14 = streaming music; -16 = podcasts; -23 = broadcast. Drawn as a line on the graph. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `integrated` | `FLOAT` | Integrated loudness in LUFS. -120 = silent. |
+| `range` | `FLOAT` | Loudness range in LU: 3 = flat and loud; 15 = dynamic. |
+| `true_peak` | `FLOAT` | Highest point between samples, in dBTP. Above -1 risks clipping once encoded. |
+| `sample_peak` | `FLOAT` | Loudest sample in dBFS. 0 = full scale. |
+| `short_term_max` | `FLOAT` | Loudest 3 seconds, in LUFS. |
+| `rms` | `FLOAT` | Average level in dBFS. |
+| `summary` | `STRING` | Every figure on one line: `-14.2 LUFS, LRA 6.1 LU, -1.3 dBTP, peak -1.5 dBFS`. |
+
+</details>
+
+<a id="node-wasaudiomixer"></a>
+<details>
+<summary><b>Audio Mixer</b></summary>
+
+Mix every track of an Audio Mixer Track chain into one clip, each at its own level, pan and start. The node draws each track's level and plays the mix.
+
+| | |
+|---|---|
+| Node id | `WASAudioMixer` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `tracks` | `WAS_AUDIO_TRACKS` | Yes |  |  | The last Audio Mixer Track of the chain. |
+| `master_db` | `FLOAT` | Yes | 0.0 |  | Master fader in dB, applied after the tracks are summed. 0 = unchanged. |
+| `length` | `COMBO` | Yes | longest track | `longest track`, `first track`, `fixed` | `longest track` = until the last track ends; `first track` = as long as the first track plus its start; `fixed` = duration seconds. |
+| `duration` | `FLOAT` | Yes | 10.0 |  | Seconds the mix runs while length is `fixed`, such as `30`. Ignored otherwise. |
+| `layout` | `COMBO` | Yes | stereo | `stereo`, `mono` | `stereo` = two channels, pan applies; `mono` = one channel, pan ignored. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The mix, at the highest sample rate among the tracks. |
+| `duration` | `FLOAT` | Seconds the mix plays for. |
+
+</details>
+
+<a id="node-wasaudiomixertrack"></a>
+<details>
+<summary><b>Audio Mixer Track</b></summary>
+
+One channel of Audio Mixer: a clip with its fader, pan, mute, solo and start time. Chain tracks one into the next and feed the last into Audio Mixer.
+
+| | |
+|---|---|
+| Node id | `WASAudioMixerTrack` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip this track plays. |
+| `gain_db` | `FLOAT` | Yes | 0.0 |  | Fader level in dB. 0 = as recorded; -6 = half as loud; +6 = twice as loud. |
+| `pan` | `FLOAT` | Yes | 0.0 |  | -1 = hard left; 0 = centre; 1 = hard right. A mono clip is panned at constant power; a stereo clip is balanced. |
+| `mute` | `BOOLEAN` | Yes | False |  | `true` = this track is left out of the mix; `false` = it plays. |
+| `solo` | `BOOLEAN` | Yes | False |  | `true` = only soloed tracks play while any track is soloed. |
+| `start` | `FLOAT` | Yes | 0.0 |  | Seconds into the mix this clip begins. 0 = at the top. |
+| `name` | `STRING` | Yes |  |  | The label the mixer draws for this track: `Vocals`. Empty = track 1, track 2. |
+| `tracks` | `WAS_AUDIO_TRACKS` | No |  |  | The tracks before this one, from another Audio Mixer Track. Empty = the first track. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `tracks` | `WAS_AUDIO_TRACKS` | Every track so far, this one last. Feed another Audio Mixer Track or Audio Mixer. |
+
+</details>
+
+<a id="node-wasaudionormalize"></a>
+<details>
+<summary><b>Audio Normalize</b></summary>
+
+Bring a clip to a target loudness in LUFS, a peak or an RMS level, never past a true peak ceiling, so clips from different sources play at one level. The node plays the clip before and after.
+
+| | |
+|---|---|
+| Node id | `WASAudioNormalize` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to level. |
+| `mode` | `COMBO` | Yes | loudness | `loudness`, `peak`, `true peak`, `rms` | `loudness` = integrated LUFS, how loud it sounds; `peak` = loudest sample; `true peak` = loudest point between samples; `rms` = average level. |
+| `target` | `FLOAT` | Yes | -14.0 |  | Level to reach, in LUFS or dB. -14 = streaming music; -16 = podcasts; -23 = broadcast; -1 = peak just under full scale. |
+| `ceiling` | `FLOAT` | Yes | -1.0 |  | Highest true peak allowed in dBTP; the gain is lowered to stay under it. -1 = safe for lossy encoding; 0 = full scale. |
+| `linked` | `BOOLEAN` | Yes | False |  | `false` = each clip of a batch is levelled on its own; `true` = one gain for the whole batch, measured on all of it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The levelled clip. |
+| `gain_db` | `FLOAT` | dB of gain applied to the first clip. |
+| `measured` | `FLOAT` | The first clip's level before, in LUFS or dB. |
+
+</details>
+
+<a id="node-wasaudiopad"></a>
+<details>
+<summary><b>Audio Pad</b></summary>
+
+Add silence before and after a clip, or set it to an exact length with its start placed at a time, such as lining a sound effect up with a frame of video.
+
+| | |
+|---|---|
+| Node id | `WASAudioPad` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to pad. |
+| `before` | `FLOAT` | Yes | 0.0 |  | Seconds of silence placed before the clip, such as `0.5`, which is where the clip now starts. |
+| `after` | `FLOAT` | Yes | 0.0 |  | Seconds of silence placed after the clip. Ignored while length is above 0. |
+| `length` | `FLOAT` | Yes | 0.0 |  | Seconds the result lasts exactly: silence fills what is left, and a clip that runs past the end is cut. 0 = before + clip + after. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The padded clip. |
+| `duration` | `FLOAT` | Seconds the result plays for. |
+
+</details>
+
+<a id="node-wasaudiopitchshift"></a>
+<details>
+<summary><b>Audio Pitch Shift</b></summary>
+
+Move a clip up or down in pitch by semitones while it keeps its length, such as matching a song's key or deepening a voice. Keeping formants stops a shifted voice sounding like a chipmunk or a giant.
+
+| | |
+|---|---|
+| Node id | `WASAudioPitchShift` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to shift. |
+| `semitones` | `FLOAT` | Yes | 0.0 |  | Shift in semitones. `12` = an octave up; `-5` = a fourth down; `0.5` = a quarter tone; `0` = unchanged. |
+| `keep_formants` | `BOOLEAN` | Yes | True |  | `true` = the voice keeps its size and character; `false` = formants move with the pitch, the chipmunk and giant effects. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = shifted only; `0.5` = harmony with the original; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The shifted clip, as long as the input. |
+
+</details>
+
+<a id="node-wasaudioremovesilence"></a>
+<details>
+<summary><b>Audio Remove Silence</b></summary>
+
+Trim the silence off a clip's ends and shorten every long pause inside it to a set length, such as tightening generated speech. Pauses are crossfaded so they do not click.
+
+| | |
+|---|---|
+| Node id | `WASAudioRemoveSilence` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to tighten. |
+| `threshold_db` | `FLOAT` | Yes | -50.0 |  | Level in dBFS at or below which a stretch counts as silent. -50 = studio quiet; -35 = also drops a noisy room tone. |
+| `max_pause` | `FLOAT` | Yes | 0.4 |  | Seconds any pause inside the clip is shortened to. 0.4 = natural speech; 0 = remove pauses entirely; large = leave pauses alone. |
+| `keep_edges` | `FLOAT` | Yes | 0.05 |  | Seconds of quiet left at the very start and end. 0 = trimmed tight. |
+| `trim_ends` | `BOOLEAN` | Yes | True |  | `true` = trim the start and end; `false` = only shorten pauses inside the clip. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The tightened clip. A batch is padded to its longest clip. |
+| `removed` | `FLOAT` | Seconds taken out of the first clip. |
+
+</details>
+
+<a id="node-wasaudioresample"></a>
+<details>
+<summary><b>Audio Resample</b></summary>
+
+Convert a clip to another sample rate without changing its pitch or length, band-limited so nothing aliases, such as bringing a 24 kHz voice to a 48 kHz video track.
+
+| | |
+|---|---|
+| Node id | `WASAudioResample` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to convert. |
+| `sample_rate` | `COMBO` | Yes | 48000 | `48000`, `44100`, `96000`, `32000`, `24000`, `22050`, `16000`, `8000`, `custom` | Samples per second wanted: 48000 = video; 44100 = CD and music; 16000 = speech models. custom = the rate widget. |
+| `rate` | `INT` | Yes | 48000 |  | Samples per second while sample_rate is custom, 1000 to 384000. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The clip at the new rate. |
+
+</details>
+
+<a id="node-wasaudioreverse"></a>
+<details>
+<summary><b>Audio Reverse</b></summary>
+
+Play a clip backwards, for reverse swells into a cymbal hit or a reverb tail that rises into a sound.
+
+| | |
+|---|---|
+| Node id | `WASAudioReverse` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to reverse. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The clip, last sample first. |
+
+</details>
+
+<a id="node-wasaudiospectrogram"></a>
+<details>
+<summary><b>Audio Spectrogram</b></summary>
+
+Draw a clip's spectrum over time as an IMAGE, high frequencies at the top, to see hum, noise, cut-offs and harmonics, or to feed the sound to an image model.
+
+| | |
+|---|---|
+| Node id | `WASAudioSpectrogram` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to draw. Every clip of a batch gets a picture. |
+| `width` | `INT` | Yes | 1024 |  | Picture width in pixels, such as `1024`; time runs left to right. |
+| `height` | `INT` | Yes | 512 |  | Picture height in pixels, such as `512`; frequency runs bottom to top. |
+| `scale` | `COMBO` | Yes | log | `log`, `mel`, `linear` | `log` = octaves evenly spaced, music reads best; `mel` = hearing's own scale, speech reads best; `linear` = hertz evenly spaced, hum stands out. |
+| `fft_size` | `COMBO` | Yes | 2048 | `2048`, `1024`, `4096`, `512` | Window in samples: 4096 = finer pitch, blurred timing; 512 = sharp timing, coarse pitch; 2048 = between. |
+| `floor_db` | `FLOAT` | Yes | -90.0 |  | Level drawn darkest, in dB below a full-scale sine. -90 = quiet detail; -60 = only the loud parts. |
+| `colours` | `COMBO` | Yes | magma | `magma`, `viridis`, `inferno`, `greyscale` | Colour map: `magma` and `inferno` run black to pale yellow, `viridis` purple to yellow, `greyscale` black to white. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | One spectrogram picture per clip. |
+
+</details>
+
+<a id="node-wasaudiosplit"></a>
+<details>
+<summary><b>Audio Split</b></summary>
+
+Split a clip into a list of clips: at silences, at listed times, every few seconds, into equal parts or on beats. The waveform on the node marks every clip, and in times mode a click places a cut.
+
+| | |
+|---|---|
+| Node id | `WASAudioSplit` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to split. Every clip of a batch is split the same way. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | silence = cut where it goes quiet; times = cut where listed; every = fixed length clips; parts = equal clips; beats = cut on the beat or bar. |
+| `fade` | `FLOAT` | Yes | 0.005 |  | Seconds each clip fades in and out over, so a cut through a sound does not click. 0.005 = inaudible; 0 = hard edges. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `clips` | `AUDIO` | The clips, in order, as a list. |
+| `count` | `INT` | How many clips the split made. |
+| `starts` | `FLOAT` | Seconds into the source each clip starts, one per clip. |
+
+</details>
+
+<a id="node-wasaudiostereoimager"></a>
+<details>
+<summary><b>Audio Stereo Imager</b></summary>
+
+Widen or narrow a clip's stereo image, fold the bass to mono so it stays tight on every system, and spread a mono clip with a short Haas delay. The node draws a vectorscope and the correlation.
+
+| | |
+|---|---|
+| Node id | `WASAudioStereoImager` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to place. A mono clip comes out as stereo. |
+| `width` | `FLOAT` | Yes | 1.0 |  | `0` = mono; `1` = unchanged; `1.5` = wider; `2` = very wide, check it in mono. |
+| `mono_below_hz` | `FLOAT` | Yes | 0.0 |  | Hertz below which everything is folded to mono. `0` = off; `120` = tight bass for a mix; `200` = vinyl safe. |
+| `haas_ms` | `FLOAT` | Yes | 0.0 |  | Milliseconds one channel is delayed, which spreads a mono clip. `0` = off; `12` = wide; past `25` it starts to sound like an echo. |
+| `haas_side` | `COMBO` | Yes | right | `right`, `left` | `right` = the right channel is delayed, the sound leans left; `left` = the reverse. |
+| `balance` | `FLOAT` | Yes | 0.0 |  | `-1` = left only; `0` = centred; `1` = right only. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The placed clip, in stereo. |
+| `correlation` | `FLOAT` | Correlation of the first clip's channels after, 1 = mono, 0 = wide, below 0 = cancels in mono. |
+
+</details>
+
+<a id="node-wasaudiotimestretch"></a>
+<details>
+<summary><b>Audio Time Stretch</b></summary>
+
+Make a clip faster or slower by a factor or to an exact length, keeping its pitch or letting the pitch follow like tape, such as fitting music to a video. The node plays both lengths.
+
+| | |
+|---|---|
+| Node id | `WASAudioTimeStretch` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to stretch. |
+| `speed` | `FLOAT` | Yes | 1.0 |  | 1 = unchanged; 2 = twice as fast, half as long; 0.5 = half speed. Ignored while duration is above 0. |
+| `duration` | `FLOAT` | Yes | 0.0 |  | Seconds the result lasts exactly, such as a video's length. 0 = use speed. |
+| `method` | `COMBO` | Yes | keep pitch | `keep pitch`, `tape` | `keep pitch` = same key, new tempo; `tape` = pitch rises and falls with the speed, like a record played at the wrong speed. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The stretched clip. |
+| `speed` | `FLOAT` | The speed applied: input length over output length. |
+
+</details>
+
+<a id="node-wasaudiotransition"></a>
+<details>
+<summary><b>Audio Transition</b></summary>
+
+Join two clips across an overlap: a crossfade, a dip to silence, a clean cut, a filter sweep, an echo out, a tape stop or a backspin. The node draws the seam and both fades on the joined waveform.
+
+| | |
+|---|---|
+| Node id | `WASAudioTransition` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `a` | `AUDIO` | Yes |  |  | The clip that plays first and hands over. |
+| `b` | `AUDIO` | Yes |  |  | The clip that follows. Brought to a's sample rate. |
+| `duration` | `FLOAT` | Yes | 2.0 |  | Seconds the two clips overlap. 2 = a DJ blend; 0.05 = a quick splice; 0 = butt join. Held to the shorter clip. Drag the seam's edge. |
+| `style` | `COMBO` | Yes | crossfade | `crossfade`, `dip to silence`, `cut`, `filter sweep`, `echo out`, `tape stop`, `backspin` | `crossfade` = blend; `dip to silence` = out, then in; `cut` = switch halfway; `filter sweep` = a darkens as b's bass arrives; `echo out` = a repeats away; `tape stop` = a slows to a halt; `backspin` = a spins back. |
+| `curve` | `COMBO` | Yes | equal power | `equal power`, `linear`, `s-curve`, `exponential`, `logarithmic` | Shape of the fades. `equal power` = steady level; `linear` = straight ramp; `s-curve` = soft ends; `exponential` = slow start; `logarithmic` = fast start. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | a, the transition, then b. |
+| `seam_start` | `FLOAT` | Seconds into the result the overlap starts. |
+| `seam_end` | `FLOAT` | Seconds into the result the overlap ends. |
+
+</details>
+
+### WAS Suite/Audio/Colour
+
+<a id="node-wasaudiobitcrusher"></a>
+<details>
+<summary><b>Audio Bitcrusher</b></summary>
+
+Reduce a clip to fewer bits and a lower sample rate for grit and aliasing, freely or as an SP-1200, MPC60, S950, 8-bit console, 4-bit chip or telephone, each with its own filtering.
+
+| | |
+|---|---|
+| Node id | `WASAudioBitcrusher` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to crush. |
+| `voicing` | `COMBO` | Yes | custom | `custom`, `SP-1200`, `MPC60`, `S950`, `8-bit console`, `4-bit chip`, `telephone` | `custom` = bits and rate as set; `SP-1200` = 12-bit 26 kHz, unfiltered crunch; `MPC60` = 12-bit 40 kHz, smoother; `S950` = 12-bit 32 kHz, dark; `8-bit console` and `4-bit chip` = game sounds. |
+| `bits` | `FLOAT` | Yes | 8.0 |  | Bits per sample on `custom`. `16` = clean; `8` = gritty; `4` = harsh; `1` = a square wave of the sound. |
+| `sample_rate` | `FLOAT` | Yes | 11025.0 |  | Hertz samples are held at on `custom`. `22050` = dull; `8000` = phone; `2000` = ringing aliases. At or above the clip's rate nothing is held. |
+| `jitter` | `FLOAT` | Yes | 0.0 |  | How unevenly samples are held. `0` = steady; `0.3` = a worn clock; `1` = noisy and broken. |
+| `dither` | `COMBO` | Yes | none | `none`, `tpdf`, `noise shaped` | `none` = hard steps, most grit; `tpdf` = noise instead of distortion on quiet parts; `noise shaped` = that noise pushed up high, quieter to the ear. |
+| `seed` | `INT` | Yes | 0 |  | Seed of the jitter and dither, such as `0`. The same seed gives the same result. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully crushed; `0.5` = crunch under the clean sound; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The crushed clip. |
+
+</details>
+
+<a id="node-wasaudiolofi"></a>
+<details>
+<summary><b>Audio Lo-Fi</b></summary>
+
+Play a clip back from a worn cassette, vinyl record, AM radio, telephone, VHS or tired tape: pitch wobble, hiss, crackle, a narrowed band and saturation, each scaled by its own amount and by age.
+
+| | |
+|---|---|
+| Node id | `WASAudioLoFi` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to age. |
+| `medium` | `COMBO` | Yes | cassette |  | `cassette` = hiss and wow; `vinyl` = crackle and rumble; `AM radio` and `telephone` = narrow mono; `VHS` = wobbly and dull; `worn tape` = everything, heavily. |
+| `age` | `FLOAT` | Yes | 0.5 |  | Scales every amount below. `0` = nearly new; `0.5` = used; `1` = falling apart. |
+| `wow` | `FLOAT` | Yes | 0.5 |  | Slow pitch drift. `0` = steady; `1` = seasick. |
+| `flutter` | `FLOAT` | Yes | 0.5 |  | Fast pitch flutter. `0` = steady; `1` = warbling. |
+| `noise` | `FLOAT` | Yes | 0.5 |  | Hiss and rumble. `0` = silent background; `1` = loud. |
+| `crackle` | `FLOAT` | Yes | 0.5 |  | Clicks and pops, mostly on `vinyl`. `0` = none; `1` = dusty. |
+| `bandwidth` | `FLOAT` | Yes | 0.3 |  | Narrows the band past the medium's own. `0` = as the medium; `1` = muffled and thin. |
+| `saturation` | `FLOAT` | Yes | 0.5 |  | How hard the medium is driven. `0` = clean; `1` = squashed. |
+| `seed` | `INT` | Yes | 0 |  | Seed of the wobble, noise and crackle, such as `0`. The same seed gives the same wear. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully worn; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The worn clip. |
+
+</details>
+
+<a id="node-wasaudioringmod"></a>
+<details>
+<summary><b>Audio Ring Mod</b></summary>
+
+Multiply a clip by a sine carrier for metallic, robotic ring modulation, or shift every frequency in it by a fixed number of hertz for inharmonic, barber-pole effects. The carrier can wander with an LFO.
+
+| | |
+|---|---|
+| Node id | `WASAudioRingMod` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to modulate. |
+| `mode` | `COMBO` | Yes | ring | `ring`, `amplitude`, `frequency shift` | `ring` = sum and difference tones, bell and robot; `amplitude` = tremolo at audio rates; `frequency shift` = every partial moved by frequency hertz. |
+| `frequency` | `FLOAT` | Yes | 300.0 |  | Carrier hertz, or the shift. `30` = rough buzz; `300` = robot voice; `-50` shifted = everything slightly flat and detuned. |
+| `depth` | `FLOAT` | Yes | 1.0 |  | `amplitude` only: how deep the modulation is. `1` = full; `0.3` = shimmer. |
+| `lfo_rate` | `FLOAT` | Yes | 0.2 |  | Hertz of the LFO moving the carrier. `0.2` = slow drift; `5` = warble. |
+| `lfo_depth` | `FLOAT` | Yes | 0.0 |  | Hertz the carrier wanders either way. `0` = steady; `100` = sci-fi sweep. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully modulated; `0.5` = blended; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The modulated clip. |
+
+</details>
+
+<a id="node-wasaudiosaturator"></a>
+<details>
+<summary><b>Audio Saturator</b></summary>
+
+Push a clip into a saturation curve, from gentle tube and tape warmth to transistor fuzz, hard clipping and wavefolding, oversampled so the harmonics stay clean. The node draws the curve it applies.
+
+| | |
+|---|---|
+| Node id | `WASAudioSaturator` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to saturate. |
+| `mode` | `COMBO` | Yes | tube | `tube`, `tape`, `transistor`, `diode`, `hard clip`, `foldback`, `wavefolder`, `rectify` | `tube` and `tape` = warm and soft; `transistor` = harder fuzz; `diode` = lopsided bite; `hard clip` = square edges; `foldback` and `wavefolder` = metallic folds; `rectify` = octave up. |
+| `drive_db` | `FLOAT` | Yes | 12.0 |  | dB pushed into the curve. `3` = subtle warmth; `12` = clearly driven; `30` and up = destroyed. |
+| `bias` | `FLOAT` | Yes | 0.0 |  | Offsets the curve so it breaks up unevenly, adding even harmonics. `0` = symmetric; `0.2` = classic tube warmth. |
+| `tone` | `FLOAT` | Yes | 0.0 |  | Tilts the result around 1 kHz, 6 dB at the extremes. `-1` = darker; `0` = flat; `1` = brighter. |
+| `oversample` | `COMBO` | Yes | 4x | `4x`, `2x`, `1x`, `8x` | `4x` = clean; `8x` = cleanest for heavy drive and folding; `1x` = fastest, harsh aliasing like a cheap pedal. |
+| `auto_gain` | `BOOLEAN` | Yes | True |  | `true` = the result is brought back to the input's average level, so drive changes tone, not loudness; `false` = louder as it saturates. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully saturated; `0.3` = parallel drive, body kept; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The saturated clip. |
+
+</details>
+
+<a id="node-wasaudioslew"></a>
+<details>
+<summary><b>Audio Slew</b></summary>
+
+Limit how fast a clip's waveform may rise and fall, so sharp edges round off into a soft, lopsided distortion and high frequencies dull, the slew of an analog circuit pushed too hard. Mix sets how much of the slewed signal is heard.
+
+| | |
+|---|---|
+| Node id | `WASAudioSlew` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to slew. |
+| `mode` | `COMBO` | Yes | limit | `limit`, `smooth` | `limit` = steps capped at a fixed rate, triangles and grit; `smooth` = eases towards the input, a lopsided low pass. |
+| `rise_ms` | `FLOAT` | Yes | 0.5 |  | Milliseconds a full swing from bottom to top takes. `0.05` = barely touched; `0.5` = rounded; `5` = heavy and muffled. |
+| `fall_ms` | `FLOAT` | Yes | 0.5 |  | Milliseconds a full swing down takes. Equal to rise_ms = even; different = lopsided, which adds even harmonics. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully slewed; `0.5` = blended; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The slewed clip. |
+
+</details>
+
+### WAS Suite/Audio/Dynamics
+
+<a id="node-wasaudiocompressor"></a>
+<details>
+<summary><b>Audio Compressor</b></summary>
+
+Turn loud passages down so a clip sits at an even level, or duck it under another clip wired into sidechain, such as music under a voice. Threshold and ratio drag on the curve drawn on the node.
+
+| | |
+|---|---|
+| Node id | `WASAudioCompressor` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to compress. |
+| `threshold_db` | `FLOAT` | Yes | -18.0 |  | Level in dBFS above which the gain comes down. -18 = moderate; -30 = most of the clip; -6 = only the loudest peaks. |
+| `ratio` | `FLOAT` | Yes | 4.0 |  | dB in per dB out above the threshold. `1` = off; `2` = gentle; `4` = firm; `10` and up = close to limiting. |
+| `knee_db` | `FLOAT` | Yes | 6.0 |  | dB around the threshold the ratio eases in over. `0` = hard knee; `6` = smooth; `12` = very gradual. |
+| `attack_ms` | `FLOAT` | Yes | 10.0 |  | Milliseconds the gain takes to come down. `1` = catches transients; `10` = keeps the punch; `50` = slow, lets drums through. |
+| `release_ms` | `FLOAT` | Yes | 120.0 |  | Milliseconds the gain takes to recover. `50` = fast and lively; `120` = natural; `500` = smooth, for vocals and buses. |
+| `detector` | `COMBO` | Yes | peak | `peak`, `rms` | `peak` = reacts to every sample, tighter control; `rms` = reacts to the average level over 10 ms, smoother and closer to what the ear hears. |
+| `lookahead_ms` | `FLOAT` | Yes | 0.0 |  | Milliseconds the gain starts coming down before a peak arrives. `0` = off; `5` = catches sharp transients without clicks. |
+| `makeup_db` | `FLOAT` | Yes | 0.0 |  | dB added after compression to bring the level back up. `0` = none. |
+| `auto_makeup` | `BOOLEAN` | Yes | False |  | `true` = add the gain the threshold and ratio take off at full scale, halved, on top of makeup_db; `false` = makeup_db only. |
+| `sidechain_cut_hz` | `FLOAT` | Yes | 0.0 |  | Hertz below which the detector ignores the signal, so bass does not pump the gain. `0` = off; `100` = typical for a mix. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully compressed; `0.5` = parallel compression, punch with the dynamics kept; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+| `sidechain` | `AUDIO` | No |  |  | Another clip whose level drives the gain, such as a voice ducking music. Empty = the clip drives itself. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The compressed clip. |
+| `max_reduction` | `FLOAT` | Most dB of gain reduction on the first clip. |
+
+</details>
+
+<a id="node-wasaudiodeesser"></a>
+<details>
+<summary><b>Audio De-Esser</b></summary>
+
+Turn down harsh s, sh and t sounds in a voice only when they flare, leaving the rest untouched, such as smoothing a bright text-to-speech take. Listen mode plays the band being caught, to tune the frequency.
+
+| | |
+|---|---|
+| Node id | `WASAudioDeEsser` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The voice to de-ess. |
+| `frequency` | `FLOAT` | Yes | 6000.0 |  | Hertz the sibilance band starts at. `5000` = deeper voices; `6000` = most voices; `8000` = bright female voices and TTS. |
+| `threshold_db` | `FLOAT` | Yes | -30.0 |  | Level in dBFS of the band above which it is turned down. Lower catches more: `-40` = heavy; `-20` = only the worst. |
+| `range_db` | `FLOAT` | Yes | 8.0 |  | Most dB the band is turned down. `4` = subtle; `8` = typical; `16` = lisping. |
+| `mode` | `COMBO` | Yes | split band | `split band`, `wideband`, `listen` | `split band` = only the high band goes down; `wideband` = the whole voice dips, more natural on light sibilance; `listen` = output the band caught. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The de-essed voice, or the band caught in listen mode. |
+| `max_reduction` | `FLOAT` | Most dB the band was turned down on the first clip. |
+
+</details>
+
+<a id="node-wasaudiogate"></a>
+<details>
+<summary><b>Audio Gate</b></summary>
+
+Shut out the quiet parts of a clip, such as room noise between words or bleed between drum hits, with a gate that opens and closes or an expander that eases them down. A sidechain input lets another clip open it.
+
+| | |
+|---|---|
+| Node id | `WASAudioGate` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to gate. |
+| `mode` | `COMBO` | Yes | gate | `gate`, `expander` | `gate` = opens and closes, with hold and hysteresis; `expander` = turns quiet parts down smoothly by ratio, gentler on breaths and tails. |
+| `threshold_db` | `FLOAT` | Yes | -40.0 |  | Level in dBFS the gate opens at, or below which the expander turns down. `-40` = speech in a quiet room; `-25` = noisy room. |
+| `depth_db` | `FLOAT` | Yes | 40.0 |  | dB the quiet parts are turned down by. `10` = gentle; `40` = near silence; `90` = off entirely. |
+| `ratio` | `FLOAT` | Yes | 3.0 |  | Expander only: dB of fall per dB under the threshold. `2` = gentle; `4` = firm. |
+| `hysteresis_db` | `FLOAT` | Yes | 4.0 |  | Gate only: dB under the threshold the level falls before the gate closes, so it does not chatter. `4` = typical. |
+| `attack_ms` | `FLOAT` | Yes | 1.0 |  | Milliseconds to open. `0.1` = snaps open for drums; `5` = soft for voice. |
+| `hold_ms` | `FLOAT` | Yes | 50.0 |  | Gate only: milliseconds it stays open after the level drops. `50` = speech; `200` = keeps a decaying note. |
+| `release_ms` | `FLOAT` | Yes | 150.0 |  | Milliseconds to close. `50` = tight; `300` = natural tails. |
+| `lookahead_ms` | `FLOAT` | Yes | 2.0 |  | Milliseconds the gate opens ahead of the sound, so the first transient is not cut. `0` = off. |
+| `sidechain_cut_hz` | `FLOAT` | Yes | 0.0 |  | Hertz below which the detector ignores the signal, so rumble does not open it. `0` = off; `150` = typical. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+| `sidechain` | `AUDIO` | No |  |  | Another clip whose level opens the gate, such as a kick opening a bass line. Empty = the clip opens itself. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The gated clip. |
+| `open_share` | `FLOAT` | Share of the first clip the gate was open for, 0 to 1. |
+
+</details>
+
+<a id="node-wasaudiolimiter"></a>
+<details>
+<summary><b>Audio Limiter</b></summary>
+
+Keep every peak at or under a ceiling, reading the peaks between samples, so a clip can be made louder without clipping. The final stage of a master, before Audio Normalize or after it.
+
+| | |
+|---|---|
+| Node id | `WASAudioLimiter` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to limit. |
+| `gain_db` | `FLOAT` | Yes | 0.0 |  | dB pushed into the limiter, which is how much louder the result gets. `0` = only catch overs; `6` = noticeably louder. |
+| `ceiling_db` | `FLOAT` | Yes | -1.0 |  | Highest level let through. `-1` = safe for lossy encoding; `-0.3` = lossless delivery; `0` = full scale. |
+| `release_ms` | `FLOAT` | Yes | 100.0 |  | Milliseconds the gain takes to recover. `20` = loud and dense; `100` = natural; `500` = transparent on sparse material. |
+| `lookahead_ms` | `FLOAT` | Yes | 5.0 |  | Milliseconds the gain starts falling before a peak. `5` = clean; `1` = sharper transients, more distortion on bass. |
+| `true_peak` | `BOOLEAN` | Yes | True |  | `true` = reads peaks between samples, four times oversampled, so the ceiling holds after encoding; `false` = sample peaks only. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The limited clip. |
+| `max_reduction` | `FLOAT` | Most dB of gain reduction on the first clip. |
+
+</details>
+
+<a id="node-wasaudiomultibandcompressor"></a>
+<details>
+<summary><b>Audio Multiband Compressor</b></summary>
+
+Compress the lows, mids and highs of a clip each on their own, so a boomy bass or a harsh top is held without pumping the rest, such as glueing a mix before the limiter.
+
+| | |
+|---|---|
+| Node id | `WASAudioMultibandCompressor` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to compress. |
+| `low_split` | `FLOAT` | Yes | 200.0 |  | Hertz between the low and mid bands. `120` = kick and bass only; `200` = typical; `400` = includes low mids. |
+| `high_split` | `FLOAT` | Yes | 3000.0 |  | Hertz between the mid and high bands. `2500` = presence and up; `6000` = air and sibilance only. |
+| `low_threshold_db` | `FLOAT` | Yes | -20.0 |  | dBFS the low band starts compressing at, such as `-20`. |
+| `low_ratio` | `FLOAT` | Yes | 3.0 |  | Ratio of the low band. `1` = off; `3` = firm. |
+| `low_gain_db` | `FLOAT` | Yes | 0.0 |  | dB added to the low band after compression. `0` = none. |
+| `mid_threshold_db` | `FLOAT` | Yes | -20.0 |  | dBFS the mid band starts compressing at, such as `-20`. |
+| `mid_ratio` | `FLOAT` | Yes | 2.0 |  | Ratio of the mid band. `1` = off; `2` = gentle. |
+| `mid_gain_db` | `FLOAT` | Yes | 0.0 |  | dB added to the mid band after compression. `0` = none. |
+| `high_threshold_db` | `FLOAT` | Yes | -24.0 |  | dBFS the high band starts compressing at, such as `-24`. |
+| `high_ratio` | `FLOAT` | Yes | 2.5 |  | Ratio of the high band. `1` = off; `2.5` = tames harshness. |
+| `high_gain_db` | `FLOAT` | Yes | 0.0 |  | dB added to the high band after compression. `0` = none. |
+| `attack_ms` | `FLOAT` | Yes | 15.0 |  | Milliseconds every band takes to come down. `5` = tight; `30` = keeps transients. |
+| `release_ms` | `FLOAT` | Yes | 150.0 |  | Milliseconds every band takes to recover. `80` = lively; `300` = glued. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully compressed; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The compressed clip. |
+
+</details>
+
+<a id="node-wasaudiotransientshaper"></a>
+<details>
+<summary><b>Audio Transient Shaper</b></summary>
+
+Make every hit in a clip punchier or softer and its ring longer or shorter, whatever its level, such as tightening a drum loop or taming a plucked guitar. No threshold to set.
+
+| | |
+|---|---|
+| Node id | `WASAudioTransientShaper` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to shape. |
+| `attack` | `FLOAT` | Yes | 0.5 |  | `1` = hits jump out; `0` = unchanged; `-1` = hits softened, as if further away. |
+| `sustain` | `FLOAT` | Yes | 0.0 |  | `1` = tails and room ring longer; `0` = unchanged; `-1` = tails cut short, dry and tight. |
+| `speed` | `FLOAT` | Yes | 1.0 |  | Multiplies the shaper's timing. `0.5` = snappy, for hats and clicks; `1` = drums; `2` = slow, for pianos and pads. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully shaped; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The shaped clip. |
+
+</details>
+
+### WAS Suite/Audio/Filter
+
+<a id="node-wasaudioanalogfilter"></a>
+<details>
+<summary><b>Audio Analog Filter</b></summary>
+
+Run a clip through a resonant analog filter, a Moog-style ladder, a 303-style diode, an MS-20 or an SEM, driven into its saturation, with the cutoff swept by the clip's own envelope for auto-wah or by an LFO.
+
+| | |
+|---|---|
+| Node id | `WASAudioAnalogFilter` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to filter. |
+| `model` | `COMBO` | Yes | ladder | `ladder`, `diode`, `ms-20`, `sem` | `ladder` = warm 24 dB Moog style; `diode` = squelchy 303 style; `ms-20` = screaming 12 dB; `sem` = smooth 12 dB with every response. |
+| `mode` | `COMBO` | Yes | low pass | `low pass`, `high pass`, `band pass`, `notch` | `low pass` = darker; `high pass` = thinner; `band pass` = telephone and wah; `notch` = phasey hole, `sem` only. Falls back to `low pass` where a voicing has no such response. |
+| `cutoff` | `FLOAT` | Yes | 1200.0 |  | Hertz the filter bends at. `200` = muffled; `1200` = warm; `5000` = bright. Drag on the curve. |
+| `resonance` | `FLOAT` | Yes | 0.3 |  | Peak at the cutoff. `0` = none; `0.6` = vocal and squelchy; `0.95` and up = rings and self-oscillates. |
+| `drive_db` | `FLOAT` | Yes | 6.0 |  | dB pushed into the filter's saturation. `0` = clean; `6` = warm; `24` = growling. The level is brought back down after. |
+| `envelope` | `FLOAT` | Yes | 0.0 |  | How far the clip's own level moves the cutoff, up to 6 octaves. `0.5` = auto-wah that opens on every hit; `-0.5` = closes on hits. |
+| `lfo_depth` | `FLOAT` | Yes | 0.0 |  | Octaves the LFO sweeps the cutoff either way. `0` = off; `1` = classic sweep; `3` = dramatic. |
+| `lfo_rate` | `FLOAT` | Yes | 0.5 |  | LFO cycles per second, when bpm is 0. `0.25` = slow sweep; `6` = wobble. |
+| `lfo_shape` | `COMBO` | Yes | sine | `sine`, `triangle`, `square`, `saw up`, `saw down`, `random steps`, `random smooth` | `sine` = smooth; `triangle` = even; `square` = jumps; `saw up` and `saw down` = ramps; `random steps` = sample and hold. |
+| `bpm` | `FLOAT` | Yes | 0.0 |  | Tempo the LFO locks to, one cycle per division. `0` = use lfo_rate. |
+| `division` | `COMBO` | Yes | 1/4 | `1/4`, `1/8`, `1/16`, `1/32`, `1/2`, `1/1`, `2/1`, `4/1`, `1/4d`, `1/8d`, `1/16d`, `1/4t` and 2 more | Note length of one LFO cycle at bpm: `1/4` = a beat; `1/8d` = dotted eighth; `1/16t` = triplet sixteenth. |
+| `attack_ms` | `FLOAT` | Yes | 5.0 |  | Milliseconds the envelope takes to rise. `2` = snappy wah; `50` = slow bloom. |
+| `release_ms` | `FLOAT` | Yes | 150.0 |  | Milliseconds the envelope takes to fall. `80` = quick; `400` = lazy. |
+| `oversample` | `COMBO` | Yes | 2x | `2x`, `1x`, `4x` | `2x` = clean at high cutoffs and drive; `1x` = half the time, may alias; `4x` = cleanest, slowest. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `1` = fully filtered; `0` = the input unchanged. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The filtered clip. |
+
+</details>
+
+<a id="node-wasaudioequalizer"></a>
+<details>
+<summary><b>Audio Equalizer</b></summary>
+
+Boost or cut parts of a clip's tone with up to 16 bells, shelves, cuts and notches, dragged into place on a curve drawn over the clip's spectrum before and after.
+
+| | |
+|---|---|
+| Node id | `WASAudioEqualizer` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to equalise. |
+| `bands` | `STRING` | Yes | off low cut 30 12; low shelf 100 0 0.7; bell 400 0 1; bell 2500 0 1; high shelf 8000 0 0.7; off high cut 18000 12 |  | Bands as `kind hertz gain Q`, cuts as `kind hertz slope`, separated by `;`: `low cut 30 24; bell 2500 -3 1.2`. `off` bypasses one. Drag them on the curve instead. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The equalised clip. |
+
+</details>
+
+### WAS Suite/Audio/Modulation
+
+<a id="node-wasaudiochorus"></a>
+<details>
+<summary><b>Audio Chorus</b></summary>
+
+Thicken a voice, guitar or pad with slightly delayed copies of itself that drift in time: a multi-voice chorus, the lush three-phase string ensemble, or a pitch vibrato. The node plays the clip before and after.
+
+| | |
+|---|---|
+| Node id | `WASAudioChorus` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to chorus. |
+| `mode` | `COMBO` | Yes | chorus | `chorus`, `ensemble`, `vibrato` | `chorus` = several drifting copies, wider and thicker; `ensemble` = three copies on a slow and a fast wobble, the string machine sound; `vibrato` = one moving copy, a pitch wobble, best at mix 1. |
+| `rate` | `FLOAT` | Yes | 0.8 |  | Hertz the copies drift at. `0.3` = slow and lush; `0.8` = typical; `3` = fast and seasick. `ensemble` adds a wobble 8 times faster. |
+| `depth` | `FLOAT` | Yes | 2.0 |  | Milliseconds the delay swings either side of `delay`. `0.5` = subtle; `2` = typical; `5` = a strong pitch wobble. |
+| `delay` | `FLOAT` | Yes | 15.0 |  | Milliseconds the copies run behind the clip. `7` = tight; `15` = typical; `30` = close to a double. `vibrato` ignores it and stays in time. |
+| `voices` | `INT` | Yes | 3 |  | Copies in `chorus` mode, spread in delay and timing. `2` = light; `3` = typical; `6` = dense. `ensemble` uses 3 and `vibrato` 1. |
+| `spread` | `FLOAT` | Yes | 0.25 |  | Share of a cycle the right channel's drift runs ahead of the left. `0` = the same on both sides; `0.25` = wide; `0.5` = widest. A mono clip stays mono. |
+| `feedback` | `FLOAT` | Yes | 0.0 |  | Share of the copies fed back in `chorus` mode, for a metallic edge. `0` = off; `0.3` = noticeable; negative = hollow. The other modes ignore it. |
+| `mix` | `FLOAT` | Yes | 0.5 |  | `0` = the input unchanged; `0.5` = equal blend, the classic chorus; `1` = the copies only, which `vibrato` wants. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The chorused clip, as long as the input. |
+
+</details>
+
+<a id="node-wasaudioflanger"></a>
+<details>
+<summary><b>Audio Flanger</b></summary>
+
+Sweep a very short delayed copy against a clip for the jet-plane whoosh of a flanger, with feedback for a metallic ring and a through-zero mode that cancels like two tapes running in sync. The sweep follows a rate or a tempo.
+
+| | |
+|---|---|
+| Node id | `WASAudioFlanger` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to flange. |
+| `mode` | `COMBO` | Yes | classic | `classic`, `through-zero` | `classic` = a delayed copy sweeps against the clip, the jet whoosh; `through-zero` = an inverted copy sweeps past the clip itself, cancelling at each crossing like two tapes in sync. |
+| `rate` | `FLOAT` | Yes | 0.25 |  | Hertz of the sweep. `0.1` = one pass every 10 seconds; `0.25` = typical; `2` = fast. Unused when bpm is above 0. |
+| `depth` | `FLOAT` | Yes | 0.7 |  | Share of manual swept either side. `0` = a fixed comb; `0.5` = from half to one and a half times manual; `1` = from 0 to twice manual. |
+| `manual` | `FLOAT` | Yes | 2.0 |  | Milliseconds of the centre delay. `0.5` = a high, bright sweep; `2` = typical; `8` = low, close to a chorus. |
+| `feedback` | `FLOAT` | Yes | 0.5 |  | Share of the delayed copy fed back. `0` = gentle; `0.7` = a metallic ring; `-0.7` = hollow and nasal. The average level is held as it rises. |
+| `spread` | `FLOAT` | Yes | 0.0 |  | Share of a cycle the right channel's sweep runs ahead of the left. `0` = the same on both sides; `0.25` = swirling; `0.5` = opposite. A mono clip stays mono. |
+| `shape` | `COMBO` | Yes | triangle | `sine`, `triangle`, `square`, `saw up`, `saw down`, `random steps`, `random smooth` | `triangle` = an even sweep up and down; `sine` = lingers at the ends; `saw up` and `saw down` = one way, then back; `random smooth` = wandering. Jumps are smoothed over 2 ms. |
+| `bpm` | `FLOAT` | Yes | 0.0 |  | Tempo the sweep follows. `0` = use rate; `120` = one sweep per division at 120 BPM. |
+| `division` | `COMBO` | Yes | 1/1 | `1/4`, `1/8`, `1/16`, `1/32`, `1/2`, `1/1`, `2/1`, `4/1`, `1/4d`, `1/8d`, `1/16d`, `1/4t` and 2 more | Note length of one sweep when bpm is above 0. `1/4` = a beat; `1/1` = a bar of 4/4; `d` = dotted; `t` = triplet. |
+| `mix` | `FLOAT` | Yes | 0.5 |  | `0` = the input unchanged; `0.5` = equal blend, the deepest notches; `1` = the delayed copy only, a pitch wobble. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The flanged clip, as long as the input. |
+
+</details>
+
+<a id="node-wasaudiophaser"></a>
+<details>
+<summary><b>Audio Phaser</b></summary>
+
+Sweep notches through a clip's spectrum with a chain of allpass stages, for the swirling phase sound of guitars, keys and drums. The sweep runs between two frequencies on a rate or a tempo.
+
+| | |
+|---|---|
+| Node id | `WASAudioPhaser` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to phase. |
+| `stages` | `INT` | Yes | 4 |  | Allpass stages; every 2 make one notch. `2` = subtle; `4` = classic; `8` = deep and vocal; `12` = dense. |
+| `rate` | `FLOAT` | Yes | 0.5 |  | Hertz of the sweep. `0.1` = a slow swirl; `0.5` = typical; `4` = a fast warble. Unused when bpm is above 0. |
+| `low_hz` | `FLOAT` | Yes | 200.0 |  | Hertz the sweep reaches at its lowest. `100` = deep; `300` = typical. Swapped with high_hz when above it. |
+| `high_hz` | `FLOAT` | Yes | 2000.0 |  | Hertz the sweep reaches at its highest. `1500` = mellow; `4000` = bright; `10000` = airy. Held below half the sample rate. |
+| `feedback` | `FLOAT` | Yes | 0.3 |  | Share of the last stage fed back into the first. `0` = smooth; `0.7` = sharp resonant peaks; negative = peaks moved between the notches. The average level is held. |
+| `spread` | `FLOAT` | Yes | 0.0 |  | Share of a cycle the right channel's sweep runs ahead of the left. `0` = the same on both sides; `0.25` = swirling; `0.5` = opposite. A mono clip stays mono. |
+| `shape` | `COMBO` | Yes | sine | `sine`, `triangle`, `square`, `saw up`, `saw down`, `random steps`, `random smooth` | `sine` = a smooth sweep; `triangle` = even up and down; `saw up` and `saw down` = one way, then back; `random smooth` = wandering. Jumps are smoothed over 2 ms. |
+| `bpm` | `FLOAT` | Yes | 0.0 |  | Tempo the sweep follows. `0` = use rate; `120` = one sweep per division at 120 BPM. |
+| `division` | `COMBO` | Yes | 1/1 | `1/4`, `1/8`, `1/16`, `1/32`, `1/2`, `1/1`, `2/1`, `4/1`, `1/4d`, `1/8d`, `1/16d`, `1/4t` and 2 more | Note length of one sweep when bpm is above 0. `1/4` = a beat; `1/1` = a bar of 4/4; `d` = dotted; `t` = triplet. |
+| `mix` | `FLOAT` | Yes | 0.5 |  | `0` = the input unchanged; `0.5` = equal blend, the classic full notches; `1` = the phase-shifted copy only, close to the input. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The phased clip, as long as the input. |
+
+</details>
+
+<a id="node-wasaudiotremolo"></a>
+<details>
+<summary><b>Audio Tremolo</b></summary>
+
+Pulse a clip's volume, or move it from side to side, at a steady rate or in time with a tempo. A mono clip auto-panned comes out stereo. The node plays the clip before and after.
+
+| | |
+|---|---|
+| Node id | `WASAudioTremolo` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to pulse or pan. |
+| `mode` | `COMBO` | Yes | tremolo | `tremolo`, `auto-pan` | `tremolo` = the volume pulses; `auto-pan` = the sound moves between left and right at constant power, and a mono clip comes out stereo. |
+| `rate` | `FLOAT` | Yes | 4.0 |  | Hertz of the pulse. `2` = a slow throb; `5` = a classic amp tremolo; `12` = a fast flutter. Unused when bpm is above 0. |
+| `depth` | `FLOAT` | Yes | 0.5 |  | `0` = no change; `0.5` = dips to half volume; `1` = dips to silence, or pans fully from side to side in `auto-pan`. |
+| `shape` | `COMBO` | Yes | sine | `sine`, `triangle`, `square`, `saw up`, `saw down`, `random steps`, `random smooth` | `sine` = a smooth pulse; `triangle` = even ramps; `square` = on and off, a chop; `saw up` = swells; `saw down` = decays; random shapes wander. Jumps are smoothed over 2 ms. |
+| `stereo_phase` | `FLOAT` | Yes | 0.0 |  | Share of a cycle the right channel's pulse runs ahead of the left in `tremolo`. `0` = together; `0.5` = alternating sides. `auto-pan` ignores it. |
+| `bpm` | `FLOAT` | Yes | 0.0 |  | Tempo the pulse follows. `0` = use rate; `120` = one pulse per division at 120 BPM. |
+| `division` | `COMBO` | Yes | 1/8 | `1/4`, `1/8`, `1/16`, `1/32`, `1/2`, `1/1`, `2/1`, `4/1`, `1/4d`, `1/8d`, `1/16d`, `1/4t` and 2 more | Note length of one pulse when bpm is above 0. `1/4` = a beat; `1/8` = two per beat; `d` = dotted; `t` = triplet. |
+| `mix` | `FLOAT` | Yes | 1.0 |  | `0` = the input unchanged; `0.5` = half the depth; `1` = the full effect. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. A full `auto-pan` raises the near side 3 dB. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The pulsed or panned clip, as long as the input; stereo after `auto-pan`. |
+
+</details>
+
+### WAS Suite/Audio/Space
+
+<a id="node-wasaudioconvolutionreverb"></a>
+<details>
+<summary><b>Audio Convolution Reverb</b></summary>
+
+Put a clip in a real space, or through a speaker cabinet, by convolving it with an impulse response recorded there and loaded with Load Audio. The node plays the clip before and after and draws the impulse response's measured decay.
+
+| | |
+|---|---|
+| Node id | `WASAudioConvolutionReverb` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to reverberate. |
+| `impulse` | `AUDIO` | Yes |  |  | The impulse response, at most 30 s after length and stretch. Mono = the same space on every channel; stereo on a mono clip = a stereo result. A batch pairs clip by clip. |
+| `pre_delay` | `FLOAT` | Yes | 0.0 |  | Milliseconds the reverb starts late. `0` = as recorded; `30` = keeps a voice clear of its tail. |
+| `length` | `FLOAT` | Yes | 0.0 |  | Seconds of the impulse response kept, faded at the end. `0` = all of it; `1.5` = a shorter decay from the same space. |
+| `stretch` | `FLOAT` | Yes | 1.0 |  | Factor on the impulse response's duration. `1` = as recorded; `0.5` = a smaller, brighter space; `2` = a larger, darker one. |
+| `low_cut` | `FLOAT` | Yes | 0.0 |  | Hertz below which the reverb is cut. `0` = off; `100` = clears boom; `300` = thin. |
+| `high_cut` | `FLOAT` | Yes | 0.0 |  | Hertz above which the reverb is cut. `0` = off; `8000` = softer; `4000` = dark. |
+| `normalise` | `BOOLEAN` | Yes | True |  | `true` = the impulse response is brought to unit energy, so mix sets a sane level; `false` = used at its recorded level. |
+| `mix` | `FLOAT` | Yes | 0.3 |  | `0` = the input unchanged; `0.3` = a reverb on a dry track; `1` = the reverb only, for a send or a cabinet. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+| `tail` | `FLOAT` | Yes | -1.0 |  | Seconds added past the input for the reverb to ring out. `-1` = the impulse response's length plus pre_delay; `0` = none, cut at the input's end. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The reverberated clip, longer by the tail. |
+
+</details>
+
+<a id="node-wasaudiodelay"></a>
+<details>
+<summary><b>Audio Delay</b></summary>
+
+Repeat a clip as echoes that fade away: clean and exact, a wobbling tape echo, a dark bucket brigade, or bouncing between left and right, timed in milliseconds or to a tempo. The node plays the clip before and after and marks where the repeats land.
+
+| | |
+|---|---|
+| Node id | `WASAudioDelay` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to echo. |
+| `mode` | `COMBO` | Yes | digital | `digital`, `tape`, `BBD`, `ping-pong` | `digital` = clean, exact repeats; `tape` = wow, flutter and saturation, each repeat duller; `BBD` = dark, gritty analog repeats; `ping-pong` = repeats alternate left and right, a mono clip becomes stereo. |
+| `time_ms` | `FLOAT` | Yes | 350.0 |  | Milliseconds between repeats when bpm is 0. `80` = slapback; `350` = classic echo; `1000` = long and spacious. |
+| `bpm` | `FLOAT` | Yes | 0.0 |  | Tempo the repeats lock to, one per division. `0` = use time_ms; `120` with `1/8` = 250 ms. |
+| `division` | `COMBO` | Yes | 1/8 | `1/4`, `1/8`, `1/16`, `1/32`, `1/2`, `1/1`, `2/1`, `4/1`, `1/4d`, `1/8d`, `1/16d`, `1/4t` and 2 more | Note length between repeats when bpm is above 0. `1/4` = a beat; `1/8d` = dotted eighth; `1/8t` = triplet eighth. |
+| `feedback` | `FLOAT` | Yes | 0.4 |  | Share of each repeat fed into the next. `0` = one repeat; `0.4` = a few; `0.9` = long trails; `0.98` = near endless. |
+| `low_cut` | `FLOAT` | Yes | 0.0 |  | Hertz cut below on every repeat, so each is thinner. `0` = off; `150` = keeps the bass clean; `500` = telephone thin. |
+| `high_cut` | `FLOAT` | Yes | 0.0 |  | Hertz cut above on every repeat, so each is darker. `0` = off; `6000` = softer trails; `2500` = muffled. |
+| `drive` | `FLOAT` | Yes | 0.0 |  | Saturation on every repeat. `0` = clean (`tape` keeps a little); `0.3` = warm; `1` = crushed and compressed. |
+| `duck` | `FLOAT` | Yes | 0.0 |  | How far the repeats dip while the dry clip is loud. `0` = off; `0.5` = half; `1` = the repeats only come up in the gaps. |
+| `width` | `FLOAT` | Yes | 1.0 |  | Stereo spread of the repeats. `0` = centred; `1` = as the clip, or hard left and right in `ping-pong`. |
+| `mix` | `FLOAT` | Yes | 0.35 |  | `0` = the input unchanged; `0.35` = echoes behind the clip; `1` = the repeats only. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+| `tail` | `FLOAT` | Yes | -1.0 |  | Seconds added past the input for the repeats to fade. `-1` = until they fall 60 dB, at most 30; `0` = none, cut at the input's end. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The echoed clip, longer by the tail. |
+
+</details>
+
+<a id="node-wasaudioreverb"></a>
+<details>
+<summary><b>Audio Reverb</b></summary>
+
+Put a dry voice, instrument or effect in a room, hall, plate, chamber or spring tank, with the decay time set in seconds and the tail left to ring out. The node plays the clip before and after and draws the reverb's measured decay.
+
+| | |
+|---|---|
+| Node id | `WASAudioReverb` |
+| Turn off with | `features.audio: false` in `config.yaml` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `audio` | `AUDIO` | Yes |  |  | The clip to reverberate. |
+| `room` | `COMBO` | Yes | hall | `room`, `hall`, `plate`, `chamber`, `spring` | `room` = small, close walls; `hall` = large and smooth; `plate` = dense, bright, no early echoes; `chamber` = warm and thick; `spring` = the boing of a guitar amp tank. |
+| `decay` | `FLOAT` | Yes | 2.0 |  | Seconds the tail takes to fall 60 dB around 1 kHz. `0.5` = small room; `2` = hall; `6` = cathedral. |
+| `size` | `FLOAT` | Yes | 1.0 |  | Scale on the room's dimensions. `1` = as designed; `0.5` = half, denser and tighter; `2` = double, sparser echoes. |
+| `pre_delay` | `FLOAT` | Yes | 20.0 |  | Milliseconds before the reverb answers. `0` = at once; `20` = natural; `80` = keeps a voice clear of its tail. |
+| `damping` | `FLOAT` | Yes | 0.5 |  | How much faster the highs die than the decay. `0` = as long, bright; `0.5` = about half as long; `1` = a tenth as long, dark. |
+| `modulation` | `FLOAT` | Yes | 0.3 |  | Slow movement in the tail that smooths metallic ringing. `0` = static; `0.3` = subtle; `1` = lush chorus. `spring` ignores it. |
+| `low_cut` | `FLOAT` | Yes | 80.0 |  | Hertz below which the reverb is cut. `0` = off; `80` = clears rumble; `300` = thin, keeps a mix clean. |
+| `high_cut` | `FLOAT` | Yes | 10000.0 |  | Hertz above which the reverb is cut. `0` = off; `10000` = natural; `4000` = dark and vintage. |
+| `width` | `FLOAT` | Yes | 1.0 |  | Stereo spread of the reverb. `0` = the same on every channel; `1` = fully decorrelated. A mono clip stays mono. |
+| `mix` | `FLOAT` | Yes | 0.3 |  | `0` = the input unchanged; `0.3` = a reverb on a dry track; `1` = the reverb only, for a send. |
+| `output_db` | `FLOAT` | Yes | 0.0 |  | dB applied to the result. `0` = unchanged. |
+| `tail` | `FLOAT` | Yes | -1.0 |  | Seconds added past the input for the reverb to ring out. `-1` = decay plus pre_delay, at most 30; `0` = none, cut at the input's end. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `audio` | `AUDIO` | The reverberated clip, longer by the tail. |
 
 </details>
 

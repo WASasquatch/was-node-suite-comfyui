@@ -24,6 +24,7 @@ __all__ = [
     "cached",
     "checkpoint_shapes",
     "compute_device",
+    "forget",
     "managed",
     "managed_module",
     "model_directories",
@@ -755,6 +756,23 @@ def managed_module(
         The cached backend, whose ``processor`` is ``None``.
     """
     return managed(key, lambda: (None, build()), device=device, name=name)
+
+
+def forget(key: tuple) -> bool:
+    """Drop the backends cached under a key and hand back the memory they held.
+
+    Args:
+        key: The key :func:`managed` or :func:`cached` was given, or a managed key with its
+            device appended.
+
+    Returns:
+        True when anything was held under the key.
+    """
+    key = tuple(key)
+    dropped = [entry for entry in list(_cache) if entry == key or entry[:-1] == key]
+    for entry in dropped:
+        _release(_cache.pop(entry))
+    return bool(dropped)
 
 
 def cached(key: tuple, build):

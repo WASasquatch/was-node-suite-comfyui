@@ -9,6 +9,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 __all__ = [
+    "AUDIO_TRACKS",
     "BEATS",
     "BLIP_MODEL",
     "BUS",
@@ -23,6 +24,22 @@ __all__ = [
     "H3_PROMPTS",
     "IMAGE_BOUNDS",
     "LIST",
+    "LLM",
+    "LLM_AGENTS",
+    "LLM_CHAT_ENGINE",
+    "LLM_DOCUMENTS",
+    "LLM_EMBEDDING",
+    "LLM_INDEX",
+    "LLM_MEMORY",
+    "LLM_MEMORY_BLOCKS",
+    "LLM_MESSAGES",
+    "LLM_POSTPROCESSORS",
+    "LLM_QUERY_ENGINE",
+    "LLM_RETRIEVER",
+    "LLM_SOURCES",
+    "LLM_TABLES",
+    "LLM_VECTOR_STORE",
+    "LLM_TOOLS",
     "LORA_STACK",
     "LUT",
     "MIDAS_MODEL",
@@ -89,6 +106,11 @@ H3_PROMPTS = io.Custom("WAS_H3_PROMPTS")
 #: plays there, as a tuple of `modules.latent.h3_assets.Asset` in chain order.
 H3_ASSETS = io.Custom("WAS_H3_ASSETS")
 
+#: `Audio Mixer Track` -> the next `Audio Mixer Track` and `Audio Mixer`. The clips of a mix,
+#: each with its fader, pan, mute, solo and start, as a tuple of `modules.audio.mixer.Track` in
+#: chain order.
+AUDIO_TRACKS = io.Custom("WAS_AUDIO_TRACKS")
+
 #: `Audio Beats` output. A track's beat times, downbeats, tempo and per-frame loudness, as a
 #: `modules.media.beats.Beats`.
 BEATS = io.Custom("WAS_BEATS")
@@ -131,6 +153,70 @@ IMAGE_BOUNDS = io.Custom("IMAGE_BOUNDS")
 #: Wire-compatible with core's `io.Array`, which emits the same io_type and carries the same
 #: plain list; declared here so all custom sockets resolve from one module.
 LIST = io.Custom("ARRAY")
+
+#: A language model, from the LLM model nodes to every node that writes, ranks or reasons with
+#: text. Carries a `modules.llm.wires.LanguageModel`: the llama-index LLM, where it runs and
+#: what it can do.
+LLM = io.Custom("WAS_LLM")
+
+#: An embedding model, from `LLM Embedding Model` to the indexes, the semantic splitter and the
+#: vector memory. Carries a `modules.llm.wires.EmbeddingModel`.
+LLM_EMBEDDING = io.Custom("WAS_LLM_EMBEDDING")
+
+#: A conversation, from `LLM Message` to the next `LLM Message`, `LLM Chat` and the agents. A
+#: `modules.llm.wires.Messages` holding llama-index `ChatMessage` objects in order.
+LLM_MESSAGES = io.Custom("WAS_LLM_MESSAGES")
+
+#: Whole documents or the chunks split from them, from the LLM document loaders to the
+#: splitters and the indexes. A `modules.llm.wires.Documents`.
+LLM_DOCUMENTS = io.Custom("WAS_LLM_DOCUMENTS")
+
+#: A built index, from the LLM index nodes to the retrievers, query engines and `LLM Save
+#: Index`. A `modules.llm.wires.Index`.
+LLM_INDEX = io.Custom("WAS_LLM_INDEX")
+
+#: A retriever, from the LLM retriever nodes to `LLM Retrieve`, the query and chat engines and
+#: the retriever tool. A `modules.llm.wires.Retriever`.
+LLM_RETRIEVER = io.Custom("WAS_LLM_RETRIEVER")
+
+#: Steps run over retrieved chunks before an answer is written, filters and rerankers in chain
+#: order. A tuple of `modules.llm.wires.Postprocessor`.
+LLM_POSTPROCESSORS = io.Custom("WAS_LLM_POSTPROCESSORS")
+
+#: A query engine, from the LLM query engine nodes to `LLM Query` and `LLM Query Engine Tool`.
+#: A `modules.llm.wires.QueryEngine`.
+LLM_QUERY_ENGINE = io.Custom("WAS_LLM_QUERY_ENGINE")
+
+#: How `LLM Chat Session` builds a chat engine around its memory. A
+#: `modules.llm.wires.ChatEngine`.
+LLM_CHAT_ENGINE = io.Custom("WAS_LLM_CHAT_ENGINE")
+
+#: Where a conversation is kept between runs and how much of it reaches the model. A
+#: `modules.llm.memory.MemorySpec`.
+LLM_MEMORY = io.Custom("WAS_LLM_MEMORY")
+
+#: Long-term memory blocks in chain order, from `LLM Memory Block` to `LLM Memory`. A tuple of
+#: `modules.llm.memory.BlockSpec`.
+LLM_MEMORY_BLOCKS = io.Custom("WAS_LLM_MEMORY_BLOCKS")
+
+#: Tools an agent may call, in chain order. A tuple of llama-index tools.
+LLM_TOOLS = io.Custom("WAS_LLM_TOOLS")
+
+#: Agents in chain order, from `LLM Agent` to the next `LLM Agent` and `LLM Run Agent`. A tuple of
+#: `modules.llm.wires.AgentSpec`.
+LLM_AGENTS = io.Custom("WAS_LLM_AGENTS")
+
+#: The chunks a retrieval or a query answered from, with their scores, for the evaluators and
+#: `LLM Sources to Text`. A `modules.llm.wires.Sources`.
+LLM_SOURCES = io.Custom("WAS_LLM_SOURCES")
+
+#: Tables in one in-memory database, from `LLM Load Table` to the next `LLM Load Table`, `LLM
+#: SQL Query Engine` and `LLM Table to Documents`. A `modules.llm.tables.Tables`.
+LLM_TABLES = io.Custom("WAS_LLM_TABLES")
+
+#: A collection in a vector store, from `LLM Vector Store` to `LLM Vector Index` and `LLM Vector
+#: Store Index`. A `modules.llm.vector_stores.VectorStore`.
+LLM_VECTOR_STORE = io.Custom("WAS_LLM_VECTOR_STORE")
 
 #: A colour lookup table, from `WASNSLoadLUT` and `WASNSCombineLUT` to `WASNSApplyLUT` and
 #: `WASNSSaveLUT`. Carries a `modules.image.lut.LUT`, not a bare array.

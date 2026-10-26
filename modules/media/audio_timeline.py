@@ -16,6 +16,13 @@ __all__ = ["AUDIO_FFT", "AUDIO_HOP", "retimed"]
 AUDIO_FFT = 2048
 AUDIO_HOP = 512
 
+#: Bins and columns each level match averages over.
+LEVEL_BINS = 9
+LEVEL_COLUMNS = 5
+
+#: Most a level match raises or lowers a region, as a gain.
+LEVEL_LIMIT = 2.0
+
 
 def retimed(audio: dict, frames: float, read_at, fps: float) -> dict:
     """Audio rebuilt on a new timeline, each output moment read from a mapped input moment.
@@ -59,9 +66,45 @@ def retimed(audio: dict, frames: float, read_at, fps: float) -> dict:
         torch.cat([torch.zeros_like(advance[..., :1]), advance[..., :-1]], dim=-1), dim=-1
     )
     rebuilt = torch.polar(magnitude, _locked(phase, angle[..., index], magnitude))
+    del spectrum, size, angle, phase
     stretched = torch.istft(rebuilt, AUDIO_FFT, AUDIO_HOP, window=window, center=True,
                             length=out_samples)
+    stretched = _levelled(rebuilt, magnitude, stretched, window, out_samples)
     return {"waveform": stretched.reshape(batch, channels, -1), "sample_rate": rate}
+
+
+def _levelled(rebuilt: torch.Tensor, magnitude: torch.Tensor, signal: torch.Tensor, window: torch.Tensor,
+              length: int) -> torch.Tensor:
+    """A rebuilt signal made again with each region's energy matched to the magnitudes it was built from.
+
+    Args:
+        rebuilt: The complex spectrum ``[rows, bins, columns]`` the signal came from.
+        magnitude: The magnitudes that spectrum was asked to carry.
+        signal: ``[rows, samples]`` rebuilt from ``rebuilt``.
+        window: The analysis window.
+        length: Samples to answer.
+
+    Returns:
+        ``[rows, samples]``.
+    """
+    again = torch.stft(signal, AUDIO_FFT, AUDIO_HOP, window=window, center=True, return_complex=True)
+    columns = min(int(again.shape[-1]), int(magnitude.shape[-1]))
+    shape = (LEVEL_BINS, LEVEL_COLUMNS)
+    padding = (LEVEL_BINS // 2, LEVEL_COLUMNS // 2)
+
+    def pooled(power: torch.Tensor) -> torch.Tensor:
+        return torch.nn.functional.avg_pool2d(power[:, None], shape, stride=1, padding=padding,
+                                              count_include_pad=False)[:, 0]
+
+    wanted = pooled(magnitude[..., :columns].square())
+    got = pooled(again[..., :columns].abs().square())
+    del again
+    floor = 1e-12 * float(wanted.max().clamp_min(1e-30))
+    gain = ((wanted + floor) / (got + floor)).sqrt_().clamp_(1.0 / LEVEL_LIMIT, LEVEL_LIMIT)
+    del wanted, got
+    corrected = rebuilt.clone()
+    corrected[..., :columns] *= gain
+    return torch.istft(corrected, AUDIO_FFT, AUDIO_HOP, window=window, center=True, length=length)
 
 
 def _locked(phase: torch.Tensor, source: torch.Tensor, magnitude: torch.Tensor) -> torch.Tensor:

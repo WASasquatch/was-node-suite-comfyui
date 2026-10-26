@@ -7,7 +7,7 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { addressOf, hold, release } from "./compare_media.js";
+import { addressOf, hold, keptEntry, release } from "./compare_media.js";
 import { executionId, nodeLocator, ownOutput } from "./preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./resolution.js";
 import { onRunEnded } from "./run_events.js";
@@ -428,7 +428,8 @@ export function createVideoComparePanel(node) {
         remember(sides);
         return;
       }
-      show(node.properties?.[REMEMBERED_KEY]);
+      const kept = node.properties?.[REMEMBERED_KEY];
+      show({ a: keptEntry(kept?.a) ? kept.a : null, b: keptEntry(kept?.b) ? kept.b : null });
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to read the written sides:`, error);
     }

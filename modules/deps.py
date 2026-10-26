@@ -31,9 +31,12 @@ REQUIREMENTS = Path(__file__).resolve().parent.parent / "requirements"
 
 #: Import name -> pip requirement, for packages whose two names differ.
 PIP_NAMES = {
+    "bs4": "beautifulsoup4",
     "docx": "python-docx",
+    "faiss": "faiss-cpu",
     "git": "GitPython",
     "huggingface_hub": "huggingface-hub",
+    "psycopg2": "psycopg2-binary",
 }
 
 _loaded: dict[str, ModuleType] = {}

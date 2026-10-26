@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
-description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, and animation."
-version = "3.6.7"
+description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, animation, and Llama-Index in ComfyUI: language models, documents, retrieval, chat, memory and agents as nodes."
+version = "3.7.0"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
@@ -9,10 +9,74 @@ dependencies = []
 
 [project.optional-dependencies]
 document_export = ["python-docx", "odfdo", "xhtml2pdf"]  # .docx, .odt and .pdf on Save DOC
+vector_stores = [  # Chroma, LanceDB, FAISS and Postgres on LLM Vector Store
+    "llama-index-vector-stores-chroma>=0.6,<0.7",
+    "llama-index-vector-stores-lancedb>=0.6,<0.7",
+    "llama-index-vector-stores-faiss>=0.7,<0.8",
+    "faiss-cpu>=1.15",
+    "llama-index-vector-stores-postgres>=0.9,<0.10",
+    "chromadb>=1.5",
+    "lancedb>=0.40",
+    "pandas>=2.2",
+    "psycopg2-binary>=2.9",
+]
+llm = [  # the LLM nodes, on llama-index
+    "llama-index-core>=0.14.25,<0.15",
+    "llama-index-llms-openai>=0.8.3",
+    "llama-index-llms-anthropic>=0.12.3",
+    "llama-index-llms-google-genai>=0.11.3",
+    "llama-index-llms-openai-like>=0.8.1",
+    "llama-index-llms-ollama>=0.11.0",
+    "llama-index-embeddings-openai>=0.7.0",
+    "llama-index-embeddings-google-genai>=0.6.0",
+    "llama-index-embeddings-ollama>=0.10.0",
+    "llama-index-tools-mcp>=0.6,<0.7",
+    "llama-index-vector-stores-qdrant>=0.10,<0.11",
+    "qdrant-client>=1.20",
+    "pypdf>=6.0",
+    "beautifulsoup4>=4.12",
+    "openpyxl>=3.1",
+    "accelerate",
+    "bitsandbytes",
+    "httpx>=0.27",
+    "nltk>=3.9",
+    "rake-nltk>=1.0.6",
+    "tzdata",
+]
 all = [
     "python-docx",
     "odfdo",
     "xhtml2pdf",
+    "llama-index-core>=0.14.25,<0.15",
+    "llama-index-llms-openai>=0.8.3",
+    "llama-index-llms-anthropic>=0.12.3",
+    "llama-index-llms-google-genai>=0.11.3",
+    "llama-index-llms-openai-like>=0.8.1",
+    "llama-index-llms-ollama>=0.11.0",
+    "llama-index-embeddings-openai>=0.7.0",
+    "llama-index-embeddings-google-genai>=0.6.0",
+    "llama-index-embeddings-ollama>=0.10.0",
+    "llama-index-tools-mcp>=0.6,<0.7",
+    "llama-index-vector-stores-qdrant>=0.10,<0.11",
+    "qdrant-client>=1.20",
+    "pypdf>=6.0",
+    "beautifulsoup4>=4.12",
+    "openpyxl>=3.1",
+    "accelerate",
+    "bitsandbytes",
+    "httpx>=0.27",
+    "nltk>=3.9",
+    "rake-nltk>=1.0.6",
+    "tzdata",
+    "llama-index-vector-stores-chroma>=0.6,<0.7",
+    "llama-index-vector-stores-lancedb>=0.6,<0.7",
+    "llama-index-vector-stores-faiss>=0.7,<0.8",
+    "faiss-cpu>=1.15",
+    "llama-index-vector-stores-postgres>=0.9,<0.10",
+    "chromadb>=1.5",
+    "lancedb>=0.40",
+    "pandas>=2.2",
+    "psycopg2-binary>=2.9",
 ]
 
 [project.urls]

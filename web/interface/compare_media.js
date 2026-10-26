@@ -14,6 +14,19 @@ export const KEPT_TYPE = "was_compare";
 // The route serving a kept side by name.
 const KEPT_ROUTE = "/was/interface/api/compare_file";
 
+// The name a kept side is written under.
+const KEPT_NAME = /^[0-9a-f]{32}\.(?:mp4|png|wav)$/;
+
+/**
+ * Whether an entry names a side the pack kept, the only kind restored from a saved node.
+ *
+ * @param {object} entry - A side's `filename` and `type`.
+ * @returns {boolean} True for a kept side.
+ */
+export function keptEntry(entry) {
+  return entry?.type === KEPT_TYPE && typeof entry.filename === "string" && KEPT_NAME.test(entry.filename);
+}
+
 // Bytes held across every panel before the least recently used unwatched side is let go.
 const HELD_BYTES = 1024 * 1024 * 1024;
 

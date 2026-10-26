@@ -267,6 +267,10 @@ const GROWING = {
   WASNumberExpression: BARE_LETTER_SLOTS,
   // The lists one plot overlays, drawn as they are wired.
   WASNumberListPlot: [["values"], ...lettered("values", 4).slice(1)],
+  // The retrievers one fusion merges, drawn as they are wired.
+  WASLLMFusionRetriever: [["retriever"], ...lettered("retriever", 6).slice(1)],
+  // The text values a template fills, drawn as they are wired.
+  WASLLMPromptTemplate: lettered("value", 4),
   // The images an edit reads, drawn as they are wired.
   WASTextEncodeFibo2: [1, 2, 3, 4, 5].map((index) => [`image_${index}`]),
   WASGenerateFibo2Prompt: [1, 2, 3, 4].map((index) => [`image_${index}`]),

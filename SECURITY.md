@@ -15,7 +15,7 @@ input that reaches it is fixed fastest.
 | Install a package | Nothing runs `pip`. A feature group that needs a library names it in the log with the command to run |
 | Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in three places, all below: Three.js scenes while `threejs.allow_scripts` is on, the page Three Compile writes under the same setting, and the Content Viewer's sandboxed frame while `viewer.allow_scripts` is on, which it is not by default |
 | Load arbitrary pickles | Every `torch.load` passes `weights_only=True`, and Load Cache, which reads a file a person picks, refuses torch older than 2.6. Every `comfy.utils.load_torch_file` passes `safe_load=True`. Diffusers Hub Model Down-Loader fetches and loads `.safetensors` weights only, and BLIP and CLIPSeg load `model.safetensors` only. The checkpoint and Diffusers model loaders hand a model-folder file to ComfyUI's own loading code, as ComfyUI's loader nodes do |
-| Require any package | The default node set installs nothing, and `requirements.txt` names no package. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group. Nothing installs them: the group prints the command for a person to run |
+| Require any package | The default node set installs nothing, and `requirements.txt` names no package. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group, and at `requirements/llm.txt`, which names the packages of the `llm` group. Nothing installs them: each group prints the command for a person to run |
 
 ## Number inputs
 
@@ -28,19 +28,26 @@ Image Blend refuse an output past 30000 pixels a side or 268435456 pixels before
 and name the input to lower. An empty Kandinsky 6 latent and a MiniMax H3 segment are refused
 past 2147483648 values, Number Range and Number Sequence make at most 10000 values, Power LoRA
 Loader takes at most 10000 values in one strength or weight list, and every LUT a node builds
-is at most 256 a side.
+is at most 256 a side. Bounding Box Editor reads at most 262144 characters of layout and 64
+boxes, and blocks its masks output past 134217728 values.
 
 ## Network
 
 `features.network` is `false` out of the box, and while it is off nothing in this pack makes a
-request beyond ComfyUI's own server. A node that cannot find its weights names the file and the
-key instead.
+request to another machine. Beyond ComfyUI's own server, it then makes requests only to loopback
+addresses: a language model server LLM Provider or LLM Embedding Model names (Ollama, LM Studio,
+vLLM, a llama.cpp server, or an `llm.endpoints` entry whose address is loopback), and an MCP or
+vector store server at a loopback address that config.yaml names. An MCP server named by a
+`command` is a program started on this machine, and what that program reaches is its own. A node
+that cannot find its weights names the file and the key instead.
 
 With it on, `huggingface_hub` and transformers fetch files a node needs and does not find on
 disk, from Hugging Face only, and never send a stored Hugging Face token. Most nodes fetch fixed
 files from fixed repositories. BLIP Model Loader, CLIPSeg Model Loader and Diffusers Hub Model
 Down-Loader fetch the repository the workflow names into the model folder: its configuration and
-its `.safetensors` weights. Three Texture URL lets the browser load the `http` or `https`
+its `.safetensors` weights. LLM Embedding Model, LLM Rerank and LLM Transformers Loader fetch
+only a repository on their own fixed list, its configuration, tokenizer and `.safetensors`
+weights, into `models/LLM`, and load no model carrying its own code. Three Texture URL lets the browser load the `http` or `https`
 address the node was given. The browser learns whether `features.network` is on from what the
 server sends with a scene, never from the scene itself. Every other address the browser is
 handed is the pack's own asset route, a `data:` URL, a `blob:` URL or one of the ten fixed
@@ -56,19 +63,54 @@ Face for each listed file's size, whatever `features.network` is set to, and dow
 when its Download button is pressed, as it does for any workflow that lists its models. No other
 outside address appears in the pack's own browser code.
 
-No Python code here is an HTTP client: nothing imports `requests`, `httpx`, `urllib.request`,
-`http.client`, `urllib3` or `websockets`, and nothing opens a socket. Three related names do
-appear, and none of them reaches the network. `aiohttp.web` registers this pack's own inbound
-routes in sixteen modules, and its client half is never used. `urllib.parse` reads strings in
-three files: it decodes a `data:` URI and a picture's name in the document exporter, unescapes
-the file names a 3D model refers to, and splits the address Three Texture URL is given.
+Two modules are HTTP clients, both loaded only with `features.llm` on and both refusing every
+request while `features.network` is off. `modules/llm/documents.py` fetches a web page for LLM
+Load Web Page and for the web page tool an agent calls, through `http.client` and
+`socket.create_connection`: `http` and `https` only, refusing a host any of whose addresses is
+loopback, private, link-local, multicast, reserved or unspecified, checking again after each of
+at most five redirects, connecting only to an address it checked, and reading at most 20 MB.
+`modules/llm/tools.py` calls three fixed services for the agent tools through `httpx`,
+following a redirect only to the same host over `https`, at most three times:
+Wikipedia's search and page summary API, Tavily's search API with the key in
+`TAVILY_API_KEY`, and Brave Search's API with the key in `BRAVE_API_KEY`. The hosted language
+and embedding models reach their providers through those providers' own libraries, as
+[Language models](#language-models) lists.
+
+No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
+`urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.
+Three related names do appear, and none of them reaches the network. `aiohttp.web` registers
+this pack's own inbound routes in seventeen modules, and its client half is never used.
+`urllib.parse` reads strings in ten files: it decodes a `data:` URI and a picture's name in
+the document exporter, unescapes the file names a 3D model refers to, splits the address Three
+Texture URL is given, and splits the addresses the LLM nodes fetch or call and the servers
+`llm.endpoints`, `llm.mcp_servers` and `llm.vector_stores` name.
 `socket.gethostname()` fills the `[hostname]` token. Tokens are not expanded in the address
-Three Texture URL is given, so no token value reaches another host through it.
+Three Texture URL or LLM Load Web Page is given. Text wired into either from another node arrives
+with its tokens already expanded, so with `features.network` on, a workflow can put this
+computer's name or login into an address it fetches.
 
 The PDF export hands its document to xhtml2pdf with every picture already inside it as a `data:`
 URL. Stylesheet imports, `url()` references and `<link>` tags are removed first, every file
 request is answered with an empty inline file, and xhtml2pdf's resource policy refuses network
 and local reads wherever the installed version has one.
+
+## Language models
+
+Every LLM node loads only while `features.llm` is on, and it is off out of the box.
+
+| | |
+|---|---|
+| Hosted models | LLM OpenAI, LLM Anthropic, LLM Google Gemini, LLM Provider's hosted presets and an `llm.endpoints` entry at an address other than loopback refuse to run while `features.network` is off. Each preset sends to one fixed address with the key from one fixed environment variable; a workflow supplies neither |
+| Keys | Read from the environment ComfyUI starts in, never from a widget. No key is logged, put in a run result or named in an error: error text passes through a filter that replaces anything shaped like a key and the exact value of every key, token and password the pack has read. A keyless OpenAI-compatible server, and every server LLM Provider reaches other than OpenAI, is sent the `OpenAI-Organization`, `OpenAI-Project` and `OPENAI_CUSTOM_HEADERS` headers empty, and Ollama is sent `Bearer not-needed` in place of `OLLAMA_API_KEY` when its entry names no key. A keyless OpenAI-compatible server is sent the placeholder `not-needed`, never `OPENAI_API_KEY` |
+| A model nobody wired | Inside every LLM node that runs a model, llama-index's global default models are replaced by ones that raise, so no step falls back to a hosted model the graph did not connect |
+| Logs | llama-index's loggers, and those of httpx, httpcore and the MCP client, are held at WARNING, so the prompts, documents, answers, search queries and request addresses they would log at INFO stay out of the log |
+| Files an agent reads | The document tool reads only the one file picked on its menu, through the file listing and the sandbox. The calculator evaluates arithmetic through the pack's expression parser, never `eval` |
+| Saved indexes and conversations | Written only under `ComfyUI/user/was-node-suite/llm/`, by a name of letters, digits, spaces, dots, dashes and underscores up to 64 characters, each path resolved through the sandbox. Saving an index replaces only the files the pack wrote in a folder that carries its marker |
+| MCP servers | LLM MCP Tools runs or reaches only a server `llm.mcp_servers` in config.yaml names, picked by that name; a workflow carries no command, argument, address or token. A command is started with a minimal environment plus the variables its entry sets or names in `env_from`. An address other than loopback refuses while `features.network` is off. Errors and panels name a server by its name and host, never the path, query or credentials of its address. A server's tools then act with whatever access that program has |
+| Vector stores | A local store is the folder `ComfyUI/user/was-node-suite/llm/vector_stores`, written by Qdrant, or by Chroma, LanceDB or FAISS while `features.vector_stores` is on. Chroma is opened with its telemetry off. A server is reached only when `llm.vector_stores` in config.yaml names it, and one other than loopback refuses while `features.network` is off. Building into a collection first removes the chunks of the documents being added again, and nothing else |
+| Tables and documents | LLM Load Table reads a JSON or JSON Lines table of at most 64 MB, at most 512 columns of a sheet and at most `max_rows` rows of it, and copies a SQLite file's tables through a read-only connection; every query an answer writes passes a read-only authorizer and stops at `timeout_seconds`. A PDF's decoded pages are released as each is read. A json split reads a document of at most 16 million characters and refuses one whose key paths would write more than 64 million |
+| Agents | An agent calls only the tools wired to it. Text it reads can steer which tool it calls and with what, so with `features.network` on, whatever an agent can read can reach an address its web tools fetch |
+| Picture documents | A picture document stores a JPEG copy at most 384 pixels a side, its folder's menu label and its path below that folder, never an absolute path. LLM Sources to Images reads the file back only through the folder menu and the read allowlist, and a picture is embedded only from its stored copy |
 
 ## Text tokens
 
@@ -76,7 +118,8 @@ and local reads wherever the installed version has one.
 letters, digits, `.`, `_` and `-`, without leading dots, and to 64 characters. Built-in and
 custom tokens expand in every text input except the ones the token module lists as literal:
 token definitions, repository ids, colours, state a node's own frontend writes, listing keys,
-stored system prompts and Three Texture URL's address.
+stored system prompts, the addresses Three Texture URL and LLM Load Web Page are given, and the
+model, tool, agent, conversation, table and collection names the LLM nodes look up.
 
 A custom token's value is placed into any text input that names it, so anyone who can queue a
 prompt can read it, and a token is no place for a secret. Text Add Tokens and Text Add Token by
@@ -184,9 +227,10 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/archive/save.py` | The `.part` file Zip Save writes, renamed over the archive once complete or removed when the write fails, and a leftover `.part` of the same name |
 | `modules/latent/h3_clip_file.py` | The `.part` file H3 Save Clip writes, renamed over the clip once complete |
 | `modules/interface/preview.py` | Mask editor uploads in `input/clipspace/` written in the last ten minutes, as the route table below states |
-| `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4` or `.png`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
+| `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4`, `.png` or `.wav`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
 | `modules/viewer/parsers/canvas_parser.py` | The `.part` file the Content Viewer writes a picture into, renamed to `input/was_viewer/<md5>.png` once complete |
 | `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
+| `modules/llm/storage.py` | In `ComfyUI/user/was-node-suite/llm/indexes/<name>/`, the llama-index files and marker it wrote there, before a save under the same name, and only in a folder carrying its marker. In `ComfyUI/user/was-node-suite/llm/sessions/`, a session's `<name>.json` and the `<name>.<block>.vectors.json` files it lists, while LLM Clear Memory's `confirm` or LLM Chat Session's `reset` is on, or when the chat panel deletes that conversation. A rename moves the same files to the new name and refuses a name already saved. Each file is written through a `.part` file renamed over its name |
 
 Some nodes replace a file of the same name: Zip Extract, Save LUT and the save nodes'
 overwrite settings replace files inside the folder they write to, and Power LoRA Merger replaces
@@ -210,7 +254,8 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run, or to any client for a run queued without one |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
 | `GET /was/interface/api/system_prompts` | library key | the `system_prompts` folder in the state directory; a key its own listing does not hold reads nothing. 2000 entries and 256 KB of text at most, read off the server's event loop |
-| `GET /was/interface/api/compare_file` | a kept file's name | the `compare` folder in the state directory; a name other than 32 hex digits and `.mp4` or `.png`, or a link, reads nothing |
+| `GET`, `POST /was/interface/api/llm_sessions` | conversation name, a new name | the `llm/sessions` folder in the state directory, registered only while `features.llm` is on. GET lists 500 conversations at most, or reads one by name; POST renames or deletes one by name. A name is 1 to 64 letters, digits, spaces, dots, dashes and underscores and is refused otherwise. Read and changed off the server's event loop |
+| `GET /was/interface/api/compare_file` | a kept file's name | the `compare` folder in the state directory; a name other than 32 hex digits and `.mp4`, `.png` or `.wav`, or a link, reads nothing |
 | `GET /was/interface/api/video_probe` | menu label | the file listing of video files, then the allowlist; read off the server's event loop |
 | `GET`, `POST /was/interface/api/pause` | node id, client id, value | an in-memory hold. GET lists only the holds queued under the asking client id, and POST releases a hold only for that id |
 | `GET /was/interface/api/app_exposure` | saved workflow name | the asking user's workflows folder, `ComfyUI/user/<user>/workflows`, where `--multi-user` takes the user from the `Comfy-User` header and an unknown user reads nothing. A name leaving it is refused before it is read. A file over 16 MB, a subgraph holding itself, nesting past 32 levels or more than 20000 nodes is refused with fixed text, and the work runs off the server's event loop |

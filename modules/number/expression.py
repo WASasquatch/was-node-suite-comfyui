@@ -679,6 +679,9 @@ def evaluate(expression, variables: dict | None = None):
     names = dict(CONSTANTS)
     for name in VARIABLE_NAMES:
         value = given.get(name)
+        # An unwired letter that is also a constant, `e`, keeps the constant's value.
+        if value is None and name in CONSTANTS:
+            continue
         names[name] = 0 if value is None else _number(value, name)
 
     try:

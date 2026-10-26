@@ -5,10 +5,10 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **513** across **48** categories |
+| Nodes | **657** across **66** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`: [`docs/CONFIG.md`](docs/CONFIG.md) |
-| Panels | 194 nodes draw their own readout, picture or editor on the canvas |
+| Panels | 362 nodes draw their own readout, picture or editor on the canvas |
 | Graphs | Runnable examples in [`docs/workflows/`](docs/workflows), linked per area below |
 
 ---
@@ -306,6 +306,80 @@ picking one per node instead of pasting it.
 [`NODES.md`](NODES.md) under **WAS Suite/Text/System Prompts**. Files and front matter:
 [`docs/SYSTEM_PROMPTS.md`](docs/SYSTEM_PROMPTS.md). Graph:
 [`system-prompt-library.json`](docs/workflows/system-prompt-library.json).
+
+---
+
+## Llama-Index in ComfyUI
+
+The nodes under **WAS Suite/LLM** are llama-index on the canvas: each part of a llama-index
+pipeline, from the model to the agent, is a node, wired and queued like any other and run on the
+models a graph wires in:
+
+- **Models.** **LLM From CLIP** uses the language model inside a core **Load CLIP**, such as
+  Qwen3 or Gemma, with pictures. **LLM GGUF Loader** runs a GGUF file, and **LLM Transformers
+  Loader** a Hugging Face model folder. **LLM OpenAI**, **LLM Anthropic**, **LLM Google Gemini**
+  and **LLM Provider** reach hosted models and local servers such as Ollama and LM Studio, with
+  keys read from the environment. **LLM Embedding Model** embeds text, and **LLM Unload** frees
+  the models between steps.
+- **Writing.** **LLM Complete** answers a prompt, the text a CLIP Text Encode can take. **LLM
+  Chat** and **LLM Message** hold a conversation with pictures and sound. **LLM Structured
+  Output** fills a schema as JSON. **LLM Prompt Template**, **LLM Token Count** and **LLM
+  Messages to Text** handle the text around them.
+- **Documents.** **LLM Load Documents**, **LLM Load Document**, **LLM Load Web Page**, **LLM
+  Documents From DOC** and **LLM Text to Document** read text in, from notes and code to PDFs,
+  Word documents, e-books and slide decks. **LLM To Documents** turns whatever a graph holds into
+  documents: text, a list of text, pictures, frames spread across a video, a DOC, a conversation,
+  found sources or table rows. **LLM Split Documents** cuts documents into chunks eight ways,
+  **LLM Extract Metadata** labels the chunks with titles, summaries, questions, keywords and the
+  names they mention, and **LLM Documents to Text** joins them for a prompt.
+- **Pictures.** **LLM Load Images** reads a folder of renders with the prompt saved in each file,
+  and **LLM Images to Documents** takes frames from the graph, either one described by a vision
+  model on request. **LLM Image Embedding Model** and **LLM Image Index** make them searchable by
+  words or by another picture, and **LLM Sources to Images** hands the pictures found back as an
+  image batch.
+- **Tables.** **LLM Load Table** reads CSV, Excel, JSON and SQLite files into tables that are
+  only ever read, **LLM SQL Query Engine** answers questions about them by writing SQL, and **LLM
+  Table to Documents** turns rows into documents for an index. **LLM SQL Retriever** finds the
+  rows that answer a question, for a retriever tool or a recursive retriever.
+- **Indexes and retrieval.** Vector, summary, tree, keyword, knowledge graph, document summary
+  and image indexes, saved and loaded by name, and brought up to date with **LLM Index Insert**,
+  which skips unchanged documents and replaces changed ones. **LLM Vector Store** keeps a vector
+  index in a Qdrant, Chroma, LanceDB or FAISS collection on this machine, or on a Qdrant, Chroma
+  or Postgres server, reopened with **LLM Vector Store Index**. **LLM Index Retriever**, **LLM
+  BM25 Retriever**, **LLM Fusion Retriever**, **LLM Auto-Merging Retriever**, **LLM Router
+  Retriever** and **LLM Auto Retriever**, which writes its own metadata filters, find chunks.
+  **LLM Transform Retriever** rewrites the question first, as a made-up answer or a simpler
+  question, and **LLM Index Node** with **LLM Recursive Retriever** searches short summaries
+  first, then the retriever each one points to. **LLM Postprocessor** and **LLM Rerank** filter
+  and reorder what is found before **LLM Retrieve** or **LLM Sources to Text** hands it on.
+- **Answers and chat.** **LLM Query Engine** answers from retrieved chunks, with citations,
+  showing a vision model the pictures found, and
+  **LLM Query Transform**, **LLM Sub-Question Query Engine**, **LLM Router Query Engine** and
+  **LLM Retry Query Engine** reshape, route or retry each question for **LLM Query**. **LLM Chat Engine** and **LLM Chat Session**
+  hold a chat over them on a chat panel that saves each conversation under a name, with a menu
+  to start, open, rename and delete them. **LLM Memory** adds static, facts and vector blocks,
+  **LLM Memory History** reads a conversation back and **LLM Clear Memory** deletes one.
+- **Agents.** **LLM Tool**, **LLM Query Engine Tool** and **LLM Retriever Tool** give **LLM
+  Agent** a calculator, dates, Wikipedia, web pages, web search, a document and the indexes,
+  **LLM MCP Tools** adds the tools of any MCP server named in config.yaml, and
+  **LLM Run Agent** runs one agent or a team that hands work to each other, with every tool call
+  in its trace.
+- **Evaluation.** **LLM Evaluate** scores an answer eight ways, one of them against a second answer, **LLM Generate Questions** writes
+  test questions from documents, and **LLM Evaluate Retriever** measures a retriever on them.
+
+For prompt enhancement on the model already loaded for a generation, questions answered from a
+folder of notes or a spreadsheet, finding past renders by what they show, and agents that look
+things up before they answer.
+
+The group is `features.llm`, off until its requirements are installed. [`NODES.md`](NODES.md)
+under **WAS Suite/LLM**. Keys, folders and servers: [`docs/LLM.md`](docs/LLM.md). Graphs:
+[`llm-chat-with-notes.json`](docs/workflows/llm-chat-with-notes.json),
+[`llm-research-agent.json`](docs/workflows/llm-research-agent.json),
+[`llm-picture-search.json`](docs/workflows/llm-picture-search.json),
+[`llm-table-questions.json`](docs/workflows/llm-table-questions.json),
+[`llm-vector-store.json`](docs/workflows/llm-vector-store.json),
+[`llm-retrievers.json`](docs/workflows/llm-retrievers.json),
+[`llm-to-documents.json`](docs/workflows/llm-to-documents.json).
 
 ---
 

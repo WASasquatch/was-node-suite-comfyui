@@ -78,6 +78,11 @@ export function captureWheel(element, onWheel) {
     event.preventDefault();
     event.stopPropagation();
   };
+  // Lets the Nodes 2.0 renderer leave the wheel to this panel while it holds focus.
+  if (onWheel) element.setAttribute("data-capture-wheel", "true");
   element.addEventListener("wheel", handler, { passive: false });
-  return () => element.removeEventListener("wheel", handler);
+  return () => {
+    element.removeEventListener("wheel", handler);
+    if (onWheel) element.removeAttribute("data-capture-wheel");
+  };
 }

@@ -90,8 +90,8 @@ class LoadSystemPrompt(io.ComfyNode):
         entry = system_prompts.find(key, fresh=True)
         if entry is None:
             raise ValueError(
-                f"`{key}` is not in the system prompt library at "
-                f"{system_prompts.library_directory()}. Pick another prompt, or press R to "
+                f"`{key}` is not in the system prompt library, "
+                "ComfyUI/user/was-node-suite/system_prompts. Pick another prompt, or press R to "
                 "refresh the menu"
             )
         text = system_prompts.read(entry).body.strip()

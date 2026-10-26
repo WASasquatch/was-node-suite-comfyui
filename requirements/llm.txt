@@ -1,0 +1,25 @@
+# features.llm: the LLM nodes, on llama-index.
+#
+# GGUF models also need llama-cpp-python, which is not listed here: PyPI carries no build
+# with GPU support for most machines. docs/LLM.md names where a matching build comes from.
+llama-index-core>=0.14.25,<0.15                # documents, indexes, retrieval, chat, memory, agents
+llama-index-llms-openai>=0.8.3                 # OpenAI
+llama-index-llms-anthropic>=0.12.3             # Anthropic
+llama-index-llms-google-genai>=0.11.3          # Google Gemini
+llama-index-llms-openai-like>=0.8.1            # OpenAI-compatible providers and local servers
+llama-index-llms-ollama>=0.11.0                # Ollama
+llama-index-embeddings-openai>=0.7.0           # OpenAI and OpenAI-compatible embeddings
+llama-index-embeddings-google-genai>=0.6.0     # Gemini embeddings
+llama-index-embeddings-ollama>=0.10.0          # Ollama embeddings
+llama-index-tools-mcp>=0.6,<0.7                # MCP servers as agent tools
+llama-index-vector-stores-qdrant>=0.10,<0.11   # Qdrant collections on LLM Vector Store
+qdrant-client>=1.20                            # Qdrant folders and servers on LLM Vector Store
+pypdf>=6.0                                     # .pdf in the document loaders
+beautifulsoup4>=4.12                           # web pages and the html splitter
+openpyxl>=3.1                                  # .xlsx sheets in LLM Load Table
+accelerate                                     # 8-bit and 4-bit models on LLM Transformers Loader
+bitsandbytes                                   # 8-bit and 4-bit models on LLM Transformers Loader
+httpx>=0.27                                    # the web tools agents call
+nltk>=3.9                                      # stopwords and stemming for BM25 retrieval
+rake-nltk>=1.0.6                               # rake keyword mode on LLM Index Retriever
+tzdata                                         # time zone names for the date and time tool on Windows

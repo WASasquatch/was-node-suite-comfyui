@@ -7,8 +7,18 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **538 nodes for ComfyUI**, across images, filters and colour, masking, 
-text and prompts, logic and flow, numbers, latents and sampling, files, animation and video. 
+The pack contains **657 nodes for ComfyUI**, across images, filters and colour, masking, 
+text and prompts, logic and flow, numbers, latents and sampling, files, animation and video, 
+and Llama-Index in ComfyUI. 
+
+**Llama-Index in ComfyUI** puts llama-index on the canvas. Models, document loaders, splitters,
+indexes, vector stores, retrievers, query and chat engines, memory, tools, agents and evaluation
+are each a node, wired and queued like any other. They run on the models a graph already loads,
+such as the Qwen3 or Gemma inside a core Load CLIP, as well as GGUF files, Hugging Face folders,
+local servers such as Ollama, and hosted providers. Pictures and video frames are indexed beside
+text, so a graph can answer from a folder of notes, find a render by what it shows, or send an
+agent to look things up before it writes a prompt. The group installs on its own and ships off;
+without it the pack needs no packages. [What it covers](FEATURES.md#llama-index-in-comfyui).
 
 ### See [`NODES.md`](NODES.md) for reference.
 ### Consider [donating to the project](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US) to help me afford caffeine.
@@ -36,32 +46,36 @@ database and the wildcard, LUT and view-extension folders are written under
 `<ComfyUI user dir>/was-node-suite/`, and python compiles the pack to bytecode. An update
 recompiles, so it happens once more each time you pull.
 
-One optional group wants packages and ships off: `document_export`, which lets **Save DOC**
-write `.docx`, `.odt` and `.pdf`.
+Three optional groups want packages and ship off: `document_export`, which lets **Save DOC**
+write `.docx`, `.odt` and `.pdf`, `llm`, the language model nodes, and `vector_stores`, which
+adds Chroma, LanceDB, FAISS and Postgres to the LLM nodes' vector stores.
 
 ```sh
 # portable ComfyUI, from the ComfyUI_windows_portable directory
 python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\document_export.txt
+python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\llm.txt
+python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\vector_stores.txt
 ```
 
-Then set `document_export: true` under `features:` in `config.yaml`.
+Then set `document_export: true`, `llm: true` or `vector_stores: true` under `features:` in `config.yaml`. The `llm`
+group's keys, model folders and servers: [`docs/LLM.md`](docs/LLM.md).
 [`docs/CONFIG.md`](docs/CONFIG.md#features) has every group, what it needs and what it gates.
 
 ---
 
 # What changed since v2
 
-538 nodes across a package of source files. The pack itself needs no packages, and nothing is
+657 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 | | v2 | v3 |
 |---|---|---|
-| Nodes | 220 | 538 |
+| Nodes | 220 | 657 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
 | Third-party carried in the repository | SAM and BLIP, 75 files of python | 143 files: browser libraries, fonts, eight face cascades, three sets of weights and two networks, each with its licence |
-| Optional node groups | none | 22 keys in `config.yaml`, 8 of them off out of the box. Per-node disable group. |
+| Optional node groups | none | 26 keys in `config.yaml`, 10 of them off out of the box. Per-node disable group. |
 
 213 of the 220 node ids are unchanged. Four are retired onto replacements, three are removed
 outright, and the section below says what opens in their place. Face detection, gradient maps, background removal, frame interpolation,
@@ -70,15 +84,16 @@ on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, sci
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
 belongs to an optional group.
 
-## 301 new nodes
+## 420 new nodes
 
 | Area | New | Area | New |
 |---|--:|---|--:|
+| Llama-Index in ComfyUI | 79 | Bounds | 10 |
 | Three.js scenes | 43 | HDR and linear light | 9 |
-| Files, archives and documents | 28 | Affine sampling | 7 |
-| Logic and flow | 26 | Everything else | 166 |
+| Audio | 39 | Affine sampling | 7 |
+| Files, archives and documents | 28 | Everything else | 157 |
+| Logic and flow | 26 | | |
 | Layers | 22 | | |
-| Bounds | 10 | | |
 
 What each area does: [`FEATURES.md`](FEATURES.md).
 
@@ -153,7 +168,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**538 nodes** across 49 categories. [`NODES.md`](NODES.md) carries every input, output and
+**657 nodes** across 66 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 

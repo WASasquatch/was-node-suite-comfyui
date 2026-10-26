@@ -1,0 +1,1297 @@
+{
+  "id": "22428c68-9187-48a2-ab8d-641675ba2f12",
+  "revision": 0,
+  "last_node_id": 20,
+  "last_link_id": 15,
+  "nodes": [
+    {
+      "id": 6,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Rush jobs are billed at 1.5 times the normal rate. Shots on hold wait for the client's notes before any render."
+      ],
+      "widgets_values_named": {
+        "value": "Rush jobs are billed at 1.5 times the normal rate. Shots on hold wait for the client's notes before any render."
+      }
+    },
+    {
+      "id": 7,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        290
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2,
+            13
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "example.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 8,
+      "type": "LoadVideo",
+      "pos": [
+        0,
+        820
+      ],
+      "size": [
+        387,
+        299
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "VIDEO",
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "ComfyUI_1032.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "ComfyUI_1032.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASLLMLoadTable",
+      "pos": [
+        0,
+        1209
+      ],
+      "size": [
+        390,
+        438
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "tables",
+          "name": "tables",
+          "shape": 7,
+          "type": "WAS_LLM_TABLES",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "table_name",
+          "name": "table_name",
+          "type": "STRING",
+          "widget": {
+            "name": "table_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sheet",
+          "name": "sheet",
+          "type": "STRING",
+          "widget": {
+            "name": "sheet"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_rows",
+          "name": "max_rows",
+          "type": "INT",
+          "widget": {
+            "name": "max_rows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_file_mb",
+          "name": "max_file_mb",
+          "type": "INT",
+          "widget": {
+            "name": "max_file_mb"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "tables",
+          "name": "tables",
+          "type": "WAS_LLM_TABLES",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMLoadTable"
+      },
+      "widgets_values": [
+        "llm_tables/shots.csv [input]",
+        "",
+        "",
+        100000,
+        64
+      ],
+      "widgets_values_named": {
+        "file": "llm_tables/shots.csv [input]",
+        "table_name": "",
+        "sheet": "",
+        "max_rows": 100000,
+        "max_file_mb": 64
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASLLMImageEmbeddingModel",
+      "pos": [
+        0,
+        1737
+      ],
+      "size": [
+        390,
+        266
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "COMBO",
+          "widget": {
+            "name": "model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_embedding",
+          "name": "image_embedding",
+          "type": "WAS_LLM_EMBEDDING",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMImageEmbeddingModel"
+      },
+      "widgets_values": [
+        "google/siglip2-base-patch16-224",
+        16
+      ],
+      "widgets_values_named": {
+        "model": "google/siglip2-base-patch16-224",
+        "batch_size": 16
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASLLMToDocuments",
+      "pos": [
+        480,
+        0
+      ],
+      "size": [
+        390,
+        366
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING,ARRAY,IMAGE,VIDEO,DOC,WAS_LLM_MESSAGES,WAS_LLM_SOURCES,WAS_LLM_TABLES",
+          "link": 1
+        },
+        {
+          "localized_name": "describe",
+          "name": "describe",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "shape": 7,
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "video_frames",
+          "name": "video_frames",
+          "type": "INT",
+          "widget": {
+            "name": "video_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMToDocuments"
+      },
+      "widgets_values": [
+        "rush policy",
+        8
+      ],
+      "widgets_values_named": {
+        "title": "rush policy",
+        "video_frames": 8
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASLLMToDocuments",
+      "pos": [
+        480,
+        456
+      ],
+      "size": [
+        390,
+        366
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING,ARRAY,IMAGE,VIDEO,DOC,WAS_LLM_MESSAGES,WAS_LLM_SOURCES,WAS_LLM_TABLES",
+          "link": 2
+        },
+        {
+          "localized_name": "describe",
+          "name": "describe",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "shape": 7,
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 3
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "video_frames",
+          "name": "video_frames",
+          "type": "INT",
+          "widget": {
+            "name": "video_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMToDocuments"
+      },
+      "widgets_values": [
+        "reference",
+        8
+      ],
+      "widgets_values_named": {
+        "title": "reference",
+        "video_frames": 8
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASLLMToDocuments",
+      "pos": [
+        480,
+        912
+      ],
+      "size": [
+        390,
+        366
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING,ARRAY,IMAGE,VIDEO,DOC,WAS_LLM_MESSAGES,WAS_LLM_SOURCES,WAS_LLM_TABLES",
+          "link": 4
+        },
+        {
+          "localized_name": "describe",
+          "name": "describe",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "shape": 7,
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 5
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "video_frames",
+          "name": "video_frames",
+          "type": "INT",
+          "widget": {
+            "name": "video_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMToDocuments"
+      },
+      "widgets_values": [
+        "clip",
+        6
+      ],
+      "widgets_values_named": {
+        "title": "clip",
+        "video_frames": 6
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASLLMToDocuments",
+      "pos": [
+        480,
+        1368
+      ],
+      "size": [
+        390,
+        366
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING,ARRAY,IMAGE,VIDEO,DOC,WAS_LLM_MESSAGES,WAS_LLM_SOURCES,WAS_LLM_TABLES",
+          "link": 6
+        },
+        {
+          "localized_name": "describe",
+          "name": "describe",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "shape": 7,
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 7
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "video_frames",
+          "name": "video_frames",
+          "type": "INT",
+          "widget": {
+            "name": "video_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMToDocuments"
+      },
+      "widgets_values": [
+        "",
+        8
+      ],
+      "widgets_values_named": {
+        "title": "",
+        "video_frames": 8
+      }
+    },
+    {
+      "id": 15,
+      "type": "WASLLMImageIndex",
+      "pos": [
+        950,
+        0
+      ],
+      "size": [
+        390,
+        388
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 8
+        },
+        {
+          "localized_name": "image_embedding",
+          "name": "image_embedding",
+          "type": "WAS_LLM_EMBEDDING",
+          "link": 9
+        },
+        {
+          "localized_name": "embedding",
+          "name": "embedding",
+          "shape": 7,
+          "type": "WAS_LLM_EMBEDDING",
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chunk_size",
+          "name": "chunk_size",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "chunk_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chunk_overlap",
+          "name": "chunk_overlap",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "chunk_overlap"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "WAS_LLM_INDEX",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMImageIndex",
+        "was_show_advanced": false
+      },
+      "widgets_values": [
+        32,
+        1024,
+        20
+      ],
+      "widgets_values_named": {
+        "batch_size": 32,
+        "chunk_size": 1024,
+        "chunk_overlap": 20
+      }
+    },
+    {
+      "id": 16,
+      "type": "WASLLMIndexRetriever",
+      "pos": [
+        1420,
+        0
+      ],
+      "size": [
+        400,
+        366
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "WAS_LLM_INDEX",
+          "link": 10
+        },
+        {
+          "localized_name": "llm",
+          "name": "llm",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "localized_name": "embedding",
+          "name": "embedding",
+          "shape": 7,
+          "type": "WAS_LLM_EMBEDDING",
+          "link": null
+        },
+        {
+          "localized_name": "top_k",
+          "name": "top_k",
+          "type": "INT",
+          "widget": {
+            "name": "top_k"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "Mode",
+          "name": "mode",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "metadata_filters",
+          "name": "metadata_filters",
+          "type": "STRING",
+          "widget": {
+            "name": "metadata_filters"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filters_match",
+          "name": "filters_match",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "filters_match"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "retriever",
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "links": [
+            11,
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMIndexRetriever",
+        "was_show_advanced": false
+      },
+      "widgets_values": [
+        3,
+        "default",
+        "",
+        "all"
+      ],
+      "widgets_values_named": {
+        "top_k": 3,
+        "mode": "default",
+        "metadata_filters": "",
+        "filters_match": "all"
+      }
+    },
+    {
+      "id": 17,
+      "type": "WASLLMRetrieve",
+      "pos": [
+        1900,
+        0
+      ],
+      "size": [
+        400,
+        452
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "retriever",
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "link": 11
+        },
+        {
+          "localized_name": "postprocessors",
+          "name": "postprocessors",
+          "shape": 7,
+          "type": "WAS_LLM_POSTPROCESSORS",
+          "link": null
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "query",
+          "name": "query",
+          "type": "STRING",
+          "widget": {
+            "name": "query"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "sources",
+          "name": "sources",
+          "type": "WAS_LLM_SOURCES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMRetrieve"
+      },
+      "widgets_values": [
+        "which shots are on hold"
+      ],
+      "widgets_values_named": {
+        "query": "which shots are on hold"
+      }
+    },
+    {
+      "id": 18,
+      "type": "WASLLMRetrieve",
+      "pos": [
+        1900,
+        542
+      ],
+      "size": [
+        400,
+        452
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "retriever",
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "link": 12
+        },
+        {
+          "localized_name": "postprocessors",
+          "name": "postprocessors",
+          "shape": 7,
+          "type": "WAS_LLM_POSTPROCESSORS",
+          "link": null
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 13
+        },
+        {
+          "localized_name": "query",
+          "name": "query",
+          "type": "STRING",
+          "widget": {
+            "name": "query"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "sources",
+          "name": "sources",
+          "type": "WAS_LLM_SOURCES",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMRetrieve"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "query": ""
+      }
+    },
+    {
+      "id": 19,
+      "type": "WASLLMSourcesToImages",
+      "pos": [
+        2380,
+        0
+      ],
+      "size": [
+        270,
+        170
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "sources",
+          "name": "sources",
+          "type": "WAS_LLM_SOURCES",
+          "link": 14
+        },
+        {
+          "localized_name": "full_size",
+          "name": "full_size",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "full_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "widget": {
+            "name": "fit"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            15
+          ]
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMSourcesToImages"
+      },
+      "widgets_values": [
+        true,
+        0,
+        0,
+        "fit and pad"
+      ],
+      "widgets_values_named": {
+        "full_size": true,
+        "width": 0,
+        "height": 0,
+        "fit": "fit and pad"
+      }
+    },
+    {
+      "id": 20,
+      "type": "PreviewImage",
+      "pos": [
+        2730,
+        0
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      6,
+      0,
+      11,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      7,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      11,
+      0,
+      12,
+      2,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      4,
+      8,
+      0,
+      13,
+      0,
+      "VIDEO"
+    ],
+    [
+      5,
+      12,
+      0,
+      13,
+      2,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      6,
+      9,
+      0,
+      14,
+      0,
+      "WAS_LLM_TABLES"
+    ],
+    [
+      7,
+      13,
+      0,
+      14,
+      2,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      8,
+      14,
+      0,
+      15,
+      0,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      9,
+      10,
+      0,
+      15,
+      1,
+      "WAS_LLM_EMBEDDING"
+    ],
+    [
+      10,
+      15,
+      0,
+      16,
+      0,
+      "WAS_LLM_INDEX"
+    ],
+    [
+      11,
+      16,
+      0,
+      17,
+      0,
+      "WAS_LLM_RETRIEVER"
+    ],
+    [
+      12,
+      16,
+      0,
+      18,
+      0,
+      "WAS_LLM_RETRIEVER"
+    ],
+    [
+      13,
+      7,
+      0,
+      18,
+      2,
+      "IMAGE"
+    ],
+    [
+      14,
+      18,
+      1,
+      19,
+      0,
+      "WAS_LLM_SOURCES"
+    ],
+    [
+      15,
+      19,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Text, a picture, a video and a table in one index",
+      "bounding": [
+        -40,
+        -120,
+        3270,
+        2193
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.5124444444444445,
+      "offset": [
+        117.08586296617518,
+        273.20034692107544
+      ]
+    }
+  },
+  "version": 0.4
+}
