@@ -8,6 +8,7 @@ from ...modules import log
 from ...modules.compat.types import LLM_DOCUMENTS
 from ...modules.llm import documents as loading
 from ...modules.llm import wires
+from ...modules.io import picker
 
 REQUIRES = "llm"
 
@@ -39,7 +40,7 @@ class LLMLoadDocument(io.ComfyNode):
                 "document per page. The panel shows what was read and a sample of the text."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=loading.file_options(),
                     tooltip=(
@@ -47,7 +48,7 @@ class LLMLoadDocument(io.ComfyNode):
                         ".odt file in ComfyUI's input, output and temp folders, tagged `[input]`, "
                         "`[output]` or `[temp]`, and in folders added under paths.allow_read."
                     ),
-                ),
+                )),
                 io.Boolean.Input(
                     "page_per_document",
                     default=False,

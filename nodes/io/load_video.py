@@ -11,7 +11,6 @@ from ...modules.compat import limits
 from ...modules.compat.types import WAS_VIDEO_METADATA
 from ...modules.image import sizing
 from ...modules.media import reader, sampling
-from ...modules.util import sandbox
 
 logger = log.get_logger("nodes.io")
 
@@ -403,6 +402,15 @@ class LoadVideo(io.ComfyNode):
                         "transparency."
                     ),
                 ),
+                io.String.Input(
+                    "path",
+                    optional=True,
+                    force_input=True,
+                    tooltip=(
+                        "A path wired in as text, such as `E:\\clips\\take_01.mp4`, read in place of the "
+                        "file menu. Only a file in a folder that menu reads is opened."
+                    ),
+                ),
             ],
             outputs=[
                 io.Video.Output(
@@ -446,30 +454,33 @@ class LoadVideo(io.ComfyNode):
         cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=0,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
-        pad_color="#000000", channels="RGB",
+        pad_color="#000000", channels="RGB", path=None,
     ):
         """When the chosen file was last written, so an edited video is read again."""
         # An empty name resolves to the input folder itself, which exists, so it is refused
         # before the folder is asked about it.
-        chosen = (file or "").strip()
-        if not chosen or sandbox.annotated_path(chosen) is None:
-            return float("NaN")
         # Its modification time rather than its digest: a video is large enough that
         # hashing it would cost more than the read the fingerprint is there to avoid.
-        return os.path.getmtime(reader.input_path(file))
+        if str(path or "").strip():
+            file = path
+        chosen = (file or "").strip()
+        if not chosen:
+            return float("NaN")
+        try:
+            return os.path.getmtime(reader.input_path(file))
+        except Exception:
+            return float("NaN")
 
     @classmethod
-    def validate_inputs(cls, file):
-        """Whether the chosen file is still in one of ComfyUI's own folders."""
-        if not (file or "").strip():
-            return "no video was chosen. Pick one from the list, or upload one with the button"
-        if sandbox.names_another_host(file):
-            return "a path naming another machine is not read"
-        if sandbox.annotated_path(file) is None:
-            return (
-                f"`{file}` is not in ComfyUI's input, output or temp folder. Pick "
-                f"another, or upload it again"
-            )
+    def validate_inputs(cls, file=None):
+        """Accept any ``file``; ``execute`` reports one that names nothing there.
+
+        Args:
+            file: The stored menu value, which a wired ``path`` replaces.
+
+        Returns:
+            True, always.
+        """
         return True
 
     @classmethod
@@ -477,7 +488,7 @@ class LoadVideo(io.ComfyNode):
         cls, file, num_frames=0, strategy="uniform", nth=1, seed=0, target_fps=0.0,
         resize_mode=sizing.FIT_AND_PAD, width=0, height=0, start=0, end=-1, max_size=0,
         interpolation=sizing.DEFAULT_FILTER, align=sizing.DEFAULT_ALIGNMENT,
-        pad_color="#000000", channels="RGB",
+        pad_color="#000000", channels="RGB", path=None,
     ) -> io.NodeOutput:
         """Read the chosen video and hand on its frames, its sound and what it measures.
 
@@ -488,7 +499,7 @@ class LoadVideo(io.ComfyNode):
                 could be decoded.
         """
         return load(
-            reader.input_path(file), num_frames, strategy, nth, seed, target_fps,
-            resize_mode, width, height, start, end, max_size, interpolation, align,
-            pad_color, channels,
+            reader.input_path(path if str(path or "").strip() else file), num_frames, strategy,
+            nth, seed, target_fps, resize_mode, width, height, start, end, max_size,
+            interpolation, align, pad_color, channels,
         )

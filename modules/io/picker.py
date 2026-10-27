@@ -1,7 +1,6 @@
-"""The files and folders a widget offers, and the one a chosen label names.
+"""The files and folders a menu offers, and the one a label or a wired path names.
 
-An input file is listed bare, everything else carries its root as ``[output]`` or
-``[temp]``. A folder menu names each root on its own.
+Input files are listed bare, the rest as ``name [root]``; a folder menu lists each root too.
 """
 
 from __future__ import annotations
@@ -15,7 +14,8 @@ from .. import log
 from ..util import file_listing, sandbox
 
 __all__ = [
-    "INPUT_TAG", "MAX_FOLDERS", "ROOTS", "folders", "labels", "resolve", "resolve_folder",
+    "FILE_HINT", "FOLDER_HINT", "INPUT_TAG", "MAX_FOLDERS", "ROOTS", "folder_label", "folders",
+    "labels", "path_input", "resolve", "resolve_folder",
 ]
 
 logger = log.get_logger("io.picker")
@@ -30,6 +30,10 @@ INPUT_TAG = f" [{file_listing.INPUT}]"
 #: How many folders a menu offers in all, divided between the roots so a dataset tree costs
 #: a bounded amount rather than the whole of itself.
 MAX_FOLDERS = 2000
+
+#: What a menu's tooltip says about the path it also takes as wired text.
+FILE_HINT = "A wired path, such as `E:\\images\\cat.png`, works too."
+FOLDER_HINT = "A wired path, such as `E:\\images`, works too."
 
 #: Serializes the folder walk and its cache, which is read from ComfyUI's server thread for
 #: an ``/object_info`` request and from the prompt thread when a node builds its schema.
@@ -102,11 +106,29 @@ def folders(extra=()) -> list[str]:
         return offered
 
 
-def resolve_folder(label: str, extra=()) -> Path | None:
-    """The folder one label names, resolved inside a permitted read root.
+def path_input(combo, folder: bool = False):
+    """A file or folder menu that also takes a path wired in as text.
 
     Args:
-        label: The widget's value, as :func:`folders` offered it.
+        combo: The ``io.Combo.Input`` the menu is; its tooltip gains :data:`FILE_HINT` or
+            :data:`FOLDER_HINT`.
+        folder: True for a folder menu.
+
+    Returns:
+        An ``io.MultiType.Input`` drawing the menu and accepting a STRING link.
+    """
+    from comfy_api.latest import io
+
+    hint = FOLDER_HINT if folder else FILE_HINT
+    combo.tooltip = f"{combo.tooltip} {hint}" if combo.tooltip else hint
+    return io.MultiType.Input(combo, [io.String])
+
+
+def resolve_folder(label: str, extra=()) -> Path | None:
+    """The folder one label or one wired path names, resolved inside a permitted read root.
+
+    Args:
+        label: The widget's value, as :func:`folders` offered it, or a path wired in as text.
         extra: The same folders :func:`folders` was given.
 
     Returns:
@@ -131,7 +153,39 @@ def resolve_folder(label: str, extra=()) -> Path | None:
         if not sandbox.contains(root, target):
             return None
         return Path(sandbox.resolve_read(target))
+    written = file_listing.path_text(chosen)
+    if written is None:
+        return None
+    target = Path(sandbox.resolve_read(written))
+    if any(sandbox.contains(root, target) for _name, root in _rooted(extra)):
+        return target
     return None
+
+
+def folder_label(value: str, extra=()) -> str:
+    """The menu label a wired folder path names, or the value itself when it is a label.
+
+    Args:
+        value: A label :func:`folders` offered, or a path wired in as text.
+        extra: The same folders :func:`folders` was given.
+
+    Returns:
+        ``<relative path> [tag]``, or the root's own name for a root itself, so no absolute
+        path is written anywhere the label goes.
+
+    Raises:
+        PathNotAllowed: The path lies outside every permitted read root.
+    """
+    chosen = str(value or "").strip()
+    written = file_listing.path_text(chosen)
+    if written is None:
+        return chosen
+    target = Path(sandbox.resolve_read(written))
+    for name, root in _rooted(extra):
+        if sandbox.contains(root, target):
+            relative = os.path.relpath(target, root).replace("\\", "/")
+            return name if relative in ("", ".") else f"{relative} [{name}]"
+    return chosen
 
 
 def _rooted(extra) -> list[tuple[str, Path]]:
@@ -250,10 +304,10 @@ def _own(extensions, extra):
 
 
 def resolve(label: str, extensions, extra=()) -> str | None:
-    """The file one label names, resolved inside a permitted read root.
+    """The file one label or one wired path names, resolved inside a permitted read root.
 
     Args:
-        label: The widget's value, as :func:`labels` offered it.
+        label: The widget's value, as :func:`labels` offered it, or a path wired in as text.
         extensions: The suffixes that menu was built from.
         extra: The same folders :func:`labels` was given.
 
@@ -274,7 +328,7 @@ def resolve(label: str, extensions, extra=()) -> str | None:
     except Exception as error:
         logger.debug("`%s` could not be resolved through folder_paths: %s", chosen, error)
     if found is None:
-        found = file_listing.resolve(chosen, extensions, tags=ROOTS)
+        found = file_listing.resolve(chosen, extensions, tags=ROOTS, paths=True)
     if found is None:
         for label, path in _own(extensions, extra):
             if label == chosen:

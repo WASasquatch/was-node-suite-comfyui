@@ -10,6 +10,7 @@ from ...modules import log
 from ...modules.compat.types import LIST
 from ...modules.state import history
 from ...modules.util import sandbox, text_files
+from ...modules.io import picker
 
 logger = log.get_logger("nodes.io")
 
@@ -42,7 +43,7 @@ class LoadTextLine(io.ComfyNode):
                 "config.yaml. A file deleted or renamed since gives empty text."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=text_files.options(),
                     tooltip=(
@@ -51,7 +52,7 @@ class LoadTextLine(io.ComfyNode):
                         "[output]', or 'notes.txt [prompts]' for a prompts folder under "
                         "paths.allow_read."
                     ),
-                ),
+                )),
                 io.Combo.Input(
                     "mode",
                     options=["file", "index", "random"],
@@ -150,7 +151,7 @@ class LoadTextLine(io.ComfyNode):
         )
 
     @classmethod
-    def validate_inputs(cls, file) -> bool:
+    def validate_inputs(cls, file=None) -> bool:
         """Accept any ``file``, including one the menu no longer offers.
 
         Args:

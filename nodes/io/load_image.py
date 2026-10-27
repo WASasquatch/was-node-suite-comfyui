@@ -189,7 +189,7 @@ def chosen_path(label: str):
         logger.debug("`%s` could not be resolved through folder_paths: %s", chosen, error)
     if found is None:
         found = file_listing.resolve(
-            chosen, ALLOWED_EXT, tags=file_listing.ROOTS
+            chosen, ALLOWED_EXT, tags=file_listing.ROOTS, paths=True
         )
     if found is None:
         return None
@@ -290,6 +290,15 @@ class ImageLoad(io.ComfyNode):
                         "Ignored for \"the file's own\"."
                     ),
                 ),
+                io.String.Input(
+                    "path",
+                    optional=True,
+                    force_input=True,
+                    tooltip=(
+                        "A path wired in as text, such as `E:\\images\\cat.png`, read in place of the "
+                        "image menu. Only a file in a folder that menu reads is opened."
+                    ),
+                ),
             ],
             outputs=[
                 io.Image.Output(
@@ -324,12 +333,24 @@ class ImageLoad(io.ComfyNode):
         )
 
     @classmethod
+    def validate_inputs(cls, image=None):
+        """Accept any ``image``; ``execute`` reports one that names nothing there.
+
+        Args:
+            image: The stored menu value, which a wired ``path`` replaces.
+
+        Returns:
+            True, always.
+        """
+        return True
+
+    @classmethod
     def fingerprint_inputs(
         cls, image="", RGBA=False, filename_text_extension=True, colour_space="sRGB",
-        icc_mode=colour_profile.CONVERT,
+        icc_mode=colour_profile.CONVERT, path=None,
     ):
         """The file's digest, so a re-run reads it again once it has changed on disk."""
-        found = chosen_path(image)
+        found = chosen_path(path if str(path or "").strip() else image)
         if found is None:
             return float("NaN")
         return get_sha256(found)
@@ -337,7 +358,7 @@ class ImageLoad(io.ComfyNode):
     @classmethod
     def execute(
         cls, image="", RGBA=False, filename_text_extension=True, colour_space="sRGB",
-        icc_mode=colour_profile.CONVERT,
+        icc_mode=colour_profile.CONVERT, path=None,
     ) -> io.NodeOutput:
         """Load the chosen picture, or substitute a black one for anything unreadable.
 
@@ -349,6 +370,8 @@ class ImageLoad(io.ComfyNode):
         import node_helpers
 
         opened, kind = None, ""
+        if str(path or "").strip():
+            image = path
         found = chosen_path(image)
         if found is None:
             logger.error(

@@ -33,13 +33,16 @@ __all__ = [
     "TEMP",
     "configured",
     "find",
+    "label_of",
     "labels",
+    "path_text",
     "linked",
     "listing",
     "resolve",
     "reuse_until",
     "roots",
     "scan",
+    "typed",
     "view",
 ]
 
@@ -303,18 +306,23 @@ def find(
     label: str,
     extensions: Iterable[str] | None = None,
     tags: Sequence[str] = TAGS,
+    paths: bool = False,
 ) -> Entry | None:
     """The entry one label names, read from the whole walk.
 
     Args:
         label: The exact label, such as ``prompts/animals.txt [input]``. Surrounding space
-            is ignored; nothing else about it is read, so it is a key and never a path.
+            is ignored.
         extensions: Suffixes the caller lists, or ``None`` for every file.
         tags: Which roots the caller reads.
+        paths: Also read text that is no label as a path, through :func:`typed`.
 
     Returns:
         The entry, or ``None`` when no walked file carries that label, which covers a file
-        that has been deleted, renamed, or invented.
+        that has been deleted, renamed, or invented, and no path names one.
+
+    Raises:
+        PathNotAllowed: With ``paths``, the text is a path outside every permitted read root.
     """
     wanted = tuple(_suffixes(extensions)) if extensions is not None else None
     kept = _kept(tags)
@@ -327,13 +335,14 @@ def find(
         if wanted is not None and not entry.relative.lower().endswith(wanted):
             continue
         return entry
-    return None
+    return typed(needle, extensions, tags) if paths else None
 
 
 def resolve(
     label: str,
     extensions: Iterable[str] | None = None,
     tags: Sequence[str] = TAGS,
+    paths: bool = False,
 ) -> str | None:
     """The absolute path one label names, from :func:`find`.
 
@@ -341,12 +350,96 @@ def resolve(
         label: The exact label, as the menu offered it.
         extensions: Suffixes the caller lists, or ``None`` for every file.
         tags: Which roots the caller reads.
+        paths: Also read text that is no label as a path, through :func:`typed`.
 
     Returns:
         The absolute path, or ``None`` when no walked file carries that label.
+
+    Raises:
+        PathNotAllowed: With ``paths``, the text is a path outside every permitted read root.
     """
-    entry = find(label, extensions, tags)
+    entry = find(label, extensions, tags, paths)
     return entry.path if entry is not None else None
+
+
+def label_of(
+    value,
+    extensions: Iterable[str] | None = None,
+    tags: Sequence[str] = TAGS,
+) -> str:
+    """The label a wired file path is listed under, or the value itself when it is a label.
+
+    Args:
+        value: A label, or a path wired in as text.
+        extensions: Suffixes the file must carry, or ``None`` for every file.
+        tags: The roots it must lie under.
+
+    Returns:
+        ``<relative path> [tag]`` for a path naming a file under those roots, else the value.
+
+    Raises:
+        PathNotAllowed: The value is a path outside every permitted read root.
+    """
+    chosen = str(value or "").strip()
+    entry = typed(chosen, extensions, tags)
+    return entry.label if entry is not None else chosen
+
+
+def path_text(value) -> str | None:
+    """Text wired into a file or folder menu, when it is a path rather than a label.
+
+    Args:
+        value: The text, such as ``E:\\images\\cat.png``, quotes and space around it ignored.
+
+    Returns:
+        The path as written, or ``None`` for empty text, a label such as ``cat.png [input]``
+        and a bare name with no folder in it.
+    """
+    text = str(value or "").strip().strip("\"'").strip()
+    if not text or (text.endswith("]") and " [" in text):
+        return None
+    if "/" in text or "\\" in text or (len(text) > 1 and text[1] == ":"):
+        return text
+    return None
+
+
+def typed(
+    value,
+    extensions: Iterable[str] | None = None,
+    tags: Sequence[str] = TAGS,
+) -> Entry | None:
+    """The file a path wired in as text names, labelled as the walk labels it.
+
+    Args:
+        value: The text, as :func:`path_text` reads it.
+        extensions: Suffixes the file must carry, or ``None`` for every file.
+        tags: The roots it must lie under.
+
+    Returns:
+        The entry, or ``None`` when the text is no path, or names no file of these kinds under
+        those roots.
+
+    Raises:
+        PathNotAllowed: The path lies outside every permitted read root.
+    """
+    from . import sandbox
+
+    text = path_text(value)
+    if text is None:
+        return None
+    target = Path(sandbox.resolve_read(text))
+    if not target.is_file():
+        return None
+    wanted = tuple(_suffixes(extensions)) if extensions is not None else None
+    if wanted is not None and not target.name.lower().endswith(wanted):
+        return None
+    for order, (tag, root) in enumerate(roots(tags)):
+        if not sandbox.contains(root, target):
+            continue
+        relative = target.relative_to(root).as_posix()
+        info = target.stat()
+        return Entry(tag, order, relative, f"{relative} [{tag}]", str(target), info.st_mtime, info.st_size)
+    return None
 
 
 # ---------------------------------------------------------------------- internals

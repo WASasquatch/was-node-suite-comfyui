@@ -555,6 +555,10 @@ def load_folder(root: Path, folder: str, extensions: tuple[str, ...], recursive:
     Returns:
         What was read, and the reasons files were passed over.
     """
+    from ..io import picker
+
+    # A wired path is recorded as the label the menu lists, never as a path on this machine.
+    folder = picker.folder_label(folder)
     files, stopped = walk(root, extensions, recursive)
     loaded = Loaded(matched=len(files))
     if stopped:
@@ -621,7 +625,7 @@ def picked_file(label: str) -> tuple[Found, str]:
             "LLM Load Document has no file picked. Put a document in ComfyUI's input folder, "
             "refresh the page and pick it from the file menu."
         )
-    entry = file_listing.find(chosen, FILE_EXTENSIONS, file_listing.ROOTS)
+    entry = file_listing.find(chosen, FILE_EXTENSIONS, file_listing.ROOTS, paths=True)
     if entry is None:
         raise ValueError(
             f"`{chosen}` names no file LLM Load Document can find. It may have been moved or "

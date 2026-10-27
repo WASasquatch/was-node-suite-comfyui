@@ -12,6 +12,7 @@ from ...modules.compat.types import DOC
 from ...modules.document import container
 from ...modules.log import get_logger
 from ...modules.util import file_listing, sandbox
+from ...modules.io import picker
 
 logger = get_logger("nodes.document")
 
@@ -70,7 +71,7 @@ class LoadDocument(io.ComfyNode):
                 )
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=options(),
                     tooltip=(
@@ -79,7 +80,7 @@ class LoadDocument(io.ComfyNode):
                         "'[output]' or '[temp]'. A folder added under paths.allow_read appears "
                         "under its own name."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 DOC.Output(
@@ -146,7 +147,7 @@ def _named(file: str) -> str:
     label = str(file or "").strip()
     if not label or label == NO_DOCUMENTS:
         return ""
-    return file_listing.resolve(label, extensions(), file_listing.ROOTS) or label
+    return file_listing.resolve(label, extensions(), file_listing.ROOTS, paths=True) or label
 
 
 def _require_export_group(extension: str) -> None:

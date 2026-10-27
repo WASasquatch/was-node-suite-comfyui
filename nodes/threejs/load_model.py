@@ -9,6 +9,7 @@ from ...modules.log import get_logger
 from ...modules.threejs import models
 from ...modules.threejs.spec import create_spec
 from ...modules.util import file_listing, sandbox
+from ...modules.io import picker
 
 REQUIRES = "threejs"
 
@@ -52,7 +53,7 @@ class ThreeLoadModel(io.ComfyNode):
                 "or .ply arrives with a plain default surface."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=options(),
                     tooltip=(
@@ -60,7 +61,7 @@ class ThreeLoadModel(io.ComfyNode):
                         "`.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` in ComfyUI's input, "
                         "output and temp folders."
                     ),
-                ),
+                )),
                 io.String.Input(
                     "path",
                     default="",
@@ -118,7 +119,7 @@ class ThreeLoadModel(io.ComfyNode):
                     ".obj, .3mf, .stl or .ply in ComfyUI's input folder and pick it, or wire "
                     "Load 3D's mesh_path into path."
                 )
-            chosen = file_listing.resolve(file, models.SUFFIXES, file_listing.ROOTS) or file
+            chosen = file_listing.resolve(file, models.SUFFIXES, file_listing.ROOTS, paths=True) or file
 
         resolved = sandbox.resolve_read(chosen)
         url, kind, sidecars = models.carried(resolved)

@@ -6,7 +6,7 @@
  */
 
 import { app } from "../../../scripts/app.js";
-import { addSectionHeader } from "./decoration.js";
+import { addSectionHeader, redrawHeaders } from "./decoration.js";
 import { withGraphChange } from "./region.js";
 
 const LOG_NAME = "WASNodeSuite.RowHeaders";
@@ -84,6 +84,7 @@ export function setRowColours(node, colours) {
     if (Object.keys(stored).length) node.properties[ROW_COLOURS_KEY] = stored;
     else delete node.properties[ROW_COLOURS_KEY];
   });
+  redrawHeaders(node);
   node.setDirtyCanvas?.(true, true);
   node.graph?.setDirtyCanvas?.(true, true);
 }
@@ -179,6 +180,7 @@ export function setRowNames(node, names) {
     if (Object.keys(stored).length) node.properties[ROW_NAMES_KEY] = stored;
     else delete node.properties[ROW_NAMES_KEY];
   });
+  redrawHeaders(node);
   node.setDirtyCanvas?.(true, true);
   node.graph?.setDirtyCanvas?.(true, true);
 }

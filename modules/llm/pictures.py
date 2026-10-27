@@ -502,8 +502,11 @@ def load_folder(root, folder: str, recursive: bool, max_files: int, max_bytes: i
         What was read.
     """
     from ..image import sizing
+    from ..io import picker
     from .documents import walk
 
+    # A wired path is recorded as the label the menu lists, never as a path on this machine.
+    folder = picker.folder_label(folder)
     files, _stopped = walk(root, IMAGE_EXTENSIONS, recursive)
     loaded = Read(matched=len(files))
     if len(files) > max_files:

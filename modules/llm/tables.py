@@ -349,7 +349,7 @@ def picked(label: str, node: str):
             f"{node} has no file picked. Put a .csv, .xlsx, .json or .sqlite file in ComfyUI's input "
             f"folder, refresh the page and pick it."
         )
-    entry = file_listing.find(chosen, TABLE_EXTENSIONS, file_listing.ROOTS)
+    entry = file_listing.find(chosen, TABLE_EXTENSIONS, file_listing.ROOTS, paths=True)
     if entry is None:
         raise ValueError(f"`{chosen[:120]}` names no file {node} can find. Refresh the page and pick it again.")
     resolved = sandbox.resolve_read(entry.path)
@@ -414,7 +414,7 @@ def load_file(label: str, name: str, sheet: str, max_rows: int, max_bytes: int, 
     sources = dict(previous.sources or {}) if previous is not None else {}
     rows = dict(previous.rows or {}) if previous is not None else {}
     for table, count in added.items():
-        sources[table] = label
+        sources[table] = file_listing.label_of(label, TABLE_EXTENSIONS, file_listing.ROOTS)
         rows[table] = count
     made = Tables(connection=connection, names=tuple(taken + list(added)), sources=sources, rows=rows)
     return made, list(added)

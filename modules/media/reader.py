@@ -196,7 +196,7 @@ def input_path(name: str) -> str:
 
     Args:
         name: The widget's value, either a bare name in the input folder or one carrying
-            its folder as `clip.mp4 [output]`.
+            its folder as `clip.mp4 [output]`, or a path wired in as text.
 
     Returns:
         The absolute path of the file.
@@ -214,6 +214,11 @@ def input_path(name: str) -> str:
     if sandbox.names_another_host(chosen):
         raise ValueError(f"`{chosen}` names another machine, which a video is not read from")
     found = sandbox.annotated_path(chosen)
+    if found is None:
+        from ..util import file_listing
+
+        typed = file_listing.typed(chosen, VIDEO_EXTENSIONS, file_listing.ROOTS)
+        found = typed.path if typed is not None else None
     if found is None:
         raise ValueError(
             f"`{chosen}` is not in ComfyUI's input, output or temp folder any more. Pick "

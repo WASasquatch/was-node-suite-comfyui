@@ -11,7 +11,7 @@ from ....modules import log
 from ....modules.image import exr
 from ....modules.interface import run_result
 from ....modules.io import picker
-from ....modules.util import sandbox
+from ....modules.util import file_listing, sandbox
 
 logger = log.get_logger("nodes.image.hdr")
 
@@ -115,7 +115,7 @@ class EXRLoad(io.ComfyNode):
                 "brightness. Hands on the image, its alpha and its peak value."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=exr_labels(),
                     tooltip=(
@@ -124,7 +124,7 @@ class EXRLoad(io.ComfyNode):
                         "`scratch.exr [temp]`; EXR Save writes into output. Uncompressed, ZIP, "
                         "ZIPS and RLE files read; PIZ, DWA, B44 and PXR24 are refused."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 io.Image.Output(
@@ -162,8 +162,11 @@ class EXRLoad(io.ComfyNode):
             return float("NaN")
 
     @classmethod
-    def validate_inputs(cls, file):
+    def validate_inputs(cls, file=None):
         """Whether the chosen file is still in one of ComfyUI's own folders."""
+        # A wired value is not known yet, and a written path is read where the node runs.
+        if file is None or file_listing.path_text(file) is not None:
+            return True
         if not (file or "").strip():
             return (
                 "no EXR was chosen. Pick one from the file list"

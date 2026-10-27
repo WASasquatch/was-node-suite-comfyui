@@ -4,6 +4,7 @@
  * The groups in use and the next empty one are drawn, and the rest hidden. Hiding is
  * presentation only: `widgets_values` carries every widget whether it is drawn or not.
  */
+import { redrawHeaders } from "./decoration.js";
 import { setWidgetHidden } from "./visibility.js";
 
 const LOG_NAME = "WASNodeSuite.Grow";
@@ -102,6 +103,7 @@ export function growWidgets(node, groups, options = {}) {
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to fold ${node?.type}:`, error);
     }
+    redrawHeaders(node);
   };
 
   for (const widget of node.widgets ?? []) {

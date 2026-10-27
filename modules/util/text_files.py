@@ -106,7 +106,7 @@ def resolve(label: str) -> str | None:
         covers one that has been deleted, renamed, or invented. A file the menu's own limit
         left out still resolves.
     """
-    return file_listing.resolve(label, TEXT_EXTENSIONS, TEXT_TAGS)
+    return file_listing.resolve(label, TEXT_EXTENSIONS, TEXT_TAGS, paths=True)
 
 
 def decode(data: bytes, errors: str = "strict") -> str:

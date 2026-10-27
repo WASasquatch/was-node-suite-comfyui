@@ -9,6 +9,7 @@ from ...modules.log import get_logger
 from ...modules.threejs import environments, textures
 from ...modules.threejs.spec import create_spec
 from ...modules.util import file_listing, sandbox
+from ...modules.io import picker
 
 REQUIRES = "threejs"
 
@@ -74,7 +75,7 @@ class ThreeEnvironment(io.ComfyNode):
                         "source is `image`. A batch is read on its first frame alone."
                     ),
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=options(),
                     default=NO_FILES,
@@ -84,7 +85,7 @@ class ThreeEnvironment(io.ComfyNode):
                         "The menu lists what is in ComfyUI's input, output and temp folders, "
                         "under `none`."
                     ),
-                ),
+                )),
                 io.String.Input(
                     "path",
                     default="",
@@ -190,7 +191,7 @@ class ThreeEnvironment(io.ComfyNode):
                         "choose 'studio room', which needs no file."
                     )
                 chosen = file_listing.resolve(
-                    file, environments.SUFFIXES, file_listing.ROOTS
+                    file, environments.SUFFIXES, file_listing.ROOTS, paths=True
                 ) or file
             resolved = sandbox.resolve_read(chosen)
             url, kind = environments.carried(resolved)

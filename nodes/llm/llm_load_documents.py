@@ -43,7 +43,7 @@ class LLMLoadDocuments(io.ComfyNode):
                 "text."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "folder",
                     options=picker.folders(),
                     tooltip=(
@@ -51,7 +51,7 @@ class LLMLoadDocuments(io.ComfyNode):
                         "[input]` = the notes folder inside it. A folder added under "
                         "paths.allow_read in config.yaml is listed under its own name."
                     ),
-                ),
+                ), folder=True),
                 io.String.Input(
                     "extensions",
                     default=(

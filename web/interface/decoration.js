@@ -158,6 +158,38 @@ const HEADER_TEXT = "rgba(210, 230, 255, 0.95)";
 // Width of the solid edge down the left of a coloured header.
 const HEADER_STRIPE = 4;
 
+// Node -> its headers, as header name -> a function answering `{label, tint, key}` now.
+const HEADERS = new WeakMap();
+
+// Header widget -> the `key` of what it last painted.
+const PAINTED = new WeakMap();
+
+/**
+ * Paint a node's headers again where their text or colour has moved since they were drawn.
+ *
+ * @param {object} node - The node whose headers to read again.
+ * @returns {void}
+ */
+export function redrawHeaders(node) {
+  const headers = HEADERS.get(node);
+  if (!headers) return;
+  let changed = false;
+  for (const [name, look] of headers) {
+    const widget = node.widgets?.find((each) => each?.name === name);
+    if (!widget) continue;
+    try {
+      const now = look();
+      if (PAINTED.get(widget) === now.key) continue;
+      widget.value = now.label;
+      changed = true;
+      widget.triggerDraw?.();
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to repaint ${name}:`, error);
+    }
+  }
+  if (changed) node.setDirtyCanvas?.(true, false);
+}
+
 /**
  * Text cut short with an ellipsis to fit a width, in the context's current font.
  *
@@ -214,6 +246,12 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
     const value = typeof title === "function" ? title(node) : title;
     return String(value ?? "");
   };
+  const look = () => {
+    const label = text();
+    const tint = typeof colour === "function" ? colour(node) : null;
+    const key = [label, tint?.fill ?? "", tint?.stripe ?? "", tint?.text ?? ""].join("\u0000");
+    return { label, tint, key };
+  };
   const widget = {
     name,
     type: "custom",
@@ -228,9 +266,9 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
         const room = barRoom(ctx, host, width);
         const inset = Math.min(HEADER_INSET, room / 2);
         const bar = Math.max(0, room - inset * 2);
-        const tint = typeof colour === "function" ? colour(node) : null;
-        const label = text();
+        const { label, tint, key } = look();
         widget.value = label;
+        PAINTED.set(widget, key);
         ctx.save();
         saved = true;
         ctx.globalAlpha = 1.0;
@@ -265,10 +303,17 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
       } catch (error) {
         console.error(`[${LOG_NAME}] ${name} failed:`, error);
       }
+      redrawHeaders(host ?? node);
       return true;
     };
   }
-  return addDecoration(node, widget, before);
+  const added = addDecoration(node, widget, before);
+  if (added) {
+    const known = HEADERS.get(node) ?? new Map();
+    known.set(name, look);
+    HEADERS.set(node, known);
+  }
+  return added;
 }
 
 // Node -> its buttons that grey out, as `{name, greyed}`.
@@ -328,6 +373,7 @@ export function addButton(node, { name, label, onClick, disabled, before }) {
  * @returns {void}
  */
 export function refreshButtons(node) {
+  redrawHeaders(node);
   const known = GREYING.get(node);
   if (!known) return;
   let changed = false;

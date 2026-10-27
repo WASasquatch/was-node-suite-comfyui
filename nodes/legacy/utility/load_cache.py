@@ -98,7 +98,7 @@ class LoadCache(io.ComfyNode):
                 "Enable legacy.cache to load it."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "latent",
                     options=cache_options((".latent",)),
                     optional=True,
@@ -108,8 +108,8 @@ class LoadCache(io.ComfyNode):
                         "ComfyUI's own folders. Left on the empty entry, the LATENT "
                         "output is nothing at all."
                     ),
-                ),
-                io.Combo.Input(
+                )),
+                picker.path_input(io.Combo.Input(
                     "image",
                     options=cache_options((".image",)),
                     optional=True,
@@ -119,8 +119,8 @@ class LoadCache(io.ComfyNode):
                         "ComfyUI's own folders. Left on the empty entry, the IMAGE "
                         "output is nothing at all."
                     ),
-                ),
-                io.Combo.Input(
+                )),
+                picker.path_input(io.Combo.Input(
                     "conditioning",
                     options=cache_options((".conditioning",)),
                     optional=True,
@@ -130,7 +130,7 @@ class LoadCache(io.ComfyNode):
                         "ComfyUI's own folders. Left on the empty entry, the CONDITIONING "
                         "output is nothing at all."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 io.Latent.Output(

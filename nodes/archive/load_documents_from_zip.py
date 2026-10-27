@@ -59,7 +59,7 @@ class LoadDocumentsFromZip(io.ComfyNode):
                 "it arrived under."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=archive_options(),
                     tooltip=(
@@ -68,7 +68,7 @@ class LoadDocumentsFromZip(io.ComfyNode):
                         "paths.allow_read, each tagged with where it sits. Ignored while the "
                         "zip socket is connected."
                     ),
-                ),
+                )),
                 ZIP.Input(
                     "zip",
                     optional=True,

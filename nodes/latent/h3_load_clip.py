@@ -11,6 +11,7 @@ from ...modules.archive import picks
 from ...modules.interface import run_result
 from ...modules.latent import h3_clip_file
 from ...modules.util import file_listing, sandbox
+from ...modules.io import picker
 
 logger = log.get_logger("nodes.h3_load_clip")
 
@@ -54,7 +55,7 @@ def _named(label: str) -> str:
     text = str(label or "").strip()
     if not text or text == NO_CLIPS:
         return ""
-    return file_listing.resolve(text, (h3_clip_file.EXTENSION,), file_listing.ROOTS) or ""
+    return file_listing.resolve(text, (h3_clip_file.EXTENSION,), file_listing.ROOTS, paths=True) or ""
 
 
 class H3LoadClip(io.ComfyNode):
@@ -80,7 +81,7 @@ class H3LoadClip(io.ComfyNode):
                 "without resampling scenes 1 and 2."
             ),
             inputs=[
-                io.Combo.Input("clip_file", options=options(), tooltip=CLIP_HINT),
+                picker.path_input(io.Combo.Input("clip_file", options=options(), tooltip=CLIP_HINT)),
                 io.Int.Input(
                     "up_to_scene",
                     default=0,

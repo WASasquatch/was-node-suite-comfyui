@@ -57,7 +57,7 @@ class ZipOpen(io.ComfyNode):
                 )
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=options(),
                     tooltip=(
@@ -65,7 +65,7 @@ class ZipOpen(io.ComfyNode):
                         "folders, subfolders included, and in any folder under "
                         "paths.allow_read. A '[temp]' entry is gone after a restart."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 ZIP.Output(
@@ -121,7 +121,7 @@ class ZipOpen(io.ComfyNode):
         )
 
     @classmethod
-    def validate_inputs(cls, file) -> bool:
+    def validate_inputs(cls, file=None) -> bool:
         """Accept any ``file``, including one the menu no longer offers.
 
         Args:

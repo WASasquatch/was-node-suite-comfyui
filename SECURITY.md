@@ -166,6 +166,11 @@ of another file, or names a device such as `NUL` or `COM1`, and so is any path a
 writes. A frame cache name is refused when it holds a folder separator. Whatever they match stays
 inside that folder.
 
+A file or folder menu a node reads from also takes a path wired in as text. It is resolved
+through the same allowlist and read only when it lands inside ComfyUI's input, output or temp
+folder or a folder `paths.allow_read` lists, never the pack's own directory, and a file must
+carry one of the extensions the menu lists. A path outside them is refused like any other.
+
 A refusal repeats the value as it was given, cut to 240 characters, and names the permitted
 folders as `input`, `output`, `temp`, `ComfyUI/user/was-node-suite` and the number of folders
 `paths.allow_read` or `paths.allow_write` lists. It never names a resolved path, a link's target

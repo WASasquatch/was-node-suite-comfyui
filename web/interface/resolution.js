@@ -90,6 +90,13 @@ const waiting = new WeakMap();
 
 let frameHandle = 0;
 
+// Frames between two full measurements while the zoom and the pixel density hold still.
+const SWEEP_FRAMES = 60;
+
+let viewSeen = "";
+
+let framesQuiet = 0;
+
 // One observer for the page, made by the first entry that has to wait and then kept: a panel that
 // is never mounted is never disposed either, so there is no last waiter to give it back at, and
 // an observer holding no targets is one object. A ResizeObserver reports a target the first time
@@ -113,12 +120,30 @@ function notify(entry) {
 }
 
 /**
- * Look at every watched element once, and tell the ones whose ratio moved.
+ * The graph's zoom and the pixel density, as one string.
+ *
+ * @returns {string} Both values joined.
+ */
+function viewOf() {
+  return `${window.devicePixelRatio}|${window.app?.canvas?.ds?.scale ?? ""}`;
+}
+
+/**
+ * Measure every watched element when the zoom or the pixel density moved, and every
+ * `SWEEP_FRAMES` frames otherwise, and tell the ones whose ratio moved.
  *
  * @returns {void}
  */
 function tick() {
   frameHandle = 0;
+  const view = viewOf();
+  framesQuiet += 1;
+  if (view === viewSeen && framesQuiet < SWEEP_FRAMES) {
+    if (watched.size) frameHandle = requestAnimationFrame(tick);
+    return;
+  }
+  viewSeen = view;
+  framesQuiet = 0;
   for (const entry of watched) {
     const ratio = measureRatio(entry.element);
     // A hidden element measures zero, which is no answer rather than an answer of one. Keeping

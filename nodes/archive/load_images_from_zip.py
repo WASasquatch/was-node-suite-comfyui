@@ -74,7 +74,7 @@ class LoadImagesFromZip(io.ComfyNode):
                 "in the same order."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=archive_options(),
                     tooltip=(
@@ -83,7 +83,7 @@ class LoadImagesFromZip(io.ComfyNode):
                         "paths.allow_read, each tagged with where it sits. Ignored while the "
                         "zip socket is connected."
                     ),
-                ),
+                )),
                 ZIP.Input(
                     "zip",
                     optional=True,

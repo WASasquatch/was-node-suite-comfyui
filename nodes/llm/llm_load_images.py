@@ -54,14 +54,14 @@ class LLMLoadImages(io.ComfyNode):
                 "description of each. The panel shows what was read and a sample of the prompts."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "folder", options=folders, default="output" if "output" in folders else None,
                     tooltip=(
                         "Which folder to read. `output` = ComfyUI's output folder; `faces [input]` = "
                         "the faces folder inside input. A folder under paths.allow_read in config.yaml "
                         "is listed under its own name."
                     ),
-                ),
+                ), folder=True),
                 io.Boolean.Input(
                     "recursive", default=True,
                     tooltip="`true` reads the folders inside it too; `false` reads only the pictures directly in it. Links are not followed.",

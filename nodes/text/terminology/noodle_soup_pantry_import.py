@@ -54,7 +54,7 @@ class NoodleSoupPantryImport(io.ComfyNode):
                 "writes; everything read in counts as yours and survives a refresh."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=pantry_options(),
                     tooltip=(
@@ -63,7 +63,7 @@ class NoodleSoupPantryImport(io.ComfyNode):
                         "under paths.allow_read in config.yaml, each labelled with the "
                         "folder it sits in."
                     ),
-                ),
+                )),
                 io.Combo.Input(
                     "mode",
                     options=list(MODES),

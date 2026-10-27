@@ -392,7 +392,10 @@ Sequence** read a 16-bit PNG at full precision, and a file marked linear with no
 **Image Save** encodes the files of a batch in parallel.
 **Fast Save Animated WEBP** writes a batch as one animated WebP with its frames encoded in
 parallel, lossless frames pixel for pixel. **Directory Listing** and **Path Exists** reach the
-filesystem.
+filesystem. Every file and folder menu a loader reads from also takes a path wired in as text,
+such as `E:\images` from a String node, inside the folders the menu lists; **Image Load**,
+**Load Video** and **Load Video Upload** take it on their `path` socket and keep their upload
+button.
 
 **Open ZIP**, **ZIP Add**, **Save ZIP**, **Zip Extract**, **ZIP Manage** and the three
 `Load ... from ZIP` nodes put an archive on the wire. **Load Document**, **Save DOC**, **Text

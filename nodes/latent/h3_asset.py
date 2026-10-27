@@ -14,6 +14,7 @@ from ...modules.interface import preview, run_result
 from ...modules.latent import h3_assets, h3_conditioning, h3_extend
 from ...modules.media import reader
 from ...modules.util import file_listing, sandbox
+from ...modules.io import picker
 
 logger = log.get_logger("nodes.h3_asset")
 
@@ -109,7 +110,7 @@ def chosen_path(label: str) -> str | None:
         raise sandbox.PathNotAllowed(
             f"`{chosen}` names another machine. Pick a file from the menu"
         )
-    found = file_listing.resolve(chosen, EXTENSIONS, file_listing.ROOTS)
+    found = file_listing.resolve(chosen, EXTENSIONS, file_listing.ROOTS, paths=True)
     if found is None:
         try:
             found = sandbox.annotated_path(chosen)
@@ -255,7 +256,7 @@ class MiniMaxH3Asset(io.ComfyNode):
             ),
             inputs=[
                 H3_ASSETS.Input("assets", optional=True, tooltip=ASSETS_HINT),
-                io.Combo.Input("file", options=file_labels(), tooltip=FILE_HINT),
+                picker.path_input(io.Combo.Input("file", options=file_labels(), tooltip=FILE_HINT)),
                 io.Combo.Input(
                     "role", options=list(h3_assets.ROLES), default=h3_assets.FIRST_FRAME,
                     tooltip=ROLE_HINT,

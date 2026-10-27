@@ -206,16 +206,16 @@ class LoadImageBatch(io.ComfyNode):
                         "shows it as `index 5 of 0 to 363`."
                     ),
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "folder",
                     options=picker.folders(),
                     tooltip=(
                         "Which folder to read. A bare 'input', 'output' or 'temp' is that "
                         "folder itself; 'plates/shot_01 [input]' is that folder below it. "
-                        "Any folder added under paths.allow_read in config.yaml is listed "
-                        "under its own name, and so are the folders inside it."
+                        "Folders under paths.allow_read in config.yaml are listed under their "
+                        "own names."
                     ),
-                ),
+                ), folder=True),
                 io.String.Input(
                     "pattern",
                     default="*",

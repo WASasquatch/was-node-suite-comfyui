@@ -394,7 +394,7 @@ Save every frame of a video file as a numbered image.
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `video` | `COMBO` | Yes |  |  | Which video to read. The menu lists every container in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read: .mp4, .mkv, .webm, .mov and the rest ffmpeg opens. |
+| `video` | `COMBO,STRING` | Yes |  |  | Which video to read. The menu lists every container in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read: .mp4, .mkv, .webm, .mov and the rest ffmpeg opens. A wired path, such as `E:\images\cat.png`, works too. |
 | `root` | `COMBO` | Yes |  |  | Which folder the files land in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. The name below it says the rest. |
 | `folder` | `STRING` | Yes | frames |  | Folder below the root that the stills are written into, created if it is not there. Tokens expand, so '[time(%Y-%m-%d)]/frames' files each day's under a dated folder. |
 | `prefix` | `STRING` | Yes | frame_ |  | Text before the frame number, so 'frame_' gives 'frame_0000.png'. Tokens are expanded here too. Leave it empty to name the files by number alone. |
@@ -900,7 +900,7 @@ Read the .wasdoc documents inside a zip archive, both as one LIST and as a DOC l
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to read, case ignored: '*' = every document at any depth; 'report_*' = documents named so, in any folder; 'drafts/*' = that folder only; 'drafts/**/*' = it and everything under it. |
 | `zip` | `ZIP` | No |  |  | The archive to read, from Open ZIP. Connected, it is used and the menu is ignored, so the archive is opened and indexed once however many nodes read it. |
 
@@ -931,7 +931,7 @@ Read the images inside a zip archive as one batch. A batch is a single tensor, s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to read; STRING. No '/' matches the file name at any depth; a '/' anchors at the archive root. Case is ignored, and non-images are always skipped. Eg: *, *.png, frames/**/*.png |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How mixed sizes reach width by height, since one batch holds one size. `fit and pad`: whole image, pad_color bars. `fill and crop`: fills the frame, ends cut. `stretch`: distorts. `crop or pad`: no resampling, original pixels kept. |
 | `width` | `INT` | Yes | 512 |  | How wide every image in the batch comes out, in pixels. Every mode delivers exactly this width, so the batch is this wide whatever the archive held. A multiple of 8 suits a sampler; 512 or 1024 matches most models. |
@@ -969,7 +969,7 @@ Read the text files inside a zip archive, both as one LIST and as a STRING list 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to read, case ignored: '*' = every text file at any depth; '*.txt' = every .txt in any folder; 'captions/*.txt' = that folder only; 'captions/**/*.txt' = it and everything under it. |
 | `zip` | `ZIP` | No |  |  | The archive to read, from Open ZIP. Connected, it is used and the menu is ignored, so the archive is opened and indexed once however many nodes read it. |
 
@@ -1001,7 +1001,7 @@ Open a zip archive and list what is in it, a line per file with its kind and siz
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which archive to open: every .zip in ComfyUI's input, output and temp folders, subfolders included, and in any folder under paths.allow_read. A '[temp]' entry is gone after a restart. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to open: every .zip in ComfyUI's input, output and temp folders, subfolders included, and in any folder under paths.allow_read. A '[temp]' entry is gone after a restart. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -1426,7 +1426,7 @@ Open one document from disk and put it on a DOC wire, with its markup, metadata 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which document to open: every .wasdoc, .docx and .odt in ComfyUI's input, output and temp folders, subfolders included, tagged '[input]', '[output]' or '[temp]'. A folder added under paths.allow_read appears under its own name. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which document to open: every .wasdoc, .docx and .odt in ComfyUI's input, output and temp folders, subfolders included, tagged '[input]', '[output]' or '[temp]'. A folder added under paths.allow_read appears under its own name. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -1646,7 +1646,7 @@ List what is in a folder as full paths, names and a count, so a For Loop can tak
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Folders under paths.allow_read in config.yaml are listed under their own names. A wired path, such as `E:\images`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to list, as a glob. `*` = everything; `*.png` = only PNGs; `frame_*.png` = one numbered run. A name starting with a dot needs a pattern starting with one. A drive, leading slash or '..' is refused. |
 | `recursive` | `BOOLEAN` | Yes | False |  | Whether subfolders are listed too. false lists only what sits directly in the folder; true applies the pattern at every depth, so `*.png` also finds 'shot_a/frame_0.png', and every name below the top carries its subfolder. |
 | `include` | `COMBO` | Yes | files | `files`, `directories`, `both` | What is listed. `files` = files alone, which is what a loop over images wants; `directories` = folders alone, for walking a set of shot folders; `both` = the two together in one order. |
@@ -1715,6 +1715,7 @@ Load an image picked from ComfyUI's input, output and temp folders, or a folder 
 | `filename_text_extension` | `BOOLEAN` | No | True |  | Whether the filename_text output keeps the extension. On = 'cat.png', off = 'cat'. Handy when the name is being reused as a caption or as a save prefix. |
 | `colour_space` | `COMBO` | No | sRGB |  | The colour space the picture comes out in. "the file's own" = a tagged file left as written; 'sRGB' = what samplers, filters and LUTs expect; 'Adobe RGB (1998)', 'Display P3' and the rest = for a photograph going back out in its own space. |
 | `icc_mode` | `COMBO` | No |  | `convert`, `assign` | 'convert' = the numbers change so the colour stays put, for a photograph; 'assign' = the numbers are kept and declared to be in that space, to fix an untagged file that is really Display P3. Ignored for "the file's own". |
+| `path` | `STRING` | No |  |  | A path wired in as text, such as `E:\images\cat.png`, read in place of the image menu. Only a file in a folder that menu reads is opened. |
 
 **Outputs**
 
@@ -1787,7 +1788,7 @@ Load one image from a folder by index, in sequence or at random, or every image 
 | `mode` | `COMBO` | Yes |  | `single_image`, `incremental_image`, `random`, `all_images` | Which image of the folder to load. `single_image` takes the one at index; `incremental_image` takes the next one each run and remembers where it stopped, wrapping round; `random` picks one using seed; `all_images` reads every match into image_list and filename_list at once, up to 4096. |
 | `seed` | `INT` | Yes | 0 |  | Chooses the image in `random` mode; the same seed always picks the same one. Ignored by the other two modes. |
 | `index` | `INT` | Yes | 0 |  | Which image `single_image` loads, counting from 0 through the matching files sorted by path; past the last one the prompt fails. `incremental_image` writes the image it read back here. The panel shows it as `index 5 of 0 to 363`. |
-| `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Folders under paths.allow_read in config.yaml are listed under their own names. A wired path, such as `E:\images`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which files in the folder to consider. '*' takes them all, 'cat_*.png' only those named that way, and '**/*' also descends into subfolders. Files whose format this pack cannot read are skipped whatever the pattern says. |
 | `allow_RGBA_output` | `BOOLEAN` | Yes | False |  | `off` discards any transparency and hands on a plain colour image, which is what samplers and most nodes expect; `on` keeps the transparency channel. |
 | `filename_text_extension` | `BOOLEAN` | No | True |  | Whether the filename_text output keeps the extension. On = 'cat.png', off = 'cat'. Handy when the name is being reused as a caption or as a save prefix. |
@@ -1817,7 +1818,7 @@ Load a numbered image sequence from a folder as one batch, in filename order, re
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Folders under paths.allow_read in config.yaml are listed under their own names. A wired path, such as `E:\images`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which files to take, as a glob. `*` takes every image in the folder, `frame_*.png` takes one numbered run out of a folder holding several. Matching is inside the folder only. |
 | `num_frames` | `INT` | Yes | 0 |  | How many frames to keep, chosen by strategy. `0` = every file in the range, up to the 4096 ceiling; `16` = a short sample. A run too long to fit in memory stops with the count to set. |
 | `strategy` | `COMBO` | Yes | uniform | `uniform`, `head`, `center`, `tail`, `random`, `every_nth` | How num_frames are chosen. uniform = evenly spaced; head = first; center = middle; tail = last; random = a seeded pick; every_nth = every nth. Only the chosen files are opened. |
@@ -1860,7 +1861,7 @@ Read a text file picked from a menu, dropping comment lines, as text and as a di
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | The UTF-8 text file to read: 'notes.txt' in input, 'notes.txt [output]', 'notes.txt [temp]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. |
+| `file` | `COMBO,STRING` | Yes |  |  | The UTF-8 text file to read: 'notes.txt' in input, 'notes.txt [output]', 'notes.txt [temp]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `dictionary_name` | `STRING` | Yes | [filename] |  | The key the lines are stored under in the dictionary output. Left as '[filename]' it is the part of the file's name before the first dot, so 'animals.txt' becomes 'animals'; anything else is used as the key verbatim. |
 
 **Outputs**
@@ -1886,7 +1887,7 @@ Read a text file picked from a menu as the whole file, the line at an index, or 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | The .txt, .csv, .tsv, .json, .jsonl, .md, .yaml or .yml file to read, tagged with its folder: 'notes.txt [input]', 'notes.txt [output]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. |
+| `file` | `COMBO,STRING` | Yes |  |  | The .txt, .csv, .tsv, .json, .jsonl, .md, .yaml or .yml file to read, tagged with its folder: 'notes.txt [input]', 'notes.txt [output]', or 'notes.txt [prompts]' for a prompts folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `mode` | `COMBO` | Yes |  | `file`, `index`, `random` | What 'line' carries. 'file' = the whole file, for a prompt written across several lines; 'index' = the line at 'index', for stepping through a list; 'random' = one line drawn by 'seed'. 'lines' and 'text' are the same in all three. |
 | `index` | `INT` | Yes | 0 |  | Which line 'index' mode takes, counting from 0, so 0 is the first line. -1 is the last line, -2 the one before it. Read only in 'index' mode. What happens past either end is 'out_of_range'. |
 | `out_of_range` | `COMBO` | Yes |  | `wrap`, `clamp`, `empty`, `error` | What an index past either end does: 'wrap' starts from the other end, 'clamp' sticks at the first or last line, 'empty' gives nothing, 'error' stops the prompt. |
@@ -1935,6 +1936,7 @@ Load a video and hand on the video itself, its frames as an image batch, its sou
 | `align` | `COMBO` | No | middle center | `top left`, `top center`, `top right`, `middle left`, `middle center`, `middle right`, `bottom left`, `bottom center`, `bottom right` | Which part of a frame survives a crop, and which side carries the wider bar of a pad. |
 | `pad_color` | `STRING` | No | #000000 |  | Fill for space a frame does not cover. Any Pillow colour. |
 | `channels` | `COMBO` | No | RGB | `RGB`, `RGBA` | Channels the image batch carries. `RGBA` keeps the pad transparent. The video output is always colour, since a video carries no transparency. |
+| `path` | `STRING` | No |  |  | A path wired in as text, such as `E:\clips\take_01.mp4`, read in place of the file menu. Only a file in a folder that menu reads is opened. |
 
 **Outputs**
 
@@ -1977,6 +1979,7 @@ Load a video and hand on the video itself, its frames as an image batch, its sou
 | `align` | `COMBO` | No | middle center | `top left`, `top center`, `top right`, `middle left`, `middle center`, `middle right`, `bottom left`, `bottom center`, `bottom right` | Which part of a frame survives a crop, and which side carries the wider bar of a pad. |
 | `pad_color` | `STRING` | No | #000000 |  | Fill for space a frame does not cover. Any Pillow colour. |
 | `channels` | `COMBO` | No | RGB | `RGB`, `RGBA` | Channels the image batch carries. `RGBA` keeps the pad transparent. The video output is always colour, since a video carries no transparency. |
+| `path` | `STRING` | No |  |  | A path wired in as text, such as `E:\clips\take_01.mp4`, read in place of the file menu. Only a file in a folder that menu reads is opened. |
 
 **Outputs**
 
@@ -2003,7 +2006,7 @@ Pick a frame cache written by Video Cache or H3 Decode Video and use it as a cli
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `cache` | `COMBO` | Yes |  |  | Which frame cache to read, as `frame_cache/scene_00001/cache.wasframes [output]`. A cache in temp is gone after a restart. |
+| `cache` | `COMBO,STRING` | Yes |  |  | Which frame cache to read, as `frame_cache/scene_00001/cache.wasframes [output]`. A cache in temp is gone after a restart. A wired path, such as `E:\images\cat.png`, works too. |
 | `delete_after_save` | `BOOLEAN` | Yes | False |  | `true` = the cache's own files are deleted once a save has written all of it, for a cache in output, temp or a `paths.allow_write` folder; `false` = it is kept for the next save. |
 
 **Outputs**
@@ -4346,7 +4349,7 @@ Read an OpenEXR file as linear light with everything above one kept, so a plate 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which EXR to read. Each entry carries the folder it sits in: `plate_0001.exr [output]`, `shot.exr [input]`, `scratch.exr [temp]`; EXR Save writes into output. Uncompressed, ZIP, ZIPS and RLE files read; PIZ, DWA, B44 and PXR24 are refused. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which EXR to read. Each entry carries the folder it sits in: `plate_0001.exr [output]`, `shot.exr [input]`, `scratch.exr [temp]`; EXR Save writes into output. Uncompressed, ZIP, ZIPS and RLE files read; PIZ, DWA, B44 and PXR24 are refused. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -6054,7 +6057,7 @@ Build one grid image from the pictures in a folder, for reviewing a whole output
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `folder` | `COMBO` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Any folder added under paths.allow_read in config.yaml is listed under its own name, and so are the folders inside it. |
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'plates/shot_01 [input]' is that folder below it. Folders under paths.allow_read in config.yaml are listed under their own names. A wired path, such as `E:\images`, works too. |
 | `pattern_glob` | `STRING` | Yes | * |  | Which files in the folder to include. '*' takes them all, 'cat_*.png' only those named that way, and '**/*' also descends into subfolders when include_subfolders is on. Files in a format this pack cannot read are skipped whatever the pattern says. |
 | `include_subfolders` | `BOOLEAN` | Yes | False |  | Whether '**' in the pattern is allowed to descend into subfolders. With off a '**' matches only inside the folder itself. |
 | `border_width` | `INT` | Yes | 3 |  | Thickness in pixels of the gap between cells, of the outline around each cell and of the frame around the sheet. 0 removes all three. |
@@ -7646,7 +7649,7 @@ Read a MiniMax H3 clip that H3 Save Clip wrote, whole or as it stood when any sc
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `clip_file` | `COMBO` | Yes |  |  | Which saved clip to read, as `h3_clips/clip_00001.h3clip [output]`, written by H3 Save Clip. A clip saved to temp is gone after a restart. |
+| `clip_file` | `COMBO,STRING` | Yes |  |  | Which saved clip to read, as `h3_clips/clip_00001.h3clip [output]`, written by H3 Save Clip. A clip saved to temp is gone after a restart. A wired path, such as `E:\images\cat.png`, works too. |
 | `up_to_scene` | `INT` | Yes | 0 |  | `0` = the whole clip; `2` = the clip as it stood when scene 2 finished, every later scene dropped, so the loop renders scene 3 onward again. |
 
 **Outputs**
@@ -7856,7 +7859,7 @@ One picture, clip or sound for a MiniMax H3 segment: a frame it opens on, closes
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which picture, clip or sound to read, as `cast/alice.png [input]` or `takes/shot_03.mp4 [output]`. `(wired input)` reads the image, video and audio sockets instead, and a wired socket always wins over the file. |
+| `file` | `COMBO,STRING` | Yes |  |  | The assets before this one, from another MiniMax H3 Asset's assets output. This asset joins the end of that chain, so a run of any length is one wire into the next node. |
 | `role` | `COMBO` | Yes | first frame | `first frame`, `last frame`, `keyframe`, `reference picture`, `reference clip`, `reference audio` | `first frame` = the segment opens on it; `last frame` = closes on it; `keyframe` = pinned at `frame` (still, clip, sound, or clip with sound); `reference picture`, `reference clip`, `reference audio` = named `<Picture N>`, `<Video N>`, `<Audio N>` in the segment's prompt. |
 | `segment` | `INT` | Yes | 1 |  | Which segment it belongs to, as `1` for the opening segment or `3` for Segment 3. `0` = every segment, as a cast picture the whole run references. |
 | `frame` | `INT` | Yes | 0 |  | Where a `keyframe` lands, counted in the segment's new frames at 24 fps: `0` = its first new frame, `48` = two seconds in, `-1` = its last frame. With `(the video being made)`, the frame of the finished video to reference, as `120`. |
@@ -11561,7 +11564,7 @@ Read one line of a text file per prompt, or one line by index, to walk a list of
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which file to read, one prompt or phrase per line. The menu lists every text file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read. Ignored when multiline_text is connected. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which file to read, one prompt or phrase per line. The menu lists every text file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read. Ignored when multiline_text is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `dictionary_name` | `STRING` | Yes | [filename] |  | The key the list of every line is filed under in the dictionary output, so Text Dictionary Get can fetch it again by name. Used exactly as typed. |
 | `label` | `STRING` | Yes | TextBatch |  | Name this batch's read position is remembered under, surviving a restart. Nodes sharing a label share one position and take turns; different labels advance independently. Pointing a label at a different file starts it over at the first line. |
 | `mode` | `COMBO` | Yes |  | `automatic`, `index` | `automatic` hands out the next line on every run and wraps around at the end of the file, which is what walks a list of prompts one per generation. `index` returns the one line asked for and does not advance. |
@@ -12840,7 +12843,7 @@ Read a style library into this one, from a .json library or from an AUTOMATIC111
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which style file to read. The menu lists every .json and .csv file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which style file to read. The menu lists every .json and .csv file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. A wired path, such as `E:\images\cat.png`, works too. |
 | `mode` | `COMBO` | Yes |  | `add to the library`, `replace the library` | `add to the library` keeps the styles already saved here and adds the file's. `replace the library` leaves the library holding exactly what the file holds, dropping every other style. |
 
 **Outputs**
@@ -12983,7 +12986,7 @@ Read a Noodle Soup Prompts pantry file into the stored pantry, so a terminology 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which pantry file to read. The menu lists every .json file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which pantry file to read. The menu lists every .json file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. A wired path, such as `E:\images\cat.png`, works too. |
 | `mode` | `COMBO` | Yes |  | `add to the pantry`, `replace the pantry` | `add to the pantry` keeps everything already stored and adds the words the file has that a terminology does not. `replace the pantry` leaves the pantry holding exactly what the file holds, dropping every other terminology. |
 
 **Outputs**
@@ -13886,7 +13889,7 @@ Read one file, such as a PDF, a Word document, an e-book, a slide deck or code, 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which file to read: every text, Markdown, HTML, code, .pdf, .docx and .odt file in ComfyUI's input, output and temp folders, tagged `[input]`, `[output]` or `[temp]`, and in folders added under paths.allow_read. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which file to read: every text, Markdown, HTML, code, .pdf, .docx and .odt file in ComfyUI's input, output and temp folders, tagged `[input]`, `[output]` or `[temp]`, and in folders added under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `page_per_document` | `BOOLEAN` | Yes | False |  | For a PDF: `true` = one document per page, each naming its page number, so an answer can cite the page; `false` = the whole file as one document. |
 | `keep_html` | `BOOLEAN` | Yes | False |  | `false` reads an .html file as text; `true` keeps its markup, for LLM Split Documents set to html. |
 | `documents` | `WAS_LLM_DOCUMENTS` | No |  |  | Documents from another loader, such as another LLM Load Document. The ones read here are added after them. |
@@ -13914,7 +13917,7 @@ Read every matching file in a folder, such as notes, PDFs, Word documents, e-boo
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `folder` | `COMBO` | Yes |  |  | Which folder to read. `input` = ComfyUI's input folder itself; `notes [input]` = the notes folder inside it. A folder added under paths.allow_read in config.yaml is listed under its own name. |
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. `input` = ComfyUI's input folder itself; `notes [input]` = the notes folder inside it. A folder added under paths.allow_read in config.yaml is listed under its own name. A wired path, such as `E:\images`, works too. |
 | `extensions` | `STRING` | Yes | .txt, .md, .rst, .html, .htm, .csv, .tsv, .json, .jsonl, .yaml, .yml, .xml, .py, .js, .ts, .c, .cpp, .h, .java, .cs, .go, .rs, .sh, .sql, .pdf, .docx, .odt, .epub, .pptx |  | Which files to read, separated by commas: `.md, .txt` = notes only; `.pdf` = PDFs only. An extension with no reader of its own is read as text, and a file holding binary data is passed over. |
 | `recursive` | `BOOLEAN` | Yes | True |  | `true` reads the folders inside it too, as `week 1/monday.md`; `false` reads only the files directly in it. Links and junctions are not followed. |
 | `max_files` | `INT` | Yes | 500 |  | Most files read, taken in path order. `500` covers a notes folder; the files past it are counted as skipped. |
@@ -13945,7 +13948,7 @@ Read every picture in a folder, such as ComfyUI's output folder, into documents 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `folder` | `COMBO` | Yes |  |  | Which folder to read. `output` = ComfyUI's output folder; `faces [input]` = the faces folder inside input. A folder under paths.allow_read in config.yaml is listed under its own name. |
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. `output` = ComfyUI's output folder; `faces [input]` = the faces folder inside input. A folder under paths.allow_read in config.yaml is listed under its own name. A wired path, such as `E:\images`, works too. |
 | `recursive` | `BOOLEAN` | Yes | True |  | `true` reads the folders inside it too; `false` reads only the pictures directly in it. Links are not followed. |
 | `max_files` | `INT` | Yes | 500 |  | Most pictures read, taken in path order: 500 = a few days of renders. Those past it are counted as skipped. |
 | `max_file_mb` | `INT` | Yes | 64 |  | Largest picture file read, in megabytes: `64` = any render; a larger file is counted as skipped. |
@@ -13977,7 +13980,7 @@ Read a CSV, TSV, Excel sheet, JSON list or SQLite file into tables, so a languag
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | The file, from ComfyUI's input, output or temp folders: `.csv`, `.tsv`, `.xlsx`, `.json`, `.jsonl`, `.sqlite` or `.db`. |
+| `file` | `COMBO,STRING` | Yes |  |  | The file, from ComfyUI's input, output or temp folders: `.csv`, `.tsv`, `.xlsx`, `.json`, `.jsonl`, `.sqlite` or `.db`. A wired path, such as `E:\images\cat.png`, works too. |
 | `table_name` | `STRING` | Yes |  |  | The table's name in questions and SQL, such as `sales`. Blank = the file's name. For a SQLite file, placed before each of its tables' names. |
 | `sheet` | `STRING` | Yes |  |  | The sheet of an .xlsx workbook, such as `Q3`. Blank = its first sheet. |
 | `max_rows` | `INT` | Yes | 100000 |  | Rows read from one table at most: 100000 = most spreadsheets; rows past it are left out. |
@@ -15930,9 +15933,9 @@ Deprecated, with no direct replacement. Reads back a latent, image batch or cond
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `latent` | `COMBO` | No |  |  | Which '.latent' file to read, as Cache Node named it. The menu lists the pack's cache directory, tagged '[cache]', beside ComfyUI's own folders. Left on the empty entry, the LATENT output is nothing at all. |
-| `image` | `COMBO` | No |  |  | Which '.image' file to read, as Cache Node named it. The menu lists the pack's cache directory, tagged '[cache]', beside ComfyUI's own folders. Left on the empty entry, the IMAGE output is nothing at all. |
-| `conditioning` | `COMBO` | No |  |  | Which '.conditioning' file to read, as Cache Node named it. The menu lists the pack's cache directory, tagged '[cache]', beside ComfyUI's own folders. Left on the empty entry, the CONDITIONING output is nothing at all. |
+| `latent` | `COMBO,STRING` | No |  |  | Which '.latent' file to read, as Cache Node named it. The menu lists the pack's cache directory, tagged '[cache]', beside ComfyUI's own folders. Left on the empty entry, the LATENT output is nothing at all. A wired path, such as `E:\images\cat.png`, works too. |
+| `image` | `COMBO,STRING` | No |  |  | Which '.image' file to read, as Cache Node named it. The menu lists the pack's cache directory, tagged '[cache]', beside ComfyUI's own folders. Left on the empty entry, the IMAGE output is nothing at all. A wired path, such as `E:\images\cat.png`, works too. |
+| `conditioning` | `COMBO,STRING` | No |  |  | Which '.conditioning' file to read, as Cache Node named it. The menu lists the pack's cache directory, tagged '[cache]', beside ComfyUI's own folders. Left on the empty entry, the CONDITIONING output is nothing at all. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -18818,7 +18821,7 @@ Read a Photoshop document or a layered TIFF into a layer stack, so work done in 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which document to read. Each entry carries the folder it sits in, as `art.psd [input]` or `plate.tif [output]`. A folder added under paths.allow_read in config.yaml appears under its own name. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which document to read. Each entry carries the folder it sits in, as `art.psd [input]` or `plate.tif [output]`. A folder added under paths.allow_read in config.yaml appears under its own name. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -19632,7 +19635,7 @@ Light the scene from all around, which gives metal and glass something to reflec
 | `background_blur` | `FLOAT` | Yes | 0.0 |  | How far the background is blurred when it is drawn. 0.0 is sharp, 0.3 throws it out of focus behind the subject. |
 | `rotation` | `FLOAT` | Yes | 0.0 |  | Turns the surroundings around the scene, in degrees, which moves where the highlights fall. 0.0 leaves it as the image was shot. |
 | `image` | `IMAGE` | No |  |  | An equirectangular picture, twice as wide as it is tall, used when source is `image`. A batch is read on its first frame alone. |
-| `file` | `COMBO` | No | none |  | Which `.hdr` or `.exr` to light from, used when source is `file`. The menu lists what is in ComfyUI's input, output and temp folders, under `none`. |
+| `file` | `COMBO,STRING` | No | none |  | How far the background is blurred when it is drawn. 0.0 is sharp, 0.3 throws it out of focus behind the subject. |
 | `path` | `STRING` | No |  |  | An environment somewhere else, as a full path such as `D:/hdri/studio_4k.hdr`. Filled in, it is used instead of the menu. |
 
 **Outputs**
@@ -19834,7 +19837,7 @@ Put a model file into the scene as an object, so a mesh made elsewhere can be li
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which model to place. The menu lists every `.glb`, `.gltf`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` in ComfyUI's input, output and temp folders. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which model to place. The menu lists every `.glb`, `.gltf`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` in ComfyUI's input, output and temp folders. A wired path, such as `E:\images\cat.png`, works too. |
 | `scale` | `FLOAT` | Yes | 1.0 |  | Multiplies the model's own size. 1.0 leaves it, 0.01 suits a model authored in centimetres. |
 | `centre` | `BOOLEAN` | Yes | True |  | `true` moves the model so its middle sits at the origin; `false` keeps the coordinates it was saved with. |
 | `cast_shadow` | `BOOLEAN` | Yes | True |  | `true` lets every mesh in the model throw and receive shadows, `false` neither. |

@@ -124,7 +124,7 @@ class TextLoadLineFromFile(io.ComfyNode):
                 "logs an error and emits an empty line."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=line_options(),
                     tooltip=(
@@ -133,7 +133,7 @@ class TextLoadLineFromFile(io.ComfyNode):
                         "any folder added under paths.allow_read. Ignored when multiline_text "
                         "is connected."
                     ),
-                ),
+                )),
                 io.String.Input(
                     "dictionary_name",
                     default="[filename]",

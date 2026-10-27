@@ -9,6 +9,7 @@ from comfy_api.latest import io, ui
 from ....modules import log
 from ....modules.image import layer_ops, psd
 from ....modules.util import file_listing, sandbox
+from ....modules.io import picker
 
 REQUIRES = "photoshop"
 
@@ -66,7 +67,7 @@ class LayersLoad(io.ComfyNode):
                 "pixels."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=document_labels(),
                     tooltip=(
@@ -74,7 +75,7 @@ class LayersLoad(io.ComfyNode):
                         "in, as `art.psd [input]` or `plate.tif [output]`. A folder added "
                         "under paths.allow_read in config.yaml appears under its own name."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 io.Layers.Output(
@@ -126,7 +127,7 @@ class LayersLoad(io.ComfyNode):
                 f"{NODE_NAME} has no file picked. Choose one from the menu, or put a .psd "
                 f"or a layered .tif in ComfyUI's input folder and reload the page."
             )
-        found = file_listing.resolve(label, ALLOWED_EXT, tags=TAGS)
+        found = file_listing.resolve(label, ALLOWED_EXT, tags=TAGS, paths=True)
         if not found:
             raise ValueError(
                 f"{NODE_NAME} cannot find `{label}`. It may have been renamed, moved or "

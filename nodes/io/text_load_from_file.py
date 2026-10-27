@@ -80,7 +80,7 @@ class LoadTextFile(io.ComfyNode):
                 "text."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=text_options(),
                     tooltip=(
@@ -88,7 +88,7 @@ class LoadTextFile(io.ComfyNode):
                         "[output]', 'notes.txt [temp]', or 'notes.txt [prompts]' for a "
                         "prompts folder under paths.allow_read."
                     ),
-                ),
+                )),
                 io.String.Input(
                     "dictionary_name",
                     default="[filename]",

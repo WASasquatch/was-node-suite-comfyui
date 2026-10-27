@@ -11,6 +11,7 @@ from ...modules.compat.types import LLM_TABLES
 from ...modules.interface import run_result
 from ...modules.llm import tables as tabling
 from ...modules.llm import wires
+from ...modules.io import picker
 
 REQUIRES = "llm"
 
@@ -45,10 +46,10 @@ class LLMLoadTable(io.ComfyNode):
                 "query them together. The panel shows each table's columns and first rows."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file", options=tabling.file_options(),
                     tooltip="The file, from ComfyUI's input, output or temp folders: `.csv`, `.tsv`, `.xlsx`, `.json`, `.jsonl`, `.sqlite` or `.db`.",
-                ),
+                )),
                 io.String.Input(
                     "table_name", default="",
                     tooltip="The table's name in questions and SQL, such as `sales`. Blank = the file's name. For a SQLite file, placed before each of its tables' names.",

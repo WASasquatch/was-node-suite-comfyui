@@ -53,7 +53,7 @@ class VideoDumpFrames(io.ComfyNode):
             category="WAS Suite/Animation",
             description="Save every frame of a video file as a numbered image.",
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "video",
                     options=video_options(),
                     tooltip=(
@@ -61,7 +61,7 @@ class VideoDumpFrames(io.ComfyNode):
                         "input, output and temp folders and in any folder added under "
                         "paths.allow_read: .mp4, .mkv, .webm, .mov and the rest ffmpeg opens."
                     ),
-                ),
+                )),
                 io.Combo.Input(
                     "root",
                     options=rooted.options(),

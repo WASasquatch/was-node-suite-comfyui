@@ -56,7 +56,7 @@ class PromptStylesImport(io.ComfyNode):
                 "keeping every style saved here."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=style_file_options(),
                     tooltip=(
@@ -65,7 +65,7 @@ class PromptStylesImport(io.ComfyNode):
                         "folder added under paths.allow_read in config.yaml, each labelled "
                         "with the folder it sits in."
                     ),
-                ),
+                )),
                 io.Combo.Input(
                     "mode",
                     options=list(MODES),

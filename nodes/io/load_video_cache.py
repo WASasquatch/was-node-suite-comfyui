@@ -10,6 +10,7 @@ from ...modules import log
 from ...modules.archive import picks
 from ...modules.media import frame_cache
 from ...modules.util import file_listing, sandbox
+from ...modules.io import picker
 
 logger = log.get_logger("nodes.load_video_cache")
 
@@ -34,7 +35,7 @@ def _named(cache: str) -> str:
     label = str(cache or "").strip()
     if not label or label == NO_CACHES:
         return ""
-    return file_listing.resolve(label, (frame_cache.EXTENSION,), file_listing.ROOTS) or label
+    return file_listing.resolve(label, (frame_cache.EXTENSION,), file_listing.ROOTS, paths=True) or label
 
 
 class LoadVideoCache(io.ComfyNode):
@@ -58,14 +59,14 @@ class LoadVideoCache(io.ComfyNode):
                 "without rendering it again."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "cache",
                     options=options(),
                     tooltip=(
                         "Which frame cache to read, as `frame_cache/scene_00001/cache.wasframes "
                         "[output]`. A cache in temp is gone after a restart."
                     ),
-                ),
+                )),
                 io.Boolean.Input(
                     "delete_after_save",
                     default=False,

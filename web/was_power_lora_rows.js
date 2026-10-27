@@ -11,7 +11,7 @@ const EXT_NAME = "WASNodeSuite.PowerLoraRows";
 // The nodes this attaches to.
 const NODES = ["WASPowerLoraLoader", "WASNSPowerLoraMerger"];
 
-// Rows either node declares, matching MAX_ROWS in nodes/extras/lora/power_lora_loader.py.
+// Rows either node declares.
 const MAX_ROWS = 26;
 
 // ComfyUI's own "Refresh Node Definitions".
@@ -27,6 +27,9 @@ const STACK_INPUT = "stack_data";
 
 // The bar above the rows, and what it reads with stack_data wired and without.
 const ROWS_HEADER = "was_rows_header";
+
+// Header the row bars put above row 1.
+const FIRST_ROW_HEADER = "was_lora_header_1";
 const ROWS_TITLE = "LoRAs";
 const STACK_TITLE = "Using stack_data (rows ignored)";
 
@@ -351,10 +354,14 @@ app.registerExtension({
       const result = originalOnNodeCreated?.apply(this, arguments);
       try {
         if (this.inputs?.some((input) => input?.name === STACK_INPUT)) {
+          // Above the first row's own header where it has one.
+          const first = this.widgets?.some((widget) => widget?.name === FIRST_ROW_HEADER)
+            ? FIRST_ROW_HEADER
+            : "lora_1_enabled";
           addSectionHeader(this, {
             name: ROWS_HEADER,
             title: (node) => (stackLinked(node) ? STACK_TITLE : ROWS_TITLE),
-            before: "lora_1_enabled",
+            before: first,
           });
         }
         addButton(this, {

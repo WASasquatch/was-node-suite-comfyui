@@ -92,6 +92,11 @@ and its files carry that name in brackets: `D:/photos` appears as `photos`, hold
 same way. Folder menus list three levels deep and stop at 2000 entries. Restart ComfyUI after
 changing either list.
 
+Every file and folder menu a node reads from also takes a path wired in as text, such as
+`D:/photos` or `D:\photos\sunset.png` from a String node. It is read only when it lies inside
+ComfyUI's `input/`, `output/` or `temp/` or a folder `allow_read` lists, and a file must be one
+of the kinds the menu lists; anything else is refused.
+
 ### Containment
 
 A node input naming a file or directory is resolved against these roots before the
