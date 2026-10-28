@@ -19,6 +19,7 @@ from .. import deps, log
 from . import FEATURE, messages, runtime
 
 __all__ = [
+    "MAX_SYSTEM_CHARS",
     "MAX_TEMPLATE_CHARS",
     "MAX_TOKEN_TEXT_CHARS",
     "Reply",
@@ -39,12 +40,16 @@ __all__ = [
     "split_system",
     "text_value",
     "with_max_tokens",
+    "with_system_prompt",
 ]
 
 logger = log.get_logger("llm.generate")
 
 #: Characters a filled template holds at most.
 MAX_TEMPLATE_CHARS = 1_000_000
+
+#: Characters of a system prompt kept.
+MAX_SYSTEM_CHARS = 100_000
 
 #: Characters of text one token count reads at most.
 MAX_TOKEN_TEXT_CHARS = 50_000_000
@@ -139,6 +144,27 @@ def with_max_tokens(llm, limit: int):
         except Exception as error:
             logger.debug("the token limit could not be set on %s (%s)", type(llm).__name__, error)
     return llm, False
+
+
+def with_system_prompt(llm, text: str):
+    """A copy of a llama-index LLM that opens every call with a system message.
+
+    Args:
+        llm: The llama-index LLM.
+        text: The instructions, cut to :data:`MAX_SYSTEM_CHARS`. Empty leaves the model as it is.
+
+    Returns:
+        The copy, or the model unchanged when ``text`` is empty.
+
+    Raises:
+        ValueError: The model class takes no system prompt.
+    """
+    wanted = str(text or "").strip()[:MAX_SYSTEM_CHARS]
+    if not wanted:
+        return llm
+    if "system_prompt" not in (getattr(type(llm), "model_fields", {}) or {}):
+        raise ValueError(f"{type(llm).__name__} takes no system prompt")
+    return llm.model_copy(update={"system_prompt": wanted})
 
 
 def split_reply(response, streamed: str = "") -> tuple[str, str]:

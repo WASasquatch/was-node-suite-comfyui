@@ -60,6 +60,13 @@ class WASLLMQuery(io.ComfyNode):
                     display_name="sources",
                     tooltip="The chunks with their scores, the question and the answer, for the evaluators and LLM Sources to Text.",
                 ),
+                io.String.Output(
+                    display_name="thinking",
+                    tooltip=(
+                        "What a reasoning model thought before answering, such as Qwen with "
+                        "thinking on in LLM From CLIP. Empty for a model that does not think aloud."
+                    ),
+                ),
             ],
         )
 
@@ -72,7 +79,7 @@ class WASLLMQuery(io.ComfyNode):
             question: The question.
 
         Returns:
-            The answer, the sources as text and the sources wire.
+            The answer, the sources as text, the sources wire and the thinking.
         """
         node = "LLM Query"
         engine = wires.expect(query_engine, wires.QueryEngine, node, "query_engine", "LLM Query Engine")
@@ -93,6 +100,12 @@ class WASLLMQuery(io.ComfyNode):
             "LLM Query answered in %.2fs from %d chunk(s), %d characters%s",
             found["seconds"], len(nodes), len(answer), ", streamed" if found["streamed"] else "",
         )
+        thought_only = bool(found["thinking"]) and not answer
+        if thought_only:
+            logger.warning(
+                "LLM Query: the model wrote %d characters of thinking and no answer after it",
+                len(found["thinking"]),
+            )
         bodies = [run_result.body("answer", answer)]
         if found["thinking"]:
             bodies.append(run_result.body("thinking", found["thinking"]))
@@ -101,9 +114,11 @@ class WASLLMQuery(io.ComfyNode):
         if listing:
             bodies.append(run_result.body("sources", listing))
         run_result.publish(
-            status=run_result.OK if answer or nodes else run_result.WARNING,
+            status=run_result.WARNING if thought_only or not (answer or nodes) else run_result.OK,
             summary=(
-                f"Answered from {len(nodes)} chunk{'s' if len(nodes) != 1 else ''} in {found['seconds']:.1f}s"
+                "The model thought and never answered. Raise max_tokens on the model node, or turn thinking off"
+                if thought_only
+                else f"Answered from {len(nodes)} chunk{'s' if len(nodes) != 1 else ''} in {found['seconds']:.1f}s"
                 if answer or nodes else "The engine answered nothing and found no chunks"
             ),
             counts={"chunks": len(nodes), "characters": len(answer), "seconds": round(found["seconds"], 2)},
@@ -113,4 +128,4 @@ class WASLLMQuery(io.ComfyNode):
             bodies=bodies,
         )
         sources = wires.Sources(items=nodes, query=text, answer=answer)
-        return io.NodeOutput(answer, listing, sources)
+        return io.NodeOutput(answer, listing, sources, found["thinking"])

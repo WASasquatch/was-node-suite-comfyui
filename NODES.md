@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **657** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **659** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-571 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+573 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 415 |
+| [Always loaded](#always-loaded) | always on | 417 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-415 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+417 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -67,7 +67,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
 - [WAS Suite/Latent/Video](#was-suitelatentvideo) (21)
 - [WAS Suite/LoRA](#was-suitelora) (1)
-- [WAS Suite/Loaders](#was-suiteloaders) (3)
+- [WAS Suite/Loaders](#was-suiteloaders) (4)
 - [WAS Suite/Logic](#was-suitelogic) (6)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
@@ -75,7 +75,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
 - [WAS Suite/Sampling](#was-suitesampling) (28)
-- [WAS Suite/Text](#was-suitetext) (9)
+- [WAS Suite/Text](#was-suitetext) (10)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (6)
@@ -8517,6 +8517,30 @@ Load the Kandinsky 6 audio VAE, which turns the sound half of a Kandinsky 6 late
 
 </details>
 
+<a id="node-waslanguagemodelloader"></a>
+<details>
+<summary><b>Language Model Loader</b></summary>
+
+Load a language model from models/text_encoders as a CLIP that writes text, for Generate Text, Fast Generate Text and LLM From CLIP. Reads dense Qwen3 models up to 32B as well as every language model ComfyUI reads. The panel shows the model, its size and how its weights are stored.
+
+| | |
+|---|---|
+| Node id | `WASLanguageModelLoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_name` | `COMBO` | Yes |  |  | A language model in models/text_encoders, such as qwen3_32b_w4a8.safetensors or qwen_3_4b.safetensors. Qwen3 14B and 32B load in their Hugging Face layout, plain or quantized. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `CLIP` | The model, for Generate Text, Fast Generate Text or LLM From CLIP. A Qwen3 answers in its chat format, thinking only when asked. |
+
+</details>
+
 <a id="node-wasvideomotionmodelloader"></a>
 <details>
 <summary><b>Video Motion Model Loader</b></summary>
@@ -11477,6 +11501,34 @@ Write the JSON caption Fibo 2.0 reads, with the language model inside a CLIP: fr
 
 </details>
 
+<a id="node-wasmossimagecompileprompt"></a>
+<details>
+<summary><b>MOSS-Image Compile Prompt</b></summary>
+
+Turn the caption or box layout a language model drafted, such as with the MOSS-Image prompt enhancer skill, into the prompt MOSS-Image reads. Layout boxes are placed on the image size being generated. The panel lists the caption and every box.
+
+| | |
+|---|---|
+| Node id | `WASMOSSImageCompilePrompt` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `draft` | `STRING` | Yes |  |  | The model's answer holding `{"caption": "..."}` or a layout with `summary`, `items` and boxes in pixels. Words or code fences around the JSON are ignored; text with no JSON becomes the caption. |
+| `width` | `INT` | Yes | 1024 |  | Width of the image being generated in pixels, such as `2560`. Layout boxes are placed on it. |
+| `height` | `INT` | Yes | 1024 |  | Height of the image being generated in pixels, such as `1440`. Layout boxes are placed on it. |
+| `on_resize` | `COMBO` | Yes | fit | `fit`, `fill`, `stretch`, `keep size` | How a layout drafted at another size is placed: `fit` = scaled whole and centred; `fill` = scaled to cover; `stretch` = each side scaled; `keep size` = centred unscaled. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `prompt` | `STRING` | The caption, or the layout as one line of JSON, which MOSS-Image reads as it is. Wire it straight into CLIP Text Encode with a MOSS-Image text encoder. |
+| `caption` | `STRING` | The caption as plain text, also for a layout, for a preview or a node that reads plain text. |
+
+</details>
+
 <a id="node-wasrichtexteditor"></a>
 <details>
 <summary><b>Rich Text Editor</b></summary>
@@ -12887,7 +12939,7 @@ Emit the positive and negative prompt of a style from the style library. Styles 
 <details>
 <summary><b>Load System Prompt</b></summary>
 
-Load a saved system prompt to steer a language or vision model, such as Fast Generate Text or Generate Text. The node shows the library to search and pick from by folder and model family, with the chosen prompt's text. The text arrives without its front matter.
+Load a saved system prompt or skill to steer a language or vision model, such as LLM Complete or Fast Generate Text. A skill also hands its reference files to the LLM index nodes, so a model can look things up in them while it works.
 
 | | |
 |---|---|
@@ -12897,7 +12949,7 @@ Load a saved system prompt to steer a language or vision model, such as Fast Gen
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `system_prompt` | `COMBO` | Yes |  |  | Which saved prompt to load, by its place in the library, such as `Captioning/Detailed Caption.txt`. Picked from the library drawn on the node. The files are in ComfyUI/user/was-node-suite/system_prompts. |
+| `system_prompt` | `COMBO` | Yes |  |  | Which saved prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `my-skill/SKILL.md`. Picked from the library drawn on the node, where Import adds a skill folder. The files are in ComfyUI/user/was-node-suite/system_prompts. |
 
 **Outputs**
 
@@ -12905,6 +12957,7 @@ Load a saved system prompt to steer a language or vision model, such as Fast Gen
 |---|---|---|
 | `system_prompt` | `STRING` | The prompt's text without its front matter, for a model's system_prompt input. |
 | `name` | `STRING` | The prompt's name from its front matter, or its file name when it has none. |
+| `documents` | `WAS_LLM_DOCUMENTS` | A skill's other text files, such as `references/layout.md`, one document each, for LLM Vector Index or another LLM index. Empty for a plain prompt, and while the LLM nodes are off. |
 
 </details>
 
@@ -15245,6 +15298,7 @@ Ask a query engine a question and get its answer with the chunks it was written 
 | `answer` | `STRING` | The engine's answer, with any thinking a reasoning model wrote removed. |
 | `sources_text` | `STRING` | The chunks the answer came from as numbered text, each headed by its score and file name. |
 | `sources` | `WAS_LLM_SOURCES` | The chunks with their scores, the question and the answer, for the evaluators and LLM Sources to Text. |
+| `thinking` | `STRING` | What a reasoning model thought before answering, such as Qwen with thinking on in LLM From CLIP. Empty for a model that does not think aloud. |
 
 </details>
 
@@ -15270,6 +15324,7 @@ Combine a retriever and a language model into a query engine that answers questi
 | `citation_chunk_size` | `INT` | Yes | 512 |  | Tokens in one numbered source while citations is `true`. `256` cites finely, `1024` cites whole passages. |
 | `qa_prompt` | `STRING` | No |  |  | Replaces the question prompt. Must hold `{context_str}` and `{query_str}`, such as `Answer from this only:\n{context_str}\nQuestion: {query_str}`. Empty uses the built-in prompt. |
 | `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Filters and rerankers run over the retrieved chunks before the answer is written, in chain order. |
+| `system_prompt` | `STRING` | No |  |  | Standing instructions the model follows in every answer, such as a skill from Load System Prompt whose documents feed the retriever, or `Answer in British English.` Unconnected = none. |
 
 **Outputs**
 

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 from .. import deps, log
 from . import FEATURE, runtime
-from .clip_llm import ASSISTANT, MAX_CONTEXT, TOOL, conversation, local_base
+from .clip_llm import ASSISTANT, MAX_CONTEXT, THINK_OPEN, TOOL, conversation, local_base
 
 __all__ = [
     "ATTENTION",
@@ -651,6 +651,8 @@ def hf_model():
             worker = threading.Thread(target=run, name="was-llm-generate", daemon=True)
             worker.start()
             try:
+                if opened:
+                    yield THINK_OPEN
                 for piece in streamer:
                     if interrupted():
                         halt.set()

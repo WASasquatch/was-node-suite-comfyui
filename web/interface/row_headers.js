@@ -276,7 +276,7 @@ export function addLabelHeader(node, { name, key, title, before }) {
     name,
     title,
     before,
-    colour: () => ROW_PALETTE[rowColour(node, key)] ?? null,
+    colour: (host) => ROW_PALETTE[rowColour(host ?? node, key)] ?? null,
     onClick: (host, event) => askHeader(host, entry, event),
   });
   if (entry.widget) remember(node, entry);
@@ -305,9 +305,12 @@ export function addRowHeaders(node, { groups, name, title, noun, before = 0, tin
     const entry = { key: row, label: `${noun} ${row}`, renamable };
     entry.widget = addSectionHeader(node, {
       name: name(row),
-      title: () => title(node, row),
+      title: (host) => title(host ?? node, row),
       before: names[before],
-      colour: () => ROW_PALETTE[rowColour(node, row)] ?? tint?.(node, row) ?? null,
+      colour: (host) => {
+        const shown = host ?? node;
+        return ROW_PALETTE[rowColour(shown, row)] ?? tint?.(shown, row) ?? null;
+      },
       onClick: (host, event) => askHeader(host, entry, event),
     });
     if (entry.widget) remember(node, entry);

@@ -7,7 +7,7 @@ from comfy_api.latest import io
 from ...modules import log
 from ...modules.compat.types import LLM, LLM_POSTPROCESSORS, LLM_QUERY_ENGINE, LLM_RETRIEVER
 from ...modules.interface import run_result
-from ...modules.llm import query, runtime, wires
+from ...modules.llm import generate, query, runtime, wires
 
 REQUIRES = "llm"
 
@@ -30,6 +30,7 @@ class WASLLMQueryEngine(io.ComfyNode):
                 "RAG",
                 "question answering",
                 "citations",
+                "skill",
             ],
             category="WAS Suite/LLM/Query",
             description=(
@@ -77,6 +78,14 @@ class WASLLMQueryEngine(io.ComfyNode):
                     "postprocessors", optional=True,
                     tooltip="Filters and rerankers run over the retrieved chunks before the answer is written, in chain order.",
                 ),
+                io.String.Input(
+                    "system_prompt", force_input=True, optional=True,
+                    tooltip=(
+                        "Standing instructions the model follows in every answer, such as a "
+                        "skill from Load System Prompt whose documents feed the retriever, or "
+                        "`Answer in British English.` Unconnected = none."
+                    ),
+                ),
             ],
             outputs=[
                 LLM_QUERY_ENGINE.Output(
@@ -96,6 +105,7 @@ class WASLLMQueryEngine(io.ComfyNode):
         citation_chunk_size,
         qa_prompt="",
         postprocessors=None,
+        system_prompt="",
     ) -> io.NodeOutput:
         """Build the query engine.
 
@@ -107,6 +117,7 @@ class WASLLMQueryEngine(io.ComfyNode):
             citation_chunk_size: Tokens in one numbered source.
             qa_prompt: A question prompt replacing the built-in one.
             postprocessors: Steps run over the chunks first.
+            system_prompt: Instructions opening every call to the model.
 
         Returns:
             The query engine.
@@ -120,6 +131,12 @@ class WASLLMQueryEngine(io.ComfyNode):
         if response_mode not in query.RESPONSE_MODES:
             raise ValueError(f"{node}: response_mode {str(response_mode)[:40]!r} is not one of {', '.join(query.RESPONSE_MODES)}.")
         prompt = query.check_qa_prompt(qa_prompt, node)
+        instructions = str(system_prompt or "").strip()
+        if instructions:
+            try:
+                model = model.with_llm(generate.with_system_prompt(model.llm, instructions))
+            except ValueError as error:
+                raise ValueError(f"{node}: {error}. Leave system_prompt unconnected for this model.") from None
         shows_pictures = bool(source.pictures and model.vision)
         wires.ready(source, model, steps)
         with runtime.guarded():
@@ -145,6 +162,7 @@ class WASLLMQueryEngine(io.ComfyNode):
             "response mode": response_mode,
             "citations": f"{int(citation_chunk_size)} tokens a source" if citations else "off",
             "qa prompt": f"{len(prompt)} characters" if prompt else "built-in",
+            "system prompt": f"{len(instructions)} characters" if instructions else "none",
         }
         if source.pictures:
             facts["pictures"] = "shown to the model" if shows_pictures else f"named only; {model.label} does not read pictures"
@@ -156,6 +174,10 @@ class WASLLMQueryEngine(io.ComfyNode):
             summary="; ".join(unused) if unused else f"Answers with {model.label}, {response_mode}",
             counts={"postprocessors": len(steps)},
             facts=facts,
-            bodies=[run_result.body("qa prompt", prompt)] if prompt else None,
+            bodies=[
+                run_result.body(title, text)
+                for title, text in (("system prompt", instructions[:4000]), ("qa prompt", prompt))
+                if text
+            ] or None,
         )
         return io.NodeOutput(wire)

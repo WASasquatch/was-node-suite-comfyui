@@ -509,7 +509,7 @@ def run_query(engine, question: str, stream: runtime.TextStream | None = None) -
         if not streamed:
             stream.write(text)
         stream.finish()
-    answer, thinking = messages.split_thinking(text)
+    answer, thinking = messages.split_thinking(text, opened=messages.closes_only(text))
     return {
         "answer": answer,
         "thinking": thinking,

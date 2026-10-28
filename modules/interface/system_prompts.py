@@ -1,26 +1,30 @@
-"""The system prompt library as JSON a node interface draws.
+"""The system prompt library as JSON a node interface draws, and the folder import it sends.
 
-``GET /was/interface/api/system_prompts`` answers every entry's name, folder, families,
-description and size. With ``key`` it answers that one entry and its text, cut to
-:data:`MAX_TEXT_CHARS`.
+``GET /was/interface/api/system_prompts`` lists the entries, or with ``key`` answers one with
+its text. ``POST`` writes a folder into the library.
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 
 from .. import log
 from ..prompt import system_prompts
 from .channel import NO_STORE, REFUSAL_HEADER
 
 __all__ = [
+    "IMPORT_FAILED",
+    "MAX_BODY_BYTES",
     "MAX_KEY_CHARS",
+    "MAX_LISTED_FILES",
     "MAX_TEXT_CHARS",
     "REFUSAL",
     "ROUTE",
     "WORKERS",
     "entry_fields",
     "entry_payload",
+    "import_payload",
     "listing_payload",
     "register_routes",
 ]
@@ -36,8 +40,17 @@ MAX_KEY_CHARS = 1024
 #: Characters of an entry's text one answer holds.
 MAX_TEXT_CHARS = system_prompts.MAX_FILE_BYTES
 
-#: Requests walking or reading the library at once.
+#: Requests walking, reading or writing the library at once.
 WORKERS = 2
+
+#: Largest import body read, in bytes: twice the text one import writes, for escaping.
+MAX_BODY_BYTES = 32 * 1024 * 1024
+
+#: Files of a skill one entry answer names, at most.
+MAX_LISTED_FILES = system_prompts.MAX_SKILL_FILES
+
+#: What an import that failed for a reason outside the request answers.
+IMPORT_FAILED = "the folder could not be imported. The server log names the cause"
 
 #: The words a refusal carries.
 REFUSAL = "not in the system prompt library"
@@ -52,8 +65,9 @@ def entry_fields(entry: system_prompts.Entry) -> dict:
         entry: An entry of the library.
 
     Returns:
-        ``{"key", "name", "folder", "families", "description", "tags", "size", "modified"}``,
-        ``modified`` in seconds since the epoch.
+        ``{"key", "name", "folder", "families", "description", "tags", "size", "modified",
+        "skill", "files"}``, ``modified`` in seconds since the epoch and ``files`` the count of
+        a skill's other files.
     """
     return {
         "key": entry.key,
@@ -64,6 +78,8 @@ def entry_fields(entry: system_prompts.Entry) -> dict:
         "tags": list(entry.tags),
         "size": int(entry.size),
         "modified": round(float(entry.modified), 3),
+        "skill": bool(entry.skill),
+        "files": int(entry.files),
     }
 
 
@@ -71,7 +87,8 @@ def listing_payload() -> dict:
     """Every entry of the library. Never raises.
 
     Returns:
-        ``{"entries", "total", "limit"}``, ``limit`` the most entries a listing holds.
+        ``{"entries", "total", "limit", "import"}``, ``limit`` the most entries a listing holds
+        and ``import`` the suffixes, names and sizes a folder import takes.
     """
     try:
         entries = system_prompts.scan()
@@ -82,18 +99,27 @@ def listing_payload() -> dict:
         "entries": [entry_fields(entry) for entry in entries],
         "total": len(entries),
         "limit": system_prompts.MAX_ENTRIES,
+        "import": {
+            "prompt_extensions": list(system_prompts.IMPORT_EXTENSIONS),
+            "skill_extensions": list(system_prompts.SKILL_EXTENSIONS),
+            "skipped_folders": sorted(system_prompts.SKIPPED_FOLDERS),
+            "max_files": system_prompts.MAX_IMPORT_FILES,
+            "max_bytes": system_prompts.MAX_IMPORT_BYTES,
+            "max_file_bytes": system_prompts.MAX_SKILL_FILE_BYTES,
+            "max_depth": system_prompts.MAX_DEPTH,
+        },
     }
 
 
 def entry_payload(key) -> dict | None:
-    """One entry and its text. Never raises.
+    """One entry, its text and a skill's files. Never raises.
 
     Args:
         key: A key of the listing.
 
     Returns:
-        ``{"entry", "text", "truncated"}``, or ``None`` when no entry has that key or its
-        file cannot be read.
+        ``{"entry", "text", "truncated", "files"}``, ``files`` a skill's other files as
+        ``{"path", "size"}``; or ``None`` when no entry has that key or its file cannot be read.
     """
     wanted = str(key or "")[:MAX_KEY_CHARS]
     try:
@@ -101,6 +127,7 @@ def entry_payload(key) -> dict | None:
         if entry is None:
             return None
         document = system_prompts.read(entry)
+        files, _skipped = system_prompts.skill_files(entry)
     except Exception as error:
         logger.debug("%s could not read %s (%s)", ROUTE, wanted, error)
         return None
@@ -109,6 +136,54 @@ def entry_payload(key) -> dict | None:
         "entry": entry_fields(entry),
         "text": body[:MAX_TEXT_CHARS],
         "truncated": len(body) > MAX_TEXT_CHARS,
+        "files": [{"path": found.relative, "size": int(found.size)} for found in files[:MAX_LISTED_FILES]],
+    }
+
+
+def import_payload(body: bytes) -> tuple[int, dict]:
+    """Write the folder an import body carries. Never raises.
+
+    Args:
+        body: The request body, ``{"folder", "replace", "files": [{"path", "text"}]}``.
+
+    Returns:
+        ``(status, payload)``: 200 with ``{"folder", "skills", "written", "replaced",
+        "unchanged", "skipped"}``; 409 with ``{"error", "exists"}`` when the folder is in the
+        library and ``replace`` is not true; otherwise 400 with ``{"error"}``.
+    """
+    try:
+        sent = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        return 400, {"error": "the body has to be JSON"}
+    if not isinstance(sent, dict):
+        return 400, {"error": "the body has to be a JSON object"}
+    listed = sent.get("files")
+    if not isinstance(listed, list):
+        return 400, {"error": "files has to be a list"}
+    if len(listed) > system_prompts.MAX_IMPORT_FILES:
+        return 400, {"error": f"one import takes at most {system_prompts.MAX_IMPORT_FILES} files"}
+    pairs = []
+    for item in listed:
+        if not isinstance(item, dict) or not isinstance(item.get("path"), str) or not isinstance(item.get("text"), str):
+            return 400, {"error": "each file has to carry a path and its text"}
+        pairs.append((item["path"], item["text"]))
+    try:
+        done = system_prompts.import_folder(sent.get("folder"), pairs, replace=sent.get("replace") is True)
+    except system_prompts.FolderExists as error:
+        return 409, {"error": str(error), "exists": True}
+    except system_prompts.ImportRefused as error:
+        return 400, {"error": str(error)}
+    except Exception as error:
+        logger.warning("%s could not import a folder (%s)", ROUTE, type(error).__name__)
+        logger.debug("%s import failed", ROUTE, exc_info=True)
+        return 400, {"error": IMPORT_FAILED}
+    return 200, {
+        "folder": done.folder,
+        "skills": list(done.skills),
+        "written": done.written,
+        "replaced": done.replaced,
+        "unchanged": done.unchanged,
+        "skipped": done.skipped,
     }
 
 
@@ -139,6 +214,22 @@ def register_routes() -> bool:
             if payload is None:
                 return web.Response(status=204, headers={**NO_STORE, REFUSAL_HEADER: REFUSAL})
             return web.json_response(payload, headers=NO_STORE)
+
+        @PromptServer.instance.routes.post(ROUTE)
+        async def post_system_prompts(request):
+            # The declared length is checked before any of the body is read.
+            length = request.content_length
+            if length is None:
+                return web.json_response({"error": "the body has to state its length"}, status=411, headers=NO_STORE)
+            if length > MAX_BODY_BYTES:
+                return web.json_response(
+                    {"error": f"the import is {length} bytes, past the {MAX_BODY_BYTES} one import takes"},
+                    status=413, headers=NO_STORE,
+                )
+            body = await request.read()
+            async with gate:
+                status, payload = await asyncio.to_thread(import_payload, body)
+            return web.json_response(payload, status=status, headers=NO_STORE)
 
     except Exception as error:
         logger.warning(

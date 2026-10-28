@@ -17,6 +17,7 @@ __all__ = [
     "Family",
     "MAX_CONTEXT",
     "MAX_PICTURES",
+    "THINK_OPEN",
     "clip_model",
     "context_of",
     "conversation",
@@ -46,6 +47,9 @@ LIVE_INTERVAL = 0.25
 
 #: Characters per delta when a finished generation is replayed as a stream.
 PIECE_CHARS = 48
+
+#: The tag a stream opens with when the prompt opened the thinking block.
+THINK_OPEN = "<think>"
 
 #: The role names a conversation is reduced to.
 USER, ASSISTANT, TOOL = "user", "assistant", "tool"
@@ -207,6 +211,8 @@ def split(text: str, opened: bool = False) -> tuple[str, str]:
         ``(answer, thinking)``, both stripped.
     """
     text = str(text or "")
+    if text.lstrip().startswith(THINK_OPEN):
+        return messages.split_thinking(text)
     opened = opened or ("</think>" in text and "<think>" not in text)
     return messages.split_thinking(text, opened=opened)
 
@@ -377,7 +383,8 @@ def family_of(clip) -> Family:
     """
     tokenizer = getattr(clip, "tokenizer", None)
     name = str(getattr(tokenizer, "clip_name", "") or "")
-    lowered = name.lower()
+    # The pack's own encoders carry a was_ prefix before the family name.
+    lowered = name.lower().removeprefix("was_")
     template = str(getattr(tokenizer, "llama_template", "") or "")
     sees = _model_sees(clip)
     if "<|im_start|>" in template or lowered.startswith("qwen"):
@@ -774,6 +781,8 @@ def clip_model():
         def _stream(self, items):
             """Generate, then replay the finished text as deltas."""
             raw, opened, stats = self.generate(items)
+            if opened:
+                yield THINK_OPEN
             yield from pieces(raw)
             return opened, stats
 

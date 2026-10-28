@@ -5,7 +5,7 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **657** across **66** categories |
+| Nodes | **659** across **66** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 362 nodes draw their own readout, picture or editor on the canvas |
@@ -300,12 +300,52 @@ model family and description as front matter. **Load System Prompt** draws the l
 searched and filtered by folder and model family, with the chosen prompt's text, and hands that
 text to a model's `system_prompt` input. **Save System Prompt** files a prompt into it.
 
-For keeping the instructions that steer Qwen, Gemma and other language models in one place, and
-picking one per node instead of pasting it.
+A folder holding `SKILL.md` is a skill, and **Import** on the node adds one, or a folder of
+prompts, from a folder on disk. The skill's `SKILL.md` is the system prompt, and its other text
+files, such as `references/layout.md`, leave Load System Prompt on its `documents` output for an
+LLM index, so a local model looks up what the skill references while it answers.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Text/System Prompts**. Files and front matter:
-[`docs/SYSTEM_PROMPTS.md`](docs/SYSTEM_PROMPTS.md). Graph:
-[`system-prompt-library.json`](docs/workflows/system-prompt-library.json).
+For keeping the instructions that steer Qwen, Gemma and other language models in one place,
+picking one per node instead of pasting it, and running skills written for Claude Code and Codex
+on a local model.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Text/System Prompts**. Files, front matter and skills:
+[`docs/SYSTEM_PROMPTS.md`](docs/SYSTEM_PROMPTS.md). Graphs:
+[`system-prompt-library.json`](docs/workflows/system-prompt-library.json),
+[`llm-skill-prompt-enhancer.json`](docs/workflows/llm-skill-prompt-enhancer.json).
+
+---
+
+## MOSS-Image captions and layouts written by a model
+
+**MOSS-Image Compile Prompt** turns the caption or box layout a language model drafts, as the
+MOSS-Image prompt enhancer skill has it write them, into the prompt MOSS-Image reads. A layout's
+boxes are placed on the size being generated, and its summary tags, canvas and box tags are kept.
+The panel lists the caption and every box.
+
+For prompt enhancement that places subjects and lettering where the model is told to, on the
+model already loaded for the generation.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Text**. Graph:
+[`llm-skill-prompt-enhancer.json`](docs/workflows/llm-skill-prompt-enhancer.json).
+
+---
+
+## Qwen3 32B and other language models as a CLIP
+
+**Language Model Loader** loads a language model from `ComfyUI/models/text_encoders` as a CLIP
+that writes text, for core Generate Text, **Fast Generate Text** and **LLM From CLIP**. It reads
+Qwen3 14B and 32B as one safetensors file in Hugging Face key names, in bfloat16 or quantized in
+ComfyUI's own formats, and loads every other language model as ComfyUI reads it. Its panel shows
+the model, its size, its layers and how its weights are stored. A prompt encoder with no output
+layer, such as MiniMax H3's Qwen3-VL 32B, is refused by name.
+
+For prompt writing, chat and retrieval on a larger model than the text encoders image models
+ship with.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Loaders**. Files:
+[`docs/MODELS.md`](docs/MODELS.md#language-models). Graph:
+[`language-model-loader.json`](docs/workflows/language-model-loader.json).
 
 ---
 
@@ -315,8 +355,8 @@ The nodes under **WAS Suite/LLM** are llama-index on the canvas: each part of a 
 pipeline, from the model to the agent, is a node, wired and queued like any other and run on the
 models a graph wires in:
 
-- **Models.** **LLM From CLIP** uses the language model inside a core **Load CLIP**, such as
-  Qwen3 or Gemma, with pictures. **LLM GGUF Loader** runs a GGUF file, and **LLM Transformers
+- **Models.** **LLM From CLIP** uses the language model inside a core **Load CLIP** or a
+  **Language Model Loader**, such as Qwen3 or Gemma, with pictures. **LLM GGUF Loader** runs a GGUF file, and **LLM Transformers
   Loader** a Hugging Face model folder. **LLM OpenAI**, **LLM Anthropic**, **LLM Google Gemini**
   and **LLM Provider** reach hosted models and local servers such as Ollama and LM Studio, with
   keys read from the environment. **LLM Embedding Model** embeds text, and **LLM Unload** frees
@@ -352,8 +392,9 @@ models a graph wires in:
   question, and **LLM Index Node** with **LLM Recursive Retriever** searches short summaries
   first, then the retriever each one points to. **LLM Postprocessor** and **LLM Rerank** filter
   and reorder what is found before **LLM Retrieve** or **LLM Sources to Text** hands it on.
-- **Answers and chat.** **LLM Query Engine** answers from retrieved chunks, with citations,
-  showing a vision model the pictures found, and
+- **Answers and chat.** **LLM Query Engine** answers from retrieved chunks under a system
+  prompt, such as a skill from Load System Prompt whose files are the indexed documents, with
+  citations, showing a vision model the pictures found, and
   **LLM Query Transform**, **LLM Sub-Question Query Engine**, **LLM Router Query Engine** and
   **LLM Retry Query Engine** reshape, route or retry each question for **LLM Query**. **LLM Chat Engine** and **LLM Chat Session**
   hold a chat over them on a chat panel that saves each conversation under a name, with a menu
@@ -379,7 +420,8 @@ under **WAS Suite/LLM**. Keys, folders and servers: [`docs/LLM.md`](docs/LLM.md)
 [`llm-table-questions.json`](docs/workflows/llm-table-questions.json),
 [`llm-vector-store.json`](docs/workflows/llm-vector-store.json),
 [`llm-retrievers.json`](docs/workflows/llm-retrievers.json),
-[`llm-to-documents.json`](docs/workflows/llm-to-documents.json).
+[`llm-to-documents.json`](docs/workflows/llm-to-documents.json),
+[`llm-skill-prompt-enhancer.json`](docs/workflows/llm-skill-prompt-enhancer.json).
 
 ---
 
@@ -888,7 +930,8 @@ exist: [Image Search](https://github.com/WASasquatch/ComfyUI_Viewer_Image_Search
 43 nodes for geometry, materials, lights, cameras, model loading, rendering and path tracing,
 with the scene drawn on the canvas. For building and rendering a 3D scene inside a graph.
 
-Off out of the box: set `threejs: true` under `features:` in `config.yaml`.
+The group starts on. Set `features.threejs` to false in `config.yaml` to leave the 43 nodes
+out.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Three**. Five graphs in
 [`docs/workflows/`](docs/workflows).

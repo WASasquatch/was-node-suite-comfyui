@@ -33,6 +33,9 @@ const SCROLLS = ["auto", "scroll", "overlay"];
 const REPORT_FONT = "11px system-ui,sans-serif";
 const TEXT_FONT = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 
+// Height one text keeps, label included, while a report carries more than one.
+const SEVERAL_BODY_MIN = 76;
+
 // Height of a frame tab strip, and of a tab inside it, in CSS pixels.
 const TAB_STRIP_HEIGHT = 22;
 const TAB_HEIGHT = 20;
@@ -461,6 +464,8 @@ export function createReportPanel(node, options = {}) {
     release();
     bodies.textContent = "";
     drawnSignature = signature;
+    // Several texts each keep a few lines, and the area scrolls past them.
+    const several = carriedBodies.filter((carried) => carried?.text).length > 1;
     carriedBodies.forEach((carried, index) => {
       const { name, text, whole, lines, offset } = carried;
       if (!text) return;
@@ -474,7 +479,8 @@ export function createReportPanel(node, options = {}) {
       });
       drawn.push(listing);
       const block = document.createElement("div");
-      block.style.cssText = "display:flex;flex-direction:column;gap:2px;min-height:0";
+      block.style.cssText = "display:flex;flex-direction:column;gap:2px;"
+        + `min-height:${several ? SEVERAL_BODY_MIN : 0}px`;
       if (name) {
         const label = document.createElement("div");
         label.style.cssText = `color:${themeVar("fgMuted")};font-size:9px`;

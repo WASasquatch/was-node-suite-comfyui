@@ -18,6 +18,7 @@ __all__ = [
     "MAX_IMAGE_EDGE",
     "ROLES",
     "audio_block",
+    "closes_only",
     "from_dicts",
     "image_blocks",
     "image_tensors",
@@ -215,6 +216,19 @@ def thinking_of(value) -> str:
 
     parts = [block.content or "" for block in getattr(value, "blocks", ()) or () if isinstance(block, ThinkingBlock)]
     return "\n\n".join(part.strip() for part in parts if part and part.strip())
+
+
+def closes_only(text: str) -> bool:
+    """Whether a text closes a thinking block it never opened, as after a prompt that opened it.
+
+    Args:
+        text: What the model wrote.
+
+    Returns:
+        True when ``</think>`` appears and ``<think>`` does not.
+    """
+    text = str(text or "")
+    return "</think>" in text and "<think>" not in text
 
 
 def split_thinking(text: str, opened: bool = False) -> tuple[str, str]:

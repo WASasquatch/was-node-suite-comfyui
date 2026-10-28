@@ -2386,7 +2386,7 @@
           "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
-          "link": null
+          "link": 30
         },
         {
           "localized_name": "direction",
@@ -2405,11 +2405,6 @@
             "name": "exposure"
           },
           "link": null
-        },
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 30
         }
       ],
       "outputs": [
@@ -2752,7 +2747,7 @@
       8,
       0,
       34,
-      3,
+      0,
       "IMAGE"
     ],
     [

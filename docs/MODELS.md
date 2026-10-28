@@ -361,6 +361,33 @@ Sample with `euler` in SamplerCustomAdvanced. Dev generates and edits; Edit Turb
 | Edit Turbo comes out oversaturated and harsh | It is sampled off its settings. Give it 4 steps, CFG 1 and `euler` |
 | An edit comes out cropped or soft | `width` and `height` are typed. At 0 an edit samples about one megapixel in image_1's shape |
 
+## Language models
+
+**Language Model Loader** lists every file in `ComfyUI/models/text_encoders` and reads two kinds:
+
+| File | Built by |
+|---|---|
+| A dense [Qwen3 14B](https://huggingface.co/Qwen/Qwen3-14B) or [Qwen3 32B](https://huggingface.co/Qwen/Qwen3-32B) as one `.safetensors` file in Hugging Face key names (`model.embed_tokens.weight`, `model.layers.0.self_attn.q_proj.weight`, `lm_head.weight`), in bfloat16 or with `comfy_quant` layers. A `mlp.down_proj` may be stored as equal column slices, `mlp.down_proj.parts.0`, `mlp.down_proj.parts.1` and on, whose outputs add | The pack, on ComfyUI's own Qwen3 model |
+| Any language model Load CLIP reads, such as `qwen_3_4b.safetensors`, `ministral-3-3b.safetensors` or `gemma_3_12B_it_fp4_mixed.safetensors` | ComfyUI |
+
+Qwen publishes both models under Apache-2.0 as several shard files; the loader reads one file.
+[WAS/LLM](https://huggingface.co/WAS/LLM) holds Qwen3 32B as three files, each saved in
+`ComfyUI/models/text_encoders`. Every linear layer is quantized, and the embedding and the output
+layer are int8 convrot in all three.
+
+| File | Size | Layer linears | Graphics card it fits on |
+|---|--:|---|---|
+| [`qwen3_32b_w4a8.safetensors`](https://huggingface.co/WAS/LLM/blob/main/Qwen3-32B/qwen3_32b_w4a8.safetensors) | 19.1 GB | `w4a8`, each `down_proj` in two halves | 24 GB, RTX 30 series and newer |
+| [`qwen3_32b_w6a8.safetensors`](https://huggingface.co/WAS/LLM/blob/main/Qwen3-32B/qwen3_32b_w6a8.safetensors) | 26.0 GB | `w6a8`, each `down_proj` in two halves | 32 GB, RTX 30 series and newer |
+| [`qwen3_32b_int8_convrot.safetensors`](https://huggingface.co/WAS/LLM/blob/main/Qwen3-32B/qwen3_32b_int8_convrot.safetensors) | 32.8 GB | `int8 convrot` | 48 GB, RTX 20 series and newer |
+
+| Trouble | Cause |
+|---|---|
+| `is MiniMax H3's prompt encoder` | `qwen3vl_32b_minimax_h3_*` holds 50 of Qwen3-VL 32B's 64 layers and no output layer. It conditions H3 in Load CLIP and writes no text |
+| `is a text encoder that conditions images` | The file is a CLIP, T5 or similar encoder with no language model in it |
+| `reads text only` | Qwen3 14B and 32B take no picture. Use a Qwen3-VL or Gemma 3 file for pictures |
+| Writing is slow | The file is larger than the graphics card's memory, so part of its weights streams for every token. Pick the file that fits the card in the table above |
+
 ## Quantized models
 
 **Quantize Model** writes to `ComfyUI/output/diffusion_models/` by default, numbered
@@ -377,6 +404,9 @@ file loads with no loader setting.
 | `fp8 e4m3fn` | 8-bit float, one scale per layer | RTX 40 series and newer |
 | `mxfp8` | 8-bit float, a power-of-two scale per 32 weights | RTX 50 series, emulated on older cards |
 | `nvfp4` | 4-bit float, a scale per 16 weights and one per layer | RTX 50 series, emulated on older cards |
+
+`w6a8` and `w4a8` take a layer up to 17,408 inputs wide. A wider layer, such as the feed-forward
+output of Qwen3 32B, takes `int8 convrot`.
 
 With `layers`, `scales` and `attention` on `like Comfy-Org`, these releases come out tensor for
 tensor from the bfloat16 file beside them in the same repository, apart from the hardware
@@ -546,6 +576,7 @@ beside the SFT.
 |---|---|--:|---|---|---|
 | `autismmixSDXL_autismmixConfetti.safetensors` | `ComfyUI/models/checkpoints` | 6.9 GB | [AutismMix SDXL on Civitai](https://civitai.com/models/288584?modelVersionId=324524), version `AutismMix_confetti` | On the Civitai page | `fast-samplers-and-savers.json`, `hdr.json` |
 | `qwen_3_4b.safetensors` | `ComfyUI/models/text_encoders` | 8.0 GB | [Comfy-Org/z_image_turbo](https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/text_encoders/qwen_3_4b.safetensors) | Apache-2.0 | `fast-generate-text.json` |
+| `qwen3_32b_w4a8.safetensors` | `ComfyUI/models/text_encoders` | 19.1 GB | [WAS/LLM](https://huggingface.co/WAS/LLM/blob/main/Qwen3-32B/qwen3_32b_w4a8.safetensors) | Apache-2.0 | `language-model-loader.json` |
 | `4xNomosWebPhoto_RealPLKSR.safetensors` | `ComfyUI/models/upscale_models` | 30 MB | [Phips/4xNomosWebPhoto_RealPLKSR](https://huggingface.co/Phips/4xNomosWebPhoto_RealPLKSR/blob/main/4xNomosWebPhoto_RealPLKSR.safetensors) | CC-BY-4.0 | `vtc_temporal_upscale.json` |
 | `skin_detail_slider_krea2_ZT-V1.safetensors` | `ComfyUI/models/loras/Krea2` | 1.2 MB | [Skin Detail Slider on Civitai](https://civitai.com/models/2936275?modelVersionId=3323867), version `V1` | On the Civitai page | `power-lora-stack.json` |
 | `day_&_night_slider_0ts-krea2-v1.safetensors` | `ComfyUI/models/loras/Krea2` | 1.2 MB | [Day & Night Slider on Civitai](https://civitai.com/models/2957416?modelVersionId=3350109), version `V1` | On the Civitai page | `power-lora-stack.json` |

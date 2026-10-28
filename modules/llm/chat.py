@@ -225,7 +225,7 @@ async def chat_turn(engine, payload, stream: runtime.TextStream) -> dict:
         stream.write(text)
     stream.finish()
     raw = text.strip()
-    reply, thinking = messages.split_thinking(raw)
+    reply, thinking = messages.split_thinking(raw, opened=messages.closes_only(raw))
     return {"raw": raw, "reply": reply, "thinking": thinking, "nodes": _nodes_of(response)}
 
 

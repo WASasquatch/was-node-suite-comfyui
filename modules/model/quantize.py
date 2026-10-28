@@ -70,6 +70,10 @@ ROTATIONS = (256, 64, 16)
 #: Rows a grouped format needs; a layer with fewer takes int8 convrot.
 GROUPED_ROWS = 64
 
+#: The widest input a grouped format's kernels take on a GPU with 99 KB of shared memory per
+#: block; a wider layer takes int8 convrot.
+GROUPED_WIDEST = 17408
+
 #: Which linear layers are quantized.
 LAYERS = ("like Comfy-Org", "transformer blocks", "every linear layer")
 
@@ -536,7 +540,7 @@ def _fits(menu_name: str, rows: int, width: int, group: int) -> bool:
     if width % target.divides:
         return False
     if target.grouped:
-        if rows < GROUPED_ROWS or width % group:
+        if rows < GROUPED_ROWS or width > GROUPED_WIDEST or width % group:
             return False
         if target.tag == "w6a8_int8" and (width % 32 or group % 16):
             return False

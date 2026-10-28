@@ -1,0 +1,1104 @@
+{
+  "id": "c0dd1134-4cb7-46de-939c-3765a07d0353",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 11,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "CLIPLoader",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        390,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3.5_9b_w4a8_gptq.safetensors",
+        "moss_image",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3.5_9b_w4a8_gptq.safetensors",
+        "type": "moss_image",
+        "device": "default"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASLoadSystemPrompt",
+      "pos": [
+        0,
+        196
+      ],
+      "size": [
+        390,
+        498
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "system_prompt",
+          "name": "system_prompt",
+          "type": "COMBO",
+          "widget": {
+            "name": "system_prompt"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "system_prompt",
+          "name": "system_prompt",
+          "type": "STRING",
+          "links": [
+            7
+          ]
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLoadSystemPrompt"
+      },
+      "widgets_values": [
+        "moss-image-prompt-enhancer/SKILL.md"
+      ],
+      "widgets_values_named": {
+        "system_prompt": "moss-image-prompt-enhancer/SKILL.md"
+      }
+    },
+    {
+      "id": 3,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        0,
+        784
+      ],
+      "size": [
+        390,
+        88
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "A vintage railway travel poster, 1930s lithograph style, flat colour shapes and soft paper grain. A green steam locomotive crosses a curved stone viaduct over a deep valley at golden hour, with fells and a lake behind. The title \"LAKE DISTRICT\" in large cream capitals across the top, and \"by rail from London\" in smaller lettering along the bottom."
+      ],
+      "widgets_values_named": {
+        "value": "A vintage railway travel poster, 1930s lithograph style, flat colour shapes and soft paper grain. A green steam locomotive crosses a curved stone viaduct over a deep valley at golden hour, with fells and a lake behind. The title \"LAKE DISTRICT\" in large cream capitals across the top, and \"by rail from London\" in smaller lettering along the bottom."
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASLLMFromCLIP",
+      "pos": [
+        470,
+        0
+      ],
+      "size": [
+        390,
+        462
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 1
+        },
+        {
+          "localized_name": "Sampling Mode",
+          "name": "sampling_mode",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "sampling_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "temperature",
+          "name": "sampling_mode.temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sampling_mode.temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "top_k",
+          "name": "sampling_mode.top_k",
+          "type": "INT",
+          "widget": {
+            "name": "sampling_mode.top_k"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "top_p",
+          "name": "sampling_mode.top_p",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sampling_mode.top_p"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_p",
+          "name": "sampling_mode.min_p",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sampling_mode.min_p"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "repetition_penalty",
+          "name": "sampling_mode.repetition_penalty",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sampling_mode.repetition_penalty"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "sampling_mode.seed",
+          "type": "INT",
+          "widget": {
+            "name": "sampling_mode.seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "presence_penalty",
+          "name": "sampling_mode.presence_penalty",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "sampling_mode.presence_penalty"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_tokens",
+          "name": "max_tokens",
+          "type": "INT",
+          "widget": {
+            "name": "max_tokens"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "thinking",
+          "name": "thinking",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "thinking"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fast_decode",
+          "name": "fast_decode",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fast_decode"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "llm",
+          "name": "llm",
+          "type": "WAS_LLM",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMFromCLIP"
+      },
+      "widgets_values": [
+        "on",
+        0.7,
+        64,
+        0.95,
+        0.05,
+        1.05,
+        7,
+        0,
+        2048,
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "sampling_mode": "on",
+        "sampling_mode.temperature": 0.7,
+        "sampling_mode.top_k": 64,
+        "sampling_mode.top_p": 0.95,
+        "sampling_mode.min_p": 0.05,
+        "sampling_mode.repetition_penalty": 1.05,
+        "sampling_mode.seed": 7,
+        "sampling_mode.presence_penalty": 0,
+        "max_tokens": 2048,
+        "thinking": false,
+        "fast_decode": true
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASLLMEmbeddingModel",
+      "pos": [
+        470,
+        552
+      ],
+      "size": [
+        390,
+        470
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model",
+          "name": "source.model",
+          "type": "COMBO",
+          "widget": {
+            "name": "source.model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pooling",
+          "name": "source.pooling",
+          "type": "COMBO",
+          "widget": {
+            "name": "source.pooling"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "normalize",
+          "name": "source.normalize",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "source.normalize"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "query_instruction",
+          "name": "source.query_instruction",
+          "type": "STRING",
+          "widget": {
+            "name": "source.query_instruction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_instruction",
+          "name": "source.text_instruction",
+          "type": "STRING",
+          "widget": {
+            "name": "source.text_instruction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_length",
+          "name": "source.max_length",
+          "type": "INT",
+          "widget": {
+            "name": "source.max_length"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "source.batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "source.batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "embedding",
+          "name": "embedding",
+          "type": "WAS_LLM_EMBEDDING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMEmbeddingModel"
+      },
+      "widgets_values": [
+        "local",
+        "BAAI/bge-small-en-v1.5",
+        "auto",
+        true,
+        "",
+        "",
+        512,
+        32
+      ],
+      "widgets_values_named": {
+        "source": "local",
+        "source.model": "BAAI/bge-small-en-v1.5",
+        "source.pooling": "auto",
+        "source.normalize": true,
+        "source.query_instruction": "",
+        "source.text_instruction": "",
+        "source.max_length": 512,
+        "source.batch_size": 32
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASLLMVectorIndex",
+      "pos": [
+        940,
+        0
+      ],
+      "size": [
+        390,
+        388
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "documents",
+          "name": "documents",
+          "type": "WAS_LLM_DOCUMENTS",
+          "link": 2
+        },
+        {
+          "localized_name": "embedding",
+          "name": "embedding",
+          "type": "WAS_LLM_EMBEDDING",
+          "link": 3
+        },
+        {
+          "localized_name": "vector_store",
+          "name": "vector_store",
+          "shape": 7,
+          "type": "WAS_LLM_VECTOR_STORE",
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chunk_size",
+          "name": "chunk_size",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "chunk_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chunk_overlap",
+          "name": "chunk_overlap",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "chunk_overlap"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "WAS_LLM_INDEX",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMVectorIndex",
+        "was_show_advanced": false
+      },
+      "widgets_values": [
+        64,
+        1024,
+        20
+      ],
+      "widgets_values_named": {
+        "batch_size": 64,
+        "chunk_size": 1024,
+        "chunk_overlap": 20
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASLLMIndexRetriever",
+      "pos": [
+        940,
+        478
+      ],
+      "size": [
+        390,
+        366
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "WAS_LLM_INDEX",
+          "link": 4
+        },
+        {
+          "localized_name": "llm",
+          "name": "llm",
+          "shape": 7,
+          "type": "WAS_LLM",
+          "link": null
+        },
+        {
+          "localized_name": "embedding",
+          "name": "embedding",
+          "shape": 7,
+          "type": "WAS_LLM_EMBEDDING",
+          "link": null
+        },
+        {
+          "localized_name": "top_k",
+          "name": "top_k",
+          "type": "INT",
+          "widget": {
+            "name": "top_k"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "Mode",
+          "name": "mode",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "metadata_filters",
+          "name": "metadata_filters",
+          "type": "STRING",
+          "widget": {
+            "name": "metadata_filters"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filters_match",
+          "name": "filters_match",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "filters_match"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "retriever",
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMIndexRetriever",
+        "was_show_advanced": false
+      },
+      "widgets_values": [
+        2,
+        "default",
+        "",
+        "all"
+      ],
+      "widgets_values_named": {
+        "top_k": 2,
+        "mode": "default",
+        "metadata_filters": "",
+        "filters_match": "all"
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASLLMQueryEngine",
+      "pos": [
+        1410,
+        0
+      ],
+      "size": [
+        390,
+        404
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "retriever",
+          "name": "retriever",
+          "type": "WAS_LLM_RETRIEVER",
+          "link": 5
+        },
+        {
+          "localized_name": "llm",
+          "name": "llm",
+          "type": "WAS_LLM",
+          "link": 6
+        },
+        {
+          "localized_name": "postprocessors",
+          "name": "postprocessors",
+          "shape": 7,
+          "type": "WAS_LLM_POSTPROCESSORS",
+          "link": null
+        },
+        {
+          "localized_name": "system_prompt",
+          "name": "system_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 7
+        },
+        {
+          "localized_name": "response_mode",
+          "name": "response_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "response_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "citations",
+          "name": "citations",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "citations"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "citation_chunk_size",
+          "name": "citation_chunk_size",
+          "type": "INT",
+          "widget": {
+            "name": "citation_chunk_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "qa_prompt",
+          "name": "qa_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "qa_prompt"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "query_engine",
+          "name": "query_engine",
+          "type": "WAS_LLM_QUERY_ENGINE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMQueryEngine"
+      },
+      "widgets_values": [
+        "compact",
+        false,
+        512,
+        "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nNo tools or files are available here, so do not run the compile script. Reply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
+      ],
+      "widgets_values_named": {
+        "response_mode": "compact",
+        "citations": false,
+        "citation_chunk_size": 512,
+        "qa_prompt": "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nNo tools or files are available here, so do not run the compile script. Reply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASLLMQuery",
+      "pos": [
+        1880,
+        0
+      ],
+      "size": [
+        390,
+        452
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "query_engine",
+          "name": "query_engine",
+          "type": "WAS_LLM_QUERY_ENGINE",
+          "link": 8
+        },
+        {
+          "localized_name": "question",
+          "name": "question",
+          "type": "STRING",
+          "widget": {
+            "name": "question"
+          },
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "answer",
+          "name": "answer",
+          "type": "STRING",
+          "links": [
+            10
+          ]
+        },
+        {
+          "localized_name": "sources_text",
+          "name": "sources_text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "sources",
+          "name": "sources",
+          "type": "WAS_LLM_SOURCES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLLMQuery"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "question": ""
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASMOSSImageCompilePrompt",
+      "pos": [
+        2350,
+        0
+      ],
+      "size": [
+        390,
+        424
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "draft",
+          "name": "draft",
+          "type": "STRING",
+          "widget": {
+            "name": "draft"
+          },
+          "link": 10
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "on_resize",
+          "name": "on_resize",
+          "type": "COMBO",
+          "widget": {
+            "name": "on_resize"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            11
+          ]
+        },
+        {
+          "localized_name": "caption",
+          "name": "caption",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASMOSSImageCompilePrompt"
+      },
+      "widgets_values": [
+        "",
+        1024,
+        1536,
+        "fit"
+      ],
+      "widgets_values_named": {
+        "draft": "",
+        "width": 1024,
+        "height": 1536,
+        "on_resize": "fit"
+      }
+    },
+    {
+      "id": 11,
+      "type": "PreviewAny",
+      "pos": [
+        2820,
+        0
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      4,
+      0,
+      "CLIP"
+    ],
+    [
+      2,
+      2,
+      2,
+      6,
+      0,
+      "WAS_LLM_DOCUMENTS"
+    ],
+    [
+      3,
+      5,
+      0,
+      6,
+      1,
+      "WAS_LLM_EMBEDDING"
+    ],
+    [
+      4,
+      6,
+      0,
+      7,
+      0,
+      "WAS_LLM_INDEX"
+    ],
+    [
+      5,
+      7,
+      0,
+      8,
+      0,
+      "WAS_LLM_RETRIEVER"
+    ],
+    [
+      6,
+      4,
+      0,
+      8,
+      1,
+      "WAS_LLM"
+    ],
+    [
+      7,
+      2,
+      0,
+      8,
+      3,
+      "STRING"
+    ],
+    [
+      8,
+      8,
+      0,
+      9,
+      0,
+      "WAS_LLM_QUERY_ENGINE"
+    ],
+    [
+      9,
+      3,
+      0,
+      9,
+      1,
+      "STRING"
+    ],
+    [
+      10,
+      9,
+      0,
+      10,
+      0,
+      "STRING"
+    ],
+    [
+      11,
+      10,
+      0,
+      11,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "A MOSS-Image prompt written by a skill, with its references looked up",
+      "bounding": [
+        -40,
+        -120,
+        3110,
+        1212
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        100,
+        180
+      ]
+    }
+  },
+  "version": 0.4
+}

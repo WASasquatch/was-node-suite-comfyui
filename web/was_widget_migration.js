@@ -155,11 +155,6 @@ const V2_BOOLEAN_WIDGETS = {
   "MiDaS Depth Approximation": ["use_cpu", "invert_depth"],
   "MiDaS Mask Image": ["use_cpu", "threshold"],
   "Text Add Token by Input": ["print_current_tokens"],
-  "Text Dictionary New": [
-    "key_1", "value_1", "key_2", "value_2", "key_3", "value_3", "key_4", "value_4",
-    "key_5", "value_5", "key_6", "value_6", "key_7", "value_7", "key_8", "value_8",
-    "list_values",
-  ],
   "Text Add Tokens": ["print_current_tokens"],
   "Text Concatenate": ["clean_whitespace"],
 };

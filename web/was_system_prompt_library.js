@@ -10,7 +10,7 @@ import { api } from "../../scripts/api.js";
 import { createFloatingWindow } from "./interface/floating_window.js";
 import { captureWheel } from "./interface/pointer.js";
 import { readableBytes } from "./interface/report_panel.js";
-import { fetchWithin } from "./interface/request.js";
+import { UPLOAD_TIMEOUT, fetchWithin } from "./interface/request.js";
 import { setWidgetHidden } from "./interface/visibility.js";
 import { appendInterfaceWidget, chainWidgetCallback } from "./interface/widget.js";
 import {
@@ -163,7 +163,37 @@ function readEntry(raw) {
     tags: strings(raw.tags),
     size: number(raw.size),
     modified: number(raw.modified),
+    skill: raw.skill === true,
+    files: number(raw.files),
   };
+}
+
+/**
+ * A skill's file list from an entry answer.
+ *
+ * @param {unknown} value - The `files` the route answered.
+ * @returns {{path: string, size: number}[]} The files.
+ */
+function readFiles(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => item && typeof item.path === "string" && item.path)
+    .map((item) => ({ path: item.path, size: Number.isFinite(Number(item.size)) ? Number(item.size) : 0 }));
+}
+
+/**
+ * Show a short message in the frontend's corner.
+ *
+ * @param {string} severity - `success`, `info`, `warn` or `error`.
+ * @param {string} detail - The sentence.
+ * @returns {void}
+ */
+function tell(severity, detail) {
+  try {
+    app?.extensionManager?.toast?.add?.({ severity, summary: "System prompt library", detail, life: 7000 });
+  } catch (error) {
+    console.error(`[${EXT_NAME}] Failed to show a message:`, error);
+  }
 }
 
 /**
@@ -198,6 +228,19 @@ function familyPills(families, most) {
 }
 
 /**
+ * The pill marking a skill, with the count of its other files.
+ *
+ * @param {object} entry - A skill's entry.
+ * @returns {HTMLElement} The pill.
+ */
+function skillPill(entry) {
+  const label = entry.files ? `skill · ${entry.files} ${entry.files === 1 ? "file" : "files"}` : "skill";
+  const made = pill(label, LOOK.accent);
+  made.title = "SKILL.md plus its documents";
+  return made;
+}
+
+/**
  * How long ago a time was, in the largest whole unit.
  *
  * @param {number} seconds - Seconds since the epoch.
@@ -220,6 +263,8 @@ const library = {
   fetchedAt: 0,
   token: 0,
   pending: null,
+  // What a folder import takes, as the route answered it.
+  limits: null,
 };
 
 // Each entry's text, by key, as `{status, modified, text}`, and the requests in flight.
@@ -281,6 +326,7 @@ function loadLibrary(force = false) {
       if (token !== library.token) return;
       const entries = Array.isArray(data?.entries) ? data.entries : [];
       library.entries = entries.map(readEntry).filter(Boolean);
+      library.limits = data?.import && typeof data.import === "object" ? data.import : library.limits;
       library.status = STATUS.READY;
       for (const [key, held] of texts) {
         const entry = library.entries.find((each) => each.key === key);
@@ -314,17 +360,19 @@ function loadText(entry) {
     try {
       const response = await fetchWithin(`${ROUTE}?key=${encodeURIComponent(entry.key)}`, { cache: "no-store" });
       if (response.status === 204) {
-        texts.set(entry.key, { status: STATUS.MISSING, modified: entry.modified, text: "" });
+        texts.set(entry.key, { status: STATUS.MISSING, modified: entry.modified, text: "", files: [] });
         return;
       }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       const answered = readEntry(data?.entry);
       const text = typeof data?.text === "string" ? data.text.slice(0, PREVIEW_TEXT_CHARS) : "";
-      texts.set(entry.key, { status: STATUS.READY, modified: answered?.modified ?? entry.modified, text });
+      texts.set(entry.key, {
+        status: STATUS.READY, modified: answered?.modified ?? entry.modified, text, files: readFiles(data?.files),
+      });
     } catch (error) {
       console.error(`[${EXT_NAME}] Failed to read the system prompt \`${entry.key}\`:`, error);
-      texts.set(entry.key, { status: STATUS.FAILED, modified: entry.modified, text: "" });
+      texts.set(entry.key, { status: STATUS.FAILED, modified: entry.modified, text: "", files: [] });
     } finally {
       textRequests.delete(entry.key);
       redraw();
@@ -362,6 +410,172 @@ function writeKey(node, key) {
 }
 
 /**
+ * Ask a yes or no question in the frontend's own dialog.
+ *
+ * @param {string} title - The dialog's title.
+ * @param {string} message - The question.
+ * @returns {Promise<boolean>} True for yes.
+ */
+async function ask(title, message) {
+  try {
+    const dialog = app?.extensionManager?.dialog;
+    if (typeof dialog?.confirm === "function") {
+      return (await dialog.confirm({ title, message, type: "overwrite" })) === true;
+    }
+  } catch (error) {
+    console.error(`[${EXT_NAME}] Failed to ask:`, error);
+  }
+  return window.confirm(`${title}\n\n${message}`);
+}
+
+/**
+ * Send an import to the library.
+ *
+ * @param {object} payload - `{folder, replace, files}`.
+ * @returns {Promise<{status: number, data: object}>} The answer.
+ */
+async function postImport(payload) {
+  const response = await fetchWithin(ROUTE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }, UPLOAD_TIMEOUT);
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+  return { status: response.status, data: data && typeof data === "object" ? data : {} };
+}
+
+/**
+ * The files of a picked folder the library takes, each with its path below the folder.
+ *
+ * @param {File[]} files - What the folder picker handed over.
+ * @param {object} limits - The import limits the route answered.
+ * @returns {{folder: string, kept: {file: File, path: string}[], skipped: number}} The folder's
+ *   name and the files to send.
+ */
+function importable(files, limits) {
+  const lower = (values) => new Set(strings(values).map((value) => value.toLowerCase()));
+  const promptSuffixes = lower(limits?.prompt_extensions ?? [".txt", ".md"]);
+  const skillSuffixes = lower(limits?.skill_extensions ?? [".txt", ".md"]);
+  const passed = new Set(strings(limits?.skipped_folders));
+  const most = Number(limits?.max_files) || 400;
+  const mostBytes = Number(limits?.max_bytes) || 16 * 1024 * 1024;
+  const mostFileBytes = Number(limits?.max_file_bytes) || 1024 * 1024;
+  const deepest = Number(limits?.max_depth) || 8;
+
+  let folder = "";
+  let skipped = 0;
+  const rows = [];
+  for (const file of files) {
+    const parts = String(file.webkitRelativePath || "").split("/").filter(Boolean);
+    if (parts.length < 2) continue;
+    folder ||= parts[0];
+    const inner = parts.slice(1);
+    if (inner.some((part) => part.startsWith(".") || passed.has(part)) || inner.length - 1 > deepest) {
+      skipped += 1;
+      continue;
+    }
+    rows.push({ file, path: inner.join("/") });
+  }
+  const roots = rows
+    .filter((row) => row.path.split("/").pop().toLowerCase() === "skill.md")
+    .map((row) => (row.path.includes("/") ? row.path.slice(0, row.path.lastIndexOf("/")) : ""));
+  const inSkill = (path) => roots.some((root) => root === "" || path.startsWith(`${root}/`));
+
+  const kept = [];
+  let total = 0;
+  for (const row of rows) {
+    const dot = row.path.lastIndexOf(".");
+    const suffix = dot > row.path.lastIndexOf("/") ? row.path.slice(dot).toLowerCase() : "";
+    const allowed = (inSkill(row.path) ? skillSuffixes : promptSuffixes).has(suffix);
+    if (!allowed || row.file.size > mostFileBytes || kept.length >= most || total + row.file.size > mostBytes) {
+      skipped += 1;
+      continue;
+    }
+    total += row.file.size;
+    kept.push(row);
+  }
+  return { folder, kept, skipped };
+}
+
+/**
+ * Write a picked folder into the library, and load the first skill it holds on the node.
+ *
+ * @param {object} node - The Load System Prompt node.
+ * @param {File[]} files - What the folder picker handed over.
+ * @returns {Promise<void>} Resolved once the library has been read again.
+ */
+async function sendFolder(node, files) {
+  if (!files.length) return;
+  if (!library.limits) await loadLibrary(true);
+  const { folder, kept, skipped } = importable(files, library.limits);
+  if (!kept.length) {
+    tell("warn", `${folder || "That folder"} holds no .txt or .md prompt and no SKILL.md, so nothing was imported.`);
+    return;
+  }
+  const payload = {
+    folder,
+    replace: false,
+    files: await Promise.all(kept.map(async (row) => ({ path: row.path, text: await row.file.text() }))),
+  };
+  let answer = await postImport(payload);
+  if (answer.status === 409 && answer.data.exists) {
+    const replace = await ask(
+      "Replace in the library?",
+      `${folder} is already in the system prompt library. Write this folder's files over it? `
+        + "Files only in the library's copy stay.",
+    );
+    if (!replace) return;
+    payload.replace = true;
+    answer = await postImport(payload);
+  }
+  if (answer.status !== 200) {
+    tell("error", typeof answer.data.error === "string" ? answer.data.error : `The import failed (HTTP ${answer.status}).`);
+    return;
+  }
+  await loadLibrary(true);
+  const done = answer.data;
+  const skills = strings(done.skills);
+  const key = skills[0] ?? library.entries.find((entry) => entry.folder === done.folder
+    || entry.folder.startsWith(`${done.folder}/`))?.key;
+  if (key && node?.graph && !promptLinked(node) && writeKey(node, key)) redraw(node);
+  const passed = skipped + Object.values(done.skipped ?? {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
+  const what = skills.length ? `${skills.length} ${skills.length === 1 ? "skill" : "skills"}` : "prompts";
+  tell("success", `Imported ${what} from ${done.folder}: ${done.written} new, ${done.replaced} replaced, `
+    + `${done.unchanged} unchanged${passed ? `, ${passed} passed over` : ""}.`);
+}
+
+/**
+ * Open the folder picker for an import.
+ *
+ * @param {object} node - The Load System Prompt node.
+ * @returns {void}
+ */
+function importFolder(node) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.multiple = true;
+  input.webkitdirectory = true;
+  input.style.display = "none";
+  const finish = () => input.remove();
+  input.addEventListener("cancel", finish, { once: true });
+  input.addEventListener("change", () => {
+    const files = Array.from(input.files ?? []);
+    finish();
+    sendFolder(node, files).catch((error) => {
+      console.error(`[${EXT_NAME}] Failed to import the folder:`, error);
+      tell("error", "The folder could not be imported. The browser console names the cause.");
+    });
+  }, { once: true });
+  document.body.appendChild(input);
+  input.click();
+}
+
+/**
  * Build a picker over the library for one node.
  *
  * @param {object} node - The Load System Prompt node it writes.
@@ -395,6 +609,11 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     toolbar.appendChild(where);
   }
   toolbar.appendChild(button("↻", () => loadLibrary(true), { hint: "Read the folder again", kind: "tool", logName: EXT_NAME }));
+  toolbar.appendChild(button("Import", () => importFolder(node), {
+    hint: "Add a skill folder, one holding SKILL.md and its references, or a folder of .txt and .md prompts",
+    kind: "tool",
+    logName: EXT_NAME,
+  }));
   if (onExpand) toolbar.appendChild(button("Expand", () => onExpand(node), { hint: "Open a larger view", kind: "tool", logName: EXT_NAME }));
   if (onDone) toolbar.appendChild(button("Done", () => onDone(), { hint: "Close the larger view", kind: "go", logName: EXT_NAME }));
 
@@ -563,7 +782,7 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
       return;
     }
     if (!total) {
-      notice(list, "No system prompts yet", ["Save System Prompt adds one", LIBRARY_PATH],
+      notice(list, "No system prompts yet", ["Import adds a skill folder; Save System Prompt adds one", LIBRARY_PATH],
         button("Refresh", () => loadLibrary(true), { kind: "plain", logName: EXT_NAME }));
       return;
     }
@@ -587,6 +806,7 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
       const top = el("div", "display:flex;align-items:center;gap:8px;min-width:0");
       top.appendChild(el("span", "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
         + `font:600 ${wide ? 13 : 12}px/1.4 ${SANS}`, entry.name));
+      if (entry.skill) top.appendChild(skillPill(entry));
       top.appendChild(familyPills(entry.families, ROW_FAMILIES));
       row.appendChild(top);
       const sub = [entry.description, state.folder === entry.folder ? "" : entry.folder].filter(Boolean).join(" · ");
@@ -631,6 +851,7 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     }
     const head = el("div", "flex:0 0 auto;display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap");
     head.appendChild(el("span", `font:600 ${wide ? 17 : 13}px/1.3 ${SANS};overflow-wrap:anywhere;min-width:0`, entry.name));
+    if (entry.skill) head.appendChild(skillPill(entry));
     if (entry.families.length) head.appendChild(familyPills(entry.families, entry.families.length));
     preview.appendChild(head);
     preview.appendChild(el("div", `flex:0 0 auto;font:${wide ? 12 : 11}px/1.4 ${SANS};color:${LOOK.muted};`
@@ -660,6 +881,15 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
       loadText(entry);
     }
     preview.appendChild(body);
+    const files = held?.status === STATUS.READY ? held.files ?? [] : [];
+    if (entry.skill && files.length) {
+      const named = files.map((file) => `${file.path} (${readableBytes(file.size)})`);
+      const line = el("div", `flex:0 0 auto;font:${wide ? 12 : 11}px/1.45 ${SANS};color:${LOOK.muted};`
+        + (wide ? "overflow-wrap:anywhere" : "overflow:hidden;text-overflow:ellipsis;white-space:nowrap"),
+      `Documents: ${named.join(" · ")}`);
+      line.title = named.join("\n");
+      preview.appendChild(line);
+    }
     if (wide) {
       preview.appendChild(el("div", `flex:0 0 auto;font:12px ui-monospace,Consolas,monospace;color:${LOOK.muted};`
         + "overflow:hidden;text-overflow:ellipsis;white-space:nowrap", entry.key));

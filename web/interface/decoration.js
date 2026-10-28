@@ -1,6 +1,7 @@
 /**
  * Widgets a node draws but never saves: headers, buttons, anything that holds no value.
  */
+import { app } from "../../../scripts/app.js";
 
 const LOG_NAME = "WASNodeSuite.Decoration";
 
@@ -164,6 +165,61 @@ const HEADERS = new WeakMap();
 // Header widget -> the `key` of what it last painted.
 const PAINTED = new WeakMap();
 
+// `<node id>\0<header name>` -> weak references to every header made under that key, newest last.
+const TWINS = new Map();
+
+// Headers kept per key.
+const MAX_TWINS = 8;
+
+/**
+ * The node on screen in place of one that is no longer in a graph.
+ *
+ * @param {object} node - The node a renderer handed over.
+ * @returns {object} The node with that id in the graph on screen, or the node itself.
+ */
+function liveNode(node) {
+  if (!node || node.graph) return node;
+  try {
+    return app?.canvas?.graph?.getNodeById?.(node.id) ?? node;
+  } catch {
+    return node;
+  }
+}
+
+/**
+ * Note a header under its node id and name, for repainting a copy Nodes 2.0 still shows.
+ *
+ * @param {object} node - The node it was made for.
+ * @param {object} widget - The header widget.
+ * @returns {void}
+ */
+function rememberTwin(node, widget) {
+  const key = `${node?.id}\u0000${widget.name}`;
+  const kept = (TWINS.get(key) ?? []).filter((ref) => ref.deref());
+  kept.push(new WeakRef(widget));
+  TWINS.set(key, kept.slice(-MAX_TWINS));
+}
+
+/**
+ * Repaint every earlier copy of a header that a renderer may still be showing.
+ *
+ * @param {object} node - The node the header is on now.
+ * @param {object} widget - The header on that node.
+ * @returns {void}
+ */
+function repaintTwins(node, widget) {
+  for (const ref of TWINS.get(`${node?.id}\u0000${widget.name}`) ?? []) {
+    const twin = ref.deref();
+    if (!twin || twin === widget) continue;
+    PAINTED.delete(twin);
+    try {
+      twin.triggerDraw?.();
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to repaint ${widget.name}:`, error);
+    }
+  }
+}
+
 /**
  * Paint a node's headers again where their text or colour has moved since they were drawn.
  *
@@ -178,11 +234,11 @@ export function redrawHeaders(node) {
     const widget = node.widgets?.find((each) => each?.name === name);
     if (!widget) continue;
     try {
-      const now = look();
+      const now = look(node);
       if (PAINTED.get(widget) === now.key) continue;
-      widget.value = now.label;
       changed = true;
-      widget.triggerDraw?.();
+      if (typeof widget.triggerDraw === "function") widget.triggerDraw();
+      else repaintTwins(node, widget);
     } catch (error) {
       console.error(`[${LOG_NAME}] Failed to repaint ${name}:`, error);
     }
@@ -242,20 +298,21 @@ function barRoom(ctx, host, width) {
  * @returns {object|null} The widget added, or null when there was nowhere to put it.
  */
 export function addSectionHeader(node, { name, title, before, colour, onClick }) {
-  const text = () => {
-    const value = typeof title === "function" ? title(node) : title;
+  const text = (host) => {
+    const value = typeof title === "function" ? title(host) : title;
     return String(value ?? "");
   };
-  const look = () => {
-    const label = text();
-    const tint = typeof colour === "function" ? colour(node) : null;
+  const look = (host) => {
+    const label = text(host);
+    const tint = typeof colour === "function" ? colour(host) : null;
     const key = [label, tint?.fill ?? "", tint?.stripe ?? "", tint?.text ?? ""].join("\u0000");
     return { label, tint, key };
   };
   const widget = {
     name,
     type: "custom",
-    value: text(),
+    // Fixed, so a press never reads as a change of value.
+    value: name,
     computeSize(width) {
       return [width ?? 0, HEADER_HEIGHT];
     },
@@ -263,11 +320,11 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
       let saved = false;
       try {
         const h = height ?? HEADER_HEIGHT;
-        const room = barRoom(ctx, host, width);
+        const shown = liveNode(host ?? node);
+        const room = barRoom(ctx, shown, width);
         const inset = Math.min(HEADER_INSET, room / 2);
         const bar = Math.max(0, room - inset * 2);
-        const { label, tint, key } = look();
-        widget.value = label;
+        const { label, tint, key } = look(shown);
         PAINTED.set(widget, key);
         ctx.save();
         saved = true;
@@ -298,12 +355,16 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
   if (typeof onClick === "function") {
     widget.mouse = (event, pos, host) => {
       if (event?.type !== "pointerdown" && event?.type !== "mousedown") return false;
+      const shown = liveNode(host ?? node);
       try {
-        onClick(host ?? node, event);
+        onClick(shown, event);
       } catch (error) {
         console.error(`[${LOG_NAME}] ${name} failed:`, error);
       }
-      redrawHeaders(host ?? node);
+      redrawHeaders(shown);
+      // The copy that was pressed, where the renderer still shows an earlier one.
+      PAINTED.delete(widget);
+      widget.triggerDraw?.();
       return true;
     };
   }
@@ -312,6 +373,7 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
     const known = HEADERS.get(node) ?? new Map();
     known.set(name, look);
     HEADERS.set(node, known);
+    rememberTwin(node, widget);
   }
   return added;
 }
