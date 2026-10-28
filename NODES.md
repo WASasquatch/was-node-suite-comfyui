@@ -12939,7 +12939,7 @@ Emit the positive and negative prompt of a style from the style library. Styles 
 <details>
 <summary><b>Load System Prompt</b></summary>
 
-Load a saved system prompt or skill to steer a language or vision model, such as LLM Complete or Fast Generate Text. A skill also hands its reference files to the LLM index nodes, so a model can look things up in them while it works.
+Load a saved or built-in system prompt or skill to steer a language or vision model, such as Fast Generate Text. The built-in prompts turn a short idea into a prompt written for one image or video model, such as FLUX.2, LTX-2 or MiniMax H3. A skill also hands its reference files to the LLM index nodes.
 
 | | |
 |---|---|
@@ -12949,7 +12949,7 @@ Load a saved system prompt or skill to steer a language or vision model, such as
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `system_prompt` | `COMBO` | Yes |  |  | Which saved prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `my-skill/SKILL.md`. Picked from the library drawn on the node, where Import adds a skill folder. The files are in ComfyUI/user/was-node-suite/system_prompts. |
+| `system_prompt` | `COMBO` | Yes |  |  | Which prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts. |
 
 **Outputs**
 
@@ -12978,7 +12978,7 @@ Save a system prompt into the library as a text or Markdown file, with its name,
 |---|---|---|---|---|---|
 | `system_prompt` | `STRING` | Yes |  |  | The instructions to keep, typed or wired in. Front matter at the top is kept, and name, model_family and description below are written over it. |
 | `name` | `STRING` | Yes |  |  | What the prompt is called in the library, and its file name. Eg: `Detailed Caption` saves `Detailed Caption.txt`. Characters a file name cannot hold become `_`. |
-| `folder` | `STRING` | Yes |  |  | A folder inside the library, made when missing. Empty saves at the top. Eg: `Captioning/Qwen`. A drive, a leading `/` or `..` is refused. |
+| `folder` | `STRING` | Yes |  |  | A folder inside the library, made when missing. Empty saves at the top. Eg: `Captioning/Qwen`. A drive, a leading `/`, `..` or `Built-in`, where the pack's own prompts are listed, is refused. |
 | `model_family` | `STRING` | Yes |  |  | The model families the prompt suits, separated by commas, for filtering in Load System Prompt. Eg: `Qwen, Gemma`. Empty keeps the family the text's own front matter names, or none. |
 | `description` | `STRING` | Yes |  |  | One line saying what the prompt is for, shown under its name in Load System Prompt. Eg: `One dense paragraph for training captions`. |
 | `file_type` | `COMBO` | Yes | txt | `txt`, `md` | `txt` = a plain text file; `md` = Markdown, as skill files are written. |

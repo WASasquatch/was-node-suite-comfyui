@@ -1,7 +1,7 @@
 """The system prompt library as JSON a node interface draws, and the folder import it sends.
 
 ``GET /was/interface/api/system_prompts`` lists the entries, or with ``key`` answers one with
-its text. ``POST`` writes a folder into the library.
+its text. ``POST`` imports a folder or copies a built-in.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from ..prompt import system_prompts
 from .channel import NO_STORE, REFUSAL_HEADER
 
 __all__ = [
+    "COPY_FAILED",
     "IMPORT_FAILED",
     "MAX_BODY_BYTES",
     "MAX_KEY_CHARS",
@@ -25,6 +26,7 @@ __all__ = [
     "entry_fields",
     "entry_payload",
     "import_payload",
+    "copy_payload",
     "listing_payload",
     "register_routes",
 ]
@@ -52,6 +54,9 @@ MAX_LISTED_FILES = system_prompts.MAX_SKILL_FILES
 #: What an import that failed for a reason outside the request answers.
 IMPORT_FAILED = "the folder could not be imported. The server log names the cause"
 
+#: What a copy that failed for a reason outside the request answers.
+COPY_FAILED = "the built-in prompt could not be copied. The server log names the cause"
+
 #: The words a refusal carries.
 REFUSAL = "not in the system prompt library"
 
@@ -66,8 +71,8 @@ def entry_fields(entry: system_prompts.Entry) -> dict:
 
     Returns:
         ``{"key", "name", "folder", "families", "description", "tags", "size", "modified",
-        "skill", "files"}``, ``modified`` in seconds since the epoch and ``files`` the count of
-        a skill's other files.
+        "skill", "files", "builtin"}``, ``modified`` in seconds since the epoch, ``files`` the
+        count of a skill's other files and ``builtin`` true for one of the pack's own prompts.
     """
     return {
         "key": entry.key,
@@ -80,6 +85,7 @@ def entry_fields(entry: system_prompts.Entry) -> dict:
         "modified": round(float(entry.modified), 3),
         "skill": bool(entry.skill),
         "files": int(entry.files),
+        "builtin": bool(entry.builtin),
     }
 
 
@@ -87,8 +93,9 @@ def listing_payload() -> dict:
     """Every entry of the library. Never raises.
 
     Returns:
-        ``{"entries", "total", "limit", "import"}``, ``limit`` the most entries a listing holds
-        and ``import`` the suffixes, names and sizes a folder import takes.
+        ``{"entries", "total", "limit", "builtin_folder", "import"}``, ``limit`` the most
+        entries a listing holds, ``builtin_folder`` the folder the pack's own prompts are listed
+        under and ``import`` the suffixes, names and sizes a folder import takes.
     """
     try:
         entries = system_prompts.scan()
@@ -99,6 +106,7 @@ def listing_payload() -> dict:
         "entries": [entry_fields(entry) for entry in entries],
         "total": len(entries),
         "limit": system_prompts.MAX_ENTRIES,
+        "builtin_folder": system_prompts.BUILTIN_FOLDER,
         "import": {
             "prompt_extensions": list(system_prompts.IMPORT_EXTENSIONS),
             "skill_extensions": list(system_prompts.SKILL_EXTENSIONS),
@@ -140,11 +148,39 @@ def entry_payload(key) -> dict | None:
     }
 
 
-def import_payload(body: bytes) -> tuple[int, dict]:
-    """Write the folder an import body carries. Never raises.
+def copy_payload(sent: dict) -> tuple[int, dict]:
+    """Copy the built-in prompt a request names into the library. Never raises.
 
     Args:
-        body: The request body, ``{"folder", "replace", "files": [{"path", "text"}]}``.
+        sent: The request body, ``{"copy": key, "replace": bool}``.
+
+    Returns:
+        ``(status, payload)``: 200 with ``{"key", "written", "replaced", "unchanged"}``, ``key``
+        the copy's; 409 with ``{"error", "exists"}`` when a file at the copy's path holds other
+        text and ``replace`` is not true; otherwise 400 with ``{"error"}``.
+    """
+    key = sent.get("copy")
+    if not isinstance(key, str) or not key:
+        return 400, {"error": "copy has to name a built-in prompt"}
+    try:
+        done = system_prompts.copy_builtin(key[:MAX_KEY_CHARS], replace=sent.get("replace") is True)
+    except system_prompts.FolderExists as error:
+        return 409, {"error": str(error), "exists": True}
+    except system_prompts.ImportRefused as error:
+        return 400, {"error": str(error)}
+    except Exception as error:
+        logger.warning("%s could not copy a built-in prompt (%s)", ROUTE, type(error).__name__)
+        logger.debug("%s copy failed", ROUTE, exc_info=True)
+        return 400, {"error": COPY_FAILED}
+    return 200, {"key": done.key, "written": done.written, "replaced": done.replaced, "unchanged": done.unchanged}
+
+
+def import_payload(body: bytes) -> tuple[int, dict]:
+    """Write the folder an import body carries, or the copy of a built-in prompt it names. Never raises.
+
+    Args:
+        body: The request body, ``{"folder", "replace", "files": [{"path", "text"}]}``, or
+            ``{"copy", "replace"}`` for :func:`copy_payload`.
 
     Returns:
         ``(status, payload)``: 200 with ``{"folder", "skills", "written", "replaced",
@@ -157,6 +193,8 @@ def import_payload(body: bytes) -> tuple[int, dict]:
         return 400, {"error": "the body has to be JSON"}
     if not isinstance(sent, dict):
         return 400, {"error": "the body has to be a JSON object"}
+    if "copy" in sent:
+        return copy_payload(sent)
     listed = sent.get("files")
     if not isinstance(listed, list):
         return 400, {"error": "files has to be a list"}

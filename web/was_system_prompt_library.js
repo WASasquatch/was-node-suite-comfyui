@@ -12,9 +12,9 @@ import { captureWheel } from "./interface/pointer.js";
 import { readableBytes } from "./interface/report_panel.js";
 import { UPLOAD_TIMEOUT, fetchWithin } from "./interface/request.js";
 import { setWidgetHidden } from "./interface/visibility.js";
-import { appendInterfaceWidget, chainWidgetCallback } from "./interface/widget.js";
+import { appendInterfaceWidget, chainWidgetCallback, keepOnNode } from "./interface/widget.js";
 import {
-  FIELD, LABEL, LOOK, SANS, SCROLLBARS, SELECTED_FILL, button, el, focusRing, pill,
+  FIELD, LABEL, LOOK, SANS, SCROLLBARS, SELECTED_FILL, button, createSplitter, el, focusRing, pill,
 } from "./interface/window_kit.js";
 
 const EXT_NAME = "WASNodeSuite.SystemPromptLibrary";
@@ -48,9 +48,24 @@ const PREVIEW_TEXT_CHARS = 262144;
 // Family pills drawn on a row before the rest are counted.
 const ROW_FAMILIES = 2;
 
-// The sidebar's width on the node and in the window, in pixels.
-const NODE_SIDEBAR = 132;
+// The sidebar's width on the node and in the window, in pixels, and the range a drag keeps it in.
+const NODE_SIDEBAR = 150;
 const WINDOW_SIDEBAR = 210;
+const SIDEBAR_RANGE = [90, 520];
+
+// The preview's height under the list on the node, and its width beside it in the window.
+const NODE_PREVIEW = 170;
+const WINDOW_PREVIEW = 440;
+
+// The least the list and the preview keep while a divider is dragged, in pixels.
+const LEAST_PANE = 70;
+
+// Node property holding the pane sizes, as `{side, preview, sideWide, previewWide}`.
+const PANES_KEY = "was_system_prompt_panes";
+
+// Pixels a folder level is indented by in the tree, on the node and in the window.
+const NODE_INDENT = 12;
+const WINDOW_INDENT = 16;
 
 // The window's opening size and the smallest a resize allows.
 const WINDOW_WIDTH = 1000;
@@ -165,6 +180,7 @@ function readEntry(raw) {
     modified: number(raw.modified),
     skill: raw.skill === true,
     files: number(raw.files),
+    builtin: raw.builtin === true,
   };
 }
 
@@ -238,6 +254,71 @@ function skillPill(entry) {
   const made = pill(label, LOOK.accent);
   made.title = "SKILL.md plus its documents";
   return made;
+}
+
+/**
+ * The pill marking one of the pack's own prompts.
+ *
+ * @returns {HTMLElement} The pill.
+ */
+function builtinPill() {
+  const made = pill("built-in", LOOK.muted);
+  made.title = "Ships with the pack, read-only";
+  return made;
+}
+
+/**
+ * The pane sizes kept on a node.
+ *
+ * @param {object} node - A Load System Prompt node.
+ * @returns {{side: number, preview: number, sideWide: number, previewWide: number}} Pixels.
+ */
+function readPanes(node) {
+  const kept = node?.properties?.[PANES_KEY];
+  const number = (value, fallback) => (Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : fallback);
+  return {
+    side: number(kept?.side, NODE_SIDEBAR),
+    preview: number(kept?.preview, NODE_PREVIEW),
+    sideWide: number(kept?.sideWide, WINDOW_SIDEBAR),
+    previewWide: number(kept?.previewWide, WINDOW_PREVIEW),
+  };
+}
+
+/**
+ * The folder a prompt sits in on the tree: a skill's own folder is the skill, so its parent.
+ *
+ * @param {object} entry - An entry of the library.
+ * @returns {string} The folder, `/` separated, empty at the top.
+ */
+function treeFolder(entry) {
+  if (!entry.skill) return entry.folder;
+  const at = entry.folder.lastIndexOf("/");
+  return at < 0 ? "" : entry.folder.slice(0, at);
+}
+
+/**
+ * A small folder drawing for a tree row.
+ *
+ * @param {boolean} open - Drawn open, for a folder showing its subfolders.
+ * @param {string} tone - Its colour.
+ * @returns {SVGElement} The drawing.
+ */
+function folderIcon(open, tone) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("width", "13");
+  svg.setAttribute("height", "13");
+  svg.style.cssText = "flex:0 0 auto;display:block";
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", open
+    ? "M1.5 12.5v-9h4l1.5 1.5h6v1.5 M1.5 12.5l2.2-6h11l-2.2 6z"
+    : "M1.5 3.5h4l1.5 1.5h7.5v7.5H1.5z");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", tone);
+  path.setAttribute("stroke-width", "1.3");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(path);
+  return svg;
 }
 
 /**
@@ -450,6 +531,38 @@ async function postImport(payload) {
 }
 
 /**
+ * Copy a built-in prompt into the library and load the copy on the node.
+ *
+ * @param {object} node - The Load System Prompt node.
+ * @param {object} entry - The built-in entry.
+ * @returns {Promise<void>} Resolved once the library has been read again.
+ */
+async function copyBuiltin(node, entry) {
+  const payload = { copy: entry.key, replace: false };
+  let answer = await postImport(payload);
+  if (answer.status === 409 && answer.data.exists) {
+    const replace = await ask(
+      "Replace in the library?",
+      `${typeof answer.data.error === "string" ? answer.data.error : "The copy is already in the library"}. `
+        + "Write the built-in text over it?",
+    );
+    if (!replace) return;
+    payload.replace = true;
+    answer = await postImport(payload);
+  }
+  if (answer.status !== 200 || typeof answer.data.key !== "string") {
+    tell("error", typeof answer.data.error === "string" ? answer.data.error : `The copy failed (HTTP ${answer.status}).`);
+    return;
+  }
+  await loadLibrary(true);
+  const key = answer.data.key;
+  if (node?.graph && !promptLinked(node) && library.entries.some((each) => each.key === key) && writeKey(node, key)) {
+    redraw(node);
+  }
+  tell("success", `Copied ${entry.name} to ${key} in ${LIBRARY_PATH}. Edit that file to make it your own.`);
+}
+
+/**
  * The files of a picked folder the library takes, each with its path below the folder.
  *
  * @param {File[]} files - What the folder picker handed over.
@@ -582,7 +695,8 @@ function importFolder(node) {
  * @param {object} options - `{layout, onExpand, onDone}`; `layout` is `node` for the panel on the
  *   node, with the preview under the list, or `window` for the larger view, with it beside.
  * @returns {{element: HTMLElement, node: object, render: () => void, focusSearch: () => void,
- *   dispose: () => void}} The picker.
+ *   readPanes: () => void, dispose: () => void}} The picker; `readPanes` sets the panes to the sizes
+ *   kept on the node.
  */
 function createPicker(node, { layout = "node", onExpand = null, onDone = null } = {}) {
   const wide = layout === "window";
@@ -617,29 +731,80 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
   if (onExpand) toolbar.appendChild(button("Expand", () => onExpand(node), { hint: "Open a larger view", kind: "tool", logName: EXT_NAME }));
   if (onDone) toolbar.appendChild(button("Done", () => onDone(), { hint: "Close the larger view", kind: "go", logName: EXT_NAME }));
 
-  const main = el("div", `display:flex;min-height:0;${wide ? "flex:1 1 auto" : "flex:3 1 0"}`);
-  const sidebar = el("div", `flex:0 0 ${wide ? WINDOW_SIDEBAR : NODE_SIDEBAR}px;display:flex;flex-direction:column;`
-    + `gap:2px;padding:${wide ? "12px 10px" : "6px 5px"};overflow:auto;border-right:1px solid ${LOOK.border};`
-    + `box-sizing:border-box;${SCROLLBARS}`);
+  const panes = readPanes(node);
+  const main = el("div", `display:flex;min-height:${LEAST_PANE}px;flex:1 1 0`);
+  const sidebar = el("div", "flex:0 0 auto;display:flex;flex-direction:column;"
+    + `gap:1px;padding:${wide ? "12px 4px 12px 10px" : "6px 2px 6px 5px"};overflow:auto;`
+    + `border-right:1px solid ${LOOK.border};box-sizing:border-box;${SCROLLBARS}`);
   sidebar.dataset.scroll = "1";
   const list = el("div", `flex:1 1 auto;min-width:0;overflow:auto;display:flex;flex-direction:column;`
     + `gap:${wide ? 4 : 3}px;padding:${wide ? "10px" : "6px"};box-sizing:border-box;${SCROLLBARS}`);
   list.dataset.scroll = "1";
-  const preview = el("div", "display:flex;flex-direction:column;min-width:0;min-height:0;box-sizing:border-box;"
+  const preview = el("div", "display:flex;flex-direction:column;min-width:0;box-sizing:border-box;"
     + (wide
-      ? `flex:1 1 54%;gap:8px;padding:14px 16px;border-left:1px solid ${LOOK.border}`
-      : `flex:2 1 0;gap:4px;padding:7px 9px 8px;border-top:1px solid ${LOOK.border};background:${LOOK.surface}`));
-  if (wide) {
-    const listColumn = el("div", "flex:1 1 46%;display:flex;min-width:0;min-height:0");
-    listColumn.appendChild(list);
-    main.append(sidebar, listColumn, preview);
-    root.append(toolbar, main);
-  } else {
-    main.append(sidebar, list);
-    root.append(toolbar, main, preview);
+      ? `flex:0 1 auto;min-width:220px;min-height:0;gap:8px;padding:14px 16px;border-left:1px solid ${LOOK.border}`
+      : `flex:0 1 auto;min-height:${LEAST_PANE}px;gap:4px;padding:5px 9px 8px;border-top:1px solid ${LOOK.border};`
+        + `background:${LOOK.surface}`));
+  const listColumn = el("div", `flex:1 1 0;display:flex;min-width:${wide ? 200 : 120}px;min-height:0`);
+  listColumn.appendChild(list);
+
+  /**
+   * Set the panes to the sizes held for this layout.
+   *
+   * @returns {void}
+   */
+  function sizePanes() {
+    sidebar.style.width = `${wide ? panes.sideWide : panes.side}px`;
+    if (wide) preview.style.width = `${panes.previewWide}px`;
+    else preview.style.height = `${panes.preview}px`;
   }
 
-  const state = { folder: "", family: "", search: "", disposed: false };
+  /**
+   * Keep the pane sizes on the node once a divider is let go.
+   *
+   * @returns {void}
+   */
+  function keepPanes() {
+    if (!node.graph) return;
+    keepOnNode(node, PANES_KEY, {
+      side: Math.round(panes.side),
+      preview: Math.round(panes.preview),
+      sideWide: Math.round(panes.sideWide),
+      previewWide: Math.round(panes.previewWide),
+    });
+  }
+
+  const clamp = (value, low, high) => Math.max(low, Math.min(Math.max(low, high), value));
+  const sideKey = wide ? "sideWide" : "side";
+  const sideSplit = createSplitter(() => "x", (delta) => {
+    const room = main.clientWidth - LEAST_PANE * 2;
+    panes[sideKey] = clamp(panes[sideKey] + delta, SIDEBAR_RANGE[0], Math.min(SIDEBAR_RANGE[1], room));
+    sizePanes();
+  }, keepPanes);
+  sideSplit.element.title = "Drag to resize the folders";
+  const previewSplit = wide
+    ? createSplitter(() => "x", (delta) => {
+      const room = main.clientWidth - panes.sideWide - 200 - sideSplit.element.offsetWidth * 2 - 2;
+      panes.previewWide = clamp(panes.previewWide - delta, 220, room);
+      sizePanes();
+    }, keepPanes)
+    : createSplitter(() => "y", (delta) => {
+      const room = root.clientHeight - toolbar.offsetHeight - LEAST_PANE - 11;
+      panes.preview = clamp(panes.preview - delta, LEAST_PANE, room);
+      sizePanes();
+    }, keepPanes);
+  previewSplit.element.title = "Drag to resize the preview";
+  sizePanes();
+  if (wide) {
+    main.append(sidebar, sideSplit.element, listColumn, previewSplit.element, preview);
+    root.append(toolbar, main);
+  } else {
+    main.append(sidebar, sideSplit.element, listColumn);
+    root.append(toolbar, main, previewSplit.element, preview);
+  }
+
+  // `open` holds folders opened by hand, and `!folder` for one closed by hand.
+  const state = { folder: "", family: "", search: "", disposed: false, open: new Set() };
 
   /**
    * The entries the filters keep.
@@ -649,7 +814,8 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
   function visibleEntries() {
     const needle = state.search.trim().toLowerCase();
     return library.entries.filter((entry) => {
-      if (state.folder && entry.folder !== state.folder && !entry.folder.startsWith(`${state.folder}/`)) return false;
+      const folder = treeFolder(entry);
+      if (state.folder && folder !== state.folder && !folder.startsWith(`${state.folder}/`)) return false;
       if (state.family === NO_FAMILY && entry.families.length) return false;
       if (state.family && state.family !== NO_FAMILY
         && !entry.families.some((family) => family.toLowerCase() === state.family)) return false;
@@ -666,18 +832,35 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
    * @param {number} number - The entries under it.
    * @param {boolean} chosen - Whether it is the filter in force.
    * @param {() => void} onPick - What pressing it does.
-   * @param {number} [depth] - Folder levels it is indented by.
-   * @param {string} [tone] - A colour for a dot before the label.
+   * @param {object} [options] - `{depth, tone, folder}`: folder levels it is indented by, a colour
+   *   for a dot before the label, and for a folder row `{open, hasChildren, onToggle}`.
    * @returns {HTMLElement} The row.
    */
-  function sideRow(label, number, chosen, onPick, depth = 0, tone = "") {
-    const row = el("button", "display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;"
-      + `padding:${wide ? "5px 8px" : "3px 6px"};padding-left:${(wide ? 8 : 6) + depth * (wide ? 14 : 10)}px;`
+  function sideRow(label, number, chosen, onPick, { depth = 0, tone = "", folder = null } = {}) {
+    const indent = wide ? WINDOW_INDENT : NODE_INDENT;
+    const row = el("button", "display:flex;align-items:center;gap:4px;width:100%;box-sizing:border-box;"
+      + `padding:${wide ? "4px 8px" : "3px 5px"};padding-left:${(wide ? 6 : 4) + depth * indent}px;`
       + `border-radius:5px;border:0;cursor:pointer;text-align:left;font:${wide ? 13 : 12}px/1.4 ${SANS};`
       + `color:${chosen ? LOOK.text : LOOK.muted};background:${chosen ? SELECTED_FILL : "transparent"}`);
     row.type = "button";
+    if (folder) {
+      const toggle = el("span", "flex:0 0 auto;width:12px;text-align:center;font-size:9px;line-height:1;"
+        + `color:${LOOK.muted};${folder.hasChildren ? "cursor:pointer" : "visibility:hidden"}`,
+      folder.open ? "▾" : "▸");
+      if (folder.hasChildren) {
+        toggle.title = folder.open ? "Hide the subfolders" : "Show the subfolders";
+        toggle.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          folder.onToggle();
+        });
+      }
+      row.appendChild(toggle);
+      row.appendChild(folderIcon(folder.open, chosen ? LOOK.accent : LOOK.muted));
+    }
     if (tone) row.appendChild(el("span", `flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:${tone}`));
-    row.appendChild(el("span", "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap", label));
+    row.appendChild(el("span", "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+      + (folder || tone ? "margin-left:2px" : ""), label));
     row.appendChild(el("span", `flex:0 0 auto;font-size:11px;color:${LOOK.muted};font-variant-numeric:tabular-nums`, String(number)));
     row.addEventListener("mouseenter", () => { if (!chosen) row.style.color = LOOK.text; });
     row.addEventListener("mouseleave", () => { if (!chosen) row.style.color = LOOK.muted; });
@@ -686,6 +869,35 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
       onPick();
     });
     return row;
+  }
+
+  /**
+   * Whether the tree shows a folder's subfolders: opened by hand, or leading to the chosen
+   * prompt or the folder in force.
+   *
+   * @param {string} path - The folder.
+   * @returns {boolean} True when its subfolders are drawn.
+   */
+  function isOpen(path) {
+    if (state.open.has(path)) return true;
+    if (state.open.has(`!${path}`)) return false;
+    const chosen = library.entries.find((entry) => entry.key === keyOf(node));
+    const leads = (folder) => folder === path || folder.startsWith(`${path}/`);
+    return Boolean((chosen && leads(treeFolder(chosen))) || (state.folder && leads(state.folder)));
+  }
+
+  /**
+   * Open or close a folder on the tree.
+   *
+   * @param {string} path - The folder.
+   * @returns {void}
+   */
+  function toggleFolder(path) {
+    const open = isOpen(path);
+    state.open.delete(path);
+    state.open.delete(`!${path}`);
+    state.open.add(open ? `!${path}` : path);
+    renderSidebar();
   }
 
   /**
@@ -699,20 +911,32 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     sidebar.appendChild(heading("Folders", 0));
     sidebar.appendChild(sideRow("All prompts", library.entries.length, state.folder === "", () => setFolder("")));
     const counts = new Map();
+    const children = new Map();
     for (const entry of library.entries) {
-      const parts = entry.folder ? entry.folder.split("/") : [];
+      const parts = treeFolder(entry) ? treeFolder(entry).split("/") : [];
       for (let depth = 1; depth <= parts.length; depth += 1) {
         const path = parts.slice(0, depth).join("/");
         counts.set(path, (counts.get(path) ?? 0) + 1);
+        const parent = parts.slice(0, depth - 1).join("/");
+        if (!children.has(parent)) children.set(parent, new Set());
+        children.get(parent).add(path);
       }
     }
-    const folders = [...counts.keys()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-    for (const path of folders) {
-      const row = sideRow(path.split("/").pop(), counts.get(path), state.folder === path, () => setFolder(path),
-        path.split("/").length);
-      row.title = path;
-      sidebar.appendChild(row);
-    }
+    const byName = (a, b) => a.split("/").pop().localeCompare(b.split("/").pop(), undefined, { sensitivity: "base" });
+    const walk = (parent, depth) => {
+      for (const path of [...(children.get(parent) ?? [])].sort(byName)) {
+        const hasChildren = Boolean(children.get(path)?.size);
+        const open = hasChildren && isOpen(path);
+        const row = sideRow(path.split("/").pop(), counts.get(path), state.folder === path, () => setFolder(path), {
+          depth,
+          folder: { open, hasChildren, onToggle: () => toggleFolder(path) },
+        });
+        row.title = path;
+        sidebar.appendChild(row);
+        if (open) walk(path, depth + 1);
+      }
+    };
+    walk("", 0);
 
     const families = new Map();
     let unassigned = 0;
@@ -730,8 +954,9 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     const sorted = [...families.entries()]
       .sort((a, b) => a[1].label.localeCompare(b[1].label, undefined, { sensitivity: "base" }));
     for (const [id, family] of sorted) {
-      sidebar.appendChild(sideRow(family.label, family.count, state.family === id, () => setFamily(id), 0,
-        familyTone(family.label)));
+      sidebar.appendChild(sideRow(family.label, family.count, state.family === id, () => setFamily(id), {
+        tone: familyTone(family.label),
+      }));
     }
     if (unassigned && families.size) {
       sidebar.appendChild(sideRow("No family", unassigned, state.family === NO_FAMILY, () => setFamily(NO_FAMILY)));
@@ -807,9 +1032,11 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
       top.appendChild(el("span", "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
         + `font:600 ${wide ? 13 : 12}px/1.4 ${SANS}`, entry.name));
       if (entry.skill) top.appendChild(skillPill(entry));
+      if (entry.builtin) top.appendChild(builtinPill());
       top.appendChild(familyPills(entry.families, ROW_FAMILIES));
       row.appendChild(top);
-      const sub = [entry.description, state.folder === entry.folder ? "" : entry.folder].filter(Boolean).join(" · ");
+      const sub = [entry.description, state.folder === treeFolder(entry) ? "" : treeFolder(entry)]
+        .filter(Boolean).join(" · ");
       if (sub) {
         row.appendChild(el("div", `font:${wide ? 12 : 11}px/1.4 ${SANS};color:${LOOK.muted};overflow:hidden;`
           + "text-overflow:ellipsis;white-space:nowrap", sub));
@@ -852,11 +1079,29 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     const head = el("div", "flex:0 0 auto;display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap");
     head.appendChild(el("span", `font:600 ${wide ? 17 : 13}px/1.3 ${SANS};overflow-wrap:anywhere;min-width:0`, entry.name));
     if (entry.skill) head.appendChild(skillPill(entry));
+    if (entry.builtin) head.appendChild(builtinPill());
     if (entry.families.length) head.appendChild(familyPills(entry.families, entry.families.length));
+    if (entry.builtin) {
+      const copy = button("Copy", () => {
+        copyBuiltin(node, entry).catch((error) => {
+          console.error(`[${EXT_NAME}] Failed to copy the built-in prompt:`, error);
+          tell("error", "The built-in prompt could not be copied. The browser console names the cause.");
+        });
+      }, {
+        hint: `Copy into ${LIBRARY_PATH} as an editable file, and load the copy`,
+        kind: "tool",
+        logName: EXT_NAME,
+      });
+      copy.style.marginLeft = "auto";
+      head.appendChild(copy);
+    }
     preview.appendChild(head);
+    const facts = entry.builtin
+      ? [entry.folder, "ships with the pack", readableBytes(entry.size)]
+      : [entry.folder || "top level", readableBytes(entry.size), ago(entry.modified)];
     preview.appendChild(el("div", `flex:0 0 auto;font:${wide ? 12 : 11}px/1.4 ${SANS};color:${LOOK.muted};`
       + "font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap",
-    [entry.folder || "top level", readableBytes(entry.size), ago(entry.modified)].filter(Boolean).join(" · ")));
+    facts.filter(Boolean).join(" · ")));
     if (entry.description) {
       preview.appendChild(el("div", `flex:0 0 auto;font:${wide ? 13 : 12}px/1.45 ${SANS};color:${LOOK.muted};`
         + (wide ? "" : "overflow:hidden;text-overflow:ellipsis;white-space:nowrap"), entry.description));
@@ -1044,6 +1289,10 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     node,
     render,
     revealChosen,
+    readPanes() {
+      Object.assign(panes, readPanes(node));
+      sizePanes();
+    },
     focusSearch() {
       search.focus({ preventScroll: true });
     },
@@ -1149,6 +1398,7 @@ function attachPicker(node) {
     const result = originalOnConfigure?.apply(this, args);
     try {
       setWidgetHidden(findWidget(this, PROMPT_WIDGET), true);
+      picker.readPanes();
       redraw(this);
       picker.revealChosen();
     } catch (error) {

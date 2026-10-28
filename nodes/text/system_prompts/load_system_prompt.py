@@ -31,24 +31,28 @@ class LoadSystemPrompt(io.ComfyNode):
                 "load skill",
                 "skill references",
                 "instructions",
+                "prompt enhance",
+                "prompt upsampler",
+                "built-in prompts",
                 "LLM",
                 "VLM",
             ],
             category="WAS Suite/Text/System Prompts",
             description=(
-                "Load a saved system prompt or skill to steer a language or vision model, such "
-                "as LLM Complete or Fast Generate Text. A skill also hands its reference files "
-                "to the LLM index nodes, so a model can look things up in them while it works."
+                "Load a saved or built-in system prompt or skill to steer a language or vision "
+                "model, such as Fast Generate Text. The built-in prompts turn a short idea into a "
+                "prompt written for one image or video model, such as FLUX.2, LTX-2 or MiniMax H3. "
+                "A skill also hands its reference files to the LLM index nodes."
             ),
             inputs=[
                 io.Combo.Input(
                     "system_prompt",
                     options=system_prompts.labels(),
                     tooltip=(
-                        "Which saved prompt or skill to load, by its place in the library, such "
-                        "as `Captioning/Detailed Caption.txt` or `my-skill/SKILL.md`. Picked from "
-                        "the library drawn on the node, where Import adds a skill folder. The "
-                        "files are in ComfyUI/user/was-node-suite/system_prompts."
+                        "Which prompt or skill to load, by its place in the library, such as "
+                        "`Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt "
+                        "Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the "
+                        "library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts."
                     ),
                 ),
             ],
@@ -102,6 +106,11 @@ class LoadSystemPrompt(io.ComfyNode):
                 "ComfyUI/user/was-node-suite/system_prompts and press R to refresh the menu"
             )
         entry = system_prompts.find(key, fresh=True)
+        if entry is None and key.startswith(f"{system_prompts.BUILTIN_FOLDER}/"):
+            raise ValueError(
+                f"`{key}` is not a built-in prompt of this version of WAS Node Suite. Pick another "
+                "on the node, or update the pack if the workflow was saved with a newer one"
+            )
         if entry is None:
             raise ValueError(
                 f"`{key}` is not in the system prompt library, "

@@ -171,6 +171,44 @@ const TWINS = new Map();
 // Headers kept per key.
 const MAX_TWINS = 8;
 
+// Renderer copies one header repaints at most, the oldest dropped first.
+const MAX_PAINTERS = 8;
+
+// What a renderer copy hands back as `triggerDraw` when it closes.
+const CLOSED_PAINTER = /^\(\)\s*=>\s*\{\s*\}$/;
+
+/**
+ * Make `triggerDraw` on a drawn widget repaint every renderer copy bound to it, not only the last.
+ *
+ * @param {object} widget - A widget with its own `draw`.
+ * @returns {object} The same widget.
+ */
+function paintEveryCopy(widget) {
+  const painters = [];
+  const repaint = () => {
+    for (const paint of painters.slice()) {
+      try {
+        paint();
+      } catch {
+        // A copy whose canvas has gone throws, and is dropped.
+        painters.splice(painters.indexOf(paint), 1);
+      }
+    }
+  };
+  Object.defineProperty(widget, "triggerDraw", {
+    configurable: true,
+    enumerable: false,
+    get: () => (painters.length ? repaint : undefined),
+    set: (paint) => {
+      if (typeof paint !== "function" || paint === repaint || painters.includes(paint)) return;
+      if (CLOSED_PAINTER.test(String(paint))) return;
+      painters.push(paint);
+      if (painters.length > MAX_PAINTERS) painters.shift();
+    },
+  });
+  return widget;
+}
+
 /**
  * The node on screen in place of one that is no longer in a graph.
  *
@@ -368,6 +406,8 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
       return true;
     };
   }
+  // On the node and in the properties panel alike.
+  paintEveryCopy(widget);
   const added = addDecoration(node, widget, before);
   if (added) {
     const known = HEADERS.get(node) ?? new Map();

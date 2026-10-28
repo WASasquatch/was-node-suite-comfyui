@@ -1,7 +1,7 @@
-"""The system prompt library: ``.txt`` and ``.md`` files in ``system_prompts`` under the config directory.
+"""System prompts: ``.txt`` and ``.md`` files in the config directory's ``system_prompts``, and the pack's own under ``Built-in/``.
 
-Front matter carries ``name``, ``description``, ``model_family`` and ``tags``. A key is a path
-below the library, ``/`` separated. A folder holding ``SKILL.md`` is one skill.
+Front matter carries ``name``, ``description``, ``model_family`` and ``tags``. A key is a ``/``
+separated path. A ``SKILL.md`` folder is one skill.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from ..config import paths
 from ..util import file_listing, sandbox
 
 __all__ = [
+    "BUILTIN_FOLDER",
     "EXTENSIONS",
     "FILE_TYPES",
     "IMPORT_EXTENSIONS",
@@ -34,6 +35,8 @@ __all__ = [
     "MAX_SKILL_FILE_BYTES",
     "NO_PROMPTS",
     "SKILL_EXTENSIONS",
+    "Copied",
+    "CopyExists",
     "Document",
     "Entry",
     "FolderExists",
@@ -41,7 +44,9 @@ __all__ = [
     "Imported",
     "Saved",
     "SkillFile",
+    "builtin_directory",
     "compose",
+    "copy_builtin",
     "find",
     "import_folder",
     "invalidate",
@@ -60,8 +65,14 @@ __all__ = [
 
 logger = log.get_logger("prompt.system_prompts")
 
-#: The library's folder inside the config directory.
+#: The library's folder inside the config directory, and the pack's own inside its data folder.
 LIBRARY_NAME = "system_prompts"
+
+#: The folder the pack's own prompts are listed under, the first segment of their keys.
+BUILTIN_FOLDER = "Built-in"
+
+#: The pack's own prompts listed at most.
+MAX_BUILTIN_ENTRIES = 500
 
 #: The file suffixes the library lists, lower case.
 EXTENSIONS = (".txt", ".md")
@@ -162,6 +173,7 @@ class Entry(NamedTuple):
         mtime_ns: Modification time in nanoseconds.
         skill: True for the ``SKILL.md`` of a skill folder.
         files: The skill's other files, 0 for a plain prompt.
+        builtin: True for one of the pack's own read-only prompts.
     """
 
     key: str
@@ -176,6 +188,7 @@ class Entry(NamedTuple):
     mtime_ns: int
     skill: bool = False
     files: int = 0
+    builtin: bool = False
 
 
 class SkillFile(NamedTuple):
@@ -222,6 +235,26 @@ class FolderExists(ImportRefused):
     """The folder an import names is already in the library."""
 
 
+class CopyExists(FolderExists):
+    """A copy would write over a file of the library holding different text."""
+
+
+class Copied(NamedTuple):
+    """What a copy of a built-in prompt wrote.
+
+    Attributes:
+        key: The copy's key in the library.
+        written: Files written new.
+        replaced: Files written over.
+        unchanged: Files already holding the same text.
+    """
+
+    key: str
+    written: int
+    replaced: int
+    unchanged: int
+
+
 class Document(NamedTuple):
     """A file's front matter and the text after it.
 
@@ -265,6 +298,17 @@ def library_directory() -> str:
         ``<config directory>/system_prompts`` as an absolute path.
     """
     return os.path.join(os.fspath(paths.config_directory()), LIBRARY_NAME)
+
+
+def builtin_directory() -> str:
+    """The folder holding the pack's own prompts.
+
+    Returns:
+        ``system_prompts`` inside the pack's data folder, as an absolute path.
+    """
+    from ..data import paths as data_paths
+
+    return os.path.join(os.fspath(data_paths.data_directory()), LIBRARY_NAME)
 
 
 def library_label() -> str:
@@ -361,15 +405,15 @@ def scan() -> tuple[Entry, ...]:
     """Every file in the library, reused for :data:`LISTING_TTL` seconds.
 
     Returns:
-        Entries ordered by folder and then name, without regard to case. Empty when the
-        folder is missing or cannot be read.
+        The library's entries ordered by folder and then name, without regard to case, then
+        the pack's own under ``Built-in/`` in the same order.
     """
     global _listing
     with _lock:
         now = time.monotonic()
         if _listing is not None and _listing[0] > now:
             return _listing[1]
-        found = _walk(library_directory())
+        found = _walk(library_directory()) + _walk(builtin_directory(), builtin=True)
         _listing = (time.monotonic() + LISTING_TTL, found)
         return found
 
@@ -427,7 +471,34 @@ def read(entry: Entry) -> Document:
         PathNotAllowed: The file resolves outside every permitted read root.
         ValueError: The file is gone, larger than :data:`MAX_FILE_BYTES`, or not UTF-8.
     """
-    target = sandbox.resolve_read(entry.path)
+    meta, body = split_front_matter(_text_of(entry))
+    return Document(meta or {}, body)
+
+
+def _readable(entry: Entry, path: str) -> Path:
+    """``path`` of ``entry`` resolved for reading: through the sandbox, or inside the pack's own prompts.
+
+    Raises:
+        PathNotAllowed: A library file resolves outside every permitted read root.
+        ValueError: A built-in file resolves outside the pack's own prompts.
+    """
+    if not entry.builtin:
+        return sandbox.resolve_read(path)
+    root = Path(os.path.realpath(builtin_directory()))
+    target = Path(os.path.realpath(path))
+    if not sandbox.contains(root, target):
+        raise ValueError(f"the built-in prompt `{entry.key}` lies outside the pack's own prompts")
+    return target
+
+
+def _text_of(entry: Entry) -> str:
+    """The whole text of an entry's file, front matter included.
+
+    Raises:
+        PathNotAllowed: The file resolves outside every permitted read root.
+        ValueError: The file is gone, larger than :data:`MAX_FILE_BYTES`, or not UTF-8.
+    """
+    target = _readable(entry, entry.path)
     try:
         info = os.stat(target)
     except OSError as error:
@@ -445,13 +516,11 @@ def read(entry: Entry) -> Document:
     with open(target, "rb") as handle:
         raw = handle.read(MAX_FILE_BYTES + 1)
     try:
-        text = raw.decode("utf-8")
+        return raw.decode("utf-8")
     except UnicodeDecodeError as error:
         raise ValueError(
             f"the system prompt `{entry.key}` is not UTF-8 text. Save it again as UTF-8"
         ) from error
-    meta, body = split_front_matter(text)
-    return Document(meta or {}, body)
 
 
 def save(
@@ -512,6 +581,11 @@ def save(
     ordered.update({key: value for key, value in meta.items() if key not in ordered})
 
     below = _folder(folder)
+    if _reserved(below):
+        raise ValueError(
+            f"`{BUILTIN_FOLDER}` holds the pack's own prompts, so nothing is saved into it. Type "
+            "another folder, such as My Prompts"
+        )
     relative = f"{below}/{_stem(wanted)}.{kind}" if below else f"{_stem(wanted)}.{kind}"
     root = sandbox.resolve_write(library_directory())
     target = sandbox.resolve_write_file(root, relative)
@@ -597,10 +671,10 @@ def read_skill_files(entry: Entry) -> tuple[list[tuple[SkillFile, str]], dict]:
     read_files: list[tuple[SkillFile, str]] = []
     for found in files:
         try:
-            target = sandbox.resolve_read(found.path)
+            target = _readable(entry, found.path)
             with open(target, "rb") as handle:
                 raw = handle.read(MAX_SKILL_FILE_BYTES + 1)
-        except (OSError, sandbox.PathNotAllowed) as error:
+        except (OSError, ValueError, sandbox.PathNotAllowed) as error:
             logger.debug("a file of the skill `%s` could not be read (%s)", entry.key, type(error).__name__)
             passed["unreadable"] += 1
             continue
@@ -641,6 +715,11 @@ def import_folder(folder: str, files, replace: bool = False) -> Imported:
             nothing is left to write, or a path names something other than a plain file.
     """
     below = _import_folder_name(folder)
+    if _reserved(below):
+        raise ImportRefused(
+            f"`{BUILTIN_FOLDER}` holds the pack's own prompts, so nothing is imported into it. "
+            "Rename the folder and import it again"
+        )
     if not isinstance(files, (list, tuple)):
         raise ImportRefused("the import carries no file list")
     if len(files) > MAX_IMPORT_FILES:
@@ -698,45 +777,7 @@ def import_folder(folder: str, files, replace: bool = False) -> Imported:
         )
 
     with _lock:
-        try:
-            root = sandbox.resolve_write(library_directory())
-            destination = sandbox.resolve_write_file(root, below)
-        except sandbox.PathNotAllowed:
-            raise ImportRefused(f"the folder `{below}` cannot be written in the library") from None
-        if not sandbox.contains(root, destination):
-            raise ImportRefused(f"the folder `{below}` lies outside the library")
-        exists = os.path.lexists(destination)
-        if exists and (os.path.islink(destination) or _junction(destination) or not os.path.isdir(destination)):
-            raise ImportRefused(f"`{below}` in the library is not a plain folder, so nothing was imported")
-        if exists and not replace:
-            raise FolderExists(f"`{below}` is already in the system prompt library")
-
-        planned: list[tuple[Path, bytes, str]] = []
-        for path, data in kept:
-            try:
-                target = sandbox.resolve_write_file(root, f"{below}/{path}")
-            except sandbox.PathNotAllowed:
-                raise ImportRefused(f"`{path}` cannot be written in the library") from None
-            if not sandbox.contains(destination, target):
-                raise ImportRefused(f"`{path}` lies outside the folder `{below}`")
-            status = "new"
-            if os.path.lexists(target):
-                if os.path.islink(target) or not os.path.isfile(target):
-                    raise ImportRefused(f"`{below}/{path}` in the library is not a plain file, so nothing was imported")
-                with open(target, "rb") as handle:
-                    held = handle.read(len(data) + 1)
-                status = "unchanged" if held == data else "replaced"
-            planned.append((target, data, status))
-
-        counts: Counter = Counter()
-        for target, data, status in planned:
-            counts[status] += 1
-            if status == "unchanged":
-                continue
-            os.makedirs(os.path.dirname(target), exist_ok=True)
-            with open(target, "wb" if status == "replaced" else "xb") as handle:
-                handle.write(data)
-        invalidate()
+        counts = _write_files(below, kept, replace, whole_folder=True)
 
     skills = tuple(
         f"{below}/{path}" for path, _data in kept if path.rsplit("/", 1)[-1].casefold() == SKILL_FILE
@@ -746,6 +787,113 @@ def import_folder(folder: str, files, replace: bool = False) -> Imported:
         below, counts["new"], counts["replaced"], counts["unchanged"], sum(skipped.values()),
     )
     return Imported(below, skills, counts["new"], counts["replaced"], counts["unchanged"], dict(skipped))
+
+
+def copy_builtin(key: str, replace: bool = False) -> Copied:
+    """Copy one of the pack's own prompts into the library, where it can be edited.
+
+    Args:
+        key: A built-in key, such as ``Built-in/FLUX/FLUX.2 Prompt Upsampler.md``. A skill is
+            copied with all of its files.
+        replace: Write over files at the copy's path that hold different text.
+
+    Returns:
+        What was written, and the copy's key: the built-in key without ``Built-in/``.
+
+    Raises:
+        CopyExists: A file at the copy's path holds different text and ``replace`` is off.
+        ImportRefused: The key names no built-in prompt, or a file cannot be read or written.
+    """
+    wanted = str(key or "")
+    entry = find(wanted, fresh=True)
+    if entry is None or not entry.builtin:
+        raise ImportRefused(f"`{wanted[:120]}` is not one of the pack's built-in prompts")
+    relative = entry.key[len(BUILTIN_FOLDER) + 1:]
+    try:
+        kept: list[tuple[str, bytes]] = [(os.path.basename(entry.path), _text_of(entry).encode("utf-8"))]
+    except (ValueError, sandbox.PathNotAllowed) as error:
+        raise ImportRefused(str(error)) from None
+    below = relative.rsplit("/", 1)[0] if "/" in relative else ""
+    if entry.skill:
+        read_files, _skipped = read_skill_files(entry)
+        kept.extend((found.relative, text.encode("utf-8")) for found, text in read_files)
+    if not below:
+        raise ImportRefused(f"`{entry.key}` sits at the top of the built-in prompts and has no folder to copy into")
+    with _lock:
+        counts = _write_files(below, kept, replace, whole_folder=False)
+    logger.info(
+        "copied the built-in `%s` into the system prompt library: %d new, %d replaced, %d unchanged",
+        entry.key, counts["new"], counts["replaced"], counts["unchanged"],
+    )
+    return Copied(relative, counts["new"], counts["replaced"], counts["unchanged"])
+
+
+def _write_files(below: str, kept: list[tuple[str, bytes]], replace: bool, whole_folder: bool) -> Counter:
+    """Write files into the library folder ``below``, checking every target before the first write.
+
+    Args:
+        below: The folder below the library, ``/`` separated.
+        kept: ``(path below the folder, bytes)`` pairs.
+        replace: Write over files holding different bytes.
+        whole_folder: Refuse a folder already in the library. Off, only a file holding
+            different bytes is refused.
+
+    Returns:
+        The count of files that were ``new``, ``replaced`` and ``unchanged``.
+
+    Raises:
+        FolderExists: ``whole_folder`` is on, the folder exists and ``replace`` is off.
+        CopyExists: ``whole_folder`` is off, a file holds different bytes and ``replace`` is off.
+        ImportRefused: A target leaves the library or is not a plain file or folder.
+    """
+    try:
+        root = sandbox.resolve_write(library_directory())
+        destination = sandbox.resolve_write_file(root, below)
+    except sandbox.PathNotAllowed:
+        raise ImportRefused(f"the folder `{below}` cannot be written in the library") from None
+    if not sandbox.contains(root, destination):
+        raise ImportRefused(f"the folder `{below}` lies outside the library")
+    exists = os.path.lexists(destination)
+    if exists and (os.path.islink(destination) or _junction(destination) or not os.path.isdir(destination)):
+        raise ImportRefused(f"`{below}` in the library is not a plain folder, so nothing was written")
+    if exists and whole_folder and not replace:
+        raise FolderExists(f"`{below}` is already in the system prompt library")
+
+    planned: list[tuple[Path, bytes, str]] = []
+    for path, data in kept:
+        try:
+            target = sandbox.resolve_write_file(root, f"{below}/{path}")
+        except sandbox.PathNotAllowed:
+            raise ImportRefused(f"`{path}` cannot be written in the library") from None
+        if not sandbox.contains(destination, target):
+            raise ImportRefused(f"`{path}` lies outside the folder `{below}`")
+        status = "new"
+        if os.path.lexists(target):
+            if os.path.islink(target) or not os.path.isfile(target):
+                raise ImportRefused(f"`{below}/{path}` in the library is not a plain file, so nothing was written")
+            with open(target, "rb") as handle:
+                held = handle.read(len(data) + 1)
+            status = "unchanged" if held == data else "replaced"
+            if status == "replaced" and not whole_folder and not replace:
+                raise CopyExists(f"`{below}/{path}` is already in the system prompt library with different text")
+        planned.append((target, data, status))
+
+    counts: Counter = Counter()
+    for target, data, status in planned:
+        counts[status] += 1
+        if status == "unchanged":
+            continue
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with open(target, "wb" if status == "replaced" else "xb") as handle:
+            handle.write(data)
+    invalidate()
+    return counts
+
+
+def _reserved(below: str) -> bool:
+    """Whether a folder below the library lies in the one the pack's own prompts are listed under."""
+    first = str(below or "").replace("\\", "/").strip("/").split("/", 1)[0]
+    return first.strip().casefold() == BUILTIN_FOLDER.casefold()
 
 
 def _import_folder_name(folder) -> str:
@@ -921,17 +1069,25 @@ def _folder(folder: str) -> str:
     return "/".join(part.strip() for part in text.split("/") if part.strip())
 
 
-def _walk(top: str) -> tuple[Entry, ...]:
-    """Every listable file below ``top``."""
+def _walk(top: str, builtin: bool = False) -> tuple[Entry, ...]:
+    """Every listable file below ``top``.
+
+    Args:
+        top: The folder to walk.
+        builtin: Walk the pack's own prompts: keys gain ``Built-in/``, and files at the top
+            of the folder, its notices and licences, are not listed.
+    """
     try:
         if not os.path.isdir(top):
             return ()
         root = os.path.realpath(top)
     except OSError:
         return ()
+    most = MAX_BUILTIN_ENTRIES if builtin else MAX_ENTRIES
+    prefix = f"{BUILTIN_FOLDER}/" if builtin else ""
     found: list[Entry] = []
     pending: list[tuple[str, str, int]] = [(root, "", 0)]
-    while pending and len(found) < MAX_ENTRIES:
+    while pending and len(found) < most:
         directory, below, depth = pending.pop()
         try:
             with os.scandir(directory) as listing:
@@ -951,8 +1107,13 @@ def _walk(top: str) -> tuple[Entry, ...]:
             relative = f"{below}/{item.name}" if below else item.name
             try:
                 if item.is_dir(follow_symlinks=False):
+                    if not below and not builtin and _reserved(item.name):
+                        _warn_reserved(item.path)
+                        continue
                     if depth < MAX_DEPTH and not file_listing.linked(item):
                         folders.append((item.path, relative, depth + 1))
+                    continue
+                if builtin and not below:
                     continue
                 if os.path.splitext(item.name)[1].lower() not in EXTENSIONS:
                     continue
@@ -978,18 +1139,32 @@ def _walk(top: str) -> tuple[Entry, ...]:
             is_skill = bool(below) and item.name.casefold() == SKILL_FILE
             others = len(_skill_walk(directory)[0]) if is_skill else 0
             found.append(Entry(
-                relative, name, below, families, description, tags, item.path,
-                info.st_size, info.st_mtime, info.st_mtime_ns, is_skill, others,
+                prefix + relative, name, prefix + below if below else "", families, description, tags,
+                item.path, info.st_size, info.st_mtime, info.st_mtime_ns, is_skill, others, builtin,
             ))
-            if len(found) >= MAX_ENTRIES:
+            if len(found) >= most:
                 logger.warning(
-                    "the system prompt library holds more than %d files, so only the first %d are listed",
-                    MAX_ENTRIES, MAX_ENTRIES,
+                    "%s holds more than %d files, so only the first %d are listed",
+                    "the pack's built-in prompts" if builtin else "the system prompt library", most, most,
                 )
                 break
         pending.extend(reversed(folders))
     found.sort(key=lambda entry: (entry.folder.casefold(), entry.name.casefold(), entry.key.casefold()))
     return tuple(found)
+
+
+def _warn_reserved(path: str) -> None:
+    """Report, once per folder, a library folder passed over for holding the built-in prompts' name."""
+    if (path, -1) in _warned:
+        return
+    if len(_warned) >= MAX_ENTRIES:
+        _warned.clear()
+    _warned.add((path, -1))
+    logger.warning(
+        "%s is not listed: `%s` is where the pack's own prompts are listed. Rename the folder to "
+        "list what it holds",
+        path, BUILTIN_FOLDER,
+    )
 
 
 def _head(path: str, info: os.stat_result, below: str) -> tuple[str, tuple, str, tuple]:

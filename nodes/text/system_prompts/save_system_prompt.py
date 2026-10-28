@@ -69,7 +69,8 @@ class SaveSystemPrompt(io.ComfyNode):
                     placeholder="Eg: Captioning/Qwen",
                     tooltip=(
                         "A folder inside the library, made when missing. Empty saves at the "
-                        "top. Eg: `Captioning/Qwen`. A drive, a leading `/` or `..` is refused."
+                        "top. Eg: `Captioning/Qwen`. A drive, a leading `/`, `..` or `Built-in`, "
+                        "where the pack's own prompts are listed, is refused."
                     ),
                 ),
                 io.String.Input(

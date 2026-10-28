@@ -305,14 +305,23 @@ prompts, from a folder on disk. The skill's `SKILL.md` is the system prompt, and
 files, such as `references/layout.md`, leave Load System Prompt on its `documents` output for an
 LLM index, so a local model looks up what the skill references while it answers.
 
-For keeping the instructions that steer Qwen, Gemma and other language models in one place,
-picking one per node instead of pasting it, and running skills written for Claude Code and Codex
-on a local model.
+The library ships with built-in prompt enhancers under **Built-in**, read-only, one folder per
+model family: FLUX.1 to FLUX 3 Klein, Krea 2, LTX-Video and LTX-2, MiniMax H3, Wan, HunyuanVideo,
+Kandinsky 6, Qwen-Image, Z-Image, ERNIE Image, MOSS-Image, Fibo and the tag-based SDXL models. Each
+turns a short idea, a picture or an edit request into the prompt that model reads, and where the
+model's makers publish an enhancer prompt, it is theirs, unchanged or with its changes listed.
+**Copy** on a built-in writes an editable copy into the library and loads it on the node.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Text/System Prompts**. Files, front matter and skills:
-[`docs/SYSTEM_PROMPTS.md`](docs/SYSTEM_PROMPTS.md). Graphs:
+For keeping the instructions that steer Qwen, Gemma and other language models in one place,
+picking one per node instead of pasting it, running skills written for Claude Code and Codex on
+a local model, and expanding a few words into the prompt a particular image or video model
+expects.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Text/System Prompts**. Files, front matter, skills and
+the built-in prompts: [`docs/SYSTEM_PROMPTS.md`](docs/SYSTEM_PROMPTS.md). Graphs:
 [`system-prompt-library.json`](docs/workflows/system-prompt-library.json),
-[`llm-skill-prompt-enhancer.json`](docs/workflows/llm-skill-prompt-enhancer.json).
+[`llm-skill-prompt-enhancer.json`](docs/workflows/llm-skill-prompt-enhancer.json),
+[`built-in-prompt-enhancers.json`](docs/workflows/built-in-prompt-enhancers.json).
 
 ---
 

@@ -344,3 +344,65 @@ export function createNotice(host, bottom = 16) {
     },
   };
 }
+
+/**
+ * A divider dragged to resize the panes either side of it.
+ *
+ * @param {() => string} axis - `x` for a divider between columns, `y` between rows.
+ * @param {(delta: number) => void} onMove - Called with the pixels moved since the last call.
+ * @param {() => void} onEnd - Called once the drag ends.
+ * @returns {{element: HTMLElement, refresh: () => void}} The divider, and a call that redraws it.
+ */
+export function createSplitter(axis, onMove, onEnd) {
+  const element = el("div", "flex:0 0 auto;display:flex;align-items:center;justify-content:center;touch-action:none");
+  const line = el("div", `background:${LOOK.border};border-radius:1px`);
+  element.appendChild(line);
+  const paint = (active) => {
+    const across = axis() === "x";
+    element.style.cursor = across ? "col-resize" : "row-resize";
+    element.style.width = across ? "11px" : "100%";
+    element.style.height = across ? "100%" : "11px";
+    line.style.width = across ? "2px" : "36px";
+    line.style.height = across ? "36px" : "2px";
+    line.style.background = active ? LOOK.accent : LOOK.border;
+  };
+  paint(false);
+  element.addEventListener("mouseenter", () => paint(true));
+  element.addEventListener("mouseleave", () => paint(false));
+  element.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const across = axis() === "x";
+    const scale = element.getBoundingClientRect().width / Math.max(1, element.offsetWidth) || 1;
+    let last = across ? event.clientX : event.clientY;
+    const move = (moved) => {
+      if ((moved.buttons & 1) === 0) {
+        end();
+        return;
+      }
+      const now = across ? moved.clientX : moved.clientY;
+      onMove((now - last) / scale);
+      last = now;
+    };
+    const end = () => {
+      element.removeEventListener("pointermove", move);
+      element.removeEventListener("pointerup", end);
+      element.removeEventListener("pointercancel", end);
+      element.removeEventListener("lostpointercapture", end);
+      paint(false);
+      onEnd();
+    };
+    element.addEventListener("pointermove", move);
+    element.addEventListener("pointerup", end);
+    element.addEventListener("pointercancel", end);
+    element.addEventListener("lostpointercapture", end);
+    try {
+      element.setPointerCapture(event.pointerId);
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to capture the pointer:`, error);
+    }
+    paint(true);
+  });
+  return { element, refresh: () => paint(false) };
+}
