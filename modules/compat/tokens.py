@@ -91,6 +91,7 @@ LITERAL_INPUTS = {
     "WASThreeTextureURL": ("url",),
     "WASAudioEditor": ("cuts",),
     "WASAudioEqualizer": ("bands",),
+    "WASPikaH3FlexSampling": ("knots",),
     "WASBoundingBoxEditor": ("layout",),
     "WASLLMLoadWebPage": ("url",),
     "WASLLMStructuredOutput": ("schema",),

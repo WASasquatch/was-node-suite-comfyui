@@ -20,7 +20,7 @@ from .. import log
 logger = log.get_logger("modules.model.ptd")
 
 __all__ = [
-    "FL2VA", "FOLDER", "REF2VA", "Bank", "apply", "describe", "hop_of", "is_ptd_file",
+    "FL2VA", "FOLDER", "REF2VA", "Bank", "apply", "bank_of", "describe", "hop_of", "is_ptd_file",
     "load", "off_grid", "read_header", "register", "release_of",
 ]
 
@@ -33,6 +33,9 @@ FOLDER = "ptd"
 
 #: Key the patch's injections and wrapper are filed under on a model.
 KEY = "was_ptd"
+
+#: The model attachment holding the PTD file a patched model carries.
+BANK_KEY = "was_ptd_bank"
 
 #: Bytes a safetensors header may take.
 MAX_HEADER = 64 * 1024 * 1024
@@ -983,7 +986,22 @@ def apply(model, bank: Bank):
     patched.add_wrapper_with_key(comfy.patcher_extension.WrappersMP.OUTER_SAMPLE, KEY, check)
     patched.add_wrapper_with_key(comfy.patcher_extension.WrappersMP.APPLY_MODEL, KEY, stage)
     patched.add_wrapper_with_key(comfy.patcher_extension.WrappersMP.DIFFUSION_MODEL, KEY, wrapper)
+    patched.set_attachments(BANK_KEY, bank)
     return patched, notes
+
+
+def bank_of(model) -> Bank | None:
+    """The PTD file a model carries.
+
+    Args:
+        model: A ``ModelPatcher``, as H3 PTD Patch returned it or any clone made from it.
+
+    Returns:
+        The bank, or ``None`` where the model carries none.
+    """
+    getter = getattr(model, "get_attachment", None)
+    found = getter(BANK_KEY) if callable(getter) else None
+    return found if isinstance(found, Bank) else None
 
 
 #: Each release's name in messages.

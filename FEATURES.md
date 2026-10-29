@@ -603,6 +603,20 @@ For faster, lighter H3 sampling where the speed is worth some softness.
 
 ---
 
+## Pika H3 Flex
+
+**Pika H3 Flex LoRA** turns a MiniMax H3 fl2va or ref2va model into Pika H3 Flex: the matching
+Pika adapter in bypass or merge mode, the release's video and audio shifts and its fp32 AdaLN.
+**Pika H3 Flex Sampling** gives the release's six-step sigmas and core's re-noise sampler from a
+knot list, which also writes a refining pass or a ladder that climbs back. **Pika H3 Flex
+Canvas** gives the trained 480p and 768p sizes at eleven aspects and the frame count for 5 to
+15 seconds. **H3 Hires Latent** encodes upscaled frames beside a clip's own sound for a second
+pass at the larger size.
+
+For Pika H3 Flex video with sound in six model calls, from text, frames or references.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Latent/Video**.
+
 ## MiniMax H3 in four to eight steps
 
 **H3 PTD Patch** gives MiniMax H3 a Parametric Trajectory Distillation file's per-step adapters
@@ -616,6 +630,8 @@ file's steps, such as the other release's, stops before its first step and names
 The adapters stay in system memory and reach the GPU one block at a time, tens of megabytes on
 top of what the plain transformer needs. A PTD file can also carry a LoRA, held once and applied
 at every step beside the step adapters, so a distilled style or adapter ships as one file.
+**H3 PTD Sigmas** reads those steps back off any model made from the patch, so an extend loop
+that switches between fl2va and Ref2VA samples every segment on its own file's steps.
 
 For finished H3 clips at a fraction of the usual steps.
 

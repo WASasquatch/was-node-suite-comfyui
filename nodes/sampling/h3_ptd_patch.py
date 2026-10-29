@@ -97,3 +97,4 @@ class H3PTDPatch(io.ComfyNode):
         )
         logger.info("%s applied %s, %d steps", NODE_NAME, bank.name, bank.hops)
         return io.NodeOutput(patched, ptd.sigmas(bank), bank.hops)
+

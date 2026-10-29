@@ -1,8 +1,8 @@
 /**
- * What H3 PTD Patch applied, drawn on the node.
+ * What H3 PTD Patch applied, and the steps H3 PTD Sigmas read, drawn on the node.
  *
- * The node publishes the release, the step count, the trained sigmas, the sampler settings and
- * what it checked about the transformer through `run_result`.
+ * The nodes publish the release, the step count, the trained sigmas, the sampler settings and
+ * what was checked about the transformer through `run_result`.
  */
 
 import { app } from "../../scripts/app.js";
@@ -10,7 +10,8 @@ import { createReportPanel } from "./interface/report_panel.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
 const EXT_NAME = "WASNodeSuite.H3PTDPatchUI";
-const NODE_ID = "WASH3PTDPatch";
+// The nodes the panel is drawn on.
+const NODE_IDS = new Set(["WASH3PTDPatch", "WASH3PTDSigmas"]);
 
 // Height of the panel in node units: the summary and the facts.
 const PANEL_HEIGHT = 230;
@@ -30,7 +31,7 @@ app.registerExtension({
   name: EXT_NAME,
 
   async beforeRegisterNodeDef(nodeType, nodeData) {
-    if (nodeData?.name !== NODE_ID) return;
+    if (!NODE_IDS.has(nodeData?.name)) return;
 
     const proto = nodeType.prototype;
     if (proto.__was_h3_ptd_patch_wrapped) return;

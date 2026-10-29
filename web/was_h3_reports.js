@@ -1,5 +1,6 @@
 /**
- * What H3 Load Clip and the MiniMax H3 writing nodes did, drawn on the node.
+ * What H3 Load Clip, the MiniMax H3 writing nodes, the Pika H3 Flex nodes and H3 Hires Latent did,
+ * drawn on the node.
  *
  * Draws each node's own counts as figures and its facts as rows, from its last run.
  */
@@ -13,7 +14,10 @@ const SETTING_ID = "WAS.H3.ShowReports";
 const LOG_NAME = "WASNodeSuite.H3Reports";
 
 // The nodes the panel is drawn on.
-const NODES = ["WASH3LoadClip", "WASH3SceneWriter", "WASH3PromptRewrite", "WASH3PlanTransitions"];
+const NODES = [
+  "WASH3LoadClip", "WASH3SceneWriter", "WASH3PromptRewrite", "WASH3PlanTransitions",
+  "WASPikaH3FlexLoRA", "WASPikaH3FlexSampling", "WASPikaH3FlexCanvas", "WASH3HiresLatent",
+];
 
 // Height of the panel in node units: the summary line, three figures and three fact rows.
 const PANEL_HEIGHT = 168;
@@ -54,8 +58,9 @@ app.registerExtension({
       category: ["WAS Node Suite", "MiniMax H3", "Show clip reports"],
       name: "Draw the H3 clip report",
       tooltip:
-        "Draw the scenes, frames and next index H3 Load Clip read, and what the MiniMax H3 writing "
-        + "nodes wrote, on each node. The nodes run the same either way. This applies to nodes "
+        "Draw the scenes, frames and next index H3 Load Clip read, what the MiniMax H3 writing "
+        + "nodes wrote, and what the Pika H3 Flex nodes and H3 Hires Latent set, on each node. The "
+        + "nodes run the same either way. This applies to nodes "
         + "added after the setting changes, so a reload shows it everywhere.",
       type: "boolean",
       defaultValue: true,

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **659** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **664** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-573 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+578 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 417 |
+| [Always loaded](#always-loaded) | always on | 422 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-417 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+422 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -65,7 +65,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (21)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (23)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (4)
 - [WAS Suite/Logic](#was-suitelogic) (6)
@@ -74,7 +74,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (28)
+- [WAS Suite/Sampling](#was-suitesampling) (31)
 - [WAS Suite/Text](#was-suitetext) (10)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (9)
@@ -7635,6 +7635,32 @@ Open one segment of a MiniMax H3 video for a sampler. Segment 1 samples the empt
 
 </details>
 
+<a id="node-wash3hireslatent"></a>
+<details>
+<summary><b>H3 Hires Latent</b></summary>
+
+Encode the upscaled frames of a MiniMax H3 clip into a latent that keeps the clip's sound, for a second pass at the larger size. Sample it from a low sigma, as Pika H3 Flex Sampling's 100, 40, 0, with conditioning at that size.
+
+| | |
+|---|---|
+| Node id | `WASH3HiresLatent` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `latent` | `LATENT` | Yes |  |  | The first pass's video and audio latent, from its sampler. Its sound is kept unchanged. |
+| `images` | `IMAGE` | Yes |  |  | Every frame of the first pass after upscaling, as 124 for 5 seconds. Width and height are multiples of 16, as 1344x768. |
+| `vae` | `VAE` | Yes |  |  | The MiniMax H3 video VAE, as `minimax_h3_video_vae_int8_convrot`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `latent` | `LATENT` | Video and audio latent at the frames' size, the first pass's sound in it. |
+
+</details>
+
 <a id="node-wash3loadclip"></a>
 <details>
 <summary><b>H3 Load Clip</b></summary>
@@ -8352,6 +8378,34 @@ Writes a whole MiniMax H3 video from an idea: a language model outlines the stor
 | `header` | `STRING` | The text put before every scene's prompt. |
 | `footer` | `STRING` | The text put after every scene's prompt. |
 | `report` | `STRING` | What was written, and how long it runs. |
+
+</details>
+
+<a id="node-waspikah3flexcanvas"></a>
+<details>
+<summary><b>Pika H3 Flex Canvas</b></summary>
+
+Pick a Pika H3 Flex canvas by resolution, aspect and length, for the width, height and length of MiniMax H3 Image To Video or Reference To Video.
+
+| | |
+|---|---|
+| Node id | `WASPikaH3FlexCanvas` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `resolution` | `COMBO` | Yes | 480p |  | `480p` = 832x480 at 16:9; `768p` = 1344x768 at 16:9. |
+| `aspect` | `COMBO` | Yes | 16:9 | `21:9`, `16:9`, `3:2`, `4:3`, `5:4`, `1:1`, `4:5`, `3:4`, `2:3`, `9:16`, `9:21` | Width to height: at 480p, `16:9` = 832x480, `9:16` = 480x832, `1:1` = 480x480. |
+| `seconds` | `INT` | Yes | 5 |  | Clip length: `5` = 124 frames, `10` = 243, `15` = 362, at 24 fps. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `width` | `INT` | Canvas width in pixels, as `832`. |
+| `height` | `INT` | Canvas height in pixels, as `480`. |
+| `length` | `INT` | Frames at 24 fps on the 17k+5 grid, as `124` for 5 seconds. |
 
 </details>
 
@@ -10869,6 +10923,31 @@ Make MiniMax H3 generate video and sound in 4 to 8 steps from a PTD file loaded 
 
 </details>
 
+<a id="node-wash3ptdsigmas"></a>
+<details>
+<summary><b>H3 PTD Sigmas</b></summary>
+
+Read the trained step times of the PTD file a MiniMax H3 model carries, for SamplerCustomAdvanced. Wired to H3 Extend Window's model, every segment of an extend loop samples on its own file's steps, fl2va or Ref2VA.
+
+| | |
+|---|---|
+| Node id | `WASH3PTDSigmas` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | A MiniMax H3 model from H3 PTD Patch, or any LoRA, attention or memory node after it, as H3 Extend Window's model output. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `sigmas` | `SIGMAS` | The file's trained step times: `0.999, 0.947, 0.857, 0.667, 0` for fl2va 4 step, `1.0, 0.973, 0.923, 0.8, 0` for Ref2VA 4 step. |
+| `steps` | `INT` | Steps the file was trained for: `4`, `6` or `8`. |
+
+</details>
+
 <a id="node-wash3sparseattention"></a>
 <details>
 <summary><b>H3 Sparse Attention</b></summary>
@@ -11182,6 +11261,59 @@ Put a range of a model's transformer blocks back to another checkpoint of the sa
 | Name | Type | What it is |
 |---|---|---|
 | `model` | `MODEL` | The model with those blocks restored and its LoRAs still applied; MODEL. |
+
+</details>
+
+<a id="node-waspikah3flexlora"></a>
+<details>
+<summary><b>Pika H3 Flex LoRA</b></summary>
+
+Turn a MiniMax H3 fl2va or ref2va model into Pika H3 Flex: the matching Pika adapter, the release's video and audio shifts of 12 and 3, and its fp32 AdaLN. Sample it on Pika H3 Flex Sampling's sigmas.
+
+| | |
+|---|---|
+| Node id | `WASPikaH3FlexLoRA` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | MiniMax H3 from Load Diffusion Model: fl2va for the fl2va adapter, ref2va for the ref2va adapter. |
+| `lora_name` | `COMBO,STRING` | Yes |  |  | Adapter in models/loras: `pika_h3_flex_fl2va` for text and frames, `pika_h3_flex_ref2va` for references; `None` = shifts and AdaLN only. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | Adapter scale: `1.0` = the release; `0` = the base model. |
+| `mode` | `COMBO` | Yes | bypass | `bypass`, `merge` | `bypass` = adapter computed beside each layer, base weights untouched, exact on int8 and w6a8 models; `merge` = adapter added into the weights. |
+| `adaln_fp32` | `BOOLEAN` | Yes | True |  | `true` = AdaLN SiLU on the fp32 time embedding, as the release; `false` = on the embedding in the compute dtype, as core. Pruned models run fp32. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | Pika H3 Flex at video shift 12 and audio shift 3. |
+
+</details>
+
+<a id="node-waspikah3flexsampling"></a>
+<details>
+<summary><b>Pika H3 Flex Sampling</b></summary>
+
+Sample Pika H3 Flex as released: six model calls on its knots, each step's clean prediction re-noised to the next. Knots starting low, as 100, 40, 0, refine a latent from a first pass.
+
+| | |
+|---|---|
+| Node id | `WASPikaH3FlexSampling` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `knots` | `STRING` | Yes | 1000, 750, 500, 250, 100, 40, 0 |  | Steps on the 0 to 1000 grid, ending in 0: `1000, 750, 500, 250, 100, 40, 0` = the release; `100, 40, 0` = a refining pass; a value that climbs back, as `..., 40, 100, 40, 0`, samples the tail again. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `sampler` | `SAMPLER` | Core's lcm sampler: the clean prediction, then fresh noise at the next sigma. |
+| `sigmas` | `SIGMAS` | Video sigmas at shift 12. Released: `1, 0.973, 0.923, 0.8, 0.571, 0.333, 0`. |
 
 </details>
 
