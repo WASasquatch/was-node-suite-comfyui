@@ -664,6 +664,10 @@ else:
             await register_replacements()
 
         async def get_node_list(self) -> list[type[io.ComfyNode]]:
+            from .modules.util import file_listing
+
+            # File menus list nothing until ComfyUI has registered the returned nodes.
+            file_listing.defer_walks()
             loader = NodeLoader(__name__, config=self.config)
             loader.load_all()
             # After the walk, so an extension cannot take an id this pack is about to

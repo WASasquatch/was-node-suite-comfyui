@@ -78,11 +78,13 @@ def folders(extra=()) -> list[str]:
         A root's own name for the root itself, and ``<relative path> [tag]`` for each folder
         below it, to :data:`modules.util.file_listing.MAX_DEPTH` levels and
         :data:`MAX_FOLDERS` entries in all, each root taking an equal share. A folder
-        holding no listable file is offered too. Empty outside ComfyUI and where no root
-        can be read.
+        holding no listable file is offered too. Empty outside ComfyUI, where no root can be
+        read, and while file walks are deferred.
     """
     global _cache
 
+    if file_listing.walks_deferred():
+        return []
     key = tuple((tag, str(directory)) for tag, directory in (extra or ()))
     with _lock:
         until, cached_key, labels = _cache

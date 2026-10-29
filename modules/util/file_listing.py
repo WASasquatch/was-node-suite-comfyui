@@ -1,8 +1,8 @@
 """The files under ComfyUI's own directories, as the labels a widget stores.
 
-A label is ``<relative path> [tag]``: ``input``, ``output``, ``temp``, or a directory
-``paths.allow_read`` names. :func:`scan` walks each root on its own budget, memoized for
-at least :data:`LISTING_TTL` seconds.
+A label is ``<relative path> [tag]``, the tag ``input``, ``output``, ``temp`` or a
+``paths.allow_read`` folder. :func:`scan` walks on a worker thread; :func:`find` reads one
+label off disk.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from .. import log
 
 __all__ = [
     "DEFAULT_LIMIT",
+    "DEFER_LIMIT",
     "Entry",
     "INPUT",
     "LISTING_TTL",
@@ -31,19 +32,23 @@ __all__ = [
     "SLOW_WALK_SHARE",
     "TAGS",
     "TEMP",
+    "WALK_WAIT",
     "configured",
+    "defer_walks",
     "find",
     "label_of",
     "labels",
     "path_text",
     "linked",
     "listing",
+    "release_walks",
     "resolve",
     "reuse_until",
     "roots",
     "scan",
     "typed",
     "view",
+    "walks_deferred",
 ]
 
 logger = log.get_logger("util.file_listing")
@@ -96,9 +101,28 @@ SLOW_WALK_SHARE = 10.0
 #: Longest a walk is reused for, in seconds, however long it took.
 MAX_REUSE = 120.0
 
+#: Seconds, counted from the start of a walk, a caller waits for it before being answered
+#: from the last walk that finished.
+WALK_WAIT = 1.0
+
+#: Longest :func:`defer_walks` holds walks off, in seconds, where nothing releases them.
+DEFER_LIMIT = 120.0
+
 #: Serializes the walk and the view cache. Both are read from ComfyUI's server thread, for a
 #: browser panel, and from the prompt thread, for a combo and a node.
 _lock = threading.RLock()
+
+#: Signalled whenever a walk finishes, on :data:`_lock`.
+_walk_done = threading.Condition(_lock)
+
+#: The worker thread walking the roots, or ``None`` when no walk is running.
+_walker: threading.Thread | None = None
+
+#: ``time.monotonic()`` the running walk started at.
+_walk_began = 0.0
+
+#: ``time.monotonic()`` :func:`defer_walks` holds walks off until.
+_deferred_until = 0.0
 
 #: ``(monotonic time it is reused until, walk id, entries)``. The id is taken from
 #: :data:`_walks` and changes on every rebuild, so a cached view knows whether the walk under it is the one it was built
@@ -228,12 +252,39 @@ def reuse_until(started: float, finished: float) -> float:
     return finished + min(MAX_REUSE, max(LISTING_TTL, SLOW_WALK_SHARE * took))
 
 
+def defer_walks() -> None:
+    """Hold walks off until the running event loop next turns, at most :data:`DEFER_LIMIT` seconds."""
+    global _deferred_until
+    import asyncio
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+    with _lock:
+        _deferred_until = time.monotonic() + DEFER_LIMIT
+    loop.call_soon(release_walks)
+
+
+def release_walks() -> None:
+    """End the hold :func:`defer_walks` placed."""
+    global _deferred_until
+    with _lock:
+        _deferred_until = 0.0
+
+
+def walks_deferred() -> bool:
+    """Whether :func:`defer_walks` is holding walks off."""
+    return time.monotonic() < _deferred_until
+
+
 def scan() -> tuple[Entry, ...]:
     """Every listable file under every root, memoized for at least :data:`LISTING_TTL` seconds.
 
     Returns:
         The entries in the order the roots were walked, unsorted, at most
-        :data:`MAX_EXAMINED` per root. Empty where nothing was found.
+        :data:`MAX_EXAMINED` per root. The last finished walk where a refresh outlasts
+        :data:`WALK_WAIT` or walks are deferred. Empty where nothing was found.
     """
     return _scan()[2]
 
@@ -308,7 +359,7 @@ def find(
     tags: Sequence[str] = TAGS,
     paths: bool = False,
 ) -> Entry | None:
-    """The entry one label names, read from the whole walk.
+    """The entry one label names, read straight off disk under the rules the walk keeps.
 
     Args:
         label: The exact label, such as ``prompts/animals.txt [input]``. Surrounding space
@@ -318,8 +369,8 @@ def find(
         paths: Also read text that is no label as a path, through :func:`typed`.
 
     Returns:
-        The entry, or ``None`` when no walked file carries that label, which covers a file
-        that has been deleted, renamed, or invented, and no path names one.
+        The entry, or ``None`` when no file the walk would list carries that label, which
+        covers a file that has been deleted, renamed, or invented, and no path names one.
 
     Raises:
         PathNotAllowed: With ``paths``, the text is a path outside every permitted read root.
@@ -329,11 +380,8 @@ def find(
     needle = (label or "").strip()
     if not needle:
         return None
-    for entry in scan():
-        if entry.label != needle or not _holds(entry.tag, kept):
-            continue
-        if wanted is not None and not entry.relative.lower().endswith(wanted):
-            continue
+    entry = _labelled(needle, wanted, kept)
+    if entry is not None:
         return entry
     return typed(needle, extensions, tags) if paths else None
 
@@ -488,14 +536,30 @@ def _holds(tag: str, tags: set[str]) -> bool:
 
 
 def _scan() -> tuple[float, int, tuple[Entry, ...]]:
-    """The memoized walk, rebuilt once :func:`reuse_until` says it has expired."""
-    global _scan_cache, _walks
+    """The memoized walk, refreshed on a worker thread once expired, waited for up to :data:`WALK_WAIT`."""
+    global _walker, _walk_began
     with _lock:
-        until, _, entries = _scan_cache
-        now = time.monotonic()
-        if entries and now < until:
+        if (_walks and time.monotonic() < _scan_cache[0]) or walks_deferred():
             return _scan_cache
-        found: list[Entry] = []
+        if _walker is None:
+            _walk_began = time.monotonic()
+            _walker = threading.Thread(target=_refresh, name="was-file-listing", daemon=True)
+            _walker.start()
+        deadline = _walk_began + WALK_WAIT
+        while _walker is not None:
+            left = deadline - time.monotonic()
+            if left <= 0:
+                break
+            _walk_done.wait(left)
+        return _scan_cache
+
+
+def _refresh() -> None:
+    """Walk every root and publish the result as the memoized walk, on the worker thread."""
+    global _scan_cache, _walks, _walker
+    began = time.monotonic()
+    found: list[Entry] = []
+    try:
         # ComfyUI's own three first, then whatever the config adds, so a menu offers the
         # familiar folders before the rest. Each root is walked with its own budget.
         for order, (tag, directory) in enumerate(roots((*TAGS, CONFIGURED))):
@@ -510,9 +574,74 @@ def _scan() -> tuple[float, int, tuple[Entry, ...]]:
                     "of it brings the rest into the menus.",
                     tag, directory, MAX_EXAMINED, len(rows),
                 )
-        _walks += 1
-        _scan_cache = (reuse_until(now, time.monotonic()), _walks, tuple(found))
-        return _scan_cache
+    except Exception as error:
+        logger.debug("the file listing could not be read: %s", error)
+    finally:
+        with _lock:
+            _walks += 1
+            _scan_cache = (reuse_until(began, time.monotonic()), _walks, tuple(found))
+            _walker = None
+            _walk_done.notify_all()
+
+
+def _plain(part: str) -> bool:
+    """Whether one segment of a label's relative path is a name the walk lists."""
+    if not part or part.startswith(".") or "\0" in part:
+        return False
+    if os.sep in part or (os.altsep and os.altsep in part):
+        return False
+    return not (os.name == "nt" and ":" in part)
+
+
+def _linked_info(info: os.stat_result) -> bool:
+    """Whether an ``os.lstat`` result is a symlink or a Windows junction."""
+    if stat.S_ISLNK(info.st_mode):
+        return True
+    tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", None)
+    return tag is not None and getattr(info, "st_reparse_tag", 0) == tag
+
+
+def _labelled(label: str, wanted: tuple[str, ...] | None, kept: set[str]) -> Entry | None:
+    """The file one label names, read off disk segment by segment.
+
+    Args:
+        label: A label, such as ``prompts/animals.txt [input]``.
+        wanted: Lowercased suffixes the file must carry, or ``None`` for any.
+        kept: Tags the caller reads, as :func:`_kept` returns them.
+
+    Returns:
+        The entry, or ``None`` where the label is malformed, names a root the caller does not
+        read, passes a dotted name, a symlink or a junction, or names no regular file.
+    """
+    from . import sandbox
+
+    relative, separator, tail = label.rpartition(" [")
+    if not separator or not relative or not tail.endswith("]"):
+        return None
+    tag = tail[:-1]
+    if not _holds(tag, kept):
+        return None
+    parts = relative.split("/")
+    if len(parts) > MAX_DEPTH + 1 or not all(_plain(part) for part in parts):
+        return None
+    if wanted is not None and not relative.lower().endswith(wanted):
+        return None
+    for order, (root_tag, root) in enumerate(roots((*TAGS, CONFIGURED))):
+        if root_tag != tag:
+            continue
+        path = str(root)
+        try:
+            for part in parts:
+                path = os.path.join(path, part)
+                info = os.lstat(path)
+                if _linked_info(info):
+                    return None
+        except OSError:
+            return None
+        if not stat.S_ISREG(info.st_mode) or not sandbox.contains(root, Path(path)):
+            return None
+        return Entry(tag, order, relative, label, path, info.st_mtime, max(0, int(info.st_size)))
+    return None
 
 
 def _build(

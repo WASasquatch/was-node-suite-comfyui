@@ -133,10 +133,10 @@
         "Node name for S&R": "WASLoadSystemPrompt"
       },
       "widgets_values": [
-        "moss-image-prompt-enhancer/SKILL.md"
+        "Built-in/MOSS-Image/moss-image-prompt-enhancer/SKILL.md"
       ],
       "widgets_values_named": {
-        "system_prompt": "moss-image-prompt-enhancer/SKILL.md"
+        "system_prompt": "Built-in/MOSS-Image/moss-image-prompt-enhancer/SKILL.md"
       }
     },
     {
@@ -779,13 +779,13 @@
         "compact",
         false,
         512,
-        "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nNo tools or files are available here, so do not run the compile script. Reply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
+        "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nReply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
       ],
       "widgets_values_named": {
         "response_mode": "compact",
         "citations": false,
         "citation_chunk_size": 512,
-        "qa_prompt": "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nNo tools or files are available here, so do not run the compile script. Reply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
+        "qa_prompt": "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nReply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
       }
     },
     {
