@@ -6,6 +6,8 @@ import os
 
 from comfy_api.latest import io
 
+from ....modules.io import picker
+
 REQUIRES = "loaders"
 
 
@@ -38,14 +40,14 @@ class UnCLIPCheckpointLoader(io.ComfyNode):
                 "ckpt_name widget."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "ckpt_name",
                     options=checkpoint_names(),
                     tooltip=(
                         "The checkpoint file in models/checkpoints to load. An unCLIP "
                         "checkpoint is needed for the CLIP_VISION output to carry anything."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.Model.Output(
@@ -83,6 +85,7 @@ class UnCLIPCheckpointLoader(io.ComfyNode):
         import comfy.sd
         import folder_paths
 
+        ckpt_name = picker.model_name(ckpt_name, ("checkpoints",))
         ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(
             ckpt_path,

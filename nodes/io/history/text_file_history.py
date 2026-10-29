@@ -10,8 +10,9 @@ from comfy_api.latest import io
 
 from ....modules import log
 from ....modules.compat.types import DICT
+from ....modules.io import picker
 from ....modules.state import history
-from ....modules.util import sandbox
+from ....modules.util import sandbox, text_files
 
 logger = log.get_logger("nodes.io.history")
 
@@ -87,7 +88,7 @@ class TextFileHistoryLoader(io.ComfyNode):
                 "folder the pack may no longer read stops the prompt with that folder named."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "file",
                     options=options(),
                     tooltip=(
@@ -95,7 +96,7 @@ class TextFileHistoryLoader(io.ComfyNode):
                         "last as '.../<folder>/<file>', and read 'No History' until a load "
                         "or save node has run."
                     ),
-                ),
+                )),
                 io.String.Input(
                     "dictionary_name",
                     default="[filename]",
@@ -134,26 +135,31 @@ class TextFileHistoryLoader(io.ComfyNode):
         """Reread the selected file, or report that it is no longer there.
 
         Raises:
-            PathNotAllowed: The recorded path lies outside every permitted read root.
+            PathNotAllowed: The recorded path lies outside every permitted read root, or a
+                wired path lies outside them or names no text file.
         """
         entry = (file or "").strip()
-        # The newest entries first, the whole history only when the selection is older.
-        recent = labelled_history(history.display_limit())
-        file_path = recent.get(entry) or labelled_history().get(entry, entry)
+        wired = picker.wired_file(entry, text_files.TEXT_EXTENSIONS)
+        if wired is not None:
+            file_path = str(wired)
+        else:
+            # The newest entries first, the whole history only when the selection is older.
+            recent = labelled_history(history.display_limit())
+            file_path = recent.get(entry) or labelled_history().get(entry, entry)
         base = os.path.basename(file_path)
         name = base.split(".", 1)[0] if "." in base else base
         if dictionary_name != FILENAME_KEYWORD:
             name = dictionary_name
 
         # A selection the history does not list maps to itself.
-        if file_path == entry:
+        if wired is None and file_path == entry:
             logger.error("the path `%s` specified cannot be found.", file_path)
             return io.NodeOutput("", {name: []})
 
         # A recorded path is checked against the read roots permitted now.
         resolved = sandbox.resolve_read(file_path)
         if not resolved.is_file():
-            logger.error("the path `%s` specified cannot be found.", resolved)
+            logger.error("the path `%s` specified cannot be found.", entry)
             return io.NodeOutput("", {name: []})
 
         with open(resolved, "r", encoding="utf-8", newline="\n") as handle:

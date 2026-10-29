@@ -32,7 +32,8 @@ class Row:
     Attributes:
         on: Whether the slot's checkbox is ticked. A slot that is off is kept in the list
             so the numbering is unchanged, and dropped by :func:`rows_from_inputs`.
-        lora: File name as it appears in the LoRA folder, or ``None`` for an empty slot.
+        lora: File name as it appears in the LoRA folder, a full path wired in, or ``None``
+            for an empty slot.
         weight: Multiplier applied to this LoRA's contribution, or a list of them, one per
             sampling step.
     """
@@ -136,13 +137,21 @@ def rows_from_inputs(values: Mapping[str, Any]) -> list[Row]:
     Returns:
         One :class:`Row` per slot that is switched on, names a file and carries a non-zero
         weight, in slot order. A slot that fails any of those three is left out, which is
-        how a row is muted without deleting it.
+        how a row is muted without deleting it. A full path is given as its name inside the
+        LoRA folder.
+
+    Raises:
+        PathNotAllowed: A row that takes part names a path outside the LoRA folders.
     """
-    rows = _widget_rows(values)
-    return [
-        row for row in rows
+    from ..io import picker
+
+    rows = [
+        row for row in _widget_rows(values)
         if row.on and row.lora and row.lora != "None" and any(value != 0.0 for value in weight_list(row.weight))
     ]
+    for row in rows:
+        row.lora = picker.model_name(row.lora, ("loras",))
+    return rows
 
 
 def _listed_weight(slot: int, value) -> float | list[float]:

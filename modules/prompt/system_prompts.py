@@ -47,12 +47,14 @@ __all__ = [
     "builtin_directory",
     "compose",
     "copy_builtin",
+    "entry_at",
     "find",
     "import_folder",
     "invalidate",
     "labels",
     "library_directory",
     "library_label",
+    "library_roots",
     "normalise_families",
     "read",
     "read_skill_files",
@@ -458,6 +460,60 @@ def find(key: str, fresh: bool = False) -> Entry | None:
     return None
 
 
+def library_roots() -> tuple[str, str]:
+    """The folders a wired path may name besides the permitted read roots.
+
+    Returns:
+        ``(library folder, the pack's own prompts)``, as absolute paths.
+    """
+    return library_directory(), builtin_directory()
+
+
+def entry_at(path) -> Entry:
+    """The entry for one file a wired path names.
+
+    Args:
+        path: The file, already resolved inside :func:`library_roots` or a permitted read root.
+
+    Returns:
+        The library's own entry where the menu lists the file, skills included. Otherwise a
+        plain prompt keyed by its place in the library, or by its folder label such as
+        ``notes/style.md [input]``.
+
+    Raises:
+        PathNotAllowed: The file lies outside the library and every permitted read root.
+        OSError: The file cannot be stated.
+    """
+    target = os.path.realpath(path)
+    for top, builtin in ((library_directory(), False), (builtin_directory(), True)):
+        root = os.path.realpath(top)
+        if target == root or not sandbox.contains(Path(root), Path(target)):
+            continue
+        relative = os.path.relpath(target, root).replace(os.sep, "/")
+        key = f"{BUILTIN_FOLDER}/{relative}" if builtin else relative
+        listed = find(key, fresh=True)
+        if listed is not None:
+            return listed
+        return _plain_entry(target, key, key.rpartition("/")[0], builtin)
+    labelled = file_listing.typed(target, EXTENSIONS, file_listing.ROOTS)
+    key = labelled.label if labelled is not None else os.path.basename(target)
+    return _plain_entry(target, key, "", False)
+
+
+def _plain_entry(path: str, key: str, folder: str, builtin: bool) -> Entry:
+    """A plain prompt entry for one file the library does not list.
+
+    Raises:
+        OSError: The file cannot be stated.
+    """
+    info = os.stat(path)
+    name, families, description, tags = _head(path, info, "")
+    return Entry(
+        key, name, folder, families, description, tags, path, info.st_size, info.st_mtime,
+        info.st_mtime_ns, False, 0, builtin,
+    )
+
+
 def read(entry: Entry) -> Document:
     """Read one entry's front matter and text.
 
@@ -503,8 +559,8 @@ def _text_of(entry: Entry) -> str:
         info = os.stat(target)
     except OSError as error:
         raise ValueError(
-            f"the system prompt `{entry.key}` could not be read ({error}). It may have been "
-            "moved or deleted; pick another, or press R to refresh the menu"
+            f"the system prompt `{entry.key}` could not be read ({error.strerror or 'no such file'}). "
+            "It may have been moved or deleted; pick another, or press R to refresh the menu"
         ) from error
     if not stat.S_ISREG(info.st_mode):
         raise ValueError(f"the system prompt `{entry.key}` is not a file")

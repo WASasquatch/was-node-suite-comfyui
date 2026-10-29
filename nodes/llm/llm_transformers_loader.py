@@ -7,7 +7,9 @@ from comfy_api.latest import io
 from ...modules import log
 from ...modules.compat.types import LLM
 from ...modules.interface import run_result
+from ...modules.io import picker
 from ...modules.llm import hf_llm, runtime, wires
+from ...modules.model import model_directories
 
 REQUIRES = "llm"
 
@@ -47,10 +49,10 @@ class WASLLMTransformersLoader(io.ComfyNode):
                 "panel shows the model, its size and where it runs."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model", options=models or [NO_MODELS],
                     tooltip="A model folder in ComfyUI/models/LLM, such as `Qwen3-4B-Instruct-2507`, or a suggested repository, downloaded on first use when features.network is on.",
-                ),
+                ), folder=True, model=True),
                 io.Combo.Input(
                     "dtype", options=hf_llm.DTYPES, default="auto",
                     tooltip="`auto` = bfloat16 or float16 on the GPU, float32 on the CPU; `float32` is exact and twice the memory.",
@@ -112,7 +114,7 @@ class WASLLMTransformersLoader(io.ComfyNode):
         """Load the model and wrap it.
 
         Args:
-            model: The model's menu name.
+            model: The model's menu name, or a full path to its folder wired in as text.
             dtype: One of the weight types.
             quantize: One of the quantizations.
             attention: One of the attention implementations.
@@ -127,7 +129,12 @@ class WASLLMTransformersLoader(io.ComfyNode):
 
         Returns:
             The LLM wire.
+
+        Raises:
+            PathNotAllowed: A wired path lies outside the LLM folders.
         """
+        model_directories(hf_llm.FOLDER)
+        model = picker.model_name(model, (hf_llm.FOLDER,), folder=True).replace("\\", "/")
         if model == NO_MODELS or not model:
             raise ValueError(
                 "LLM Transformers Loader found no model. Put a Hugging Face model folder, holding "

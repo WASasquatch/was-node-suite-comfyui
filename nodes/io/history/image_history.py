@@ -8,7 +8,9 @@ import time
 from comfy_api.latest import io
 
 from ....modules import log
+from ....modules.constants import ALLOWED_EXT
 from ....modules.convert.tensors import pil2tensor
+from ....modules.io import picker
 from ....modules.state import history
 from ....modules.util import sandbox
 
@@ -103,7 +105,7 @@ class ImageHistoryLoader(io.ComfyNode):
                 "folder the pack may no longer read stops the prompt with that folder named."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "image",
                     options=options(),
                     tooltip=(
@@ -111,7 +113,7 @@ class ImageHistoryLoader(io.ComfyNode):
                         "last as '.../<folder>/<file>', and read 'No History' until a load "
                         "or save node has run."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 io.Image.Output(
@@ -141,13 +143,15 @@ class ImageHistoryLoader(io.ComfyNode):
         """Reload the selected image, or a black one when it is no longer there.
 
         Raises:
-            PathNotAllowed: The recorded path lies outside every permitted read root.
+            PathNotAllowed: The recorded path lies outside every permitted read root, or a
+                wired path lies outside them or names no image file.
         """
         from PIL import Image
 
         import node_helpers
 
-        paths = contained_history(image)
+        wired = picker.wired_file(image, ALLOWED_EXT)
+        paths = {image: str(wired)} if wired is not None else contained_history(image)
         if image in paths and os.path.exists(paths[image]):
             loaded = node_helpers.pillow(Image.open, paths[image])
             return io.NodeOutput(

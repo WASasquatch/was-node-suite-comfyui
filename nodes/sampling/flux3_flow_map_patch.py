@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules.io import picker
 from ...modules.model import flux3_flow_map
 
 #: The distilled checkpoint the menu starts on, where the folder holds it.
@@ -47,7 +48,7 @@ class Flux3FlowMapPatch(io.ComfyNode):
                         "flux3_image_klein_distill_r256, r64, r32 or r16."
                     ),
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "checkpoint",
                     options=options,
                     default=default,
@@ -56,7 +57,7 @@ class Flux3FlowMapPatch(io.ComfyNode):
                         "flux3_image_klein_sd_bf16 or flux3_image_klein_sd_int8_convrot. Both hold "
                         "the same bf16 branch. A file with no _sd_ holds none."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.Model.Output(
@@ -71,5 +72,10 @@ class Flux3FlowMapPatch(io.ComfyNode):
 
     @classmethod
     def execute(cls, model, checkpoint) -> io.NodeOutput:
-        """Attach the branch read from ``checkpoint`` to a clone of ``model``."""
+        """Attach the branch read from ``checkpoint`` to a clone of ``model``.
+
+        Raises:
+            PathNotAllowed: A wired path lies outside the diffusion_models folders.
+        """
+        checkpoint = picker.model_name(checkpoint, (flux3_flow_map.FOLDER,))
         return io.NodeOutput(flux3_flow_map.attach(model, checkpoint))

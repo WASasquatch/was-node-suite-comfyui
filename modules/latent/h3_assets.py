@@ -179,6 +179,28 @@ def past_segment(assets: list[Asset], count: int) -> list[Asset]:
     return [asset for asset in assets if int(asset.segment) > int(count)]
 
 
+def renumbered(assets: list[Asset], numbers: list[int]) -> list[Asset]:
+    """The assets of the segments that run, numbered as those segments count.
+
+    Args:
+        assets: Every asset of the chain, each segment counted among every row carrying a
+            prompt.
+        numbers: Each running segment's number in that count, in order.
+
+    Returns:
+        The shared assets and those on a running segment, renumbered from 1; an asset on a
+        switched-off segment is left out.
+    """
+    places = {int(number): place for place, number in enumerate(numbers, start=1)}
+    kept = []
+    for asset in assets:
+        if int(asset.segment) == EVERY_SEGMENT:
+            kept.append(asset)
+        elif int(asset.segment) in places:
+            kept.append(asset._replace(segment=places[int(asset.segment)]))
+    return kept
+
+
 def guide_length(count: int) -> int:
     """Frames a pinned clip covers, one for a still.
 

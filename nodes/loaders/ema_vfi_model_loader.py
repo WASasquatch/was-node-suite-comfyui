@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import EMA_VFI_MODEL
+from ...modules.io import picker
 from ...modules.model import frame_interpolation
 
 #: Shown in the checkpoint list when the model folder holds none, so the widget has
@@ -40,16 +41,15 @@ class EMAVFIModelLoader(io.ComfyNode):
                 "list."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "checkpoint",
                     options=found or [NO_CHECKPOINT],
                     tooltip=(
-                        "Which EMA-VFI weights to build. 'small' files = faster, less "
-                        "accurate; '_t' files = can land anywhere between two frames, needed "
-                        "for a multiplier above 2. A name not on disk is fetched on the "
-                        "first run that needs it."
+                        "EMA-VFI weights: 'small' = faster, less accurate; '_t' = any point "
+                        "between two frames, needed above a multiplier of 2. Fetched on first "
+                        "use."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 EMA_VFI_MODEL.Output(
@@ -78,5 +78,6 @@ class EMAVFIModelLoader(io.ComfyNode):
                 f"{frame_interpolation.DOWNLOAD_PAGE} into ComfyUI/models/EMA-VFI. Either "
                 "way, restart ComfyUI so the list is rebuilt."
             )
+        checkpoint = picker.model_name(checkpoint, (frame_interpolation.FOLDER_KEY,))
         built = frame_interpolation.backend(checkpoint)
         return io.NodeOutput(frame_interpolation.Network(backend=built, name=checkpoint))

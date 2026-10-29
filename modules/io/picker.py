@@ -14,8 +14,9 @@ from .. import log
 from ..util import file_listing, sandbox
 
 __all__ = [
-    "FILE_HINT", "FOLDER_HINT", "INPUT_TAG", "MAX_FOLDERS", "ROOTS", "folder_label", "folders",
-    "labels", "path_input", "resolve", "resolve_folder",
+    "FILE_HINT", "FOLDER_HINT", "INPUT_TAG", "MAX_FOLDERS", "MODEL_HINT", "ROOTS", "folder_label",
+    "folders", "labels", "model_name", "path_input", "resolve", "resolve_folder", "wired_file",
+    "written_path",
 ]
 
 logger = log.get_logger("io.picker")
@@ -34,6 +35,13 @@ MAX_FOLDERS = 2000
 #: What a menu's tooltip says about the path it also takes as wired text.
 FILE_HINT = "A wired path, such as `E:\\images\\cat.png`, works too."
 FOLDER_HINT = "A wired path, such as `E:\\images`, works too."
+MODEL_HINT = (
+    "A wired name, or a full path inside that model's folders such as "
+    "`E:\\models\\loras\\style.safetensors`, works too."
+)
+
+#: Longest a refused path is repeated in an error, in characters.
+SHOWN_LENGTH = 240
 
 #: Serializes the folder walk and its cache, which is read from ComfyUI's server thread for
 #: an ``/object_info`` request and from the prompt thread when a node builds its schema.
@@ -108,22 +116,143 @@ def folders(extra=()) -> list[str]:
         return offered
 
 
-def path_input(combo, folder: bool = False):
-    """A file or folder menu that also takes a path wired in as text.
+def path_input(combo, folder: bool = False, model: bool = False):
+    """A file, folder or model menu that also takes a path wired in as text.
 
     Args:
-        combo: The ``io.Combo.Input`` the menu is; its tooltip gains :data:`FILE_HINT` or
-            :data:`FOLDER_HINT`.
+        combo: The ``io.Combo.Input`` the menu is; its tooltip gains :data:`FILE_HINT`,
+            :data:`FOLDER_HINT` or :data:`MODEL_HINT`.
         folder: True for a folder menu.
+        model: True for a menu listing a ComfyUI model folder.
 
     Returns:
         An ``io.MultiType.Input`` drawing the menu and accepting a STRING link.
     """
     from comfy_api.latest import io
 
-    hint = FOLDER_HINT if folder else FILE_HINT
+    hint = MODEL_HINT if model else FOLDER_HINT if folder else FILE_HINT
     combo.tooltip = f"{combo.tooltip} {hint}" if combo.tooltip else hint
     return io.MultiType.Input(combo, [io.String])
+
+
+def written_path(value) -> str | None:
+    """Text wired into a model or library menu, when it is a full path rather than a name.
+
+    Args:
+        value: The widget's value or the wired text, quotes and space around it ignored.
+
+    Returns:
+        The path as written, or ``None`` for empty text, a label and any relative name, so
+        ``H3/enhancer.safetensors`` stays a name the menu offers.
+    """
+    text = file_listing.path_text(value)
+    if text is None or not os.path.isabs(text):
+        return None
+    return text
+
+
+def model_name(value, kinds, folder: bool = False) -> str:
+    """The name a model menu lists a wired path under, or the value itself when it is a name.
+
+    Args:
+        value: A name the menu offered, or a full path wired in as text.
+        kinds: ComfyUI model folder names the path may lie in, such as ``("loras",)``.
+        folder: True for a menu listing model directories rather than files.
+
+    Returns:
+        The path below the first folder of those kinds holding it, as the menu names it, so
+        the loader finds it the way it finds a picked name.
+
+    Raises:
+        PathNotAllowed: The path names another machine, names no model of those kinds inside
+            their folders, or is hidden behind a model of the same name in an earlier folder.
+    """
+    chosen = str(value or "").strip()
+    written = written_path(chosen)
+    if written is None:
+        return chosen
+    kinds = tuple(kinds)
+    if sandbox.names_another_host(written):
+        raise sandbox.PathNotAllowed(f"`{_shown(written)}` names another machine, which no node reads.")
+    import folder_paths
+
+    target = Path(os.path.realpath(written))
+    for kind in kinds:
+        if kind not in folder_paths.folder_names_and_paths:
+            continue
+        suffixes = {str(suffix).lower() for suffix in folder_paths.folder_names_and_paths[kind][1]}
+        if not folder and suffixes and target.suffix.lower() not in suffixes:
+            continue
+        folders = folder_paths.get_folder_paths(kind)
+        for place, root in enumerate(folders):
+            base = Path(os.path.realpath(root))
+            if base == target or not sandbox.contains(base, target):
+                continue
+            if not (target.is_dir() if folder else target.is_file()):
+                continue
+            name = os.path.relpath(target, base)
+            if folder:
+                earlier = [Path(os.path.realpath(os.path.join(other, name))) for other in folders[:place]]
+                if not any(path.is_dir() and path != target for path in earlier):
+                    return name
+            else:
+                found = folder_paths.get_full_path(kind, name)
+                if found and sandbox.contains(Path(os.path.realpath(found)), target):
+                    return name
+            raise sandbox.PathNotAllowed(
+                f"`{_shown(written)}` is listed as `{name}`, and a {kind} model of that name in "
+                f"an earlier folder is the one that loads. Rename one of the two"
+            )
+    noun = "folder" if folder else "file"
+    raise sandbox.PathNotAllowed(
+        f"`{_shown(written)}` is not a {' or '.join(kinds)} model {noun} inside the folders "
+        f"ComfyUI lists for it. Move it into one, or add its folder under `{kinds[0] if kinds else 'models'}` "
+        f"in extra_model_paths.yaml"
+    )
+
+
+def wired_file(value, extensions, roots=()) -> Path | None:
+    """The file a full path wired into a library or history menu names.
+
+    Args:
+        value: The widget's value or the wired text; a name the menu offered is no path.
+        extensions: Suffixes the file must carry, such as ``(".cube",)``.
+        roots: The library's own folders, read alongside the approved read roots.
+
+    Returns:
+        The absolute file, or ``None`` when the value is a name rather than a full path.
+
+    Raises:
+        PathNotAllowed: The path names another machine, lies outside the library's folders
+            and every approved read root, or names no file of those kinds.
+    """
+    written = written_path(value)
+    if written is None:
+        return None
+    if sandbox.names_another_host(written):
+        raise sandbox.PathNotAllowed(f"`{_shown(written)}` names another machine, which no node reads.")
+    wanted = tuple({str(suffix).lower() if str(suffix).startswith(".") else f".{str(suffix).lower()}"
+                    for suffix in extensions})
+    real = Path(os.path.realpath(written))
+    for root in roots:
+        if sandbox.contains(Path(os.path.realpath(root)), real):
+            if real.is_file() and (not wanted or real.name.lower().endswith(wanted)):
+                return real
+            break
+    entry = file_listing.typed(written, extensions, ROOTS)
+    if entry is not None:
+        return Path(entry.path)
+    kinds = ", ".join(wanted) if wanted else "readable"
+    raise sandbox.PathNotAllowed(
+        f"`{_shown(written)}` is not a {kinds} file in this menu's own folders, the input, output "
+        f"or temp folders, or a folder paths.allow_read names. Move it into one of them"
+    )
+
+
+def _shown(value) -> str:
+    """A refused path as given, printable and cut to :data:`SHOWN_LENGTH` characters."""
+    text = "".join(character if character.isprintable() else "?" for character in str(value).strip())
+    return text if len(text) <= SHOWN_LENGTH else f"{text[:SHOWN_LENGTH]}..."
 
 
 def resolve_folder(label: str, extra=()) -> Path | None:

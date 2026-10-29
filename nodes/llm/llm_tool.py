@@ -7,6 +7,7 @@ from comfy_api.latest import io
 from ...modules import log
 from ...modules.compat.types import LLM_TOOLS
 from ...modules.interface import run_result
+from ...modules.io import picker
 from ...modules.llm import wires
 from ...modules.llm import tools as agent_tools
 
@@ -94,10 +95,10 @@ class WASLLMTool(io.ComfyNode):
             io.DynamicCombo.Option(
                 key="document reader",
                 inputs=[
-                    io.Combo.Input(
+                    picker.path_input(io.Combo.Input(
                         "document", options=agent_tools.document_options(),
                         tooltip="The one file the model may read: text, Markdown, HTML, PDF, Word, OpenDocument, EPUB, PowerPoint or code in ComfyUI's input, output or temp folders, tagged `[input]`, `[output]` or `[temp]`.",
-                    ),
+                    )),
                     io.String.Input(
                         "name", default="read_document",
                         tooltip="The tool's name as the model sees it, such as `read_manual`. Give each document reader on one agent its own name.",

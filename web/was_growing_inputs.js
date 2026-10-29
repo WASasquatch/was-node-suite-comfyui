@@ -81,18 +81,45 @@ const POWER_LORA_ROWS = {
 };
 
 /**
+ * Whether a row of MiniMax H3 Conditioning becomes a segment: it holds a prompt and is switched on.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} row - Row number, from 1.
+ * @returns {boolean} True where the row runs.
+ */
+function h3RowRuns(node, row) {
+  const prompt = widgetValue(node, `prompt_${row}`);
+  return typeof prompt === "string" && prompt.trim() !== "" && widgetValue(node, `enabled_${row}`) !== false;
+}
+
+/**
+ * The first row of MiniMax H3 Conditioning that runs, which opens the video.
+ *
+ * @param {object} node - The node to read.
+ * @returns {number} Row number from 1, or 1 where none runs.
+ */
+function h3OpeningRow(node) {
+  for (let row = 1; row <= 24; row += 1) {
+    if (h3RowRuns(node, row)) return row;
+  }
+  return 1;
+}
+
+/**
  * Text of one segment's header on MiniMax H3 Conditioning.
  *
  * @param {object} node - The node to read.
  * @param {number} row - Segment number, from 1.
- * @returns {string} As `Segment 2 · 7.0 s · carry` or `Segment 3 · 8.0 s · cut · footer only`.
+ * @returns {string} As `Segment 2 · 7.0 s · carry`, `Segment 3 · 8.0 s · cut · footer only`
+ *   or `Segment 4 · off · 7.0 s · carry`.
  */
 function h3SegmentTitle(node, row) {
   const parts = [`Segment ${row}`];
+  if (widgetValue(node, `enabled_${row}`) === false) parts.push("off");
   const seconds = Number(widgetValue(node, `duration_${row}`));
   if (Number.isFinite(seconds)) parts.push(`${seconds.toFixed(1)} s`);
   const continuity = widgetValue(node, `continuity_${row}`);
-  if (row === 1) parts.push("opening");
+  if (row === h3OpeningRow(node)) parts.push("opening");
   else if (continuity) parts.push(String(continuity));
   const source = Number(widgetValue(node, `source_${row}`));
   if (row > 1 && Number.isFinite(source) && source !== -1 && source !== 0) {
@@ -118,12 +145,12 @@ function h3SegmentTitle(node, row) {
  */
 function h3SegmentTint(node, row) {
   const overlap = Number(widgetValue(node, `overlap_${row}`));
-  return sceneTint(row - 1, widgetValue(node, `continuity_${row}`), Number.isFinite(overlap) ? overlap : 0,
-    String(widgetValue(node, `sound_${row}`) ?? "auto"));
+  return sceneTint(row === h3OpeningRow(node) ? 0 : Math.max(1, row - 1), widgetValue(node, `continuity_${row}`),
+    Number.isFinite(overlap) ? overlap : 0, String(widgetValue(node, `sound_${row}`) ?? "auto"));
 }
 
-// A prompt, a frame count, an overlap, a continuity, a source, the shared text it takes and the
-// model it samples with, to a row on MiniMax H3 Conditioning.
+// A prompt, a frame count, an overlap, a continuity, a source, the shared text it takes, the
+// model it samples with and an on switch, to a row on MiniMax H3 Conditioning.
 // `decidesAt` names the prompt as the widget that says whether a row is in use.
 const H3_PROMPT_ROWS = {
   groups: Array.from({ length: 24 }, (unused, index) => [
@@ -137,6 +164,7 @@ const H3_PROMPT_ROWS = {
     `strength_${index + 1}`,
     `sound_${index + 1}`,
     `seed_${index + 1}`,
+    `enabled_${index + 1}`,
   ]),
   minVisible: 2,
   decidesAt: 0,
@@ -151,6 +179,7 @@ const H3_PROMPT_ROWS = {
     title: h3SegmentTitle,
     tint: h3SegmentTint,
     noun: "Segment",
+    switchName: (row) => `enabled_${row}`,
   },
 };
 

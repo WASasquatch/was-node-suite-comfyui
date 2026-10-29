@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.interface import run_result
+from ...modules.io import picker
 from ...modules.model import language_model
 
 NODE_NAME = "Language Model Loader"
@@ -38,7 +39,7 @@ class WASLanguageModelLoader(io.ComfyNode):
                 "shows the model, its size and how its weights are stored."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model_name",
                     options=files or [NO_FILE],
                     default=likely,
@@ -47,7 +48,7 @@ class WASLanguageModelLoader(io.ComfyNode):
                         "qwen3_32b_w4a8.safetensors or qwen_3_4b.safetensors. Qwen3 14B and 32B "
                         "load in their Hugging Face layout, plain or quantized."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.Clip.Output(
@@ -65,7 +66,9 @@ class WASLanguageModelLoader(io.ComfyNode):
 
         Raises:
             ValueError: No file is chosen, or the file holds no model that writes text.
+            PathNotAllowed: A wired path lies outside the text_encoders folders.
         """
+        model_name = picker.model_name(model_name, (language_model.FOLDER,))
         if not model_name or model_name == NO_FILE:
             raise ValueError(
                 f"{NODE_NAME} has no file to load. Put a language model, such as "

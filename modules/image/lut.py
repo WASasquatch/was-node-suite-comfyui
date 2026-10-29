@@ -16,6 +16,7 @@ from .. import log
 
 __all__ = [
     "BUILTIN_PRESETS",
+    "CUBE_SUFFIX",
     "MAX_LUT_EDGE",
     "MIN_LUT_EDGE",
     "PRESET_DEFAULTS",
@@ -830,5 +831,7 @@ def find_cube(name: str) -> Path:
     for path in cube_files():
         if path.name == name:
             return path
-    searched = ", ".join(str(directory) for directory in search_directories()) or "no directory"
-    raise ValueError(f"there is no LUT file named {name!r}; searched {searched}")
+    raise ValueError(
+        f"there is no LUT file named {name!r} in a models/LUT folder or the pack's luts folder "
+        f"(paths.luts in config.yaml). Put the file there, or pick another look"
+    )

@@ -43,6 +43,13 @@ const DECLARED_WIDGETS = new Set(["app", "overrides"]);
 const UNBOUND_INPUT = "The workflow exposes no input for this slot; any type.";
 const UNBOUND_OUTPUT = "The workflow presents no result for this slot; any type.";
 
+// Hints for a socket while a link names the workflow, which is read only when the node runs.
+const WIRED_INPUT = "Feeds the wired workflow's exposed input in this place; any type.";
+const WIRED_OUTPUT = "The wired workflow's result in this place; any type.";
+
+// Whether the `app` input was filled by a link at the node's last rebuild.
+const LINKED = "__was_app_linked";
+
 /**
  * The widget on a node, by name.
  *
@@ -52,6 +59,17 @@ const UNBOUND_OUTPUT = "The workflow presents no result for this slot; any type.
  */
 function widgetNamed(node, name) {
   return (node.widgets ?? []).find((widget) => widget.name === name);
+}
+
+/**
+ * Whether a link fills the node's `app` input in place of its menu.
+ *
+ * @param {object} node - The App Workflow node.
+ * @returns {boolean} True while a link is attached.
+ */
+function appLinked(node) {
+  const slot = (node.inputs ?? []).find((each) => each?.name === "app");
+  return slot?.link !== null && slot?.link !== undefined;
 }
 
 /**
@@ -276,9 +294,12 @@ function watchChoice(node, chooser) {
  * @returns {Promise<void>} Resolved once the widgets are in place.
  */
 async function rebuild(node, chosen) {
-  const answer = await fetchExposure(chosen);
+  const linked = appLinked(node);
+  node[LINKED] = linked;
+  // A wired workflow is named only when the node runs, so the menu's choice offers nothing.
+  const answer = linked ? null : await fetchExposure(chosen);
   // A later choice may have overtaken this one while its answer was on the way.
-  if (widgetNamed(node, "app")?.value !== chosen) return;
+  if (widgetNamed(node, "app")?.value !== chosen || appLinked(node) !== linked) return;
   const saved = node[OWNED + "_values"] ?? {};
   delete node[OWNED + "_values"];
   const joined = joinedWidgets(node);
@@ -293,7 +314,7 @@ async function rebuild(node, chosen) {
     // A value the node was loaded with wins over the one the workflow saved.
     if (widget && saved[entry.label] !== undefined) widget.value = saved[entry.label];
   }
-  mutateSockets(node, answer);
+  mutateSockets(node, answer, linked);
   rejoinWidgets(node, joined);
   for (const widget of node.widgets ?? []) {
     if (widget[OWNED]) recordValue(node, widget.name, widget.value);
@@ -476,9 +497,10 @@ function restoreSlots(node) {
  *
  * @param {object} node - The App Workflow node.
  * @param {object|null} answer - The exposure answer, or null for no workflow.
+ * @param {boolean} [wired] - A link names the workflow, so every declared slot is kept.
  * @returns {void}
  */
-function mutateSockets(node, answer) {
+function mutateSockets(node, answer, wired = false) {
   restoreSlots(node);
   // Only an input a wire stands in for is given a socket; the rest are widgets.
   const inputs = (answer?.inputs ?? []).filter((entry) => entry.slot);
@@ -491,7 +513,7 @@ function mutateSockets(node, answer) {
     slot.label = entry ? entry.label : undefined;
     // The declared type stays `*`, so the socket only narrows what the canvas will join.
     slot.type = entry?.wire ?? (entry?.kind && entry.kind !== "COMBO" ? entry.kind : "*");
-    slot.tooltip = entry ? inputHint(entry) : UNBOUND_INPUT;
+    slot.tooltip = entry ? inputHint(entry) : (wired ? WIRED_INPUT : UNBOUND_INPUT);
   }
 
   const results = answer?.outputs ?? [];
@@ -506,9 +528,9 @@ function mutateSockets(node, answer) {
       ? `${entry.tooltip ? `${entry.tooltip} ` : ""}${entry.name} from `
         + `${entry.node ?? "the workflow"}, which ${entry.presented_by ?? "it"} presents; `
         + `${entry.type ?? "any type"}.`
-      : UNBOUND_OUTPUT;
+      : (wired ? WIRED_OUTPUT : UNBOUND_OUTPUT);
   }
-  refreshSlots(node, inputs.length, results.length);
+  refreshSlots(node, wired ? Infinity : inputs.length, wired ? Infinity : results.length);
   describeSlots(node);
 }
 
@@ -582,6 +604,24 @@ app.registerExtension({
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to prepare the node:`, error);
       }
+      return result;
+    };
+
+    // A link joining or leaving `app` changes what the node can know before it runs. The
+    // check waits a tick, so a graph being restored is read once its links are all in.
+    const originalOnConnectionsChange = proto.onConnectionsChange;
+    proto.onConnectionsChange = function (...args) {
+      const result = originalOnConnectionsChange?.apply(this, args);
+      const node = this;
+      setTimeout(() => {
+        try {
+          if (!node[LOADING] && node.graph && appLinked(node) !== Boolean(node[LINKED])) {
+            node[STARTER]?.();
+          }
+        } catch (error) {
+          console.error(`[${EXT_NAME}] Failed to follow the app link:`, error);
+        }
+      }, 0);
       return result;
     };
 

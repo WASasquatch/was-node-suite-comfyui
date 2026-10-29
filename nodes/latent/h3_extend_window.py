@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import H3_PROMPTS
+from ...modules.interface import segment_preview
 from ...modules.latent import (
     h3_assets, h3_conditioning, h3_decode, h3_extend, h3_preview, h3_references, h3_refresh,
 )
@@ -268,6 +269,7 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                     tooltip="This segment's seed, for the noise the sampler draws, as `43`.",
                 ),
             ],
+            hidden=[io.Hidden.extra_pnginfo],
         )
 
     @classmethod
@@ -599,6 +601,22 @@ class ThreeH3ExtendWindow(io.ComfyNode):
                 h3_references.clip_items(fitted, sound is not None))
 
     @classmethod
+    def preview_owner(cls, entry) -> str | None:
+        """The key a segment's preview sheets are filed under, read from this run's workflow.
+
+        Args:
+            entry: The segment's bundle entry.
+
+        Returns:
+            The conditioning node's preview key in the workflow being run, its id where the
+            workflow carries none, or the owner the bundle was built with.
+        """
+        node = entry.get(h3_conditioning.OWNER_NODE_KEY)
+        if node is None:
+            return entry.get(h3_conditioning.OWNER_KEY)
+        return segment_preview.owner_of(node, getattr(cls.hidden, "extra_pnginfo", None))
+
+    @classmethod
     def bridged(cls, latent, positive, extension_frames, overlap_frames, audio_release,
                 named, model, vae=None, picture="cut", reference_sound=True, prompts=None,
                 pass_index=0, reencode=True, refresh_gain=h3_extend.SEGMENT_GAIN,
@@ -723,8 +741,9 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         window[h3_extend.WINDOW_KEY] = h3_extend.window_place(
             clip_rows, window, int(head), int(pass_index) <= 0, int(clip_audio.shape[-1]))
         if live_preview and prompts and 0 <= int(pass_index) < len(prompts):
-            owner = prompts[int(pass_index)].get(h3_conditioning.OWNER_KEY)
-            model = h3_preview.previewed(model, owner, int(pass_index), int(head))
+            model = h3_preview.previewed(
+                model, cls.preview_owner(prompts[int(pass_index)]),
+                h3_conditioning.segment_number(prompts, pass_index), int(head))
         own = h3_conditioning.seed_of(prompts, int(pass_index), int(seed))
         return io.NodeOutput(window, conditioned, head, report, model, own)
 
@@ -760,7 +779,7 @@ class ThreeH3ExtendWindow(io.ComfyNode):
         continuity = h3_extend.CONTINUITY_RENAMED.get(continuity, continuity)
         sound = h3_conditioning.sound_of(prompts, pass_index) if prompts is not None else "auto"
         picture, bridging, fresh_sound = h3_extend.resolved(continuity, sound)
-        named = f"segment {int(pass_index) + 1}"
+        named = h3_conditioning.segment_label(prompts, pass_index)
         following = int(pass_index) + 1
         if prompts is not None and following < len(prompts) and h3_assets.cuts_into(
                 prompts[following].get("continuity", h3_conditioning.DEFAULT_CONTINUITY),

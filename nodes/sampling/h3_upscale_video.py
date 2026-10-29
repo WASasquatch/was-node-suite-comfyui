@@ -7,9 +7,9 @@ from comfy_api.latest import io
 
 from ...modules import log
 from ...modules.image import color_fix
-from ...modules.io import rooted
+from ...modules.io import picker, rooted
 from ...modules.latent import h3_upscale
-from ...modules.model import h3_latent_upscaler
+from ...modules.model import h3_latent_upscaler, model_directories
 
 logger = log.get_logger("nodes.h3_upscale_video")
 
@@ -136,7 +136,7 @@ class H3UpscaleVideo(io.ComfyNode):
                     tooltip="What to avoid, read only when cfg is above 1.",
                 ),
                 io.Vae.Input("vae", tooltip="The H3 video VAE, for reading and writing the frames."),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "upscale_model",
                     options=_upscale_models(),
                     tooltip=(
@@ -144,7 +144,7 @@ class H3UpscaleVideo(io.ComfyNode):
                         "`minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors` is fetched on "
                         "first use with features.network on. `bicubic` resizes without one."
                     ),
-                ),
+                ), model=True),
                 io.Float.Input(
                     "scale",
                     default=2.0, min=1.0, max=4.0, step=0.05,
@@ -263,7 +263,8 @@ class H3UpscaleVideo(io.ComfyNode):
         Raises:
             ValueError: The model is not MiniMax H3, or the clip holds no frames.
             ModelUnavailable: The learned upscaler is not on disk and could not be fetched.
-            PathNotAllowed: root and name settle outside every permitted write folder.
+            PathNotAllowed: root and name settle outside every permitted write folder, or a
+                wired upscale_model path lies outside the latent upscaler folders.
             MemoryError: The source fits neither in memory nor on a scratch drive.
         """
         from ...modules.latent import h3_extend
@@ -276,6 +277,8 @@ class H3UpscaleVideo(io.ComfyNode):
                 f"{NODE_NAME} needs a MiniMax H3 model. Wire the H3 diffusion model, after any "
                 "LoRA, into model."
             )
+        model_directories(h3_latent_upscaler.FOLDER)
+        upscale_model = picker.model_name(upscale_model, (h3_latent_upscaler.FOLDER,))
         mode = mode or {"mode": DEFAULT_MODE}
         chosen = mode.get("mode", DEFAULT_MODE)
         if chosen == h3_upscale.MANUAL:

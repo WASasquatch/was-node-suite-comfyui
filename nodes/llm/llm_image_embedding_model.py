@@ -6,7 +6,9 @@ from comfy_api.latest import io
 
 from ...modules.compat.types import LLM_EMBEDDING
 from ...modules.interface import run_result
-from ...modules.llm import pictures, runtime
+from ...modules.io import picker
+from ...modules.llm import embeddings, pictures, runtime
+from ...modules.model import model_directories
 
 REQUIRES = "llm"
 
@@ -39,14 +41,14 @@ class LLMImageEmbeddingModel(io.ComfyNode):
                 "Index. The panel shows the vector length and device."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model", options=pictures.choices(),
                     tooltip=(
                         "A CLIP or SigLIP folder in models/LLM, or a suggested model downloaded there on "
                         f"first use with features.network on. `{pictures.SUGGESTED[0]}` = small and quick; "
                         f"`{pictures.SUGGESTED[1]}` = more exact."
                     ),
-                ),
+                ), folder=True, model=True),
                 io.Int.Input(
                     "batch_size", default=16, min=1, max=256,
                     tooltip="Pictures or texts embedded together: 16 = the usual; lower it if VRAM runs out.",
@@ -65,12 +67,17 @@ class LLMImageEmbeddingModel(io.ComfyNode):
         """Load the model and measure its vectors.
 
         Args:
-            model: A menu entry.
+            model: A menu entry, or a full path to a model folder wired in as text.
             batch_size: Pictures or texts embedded together.
 
         Returns:
             The picture embedding model.
+
+        Raises:
+            PathNotAllowed: A wired path lies outside the LLM folders.
         """
+        model_directories(embeddings.FOLDER)
+        model = picker.model_name(model, (embeddings.FOLDER,), folder=True).replace("\\", "/")
         with runtime.guarded():
             built, details = pictures.picture_embedding(model, int(batch_size), NODE)
         run_result.publish(

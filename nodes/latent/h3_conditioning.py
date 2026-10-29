@@ -135,6 +135,11 @@ SEGMENT_PROMPT_HINT = (
     "`<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears."
 )
 
+SEGMENT_ENABLED_HINT = (
+    "`true` = this segment runs; `false` = it is skipped like a blank row, and the segments "
+    "left keep their numbers, seeds and assets, so a few can be run on their own."
+)
+
 SEGMENT_DURATION_HINT = (
     "Seconds this segment runs, carried frames included, matching its `duration_seconds` "
     "line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to "
@@ -326,6 +331,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_1", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_1", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_2", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -369,6 +378,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_2", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_2", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_3", multiline=True, dynamic_prompts=True,
@@ -414,6 +427,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_3", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_3", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_4", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -457,6 +474,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_4", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_4", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_5", multiline=True, dynamic_prompts=True,
@@ -502,6 +523,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_5", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_5", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_6", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -545,6 +570,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_6", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_6", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_7", multiline=True, dynamic_prompts=True,
@@ -590,6 +619,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_7", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_7", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_8", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -633,6 +666,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_8", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_8", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_9", multiline=True, dynamic_prompts=True,
@@ -678,6 +715,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_9", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_9", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_10", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -721,6 +762,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_10", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_10", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_11", multiline=True, dynamic_prompts=True,
@@ -766,6 +811,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_11", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_11", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_12", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -809,6 +858,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_12", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_12", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_13", multiline=True, dynamic_prompts=True,
@@ -854,6 +907,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_13", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_13", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_14", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -897,6 +954,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_14", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_14", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_15", multiline=True, dynamic_prompts=True,
@@ -942,6 +1003,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_15", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_15", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_16", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -985,6 +1050,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_16", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_16", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_17", multiline=True, dynamic_prompts=True,
@@ -1030,6 +1099,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_17", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_17", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_18", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -1073,6 +1146,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_18", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_18", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_19", multiline=True, dynamic_prompts=True,
@@ -1118,6 +1195,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_19", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_19", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_20", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -1161,6 +1242,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_20", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_20", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_21", multiline=True, dynamic_prompts=True,
@@ -1206,6 +1291,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_21", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_21", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_22", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -1249,6 +1338,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_22", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_22", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.String.Input(
                     "prompt_23", multiline=True, dynamic_prompts=True,
@@ -1294,6 +1387,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     "seed_23", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
                 ),
+                io.Boolean.Input(
+                    "enabled_23", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
+                ),
                 io.String.Input(
                     "prompt_24", multiline=True, dynamic_prompts=True,
                     default="", optional=True, tooltip=SEGMENT_PROMPT_HINT,
@@ -1337,6 +1434,10 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 io.Int.Input(
                     "seed_24", default=0, min=0, max=0xFFFFFFFF,
                     optional=True, control_after_generate=False, tooltip=SEGMENT_SEED_HINT,
+                ),
+                io.Boolean.Input(
+                    "enabled_24", default=True, optional=True,
+                    tooltip=SEGMENT_ENABLED_HINT,
                 ),
                 io.Model.Input("model_fl2va", optional=True, tooltip=MODEL_FL2VA_HINT),
                 io.Model.Input("model_ref2va", optional=True, tooltip=MODEL_REF2VA_HINT),
@@ -1433,6 +1534,13 @@ class MiniMaxH3Conditioning(io.ComfyNode):
         import node_helpers
 
         filled = h3_conditioning.filled_rows(rows)
+        numbers = h3_conditioning.segment_numbers(rows)
+        off = h3_conditioning.switched_off(rows)
+        if not filled and off:
+            raise ValueError(
+                f"every segment of MiniMax H3 Conditioning is switched off "
+                f"({', '.join(str(number) for number in off)}). Switch on the segments to run"
+            )
         if not filled:
             raise ValueError(
                 "MiniMax H3 Conditioning has no prompt. Write what the first segment shows "
@@ -1443,18 +1551,23 @@ class MiniMaxH3Conditioning(io.ComfyNode):
         holds = h3_conditioning.strengths_of(rows)
         sounds = h3_conditioning.sounds_of(rows)
         seeds = h3_conditioning.seeds_of(rows)
+        sources = [h3_conditioning.kept_source(source, index, numbers) if off else source
+                   for index, source in enumerate(h3_conditioning.sources_of(rows))]
         encodings = []
         assets = h3_assets.collect(assets, "assets on MiniMax H3 Conditioning")
-        stray = h3_assets.past_segment(assets, len(filled))
+        prompted = len(filled) + len(off)
+        stray = h3_assets.past_segment(assets, prompted)
         if stray:
             named = ", ".join(f"{asset.name} (segment {asset.segment})" for asset in stray)
             raise ValueError(
-                f"{len(stray)} asset(s) name a segment past the {len(filled)} carrying a "
+                f"{len(stray)} asset(s) name a segment past the {prompted} carrying a "
                 f"prompt: {named}. Write that segment's prompt, or set the asset's segment "
                 f"to one that has one"
             )
+        if off:
+            assets = h3_assets.renumbered(assets, numbers)
         mismatched = [
-            f"row {index + 1} states {stated:g}s and its duration is "
+            f"segment {numbers[index]} states {stated:g}s and its duration is "
             f"{h3_conditioning.duration_of(count):g}s"
             for index, (text, count, _, _) in enumerate(filled)
             if (stated := h3_conditioning.stated_seconds(text)) is not None
@@ -1523,7 +1636,7 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             parts = (shared[0] + pictures_, shared[1] + videos_, shared[2] + sounds_)
             if not any(parts):
                 return None
-            return h3_references.assemble(*parts, named=f"segment {index + 1}")
+            return h3_references.assemble(*parts, named=f"segment {numbers[index]}")
 
         notes = []
         pinned_count = 0
@@ -1539,12 +1652,12 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 )
             segments, drawn = cls.batched(
                 clip, vae, images, width, height, filled, node_helpers, references_for,
-                choices, model_fl2va, model_ref2va, encodings, progress,
+                choices, model_fl2va, model_ref2va, encodings, progress, numbers,
             )
             latent, frames = segments[0][3], segments[0][1]
             pinned_count = len(drawn)
             for index, segment in enumerate(segments):
-                notes.append(cls.describe(index, segment, [], references_for(index)))
+                notes.append(cls.describe(numbers[index] - 1, segment, [], references_for(index)))
         else:
             segments = []
             wanted = h3_conditioning.MODE_IMAGES[mode]
@@ -1598,33 +1711,37 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                            choices[index], wired)
                 segments.append(segment)
                 pinned_count += len(blocks)
-                notes.append(cls.describe(index, segment, lines, references))
+                notes.append(cls.describe(numbers[index] - 1, segment, lines, references))
                 progress.update(1)
             latent, frames = segments[0][3], segments[0][1]
         segments = [(h3_conditioning.held(segment[0], hold),) + tuple(segment[1:])
                     for segment, hold in zip(segments, holds)]
         for index, hold in enumerate(holds):
             if hold < 1.0 and index < len(notes):
-                notes[index] = (f"{notes[index]}; " if notes[index] else f"segment {index + 1}: ") + f"hold {hold:.2f}"
+                notes[index] = ((f"{notes[index]}; " if notes[index] else f"segment {numbers[index]}: ")
+                                + f"hold {hold:.2f}")
         prompts = h3_conditioning.bundle(segments)
         for entry, encoding in zip(prompts, encodings):
             entry[h3_conditioning.ENCODING_KEY] = encoding
         for index, (entry, sound, seed) in enumerate(zip(prompts, sounds, seeds)):
             entry["sound"] = sound
             entry["seed"] = seed
+            entry[h3_conditioning.NUMBER_KEY] = numbers[index] - 1
             entry[h3_assets.MOMENTS_KEY] = h3_assets.moments_for(assets, index)
             entry[h3_conditioning.LOOP_KEY] = bool(loop) and index == len(prompts) - 1 and index > 0
         owner = segment_preview.owner_of(cls.hidden.unique_id, cls.hidden.extra_pnginfo)
-        for entry, source in zip(prompts, h3_conditioning.sources_of(rows)):
+        for entry, source in zip(prompts, sources):
             entry["source"] = source
             entry[h3_conditioning.OWNER_KEY] = owner
+            entry[h3_conditioning.OWNER_NODE_KEY] = (
+                None if cls.hidden.unique_id is None else str(cls.hidden.unique_id))
 
         total = sum(segment[1] for segment in segments)
         # A cut keeps the clip before it on a whole clip, so those frames leave the earlier scene.
         trims = [
             h3_extend.CLIP_LEAD
             if h3_assets.cuts_into(segment[4], segment[2], source, index) else 0
-            for index, (segment, source) in enumerate(zip(segments, h3_conditioning.sources_of(rows)))
+            for index, (segment, source) in enumerate(zip(segments, sources))
         ] + [0]
         on_screen = [segment[1] + trims[index] - trims[index + 1] for index, segment in enumerate(segments)]
         shape = ", ".join(
@@ -1639,6 +1756,9 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             + f", {h3_conditioning.duration_of(total)}s ({total} frames) in total"
             + "".join(f"; {note}" for note in notes if note)
         )
+        if off:
+            report += (f"; segment(s) {', '.join(str(number) for number in off)} switched off, "
+                       f"running {', '.join(str(number) for number in numbers)}")
         if named:
             report += "; names " + ", ".join(
                 f"{name} = {' or '.join(tags)}" for name, tags in named.items())
@@ -1711,7 +1831,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
 
     @classmethod
     def batched(cls, clip, vae, images, width, height, filled, node_helpers, references_for,
-                choices, model_fl2va, model_ref2va, encodings=None, progress=None):
+                choices, model_fl2va, model_ref2va, encodings=None, progress=None,
+                numbers=None):
         """One segment per neighbouring pair of a batch, each pinned at both ends.
 
         Args:
@@ -1728,6 +1849,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             model_ref2va: The wired ref2va model, or ``None``.
             encodings: A list each segment's :func:`h3_conditioning.encoding_of` is added to.
             progress: A ComfyUI ``ProgressBar`` advanced once per segment, or ``None``.
+            numbers: Each segment's number among every row carrying a prompt, picking
+                its pair of pictures; ``None`` numbers them in order.
 
         Returns:
             ``(segments, pictures)``, one segment per row and the prepared pictures.
@@ -1742,9 +1865,11 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                 "one batch, and Image Batch Advanced joins single images"
             )
         pictures = h3_conditioning.prepared(images, width, height, "cover")
-        if len(filled) > len(pictures) - 1:
+        places = [int(number) - 1 for number in numbers] if numbers else list(range(len(filled)))
+        last = max(places) + 1 if places else 0
+        if last > len(pictures) - 1:
             raise ValueError(
-                f"{len(filled)} prompt row(s) need {len(filled) + 1} pictures and "
+                f"{last} prompt row(s) need {last + 1} pictures and "
                 f"{len(pictures)} arrived. Add pictures, or clear the rows past segment "
                 f"{len(pictures) - 1}"
             )
@@ -1756,16 +1881,16 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             own, _ = h3_conditioning.empty_latent(width, height, length)
             references = references_for(index)
             conditioning = h3_conditioning.encode(
-                clip, text, [pictures[index], pictures[index + 1]], references
+                clip, text, [pictures[places[index]], pictures[places[index] + 1]], references
             )
             if encodings is not None:
                 encodings.append(h3_conditioning.encoding_of(
-                    clip, text, [pictures[index], pictures[index + 1]], references))
+                    clip, text, [pictures[places[index]], pictures[places[index] + 1]], references))
             conditioning = node_helpers.conditioning_set_values(
                 conditioning,
                 {"minimax_keyframes": [
-                    {"resolved_frame_index": 0, "latent": pinned[index]},
-                    {"resolved_frame_index": length - 1, "latent": pinned[index + 1],
+                    {"resolved_frame_index": 0, "latent": pinned[places[index]]},
+                    {"resolved_frame_index": length - 1, "latent": pinned[places[index] + 1],
                      h3_conditioning.CLOSING_KEY: True},
                 ]},
             )

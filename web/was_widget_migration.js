@@ -9,21 +9,25 @@ import { migrateWidgetValues } from "./interface/widget_migration.js";
 const EXT_NAME = "WASNodeSuite.WidgetMigration";
 
 // MiniMax H3 Conditioning's row widgets, in the order each row took them.
-const H3_ROW_FIELDS = ["prompt", "duration", "overlap", "continuity", "source", "header_footer", "model"];
+const H3_ROW_FIELDS = [
+  "prompt", "duration", "overlap", "continuity", "source", "header_footer", "model", "strength", "sound", "seed",
+];
 
 /**
  * One earlier MiniMax H3 Conditioning widget order.
  *
  * @param {number} fields - How many of each row's widgets the layout held.
- * @param {boolean} refSize - Whether the layout ends on `ref_image_size`.
+ * @param {boolean} refSize - Whether the layout holds `ref_image_size` after the rows.
+ * @param {boolean} [loop] - Whether the layout ends on `loop`.
  * @returns {string[]} The widget names, in saved order.
  */
-function h3Layout(fields, refSize) {
+function h3Layout(fields, refSize, loop = false) {
   return [
     "mode", "aspect_ratio", "megapixels", "width", "height", "prompt_header", "prompt_footer",
     ...Array.from({ length: 24 }, (unused, index) =>
       H3_ROW_FIELDS.slice(0, fields).map((field) => `${field}_${index + 1}`)).flat(),
     ...(refSize ? ["ref_image_size"] : []),
+    ...(loop ? ["loop"] : []),
   ];
 }
 
@@ -111,8 +115,8 @@ const V2_WIDGET_ORDER = {
   WASCNSModelPatch: ["mode", "strength", "bands", "slope", "start", "end"],
   "Text to Console": ["label"],
   // MiniMax H3 Conditioning gained a continuity menu on each row, after that row's overlap,
-  // then a source, a header and footer menu, a model menu, and then a hold, a sound and a seed.
-  // One earlier order per layout a save may hold.
+  // then a source, a header and footer menu, a model menu, then a hold, a sound and a seed, and
+  // then an on switch after each row's seed. One earlier order per layout a save may hold.
   WASMiniMaxH3Conditioning: [
     h3Layout(3, false),
     h3Layout(4, false),
@@ -120,6 +124,7 @@ const V2_WIDGET_ORDER = {
     h3Layout(5, true),
     h3Layout(6, true),
     h3Layout(7, true),
+    h3Layout(10, true, true),
   ],
 };
 

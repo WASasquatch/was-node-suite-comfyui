@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_MATERIAL, THREE_TEXTURE
+from ...modules.io import picker
 from ...modules.threejs import module_file
 from ...modules.threejs.spec import compact_deps, create_spec
 
@@ -48,7 +49,7 @@ class ThreeCustomMaterial(io.ComfyNode):
                 "no code travels inside a workflow."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "module",
                     options=options(),
                     tooltip=(
@@ -57,7 +58,7 @@ class ThreeCustomMaterial(io.ComfyNode):
                         "input, output and temp folders and in any folder under "
                         "paths.allow_read."
                     ),
-                ),
+                )),
                 THREE_TEXTURE.Input("texture1", optional=True, tooltip=TEXTURE_TOOLTIP),
                 THREE_TEXTURE.Input("texture2", optional=True, tooltip=TEXTURE_TOOLTIP),
                 THREE_TEXTURE.Input("texture3", optional=True, tooltip=TEXTURE_TOOLTIP),
@@ -81,6 +82,8 @@ class ThreeCustomMaterial(io.ComfyNode):
             PermissionError: ``threejs.allow_scripts`` is off.
             ValueError: No module is chosen, the module builds something other than a
                 material, or it declares more textures than this node has slots.
+            PathNotAllowed: A wired path lies outside the folders the menu lists, or names
+                no ``.js`` or ``.txt`` file.
         """
         if not module_file.chosen(module):
             raise ValueError(
@@ -88,7 +91,7 @@ class ThreeCustomMaterial(io.ComfyNode):
                 f"`// {module_file.MARKER} {module_file.VERSION}` in ComfyUI's input folder, "
                 f"or in a folder under paths.allow_read, and pick it from the menu"
             )
-        declared = module_file.load(module)
+        declared = module_file.load(module, paths=True)
         if declared.kind != "material":
             raise ValueError(
                 f"`{module}` builds a {declared.kind}, and this node needs a material. Use "

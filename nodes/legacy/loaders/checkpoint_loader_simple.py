@@ -6,6 +6,8 @@ import os
 
 from comfy_api.latest import io
 
+from ....modules.io import picker
+
 REQUIRES = "loaders"
 
 
@@ -37,11 +39,11 @@ class CheckpointLoaderSimple(io.ComfyNode):
                 "string. That name is already on the ckpt_name widget."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "ckpt_name",
                     options=checkpoint_names(),
                     tooltip="The checkpoint file in models/checkpoints to load.",
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.Model.Output(
@@ -75,6 +77,7 @@ class CheckpointLoaderSimple(io.ComfyNode):
         import comfy.sd
         import folder_paths
 
+        ckpt_name = picker.model_name(ckpt_name, ("checkpoints",))
         ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(
             ckpt_path,

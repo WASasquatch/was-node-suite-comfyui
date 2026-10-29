@@ -8,6 +8,7 @@ id reads ``"<definition_id>:<node_id>:<widget_name>"``.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -128,30 +129,75 @@ def load(name: str, root: Path | None = None) -> dict:
 
     reason = sandbox.leaves_folder(name)
     if reason is not None:
-        raise ValueError(f"{name!r} {reason}. Name a workflow inside {root}")
+        raise ValueError(f"{name!r} {reason}. Name a workflow inside the workflows folder")
     sandbox.refuse_linked_host(root / name, trusted=root)
     target = (root / name).resolve()
     if root.resolve() not in (target, *target.parents):
         raise ValueError(
-            f"{name!r} resolves outside the workflows directory. Name a workflow inside "
-            f"{root}"
+            f"{name!r} resolves outside the workflows folder. Name a workflow inside it"
         )
     if not target.is_file():
         raise FileNotFoundError(
-            f"no saved workflow named {name!r} in {root}. Save one from the workflow menu, "
-            f"with a name ending {SUFFIX}"
+            f"no saved workflow named {name!r} in the workflows folder. Save one from the "
+            f"workflow menu, with a name ending {SUFFIX}"
         )
-    size = target.stat().st_size
+    return read(target, name)
+
+
+def read(target: Path, shown: str) -> dict:
+    """Read one app workflow file already resolved inside a permitted folder.
+
+    Args:
+        target: The file.
+        shown: What messages call it, such as the menu name.
+
+    Returns:
+        The saved workflow.
+
+    Raises:
+        ValueError: The file is larger than :data:`MAX_WORKFLOW_BYTES`, or it is not JSON.
+        OSError: The file cannot be read.
+    """
+    size = Path(target).stat().st_size
     if size > MAX_WORKFLOW_BYTES:
         raise ValueError(
-            f"{name!r} is {size / (1024 * 1024):.1f} MiB, larger than the "
+            f"{shown!r} is {size / (1024 * 1024):.1f} MiB, larger than the "
             f"{MAX_WORKFLOW_BYTES / (1024 * 1024):.0f} MiB an app workflow may be. Save a "
             f"smaller workflow"
         )
     try:
-        return json.loads(target.read_text(encoding="utf-8"))
+        return json.loads(Path(target).read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
-        raise ValueError(f"{name!r} is not a readable workflow: {error}") from error
+        raise ValueError(f"{shown!r} is not a readable workflow: {error}") from error
+
+
+def wired(value) -> tuple[str, Path] | None:
+    """The app workflow a full path wired into the menu names, and the name it is shown under.
+
+    Args:
+        value: The widget's value or the wired text; a name the menu offered is no path.
+
+    Returns:
+        ``(name, file)``: the name is the path below the workflows folder, as the menu lists
+        it, or the folder label such as ``apps/upscale.app.json [input]``. ``None`` for a name.
+
+    Raises:
+        PathNotAllowed: The path lies outside the workflows folder and every permitted read
+            root, or names no ``.app.json`` file.
+    """
+    from ..io import picker
+    from ..util import file_listing, sandbox
+
+    root = directory()
+    target = picker.wired_file(value, (SUFFIX,), roots=(root,) if root is not None else ())
+    if target is None:
+        return None
+    if root is not None and root.is_dir():
+        base = Path(os.path.realpath(root))
+        if sandbox.contains(base, target) and base != target:
+            return os.path.relpath(target, base).replace(os.sep, "/"), target
+    labelled = file_listing.typed(str(target), (SUFFIX,), file_listing.ROOTS)
+    return (labelled.label if labelled is not None else target.name), target
 
 
 def exposure(workflow: dict) -> Exposure:

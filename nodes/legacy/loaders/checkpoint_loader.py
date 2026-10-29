@@ -6,6 +6,8 @@ import os
 
 from comfy_api.latest import io
 
+from ....modules.io import picker
+
 REQUIRES = "loaders"
 
 
@@ -41,21 +43,20 @@ class CheckpointLoader(io.ComfyNode):
                 "already on the ckpt_name widget."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "config_name",
                     options=config_names(),
                     tooltip=(
-                        "The .yaml config in models/configs that describes the checkpoint's "
+                        "The .yaml config in models/configs describing the checkpoint's "
                         "architecture. Only original Stable Diffusion 1.x and 2.x weights "
-                        "need one; anything newer loads with ComfyUI's Load Checkpoint "
-                        "instead, which needs no config."
+                        "need one; ComfyUI's Load Checkpoint loads anything newer."
                     ),
-                ),
-                io.Combo.Input(
+                ), model=True),
+                picker.path_input(io.Combo.Input(
                     "ckpt_name",
                     options=checkpoint_names(),
                     tooltip="The checkpoint file in models/checkpoints to load.",
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.Model.Output(
@@ -86,6 +87,8 @@ class CheckpointLoader(io.ComfyNode):
         import comfy.sd
         import folder_paths
 
+        config_name = picker.model_name(config_name, ("configs",))
+        ckpt_name = picker.model_name(ckpt_name, ("checkpoints",))
         config_path = folder_paths.get_full_path_or_raise("configs", config_name)
         ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
         model, clip, vae = comfy.sd.load_checkpoint(

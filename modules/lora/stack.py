@@ -62,15 +62,20 @@ def _rgthree_rows(inputs: Mapping[str, Any]) -> list[Entry] | None:
     return stack
 
 
+def _wired(value: Any) -> bool:
+    """Whether a prompt value is a link, ``[node id, output index]``, rather than a value."""
+    return isinstance(value, (list, tuple)) and len(value) == 2 and isinstance(value[0], str)
+
+
 def _power_lora_rows(inputs: Mapping[str, Any]) -> list[Entry] | None:
     """The switched-on rows of a Power LoRA Loader or Merger, or None where the inputs hold none."""
-    if not any(NAME_KEY.fullmatch(str(key).lower()) and isinstance(value, str)
+    if not any(NAME_KEY.fullmatch(str(key).lower()) and (isinstance(value, str) or _wired(value))
                for key, value in inputs.items()):
         return None
     for key, value in inputs.items():
-        match = WEIGHT_KEY.fullmatch(str(key).lower())
-        wired = isinstance(value, (list, tuple)) and len(value) == 2 and isinstance(value[0], str)
-        if (match or str(key).lower() == "strength") and wired:
+        name = str(key).lower()
+        read = WEIGHT_KEY.fullmatch(name) or NAME_KEY.fullmatch(name) or name == "strength"
+        if read and _wired(value):
             raise ValueError(
                 f"The Power LoRA node read here takes {key} from a wire, and a wire's value cannot "
                 f"be read from the prompt. Wire that node's lora_stack output into stack_data "
@@ -157,16 +162,22 @@ def locate(name: str) -> tuple[str, str] | None:
     """A LoRA named relative to the LoRA folder, found by file name if it moved.
 
     Args:
-        name: The name as a stack carries it.
+        name: The name as a stack carries it, or a full path inside a LoRA folder.
 
     Returns:
         ``(relative, path)``: the file's name inside the LoRA folder with ``/`` separators,
         and its full path. ``None`` where no LoRA of that name is on disk.
+
+    Raises:
+        PathNotAllowed: ``name`` is a full path outside the LoRA folders.
     """
     import folder_paths
 
+    from ..io import picker
+
     if not isinstance(name, str) or name in ("", "None"):
         return None
+    name = picker.model_name(name, ("loras",))
     try:
         # The same normalisation get_full_path applies before joining the name to a folder.
         relative = os.path.relpath(os.path.join("/", name), "/")

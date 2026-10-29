@@ -391,6 +391,7 @@ function readScenes(node) {
       hold: Math.max(0, Math.min(1, Number(valueOf(node, `strength_${row}`, 1) ?? 1))),
       sound: String(valueOf(node, `sound_${row}`, "auto") ?? "auto"),
       seed: Math.max(0, Math.round(Number(valueOf(node, `seed_${row}`, 0) ?? 0)) || 0),
+      enabled: valueOf(node, `enabled_${row}`, true) !== false,
       title: titleOf(prompt),
       colourName: colour,
       colour: colour ? ROW_PALETTE[colour] : null,
@@ -577,6 +578,7 @@ function writeScenes(node, scenes) {
     write(node, `strength_${row}`, scene.hold ?? 1);
     write(node, `sound_${row}`, scene.sound ?? "auto");
     write(node, `seed_${row}`, scene.seed ?? 0);
+    write(node, `enabled_${row}`, scene.enabled !== false);
     if (scene.colourName) colours[String(row)] = scene.colourName;
   });
   for (let row = scenes.length + 1; row <= MAX_ROWS; row += 1) {
@@ -1106,6 +1108,7 @@ function createPromptTimeline(first) {
         write(node, `overlap_${row}`, Number(scene.overlap));
         write(node, `source_${row}`, PREVIOUS_SOURCE);
         write(node, `sound_${row}`, "auto");
+        write(node, `enabled_${row}`, true);
         write(node, `header_footer_${row}`, scene.wrap ?? "both");
       }
       for (const asset of chainOf(node)) {
@@ -2411,7 +2414,8 @@ function createPromptTimeline(first) {
     read: () => ({
       rows: state.scenes.map((scene, index) => ({
         seconds: scene.seconds, overlap: scene.overlap, continuity: scene.continuity,
-        source: scene.source, title: scene.title, colour: scene.colour, model: scene.model,
+        source: scene.source, title: scene.enabled === false ? `off · ${scene.title}` : scene.title,
+        colour: scene.colour, model: scene.model,
         warning: scene.warning, preview: previewOf(index), sound: scene.sound,
       })),
       assets: state.assets.map((asset) => (asset.moment ? { ...asset, pinnable: frameDrawn(asset.frame) } : asset)),
@@ -3468,6 +3472,7 @@ function createPromptTimeline(first) {
     write(node, `strength_${row}`, 1);
     write(node, `sound_${row}`, "auto");
     write(node, `seed_${row}`, 0);
+    write(node, `enabled_${row}`, true);
     const colours = node.properties?.was_row_colours;
     if (colours && Object.hasOwn(colours, String(row))) {
       delete colours[String(row)];

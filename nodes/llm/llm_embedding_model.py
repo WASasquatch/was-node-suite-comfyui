@@ -6,7 +6,9 @@ from comfy_api.latest import io
 
 from ...modules.compat.types import LLM_EMBEDDING
 from ...modules.interface import run_result
-from ...modules.llm import embeddings, providers, runtime
+from ...modules.io import picker
+from ...modules.llm import embeddings, gguf, providers, runtime
+from ...modules.model import model_directories
 
 REQUIRES = "llm"
 
@@ -81,7 +83,7 @@ class LLMEmbeddingModel(io.ComfyNode):
             io.DynamicCombo.Option(
                 key="local",
                 inputs=[
-                    io.Combo.Input(
+                    picker.path_input(io.Combo.Input(
                         "model", options=embeddings.local_choices(),
                         default=embeddings.SUGGESTED[0],
                         tooltip=(
@@ -89,7 +91,7 @@ class LLMEmbeddingModel(io.ComfyNode):
                             "`BAAI/bge-small-en-v1.5`, fetched into models/LLM on first use when "
                             "features.network is on. Safetensors weights only."
                         ),
-                    ),
+                    ), folder=True, model=True),
                     *LOCAL_INPUTS,
                     io.Int.Input(
                         "batch_size", default=32, min=1, max=MAX_BATCH,
@@ -103,13 +105,13 @@ class LLMEmbeddingModel(io.ComfyNode):
             io.DynamicCombo.Option(
                 key="gguf",
                 inputs=[
-                    io.Combo.Input(
+                    picker.path_input(io.Combo.Input(
                         "model", options=embeddings.gguf_choices(),
                         tooltip=(
                             "A .gguf embedding model in models/LLM or models/text_encoders, such "
                             "as a bge or nomic-embed GGUF, read through llama.cpp."
                         ),
-                    ),
+                    ), model=True),
                     *LOCAL_INPUTS,
                 ],
             ),
@@ -237,6 +239,7 @@ class LLMEmbeddingModel(io.ComfyNode):
 
         Raises:
             ValueError: A setting is not valid, or the model is not on this machine.
+            PathNotAllowed: A wired model path lies outside the LLM or text_encoders folders.
             RuntimeError: A hosted source with ``features.network`` off or its key unset, or a
                 local model that would not load.
         """
@@ -259,12 +262,18 @@ class LLMEmbeddingModel(io.ComfyNode):
                     "node": NODE,
                 }
                 if kind == "local":
+                    model_directories(embeddings.FOLDER)
+                    model = picker.model_name(
+                        chosen.get("model"), (embeddings.FOLDER,), folder=True,
+                    ).replace("\\", "/")
                     batch = bounded(chosen.get("batch_size"), 32, 1, MAX_BATCH)
                     built, details = embeddings.local_embedding(
-                        chosen.get("model"), batch_size=batch, **settings,
+                        model, batch_size=batch, **settings,
                     )
                 else:
-                    built, details = embeddings.gguf_embedding(chosen.get("model"), **settings)
+                    built, details = embeddings.gguf_embedding(
+                        gguf.menu_name(chosen.get("model")), **settings,
+                    )
             elif kind == "openai":
                 built = embeddings.openai_embedding(chosen.get("model"), dimensions, node=NODE)
                 host = "api.openai.com"

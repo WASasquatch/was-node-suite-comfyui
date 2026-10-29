@@ -9,6 +9,7 @@ from comfy_api.latest import io
 
 from ....modules.compat.sockets import require_input
 from ....modules.compat.types import DICT
+from ....modules.io import picker
 from ....modules.log import get_logger
 
 REQUIRES = "extras"
@@ -66,14 +67,14 @@ class ApplyReweightedLoRA(io.ComfyNode):
                         "text-encoder tensors leaves it untouched."
                     ),
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "lora_name",
                     options=lora_names(),
                     tooltip=(
                         "The LoRA file to reweight, from your LoRA folder. It is read from "
                         "disk on every run, so the original file is never modified."
                     ),
-                ),
+                ), model=True),
                 io.Float.Input(
                     "strength_model",
                     default=0.8,
@@ -281,6 +282,7 @@ class ApplyReweightedLoRA(io.ComfyNode):
             clip, "Apply Reweighted LoRA", "clip", "text encoder", "checkpoint loader", "CLIP"
         )
 
+        lora_name = picker.model_name(lora_name, ("loras",))
         source = folder_paths.get_full_path_or_raise("loras", lora_name)
         state = load_torch_file(str(source), safe_load=True)
 
@@ -343,7 +345,8 @@ class ApplyReweightedLoRA(io.ComfyNode):
                     "strength_clip": f"{strength_clip}",
                 },
             )
-            saved_path = str(target)
+            saved_path = (Path(target).relative_to(Path(folder_paths.get_output_directory()).resolve()).as_posix()
+                          + " [output]")
             saved_digest = get_sha256(target)
             logger.info("saved the reweighted LoRA to %s", target)
 
@@ -351,7 +354,7 @@ class ApplyReweightedLoRA(io.ComfyNode):
                 roundtrip_equal = cls._matches(scaled, load_file(str(target)))
 
         stats = {
-            "source": str(source),
+            "source": lora_name,
             "block_preset": preset,
             "total_blocks_detected": total_blocks,
             "model_blocks": model_blocks,

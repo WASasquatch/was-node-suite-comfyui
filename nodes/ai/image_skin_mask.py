@@ -7,6 +7,7 @@ from comfy_api.latest import io
 
 from ...modules import log
 from ...modules.image import skin
+from ...modules.io import picker
 from ...modules.model import sapiens2
 
 REQUIRES = "preprocessors"
@@ -53,14 +54,14 @@ class ImageSkinMask(io.ComfyNode):
                     tooltip="The pictures to find skin in; IMAGE. Each picture of a batch is "
                     "masked on its own.",
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model",
                     options=found or [NO_CHECKPOINT],
                     default=sapiens2.DEFAULT if sapiens2.DEFAULT in found else None,
-                    tooltip="Body-part network from ComfyUI/models/sapiens. `sapiens2_1b_seg` = "
-                    "sure of unusual bodies and poses, 3 GB of VRAM; `0.4b` and `0.8b` = "
-                    "lighter, less sure of them; `5b` = about 10 GB. Downloaded on first use.",
-                ),
+                    tooltip="Body-part network in models/sapiens: `sapiens2_1b_seg` = sure of "
+                    "unusual poses, 3 GB of VRAM; `0.4b` and `0.8b` = lighter; `5b` = about "
+                    "10 GB. Fetched on first use.",
+                ), model=True),
                 io.Combo.Input(
                     "areas",
                     options=list(skin.AREAS),
@@ -114,16 +115,16 @@ class ImageSkinMask(io.ComfyNode):
         )
 
     @classmethod
-    def validate_inputs(cls, model) -> bool | str:
-        """Accept a listed checkpoint.
+    def validate_inputs(cls, model=None) -> bool | str:
+        """Accept a listed checkpoint, or a wired one, which is checked when the node runs.
 
         Args:
-            model: The stored combo value.
+            model: The stored combo value, or ``None`` where a link carries it.
 
         Returns:
             True, or the message naming what to pick.
         """
-        if model in sapiens2.offered():
+        if model is None or model in sapiens2.offered():
             return True
         if model == NO_CHECKPOINT:
             return (
@@ -170,6 +171,7 @@ class ImageSkinMask(io.ComfyNode):
         tolerance = min(2.0, max(0.5, float(tolerance)))
         person_threshold = min(0.95, max(0.05, float(person_threshold)))
 
+        model = picker.model_name(model, (sapiens2.FOLDER,)).replace("\\", "/")
         network = sapiens2.load(model)
         pair = pose.load(POSE_MODEL)
         progress = comfy.utils.ProgressBar(len(image))

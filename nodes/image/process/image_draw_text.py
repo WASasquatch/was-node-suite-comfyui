@@ -9,7 +9,8 @@ from ....modules.compat import limits
 from ....modules.convert.tensors import image_planes, pil2mask, pil2tensor, tensor2pil
 from ....modules.data import paths
 from ....modules.image import draw
-from ....modules.interface import preview
+from ....modules.interface import fonts, preview
+from ....modules.io import picker
 
 
 class ImageDrawText(io.ComfyNode):
@@ -197,18 +198,17 @@ class ImageDrawText(io.ComfyNode):
                         "stays consistent instead of the outline surviving the fade."
                     ),
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "font",
                     options=list(paths.font_names()),
                     optional=True,
                     tooltip=(
                         "Which typeface to draw with; .ttf, .otf and .ttc files in "
                         "ComfyUI/user/was-node-suite/fonts are listed by name. DejaVu covers "
-                        "the most ground; Liberation matches Arial, Times New Roman and "
-                        "Courier New widths; `Mono` gives every character one width, for "
-                        "frame counters."
+                        "the most ground; Liberation matches Arial and Times New Roman widths; "
+                        "`Mono` = one width per character."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 io.Image.Output(
@@ -255,8 +255,11 @@ class ImageDrawText(io.ComfyNode):
         # The picture the overlay lays the text over is published before anything is drawn.
         preview.publish(image)
 
-        resolved_font = None
-        typeface = draw.load_font(font_size, resolved_font, font)
+        wired = picker.wired_file(font, paths.FONT_SUFFIXES, roots=fonts.font_roots())
+        if wired is not None:
+            typeface = draw.load_font(font_size, str(wired), None)
+        else:
+            typeface = draw.load_font(font_size, None, font)
         fill = draw.parse_color(text_color)
         stroke = draw.parse_color(stroke_color)
         panel = draw.parse_color(background_color, draw.TRANSPARENT)

@@ -7,6 +7,8 @@ import os
 from comfy_api.latest import io
 
 from ...modules import log
+from ...modules.io import picker
+from ...modules.util import sandbox
 
 REQUIRES = "diffusers"
 
@@ -61,18 +63,21 @@ def resolve_model_path(model_path: str) -> str:
     """The absolute directory a ``model_path`` widget value names.
 
     Args:
-        model_path: A directory name offered by :func:`model_paths`.
+        model_path: A directory name offered by :func:`model_paths`, a folder below one
+            such as ``org/model``, or a full path inside a models/diffusers directory.
 
     Returns:
         The first search directory holding it.
 
     Raises:
-        ValueError: The name is not one of the listed models, which is what a workflow
-            saved against a model that has since been removed or renamed carries.
+        ValueError: No models/diffusers directory holds a model folder of that name, which
+            is what a workflow saved against a model since removed or renamed carries.
+        PathNotAllowed: A full path lies outside every models/diffusers directory.
     """
     import folder_paths
 
-    if model_path in model_paths():
+    model_path = picker.model_name(model_path, ("diffusers",), folder=True)
+    if model_path.strip(" ./\\") and sandbox.leaves_folder(model_path) is None:
         for root in folder_paths.get_folder_paths("diffusers"):
             candidate = os.path.join(root, model_path)
             if os.path.isdir(candidate):
@@ -102,15 +107,14 @@ class DiffusersLoader(io.ComfyNode):
                 "this node."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model_path",
                     options=model_paths(),
                     tooltip=(
-                        "The model directory in models/diffusers to load. Each entry is a "
-                        "folder holding unet, vae and text_encoder subdirectories, which is "
-                        "what cloning a Hugging Face model repository produces."
+                        "The model folder in models/diffusers to load, holding unet, vae and "
+                        "text_encoder subfolders as a cloned Hugging Face model repository does."
                     ),
-                ),
+                ), folder=True, model=True),
             ],
             outputs=[
                 io.Model.Output(

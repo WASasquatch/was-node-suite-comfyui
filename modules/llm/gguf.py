@@ -27,6 +27,7 @@ __all__ = [
     "gguf_model",
     "load",
     "locate",
+    "menu_name",
     "model_choices",
     "projector_choices",
     "read_header",
@@ -171,6 +172,31 @@ def locate(name: str) -> str | None:
     import folder_paths
 
     return folder_paths.get_full_path(LISTING_KEY, name)
+
+
+def menu_name(value) -> str:
+    """The name the menus list a ``.gguf`` file under, from a menu name or a wired full path.
+
+    Args:
+        value: A name from :func:`model_choices` or :func:`projector_choices`, or a full path.
+
+    Returns:
+        The value itself when it is a name, otherwise the path below the folder holding it.
+
+    Raises:
+        PathNotAllowed: The path is not a ``.gguf`` file inside the LLM or text_encoders
+            folders, or a file of that name in an earlier folder is the one that loads.
+    """
+    from ..io import picker
+    from ..util.sandbox import PathNotAllowed
+
+    _register()
+    try:
+        return picker.model_name(value, (LISTING_KEY,))
+    except PathNotAllowed as error:
+        # A refusal names the .gguf files and the LLM folder rather than the listing key.
+        text = str(error).replace(f"a {LISTING_KEY} model", "a .gguf model")
+        raise PathNotAllowed(text.replace(f"`{LISTING_KEY}`", "`LLM`")) from None
 
 
 class _Reader:

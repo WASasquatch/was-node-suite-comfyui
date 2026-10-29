@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import torch
 from comfy_api.latest import io
 
+from ....modules.io import picker
 from ....modules.model import marigold_v2
 
 
@@ -481,19 +482,18 @@ class PowerPreprocessor(io.ComfyNode):
                         "cannot find by name."
                     ),
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     ADAPTER,
                     options=marigold_v2.adapters(),
                     default=marigold_v2.AUTOMATIC,
                     optional=True,
                     tooltip=(
                         "`auto` = this map's adapter, found by name in the loras folder; "
-                        "`already on the model` = apply none, for a LoRA put on the "
-                        "transformer before it arrives; `marigold_v2_normals.safetensors` "
-                        "= that file."
+                        "`already on the model` = none, for a LoRA already applied; "
+                        "`marigold_v2_normals.safetensors` = that file."
                     ),
-                ),
-                io.Combo.Input(
+                ), model=True),
+                picker.path_input(io.Combo.Input(
                     DECODER_NAME,
                     options=marigold_v2.decoders(),
                     default=marigold_v2.AUTOMATIC,
@@ -503,8 +503,8 @@ class PowerPreprocessor(io.ComfyNode):
                         "`marigold_v2_normals_vae.safetensors` = that file. The `vae` "
                         "socket beats this when wired."
                     ),
-                ),
-                io.Combo.Input(
+                ), model=True),
+                picker.path_input(io.Combo.Input(
                     CONDITIONING,
                     options=marigold_v2.embeddings(),
                     default=marigold_v2.AUTOMATIC,
@@ -514,7 +514,7 @@ class PowerPreprocessor(io.ComfyNode):
                         "embeddings folder; `marigold_v2_depth_conditioning.safetensors` = "
                         "that file. The `conditioning` socket beats this when wired."
                     ),
-                ),
+                ), model=True),
                 io.Conditioning.Input(
                     PROMPT,
                     optional=True,
@@ -622,9 +622,10 @@ def _wired(name, model, vae, adapter_name, vae_name, conditioning_name, conditio
         name: A key of :data:`marigold_v2.MODALITIES`.
         model: The ``MODEL`` wired in, or None.
         vae: The ``VAE`` wired in, or None.
-        adapter_name: The adapter's file name, or the automatic entry.
-        vae_name: The decoder's file name, read when no ``VAE`` is wired.
-        conditioning_name: The prompt embedding's file name, or the automatic entry.
+        adapter_name: The adapter's file name or full path, or the automatic entry.
+        vae_name: The decoder's file name or full path, read when no ``VAE`` is wired.
+        conditioning_name: The prompt embedding's file name or full path, or the automatic
+            entry.
         conditioning: A ``CONDITIONING`` wired in, which wins over the file above.
         image: ``(batch, height, width, channels)`` in ``[0, 1]``.
         resolution: Longest edge the map is read at.
@@ -634,6 +635,7 @@ def _wired(name, model, vae, adapter_name, vae_name, conditioning_name, conditio
 
     Raises:
         ValueError: No transformer is wired.
+        PathNotAllowed: A wired path lies outside the loras, vae or embeddings folders.
     """
     import torch.nn.functional as functional
 
@@ -650,6 +652,9 @@ def _wired(name, model, vae, adapter_name, vae_name, conditioning_name, conditio
             f"  Nothing is downloaded for it: place the files in your models folders "
             f"yourself."
         )
+    adapter_name = picker.model_name(adapter_name, ("loras",))
+    vae_name = picker.model_name(vae_name, ("vae",))
+    conditioning_name = picker.model_name(conditioning_name, ("embeddings",))
 
     planes = image[..., :3].permute(0, 3, 1, 2).to(dtype=torch.float32)
     height, width = planes.shape[-2:]

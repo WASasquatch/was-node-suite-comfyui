@@ -108,11 +108,19 @@ CLOSING_KEY = "was_closing"
 #: Bundle entry key naming the node a segment's prompt came from.
 OWNER_KEY = "owner"
 
+#: Bundle entry key holding that node's id in the prompt, which a run reads its current preview
+#: key from.
+OWNER_NODE_KEY = "owner_node"
+
 #: Bundle entry key marking the last segment of a loop, which closes on the video's first frame.
 LOOP_KEY = "closes_loop"
 
 #: Bundle entry key holding what a segment's prompt was encoded from.
 ENCODING_KEY = "encoding"
+
+#: Bundle entry key holding a segment's number among every row carrying a prompt, from 0,
+#: switched-off rows counted.
+NUMBER_KEY = "number"
 
 #: Prompt keys a prompt encoded again keeps from the one it replaces.
 KEPT_KEYS = ("minimax_keyframes", "minimax_visual_cond_noise_aug", "minimax_audio_cond_noise_aug")
@@ -141,6 +149,135 @@ def prompt_name(row: int) -> str:
         The widget name.
     """
     return f"prompt_{row}"
+
+
+def enabled_name(row: int) -> str:
+    """The widget name of a row's on switch.
+
+    Args:
+        row: Row number, from 1.
+
+    Returns:
+        The widget name.
+    """
+    return f"enabled_{row}"
+
+
+def prompted(widgets: dict, row: int) -> bool:
+    """Whether a row carries a prompt, switched on or off.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+        row: Row number, from 1.
+
+    Returns:
+        True where the row's prompt is not blank.
+    """
+    text = widgets.get(prompt_name(row))
+    return isinstance(text, str) and bool(text.strip())
+
+
+def row_used(widgets: dict, row: int) -> bool:
+    """Whether a row becomes a segment: it carries a prompt and is switched on.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+        row: Row number, from 1.
+
+    Returns:
+        True where the prompt is not blank and the switch is not off. A missing switch is on.
+    """
+    return prompted(widgets, row) and widgets.get(enabled_name(row)) is not False
+
+
+def segment_numbers(widgets: dict) -> list[int]:
+    """Each segment's number among every row carrying a prompt, switched-off rows counted.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        One number from 1 per row that becomes a segment, in row order.
+    """
+    numbers, count = [], 0
+    for row in range(1, MAX_ROWS + 1):
+        if not prompted(widgets, row):
+            continue
+        count += 1
+        if row_used(widgets, row):
+            numbers.append(count)
+    return numbers
+
+
+def switched_off(widgets: dict) -> list[int]:
+    """The numbers of the rows carrying a prompt that are switched off.
+
+    Args:
+        widgets: Every row widget's value, keyed by widget name.
+
+    Returns:
+        Numbers from 1, counted as :func:`segment_numbers` counts them.
+    """
+    off, count = [], 0
+    for row in range(1, MAX_ROWS + 1):
+        if not prompted(widgets, row):
+            continue
+        count += 1
+        if not row_used(widgets, row):
+            off.append(count)
+    return off
+
+
+def kept_source(source: int, position: int, numbers: list[int]) -> int:
+    """A segment's source, renumbered to the segments that run.
+
+    Args:
+        source: The source as the row holds it, counted among every row carrying a prompt.
+        position: The segment's place among the segments that run, from 0.
+        numbers: :func:`segment_numbers`.
+
+    Returns:
+        The same segment counted among the segments that run, or ``-1`` for the one before
+        where the source names a segment switched off.
+    """
+    source, position = int(source), int(position)
+    if source in (0, PREVIOUS_SOURCE) or not 0 <= position < len(numbers):
+        return source
+    number = int(numbers[position])
+    named = number + source if source < 0 else source
+    if named in numbers[:position]:
+        return numbers.index(named) + 1
+    if named >= number or named < 1:
+        return source
+    return PREVIOUS_SOURCE
+
+
+def segment_number(prompts, index: int) -> int:
+    """A segment's number among every row carrying a prompt, switched-off rows counted.
+
+    Args:
+        prompts: A bundle from :func:`bundle`, or ``None``.
+        index: The segment's place in the bundle, from 0.
+
+    Returns:
+        The number from 0, ``index`` itself where the bundle records none.
+    """
+    if prompts and 0 <= int(index) < len(prompts):
+        return int(prompts[int(index)].get(NUMBER_KEY, index))
+    return int(index)
+
+
+def segment_label(prompts, index: int) -> str:
+    """A segment's name in a report, numbered as its row counts.
+
+    Args:
+        prompts: A bundle from :func:`bundle`, or ``None``.
+        index: The segment's place in the bundle, from 0.
+
+    Returns:
+        As ``segment 5``.
+    """
+    return f"segment {segment_number(prompts, index) + 1}"
 
 
 def overlap_name(row: int) -> str:
@@ -198,12 +335,11 @@ def sources_of(widgets: dict) -> list[int]:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One source per row whose prompt is not blank, as the row holds it.
+        One source per row that becomes a segment, as the row holds it.
     """
     sources = []
     for row in range(1, MAX_ROWS + 1):
-        text = widgets.get(prompt_name(row))
-        if not isinstance(text, str) or not text.strip():
+        if not row_used(widgets, row):
             continue
         value = widgets.get(source_name(row))
         sources.append(PREVIOUS_SOURCE if value is None else int(value))
@@ -229,12 +365,11 @@ def wraps_of(widgets: dict) -> list[str]:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One entry of :data:`WRAPS` per row whose prompt is not blank.
+        One entry of :data:`WRAPS` per row that becomes a segment.
     """
     wraps = []
     for row in range(1, MAX_ROWS + 1):
-        text = widgets.get(prompt_name(row))
-        if not isinstance(text, str) or not text.strip():
+        if not row_used(widgets, row):
             continue
         value = widgets.get(wrap_name(row))
         wraps.append(value if value in WRAPS else WRAPS[0])
@@ -260,12 +395,11 @@ def seeds_of(widgets: dict) -> list[int]:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One seed per row whose prompt is not blank, ``0`` where the row leaves it to the run.
+        One seed per row that becomes a segment, ``0`` where the row leaves it to the run.
     """
     values = []
     for row in range(1, MAX_ROWS + 1):
-        text = widgets.get(prompt_name(row))
-        if not isinstance(text, str) or not text.strip():
+        if not row_used(widgets, row):
             continue
         try:
             values.append(max(0, int(widgets.get(seed_name(row)) or 0)))
@@ -283,12 +417,13 @@ def seed_of(prompts, index: int, base: int) -> int:
         base: The run's seed.
 
     Returns:
-        The row's own seed where it names one, else ``base`` plus the segment number.
+        The row's own seed where it names one, else ``base`` plus the segment's number
+        among every row carrying a prompt, so a row samples alike with others switched off.
     """
     own = 0
     if prompts and 0 <= int(index) < len(prompts):
         own = int(prompts[int(index)].get("seed") or 0)
-    return own if own > 0 else int(base) + int(index)
+    return own if own > 0 else int(base) + segment_number(prompts, index)
 
 
 def sound_name(row: int) -> str:
@@ -310,12 +445,11 @@ def sounds_of(widgets: dict) -> list[str]:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One entry of :data:`h3_extend.SOUNDS` per row whose prompt is not blank.
+        One entry of :data:`h3_extend.SOUNDS` per row that becomes a segment.
     """
     values = []
     for row in range(1, MAX_ROWS + 1):
-        text = widgets.get(prompt_name(row))
-        if not isinstance(text, str) or not text.strip():
+        if not row_used(widgets, row):
             continue
         value = widgets.get(sound_name(row))
         values.append(value if value in h3_extend.SOUNDS else h3_extend.SOUNDS[0])
@@ -357,12 +491,11 @@ def strengths_of(widgets: dict) -> list[float]:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One value in ``[0, 1]`` per row whose prompt is not blank, ``1.0`` where none is set.
+        One value in ``[0, 1]`` per row that becomes a segment, ``1.0`` where none is set.
     """
     values = []
     for row in range(1, MAX_ROWS + 1):
-        text = widgets.get(prompt_name(row))
-        if not isinstance(text, str) or not text.strip():
+        if not row_used(widgets, row):
             continue
         try:
             value = float(widgets.get(strength_name(row), 1.0))
@@ -409,12 +542,11 @@ def models_of(widgets: dict) -> list[str]:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One entry of :data:`MODEL_CHOICES` per row whose prompt is not blank.
+        One entry of :data:`MODEL_CHOICES` per row that becomes a segment.
     """
     choices = []
     for row in range(1, MAX_ROWS + 1):
-        text = widgets.get(prompt_name(row))
-        if not isinstance(text, str) or not text.strip():
+        if not row_used(widgets, row):
             continue
         value = widgets.get(model_name(row))
         choices.append(value if value in MODEL_CHOICES else AUTO_MODEL)
@@ -608,20 +740,20 @@ def row_names() -> list[tuple[str, str, str, str]]:
 
 
 def filled_rows(widgets: dict) -> list[tuple[str, int, int]]:
-    """The rows carrying a prompt, in row order.
+    """The rows that become segments, in row order.
 
     Args:
         widgets: Every row widget's value, keyed by widget name.
 
     Returns:
-        One ``(prompt, frames, overlap, continuity)`` quad per row whose prompt is not
-        blank, the frame count taken from that row's duration.
+        One ``(prompt, frames, overlap, continuity)`` quad per row carrying a prompt and
+        switched on, the frame count taken from that row's duration.
     """
     rows = []
-    for prompt_key, duration_key, overlap_key, continuity_key in row_names():
-        text = widgets.get(prompt_key)
-        if not isinstance(text, str) or not text.strip():
+    for row, (prompt_key, duration_key, overlap_key, continuity_key) in enumerate(row_names(), 1):
+        if not row_used(widgets, row):
             continue
+        text = widgets.get(prompt_key)
         choice = widgets.get(continuity_key) or DEFAULT_CONTINUITY
         choice = h3_extend.CONTINUITY_RENAMED.get(choice, choice)
         rows.append((

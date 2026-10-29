@@ -7,6 +7,7 @@ from comfy_api.latest import io
 from ....modules.compat.types import LUT
 from ....modules.image import lut as tables
 from ....modules.interface import lut_report
+from ....modules.io import picker
 
 REQUIRES = "extras"
 
@@ -54,15 +55,14 @@ class LoadLUT(io.ComfyNode):
                 "below. Feed the result to Apply LUT, or to LUT Blender to mix two looks."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "look", options=lut_choices(),
                     tooltip=(
-                        "Which table to produce. 'Custom' builds one from the controls below "
-                        "and ignores any file; the named looks are built in and need no "
-                        "file; entries starting 'LUT: ' are .cube files found in a models/LUT "
-                        "directory or in the pack's own luts directory."
+                        "Which table to produce. 'Custom' builds one from the controls below; "
+                        "the named looks are built in; entries starting 'LUT: ' are .cube "
+                        "files in a models/LUT folder or ComfyUI/user/was-node-suite/luts."
                     ),
-                ),
+                )),
                 io.Int.Input(
                     "builtin_size", default=33, min=MIN_BUILTIN_SIZE, max=MAX_BUILTIN_SIZE,
                     step=2,
@@ -183,8 +183,16 @@ class LoadLUT(io.ComfyNode):
         Raises:
             ValueError: The chosen file is no longer in any search directory, or the file
                 is not a readable ``.cube``.
+            PathNotAllowed: A wired path lies outside the LUT folders and every approved
+                read root, or names no ``.cube`` file.
         """
         import numpy as np
+
+        wired = picker.wired_file(look, (tables.CUBE_SUFFIX,), roots=tables.search_directories())
+        if wired is not None:
+            loaded = tables.load_cube(wired)
+            lut_report.publish(loaded)
+            return io.NodeOutput(loaded)
 
         builtin_size = max(MIN_BUILTIN_SIZE, min(int(builtin_size), MAX_BUILTIN_SIZE))
         if look == CUSTOM:

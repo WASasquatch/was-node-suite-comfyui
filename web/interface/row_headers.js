@@ -30,6 +30,9 @@ export const ROW_PALETTE = {
   grey: { label: "Grey", fill: "rgba(140, 140, 140, 0.32)", stripe: "#a0a0a0", text: "#f2f2f2" },
 };
 
+// Colours of a row switched off, whatever colour it was given.
+const OFF_TINT = { fill: "rgba(70, 70, 70, 0.30)", stripe: "#5a5a5a", text: "#9c9c9c" };
+
 // Swatch drawn before each colour's name in the menu.
 const SWATCH = {
   red: "🟥", orange: "🟧", yellow: "🟨", green: "🟩", teal: "🟦",
@@ -222,14 +225,53 @@ export async function askRowName(node, row, label) {
 }
 
 /**
- * Entries for one header's own menu: renaming where it can be renamed, then its colours.
+ * A row's on switch, where the row has one.
  *
  * @param {object} node - The node the header belongs to.
- * @param {object} entry - The header, as `{key, label, renamable}`.
+ * @param {object} entry - The header, as `{switchName}`.
+ * @returns {object|null} The switch widget, or null.
+ */
+function rowSwitch(node, entry) {
+  if (!entry?.switchName) return null;
+  return node?.widgets?.find((widget) => widget?.name === entry.switchName) ?? null;
+}
+
+/**
+ * Turn a row's on switch on or off.
+ *
+ * @param {object} node - The node the switch is on.
+ * @param {object} widget - The switch widget.
+ * @param {boolean} on - The value to set.
+ * @returns {void}
+ */
+function setRowSwitch(node, widget, on) {
+  withGraphChange(() => {
+    widget.value = Boolean(on);
+    widget.callback?.(widget.value, app.canvas, node);
+  });
+  redrawHeaders(node);
+  node.setDirtyCanvas?.(true, true);
+  node.graph?.setDirtyCanvas?.(true, true);
+}
+
+/**
+ * Entries for one header's own menu: its on switch where it has one, renaming where it can be
+ * renamed, then its colours.
+ *
+ * @param {object} node - The node the header belongs to.
+ * @param {object} entry - The header, as `{key, label, renamable, switchName}`.
  * @returns {Array<object|null>} Menu entries, null drawing a rule.
  */
 function headerEntries(node, entry) {
   const entries = [];
+  const toggle = rowSwitch(node, entry);
+  if (toggle) {
+    const off = toggle.value === false;
+    entries.push(
+      { content: menuText(off ? "▶️ Switch On" : "⏸️ Switch Off"), callback: () => setRowSwitch(node, toggle, off) },
+      null,
+    );
+  }
   if (entry.renamable) {
     entries.push(
       { content: "✏️ Rename", callback: () => askRowName(node, entry.key, entry.label) },
@@ -297,18 +339,21 @@ export function addLabelHeader(node, { name, key, title, before }) {
  * @param {(node: object, row: number) => object|null} [options.tint] - The `{fill, stripe,
  *   text}` a row takes where no colour is chosen for it.
  * @param {boolean} [options.renamable] - Offer a name per row, read back with `rowName`.
+ * @param {(row: number) => string} [options.switchName] - A row's on switch widget, offered
+ *   in its header's menu, a row switched off drawn grey.
  * @returns {string[]} Header widget names, one per row, for folding with their rows.
  */
-export function addRowHeaders(node, { groups, name, title, noun, before = 0, tint, renamable = false }) {
+export function addRowHeaders(node, { groups, name, title, noun, before = 0, tint, renamable = false, switchName }) {
   groups.forEach((names, index) => {
     const row = index + 1;
-    const entry = { key: row, label: `${noun} ${row}`, renamable };
+    const entry = { key: row, label: `${noun} ${row}`, renamable, switchName: switchName?.(row) ?? null };
     entry.widget = addSectionHeader(node, {
       name: name(row),
       title: (host) => title(host ?? node, row),
       before: names[before],
       colour: (host) => {
         const shown = host ?? node;
+        if (rowSwitch(shown, entry)?.value === false) return OFF_TINT;
         return ROW_PALETTE[rowColour(shown, row)] ?? tint?.(shown, row) ?? null;
       },
       onClick: (host, event) => askHeader(host, entry, event),

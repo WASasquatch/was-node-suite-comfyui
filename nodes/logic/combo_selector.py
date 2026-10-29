@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules.io import picker
+
 #: Folder each source lists, against the name shown on the widget.
 FOLDERS: tuple[tuple[str, str], ...] = (
     ("checkpoints", "checkpoint"),
@@ -68,7 +70,7 @@ def build_options() -> list[io.DynamicCombo.Option]:
             io.DynamicCombo.Option(
                 folder,
                 [
-                    io.Combo.Input(
+                    picker.path_input(io.Combo.Input(
                         "value",
                         display_name=shown,
                         options=folder_options(folder),
@@ -76,7 +78,7 @@ def build_options() -> list[io.DynamicCombo.Option]:
                             f"Which {shown} to name. A sub-folder is part of the name: "
                             f"Flux/detail_v2.safetensors."
                         ),
-                    )
+                    ), model=True)
                 ],
             )
         )
@@ -170,13 +172,17 @@ class ComboSelector(io.ComfyNode):
             source: The chosen list and the name picked from it.
 
         Returns:
-            The name on a dropdown wire, the name as text, and the list it came from.
+            The name on a dropdown wire, the name as text, and the list it came from. A full
+            path wired into a model folder's list is answered as the name that list gives it.
 
         Raises:
             ValueError: The chosen list is empty.
+            PathNotAllowed: A wired full path lies outside that model folder.
         """
         kind = source.get("source") or ""
         chosen = source.get("value") or ""
+        if kind in dict(FOLDERS):
+            chosen = picker.model_name(chosen, (kind,))
         if not chosen or chosen == EMPTY:
             raise ValueError(
                 f"Combo Selector has nothing to name: {kind or 'that list'} is empty. Put a "

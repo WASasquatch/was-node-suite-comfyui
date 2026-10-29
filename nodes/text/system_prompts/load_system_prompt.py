@@ -7,6 +7,7 @@ from comfy_api.latest import io
 from ....modules import log
 from ....modules.compat.types import LLM_DOCUMENTS
 from ....modules.config import group_enabled
+from ....modules.io import picker
 from ....modules.llm import FEATURE as LLM_FEATURE
 from ....modules.llm import wires
 from ....modules.prompt import system_prompts
@@ -45,7 +46,7 @@ class LoadSystemPrompt(io.ComfyNode):
                 "A skill also hands its reference files to the LLM index nodes."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "system_prompt",
                     options=system_prompts.labels(),
                     tooltip=(
@@ -54,7 +55,7 @@ class LoadSystemPrompt(io.ComfyNode):
                         "Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the "
                         "library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts."
                     ),
-                ),
+                )),
             ],
             outputs=[
                 io.String.Output(
@@ -77,8 +78,10 @@ class LoadSystemPrompt(io.ComfyNode):
         )
 
     @classmethod
-    def validate_inputs(cls, system_prompt) -> bool | str:
+    def validate_inputs(cls, system_prompt=None) -> bool | str:
         """Accept any key, so a prompt saved earlier in the same run is found when this node runs."""
+        if system_prompt is None:
+            return True
         if not isinstance(system_prompt, str) or not system_prompt.strip():
             return "Load System Prompt has no prompt chosen. Pick one from the library on the node"
         return True
@@ -86,7 +89,10 @@ class LoadSystemPrompt(io.ComfyNode):
     @classmethod
     def fingerprint_inputs(cls, system_prompt) -> str:
         """A stamp that moves whenever the chosen file, or any file of a skill, is edited."""
-        entry = system_prompts.find(system_prompt, fresh=True)
+        try:
+            entry = _chosen(system_prompt)
+        except (OSError, ValueError):
+            return str(system_prompt)
         if entry is None:
             return str(system_prompt)
         return f"{entry.key}:{system_prompts.skill_stamp(entry)}"
@@ -97,6 +103,8 @@ class LoadSystemPrompt(io.ComfyNode):
 
         Raises:
             ValueError: The library is empty, the key names no file, or the file cannot be read.
+            PathNotAllowed: A wired path lies outside the library and every permitted read
+                root, or names no ``.txt`` or ``.md`` file.
         """
         key = str(system_prompt or "")
         if not key or key == system_prompts.NO_PROMPTS:
@@ -105,7 +113,13 @@ class LoadSystemPrompt(io.ComfyNode):
                 "import a skill folder with Import on the node, or put .txt or .md files in "
                 "ComfyUI/user/was-node-suite/system_prompts and press R to refresh the menu"
             )
-        entry = system_prompts.find(key, fresh=True)
+        try:
+            entry = _chosen(key)
+        except OSError as error:
+            raise ValueError(
+                f"`{key}` could not be read ({error.strerror or 'no such file'}). Wire the path "
+                "of a .txt or .md file that is there"
+            ) from error
         if entry is None and key.startswith(f"{system_prompts.BUILTIN_FOLDER}/"):
             raise ValueError(
                 f"`{key}` is not a built-in prompt of this version of WAS Node Suite. Pick another "
@@ -119,7 +133,7 @@ class LoadSystemPrompt(io.ComfyNode):
             )
         text = system_prompts.read(entry).body.strip()
         if not text:
-            logger.warning("the system prompt `%s` holds no text after its front matter", key)
+            logger.warning("the system prompt `%s` holds no text after its front matter", entry.key)
 
         documents = wires.Documents((), entry.name if entry.skill else "")
         if entry.skill and group_enabled(LLM_FEATURE):
@@ -132,6 +146,19 @@ class LoadSystemPrompt(io.ComfyNode):
                     entry.key, ", ".join(f"{count} {reason}" for reason, count in sorted(skipped.items())),
                 )
         return io.NodeOutput(text, entry.name, documents)
+
+
+def _chosen(value) -> system_prompts.Entry | None:
+    """The entry a menu key or a wired path names, or ``None`` for a key the library lacks.
+
+    Raises:
+        PathNotAllowed: A wired path lies outside the library and every permitted read root.
+        OSError: A wired file cannot be stated.
+    """
+    wired = picker.wired_file(value, system_prompts.EXTENSIONS, roots=system_prompts.library_roots())
+    if wired is not None:
+        return system_prompts.entry_at(wired)
+    return system_prompts.find(str(value or ""), fresh=True)
 
 
 def _skill_documents(entry: system_prompts.Entry) -> tuple[list, dict]:

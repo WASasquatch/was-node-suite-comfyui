@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules.io import picker
 from ...modules.model.kandinsky6 import audio_vae
 
 NODE_NAME = "Kandinsky 6 Audio VAE Loader"
@@ -36,7 +37,7 @@ class Kandinsky6AudioVAELoader(io.ComfyNode):
                 "its vocoder."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "vae_name",
                     options=files or [NO_FILE],
                     default=likely,
@@ -45,7 +46,7 @@ class Kandinsky6AudioVAELoader(io.ComfyNode):
                         "as kandinsky6_audio_vae.safetensors. One file serves every Kandinsky 6 "
                         "checkpoint."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.Vae.Output(
@@ -60,7 +61,9 @@ class Kandinsky6AudioVAELoader(io.ComfyNode):
 
         Raises:
             ValueError: No file is chosen, or the file is not the Kandinsky 6 audio VAE.
+            PathNotAllowed: A wired path lies outside the vae folders.
         """
+        vae_name = picker.model_name(vae_name, ("vae",))
         if not vae_name or vae_name == NO_FILE:
             raise ValueError(
                 f"{NODE_NAME} has no file to load. Download audio_vae/diffusion_pytorch_model."

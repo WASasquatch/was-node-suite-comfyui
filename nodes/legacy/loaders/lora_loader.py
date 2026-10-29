@@ -7,6 +7,7 @@ import os
 from comfy_api.latest import io
 
 from ....modules.compat.sockets import require_input
+from ....modules.io import picker
 
 REQUIRES = "loaders"
 
@@ -96,7 +97,10 @@ class LoraLoader(io.ComfyNode):
             inputs=[
                 io.Model.Input("model", tooltip=MODEL_TOOLTIP),
                 io.Clip.Input("clip", tooltip=CLIP_TOOLTIP),
-                io.Combo.Input("lora_name", options=lora_names(), tooltip=LORA_NAME_TOOLTIP),
+                picker.path_input(
+                    io.Combo.Input("lora_name", options=lora_names(), tooltip=LORA_NAME_TOOLTIP),
+                    model=True,
+                ),
                 io.Float.Input(
                     "strength_model",
                     default=1.0,
@@ -136,6 +140,7 @@ class LoraLoader(io.ComfyNode):
         require_input(model, DISPLAY_NAME, "model", "model", "checkpoint loader", "MODEL")
         require_input(clip, DISPLAY_NAME, "clip", "text encoder", "checkpoint loader", "CLIP")
 
+        lora_name = picker.model_name(lora_name, ("loras",))
         name = os.path.splitext(os.path.basename(lora_name))[0]
         if lora_name == NONE_OPTION or (strength_model == 0 and strength_clip == 0):
             return io.NodeOutput(model, clip, name)

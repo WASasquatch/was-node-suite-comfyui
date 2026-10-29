@@ -1,7 +1,7 @@
 """Reading a Three.js module file: its header, the inputs it declares and its body.
 
-``parse`` reads the comment header a module opens with, ``screen`` refuses a body reaching
-outside the scene, and ``load`` takes a menu label.
+``parse`` reads the opening comment header, ``screen`` refuses a body reaching outside the
+scene, and ``load`` takes a menu label or a wired path.
 """
 
 from __future__ import annotations
@@ -383,11 +383,12 @@ def chosen(label: str) -> bool:
     return bool(written) and written != NONE
 
 
-def load(label: str) -> Declaration:
+def load(label: str, paths: bool = False) -> Declaration:
     """The module one menu label names.
 
     Args:
         label: The widget's value, as the file menu offered it.
+        paths: Also read a full path wired in as text, inside the folders the menu lists.
 
     Returns:
         What the file declares.
@@ -396,6 +397,8 @@ def load(label: str) -> Declaration:
         PermissionError: ``threejs.allow_scripts`` is off.
         ValueError: Nothing is chosen, the label names no module that is there, or the file
             is not one this reads.
+        PathNotAllowed: With ``paths``, the path lies outside the folders the menu lists, or
+            names no ``.js`` or ``.txt`` file.
         OSError: The file could not be read.
     """
     from ..config import group_enabled
@@ -413,6 +416,12 @@ def load(label: str) -> Declaration:
             "no module was chosen. Pick one from the file list. A folder added under "
             "paths.allow_read in config.yaml appears there under its own name"
         )
+    if paths:
+        from ..io import picker
+
+        wired = picker.wired_file(chosen, SUFFIXES)
+        if wired is not None:
+            return read(sandbox.resolve_read(wired))
     found = file_listing.resolve(chosen, SUFFIXES, tags=file_listing.ROOTS)
     if found is None:
         raise ValueError(

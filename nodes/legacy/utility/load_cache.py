@@ -68,10 +68,13 @@ def cache_options(extensions) -> list[str]:
 
 
 def chosen_cache(value: str, suffix: str):
-    """The cache file one menu entry names, resolved, or None where nothing was chosen."""
+    """The cache file one menu entry or wired path names, resolved, or None where nothing was chosen."""
     entry = str(value or "").strip()
     if not entry or entry == NOTHING_CACHED:
         return None
+    wired = picker.wired_file(entry, (suffix,), roots=[cache_directory()])
+    if wired is not None:
+        return wired
     found = picker.resolve(entry, (suffix,), extra=cache_roots())
     return Path(found) if found else None
 
@@ -172,9 +175,9 @@ class LoadCache(io.ComfyNode):
             if path is None:
                 loaded.append(None)
             elif path.is_file():
-                refuse_old_torch(torch.__version__, path)
+                refuse_old_torch(torch.__version__, path.name)
                 loaded.append(torch.load(path, map_location="cpu", weights_only=True))
             else:
-                logger.error("unable to locate cache file %s", path)
+                logger.error("unable to locate cache file %s", path.name)
                 loaded.append(None)
         return io.NodeOutput(*loaded)

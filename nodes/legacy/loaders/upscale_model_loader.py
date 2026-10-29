@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ....modules.io import picker
+
 REQUIRES = "loaders"
 
 
@@ -30,14 +32,14 @@ class UpscaleModelLoader(io.ComfyNode):
                 "name is already on the model_name widget."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model_name",
                     options=upscale_model_names(),
                     tooltip=(
                         "The upscale model in models/upscale_models to load. Its own scale "
                         "factor, usually 2x or 4x, decides how much larger the result is."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 io.UpscaleModel.Output(
@@ -61,6 +63,7 @@ class UpscaleModelLoader(io.ComfyNode):
         import folder_paths
         from spandrel import ModelLoader
 
+        model_name = picker.model_name(model_name, ("upscale_models",))
         model_path = folder_paths.get_full_path_or_raise("upscale_models", model_name)
         state_dict = comfy.utils.load_torch_file(model_path, safe_load=True)
         return io.NodeOutput(ModelLoader().load_from_state_dict(state_dict).eval(), model_name)

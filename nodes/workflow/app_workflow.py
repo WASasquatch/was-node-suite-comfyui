@@ -7,6 +7,7 @@ import json
 from comfy_api.latest import io, ui
 
 from ...modules.compat.types import DICT
+from ...modules.io import picker
 
 NODE_NAME = "App Workflow"
 
@@ -54,14 +55,14 @@ class AppWorkflow(io.ComfyNode):
                 "wire, so a whole saved graph can be reused inside a larger one."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "app",
                     options=app_choices(),
                     tooltip=(
                         "Which saved app workflow to run; a name ending .app.json from the "
                         "workflows directory, such as upscale.app.json."
                     ),
-                ),
+                )),
                 io.String.Input(
                     "overrides",
                     multiline=True,
@@ -115,22 +116,30 @@ class AppWorkflow(io.ComfyNode):
         """Convert the chosen workflow, apply the given values and expand into it.
 
         Args:
-            app: Name of a saved app workflow.
+            app: Name of a saved app workflow, or a full path to one wired in as text.
             overrides: JSON object of values for its exposed inputs.
             **wired: ``input_1`` to ``input_4``, feeding exposed inputs in order.
 
         Returns:
             What the workflow exposes, then one value per result it presents.
+
+        Raises:
+            PathNotAllowed: A wired path lies outside the workflows folder and every
+                permitted read root, or names no ``.app.json`` file.
         """
         from ...modules.workflow import apps, convert, expand
 
-        if app == NONE_FOUND:
+        found = apps.wired(app)
+        if found is not None:
+            app, target = found
+            workflow = apps.read(target, app)
+        elif app == NONE_FOUND:
             raise ValueError(
                 "no app workflow was found. Save a workflow with app mode on, under a name "
                 "ending .app.json, then refresh the node definitions"
             )
-
-        workflow = apps.load(app)
+        else:
+            workflow = apps.load(app)
         exposure = apps.exposure(workflow)
         prompt, origins, missing = convert.prompt_with_origins(workflow)
         if missing:

@@ -43,6 +43,17 @@ function picked(widget) {
 }
 
 /**
+ * Whether a link fills the module input in place of its menu.
+ *
+ * @param {object} node - The node to look on.
+ * @returns {boolean} True while a link is attached.
+ */
+function moduleLinked(node) {
+  const slot = (node.inputs ?? []).find((input) => input.name === CONTROL);
+  return slot?.link !== null && slot?.link !== undefined;
+}
+
+/**
  * What one module declares, from the server or from what was already asked.
  *
  * @param {string} label - The module menu's value.
@@ -120,7 +131,11 @@ async function present(node) {
   const control = (node.widgets ?? []).find((widget) => widget.name === CONTROL);
   if (!control) return;
 
-  const declared = picked(control) ? await declarationFor(control.value) : null;
+  // A wired module is read only when the node runs, so every slot stays open while one is linked.
+  const linked = moduleLinked(node);
+  node.__was_module_linked = linked;
+  const declared = picked(control) && !linked ? await declarationFor(control.value) : null;
+  if (moduleLinked(node) !== linked) return;
   if (declared) {
     namedSlots(node, declared);
     node.__was_module_textures = (declared.wires ?? []).filter(
@@ -160,6 +175,16 @@ app.registerExtension({
     node.onConfigure = function (...args) {
       const answer = originalConfigure?.apply(this, args);
       present(node);
+      return answer;
+    };
+
+    // A link joining or leaving the module input is read a tick later, once it has settled.
+    const originalConnections = node.onConnectionsChange;
+    node.onConnectionsChange = function (...args) {
+      const answer = originalConnections?.apply(this, args);
+      setTimeout(() => {
+        if (node.graph && moduleLinked(node) !== Boolean(node.__was_module_linked)) present(node);
+      }, 0);
       return answer;
     };
 

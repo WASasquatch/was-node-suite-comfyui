@@ -1559,7 +1559,7 @@ Reload one of the images the suite's loading and saving nodes have recently touc
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `image` | `COMBO` | Yes |  |  | Which recently used image to reload. Entries are listed newest last as '.../<folder>/<file>', and read 'No History' until a load or save node has run. |
+| `image` | `COMBO,STRING` | Yes |  |  | Which recently used image to reload. Entries are listed newest last as '.../<folder>/<file>', and read 'No History' until a load or save node has run. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -1584,7 +1584,7 @@ Reload one of the text files the suite's text loading and saving nodes have rece
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO` | Yes |  |  | Which recently used text file to reread. Entries are listed newest last as '.../<folder>/<file>', and read 'No History' until a load or save node has run. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which recently used text file to reread. Entries are listed newest last as '.../<folder>/<file>', and read 'No History' until a load or save node has run. A wired path, such as `E:\images\cat.png`, works too. |
 | `dictionary_name` | `STRING` | Yes | [filename] |  | The key the lines are stored under in the dictionary output. Left as '[filename]' it is the part of the file's name before the first dot, so 'animals.txt' becomes 'animals'; anything else is used as the key verbatim. |
 
 **Outputs**
@@ -6278,7 +6278,7 @@ Draw text over an image, with wrapping, alignment, an outline and a background p
 | `background_color` | `STRING` | Yes |  |  | Colour of a panel drawn behind the text. Empty draws no panel. A half-transparent #000000B4 is the usual subtitle treatment, and is more readable than an outline over a busy picture. |
 | `background_padding` | `INT` | Yes | 8 |  | How far the panel extends past the text on every side. Read only when background_color is set. |
 | `opacity` | `FLOAT` | Yes | 1.0 |  | How much of the finished text shows, 0.0 to 1.0. Applied to the text, its outline and its panel together, so a faint watermark stays consistent instead of the outline surviving the fade. |
-| `font` | `COMBO` | No |  |  | Which typeface to draw with; .ttf, .otf and .ttc files in ComfyUI/user/was-node-suite/fonts are listed by name. DejaVu covers the most ground; Liberation matches Arial, Times New Roman and Courier New widths; `Mono` gives every character one width, for frame counters. |
+| `font` | `COMBO,STRING` | No |  |  | Which typeface to draw with; .ttf, .otf and .ttc files in ComfyUI/user/was-node-suite/fonts are listed by name. DejaVu covers the most ground; Liberation matches Arial and Times New Roman widths; `Mono` = one width per character. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -7943,6 +7943,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_1` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_1` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_1` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_1` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_2` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_2` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_2` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -7953,6 +7954,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_2` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_2` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_2` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_2` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_3` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_3` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_3` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -7963,6 +7965,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_3` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_3` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_3` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_3` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_4` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_4` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_4` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -7973,6 +7976,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_4` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_4` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_4` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_4` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_5` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_5` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_5` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -7983,6 +7987,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_5` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_5` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_5` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_5` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_6` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_6` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_6` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -7993,6 +7998,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_6` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_6` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_6` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_6` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_7` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_7` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_7` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8003,6 +8009,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_7` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_7` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_7` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_7` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_8` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_8` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_8` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8013,6 +8020,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_8` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_8` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_8` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_8` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_9` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_9` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_9` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8023,6 +8031,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_9` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_9` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_9` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_9` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_10` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_10` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_10` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8033,6 +8042,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_10` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_10` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_10` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_10` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_11` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_11` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_11` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8043,6 +8053,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_11` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_11` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_11` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_11` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_12` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_12` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_12` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8053,6 +8064,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_12` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_12` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_12` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_12` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_13` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_13` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_13` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8063,6 +8075,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_13` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_13` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_13` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_13` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_14` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_14` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_14` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8073,6 +8086,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_14` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_14` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_14` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_14` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_15` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_15` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_15` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8083,6 +8097,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_15` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_15` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_15` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_15` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_16` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_16` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_16` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8093,6 +8108,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_16` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_16` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_16` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_16` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_17` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_17` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_17` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8103,6 +8119,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_17` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_17` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_17` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_17` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_18` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_18` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_18` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8113,6 +8130,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_18` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_18` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_18` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_18` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_19` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_19` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_19` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8123,6 +8141,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_19` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_19` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_19` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_19` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_20` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_20` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_20` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8133,6 +8152,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_20` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_20` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_20` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_20` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_21` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_21` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_21` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8143,6 +8163,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_21` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_21` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_21` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_21` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_22` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_22` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_22` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8153,6 +8174,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_22` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_22` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_22` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_22` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_23` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_23` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_23` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8163,6 +8185,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_23` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_23` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_23` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_23` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `prompt_24` | `STRING` | No |  |  | One segment of the video, as `a lone astronaut walks across a red desert plain`. Each continues where the last left off; a blank row is skipped. A name given as `<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears. |
 | `duration_24` | `FLOAT` | No | 5.2 |  | Seconds this segment runs, carried frames included, matching its `duration_seconds` line. Lengths are 17k+5 frames at 24 fps: `8.0` is exact, `7` snaps to 7.29, `9` to 8.71. The report states each segment's frames. |
 | `overlap_24` | `INT` | No | 22 |  | Frames carried from the previous segment: `0` = a cut to somewhere new; `22` = the scene carries on; `39` or `56` = holds the scene harder. Sound carries take whole clips, `17` for about 0.7s. Ignored on segment 1. |
@@ -8173,6 +8196,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `strength_24` | `FLOAT` | No | 1.0 |  | How firmly this segment holds its pinned frames and references, the ones a transition adds included: `1.0` = held as given; lower values add noise to them before sampling, as `0.7`. Sound references are not changed. |
 | `sound_24` | `COMBO` | No | auto | `auto`, `carry`, `fresh` | How this segment's sound follows the last: `auto` = as its transition does; `carry` = the last segment's sound runs on across the cut, under any cut picture; `fresh` = new sound, under a carried shot too. |
 | `seed_24` | `INT` | No | 0 |  | This segment's seed, as `0` for H3 Extend Window's seed plus the segment number, or `1234` to sample this segment from its own seed whatever the others use. |
+| `enabled_24` | `BOOLEAN` | No | True |  | `true` = this segment runs; `false` = it is skipped like a blank row, and the segments left keep their numbers, seeds and assets, so a few can be run on their own. |
 | `model_fl2va` | `MODEL` | No |  |  | The MiniMax H3 fl2va model, which samples a segment from text and pinned frames. Optional: with it wired, H3 Extend Window and MiniMax H3 Clip Select answer it on their model output for every row set to `fl2va`, or to `auto` with no references. |
 | `model_ref2va` | `MODEL` | No |  |  | The MiniMax H3 ref2va model, which samples a segment on reference pictures, clips and sounds. Optional: with it wired, H3 Extend Window and MiniMax H3 Clip Select answer it on their model output for every row set to `ref2va`, or to `auto` with references. |
 | `first_frame` | `IMAGE` | No |  |  | The frame the clip opens on, stretched to the canvas. |
@@ -8352,82 +8376,82 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 | `fuse` | `BOOLEAN` | No | False |  | `false` = one patch per row; `true` = every row joined into one patch, cheaper on a long stack, near-identical results within float rounding. A row whose format cannot be joined is carried through, scaled. |
 | `strength` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | Multiplies every row's strength; 1.0 leaves the rows as set. A list, as Number Sequence's values, sets it per sampling step, stretched to fit; the text encoder takes the first value, and steps away from it run slower. |
 | `lora_1_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_1` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_1` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_1_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_2_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_2` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_2` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_2_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_3_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_3` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_3` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_3_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_4_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_4` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_4` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_4_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_5_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_5` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_5` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_5_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_6_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_6` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_6` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_6_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_7_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_7` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_7` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_7_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_8_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_8` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_8` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_8_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_9_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_9` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_9` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_9_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_10_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_10` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_10` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_10_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_11_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_11` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_11` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_11_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_12_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_12` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_12` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_12_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_13_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_13` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_13` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_13_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_14_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_14` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_14` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_14_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_15_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_15` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_15` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_15_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_16_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_16` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_16` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_16_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_17_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_17` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_17` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_17_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_18_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_18` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_18` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_18_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_19_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_19` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_19` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_19_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_20_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_20` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_20` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_20_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_21_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_21` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_21` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_21_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_22_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_22` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_22` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_22_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_23_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_23` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_23` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_23_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_24_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_24` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_24` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_24_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_25_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_25` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_25` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_25_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 | `lora_26_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_26` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_26` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_26_weight` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | How strongly this row counts: 1.0 = as trained; below 1 weakens it; above 1 pushes past it; negative reverses it; 0 leaves the row out. A list, as Number Sequence's values, sets it per sampling step, times strength. |
 
 **Outputs**
@@ -8483,7 +8507,7 @@ Build an EMA-VFI network for EMA-VFI Frame Interpolation. The network is kept fo
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `checkpoint` | `COMBO` | Yes |  |  | Which EMA-VFI weights to build. 'small' files = faster, less accurate; '_t' files = can land anywhere between two frames, needed for a multiplier above 2. A name not on disk is fetched on the first run that needs it. |
+| `checkpoint` | `COMBO,STRING` | Yes |  |  | EMA-VFI weights: 'small' = faster, less accurate; '_t' = any point between two frames, needed above a multiplier of 2. Fetched on first use. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -8507,7 +8531,7 @@ Load the Kandinsky 6 audio VAE, which turns the sound half of a Kandinsky 6 late
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `vae_name` | `COMBO` | Yes |  |  | The audio_vae file from a Kandinsky-6.0 repository, saved under models/vae, as kandinsky6_audio_vae.safetensors. One file serves every Kandinsky 6 checkpoint. |
+| `vae_name` | `COMBO,STRING` | Yes |  |  | The audio_vae file from a Kandinsky-6.0 repository, saved under models/vae, as kandinsky6_audio_vae.safetensors. One file serves every Kandinsky 6 checkpoint. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -8531,7 +8555,7 @@ Load a language model from models/text_encoders as a CLIP that writes text, for 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model_name` | `COMBO` | Yes |  |  | A language model in models/text_encoders, such as qwen3_32b_w4a8.safetensors or qwen_3_4b.safetensors. Qwen3 14B and 32B load in their Hugging Face layout, plain or quantized. |
+| `model_name` | `COMBO,STRING` | Yes |  |  | A language model in models/text_encoders, such as qwen3_32b_w4a8.safetensors or qwen_3_4b.safetensors. Qwen3 14B and 32B load in their Hugging Face layout, plain or quantized. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -8555,7 +8579,7 @@ Build a SEA-RAFT or FlowSeek optical flow network for the motion_model input of 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `checkpoint` | `COMBO` | Yes |  |  | Which weights to build: 'sea_raft_m_spring' = default; 'sea_raft_s_spring' = about 1.3x faster; 'sea_raft_m_ct' = general purpose; 'flowseek_t_ct' = reads depth too, about 1.5x slower. Files already on disk are listed first. |
+| `checkpoint` | `COMBO,STRING` | Yes |  |  | Which weights to build: 'sea_raft_m_spring' = default; 'sea_raft_s_spring' = about 1.3x faster; 'sea_raft_m_ct' = general purpose; 'flowseek_t_ct' = reads depth too, about 1.5x slower. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `iterations` | `INT` | Yes | 4 |  | Refinement passes per frame pair: 4 = default, the published fast setting; 12 = the published accurate setting, 1.5 to 2x slower. |
 
 **Outputs**
@@ -10781,7 +10805,7 @@ Give a FLUX 3 Image Klein base model the distilled checkpoint's target-time bran
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The FLUX 3 Image Klein base model, before or after the distillation LoRA: Load Diffusion Model on flux3_image_klein_bf16, then Load LoRA on flux3_image_klein_distill_r256, r64, r32 or r16. |
-| `checkpoint` | `COMBO` | Yes |  |  | The distilled checkpoint the branch is read from: flux3_image_klein_sd_bf16 or flux3_image_klein_sd_int8_convrot. Both hold the same bf16 branch. A file with no _sd_ holds none. |
+| `checkpoint` | `COMBO,STRING` | Yes |  |  | The distilled checkpoint the branch is read from: flux3_image_klein_sd_bf16 or flux3_image_klein_sd_int8_convrot. Both hold the same bf16 branch. A file with no _sd_ holds none. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -10996,7 +11020,7 @@ Upscale a video of any length with MiniMax H3, enlarging it in the latent and re
 | `positive` | `CONDITIONING` | Yes |  |  | What the clip shows, or how to refine it, from CLIP Text Encode. |
 | `negative` | `CONDITIONING` | Yes |  |  | What to avoid, read only when cfg is above 1. |
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE, for reading and writing the frames. |
-| `upscale_model` | `COMBO` | Yes |  |  | The learned upscaler, from ComfyUI/models/latent_upscale_models; `minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors` is fetched on first use with features.network on. `bicubic` resizes without one. |
+| `upscale_model` | `COMBO,STRING` | Yes |  |  | The learned upscaler, from ComfyUI/models/latent_upscale_models; `minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors` is fetched on first use with features.network on. `bicubic` resizes without one. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `scale` | `FLOAT` | Yes | 2.0 |  | Size multiplier, sides rounded to 32 pixels: `1` = refine at the same size; `2` = 1216x672 to 2432x1344. |
 | `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `light` starts each chunk at sigma 0.4 and sharpens; `creative` starts at sigma 0.75 and redraws more. `2` to `12 step` expect a turbo LoRA; `full 25 step` none. |
 | `color_transfer` | `BOOLEAN` | Yes | True |  | `true` = each frame's colour and brightness are corrected against its source frame, by color_method; `false` = frames are written as H3 decoded them. |
@@ -11148,7 +11172,7 @@ Put a range of a model's transformer blocks back to another checkpoint of the sa
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The model to restore, such as MOSS-Image SFT with its LoRAs; MODEL. |
-| `checkpoint` | `COMBO` | Yes |  |  | The checkpoint the blocks are read from, the same model before fine-tuning: moss_image_base_int8_convrot or moss_image_base_bf16 for MOSS-Image SFT. Only the chosen blocks are read. |
+| `checkpoint` | `COMBO,STRING` | Yes |  |  | The checkpoint the blocks are read from, the same model before fine-tuning: moss_image_base_int8_convrot or moss_image_base_bf16 for MOSS-Image SFT. Only the chosen blocks are read. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `first_block` | `INT` | Yes | 32 |  | First block restored, from 0. 32 = MOSS-Image SFT's banding blocks, 32 to 41; 37 = the top five only, which leaves part of the banding. |
 | `last_block` | `INT` | Yes | 41 |  | Last block restored. 41 = MOSS-Image's last block. |
 | `strength` | `FLOAT` | Yes | 1.0 |  | Share of the checkpoint's weights. 1 = its blocks exactly; 0.5 = halfway; 0 = no change. |
@@ -12949,7 +12973,7 @@ Load a saved or built-in system prompt or skill to steer a language or vision mo
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `system_prompt` | `COMBO` | Yes |  |  | Which prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts. |
+| `system_prompt` | `COMBO,STRING` | Yes |  |  | Which prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -13509,7 +13533,7 @@ Run a workflow saved in app mode as a single node. Its exposed inputs become val
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `app` | `COMBO` | Yes |  |  | Which saved app workflow to run; a name ending .app.json from the workflows directory, such as upscale.app.json. |
+| `app` | `COMBO,STRING` | Yes |  |  | Which saved app workflow to run; a name ending .app.json from the workflows directory, such as upscale.app.json. A wired path, such as `E:\images\cat.png`, works too. |
 | `overrides` | `STRING` | Yes | {} |  | Values for the workflow's exposed inputs, as JSON keyed on the input name: {"steps": 30, "text": "a red car"}. Anything left out keeps the value the workflow was saved with, and the widgets below are sent through here. |
 | `input_1` | `*` | No |  |  | Value for the first input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to that input, such as red_offset, and narrows its type to match. A file input takes an IMAGE here instead of reading the file. |
 | `input_2` | `*` | No |  |  | Value for the second input the workflow exposes, replacing what it saved; any type. Choosing a workflow renames this socket to that input, such as red_offset, and narrows its type to match. A file input takes an IMAGE here instead of reading the file. |
@@ -15065,8 +15089,8 @@ Load a GGUF language model from models/LLM or models/text_encoders and run it on
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `COMBO` | Yes |  |  | The .gguf model file, from ComfyUI/models/LLM or models/text_encoders, such as a Qwen3 4B Instruct Q8_0. |
-| `mmproj` | `COMBO` | Yes | none |  | `none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. |
+| `model` | `COMBO,STRING` | Yes |  |  | The .gguf model file, from ComfyUI/models/LLM or models/text_encoders, such as a Qwen3 4B Instruct Q8_0. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `mmproj` | `COMBO,STRING` | Yes | none |  | `none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `n_ctx` | `INT` | Yes | 8192 |  | The most tokens the model reads at once, conversation and reply together. `8192` suits chat; larger values take more memory. |
 | `gpu_layers` | `INT` | Yes | -1 |  | `-1` = every layer on the GPU; `0` = CPU only; `20` = the first 20 layers. Needs a llama-cpp-python build with GPU support. |
 | `flash_attn` | `BOOLEAN` | Yes | False |  | `true` uses flash attention, which saves memory on a long context where the build supports it. |
@@ -15134,7 +15158,7 @@ Choose a CLIP or SigLIP model that places pictures and text in the same space, s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `COMBO` | Yes |  |  | A CLIP or SigLIP folder in models/LLM, or a suggested model downloaded there on first use with features.network on. `google/siglip2-base-patch16-224` = small and quick; `google/siglip2-so400m-patch14-384` = more exact. |
+| `model` | `COMBO,STRING` | Yes |  |  | A CLIP or SigLIP folder in models/LLM, or a suggested model downloaded there on first use with features.network on. `google/siglip2-base-patch16-224` = small and quick; `google/siglip2-so400m-patch14-384` = more exact. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `batch_size` | `INT` | Yes | 16 |  | Pictures or texts embedded together: 16 = the usual; lower it if VRAM runs out. |
 
 **Outputs**
@@ -15222,7 +15246,7 @@ Load a Hugging Face language model folder from models/LLM and run it on this mac
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `COMBO` | Yes |  |  | A model folder in ComfyUI/models/LLM, such as `Qwen3-4B-Instruct-2507`, or a suggested repository, downloaded on first use when features.network is on. |
+| `model` | `COMBO,STRING` | Yes |  |  | A model folder in ComfyUI/models/LLM, such as `Qwen3-4B-Instruct-2507`, or a suggested repository, downloaded on first use when features.network is on. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `dtype` | `COMBO` | Yes | auto | `auto`, `bfloat16`, `float16`, `float32` | `auto` = bfloat16 or float16 on the GPU, float32 on the CPU; `float32` is exact and twice the memory. |
 | `quantize` | `COMBO` | Yes | none | `none`, `8-bit`, `4-bit` | `none` = full weights; `8-bit` about halves the memory; `4-bit` quarters it. Quantized models need an NVIDIA GPU and stay on it. |
 | `attention` | `COMBO` | Yes | sdpa | `sdpa`, `eager` | `sdpa` = PyTorch's fused attention, faster; `eager` = the plain version, for a model sdpa refuses. |
@@ -17717,7 +17741,7 @@ Load a diffusers-format model directory from models/diffusers and emit its name 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model_path` | `COMBO` | Yes |  |  | The model directory in models/diffusers to load. Each entry is a folder holding unet, vae and text_encoder subdirectories, which is what cloning a Hugging Face model repository produces. |
+| `model_path` | `COMBO,STRING` | Yes |  |  | The model folder in models/diffusers to load, holding unet, vae and text_encoder subfolders as a cloned Hugging Face model repository does. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -18049,7 +18073,7 @@ Produce a colour lookup table to grade images with. Pick a .cube file from a mod
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `look` | `COMBO` | Yes |  |  | Which table to produce. 'Custom' builds one from the controls below and ignores any file; the named looks are built in and need no file; entries starting 'LUT: ' are .cube files found in a models/LUT directory or in the pack's own luts directory. |
+| `look` | `COMBO,STRING` | Yes |  |  | Which table to produce. 'Custom' builds one from the controls below; the named looks are built in; entries starting 'LUT: ' are .cube files in a models/LUT folder or ComfyUI/user/was-node-suite/luts. A wired path, such as `E:\images\cat.png`, works too. |
 | `builtin_size` | `INT` | Yes | 33 |  | Edge length of the cube built for a named look or for 'Custom', in samples. 33 is the industry-standard size and is plenty; 65 is finer and eight times the memory. Ignored when a .cube file is chosen, since the file sets its own size. |
 | `custom_ev` | `FLOAT` | Yes | 0.0 |  | Exposure in photographic stops, for the 'Custom' look. +1.0 doubles the brightness, -1.0 halves it, 0.0 changes nothing. |
 | `custom_contrast` | `FLOAT` | Yes | 1.0 |  | Contrast for the 'Custom' look, around mid grey. Above 1.0 deepens shadows and brightens highlights, below 1.0 flattens the picture towards grey, 1.0 changes nothing. |
@@ -18512,7 +18536,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The model the reweighted LoRA is applied to. |
 | `clip` | `CLIP` | Yes |  |  | The clip the LoRA's text-encoder half is applied to. A LoRA with no text-encoder tensors leaves it untouched. |
-| `lora_name` | `COMBO` | Yes |  |  | The LoRA file to reweight, from your LoRA folder. It is read from disk on every run, so the original file is never modified. |
+| `lora_name` | `COMBO,STRING` | Yes |  |  | The LoRA file to reweight, from your LoRA folder. It is read from disk on every run, so the original file is never modified. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `strength_model` | `FLOAT` | Yes | 0.8 |  | How strongly the reweighted LoRA is applied to the model, before any block scaling. 1.0 is full strength; a negative value pushes away from what the LoRA learned. |
 | `strength_clip` | `FLOAT` | Yes | 0.8 |  | The same for the clip. Lowering it while leaving strength_model alone keeps the LoRA's look without its trigger words dominating the prompt. |
 | `global_scale` | `FLOAT` | Yes | 1.0 |  | Multiplier applied to every block before the three below. 1.0 changes nothing; use it to turn the whole reweighting up or down once the balance between the thirds is right. |
@@ -18562,82 +18586,82 @@ Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads
 | `options` | `WAS_LORA_MERGE_OPTIONS` | No |  |  | Optional settings from a Power LoRA Merger Options node: rank, precision, module filters and the per-mode controls. Leave it unconnected to merge at rank 32 in bf16. |
 | `stack_data` | `LORA_STACK,MODEL` | No |  |  | LoRAs to merge in place of the rows, in order, each at its model strength: a lora_stack output, or the model output of a Power LoRA Loader, ours or rgthree's, whose switched-on rows are read. |
 | `lora_1_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_1` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_1` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_1_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_2_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_2` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_2` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_2_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_3_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_3` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_3` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_3_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_4_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_4` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_4` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_4_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_5_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_5` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_5` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_5_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_6_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_6` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_6` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_6_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_7_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_7` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_7` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_7_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_8_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_8` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_8` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_8_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_9_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_9` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_9` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_9_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_10_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_10` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_10` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_10_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_11_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_11` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_11` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_11_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_12_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_12` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_12` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_12_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_13_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_13` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_13` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_13_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_14_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_14` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_14` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_14_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_15_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_15` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_15` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_15_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_16_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_16` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_16` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_16_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_17_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_17` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_17` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_17_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_18_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_18` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_18` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_18_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_19_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_19` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_19` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_19_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_20_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_20` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_20` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_20_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_21_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_21` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_21` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_21_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_22_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_22` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_22` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_22_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_23_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_23` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_23` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_23_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_24_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_24` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_24` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_24_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_25_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_25` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_25` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_25_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 | `lora_26_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
-| `lora_26` | `COMBO` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. |
+| `lora_26` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `lora_26_weight` | `FLOAT` | No | 1.0 |  | How strongly this row counts. 1.0 is the LoRA as it was trained, below 1 weakens it, above 1 pushes it past what it was trained for, and a negative value applies it in reverse. 0 leaves the row out. |
 
 **Outputs**
@@ -19042,7 +19066,7 @@ Mask the bare skin of every person in a picture, leaving out clothes, hair, back
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `image` | `IMAGE` | Yes |  |  | The pictures to find skin in; IMAGE. Each picture of a batch is masked on its own. |
-| `model` | `COMBO` | Yes |  |  | Body-part network from ComfyUI/models/sapiens. `sapiens2_1b_seg` = sure of unusual bodies and poses, 3 GB of VRAM; `0.4b` and `0.8b` = lighter, less sure of them; `5b` = about 10 GB. Downloaded on first use. |
+| `model` | `COMBO,STRING` | Yes |  |  | Body-part network in models/sapiens: `sapiens2_1b_seg` = sure of unusual poses, 3 GB of VRAM; `0.4b` and `0.8b` = lighter; `5b` = about 10 GB. Fetched on first use. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `areas` | `COMBO` | Yes | all skin | `all skin`, `face`, `body` | Which skin the mask keeps. 'all skin' = face and body; 'face' = from the jaw to the forehead; 'body' = everything below the jaw. |
 | `eyes` | `COMBO` | Yes | remove with brows | `remove with brows`, `remove`, `keep` | 'remove with brows' = cut out the eyes and the eyebrows; 'remove' = the eyes alone; 'keep' = leave both in the mask. |
 | `mouth` | `COMBO` | Yes | remove inside | `remove inside`, `remove lips`, `keep` | 'remove inside' = cut out the teeth and tongue; 'remove lips' = the lips as well; 'keep' = leave the whole mouth in the mask. |
@@ -19087,9 +19111,9 @@ Turn an image into a ControlNet hint or a map for relighting, defocus and maskin
 | `steps` | `INT` | Yes | 4 |  | How many passes a question that denoises takes. `albedo`, `roughness`, `metallicity`, `material`, `shading` and `residual` read 1 to 20: 4 is what Marigold was tuned for, 1 is roughly twice as quick and coarser, and above 8 the answer stops changing much. |
 | `model` | `MODEL` | No |  |  | The transformer `Marigold v2` runs on: Load Diffusion Model on `qwen_image_edit_2509_int8_convrot` or another `qwen_image_edit_2509` build. Choosing `Marigold v2` wires one in, reusing one already in the graph. One transformer answers every map. |
 | `vae` | `VAE` | No |  |  | A decoder to read the map through, in place of `vae_name`. Wire Load VAE, or anything answering a VAE, to use one this node cannot find by name. |
-| `adapter_name` | `COMBO` | No | auto |  | `auto` = this map's adapter, found by name in the loras folder; `already on the model` = apply none, for a LoRA put on the transformer before it arrives; `marigold_v2_normals.safetensors` = that file. |
-| `vae_name` | `COMBO` | No | auto |  | `auto` = this map's decoder, found by name in the vae folder; `marigold_v2_normals_vae.safetensors` = that file. The `vae` socket beats this when wired. |
-| `conditioning_name` | `COMBO` | No | auto |  | `auto` = this map's prompt embedding, found by name in the embeddings folder; `marigold_v2_depth_conditioning.safetensors` = that file. The `conditioning` socket beats this when wired. |
+| `adapter_name` | `COMBO,STRING` | No | auto |  | `auto` = this map's adapter, found by name in the loras folder; `already on the model` = none, for a LoRA already applied; `marigold_v2_normals.safetensors` = that file. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `vae_name` | `COMBO,STRING` | No | auto |  | `auto` = this map's decoder, found by name in the vae folder; `marigold_v2_normals_vae.safetensors` = that file. The `vae` socket beats this when wired. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `conditioning_name` | `COMBO,STRING` | No | auto |  | `auto` = this map's prompt embedding, found by name in the embeddings folder; `marigold_v2_depth_conditioning.safetensors` = that file. The `conditioning` socket beats this when wired. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `conditioning` | `CONDITIONING` | No |  |  | A prompt embedding to read the map against, from a text encoder or a loaded conditioning. Used in place of `conditioning_name`. Keep it full length: a short prompt flattens the map, while the wording barely moves it. |
 
 **Outputs**
@@ -19117,7 +19141,7 @@ Build a cutout network for Image Remove Background from a checkpoint in ComfyUI/
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `COMBO` | Yes |  |  | Checkpoint to build, as folder/file. `birefnet/General.safetensors` suits most pictures, `Portrait` people, `Matting-HR` hair and fine edges; `ben2/ben2-base.safetensors` is a second opinion. Lists every full size BiRefNet or BEN2 .safetensors in those folders; Lite files are left out. |
+| `model` | `COMBO,STRING` | Yes |  |  | Checkpoint as folder/file: `birefnet/General.safetensors` suits most pictures, `Portrait` people, `Matting-HR` hair and fine edges; `ben2/ben2-base.safetensors` is a second opinion. Lite files are not listed. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -19540,7 +19564,7 @@ Use any material the pack has no node for, built by a module file on disk whose 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `module` | `COMBO` | Yes |  |  | Which module builds the material. The menu lists every `.js` and `.txt` file opening with `// was-threejs-module 1` in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. |
+| `module` | `COMBO,STRING` | Yes |  |  | Which module builds the material. The menu lists every `.js` and `.txt` file opening with `// was-threejs-module 1` in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `texture1` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
 | `texture2` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
 | `texture3` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
@@ -20854,8 +20878,8 @@ Deprecated: use ComfyUI's Load Checkpoint instead, which reads the architecture 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `config_name` | `COMBO` | Yes |  |  | The .yaml config in models/configs that describes the checkpoint's architecture. Only original Stable Diffusion 1.x and 2.x weights need one; anything newer loads with ComfyUI's Load Checkpoint instead, which needs no config. |
-| `ckpt_name` | `COMBO` | Yes |  |  | The checkpoint file in models/checkpoints to load. |
+| `config_name` | `COMBO,STRING` | Yes |  |  | The .yaml config in models/configs describing the checkpoint's architecture. Only original Stable Diffusion 1.x and 2.x weights need one; ComfyUI's Load Checkpoint loads anything newer. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `ckpt_name` | `COMBO,STRING` | Yes |  |  | The checkpoint file in models/checkpoints to load. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -20883,7 +20907,7 @@ Deprecated: use ComfyUI's Load Checkpoint instead. Loads a checkpoint and return
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `ckpt_name` | `COMBO` | Yes |  |  | The checkpoint file in models/checkpoints to load. |
+| `ckpt_name` | `COMBO,STRING` | Yes |  |  | The checkpoint file in models/checkpoints to load. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -20913,7 +20937,7 @@ Deprecated: use ComfyUI's Load LoRA instead. Applies a LoRA to a model and a CLI
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | The diffusion model the LoRA is applied to. |
 | `clip` | `CLIP` | Yes |  |  | The text encoder the LoRA is applied to. Most LoRAs adjust both halves, so this is wired from the same checkpoint as model. |
-| `lora_name` | `COMBO` | Yes |  |  | The LoRA file in models/loras to apply. 'None' passes the model and CLIP through unchanged. |
+| `lora_name` | `COMBO,STRING` | Yes |  |  | The LoRA file in models/loras to apply. 'None' passes the model and CLIP through unchanged. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `strength_model` | `FLOAT` | Yes | 1.0 |  | How strongly the LoRA modifies the diffusion model. 1.0 is the strength it was trained at, 0.0 leaves the model alone, and a negative value applies it in reverse. |
 | `strength_clip` | `FLOAT` | Yes | 1.0 |  | How strongly the LoRA modifies the text encoder. 1.0 is the strength it was trained at; lowering it keeps the LoRA's look while letting the prompt matter more. |
 
@@ -20942,7 +20966,7 @@ Deprecated: use ComfyUI's unCLIP Checkpoint Loader instead. Loads an unCLIP chec
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `ckpt_name` | `COMBO` | Yes |  |  | The checkpoint file in models/checkpoints to load. An unCLIP checkpoint is needed for the CLIP_VISION output to carry anything. |
+| `ckpt_name` | `COMBO,STRING` | Yes |  |  | The checkpoint file in models/checkpoints to load. An unCLIP checkpoint is needed for the CLIP_VISION output to carry anything. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 
@@ -20971,7 +20995,7 @@ Deprecated: use ComfyUI's Load Upscale Model instead. Loads an upscale model and
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model_name` | `COMBO` | Yes |  |  | The upscale model in models/upscale_models to load. Its own scale factor, usually 2x or 4x, decides how much larger the result is. |
+| `model_name` | `COMBO,STRING` | Yes |  |  | The upscale model in models/upscale_models to load. Its own scale factor, usually 2x or 4x, decides how much larger the result is. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 

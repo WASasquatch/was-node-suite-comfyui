@@ -5,6 +5,8 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import REMBG_MODEL
+from ...modules.io import picker
+from ...modules.util import sandbox
 from ...modules.model import cutout
 
 REQUIRES = "preprocessors"
@@ -43,18 +45,17 @@ class RembgModelLoader(io.ComfyNode):
                 "downloaded and fetched on first use."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model",
                     options=found or [NO_CHECKPOINT],
                     default=cutout.DEFAULT if cutout.DEFAULT in found else None,
                     tooltip=(
-                        "Checkpoint to build, as folder/file. `birefnet/General.safetensors` "
-                        "suits most pictures, `Portrait` people, `Matting-HR` hair and fine "
-                        "edges; `ben2/ben2-base.safetensors` is a second opinion. Lists every "
-                        "full size BiRefNet or BEN2 .safetensors in those folders; Lite files "
-                        "are left out."
+                        "Checkpoint as folder/file: `birefnet/General.safetensors` suits most "
+                        "pictures, `Portrait` people, `Matting-HR` hair and fine edges; "
+                        "`ben2/ben2-base.safetensors` is a second opinion. Lite files are not "
+                        "listed."
                     ),
-                ),
+                ), model=True),
             ],
             outputs=[
                 REMBG_MODEL.Output(
@@ -68,16 +69,17 @@ class RembgModelLoader(io.ComfyNode):
         )
 
     @classmethod
-    def validate_inputs(cls, model) -> bool | str:
-        """Accept a listed checkpoint or a name an earlier menu offered.
+    def validate_inputs(cls, model=None) -> bool | str:
+        """Accept a listed checkpoint, a name an earlier menu offered, or a wired one.
 
         Args:
-            model: The stored combo value.
+            model: The stored combo value, or ``None`` where a link carries it, which is
+                checked when the node runs.
 
         Returns:
             True, or the message naming what to pick.
         """
-        if model in cutout.LEGACY or model in cutout.offered():
+        if model is None or model in cutout.LEGACY or model in cutout.offered():
             return True
         if model == NO_CHECKPOINT:
             return (
@@ -92,4 +94,26 @@ class RembgModelLoader(io.ComfyNode):
 
     @classmethod
     def execute(cls, model) -> io.NodeOutput:
-        return io.NodeOutput(cutout.load(model))
+        return io.NodeOutput(cutout.load(cls.menu_name(model)))
+
+    @staticmethod
+    def menu_name(value) -> str:
+        """The ``family/file`` name a wired checkpoint path is listed under.
+
+        Args:
+            value: A menu name, or a full path wired in as text.
+
+        Returns:
+            The value itself for a name, else ``birefnet/<file>`` or ``ben2/<file>``.
+
+        Raises:
+            PathNotAllowed: The path is in neither model folder.
+        """
+        if picker.written_path(value) is None:
+            return value
+        for family in ("birefnet", "ben2"):
+            try:
+                return f"{family}/{picker.model_name(value, (family,))}".replace("\\", "/")
+            except sandbox.PathNotAllowed:
+                continue
+        return picker.model_name(value, ("birefnet", "ben2"))

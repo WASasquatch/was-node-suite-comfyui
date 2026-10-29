@@ -461,11 +461,12 @@ def typed(
     Args:
         value: The text, as :func:`path_text` reads it.
         extensions: Suffixes the file must carry, or ``None`` for every file.
-        tags: The roots it must lie under.
+        tags: The roots the menu lists, tried first for the label. A file under any other
+            root of :data:`ROOTS` is taken too, labelled with that root.
 
     Returns:
         The entry, or ``None`` when the text is no path, or names no file of these kinds under
-        those roots.
+        any of those roots.
 
     Raises:
         PathNotAllowed: The path lies outside every permitted read root.
@@ -481,7 +482,9 @@ def typed(
     wanted = tuple(_suffixes(extensions)) if extensions is not None else None
     if wanted is not None and not target.name.lower().endswith(wanted):
         return None
-    for order, (tag, root) in enumerate(roots(tags)):
+    places = roots(tags)
+    places += [place for place in roots(ROOTS) if place not in places]
+    for order, (tag, root) in enumerate(places):
         if not sandbox.contains(root, target):
             continue
         relative = target.relative_to(root).as_posix()

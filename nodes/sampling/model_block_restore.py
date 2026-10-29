@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
+from ...modules.io import picker
 from ...modules.model import block_restore
 
 #: The source checkpoint the menu starts on, where the folder holds one.
@@ -41,14 +42,14 @@ class ModelBlockRestore(io.ComfyNode):
                     "model",
                     tooltip="The model to restore, such as MOSS-Image SFT with its LoRAs; MODEL.",
                 ),
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "checkpoint",
                     options=options,
                     default=default,
                     tooltip="The checkpoint the blocks are read from, the same model before "
                     "fine-tuning: moss_image_base_int8_convrot or moss_image_base_bf16 for "
                     "MOSS-Image SFT. Only the chosen blocks are read.",
-                ),
+                ), model=True),
                 io.Int.Input(
                     "first_block",
                     default=32,
@@ -89,7 +90,9 @@ class ModelBlockRestore(io.ComfyNode):
 
         Raises:
             ValueError: The blocks are out of range, or the checkpoint does not match the model.
+            PathNotAllowed: A wired path lies outside the diffusion_models folders.
         """
+        checkpoint = picker.model_name(checkpoint, (block_restore.FOLDER,))
         if strength <= 0.0:
             return io.NodeOutput(model)
         patched, _ = block_restore.restore(model, checkpoint, int(first_block), int(last_block),

@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import MOTION_MODEL
+from ...modules.io import picker
 from ...modules.model import flow_networks
 
 NODE_NAME = "Video Motion Model Loader"
@@ -43,16 +44,15 @@ class VideoMotionModelLoader(io.ComfyNode):
                 "checkpoint not yet there is fetched on first use."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "checkpoint",
                     options=found or [NO_CHECKPOINT],
                     tooltip=(
                         "Which weights to build: 'sea_raft_m_spring' = default; "
                         "'sea_raft_s_spring' = about 1.3x faster; 'sea_raft_m_ct' = general "
-                        "purpose; 'flowseek_t_ct' = reads depth too, about 1.5x slower. Files "
-                        "already on disk are listed first."
+                        "purpose; 'flowseek_t_ct' = reads depth too, about 1.5x slower."
                     ),
-                ),
+                ), model=True),
                 io.Int.Input(
                     "iterations",
                     default=FAST,
@@ -89,6 +89,7 @@ class VideoMotionModelLoader(io.ComfyNode):
                 f"ComfyUI/models/{flow_networks.FOLDER}. Either way, restart ComfyUI so the "
                 f"list is rebuilt."
             )
+        checkpoint = picker.model_name(checkpoint, (flow_networks.FOLDER,))
         built = flow_networks.backend(checkpoint)
         return io.NodeOutput(
             flow_networks.FlowNetwork(

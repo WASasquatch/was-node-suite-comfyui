@@ -9,6 +9,7 @@ from comfy_api.latest import io
 from ...modules import log
 from ...modules.compat.types import LLM
 from ...modules.interface import run_result
+from ...modules.io import picker
 from ...modules.llm import gguf, runtime, wires
 
 REQUIRES = "llm"
@@ -51,14 +52,14 @@ class WASLLMGGUFLoader(io.ComfyNode):
                 "the GPU."
             ),
             inputs=[
-                io.Combo.Input(
+                picker.path_input(io.Combo.Input(
                     "model", options=models or [NO_MODELS],
                     tooltip="The .gguf model file, from ComfyUI/models/LLM or models/text_encoders, such as a Qwen3 4B Instruct Q8_0.",
-                ),
-                io.Combo.Input(
+                ), model=True),
+                picker.path_input(io.Combo.Input(
                     "mmproj", options=[NO_PROJECTOR, *gguf.projector_choices()], default=NO_PROJECTOR,
                     tooltip="`none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf.",
-                ),
+                ), model=True),
                 io.Int.Input(
                     "n_ctx", default=8192, min=512, max=262144, step=256,
                     tooltip="The most tokens the model reads at once, conversation and reply together. `8192` suits chat; larger values take more memory.",
@@ -120,8 +121,8 @@ class WASLLMGGUFLoader(io.ComfyNode):
         """Load the model and wrap it.
 
         Args:
-            model: The model's menu name.
-            mmproj: The projector's menu name, or ``none``.
+            model: The model's menu name, or a full path wired in as text.
+            mmproj: The projector's menu name or full path, or ``none``.
             n_ctx: The context length.
             gpu_layers: Layers offloaded to the GPU.
             flash_attn: Whether to use flash attention.
@@ -136,7 +137,12 @@ class WASLLMGGUFLoader(io.ComfyNode):
 
         Returns:
             The LLM wire.
+
+        Raises:
+            PathNotAllowed: A wired path lies outside the LLM and text_encoders folders.
         """
+        model = gguf.menu_name(model)
+        mmproj = gguf.menu_name(mmproj)
         if chat_format not in gguf.CHAT_FORMATS:
             raise ValueError(f"chat_format `{chat_format}` is not one this node offers. Pick one from the menu.")
         if model == NO_MODELS or not model:
