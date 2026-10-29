@@ -1,7 +1,7 @@
 [project]
 name = "was-node-suite-comfyui"
 description = "WAS-NS reborn; Tools for image processing, filters, masking, text, logic, numbers, latents, files, 3D scenes, animation, and Llama-Index in ComfyUI: language models, documents, retrieval, chat, memory and agents as nodes."
-version = "3.8.2"
+version = "3.8.3"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 

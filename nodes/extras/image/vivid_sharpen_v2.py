@@ -23,8 +23,8 @@ class WASVividSharpenV2(io.ComfyNode):
                 "Sharpen images by blending an inverted, blurred copy back over them in "
                 "vivid light, with each stage of the stack adjustable: two blur radii, a "
                 "brightness and contrast trim on the high-pass layer, and separate "
-                "opacities for the two blends. Runs on the whole batch at once on the GPU, "
-                "so it suits long video sequences."
+                "opacities for the two blends. Runs on the GPU as many frames at a time as "
+                "fit, so it suits long video sequences."
             ),
             inputs=[
                 io.Image.Input(
@@ -139,4 +139,5 @@ class WASVividSharpenV2(io.ComfyNode):
                 strength=strength,
             ),
             folded,
+            in_place=True,
         ))

@@ -17974,7 +17974,7 @@ Sharpen images by blending an inverted, blurred copy back over them in vivid lig
 <details>
 <summary><b>Vivid Sharpen (V2)</b></summary>
 
-Sharpen images by blending an inverted, blurred copy back over them in vivid light, with each stage of the stack adjustable: two blur radii, a brightness and contrast trim on the high-pass layer, and separate opacities for the two blends. Runs on the whole batch at once on the GPU, so it suits long video sequences.
+Sharpen images by blending an inverted, blurred copy back over them in vivid light, with each stage of the stack adjustable: two blur radii, a brightness and contrast trim on the high-pass layer, and separate opacities for the two blends. Runs on the GPU as many frames at a time as fit, so it suits long video sequences.
 
 | | |
 |---|---|

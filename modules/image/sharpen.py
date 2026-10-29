@@ -1,7 +1,8 @@
 """Vivid-light sharpening, the high-pass frequency-separation retouch.
 
 :func:`vivid_sharpen` sharpens one picture, :func:`sharpen_batch` a whole batch with each
-stage of the stack exposed. Both run in torch on ComfyUI's compute device.
+stage of the stack exposed. Both run in torch on ComfyUI's compute device, a run of frames
+at a time.
 """
 
 from __future__ import annotations
@@ -12,8 +13,11 @@ import torch
 import torch.nn.functional as functional
 from PIL import Image
 
-from .accelerate import run_on
+from .accelerate import run_frames
 from .blend_modes import blend, ceiling_of
+
+#: Float32 copies of a frame the sharpening stack holds at its peak.
+WORKING_COPIES = 16
 from .filters import _blurred, _picture, _planes
 
 
@@ -138,7 +142,7 @@ def vivid_sharpen(image, radius: float = 5, strength: float = 1.0):
         stacked = _stacked(bands, _high_pass(bands, radius), 1.0, 1.0, strength)
         return stacked.clamp(0.0, 1.0) * ceiling
 
-    result = run_on(colour, work)
+    result = run_frames(colour, work, factor=WORKING_COPIES, node="Vivid Sharpen")
     if carried.shape[-1]:
         result = torch.cat((result, carried), dim=-1)
     return _picture(result, image.mode) if picture else result
@@ -183,4 +187,4 @@ def sharpen_batch(
         result = _stacked(plane, high_pass, vivid_opacity, overlay_opacity, strength)
         return result.clamp(0.0, 1.0) * ceiling
 
-    return run_on(images, work)
+    return run_frames(images, work, factor=WORKING_COPIES, node="Vivid Sharpen (V2)")

@@ -55,6 +55,13 @@ and FlowSeek's `flowseek_*.pth` from [mattpoggi/flowseek](https://github.com/mat
 Load Model Patch lists `ComfyUI/models/ptd` as well as its own folder. The other files in those
 two repositories, the bf16 copies and the 6 and 8 step releases, are in the same two layouts.
 
+A PTD file can also carry a LoRA that H3 PTD Patch applies at every step:
+
+| In the file | Holds |
+|---|---|
+| `shared.<module>.lora_A.weight`, `shared.<module>.lora_B.weight` | One LoRA pair, named by ComfyUI's MiniMax H3 module: `blocks.N` or `token_refiner.blocks.N`, then `attn.qkv_proj`, `attn.out_proj`, `mlp.fc1` or `mlp.fc2` |
+| `ptd_shared_strength` metadata | The LoRA's strength, 1.0 where absent |
+
 The upscaler is fetched by the first run that picks it with `features.network: true`, and the
 `_bf16` file beside it loads too. `taeh3.safetensors` is never fetched. Another file named
 `taeh3`, the older per-frame decoder, is a different size and does not load. Both folders are

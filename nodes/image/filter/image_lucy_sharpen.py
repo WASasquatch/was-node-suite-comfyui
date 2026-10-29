@@ -9,11 +9,15 @@ from comfy_api.latest import io
 from ....modules import log
 from ....modules.convert.tensors import CHANNEL_COUNTS
 from ....modules.image import dynamic
+from ....modules.image.accelerate import run_frames
 
 logger = log.get_logger("image.lucy_sharpen")
 
 #: Added to the blurred estimate before the ratio against it is taken.
 EPSILON = 1e-6
+
+#: Float32 copies of a frame the deconvolution holds at its peak.
+WORKING_COPIES = 10
 
 
 def lucy_sharpen(images, iterations: int = 10, kernel_size: int = 3):
@@ -30,9 +34,14 @@ def lucy_sharpen(images, iterations: int = 10, kernel_size: int = 3):
         device it arrived on.
     """
     folded = dynamic.fold(images)
-    planes, restore = _as_planes(folded.images.to(torch.float32).clamp(0.0, 1.0))
-    sharpened = _deconvolve(planes, int(iterations), max(1, int(kernel_size)))
-    return dynamic.unfold(restore(sharpened.clamp(0.0, 1.0)), folded)
+    passes, kernel = int(iterations), max(1, int(kernel_size))
+
+    def work(batch: torch.Tensor) -> torch.Tensor:
+        planes, restore = _as_planes(batch.to(torch.float32).clamp(0.0, 1.0))
+        return restore(_iterate(planes, passes, kernel).clamp(0.0, 1.0))
+
+    sharpened = run_frames(folded.images, work, factor=WORKING_COPIES, node="Image Lucy Sharpen")
+    return dynamic.unfold(sharpened, folded, in_place=True)
 
 
 def _as_planes(images: torch.Tensor):
@@ -63,37 +72,6 @@ def _as_planes(images: torch.Tensor):
         images.reshape(1, 1, 1, -1) if images.ndim < 2 else images.reshape(1, 1, *shape),
         lambda planes: planes.reshape(shape),
     )
-
-
-def _deconvolve(planes: torch.Tensor, iterations: int, kernel_size: int) -> torch.Tensor:
-    """Deconvolve on ComfyUI's torch device, falling back to the batch's own device.
-
-    Args:
-        planes: ``(batch, channels, height, width)`` float tensor in 0 to 1.
-        iterations: How many deconvolution passes to run.
-        kernel_size: Side of the square box kernel, in pixels.
-
-    Returns:
-        A tensor the same shape as ``planes``, on the device ``planes`` is on.
-    """
-    try:
-        from comfy import model_management
-    except ImportError:
-        return _iterate(planes, iterations, kernel_size)
-
-    device = model_management.get_torch_device()
-    if device == planes.device:
-        return _iterate(planes, iterations, kernel_size)
-    try:
-        return _iterate(planes.to(device), iterations, kernel_size).to(planes.device)
-    except model_management.OOM_EXCEPTION as error:
-        logger.warning(
-            "%s ran out of memory sharpening a %s batch, so it was sharpened on %s "
-            "instead: %s",
-            device, tuple(planes.shape), planes.device, error,
-        )
-        model_management.soft_empty_cache()
-        return _iterate(planes, iterations, kernel_size)
 
 
 def _iterate(planes: torch.Tensor, iterations: int, kernel_size: int) -> torch.Tensor:

@@ -79,8 +79,16 @@ REF2VA_AUDIO_SHIFT = 3.0
 KNOT_TOLERANCE = 5e-3
 
 _FL2VA_KEY = re.compile(r"^transformer\.(?P<module>.+)\.lora_(?P<factor>[AB])\.(?P<hop>\d+)\.weight$")
+
+#: A step-independent adapter pair a file may carry beside its step adapters, by native module.
+_SHARED_KEY = re.compile(
+    r"^shared\.(?P<module>(?:token_refiner\.)?blocks\.\d+\.(?:attn\.qkv_proj|attn\.out_proj|mlp\.fc1|mlp\.fc2))"
+    r"\.lora_(?P<factor>[AB])\.weight$")
 _FL2VA_HEADS = {"proj_out.main": VIDEO_HEAD, "audio_proj_out.main": AUDIO_HEAD}
 _MISSING = object()
+
+#: Attribute on each forward this module installs, holding the forward it wraps.
+WRAPPED = "_was_ptd_wraps"
 
 
 def read_header(path) -> tuple[dict, dict]:
@@ -615,10 +623,51 @@ def build(sd, metadata, name: str) -> Bank:
     """
     release = release_of(metadata, sd.keys())
     if release == REF2VA:
-        return _build_ref2va(sd, metadata, name)
-    if release == FL2VA:
-        return _build_fl2va(sd, metadata, name)
-    raise ValueError(f"{name} is not a PTD file")
+        bank = _build_ref2va(sd, metadata, name)
+    elif release == FL2VA:
+        bank = _build_fl2va(sd, metadata, name)
+    else:
+        raise ValueError(f"{name} is not a PTD file")
+    _add_shared(bank, sd, metadata, name)
+    return bank
+
+
+def _add_shared(bank: Bank, sd, metadata, name: str) -> None:
+    """File a file's step-independent adapter pairs into every step, each pair held once.
+
+    Args:
+        bank: The bank the step adapters were built into.
+        sd: The file's tensors; ``shared.<native module>.lora_A.weight`` and ``lora_B`` pairs.
+        metadata: The file's metadata; ``ptd_shared_strength`` scales the pairs, 1.0 when absent.
+        name: The file name, for messages.
+
+    Raises:
+        ValueError: A pair is incomplete, or its factors do not chain.
+    """
+    pairs: dict[str, dict[str, torch.Tensor]] = {}
+    for key in sd:
+        if key.startswith("shared."):
+            match = _SHARED_KEY.fullmatch(key)
+            if match is None:
+                raise ValueError(f"{name} carries {key}, which names no MiniMax H3 projection")
+            pairs.setdefault(match["module"], {})[match["factor"]] = sd[key]
+    if not pairs:
+        return
+    strength = float(metadata.get("ptd_shared_strength", 1.0) or 1.0) / bank.scale
+    for module, factors in sorted(pairs.items()):
+        if set(factors) != {"A", "B"}:
+            raise ValueError(f"{name}: the shared adapter for {module} is incomplete")
+        down, up = factors["A"], factors["B"]
+        if down.ndim != 2 or up.ndim != 2 or up.shape[1] != down.shape[0]:
+            raise ValueError(f"{name}: the shared adapter for {module} has factors of {tuple(down.shape)} "
+                             f"and {tuple(up.shape)}, which do not chain")
+        scale = None if strength == 1.0 else torch.full((up.shape[0], 1), strength, dtype=torch.float32)
+        pair = (Factor(down), Factor(up, scale))
+        target = bank.target(module)
+        for hop in range(bank.hops):
+            target.add(hop, *pair, None)
+    dtype = str(next(iter(pairs.values()))["A"].dtype).replace("torch.", "")
+    bank.storage = f"{bank.storage}, with a {dtype} shared adapter on {len(pairs)} projections"
 
 
 def load(path):
@@ -672,28 +721,35 @@ def _adapted(original, target: Target, bank: Bank, state: _State, scale: float, 
             out = out.mul_(state.audio_rate)
         return out
 
+    setattr(forward, WRAPPED, original)
     return forward
 
 
-def _kept(original, held: dict):
-    """A forward that leaves its output in ``held`` for the feed-forward wrapper to read."""
+def _kept(original, held: dict, target: Target, bank: Bank, state: _State, act):
+    """A forward that projects each call's output through fc2's down factors, for the feed-forward wrapper."""
 
     def forward(x, *args, **kwargs):
         out = original(x, *args, **kwargs)
-        held["out"] = out
+        if state.hop is not None and "lows" in held:
+            factors = bank.factors(target)
+            if factors:
+                held["lows"].append([_act_low(out, down, down_scale, act) for down, down_scale, *_ in factors])
         return out
 
+    setattr(forward, WRAPPED, original)
     return forward
 
 
 def _feed_forward(original, target: Target, bank: Bank, state: _State, scale: float, act, held: dict):
-    """A feed-forward whose fused fc2 runs as ComfyUI runs it, with fc2's update added after."""
+    """A feed-forward whose fused fc2 runs as ComfyUI runs it, whole or in row chunks, with fc2's update added after."""
 
     def forward(x, *args, **kwargs):
-        held.pop("out", None)
-        out = original(x, *args, **kwargs)
-        h = held.pop("out", None)
-        if state.hop is None or h is None:
+        held["lows"] = []
+        try:
+            out = original(x, *args, **kwargs)
+        finally:
+            calls = held.pop("lows", [])
+        if state.hop is None or not calls:
             return out
         factors = bank.factors(target)
         if not factors:
@@ -701,10 +757,21 @@ def _feed_forward(original, target: Target, bank: Bank, state: _State, scale: fl
         if not out.is_contiguous():
             out = out.contiguous()
         rows = out.view(-1, out.shape[-1])
-        for down, down_scale, up, up_scale, part in factors:
-            _add_low(rows, _act_low(h, down, down_scale, act), up, up_scale, part, scale)
+        offset = 0
+        # Each fc1 call covers the next run of output rows, in order.
+        for lows in calls:
+            count = lows[0].shape[0]
+            for low, (_down, _down_scale, up, up_scale, part) in zip(lows, factors):
+                _add_low(rows[offset:offset + count], low, up, up_scale, part, scale)
+            offset += count
+        if offset != rows.shape[0]:
+            raise RuntimeError(
+                f"H3 PTD Patch: a feed-forward returned {rows.shape[0]} rows and its first layer ran over "
+                f"{offset}. Another patch on the feed-forward splits it in a way the PTD patch cannot follow; "
+                f"remove that patch or the PTD patch.")
         return out
 
+    setattr(forward, WRAPPED, original)
     return forward
 
 
@@ -803,9 +870,19 @@ def apply(model, bank: Bank):
     saved: list = []
     act = _swiglu()
 
-    def keep(module):
-        saved.append((module, module.__dict__.get("forward", _MISSING),
-                      module.__dict__.get("comfy_force_forward", _MISSING)))
+    def install(module, wrap, force: bool = False):
+        current = module.__dict__.get("forward")
+        # A wrapper an earlier run of this patch left behind is peeled off first.
+        while getattr(current, WRAPPED, None) is not None:
+            current = getattr(current, WRAPPED)
+            module.forward = current
+        before = (module.__dict__.get("forward", _MISSING),
+                  module.__dict__.get("comfy_force_forward", _MISSING))
+        installed = wrap(module.forward)
+        module.forward = installed
+        if force:
+            module.comfy_force_forward = True
+        saved.append((module, *before, installed))
 
     def inject(model_patcher):
         diffusion = model_patcher.model.diffusion_model
@@ -816,23 +893,22 @@ def apply(model, bank: Bank):
         for path, target in targets.items():
             if path.endswith(".mlp.fc2") and path[:-len(".fc2")] in fused:
                 continue
-            module = diffusion.get_submodule(path)
-            keep(module)
             audio = bank.release == FL2VA and path == AUDIO_HEAD
-            module.forward = _adapted(module.forward, target, bank, state, bank.scale, audio)
-            if path.endswith(".mlp.fc2"):
-                module.comfy_force_forward = True
+            install(diffusion.get_submodule(path),
+                    lambda inner, t=target, a=audio: _adapted(inner, t, bank, state, bank.scale, a),
+                    force=path.endswith(".mlp.fc2"))
         for path, target in fused.items():
             mlp = diffusion.get_submodule(path)
             held: dict = {}
-            keep(mlp.fc1)
-            mlp.fc1.forward = _kept(mlp.fc1.forward, held)
-            keep(mlp)
-            mlp.forward = _feed_forward(mlp.forward, target, bank, state, bank.scale, act, held)
+            install(mlp.fc1, lambda inner, t=target, h=held: _kept(inner, h, t, bank, state, act))
+            install(mlp, lambda inner, t=target, h=held: _feed_forward(inner, t, bank, state, bank.scale, act, h))
 
     def eject(model_patcher):
         while saved:
-            module, forward, force = saved.pop()
+            module, forward, force, installed = saved.pop()
+            # A module another patch has already put back keeps what that patch restored.
+            if module.__dict__.get("forward") is not installed:
+                continue
             if forward is _MISSING:
                 module.__dict__.pop("forward", None)
             else:

@@ -12,8 +12,11 @@ from collections.abc import Callable
 
 import torch
 
-from .accelerate import run_on
+from .accelerate import run_frames
 from .blend_modes import ceiling_of
+
+#: Float32 copies of a frame a look holds at its peak.
+WORKING_COPIES = 16
 from .fills import (
     blend_colour,
     blend_fill,
@@ -475,15 +478,15 @@ def apply(
     recipe = RECIPES[style]
     if strength <= 0.0:
         return images
+    # A look is written against 0 to 1, so a batch carrying light above white is scaled into
+    # that range and scaled back afterwards.
+    top = ceiling_of(images)
 
     def graded(batch: torch.Tensor) -> torch.Tensor:
-        # A look is written against 0 to 1, so a frame carrying light above white is scaled
-        # into that range and scaled back afterwards.
-        top = ceiling_of(batch)
         source = batch.float() / top
         plane = _glow(recipe(source), style)
         if strength < 1.0:
             plane = source + (plane - source) * strength
         return (plane * top).clamp(0.0, top).to(batch.dtype)
 
-    return run_on(images, graded, prefer_gpu)
+    return run_frames(images, graded, prefer_gpu, factor=WORKING_COPIES, node="Image Style Filter")
