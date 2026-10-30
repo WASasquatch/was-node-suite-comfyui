@@ -1732,7 +1732,7 @@ Load an image picked from ComfyUI's input, output and temp folders, or a folder 
 <details>
 <summary><b>Image Save</b></summary>
 
-Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif or exr. root picks the folder and filename_prefix names the subfolders and file below it, with tokens expanded. The images pass through unchanged, with the written paths on files.
+Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif or exr. root picks the folder and filename_prefix names the subfolders and file below it, with tokens expanded. Wired filenames and captions name each image and write its caption beside it in a .txt, ready for a training dataset.
 
 | | |
 |---|---|
@@ -1744,15 +1744,15 @@ Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to write. Every image in the batch gets its own file, each with the next number in the sequence. |
-| `root` | `COMBO` | Yes |  |  | Which folder the files land in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename_prefix names the part below it. |
-| `filename_prefix` | `STRING` | Yes | ComfyUI |  | The name part of each file, before the number. Tokens are expanded here too, so '[time(%H-%M)]' or a custom token can go in the name rather than the folder. Cleared, the file is just the delimiter and the number. |
+| `root` | `COMBO` | Yes |  |  | `output`, `temp` or `input` = ComfyUI's own folders, `input` being where loaders read uploads and datasets from; any folder under paths.allow_write or paths.allow_read in config.yaml is listed by its own name. filename_prefix names the path below it. |
+| `filename_prefix` | `STRING` | Yes | ComfyUI |  | Folders and name below root: `training/laracroft/lara` saves training/laracroft/lara_0001.png; a trailing `/`, as `training/laracroft/`, picks the folder alone. Tokens are expanded, as `[time(%H-%M)]`. Wired filenames replace the name and keep the folders. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_00001.png' with the default, 'ComfyUI-00001.png' with '-'. |
 | `filename_number_padding` | `INT` | Yes | 4 |  | How many digits the number is padded to with leading zeros. 4 gives '_0001', 1 gives '_1'. The count keeps rising past the padding, so too few digits sorts the files oddly rather than failing. |
 | `filename_number_start` | `BOOLEAN` | Yes | False |  | Where the number goes. Off = last, 'ComfyUI_0001.png'; on = first, '0001_ComfyUI.png', which sorts the files by number rather than by name. |
 | `extension` | `COMBO` | Yes |  | `png`, `jpg`, `jpeg`, `gif`, `tiff`, `webp`, `bmp`, `exr` | `png` = lossless, up to 16-bit, carries the workflow; `exr` = unclipped linear light at 16 or 32 bit; `jpg`/`jpeg` = small, lossy; `webp` = small, lossy or lossless; `tiff`/`bmp` = large, lossless; `gif` = 256 colours. |
 | `dpi` | `INT` | Yes | 300 |  | Print resolution recorded in the file, in dots per inch. It does not resize anything, it only tells a printer or a layout program how large to place the image. Written for png, jpg and jpeg only. |
 | `quality` | `INT` | Yes | 100 |  | How much detail is kept when the format throws some away: 100 is the best the format offers, 80 is a common balance, 1 is heavily degraded. Applies to jpg, jpeg, webp and tiff; png, bmp and gif ignore it. |
-| `optimize_image` | `BOOLEAN` | Yes | True |  | Whether to spend extra time packing the file smaller without changing how it looks. Every format except webp and bmp uses it. |
+| `optimize_image` | `BOOLEAN` | Yes | True |  | `on` = smaller files for a little more time, png at deflate level 6; `off` = the fastest writes, png at level 1 and a few percent larger. The pixels are the same either way. webp and bmp ignore it. |
 | `lossless_webp` | `BOOLEAN` | Yes | False |  | For the webp format only. `on` keeps every pixel exactly and makes a much larger file; `off` compresses it at the quality set above. |
 | `overwrite_mode` | `BOOLEAN` | Yes | False |  | `off` numbers every file, so nothing is ever replaced. `on` drops the number and writes the prefix alone, overwriting the same file on every run, which suits a fixed path an external tool watches. |
 | `show_history` | `BOOLEAN` | Yes | False |  | `off` previews the images this run wrote; `on` previews the files this node has written before instead, newest first, up to the limit in the pack's config. |
@@ -1761,13 +1761,15 @@ Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif
 | `show_previews` | `BOOLEAN` | Yes | True |  | Whether the saved images appear on the node. `off` still writes the files and keeps the node small, which suits a long batch. |
 | `bit_depth` | `COMBO` | Yes |  | `8-bit`, `16-bit`, `32-bit float` | `8-bit` = 256 levels, every format but `exr`; `16-bit` = 65536 levels, `png` or `exr`, keeps gradients banding-free through grading; `32-bit float` = `exr` only, keeps light above 1.0. A depth the format cannot hold fails the prompt. |
 | `profile` | `WAS_COLOUR_PROFILE` | No |  |  | A colour profile from Image Load. The images are converted from sRGB into that space and the file is written carrying it, so a photograph goes out tagged the way it came in. Left unconnected, the file is written in sRGB and carries no profile. |
+| `filenames` | `ARRAY,STRING` | No |  |  | One name per image, as filename_list from Load Image Batch. The folders in filename_prefix still apply: `training/laracroft/` and `cat` save training/laracroft/cat.png. A name already there gets a number unless overwrite_mode is on. Several lines are several names. |
+| `captions` | `ARRAY,STRING` | No |  |  | One caption per image, written as UTF-8 text under the image's own name: cat.png gets cat.txt. A single caption goes beside every image. Surrounding blank lines and spaces are trimmed. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `images` | `IMAGE` | The same images that came in, unchanged, so the node can sit in the middle of a chain instead of ending it. |
-| `files` | `STRING` | Full path of every file written this run, in batch order. A file that could not be written is left out of the list. |
+| `files` | `STRING` | Full path of every image written this run, in batch order. A file that could not be written is left out of the list. |
 
 </details>
 
@@ -1800,7 +1802,7 @@ Load one image from a folder by index, in sequence or at random, or every image 
 | `image` | `IMAGE` | The single image this run selected, as a batch of one. |
 | `filename_text` | `STRING` | That image's own file name, without the folders leading to it, for reuse as a caption or a save prefix. |
 | `image_list` | `IMAGE` | One image at a time rather than one batch, so a node wired here runs once per image. On `all_images` that is every match in the folder; on the other three modes it is the one image this run selected. |
-| `filename_list` | `STRING` | One name per image, in the same order as image_list, with the extension dropped so it can be wired straight into Image Save's filename_prefix. Image Save adds the extension it writes. |
+| `filename_list` | `STRING` | One name per image, in the same order as image_list, extension dropped. Wired into Image Save's filenames, each image is saved under its own name, with its caption beside it when captions is wired too. |
 
 </details>
 
@@ -8740,7 +8742,7 @@ List every Execution Gate and Any Gate in the graph, subgraphs included, each wi
 <details>
 <summary><b>Pause</b></summary>
 
-Stop a run at this node and wait for Resume on the node itself. Everything above it has already run and stays cached, so change a widget while it waits and queue again: only the changed node and what depends on it run a second time. Whatever is connected passes through untouched.
+Stop a run at this node and wait for Resume on the node itself, once per run even when a list arrives, such as one caption per image. Everything above it stays cached, so change a widget while it waits and queue again. Whatever is connected passes through untouched.
 
 | | |
 |---|---|
@@ -8759,7 +8761,7 @@ Stop a run at this node and wait for Resume on the node itself. Everything above
 
 | Name | Type | What it is |
 |---|---|---|
-| `value` | `COMFY_MATCHTYPE_V3` | What arrived, unchanged. |
+| `value` | `COMFY_MATCHTYPE_V3` | What arrived, unchanged: a list goes on as the same list, item by item. |
 | `outcome` | `STRING` | How the wait ended: resumed, timed out. |
 | `resumed` | `BOOLEAN` | true where Resume was pressed, false where the wait ran out. |
 
@@ -11604,7 +11606,7 @@ Write text with the language model inside a loaded CLIP, as core Generate Text d
 | `prompt` | `STRING` | Yes |  |  | What to ask the model, such as `Describe a lighthouse on a stormy night.` |
 | `max_length` | `INT` | Yes | 512 |  | The most tokens to write. A token is about three quarters of a word, so `512` is about 380 words. |
 | `sampling_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `on` draws each token at random within the limits below. `off` always takes the likeliest token and writes the same text every time. |
-| `image` | `IMAGE` | No |  |  | A picture to ask about, for a model that reads images such as Qwen 2.5 VL or Gemma 3. |
+| `image` | `IMAGE` | No |  |  | A picture to ask about, for a model that reads images, as qwen3vl_4b from Load CLIP with type `krea2`. |
 | `video` | `IMAGE` | No |  |  | Video frames as an image batch, read as 24 fps and sampled at 1 fps. |
 | `audio` | `AUDIO` | No |  |  | Sound to ask about, for a model that hears it. |
 | `thinking` | `BOOLEAN` | No | False |  | `true` lets a model that reasons, such as Qwen3, think before answering. |

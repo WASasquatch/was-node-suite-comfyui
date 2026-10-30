@@ -1,7 +1,7 @@
-"""The system prompt library as JSON a node interface draws, and the folder import it sends.
+"""The system prompt library as JSON a node interface draws, and the imports it sends.
 
-``GET /was/interface/api/system_prompts`` lists the entries, or with ``key`` answers one with
-its text. ``POST`` imports a folder or copies a built-in.
+``GET /was/interface/api/system_prompts`` lists the entries, or with ``key`` one with its text.
+``POST`` imports a folder or copies a built-in; :data:`ARCHIVE_ROUTE` takes a zip.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ from ..prompt import system_prompts
 from .channel import NO_STORE, REFUSAL_HEADER
 
 __all__ = [
+    "ARCHIVE_FAILED",
+    "ARCHIVE_ROUTE",
     "COPY_FAILED",
     "IMPORT_FAILED",
     "MAX_BODY_BYTES",
@@ -23,6 +25,7 @@ __all__ = [
     "REFUSAL",
     "ROUTE",
     "WORKERS",
+    "archive_payload",
     "entry_fields",
     "entry_payload",
     "import_payload",
@@ -33,8 +36,11 @@ __all__ = [
 
 logger = log.get_logger("interface.system_prompts")
 
-#: The one route serving the library.
+#: The route serving the library.
 ROUTE = "/was/interface/api/system_prompts"
+
+#: The route a zip of prompts and skills is posted to, as its raw bytes.
+ARCHIVE_ROUTE = "/was/interface/api/system_prompts/archive"
 
 #: Characters of a requested key that are read.
 MAX_KEY_CHARS = 1024
@@ -53,6 +59,9 @@ MAX_LISTED_FILES = system_prompts.MAX_SKILL_FILES
 
 #: What an import that failed for a reason outside the request answers.
 IMPORT_FAILED = "the folder could not be imported. The server log names the cause"
+
+#: What a zip import that failed for a reason outside the request answers.
+ARCHIVE_FAILED = "the zip could not be imported. The server log names the cause"
 
 #: What a copy that failed for a reason outside the request answers.
 COPY_FAILED = "the built-in prompt could not be copied. The server log names the cause"
@@ -115,6 +124,8 @@ def listing_payload() -> dict:
             "max_bytes": system_prompts.MAX_IMPORT_BYTES,
             "max_file_bytes": system_prompts.MAX_SKILL_FILE_BYTES,
             "max_depth": system_prompts.MAX_DEPTH,
+            "media_extensions": sorted(system_prompts.SKILL_MEDIA),
+            "archive_max_bytes": _archive_limit(),
         },
     }
 
@@ -144,7 +155,10 @@ def entry_payload(key) -> dict | None:
         "entry": entry_fields(entry),
         "text": body[:MAX_TEXT_CHARS],
         "truncated": len(body) > MAX_TEXT_CHARS,
-        "files": [{"path": found.relative, "size": int(found.size)} for found in files[:MAX_LISTED_FILES]],
+        "files": [
+            {"path": found.relative, "size": int(found.size), "kind": found.kind}
+            for found in files[:MAX_LISTED_FILES]
+        ],
     }
 
 
@@ -225,6 +239,48 @@ def import_payload(body: bytes) -> tuple[int, dict]:
     }
 
 
+def archive_payload(body: bytes, name: str, replace: bool) -> tuple[int, dict]:
+    """Write the zip a request carries into the library. Never raises.
+
+    Args:
+        body: The zip's bytes.
+        name: The zip's file name.
+        replace: Write over a folder already in the library.
+
+    Returns:
+        ``(status, payload)`` as :func:`import_payload` answers.
+    """
+    try:
+        done = system_prompts.import_archive(body, name=name, replace=replace)
+    except system_prompts.FolderExists as error:
+        return 409, {"error": str(error), "exists": True}
+    except system_prompts.ImportRefused as error:
+        return 400, {"error": str(error)}
+    except Exception as error:
+        logger.warning("%s could not import a zip (%s)", ARCHIVE_ROUTE, type(error).__name__)
+        logger.debug("%s import failed", ARCHIVE_ROUTE, exc_info=True)
+        return 400, {"error": ARCHIVE_FAILED}
+    return 200, {
+        "folder": done.folder,
+        "skills": list(done.skills),
+        "written": done.written,
+        "replaced": done.replaced,
+        "unchanged": done.unchanged,
+        "skipped": done.skipped,
+    }
+
+
+def _archive_limit() -> int:
+    """The largest zip this server takes: the library's ceiling or ComfyUI's upload limit, the smaller."""
+    try:
+        from comfy.cli_args import args
+
+        uploads = int(float(args.max_upload_size) * 1024 * 1024)
+    except Exception:
+        uploads = system_prompts.MAX_ARCHIVE_BYTES
+    return max(0, min(system_prompts.MAX_ARCHIVE_BYTES, uploads))
+
+
 def register_routes() -> bool:
     """Register the route serving the library.
 
@@ -267,6 +323,25 @@ def register_routes() -> bool:
             body = await request.read()
             async with gate:
                 status, payload = await asyncio.to_thread(import_payload, body)
+            return web.json_response(payload, status=status, headers=NO_STORE)
+
+        @PromptServer.instance.routes.post(ARCHIVE_ROUTE)
+        async def post_system_prompt_archive(request):
+            # The declared length is checked before any of the body is read.
+            length = request.content_length
+            if length is None:
+                return web.json_response({"error": "the body has to state its length"}, status=411, headers=NO_STORE)
+            limit = _archive_limit()
+            if length > limit:
+                return web.json_response(
+                    {"error": f"the zip is {length} bytes, past the {limit} one import takes"},
+                    status=413, headers=NO_STORE,
+                )
+            name = str(request.query.get("name") or "")[:MAX_KEY_CHARS]
+            replace = request.query.get("replace") == "true"
+            async with gate:
+                body = await request.read()
+                status, payload = await asyncio.to_thread(archive_payload, body, name, replace)
             return web.json_response(payload, status=status, headers=NO_STORE)
 
     except Exception as error:

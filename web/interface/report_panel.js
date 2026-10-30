@@ -448,6 +448,7 @@ export function createReportPanel(node, options = {}) {
       val.style.cssText = "min-width:0;overflow:hidden;text-overflow:ellipsis"
         + (flow ? ";white-space:pre-wrap" : ";white-space:nowrap");
       val.textContent = value;
+      val.title = String(value ?? "");
       row.append(key, val);
       table.appendChild(row);
     }

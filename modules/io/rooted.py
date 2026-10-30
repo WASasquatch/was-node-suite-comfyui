@@ -1,7 +1,8 @@
 """Where a node reads and writes: a permitted folder, and a path relative to it.
 
-:func:`options` and :func:`read_options` are what a ``root`` widget offers.
-:func:`destination` and :func:`source` settle a choice and a relative path.
+:func:`options`, :func:`save_options` and :func:`read_options` are what a ``root`` widget
+offers. :func:`destination`, :func:`save_destination` and :func:`source` settle a choice and a
+relative path.
 """
 
 from __future__ import annotations
@@ -15,7 +16,8 @@ from ..util import sandbox
 
 __all__ = [
     "DEFAULT", "INPUT", "OUTPUT", "READ_DEFAULT", "TEMP", "destination", "options",
-    "read_options", "read_roots", "roots", "source",
+    "read_options", "read_roots", "roots", "save_destination", "save_options", "save_roots",
+    "source",
 ]
 
 logger = log.get_logger("io.rooted")
@@ -73,6 +75,50 @@ def destination(root: str, relative: str, extra: Sequence[tuple[str, object]] = 
             names a drive, or climbs out of the root.
     """
     return _inside(roots(extra), root or DEFAULT, relative, options(extra), sandbox.resolve_write)
+
+
+def save_roots(extra: Sequence[tuple[str, object]] = ()) -> list[tuple[str, Path]]:
+    """Every folder a picture may be saved into, each with the name its widget offers.
+
+    Args:
+        extra: ``(name, path)`` pairs a node adds ahead of the rest.
+
+    Returns:
+        ``[(name, path)]``, ``extra`` first, then ComfyUI's output, temp and input folders,
+        then every folder ``paths.allow_write`` or ``paths.allow_read`` adds.
+    """
+    return _gathered(
+        extra,
+        ((OUTPUT, "get_output_directory"), (TEMP, "get_temp_directory"),
+         (INPUT, "get_input_directory")),
+        _permitted("configured_write_roots") + _permitted("configured_read_roots"),
+    )
+
+
+def save_options(extra: Sequence[tuple[str, object]] = ()) -> list[str]:
+    """The names a saving ``root`` widget offers, the output folder first."""
+    return [name for name, _path in save_roots(extra)] or [OUTPUT]
+
+
+def save_destination(root: str, relative: str, extra: Sequence[tuple[str, object]] = ()) -> Path:
+    """The folder one save root and one relative path name.
+
+    Args:
+        root: A name :func:`save_options` offered.
+        relative: A path below it, with ``/`` or ``\\`` between the parts. Empty is the root
+            itself.
+        extra: The same pairs :func:`save_roots` was offered.
+
+    Returns:
+        The absolute folder, which is always inside the root.
+
+    Raises:
+        PathNotAllowed: The root is not a folder a picture may be saved into.
+        ValueError: The root is not one that was offered, or ``relative`` is absolute,
+            names a drive, or climbs out of the root.
+    """
+    return _inside(save_roots(extra), root or DEFAULT, relative, save_options(extra),
+                   sandbox.resolve_save)
 
 
 def read_roots(extra: Sequence[tuple[str, object]] = ()) -> list[tuple[str, Path]]:

@@ -273,9 +273,10 @@ class LoadImageBatch(io.ComfyNode):
                     display_name="filename_list",
                     is_output_list=True,
                     tooltip=(
-                        "One name per image, in the same order as image_list, with the "
-                        "extension dropped so it can be wired straight into Image Save's "
-                        "filename_prefix. Image Save adds the extension it writes."
+                        "One name per image, in the same order as image_list, extension "
+                        "dropped. Wired into Image Save's filenames, each image is saved "
+                        "under its own name, with its caption beside it when captions is "
+                        "wired too."
                     ),
                 ),
             ],

@@ -24,11 +24,12 @@ class Pause(io.ComfyNode):
             ],
             category="WAS Suite/Logic",
             is_output_node=True,
+            is_input_list=True,
             description=(
-                "Stop a run at this node and wait for Resume on the node itself. Everything "
-                "above it has already run and stays cached, so change a widget while it waits "
-                "and queue again: only the changed node and what depends on it run a second "
-                "time. Whatever is connected passes through untouched."
+                "Stop a run at this node and wait for Resume on the node itself, once per run "
+                "even when a list arrives, such as one caption per image. Everything above it "
+                "stays cached, so change a widget while it waits and queue again. Whatever is "
+                "connected passes through untouched."
             ),
             inputs=[
                 io.MatchType.Input(
@@ -64,7 +65,8 @@ class Pause(io.ComfyNode):
                 io.MatchType.Output(
                     template=template,
                     display_name="value",
-                    tooltip="What arrived, unchanged.",
+                    is_output_list=True,
+                    tooltip="What arrived, unchanged: a list goes on as the same list, item by item.",
                 ),
                 io.String.Output(
                     display_name="outcome",
@@ -89,21 +91,25 @@ class Pause(io.ComfyNode):
 
     @classmethod
     def execute(cls, value=None, message="", timeout=600.0) -> io.NodeOutput:
-        """Hold the run, then pass the input on.
+        """Hold the run once, then pass every value that arrived on.
 
         Args:
-            value: Anything to hold and pass on.
+            value: What arrived, as the list of values a list output hands in.
             message: Text drawn beside Resume.
             timeout: Seconds to wait before carrying on.
 
         Returns:
             What arrived, how the wait ended, and whether Resume was pressed.
         """
-        from ...modules.interface.pause import wait_for_resume
+        from ...modules.compat.lists import as_list
+        from ...modules.interface.pause import RESUMED, wait_for_resume
 
-        from ...modules.interface.pause import RESUMED
-
+        held = as_list(value) or [None]
+        shown = as_list(message)
+        limit = as_list(timeout)
         outcome, _ = wait_for_resume(
-            str(cls.hidden.unique_id), timeout=float(timeout), message=message
+            str(cls.hidden.unique_id),
+            timeout=float(limit[0]) if limit else 600.0,
+            message=str(shown[0]) if shown else "",
         )
-        return io.NodeOutput(value, outcome, outcome == RESUMED)
+        return io.NodeOutput(held, outcome, outcome == RESUMED)

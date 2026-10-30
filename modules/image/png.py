@@ -28,8 +28,8 @@ METRES_PER_INCH = 0.0254
 PHYS_METRE = 1
 
 #: Deflate level used with and without ``optimize``.
-LEVEL_OPTIMISED = 9
-LEVEL_FAST = 6
+LEVEL_OPTIMISED = 6
+LEVEL_FAST = 1
 
 #: Longest keyword a tEXt or iTXt chunk may carry.
 KEYWORD_LIMIT = 79

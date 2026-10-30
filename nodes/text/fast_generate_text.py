@@ -89,7 +89,10 @@ class FastGenerateText(io.ComfyNode):
                 ),
                 io.Image.Input(
                     "image", optional=True,
-                    tooltip="A picture to ask about, for a model that reads images such as Qwen 2.5 VL or Gemma 3.",
+                    tooltip=(
+                        "A picture to ask about, for a model that reads images, as qwen3vl_4b "
+                        "from Load CLIP with type `krea2`."
+                    ),
                 ),
                 io.Image.Input(
                     "video", optional=True,

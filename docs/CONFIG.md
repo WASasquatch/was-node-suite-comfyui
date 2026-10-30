@@ -105,18 +105,22 @@ written.
 
 | | Read | Write |
 |---|---|---|
-| ComfyUI `input/` | yes | **no**, a write there is moved to `temp/`, below |
+| ComfyUI `input/` | yes | Image Save only; any other write there is moved to `temp/`, below |
 | ComfyUI `output/` | yes | yes |
 | ComfyUI `temp/` | yes | yes |
 | The pack's own directory, `<user_dir>/was-node-suite/`, or `$WAS_CONFIG_DIR` | yes, except the entries below | yes, except the entries below |
 | Every file in that directory whose name begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`, `was_suite_settings.json` or `was_history.json`; the config file in use and the file `WAS_CONFIG` names, with every file beside them whose name begins with theirs | **no** | **no** |
 | `viewer-extensions/` in that directory | yes | **no** |
-| Anything in `paths.allow_read` | yes, and listed, previewed and read by the pack's routes for any client that reaches ComfyUI | no |
+| Anything in `paths.allow_read` | yes, and listed, previewed and read by the pack's routes for any client that reaches ComfyUI | Image Save only |
 | Anything in `paths.allow_write` | no | yes |
 
 Subdirectories of a permitted root are permitted. A write that resolves inside `input/` is
 rewritten to the same relative path under `temp/` and logged with both paths. The refused
 entries are matched without regard to case or to trailing dots and spaces.
+
+Image Save's `root` menu offers `output`, `temp`, `input` and every folder `allow_write` or
+`allow_read` lists. It writes pictures and their `.txt` captions there under names it numbers,
+replaces a file only with `overwrite_mode` on, and deletes nothing.
 
 Both sides of a comparison are fully resolved first, which covers `..` segments and symlinks: a
 symlink inside a root pointing outside it does not widen the boundary. Comparison is

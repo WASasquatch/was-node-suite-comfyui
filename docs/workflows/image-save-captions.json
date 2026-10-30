@@ -1,0 +1,701 @@
+{
+  "id": "402ba6ba-8f1b-4d23-ad20-6b009e5998e0",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 9,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Load Image Batch",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        390,
+        526
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "INT",
+          "widget": {
+            "name": "index"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_RGBA_output",
+          "name": "allow_RGBA_output",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "allow_RGBA_output"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_text_extension",
+          "name": "filename_text_extension",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "filename_text_extension"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "filename_text",
+          "name": "filename_text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "image_list",
+          "name": "image_list",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            1,
+            2
+          ]
+        },
+        {
+          "localized_name": "filename_list",
+          "name": "filename_list",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Load Image Batch",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "all_images",
+        0,
+        "fixed",
+        0,
+        "scene [input]",
+        "*",
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "mode": "all_images",
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "index": 0,
+        "folder": "scene [input]",
+        "pattern": "*",
+        "allow_RGBA_output": false,
+        "filename_text_extension": true
+      }
+    },
+    {
+      "id": 2,
+      "type": "CLIPLoader",
+      "pos": [
+        40,
+        766
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "qwen3vl_4b_fp8_scaled.safetensors",
+        "krea2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+        "type": "krea2",
+        "device": "default"
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASFastGenerateText",
+      "pos": [
+        510,
+        120
+      ],
+      "size": [
+        400,
+        514
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 4
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "localized_name": "system_prompt",
+          "name": "system_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_length",
+          "name": "max_length",
+          "type": "INT",
+          "widget": {
+            "name": "max_length"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "Sampling Mode",
+          "name": "sampling_mode",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "sampling_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "thinking",
+          "name": "thinking",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "thinking"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "use_default_template",
+          "name": "use_default_template",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "use_default_template"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mtp",
+          "name": "mtp",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "mtp"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fast_decode",
+          "name": "fast_decode",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fast_decode"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "generated_text",
+          "name": "generated_text",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "thinking",
+          "name": "thinking",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFastGenerateText",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "Write one sentence describing this image, as a caption for a training dataset. Name the subject, the setting and the style. Reply with the caption only.",
+        96,
+        "off",
+        false,
+        true,
+        "auto",
+        true
+      ],
+      "widgets_values_named": {
+        "prompt": "Write one sentence describing this image, as a caption for a training dataset. Name the subject, the setting and the style. Reply with the caption only.",
+        "max_length": 96,
+        "sampling_mode": "off",
+        "thinking": false,
+        "use_default_template": true,
+        "mtp": "auto",
+        "fast_decode": true
+      }
+    },
+    {
+      "id": 4,
+      "type": "Image Save",
+      "pos": [
+        990,
+        120
+      ],
+      "size": [
+        460,
+        950
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "profile",
+          "name": "profile",
+          "shape": 7,
+          "type": "WAS_COLOUR_PROFILE",
+          "link": null
+        },
+        {
+          "localized_name": "filenames",
+          "name": "filenames",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 3
+        },
+        {
+          "localized_name": "captions",
+          "name": "captions",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 5
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_start",
+          "name": "filename_number_start",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "filename_number_start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extension",
+          "name": "extension",
+          "type": "COMBO",
+          "widget": {
+            "name": "extension"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dpi",
+          "name": "dpi",
+          "type": "INT",
+          "widget": {
+            "name": "dpi"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quality",
+          "name": "quality",
+          "type": "INT",
+          "widget": {
+            "name": "quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "optimize_image",
+          "name": "optimize_image",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "optimize_image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lossless_webp",
+          "name": "lossless_webp",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "lossless_webp"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite_mode",
+          "name": "overwrite_mode",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "show_history",
+          "name": "show_history",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "show_history"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "show_history_by_prefix",
+          "name": "show_history_by_prefix",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "show_history_by_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_workflow",
+          "name": "embed_workflow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_workflow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "show_previews",
+          "name": "show_previews",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "show_previews"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bit_depth",
+          "name": "bit_depth",
+          "type": "COMBO",
+          "widget": {
+            "name": "bit_depth"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "files",
+          "name": "files",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Image Save",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "output",
+        "caption_demo/ComfyUI",
+        "_",
+        4,
+        false,
+        "png",
+        300,
+        100,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        "8-bit"
+      ],
+      "widgets_values_named": {
+        "root": "output",
+        "filename_prefix": "caption_demo/ComfyUI",
+        "filename_delimiter": "_",
+        "filename_number_padding": 4,
+        "filename_number_start": false,
+        "extension": "png",
+        "dpi": 300,
+        "quality": 100,
+        "optimize_image": true,
+        "lossless_webp": false,
+        "overwrite_mode": false,
+        "show_history": false,
+        "show_history_by_prefix": true,
+        "embed_workflow": true,
+        "show_previews": true,
+        "bit_depth": "8-bit"
+      }
+    }
+  ],
+  "links": [
+    [
+      2,
+      1,
+      2,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      3,
+      4,
+      2,
+      "STRING"
+    ],
+    [
+      5,
+      3,
+      0,
+      4,
+      3,
+      "STRING"
+    ],
+    [
+      4,
+      2,
+      0,
+      3,
+      0,
+      "CLIP"
+    ],
+    [
+      1,
+      1,
+      2,
+      3,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Caption a folder of images",
+      "bounding": [
+        0,
+        0,
+        1490,
+        1140
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.8075431034482757,
+      "offset": [
+        1384.917267147051,
+        203.33333333333337
+      ]
+    }
+  },
+  "version": 0.4
+}

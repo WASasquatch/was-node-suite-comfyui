@@ -35,6 +35,10 @@ THINK_CLOSE = "</think>"
 #: Prompt tokens decoded to find a thinking block the chat template left open.
 TEMPLATE_TAIL_TOKENS = 4
 
+#: Positional arguments to a transformer's ``generate`` after the embeddings, up to and
+#: including ``stop_tokens``.
+STOP_TOKENS_ARG = 9
+
 
 @dataclass
 class DecodeReport:
@@ -310,6 +314,13 @@ def generate(clip, tokens, max_length, fast=True, **options):
     marks = {}
 
     def guarded(embeds=None, *args, **kwargs):
+        config = getattr(getattr(transformer, "model", None), "config", None)
+        if kwargs.get("stop_tokens") is None and len(args) < STOP_TOKENS_ARG and config is not None \
+                and getattr(config, "stop_tokens", None) is None:
+            raise ValueError(
+                f"{type(config).__name__} names no token that ends an answer, so ComfyUI cannot "
+                f"write text with it. Load a text encoder that writes, as qwen3vl_4b with type "
+                f"krea2 for pictures or Qwen3 4B with type lumina2 for text")
         marks["entered"] = time.perf_counter()
         # The prompt length is known only here, after images have become embeddings.
         shape = getattr(embeds, "shape", None)

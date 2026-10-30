@@ -2,7 +2,7 @@
 
 :func:`resolve_read` and :func:`resolve_write` map an untrusted input onto an absolute
 path inside a permitted root, or raise :class:`PathNotAllowed`. Writes exclude ComfyUI's
-``input`` directory.
+``input``; :func:`resolve_save` admits it and every ``paths.allow_read`` folder.
 """
 
 from __future__ import annotations
@@ -28,9 +28,12 @@ __all__ = [
     "read_roots",
     "refuse_linked_host",
     "resolve_read",
+    "resolve_save",
+    "resolve_save_file",
     "resolve_write",
     "resolve_write_file",
     "save_image_path",
+    "save_roots",
     "write_roots",
 ]
 
@@ -45,6 +48,9 @@ WRITE = "write"
 
 #: Config key naming the extra roots for each purpose.
 KEYS = {READ: "paths.allow_read", WRITE: "paths.allow_write"}
+
+#: The config keys naming the extra roots a save may land in.
+SAVE_KEYS = "paths.allow_write or paths.allow_read"
 
 #: Entries of the pack's state directory no node writes: its settings, and the folder view
 #: extensions are installed from.
@@ -291,6 +297,15 @@ def write_roots() -> list[Path]:
         _comfy_directory("get_temp_directory"),
     ]
     return [root for root in roots if root is not None] + _pack_roots() + _configured("allow_write")
+
+
+def save_roots() -> list[Path]:
+    """Directories a saved picture may land in: every write root, ComfyUI's input and ``paths.allow_read``."""
+    roots = write_roots()
+    for root in (_comfy_directory("get_input_directory"), *_configured("allow_read")):
+        if root is not None and root not in roots:
+            roots.append(root)
+    return roots
 
 
 def _state_label() -> str:
@@ -1016,3 +1031,38 @@ def resolve_write_file(directory: str | os.PathLike, name: str | os.PathLike) ->
     # drive-relative one such as `C:Windows\x`, and a '..' segment steps back out of a
     # directory checked a moment earlier; _join refuses all three.
     return _join(resolve_write(directory), name, WRITE)
+
+
+def resolve_save(value: str | os.PathLike) -> Path:
+    """Resolve a folder a picture is saved into, which may be ComfyUI's input or a read folder.
+
+    Args:
+        value: The raw widget value.
+
+    Returns:
+        The resolved absolute path, inside one of :func:`save_roots`. It need not exist.
+
+    Raises:
+        PathNotAllowed: The path resolved outside every save root, names a Windows device or
+            stream, or is one of :data:`PRIVATE`, :data:`PROTECTED` or a copy of the config
+            file in use.
+    """
+    return _resolve(value, save_roots(), SAVE_KEYS, WRITE)
+
+
+def resolve_save_file(directory: str | os.PathLike, name: str | os.PathLike) -> Path:
+    """Resolve a folder a picture is saved into and the file name it is saved under, together.
+
+    Args:
+        directory: The raw directory widget value, or an already-resolved directory.
+        name: The file name. Sub-directories are allowed; a drive, a leading root and a
+            ``..`` segment are not.
+
+    Returns:
+        The resolved absolute file path, inside the resolved directory. It need not exist.
+
+    Raises:
+        PathNotAllowed: The directory resolved outside every save root, or the name names
+            somewhere other than inside it.
+    """
+    return _join(resolve_save(directory), name, WRITE)

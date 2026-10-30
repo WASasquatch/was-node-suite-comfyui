@@ -191,6 +191,12 @@ it is read. The file listing and the pack's folder and file menus follow no syml
 junction out of the folder they list. A folder in `paths.allow_read` is listed, previewed and read by the routes below for
 any client that can reach ComfyUI, the same as `input/`.
 
+Image Save is the one node that writes into ComfyUI's `input/` and the `paths.allow_read`
+folders, picked on its `root` menu. It writes pictures and their `.txt` captions under names it
+numbers, replaces an existing file only with `overwrite_mode` on, and deletes nothing. Every
+other node's write into `input/` is moved to `temp/`, and a `paths.allow_read` folder is
+written by no other node.
+
 A video, sound or picture the pack opens with FFmpeg, through PyAV, opens only as a single-file
 container, stream or picture from local disk. A playlist, a concatenation list and any network
 protocol are refused.
@@ -209,8 +215,8 @@ folder, and leaves out any value from the first source's header that names a pat
 In `obfuscate` mode the header keeps nothing from the sources but what model and network the
 file is for.
 
-A frame cache picked from a folder no node writes to, such as `input/` or a `paths.allow_read`
-folder, is read and never added to or deleted.
+A frame cache picked from a folder outside the write roots, such as `input/` or a
+`paths.allow_read` folder, is read and never added to or deleted.
 
 At startup the pack writes into its state directory, into the config file in use with a `.bak`
 beside it when it brings that file up to date, and into
@@ -259,6 +265,7 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run, or to any client for a run queued without one |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
 | `GET`, `POST /was/interface/api/system_prompts` | library key; a folder name and its files' paths and text; a built-in key to copy | the `system_prompts` folder in the state directory, and the pack's own read-only prompts listed under `Built-in/`; a key its own listing does not hold reads nothing. GET lists 2000 entries and 500 built-in ones and reads 256 KB of text at most. POST writes one folder's text files into that folder, or copies one built-in prompt or skill named by its listing key into it: a body without a declared length or over 32 MB is refused before it is read, 400 files and 16 MB at most, a folder or path leaving the library, naming a hidden folder, naming `Built-in` or holding a link is refused before anything is written, a folder already there is written over only when the request asks to replace it, and a copy writes over a file holding other text only when the request asks to replace it. Nothing is ever written into the pack's own prompts. Files are written as data and never run. Read and written off the server's event loop |
+| `POST /was/interface/api/system_prompts/archive` | a zip's bytes, its file name, whether to replace | the `system_prompts` folder in the state directory. A body without a declared length, or past 256 MB or ComfyUI's own upload limit, is refused before it is read, and the body is read inside the library's two workers. The whole zip is refused, with nothing written, when an entry leaves its folder or names `..`, is a link, is encrypted, names a Windows device or holds a null byte, unpacks past 200 times its packed size, names a program, library, installer, shortcut, disk image, archive or SVG, opens like a Windows, Linux or macOS program under any name, or is a picture or video whose bytes are not the format its suffix names or a picture past 64 megapixels. Hidden names and `__MACOSX` are passed over. Text must be UTF-8; pictures (`.png`, `.jpg`, `.webp`, `.gif`) and videos (`.mp4`, `.m4v`, `.mov`, `.webm`) are kept only inside a skill, 64 MB each and 512 MB together; 400 files and 16 MB of text at most. A folder already there is written over only when the request asks to replace it, nothing is written into the pack's own prompts, and files are written as data and never run. Read and written off the server's event loop |
 | `GET`, `POST /was/interface/api/llm_sessions` | conversation name, a new name | the `llm/sessions` folder in the state directory, registered only while `features.llm` is on. GET lists 500 conversations at most, or reads one by name; POST renames or deletes one by name. A name is 1 to 64 letters, digits, spaces, dots, dashes and underscores and is refused otherwise. Read and changed off the server's event loop |
 | `GET /was/interface/api/compare_file` | a kept file's name | the `compare` folder in the state directory; a name other than 32 hex digits and `.mp4`, `.png` or `.wav`, or a link, reads nothing |
 | `GET /was/interface/api/video_probe` | menu label | the file listing of video files, then the allowlist; read off the server's event loop |

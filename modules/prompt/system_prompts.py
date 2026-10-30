@@ -7,10 +7,12 @@ separated path. A ``SKILL.md`` folder is one skill.
 from __future__ import annotations
 
 import hashlib
+import io
 import os
 import stat
 import threading
 import time
+import unicodedata
 from collections import Counter
 from pathlib import Path
 from typing import NamedTuple
@@ -26,6 +28,7 @@ __all__ = [
     "IMPORT_EXTENSIONS",
     "LIBRARY_NAME",
     "LISTING_TTL",
+    "MAX_ARCHIVE_BYTES",
     "MAX_ENTRIES",
     "MAX_FILE_BYTES",
     "MAX_HEAD_BYTES",
@@ -33,8 +36,12 @@ __all__ = [
     "MAX_SKILL_BYTES",
     "MAX_SKILL_FILES",
     "MAX_SKILL_FILE_BYTES",
+    "MAX_SKILL_MEDIA_BYTES",
+    "MAX_SKILL_MEDIA_TOTAL",
     "NO_PROMPTS",
+    "REFUSED_SUFFIXES",
     "SKILL_EXTENSIONS",
+    "SKILL_MEDIA",
     "Copied",
     "CopyExists",
     "Document",
@@ -49,6 +56,7 @@ __all__ = [
     "copy_builtin",
     "entry_at",
     "find",
+    "import_archive",
     "import_folder",
     "invalidate",
     "labels",
@@ -148,6 +156,61 @@ MAX_IMPORT_PATH_CHARS = 400
 #: Directory entries one skill's walk examines before it stops.
 MAX_SKILL_EXAMINED = 5000
 
+#: Suffixes of the pictures and videos a skill keeps, lower case, each with its kind.
+SKILL_MEDIA = {
+    ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image", ".gif": "image",
+    ".mp4": "video", ".m4v": "video", ".mov": "video", ".webm": "video",
+}
+
+#: Bytes of one skill picture or video, at most.
+MAX_SKILL_MEDIA_BYTES = 64 * 1024 * 1024
+
+#: Bytes of one skill's pictures and videos together, and of one zip import's, at most.
+MAX_SKILL_MEDIA_TOTAL = 512 * 1024 * 1024
+
+#: Bytes of one uploaded zip, at most.
+MAX_ARCHIVE_BYTES = 256 * 1024 * 1024
+
+#: Pixels of one imported picture, at most.
+MAX_IMAGE_PIXELS = 64 * 1024 * 1024
+
+#: How many times its packed size an entry over :data:`PACKING_FLOOR` bytes may unpack to.
+MAX_PACKING_RATIO = 200
+PACKING_FLOOR = 1024 * 1024
+
+#: Suffixes a zip import refuses outright: programs, libraries, installers, shortcuts, disk
+#: images, archives and pictures that carry script.
+REFUSED_SUFFIXES = frozenset({
+    ".exe", ".dll", ".so", ".dylib", ".sys", ".drv", ".ocx", ".cpl", ".scr", ".com", ".pif",
+    ".msi", ".msp", ".msix", ".appx", ".jar", ".apk", ".app", ".dmg", ".pkg", ".deb", ".rpm",
+    ".lnk", ".url", ".hta", ".vbs", ".vbe", ".jse", ".wsf", ".wsh", ".reg", ".scf", ".chm",
+    ".iso", ".img", ".vhd", ".vhdx", ".zip", ".7z", ".rar", ".tar", ".gz", ".tgz", ".bz2",
+    ".xz", ".cab", ".svg", ".svgz", ".pyc", ".pyd", ".node", ".wasm",
+})
+
+#: The opening bytes of a Linux or macOS program, refused under any name.
+PROGRAM_SIGNATURES = (
+    b"\x7fELF", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe",
+    b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe",
+)
+
+#: The opening bytes each picture suffix carries.
+IMAGE_SIGNATURES = {
+    ".png": (b"\x89PNG\r\n\x1a\n",),
+    ".jpg": (b"\xff\xd8\xff",),
+    ".jpeg": (b"\xff\xd8\xff",),
+    ".gif": (b"GIF87a", b"GIF89a"),
+}
+
+#: The format name the picture reader gives each picture suffix.
+IMAGE_FORMATS = {".png": "PNG", ".jpg": "JPEG", ".jpeg": "JPEG", ".gif": "GIF", ".webp": "WEBP"}
+
+#: Atoms a QuickTime file may open with, after its four length bytes.
+MOVIE_ATOMS = (b"ftyp", b"moov", b"mdat", b"wide", b"free", b"skip", b"pnot")
+
+#: Top folders a zip made on macOS carries beside its contents, passed over.
+ARCHIVE_LITTER = frozenset({"__MACOSX"})
+
 #: Folder names passed over in a skill and refused in an import.
 SKIPPED_FOLDERS = frozenset({"__pycache__", "node_modules"})
 
@@ -201,12 +264,14 @@ class SkillFile(NamedTuple):
         path: The absolute file path.
         size: Bytes on disk.
         mtime_ns: Modification time in nanoseconds.
+        kind: ``text``, ``image`` or ``video``.
     """
 
     relative: str
     path: str
     size: int
     mtime_ns: int
+    kind: str = "text"
 
 
 class Imported(NamedTuple):
@@ -726,6 +791,8 @@ def read_skill_files(entry: Entry) -> tuple[list[tuple[SkillFile, str]], dict]:
     passed = Counter(skipped)
     read_files: list[tuple[SkillFile, str]] = []
     for found in files:
+        if found.kind != "text":
+            continue
         try:
             target = _readable(entry, found.path)
             with open(target, "rb") as handle:
@@ -843,6 +910,220 @@ def import_folder(folder: str, files, replace: bool = False) -> Imported:
         below, counts["new"], counts["replaced"], counts["unchanged"], sum(skipped.values()),
     )
     return Imported(below, skills, counts["new"], counts["replaced"], counts["unchanged"], dict(skipped))
+
+
+def import_archive(data, name: str = "", replace: bool = False) -> Imported:
+    """Write a zip of prompts and skills into the library, a skill's pictures and videos with it.
+
+    Args:
+        data: The zip's bytes.
+        name: The zip's file name, which names the folder unless one top folder holds everything.
+        replace: Write over files of the same path when the folder is already in the library.
+
+    Returns:
+        What was written.
+
+    Raises:
+        FolderExists: The folder is in the library and ``replace`` is off.
+        ImportRefused: The zip is unreadable or past a ceiling, an entry is unsafe, a program, or
+            a picture or video other than its name says, or nothing is left to write.
+    """
+    from ..archive import container
+
+    if not isinstance(data, (bytes, bytearray, memoryview)) or not len(data):
+        raise ImportRefused("the import carries no zip")
+    if len(data) > MAX_ARCHIVE_BYTES:
+        raise ImportRefused(
+            f"the zip is over {_megabytes(MAX_ARCHIVE_BYTES)}, the most one import takes")
+    try:
+        archive = container.Archive.from_bytes(bytes(data), label="the zip")
+    except container.ArchiveError:
+        raise ImportRefused("the file is not a readable zip archive, so nothing was imported") from None
+    if archive.truncated or len(archive.entries) > MAX_IMPORT_FILES:
+        raise ImportRefused(
+            f"the zip holds {archive.held} entries and one import takes at most "
+            f"{MAX_IMPORT_FILES} files. Import a smaller zip")
+
+    for entry in archive.entries:
+        shown = _entry_shown(entry.stored)
+        if entry.refused:
+            raise ImportRefused(
+                f"`{shown}` in the zip {container.REFUSALS[entry.refusal]}. Nothing was imported")
+        if any(part.strip() == ".." for part in entry.stored.replace("\\", "/").split("/")):
+            raise ImportRefused(f"`{shown}` in the zip climbs out of its folder, so nothing was imported")
+        if os.path.splitext(entry.name)[1].lower() in REFUSED_SUFFIXES:
+            raise ImportRefused(
+                f"`{shown}` is a program, a shortcut, an archive or a scripted picture, which the "
+                "library never keeps, so nothing was imported")
+        if entry.size > PACKING_FLOOR and entry.size > MAX_PACKING_RATIO * max(1, entry.compressed):
+            raise ImportRefused(
+                f"`{shown}` unpacks to {entry.size // max(1, entry.compressed)} times its packed "
+                "size, as a zip bomb does, so nothing was imported")
+
+    skipped: Counter = Counter()
+    visible = []
+    for entry in archive.entries:
+        parts = entry.name.split("/")
+        if parts[0] in ARCHIVE_LITTER or any(part.startswith(".") or part in SKIPPED_FOLDERS for part in parts):
+            skipped["hidden"] += 1
+            continue
+        visible.append(entry)
+    folded = Counter(unicodedata.normalize("NFC", entry.name).casefold() for entry in visible)
+    twice = next(
+        (entry.name for entry in visible if folded[unicodedata.normalize("NFC", entry.name).casefold()] > 1),
+        None)
+    if twice is not None:
+        raise ImportRefused(f"`{_entry_shown(twice)}` appears twice in the zip, so nothing was imported")
+
+    tops = {entry.name.split("/", 1)[0] for entry in visible}
+    if len(tops) == 1 and all("/" in entry.name for entry in visible):
+        folder = next(iter(tops))
+        strip = len(folder) + 1
+    else:
+        folder = os.path.splitext(os.path.basename(str(name or "").replace("\\", "/")))[0].strip() or "imported"
+        strip = 0
+    below = _import_folder_name(folder)
+    if _reserved(below):
+        raise ImportRefused(
+            f"`{BUILTIN_FOLDER}` holds the pack's own prompts, so nothing is imported into it. "
+            "Rename the zip and import it again")
+
+    placed = [(entry, _import_path(entry.name[strip:])) for entry in visible]
+    skill_roots = {
+        path.rsplit("/", 1)[0] if "/" in path else ""
+        for _entry, path in placed
+        if path.rsplit("/", 1)[-1].casefold() == SKILL_FILE
+    }
+    wanted = []
+    text_total = media_total = 0
+    for entry, path in placed:
+        suffix = os.path.splitext(path)[1].lower()
+        in_skill = any(base == "" or path.startswith(base + "/") for base in skill_roots)
+        if in_skill and suffix in SKILL_MEDIA:
+            if entry.size > MAX_SKILL_MEDIA_BYTES:
+                skipped["too large"] += 1
+                continue
+            media_total += entry.size
+            wanted.append((entry, path, SKILL_MEDIA[suffix]))
+            continue
+        if suffix not in (SKILL_EXTENSIONS if in_skill else IMPORT_EXTENSIONS):
+            skipped["not text, a picture or a video" if in_skill else "not .txt or .md outside a skill"] += 1
+            continue
+        if entry.size > (MAX_SKILL_FILE_BYTES if in_skill else MAX_FILE_BYTES):
+            skipped["too large"] += 1
+            continue
+        text_total += entry.size
+        wanted.append((entry, path, "text"))
+    if text_total > MAX_IMPORT_BYTES or media_total > MAX_SKILL_MEDIA_TOTAL:
+        raise ImportRefused(
+            f"the zip unpacks to {_megabytes(text_total)} of text and {_megabytes(media_total)} of "
+            f"pictures and videos, past the {_megabytes(MAX_IMPORT_BYTES)} and "
+            f"{_megabytes(MAX_SKILL_MEDIA_TOTAL)} one import takes")
+
+    kept: list[tuple[str, bytes]] = []
+    try:
+        payloads = dict(archive.read_many(
+            [entry for entry, _path, _kind in wanted],
+            limit=max(MAX_SKILL_MEDIA_BYTES, MAX_SKILL_FILE_BYTES),
+            total=text_total + media_total,
+        ))
+    except container.ArchiveError:
+        raise ImportRefused("an entry of the zip is damaged, so nothing was imported") from None
+    for entry, path, kind in wanted:
+        payload = payloads[entry.name]
+        if _program(payload):
+            raise ImportRefused(f"`{path}` is a program, which the library never keeps, so nothing was imported")
+        if kind != "text":
+            refusal = _media_refusal(path, payload)
+            if refusal:
+                raise ImportRefused(f"{refusal}, so nothing was imported")
+            kept.append((path, payload))
+            continue
+        try:
+            text = payload.decode("utf-8")
+        except UnicodeDecodeError:
+            skipped["not UTF-8"] += 1
+            continue
+        if "\x00" in text:
+            skipped["not text"] += 1
+            continue
+        kept.append((path, (text[1:] if text.startswith("﻿") else text).encode("utf-8")))
+    if not kept:
+        raise ImportRefused("the zip holds no .txt or .md prompt and no skill. A skill is a folder holding SKILL.md")
+
+    with _lock:
+        counts = _write_files(below, kept, replace, whole_folder=True)
+    skills = tuple(f"{below}/{path}" for path, _data in kept if path.rsplit("/", 1)[-1].casefold() == SKILL_FILE)
+    logger.info(
+        "imported the zip `%s` into the system prompt library: %d new, %d replaced, %d unchanged, %d skipped",
+        below, counts["new"], counts["replaced"], counts["unchanged"], sum(skipped.values()),
+    )
+    return Imported(below, skills, counts["new"], counts["replaced"], counts["unchanged"], dict(skipped))
+
+
+def _entry_shown(name: str) -> str:
+    """A zip entry's name as a message quotes it, printable and short."""
+    text = "".join(char if char.isprintable() else "?" for char in str(name))
+    return text if len(text) <= 80 else f"{text[:77]}..."
+
+
+def _megabytes(count: int) -> str:
+    """A byte count in whole megabytes, as ``12 MB``."""
+    return f"{max(0, int(count)) // (1024 * 1024)} MB"
+
+
+def _program(data: bytes) -> bool:
+    """Whether bytes open like a Windows, Linux or macOS program."""
+    if data[:4] in PROGRAM_SIGNATURES:
+        return True
+    if data[:2] == b"MZ" and len(data) >= 0x40:
+        offset = int.from_bytes(data[0x3C:0x40], "little")
+        return data[offset:offset + 4] == b"PE\x00\x00"
+    return False
+
+
+def _media_refusal(path: str, data: bytes) -> str:
+    """Why a picture or video is not what its suffix says, or ``""`` when it is.
+
+    Args:
+        path: Its path in the import, which a refusal names.
+        data: Its bytes.
+
+    Returns:
+        The refusal, or ``""``.
+    """
+    suffix = os.path.splitext(path)[1].lower()
+    label = suffix[1:].upper()
+    if SKILL_MEDIA.get(suffix) == "video":
+        if suffix == ".webm":
+            matches = data[:4] == b"\x1a\x45\xdf\xa3"
+        elif suffix == ".mov":
+            matches = data[4:8] in MOVIE_ATOMS
+        else:
+            matches = data[4:8] == b"ftyp"
+        return "" if matches else f"`{path}` does not hold {label} video"
+    if suffix == ".webp":
+        matches = data[:4] == b"RIFF" and data[8:12] == b"WEBP"
+    else:
+        matches = any(data.startswith(signature) for signature in IMAGE_SIGNATURES.get(suffix, ()))
+    if not matches:
+        return f"`{path}` does not hold a {label} picture"
+    from PIL import Image
+
+    try:
+        with Image.open(io.BytesIO(data)) as picture:
+            width, height = picture.size
+            if width * height > MAX_IMAGE_PIXELS:
+                return (f"`{path}` is {width}x{height}, past the "
+                        f"{MAX_IMAGE_PIXELS // (1024 * 1024)} megapixels one picture may hold")
+            if picture.format != IMAGE_FORMATS.get(suffix):
+                return f"`{path}` does not hold a {label} picture"
+            picture.verify()
+    except Image.DecompressionBombError:
+        return f"`{path}` declares more pixels than one picture may hold"
+    except Exception:
+        return f"`{path}` is not a readable {label} picture"
+    return ""
 
 
 def copy_builtin(key: str, replace: bool = False) -> Copied:
@@ -1016,6 +1297,7 @@ def _skill_walk(top: str) -> tuple[tuple[SkillFile, ...], dict]:
         return (), {}
     found: list[SkillFile] = []
     total = 0
+    media_total = 0
     examined = 0
     pending: list[tuple[str, str, int]] = [(root, "", 0)]
     while pending and examined < MAX_SKILL_EXAMINED:
@@ -1048,8 +1330,10 @@ def _skill_walk(top: str) -> tuple[tuple[SkillFile, ...], dict]:
                     continue
                 if not below and item.name.casefold() == SKILL_FILE:
                     continue
-                if os.path.splitext(item.name)[1].lower() not in SKILL_EXTENSIONS:
-                    skipped["not a text file"] += 1
+                suffix = os.path.splitext(item.name)[1].lower()
+                kind = "text" if suffix in SKILL_EXTENSIONS else SKILL_MEDIA.get(suffix)
+                if kind is None:
+                    skipped["not text, a picture or a video"] += 1
                     continue
                 info = item.stat(follow_symlinks=False)
             except OSError:
@@ -1057,16 +1341,21 @@ def _skill_walk(top: str) -> tuple[tuple[SkillFile, ...], dict]:
                 continue
             if not stat.S_ISREG(info.st_mode):
                 continue
-            if info.st_size > MAX_SKILL_FILE_BYTES:
+            text = kind == "text"
+            if info.st_size > (MAX_SKILL_FILE_BYTES if text else MAX_SKILL_MEDIA_BYTES):
                 skipped["too large"] += 1
                 continue
-            if len(found) >= MAX_SKILL_FILES or total + info.st_size > MAX_SKILL_BYTES:
+            budget_left = (MAX_SKILL_BYTES - total) if text else (MAX_SKILL_MEDIA_TOTAL - media_total)
+            if len(found) >= MAX_SKILL_FILES or info.st_size > budget_left:
                 skipped["past the skill's limit"] += 1
                 continue
             if not sandbox.contains(Path(root), Path(os.path.realpath(item.path))):
                 continue
-            total += info.st_size
-            found.append(SkillFile(relative, item.path, info.st_size, info.st_mtime_ns))
+            if text:
+                total += info.st_size
+            else:
+                media_total += info.st_size
+            found.append(SkillFile(relative, item.path, info.st_size, info.st_mtime_ns, kind))
         pending.extend(reversed(folders))
     found.sort(key=lambda each: each.relative.casefold())
     return tuple(found), dict(skipped)

@@ -52,6 +52,7 @@ __all__ = [
     "MAX_SUMMARY_CHARS",
     "MAX_TALLIES",
     "MAX_TEXT_CHARS",
+    "MAX_VALUE_CHARS",
     "OK",
     "PAGE_ROUTE",
     "ROUTE",
@@ -125,9 +126,13 @@ MAX_INPUTS = 8
 #: whole number in ``items_total``, and ``truncated`` carries ``"items"``.
 MAX_ITEMS = 8
 
-#: Characters of a count name, a fact name, a fact value or an item's note. A longer one is cut
-#: to this and ``truncated`` carries ``"text"``.
+#: Characters of a count name, a fact name or an item's note. A longer one is cut to this and
+#: ``truncated`` carries ``"text"``.
 MAX_LABEL_CHARS = 64
+
+#: Characters of a fact value, such as a folder's full path. A longer one is cut to this and
+#: ``truncated`` carries ``"text"``.
+MAX_VALUE_CHARS = 1024
 
 #: Characters of an item's own text, ellipses included. A longer one is cut to this, its
 #: ``mark`` is clamped into what is left, and ``truncated`` carries ``"text"``.
@@ -857,7 +862,7 @@ def _named(values, cap: int, numeric: bool) -> tuple[list[dict], bool]:
         if numeric:
             kept, value_cut = _number(value), False
         else:
-            kept, value_cut = _string(value, MAX_LABEL_CHARS)
+            kept, value_cut = _string(value, MAX_VALUE_CHARS)
             kept = kept or None
         if not label or kept is None:
             dropped = True

@@ -28,6 +28,7 @@ const PROMPT_WIDGET = "system_prompt";
 const NO_PROMPTS = "No System Prompts";
 
 const ROUTE = "/was/interface/api/system_prompts";
+const ARCHIVE_ROUTE = `${ROUTE}/archive`;
 
 // Where the library sits, as a portable install lays it out.
 const LIBRARY_PATH = "ComfyUI/user/was-node-suite/system_prompts";
@@ -663,6 +664,95 @@ async function sendFolder(node, files) {
 }
 
 /**
+ * Send a zip to the library.
+ *
+ * @param {File} file - The picked zip.
+ * @param {boolean} replace - Write over a folder already in the library.
+ * @returns {Promise<{status: number, data: object}>} The answer.
+ */
+async function postArchive(file, replace) {
+  const query = new URLSearchParams({ name: file.name, replace: replace ? "true" : "false" });
+  const response = await fetchWithin(`${ARCHIVE_ROUTE}?${query}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/zip" },
+    body: file,
+  }, UPLOAD_TIMEOUT);
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+  return { status: response.status, data: data && typeof data === "object" ? data : {} };
+}
+
+/**
+ * Write a picked zip of prompts or skills into the library, and load the first skill it holds.
+ *
+ * @param {object} node - The Load System Prompt node.
+ * @param {File} file - The picked zip.
+ * @returns {Promise<void>} Resolved once the library has been read again.
+ */
+async function sendArchive(node, file) {
+  if (!file) return;
+  if (!library.limits) await loadLibrary(true);
+  const most = Number(library.limits?.archive_max_bytes) || 0;
+  if (most && file.size > most) {
+    tell("warn", `${file.name} is ${readableBytes(file.size)}, past the ${readableBytes(most)} one import takes.`);
+    return;
+  }
+  let answer = await postArchive(file, false);
+  if (answer.status === 409 && answer.data.exists) {
+    const replace = await ask(
+      "Replace in the library?",
+      `${typeof answer.data.error === "string" ? answer.data.error : "That folder is already in the library"}. `
+        + "Write this zip's files over it? Files only in the library's copy stay.",
+    );
+    if (!replace) return;
+    answer = await postArchive(file, true);
+  }
+  if (answer.status !== 200) {
+    tell("error", typeof answer.data.error === "string" ? answer.data.error : `The import failed (HTTP ${answer.status}).`);
+    return;
+  }
+  await loadLibrary(true);
+  const done = answer.data;
+  const skills = strings(done.skills);
+  const key = skills[0] ?? library.entries.find((entry) => entry.folder === done.folder
+    || entry.folder.startsWith(`${done.folder}/`))?.key;
+  if (key && node?.graph && !promptLinked(node) && writeKey(node, key)) redraw(node);
+  const passed = Object.values(done.skipped ?? {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
+  const what = skills.length ? `${skills.length} ${skills.length === 1 ? "skill" : "skills"}` : "prompts";
+  tell("success", `Imported ${what} from ${file.name} into ${done.folder}: ${done.written} new, `
+    + `${done.replaced} replaced, ${done.unchanged} unchanged${passed ? `, ${passed} passed over` : ""}.`);
+}
+
+/**
+ * Open the file picker for a zip import.
+ *
+ * @param {object} node - The Load System Prompt node.
+ * @returns {void}
+ */
+function importArchive(node) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".zip,application/zip";
+  input.style.display = "none";
+  const finish = () => input.remove();
+  input.addEventListener("cancel", finish, { once: true });
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    finish();
+    sendArchive(node, file).catch((error) => {
+      console.error(`[${EXT_NAME}] Failed to import the zip:`, error);
+      tell("error", "The zip could not be imported. The browser console names the cause.");
+    });
+  }, { once: true });
+  document.body.appendChild(input);
+  input.click();
+}
+
+/**
  * Open the folder picker for an import.
  *
  * @param {object} node - The Load System Prompt node.
@@ -725,6 +815,11 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
   toolbar.appendChild(button("↻", () => loadLibrary(true), { hint: "Read the folder again", kind: "tool", logName: EXT_NAME }));
   toolbar.appendChild(button("Import", () => importFolder(node), {
     hint: "Add a skill folder, one holding SKILL.md and its references, or a folder of .txt and .md prompts",
+    kind: "tool",
+    logName: EXT_NAME,
+  }));
+  toolbar.appendChild(button("Import ZIP", () => importArchive(node), {
+    hint: "Add a zip of skills or prompts: text, Markdown, and a skill's pictures and videos",
     kind: "tool",
     logName: EXT_NAME,
   }));

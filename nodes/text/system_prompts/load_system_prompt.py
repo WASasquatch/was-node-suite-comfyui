@@ -110,7 +110,7 @@ class LoadSystemPrompt(io.ComfyNode):
         if not key or key == system_prompts.NO_PROMPTS:
             raise ValueError(
                 "the system prompt library is empty. Save a prompt with Save System Prompt, "
-                "import a skill folder with Import on the node, or put .txt or .md files in "
+                "import a skill with Import or Import ZIP on the node, or put .txt or .md files in "
                 "ComfyUI/user/was-node-suite/system_prompts and press R to refresh the menu"
             )
         try:

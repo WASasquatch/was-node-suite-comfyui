@@ -19,7 +19,7 @@ paths:
   styles: null           # styles .json, or an A1111 styles .csv; null -> <user_dir>/was-node-suite/styles.json
   luts: null             # directory of .cube LUTs; null -> <user_dir>/was-node-suite/luts
   scratch: null          # folder frame batches too large for memory are kept in; null -> ComfyUI temp/
-  allow_read: []         # extra readable directories, e.g. ["D:/datasets/prompts"]
+  allow_read: []         # extra readable directories, e.g. ["D:/datasets/prompts"]; Image Save also saves here
   allow_write: []        # extra writable directories, e.g. ["D:/renders"]
 
 text:

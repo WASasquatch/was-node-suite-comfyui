@@ -301,9 +301,12 @@ searched and filtered by folder and model family, with the chosen prompt's text,
 text to a model's `system_prompt` input. **Save System Prompt** files a prompt into it.
 
 A folder holding `SKILL.md` is a skill, and **Import** on the node adds one, or a folder of
-prompts, from a folder on disk. The skill's `SKILL.md` is the system prompt, and its other text
-files, such as `references/layout.md`, leave Load System Prompt on its `documents` output for an
-LLM index, so a local model looks up what the skill references while it answers.
+prompts, from a folder on disk; **Import ZIP** adds the same from a zip, a skill's pictures and
+videos with it. A zip holding a program, a link, a path out of its folder, a zip bomb or a picture
+or video that is not what its name says is refused whole. The skill's `SKILL.md` is the system
+prompt, and its other text files, such as `references/layout.md`, leave Load System Prompt on its
+`documents` output for an LLM index, so a local model looks up what the skill references while it
+answers.
 
 The library ships with built-in prompt enhancers under **Built-in**, read-only, one folder per
 model family: FLUX.1 to FLUX 3 Klein, Krea 2, LTX-Video and LTX-2, MiniMax H3, Wan, HunyuanVideo,
@@ -437,8 +440,13 @@ under **WAS Suite/LLM**. Keys, folders and servers: [`docs/LLM.md`](docs/LLM.md)
 ## Files, folders and archives
 
 33 nodes. **Load Image Batch** and **Load Image Sequence** answer a paired `image_list` and
-`filename_list`, so wiring the second into **Image Save**'s `filename_prefix` writes every
-result under the name it came in with. **Image Load**, **Load Image Batch** and **Load Image
+`filename_list`. Wired into **Image Save**'s `filenames`, the second saves every result under
+the name it came in with, and text wired into `captions` is written beside each image under
+the same name, `cat.png` with `cat.txt`, a captioned training set in one node. Both take one
+value per image from a list output or a `LIST`, or one value for the whole batch. **Image
+Save** also saves into ComfyUI's `input` folder and every folder `paths.allow_read` or
+`paths.allow_write` lists, so a dataset is edited where its loaders read it.
+**Image Load**, **Load Image Batch** and **Load Image
 Sequence** read a 16-bit PNG at full precision, and a file marked linear with no curve applied.
 **Image Save** encodes the files of a batch in parallel.
 **Fast Save Animated WEBP** writes a batch as one animated WebP with its frames encoded in
@@ -459,6 +467,7 @@ an archive or a document directly.
 [`NODES.md`](NODES.md) under **WAS Suite/IO**, **WAS Suite/Archive** and
 **WAS Suite/Document**. Graphs:
 [`folder-round-trip.json`](docs/workflows/folder-round-trip.json),
+[`image-save-captions.json`](docs/workflows/image-save-captions.json),
 [`zip-archives.json`](docs/workflows/zip-archives.json),
 [`document-export.json`](docs/workflows/document-export.json).
 
