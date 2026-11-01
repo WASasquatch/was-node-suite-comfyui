@@ -52,8 +52,9 @@ class LoadSystemPrompt(io.ComfyNode):
                     tooltip=(
                         "Which prompt or skill to load, by its place in the library, such as "
                         "`Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt "
-                        "Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the "
-                        "library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts."
+                        "Upsampler.md`. `Built-in/` entries are read-only; Edit a copy, Edit, "
+                        "Duplicate and New on the library write into "
+                        "ComfyUI/user/was-node-suite/system_prompts."
                     ),
                 )),
             ],

@@ -313,7 +313,9 @@ model family: FLUX.1 to FLUX 3 Klein, Krea 2, LTX-Video and LTX-2, MiniMax H3, W
 Kandinsky 6, Qwen-Image, Z-Image, ERNIE Image, MOSS-Image, Fibo and the tag-based SDXL models. Each
 turns a short idea, a picture or an edit request into the prompt that model reads, and where the
 model's makers publish an enhancer prompt, it is theirs, unchanged or with its changes listed.
-**Copy** on a built-in writes an editable copy into the library and loads it on the node.
+Any prompt or skill opens in an editor on the node's library: **Edit a copy** on a built-in saves
+an edited copy of your own, **Edit** and **Duplicate** change or copy your own, and **New** writes
+one from scratch, for building on the built-ins without retyping them.
 
 For keeping the instructions that steer Qwen, Gemma and other language models in one place,
 picking one per node instead of pasting it, running skills written for Claude Code and Codex on
@@ -620,11 +622,16 @@ Pika adapter in bypass or merge mode, the release's video and audio shifts and i
 knot list, which also writes a refining pass or a ladder that climbs back. **Pika H3 Flex
 Canvas** gives the trained 480p and 768p sizes at eleven aspects and the frame count for 5 to
 15 seconds. **H3 Hires Latent** encodes upscaled frames beside a clip's own sound for a second
-pass at the larger size.
+pass at the larger size. The PikaTD files hold the Pika H3 Flex adapter at strength 0.5 inside
+the four-step PTD files, so **H3 PTD Patch** alone makes Pika H3 Flex video, with no Pika node.
 
-For Pika H3 Flex video with sound in six model calls, from text, frames or references.
+For Pika H3 Flex video with sound in six model calls, or in four with a PikaTD file, from text,
+frames or references.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Latent/Video**.
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Latent/Video**. Files:
+[`docs/MODELS.md`](docs/MODELS.md#minimax-h3). Graphs:
+[`minimax-h3-pika-flex.json`](docs/workflows/minimax-h3-pika-flex.json),
+[`minimax-h3-pikatd.json`](docs/workflows/minimax-h3-pikatd.json).
 
 ## MiniMax H3 in four to eight steps
 
@@ -638,7 +645,9 @@ trained sigmas and what it checked about the transformer. A sampler given sigmas
 file's steps, such as the other release's, stops before its first step and names the right ones.
 The adapters stay in system memory and reach the GPU one block at a time, tens of megabytes on
 top of what the plain transformer needs. A PTD file can also carry a LoRA, held once and applied
-at every step beside the step adapters, so a distilled style or adapter ships as one file.
+at every step beside the step adapters, so a distilled style or adapter ships as one file. An
+fl2va file can carry a second LoRA for the sound alone, blended with the step adapters at the
+share the file sets or **sound_mix** gives.
 **H3 PTD Sigmas** reads those steps back off any model made from the patch, so an extend loop
 that switches between fl2va and Ref2VA samples every segment on its own file's steps.
 

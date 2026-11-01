@@ -87,6 +87,14 @@ _FL2VA_KEY = re.compile(r"^transformer\.(?P<module>.+)\.lora_(?P<factor>[AB])\.(
 _SHARED_KEY = re.compile(
     r"^shared\.(?P<module>(?:token_refiner\.)?blocks\.\d+\.(?:attn\.qkv_proj|attn\.out_proj|mlp\.fc1|mlp\.fc2))"
     r"\.lora_(?P<factor>[AB])\.weight$")
+
+#: A step-independent adapter pair a file may carry for the sound tokens alone, by native module.
+_SOUND_KEY = re.compile(
+    r"^sound\.(?P<module>blocks\.\d+\.(?:attn\.qkv_proj|attn\.out_proj|mlp\.fc1|mlp\.fc2))"
+    r"\.lora_(?P<factor>[AB])\.weight$")
+
+#: Packed sequence segments holding sound tokens.
+SOUND_SEGMENTS = ("audio", "cond_audio", "ref_audio")
 _FL2VA_HEADS = {"proj_out.main": VIDEO_HEAD, "audio_proj_out.main": AUDIO_HEAD}
 _MISSING = object()
 
@@ -319,6 +327,7 @@ class Target(torch.nn.Module):
     Attributes:
         block: The block the projection belongs to, whose factors share one GPU copy.
         staged: The current step's factors on the GPU while its block is loaded, else empty.
+        cursor: The packed sequence row the projection's next call starts at.
     """
 
     def __init__(self, hops: int, block: str = ""):
@@ -327,15 +336,27 @@ class Target(torch.nn.Module):
         self.downs = torch.nn.ModuleList(torch.nn.ModuleList() for _ in range(hops))
         self.ups = torch.nn.ModuleList(torch.nn.ModuleList() for _ in range(hops))
         self.parts: list[list[int | None]] = [[] for _ in range(hops)]
+        self.sounds: list[list[bool]] = [[] for _ in range(hops)]
         self.staged: list[tuple] = []
+        self.cursor = 0
 
-    def add(self, hop: int, down: Factor, up: Factor, part: int | None) -> None:
-        """File one step's factor pair, writing into third ``part`` of the output, or all of it."""
+    def add(self, hop: int, down: Factor, up: Factor, part: int | None, sound: bool = False) -> None:
+        """File one step's factor pair, writing into third ``part`` of the output, or all of it.
+
+        Args:
+            hop: The step.
+            down: The down factor.
+            up: The up factor.
+            part: The third of a fused query, key and value output the pair fills, or None.
+            sound: True for a pair that adapts the sound tokens alone.
+        """
         self.downs[hop].append(down)
         self.ups[hop].append(up)
         self.parts[hop].append(part)
+        self.sounds[hop].append(sound)
 
-    def update(self, x: torch.Tensor, out: torch.Tensor, scale: float, factors: list) -> torch.Tensor:
+    def update(self, x: torch.Tensor, out: torch.Tensor, scale: float, factors: list,
+               spans=None) -> torch.Tensor:
         """``out`` with the step's update for input ``x`` added in place.
 
         Args:
@@ -343,6 +364,8 @@ class Target(torch.nn.Module):
             out: Its output.
             scale: Multiplier on the update.
             factors: The step's staged factors, from :meth:`Bank.factors`.
+            spans: ``(picture, sound, keep, mix)`` from :func:`_call_spans`, or None to update
+                every row with every pair.
 
         Returns:
             ``out``, or a contiguous copy of it where it was not contiguous.
@@ -353,9 +376,34 @@ class Target(torch.nn.Module):
             out = out.contiguous()
         rows = out.view(-1, out.shape[-1])
         flat = x.reshape(-1, x.shape[-1])
-        for down, down_scale, up, up_scale, part in factors:
-            _add_low(rows, _through(flat, down, down_scale), up, up_scale, part, scale)
+        for down, down_scale, up, up_scale, part, sound in factors:
+            for start, stop, gain in _weighted(sound, spans, rows.shape[0]):
+                _add_low(rows[start:stop], _through(flat[start:stop], down, down_scale),
+                         up, up_scale, part, scale * gain)
         return out
+
+
+def _weighted(sound: bool, spans, count: int) -> list[tuple[int, int, float]]:
+    """The rows a pair updates in one call, each run with its weight.
+
+    Args:
+        sound: True for a sound pair.
+        spans: ``(picture, sound, keep, mix)`` from :func:`_call_spans`, or None.
+        count: Rows in the call.
+
+    Returns:
+        ``(start, stop, weight)`` runs: a sound pair on the sound rows at ``mix``; a step or
+        shared pair on the picture rows at 1 and on the sound rows at ``keep``.
+    """
+    if spans is None:
+        return [(0, count, 1.0)]
+    picture, sound_rows, keep, mix = spans
+    if sound:
+        return [(a, b, mix) for a, b in sound_rows if b > a] if mix else []
+    runs = [(a, b, 1.0) for a, b in picture if b > a]
+    if keep:
+        runs += [(a, b, keep) for a, b in sound_rows if b > a]
+    return runs
 
 
 class Bank(torch.nn.Module):
@@ -375,6 +423,11 @@ class Bank(torch.nn.Module):
         audio_bank: Ref2VA's audio head bank, or None.
         base_heads: fl2va's reference video head weight and bias, or None.
         slot_bytes: Bytes of the GPU slot one block's factors for one step are copied into.
+        sound: Projections carrying a sound adapter. Above 0, the sound tokens take that
+            adapter at ``sound_mix`` and the step and shared adapters, heads included, at
+            ``1 - sound_mix``.
+        sound_mix: The file's share of the sound adapter on the sound tokens, ``1.0`` when unset.
+        sound_text: True when the file treats the text tokens as sound tokens.
     """
 
     def __init__(self, release: str, name: str, hops: int, grid, shift: float,
@@ -393,6 +446,9 @@ class Bank(torch.nn.Module):
         self.audio_bank: HeadBank | None = None
         self.base_heads: tuple[torch.Tensor, torch.Tensor] | None = None
         self.slot_bytes = 0
+        self.sound = 0
+        self.sound_mix = 1.0
+        self.sound_text = False
         self._layout: dict[tuple[int, str], list] = {}
         self._slot: torch.Tensor | None = None
         self._hop: int | None = None
@@ -415,14 +471,14 @@ class Bank(torch.nn.Module):
         self._layout = {}
         for target in self.targets.values():
             for hop in range(self.hops):
-                pieces = list(zip(target.downs[hop], target.ups[hop], target.parts[hop]))
+                pieces = list(zip(target.downs[hop], target.ups[hop], target.parts[hop], target.sounds[hop]))
                 if pieces:
                     self._layout.setdefault((hop, target.block), []).append((target, pieces))
         largest = 0
         for entries in self._layout.values():
             offset = 0
             for _, pieces in entries:
-                for down, up, _ in pieces:
+                for down, up, _, _ in pieces:
                     for tensor in (down.weight, down.scale, up.weight, up.scale):
                         if tensor is not None:
                             offset += -(-tensor.numel() * tensor.element_size() // _ALIGN) * _ALIGN
@@ -462,7 +518,7 @@ class Bank(torch.nn.Module):
         offset = 0
         for target, pieces in self._layout.get((self._hop, block), ()):
             staged = []
-            for down, up, part in pieces:
+            for down, up, part, sound in pieces:
                 views = []
                 for tensor in (down.weight, down.scale, up.weight, up.scale):
                     if tensor is None:
@@ -473,7 +529,7 @@ class Bank(torch.nn.Module):
                     view.copy_(tensor, non_blocking=True)
                     views.append(view)
                     offset += -(-size // _ALIGN) * _ALIGN
-                staged.append((*views, part))
+                staged.append((*views, part, sound))
             target.staged = staged
         self._loaded = block
 
@@ -631,46 +687,59 @@ def build(sd, metadata, name: str) -> Bank:
         bank = _build_fl2va(sd, metadata, name)
     else:
         raise ValueError(f"{name} is not a PTD file")
-    _add_shared(bank, sd, metadata, name)
+    _add_section(bank, sd, metadata, name, "shared", _SHARED_KEY, "ptd_shared_strength")
+    bank.sound = _add_section(bank, sd, metadata, name, "sound", _SOUND_KEY, "ptd_sound_strength")
+    if bank.sound and bank.release != FL2VA:
+        raise ValueError(f"{name} carries a sound adapter, which is read on fl2va files only")
+    if bank.sound:
+        bank.sound_mix = min(max(float(metadata.get("ptd_sound_mix", 1.0)), 0.0), 1.0)
+        bank.sound_text = str(metadata.get("ptd_sound_text", "")).strip().lower() in ("1", "true", "yes")
     return bank
 
 
-def _add_shared(bank: Bank, sd, metadata, name: str) -> None:
+def _add_section(bank: Bank, sd, metadata, name: str, section: str, pattern, strength_key: str) -> int:
     """File a file's step-independent adapter pairs into every step, each pair held once.
 
     Args:
         bank: The bank the step adapters were built into.
-        sd: The file's tensors; ``shared.<native module>.lora_A.weight`` and ``lora_B`` pairs.
-        metadata: The file's metadata; ``ptd_shared_strength`` scales the pairs, 1.0 when absent.
+        sd: The file's tensors; ``<section>.<native module>.lora_A.weight`` and ``lora_B`` pairs.
+        metadata: The file's metadata; ``strength_key`` scales the pairs, 1.0 when absent.
         name: The file name, for messages.
+        section: ``shared`` for pairs on every token, ``sound`` for pairs on the sound tokens.
+        pattern: The key pattern the section's keys follow.
+        strength_key: The metadata key holding the section's strength.
+
+    Returns:
+        How many projections the section adapts.
 
     Raises:
-        ValueError: A pair is incomplete, or its factors do not chain.
+        ValueError: A key names no projection, a pair is incomplete, or its factors do not chain.
     """
     pairs: dict[str, dict[str, torch.Tensor]] = {}
     for key in sd:
-        if key.startswith("shared."):
-            match = _SHARED_KEY.fullmatch(key)
+        if key.startswith(section + "."):
+            match = pattern.fullmatch(key)
             if match is None:
                 raise ValueError(f"{name} carries {key}, which names no MiniMax H3 projection")
             pairs.setdefault(match["module"], {})[match["factor"]] = sd[key]
     if not pairs:
-        return
-    strength = float(metadata.get("ptd_shared_strength", 1.0) or 1.0) / bank.scale
+        return 0
+    strength = float(metadata.get(strength_key, 1.0) or 1.0) / bank.scale
     for module, factors in sorted(pairs.items()):
         if set(factors) != {"A", "B"}:
-            raise ValueError(f"{name}: the shared adapter for {module} is incomplete")
+            raise ValueError(f"{name}: the {section} adapter for {module} is incomplete")
         down, up = factors["A"], factors["B"]
         if down.ndim != 2 or up.ndim != 2 or up.shape[1] != down.shape[0]:
-            raise ValueError(f"{name}: the shared adapter for {module} has factors of {tuple(down.shape)} "
+            raise ValueError(f"{name}: the {section} adapter for {module} has factors of {tuple(down.shape)} "
                              f"and {tuple(up.shape)}, which do not chain")
         scale = None if strength == 1.0 else torch.full((up.shape[0], 1), strength, dtype=torch.float32)
         pair = (Factor(down), Factor(up, scale))
         target = bank.target(module)
         for hop in range(bank.hops):
-            target.add(hop, *pair, None)
+            target.add(hop, *pair, None, sound=section == "sound")
     dtype = str(next(iter(pairs.values()))["A"].dtype).replace("torch.", "")
-    bank.storage = f"{bank.storage}, with a {dtype} shared adapter on {len(pairs)} projections"
+    bank.storage = f"{bank.storage}, with a {dtype} {section} adapter on {len(pairs)} projections"
+    return len(pairs)
 
 
 def load(path):
@@ -710,16 +779,89 @@ class _State:
         self.heads = None
         self.audio_rate = 1.0
         self.warned: set[int] = set()
+        self.options: dict | None = None
+        self.mix = 1.0
+        self.text = False
+        self._layout = None
+        self._rows: tuple[int, list[tuple[int, int]]] | None = None
+
+    def sound_rows(self) -> tuple[int, list[tuple[int, int]]]:
+        """The running call's packed sequence length and the ``(start, stop)`` spans of its sound tokens.
+
+        With :attr:`text` set, the text tokens count as sound tokens.
+
+        Raises:
+            RuntimeError: The model call published no token layout.
+        """
+        layout = (self.options or {}).get("minimax_h3_layout")
+        if layout is None:
+            raise RuntimeError(
+                "H3 PTD Patch: this PTD file adapts the sound tokens on their own, and the MiniMax H3 "
+                "model gave no token layout to find them by. Update ComfyUI.")
+        if layout is not self._layout:
+            kinds = SOUND_SEGMENTS + (("text",) if self.text else ())
+            self._layout = layout
+            self._rows = (int(layout.seq_len),
+                          [(int(a), int(b)) for a, b, kind in layout.segments if kind in kinds])
+        return self._rows
 
 
-def _adapted(original, target: Target, bank: Bank, state: _State, scale: float, audio: bool):
-    """A forward that adds ``target``'s update for the current step to ``original``'s output."""
+def _clip(spans, start: int, stop: int) -> list[tuple[int, int]]:
+    """The parts of ``spans`` inside ``[start, stop)``, counted from ``start``."""
+    return [(max(a, start) - start, min(b, stop) - start) for a, b in spans if a < stop and b > start]
+
+
+def _call_spans(state: _State, target: Target, count: int):
+    """The picture and sound rows of a block projection's next call, which covers ``count`` rows.
+
+    Returns:
+        ``(picture, sound, keep, mix)``: two lists of ``(start, stop)`` in the call's own rows,
+        then the weights of the step and shared pairs and of the sound pair on the sound rows.
+
+    Raises:
+        RuntimeError: The calls run past the sequence.
+    """
+    total, sound_spans = state.sound_rows()
+    # Calls cover the packed sequence in order, whole or in consecutive slices.
+    start = target.cursor
+    stop = start + count
+    if stop > total:
+        target.cursor = 0
+        raise RuntimeError(
+            f"H3 PTD Patch: a projection in {target.block} ran over {stop} of {total} tokens. Another "
+            f"patch reorders the tokens in a way a PTD file with a sound adapter cannot follow; remove "
+            f"that patch.")
+    target.cursor = 0 if stop == total else stop
+    sound = _clip(sound_spans, start, stop)
+    picture, at = [], 0
+    for a, b in sound:
+        if a > at:
+            picture.append((at, a))
+        at = b
+    if at < count:
+        picture.append((at, count))
+    return picture, sound, 1.0 - state.mix, state.mix
+
+
+def _adapted(original, target: Target, bank: Bank, state: _State, scale: float, audio: bool,
+             routed: bool = False, sound_head: bool = False):
+    """A forward that adds ``target``'s update for the current step to ``original``'s output.
+
+    Args:
+        routed: The projection runs over the packed sequence and the bank adapts sound on its own.
+        sound_head: The projection is the sound output head of a bank that adapts sound on its own.
+    """
 
     def forward(x, *args, **kwargs):
         out = original(x, *args, **kwargs)
         if state.hop is None:
             return out
-        out = target.update(x, out, scale, bank.factors(target))
+        spans = None
+        if routed:
+            spans = _call_spans(state, target, x.reshape(-1, x.shape[-1]).shape[0])
+        elif sound_head:
+            spans = ([], [(0, x.reshape(-1, x.shape[-1]).shape[0])], 1.0 - state.mix, state.mix)
+        out = target.update(x, out, scale, bank.factors(target), spans)
         if audio and state.audio_rate != 1.0:
             out = out.mul_(state.audio_rate)
         return out
@@ -736,22 +878,41 @@ def _kept(original, held: dict, target: Target, bank: Bank, state: _State, act):
         if state.hop is not None and "lows" in held:
             factors = bank.factors(target)
             if factors:
-                held["lows"].append([_act_low(out, down, down_scale, act) for down, down_scale, *_ in factors])
+                flat = out.reshape(-1, out.shape[-1])
+                count = flat.shape[0]
+                start = held["seen"]
+                held["seen"] = start + count
+                spans = held.get("spans")
+                if spans is not None:
+                    picture, sound_rows, keep, mix = spans
+                    spans = (_clip(picture, start, start + count), _clip(sound_rows, start, start + count), keep, mix)
+                lows = []
+                for down, down_scale, _up, _up_scale, _part, sound in factors:
+                    lows.append([(a, b, gain, _act_low(flat[a:b], down, down_scale, act))
+                                 for a, b, gain in _weighted(sound, spans, count)])
+                held["lows"].append((count, lows))
         return out
 
     setattr(forward, WRAPPED, original)
     return forward
 
 
-def _feed_forward(original, target: Target, bank: Bank, state: _State, scale: float, act, held: dict):
+def _feed_forward(original, target: Target, bank: Bank, state: _State, scale: float, act, held: dict,
+                  routed: bool = False):
     """A feed-forward whose fused fc2 runs as ComfyUI runs it, whole or in row chunks, with fc2's update added after."""
 
     def forward(x, *args, **kwargs):
         held["lows"] = []
+        held["seen"] = 0
+        held["spans"] = None
         try:
+            if routed and state.hop is not None:
+                held["spans"] = _call_spans(state, target, x.reshape(-1, x.shape[-1]).shape[0])
             out = original(x, *args, **kwargs)
         finally:
             calls = held.pop("lows", [])
+            held.pop("seen", None)
+            held.pop("spans", None)
         if state.hop is None or not calls:
             return out
         factors = bank.factors(target)
@@ -762,10 +923,10 @@ def _feed_forward(original, target: Target, bank: Bank, state: _State, scale: fl
         rows = out.view(-1, out.shape[-1])
         offset = 0
         # Each fc1 call covers the next run of output rows, in order.
-        for lows in calls:
-            count = lows[0].shape[0]
-            for low, (_down, _down_scale, up, up_scale, part) in zip(lows, factors):
-                _add_low(rows[offset:offset + count], low, up, up_scale, part, scale)
+        for count, lows in calls:
+            for ranges, (_down, _down_scale, up, up_scale, part, _sound) in zip(lows, factors):
+                for a, b, gain, low in ranges:
+                    _add_low(rows[offset + a:offset + b], low, up, up_scale, part, scale * gain)
             offset += count
         if offset != rows.shape[0]:
             raise RuntimeError(
@@ -843,12 +1004,15 @@ def _check_model(model, bank: Bank) -> list[str]:
     return notes
 
 
-def apply(model, bank: Bank):
+def apply(model, bank: Bank, sound_mix: float | None = None, sound_text: bool | None = None):
     """Return a copy of a MiniMax H3 model carrying a PTD file's step adapters and heads.
 
     Args:
         model: The ``ModelPatcher`` of a plain MiniMax H3 transformer, LoRAs allowed.
         bank: The PTD file, from :func:`load`.
+        sound_mix: Share of the file's sound adapter on the sound tokens, ``0`` to ``1``, or
+            None for the file's own. Ignored for a file with no sound adapter.
+        sound_text: Whether the text tokens count as sound tokens, or None for the file's own.
 
     Returns:
         ``(model, notes)``: the patched model, and what was checked about the base.
@@ -870,13 +1034,15 @@ def apply(model, bank: Bank):
     patched.add_object_patch("diffusion_model.preprocess_text_embeds", _raw_text)
 
     state = _State()
+    state.mix = bank.sound_mix if sound_mix is None else min(max(float(sound_mix), 0.0), 1.0)
+    state.text = bank.sound_text if sound_text is None else bool(sound_text)
     saved: list = []
     act = _swiglu()
 
-    def install(module, wrap, force: bool = False):
+    def install(module, wrap, force: bool = False, peel: bool = True):
         current = module.__dict__.get("forward")
         # A wrapper an earlier run of this patch left behind is peeled off first.
-        while getattr(current, WRAPPED, None) is not None:
+        while peel and getattr(current, WRAPPED, None) is not None:
             current = getattr(current, WRAPPED)
             module.forward = current
         before = (module.__dict__.get("forward", _MISSING),
@@ -897,14 +1063,20 @@ def apply(model, bank: Bank):
             if path.endswith(".mlp.fc2") and path[:-len(".fc2")] in fused:
                 continue
             audio = bank.release == FL2VA and path == AUDIO_HEAD
+            routed = bool(bank.sound) and path.startswith("blocks.")
+            head = bool(bank.sound) and path == AUDIO_HEAD
             install(diffusion.get_submodule(path),
-                    lambda inner, t=target, a=audio: _adapted(inner, t, bank, state, bank.scale, a),
+                    lambda inner, t=target, a=audio, r=routed, s=head: _adapted(
+                        inner, t, bank, state, bank.scale, a, r, s),
                     force=path.endswith(".mlp.fc2"))
         for path, target in fused.items():
             mlp = diffusion.get_submodule(path)
             held: dict = {}
-            install(mlp.fc1, lambda inner, t=target, h=held: _kept(inner, h, t, bank, state, act))
-            install(mlp, lambda inner, t=target, h=held: _feed_forward(inner, t, bank, state, bank.scale, act, h))
+            routed = bool(bank.sound) and path.startswith("blocks.")
+            # fc1 keeps its own adapter, installed above, beneath this one.
+            install(mlp.fc1, lambda inner, t=target, h=held: _kept(inner, h, t, bank, state, act), peel=False)
+            install(mlp, lambda inner, t=target, h=held, r=routed: _feed_forward(
+                inner, t, bank, state, bank.scale, act, h, r))
 
     def eject(model_patcher):
         while saved:
@@ -951,10 +1123,15 @@ def apply(model, bank: Bank):
             native_heads = (final.video_out, final.audio_out)
             final.video_out, final.audio_out = staged_heads
         state.hop = hop
+        state.options = transformer_options
+        if bank.sound:
+            for target in bank.targets.values():
+                target.cursor = 0
         try:
             return executor(x, timestep, context, transformer_options, *args, **kwargs)
         finally:
             state.hop = None
+            state.options = None
             state.audio_rate = 1.0
             if native_heads is not None:
                 final.video_out, final.audio_out = native_heads
@@ -1036,15 +1213,20 @@ def sigmas(bank: Bank) -> torch.Tensor:
     return torch.tensor(bank.grid, dtype=torch.float32)
 
 
-def describe(bank: Bank) -> dict:
-    """What a bank is, as the rows a report shows."""
+def describe(bank: Bank, sound_mix: float | None = None, sound_text: bool | None = None) -> dict:
+    """What a bank is, as the rows a report shows, with the sound mix :func:`apply` was given."""
+    adapters = (f"{bank.storage}, {bank.nbytes() / 1e9:.2f} GB in system memory, "
+                f"{bank.slot_bytes / 1e6:.0f} MB on the GPU per block")
+    if bank.sound:
+        mix = bank.sound_mix if sound_mix is None else min(max(float(sound_mix), 0.0), 1.0)
+        text = bank.sound_text if sound_text is None else bool(sound_text)
+        adapters += f"; sound mix {mix:g}" + (", text tokens included" if text else "")
     return {
         "release": "Ref2VA (taobao-content-ai)" if bank.release == REF2VA else "fl2va (EPFL)",
         "file": bank.name,
         "steps": str(bank.hops),
         "sigmas": ", ".join(f"{s:.4f}" for s in bank.grid),
-        "adapters": (f"{bank.storage}, {bank.nbytes() / 1e9:.2f} GB in system memory, "
-                     f"{bank.slot_bytes / 1e6:.0f} MB on the GPU per block"),
+        "adapters": adapters,
         "sampler": f"euler, scheduler simple, {bank.hops} steps, cfg 1",
     }
 

@@ -51,16 +51,23 @@ and FlowSeek's `flowseek_*.pth` from [mattpoggi/flowseek](https://github.com/mat
 | `taeh3.safetensors` | `ComfyUI/models/vae_approx` | 22,709,752 bytes | **H3 Extend Window**, `live_preview`, drawn in the Prompt Timeline | `safetensors/taeh3.safetensors` in [madebyollin/taehv](https://github.com/madebyollin/taehv) |
 | `ptd_h3_ref2va_4step_int8.safetensors` | `ComfyUI/models/ptd` or `ComfyUI/models/model_patches` | 2.9 GB | **Load Model Patch**, then **H3 PTD Patch** on a ref2va transformer | `ptd/` in [nynxz/MiniMax-H3-PTD-LoRAs](https://huggingface.co/nynxz/MiniMax-H3-PTD-LoRAs/tree/main/ptd), from [taobao-content-ai/MiniMax-H3-PTD-LoRAs](https://huggingface.co/taobao-content-ai/MiniMax-H3-PTD-LoRAs) |
 | `ptd_h3_4step_int8.safetensors` | `ComfyUI/models/ptd` or `ComfyUI/models/model_patches` | 2.8 GB | **Load Model Patch**, then **H3 PTD Patch** on an fl2va transformer | `ptd/` in [nynxz/MiniMax-H3-PTD-LoRAs](https://huggingface.co/nynxz/MiniMax-H3-PTD-LoRAs/tree/main/ptd), from [epfl-vita/PTD-weights](https://huggingface.co/epfl-vita/PTD-weights) |
+| `pika_h3_flex_td_ref2va_4step_s050.safetensors` | `ComfyUI/models/ptd` or `ComfyUI/models/model_patches` | 4.8 GB | **Load Model Patch**, then **H3 PTD Patch** on a ref2va transformer | [WAS/Pika-H3-Flex-PTD](https://huggingface.co/WAS/Pika-H3-Flex-PTD) |
+| `pika_h3_flex_td_4step_s050.safetensors` | `ComfyUI/models/ptd` or `ComfyUI/models/model_patches` | 4.8 GB | **Load Model Patch**, then **H3 PTD Patch** on an fl2va transformer | [WAS/Pika-H3-Flex-PTD](https://huggingface.co/WAS/Pika-H3-Flex-PTD) |
 
 Load Model Patch lists `ComfyUI/models/ptd` as well as its own folder. The other files in those
 two repositories, the bf16 copies and the 6 and 8 step releases, are in the same two layouts.
 
-A PTD file can also carry a LoRA that H3 PTD Patch applies at every step:
+A PTD file can also carry a LoRA that H3 PTD Patch applies at every step, and an fl2va file a
+second LoRA for the sound tokens:
 
 | In the file | Holds |
 |---|---|
 | `shared.<module>.lora_A.weight`, `shared.<module>.lora_B.weight` | One LoRA pair, named by ComfyUI's MiniMax H3 module: `blocks.N` or `token_refiner.blocks.N`, then `attn.qkv_proj`, `attn.out_proj`, `mlp.fc1` or `mlp.fc2` |
 | `ptd_shared_strength` metadata | The LoRA's strength, 1.0 where absent |
+| `sound.<module>.lora_A.weight`, `sound.<module>.lora_B.weight` | One LoRA pair for the sound tokens, fl2va files only: `blocks.N`, then `attn.qkv_proj`, `attn.out_proj`, `mlp.fc1` or `mlp.fc2` |
+| `ptd_sound_strength` metadata | The sound LoRA's strength, 1.0 where absent |
+| `ptd_sound_mix` metadata | The sound LoRA's share of the sound tokens, `0` to `1`, 1.0 where absent. The step adapters and the shared LoRA take the rest. H3 PTD Patch's `sound_mix` input overrides it |
+| `ptd_sound_text` metadata | `true` = the text tokens take the sound mix too. H3 PTD Patch's `sound_text` input overrides it |
 
 The upscaler is fetched by the first run that picks it with `features.network: true`, and the
 `_bf16` file beside it loads too. `taeh3.safetensors` is never fetched. Another file named
@@ -72,7 +79,7 @@ read through `extra_model_paths.yaml` only where a root carries an entry under t
 |---|---|
 | The H3 latent upscaler | Apache-2.0, LBH-123-AI |
 | `taeh3.safetensors` | MIT, Ollin Boer Bohan |
-| The PTD files | MiniMax H3 Community License |
+| The PTD and PikaTD files | MiniMax H3 Community License |
 
 ## HDR reconstruction
 

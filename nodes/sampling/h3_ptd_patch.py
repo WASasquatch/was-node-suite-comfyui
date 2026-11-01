@@ -55,6 +55,28 @@ class H3PTDPatch(io.ComfyNode):
                         "or ComfyUI/models/ptd: bf16 or int8, Ref2VA or fl2va."
                     ),
                 ),
+                io.Float.Input(
+                    "sound_mix",
+                    optional=True,
+                    force_input=True,
+                    min=0.0,
+                    max=1.0,
+                    tooltip=(
+                        "For a file with a sound adapter: its share of the sound, `0` = the "
+                        "file's step adapters alone, `1` = the sound adapter alone, `0.5` = half "
+                        "of each. Unwired = the file's own mix."
+                    ),
+                ),
+                io.Boolean.Input(
+                    "sound_text",
+                    optional=True,
+                    force_input=True,
+                    tooltip=(
+                        "For a file with a sound adapter: `true` = the prompt's text tokens take "
+                        "the sound mix too, `false` = they take the step adapters. Unwired = the "
+                        "file's own setting."
+                    ),
+                ),
             ],
             outputs=[
                 io.Model.Output(
@@ -77,7 +99,7 @@ class H3PTDPatch(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, model, model_patch) -> io.NodeOutput:
+    def execute(cls, model, model_patch, sound_mix=None, sound_text=None) -> io.NodeOutput:
         """Patch the model.
 
         Raises:
@@ -88,8 +110,8 @@ class H3PTDPatch(io.ComfyNode):
             raise ValueError(
                 "H3 PTD Patch takes a PTD file from Load Model Patch. The model patch connected "
                 "is another kind; pick a PTD file in Load Model Patch.")
-        patched, notes = ptd.apply(model, bank)
-        facts = ptd.describe(bank)
+        patched, notes = ptd.apply(model, bank, sound_mix, sound_text)
+        facts = ptd.describe(bank, sound_mix, sound_text)
         facts["base"] = "; ".join(notes)
         run_result.publish(
             summary=f"{bank.hops} steps: KSampler euler, simple, cfg 1, or these sigmas",

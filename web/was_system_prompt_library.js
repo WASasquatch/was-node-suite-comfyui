@@ -14,7 +14,8 @@ import { UPLOAD_TIMEOUT, fetchWithin } from "./interface/request.js";
 import { setWidgetHidden } from "./interface/visibility.js";
 import { appendInterfaceWidget, chainWidgetCallback, keepOnNode } from "./interface/widget.js";
 import {
-  FIELD, LABEL, LOOK, SANS, SCROLLBARS, SELECTED_FILL, button, createSplitter, el, focusRing, pill,
+  FIELD, LABEL, LOOK, SANS, SCROLLBARS, SELECTED_FILL, button, createSplitter, el, field, focusRing, pill,
+  setDisabled, textBox,
 } from "./interface/window_kit.js";
 
 const EXT_NAME = "WASNodeSuite.SystemPromptLibrary";
@@ -347,6 +348,8 @@ const library = {
   pending: null,
   // What a folder import takes, as the route answered it.
   limits: null,
+  // The folder the pack's own prompts are listed under.
+  builtinFolder: "Built-in",
 };
 
 // Each entry's text, by key, as `{status, modified, text}`, and the requests in flight.
@@ -409,6 +412,7 @@ function loadLibrary(force = false) {
       const entries = Array.isArray(data?.entries) ? data.entries : [];
       library.entries = entries.map(readEntry).filter(Boolean);
       library.limits = data?.import && typeof data.import === "object" ? data.import : library.limits;
+      if (typeof data?.builtin_folder === "string" && data.builtin_folder) library.builtinFolder = data.builtin_folder;
       library.status = STATUS.READY;
       for (const [key, held] of texts) {
         const entry = library.entries.find((each) => each.key === key);
@@ -532,35 +536,361 @@ async function postImport(payload) {
 }
 
 /**
- * Copy a built-in prompt into the library and load the copy on the node.
+ * Ask whether to save, discard or keep editing.
  *
- * @param {object} node - The Load System Prompt node.
- * @param {object} entry - The built-in entry.
- * @returns {Promise<void>} Resolved once the library has been read again.
+ * @param {string} name - The prompt being edited.
+ * @returns {Promise<boolean|null>} True to save, false to discard, null to keep editing.
  */
-async function copyBuiltin(node, entry) {
-  const payload = { copy: entry.key, replace: false };
-  let answer = await postImport(payload);
-  if (answer.status === 409 && answer.data.exists) {
-    const replace = await ask(
-      "Replace in the library?",
-      `${typeof answer.data.error === "string" ? answer.data.error : "The copy is already in the library"}. `
-        + "Write the built-in text over it?",
-    );
-    if (!replace) return;
-    payload.replace = true;
-    answer = await postImport(payload);
+async function askUnsaved(name) {
+  const message = `${name || "This prompt"} has changes that are not saved.`;
+  try {
+    const dialog = app?.extensionManager?.dialog;
+    if (typeof dialog?.confirm === "function") {
+      const answer = await dialog.confirm({ title: "Save changes?", message, type: "dirtyClose", denyLabel: "Discard" });
+      return answer === true || answer === false ? answer : null;
+    }
+  } catch (error) {
+    console.error(`[${EXT_NAME}] Failed to ask:`, error);
   }
-  if (answer.status !== 200 || typeof answer.data.key !== "string") {
-    tell("error", typeof answer.data.error === "string" ? answer.data.error : `The copy failed (HTTP ${answer.status}).`);
+  return window.confirm(`${message}\n\nDiscard them?`) ? false : null;
+}
+
+/**
+ * The folder a built-in's copy goes into: its own folder without `Built-in/`.
+ *
+ * @param {string} folder - A folder of the tree.
+ * @returns {string} The folder, empty at the top.
+ */
+function libraryFolder(folder) {
+  const lead = library.builtinFolder;
+  if (folder === lead) return "";
+  return folder.startsWith(`${lead}/`) ? folder.slice(lead.length + 1) : folder;
+}
+
+/**
+ * The editor's fields for an entry, read again from the library.
+ *
+ * @param {object} entry - The entry edited or copied.
+ * @param {string} mode - `edit` to rewrite it, `copy` for a copy under its own name, or
+ *   `duplicate` for a copy under a new one.
+ * @returns {Promise<object|null>} The draft, or null when the entry has gone.
+ */
+async function draftFor(entry, mode) {
+  const response = await fetchWithin(`${ROUTE}?key=${encodeURIComponent(entry.key)}`, { cache: "no-store" });
+  if (response.status === 204) return null;
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  const fresh = readEntry(data?.entry) ?? entry;
+  return {
+    mode: mode === "edit" ? "edit" : "copy",
+    source: fresh.key,
+    sourceName: fresh.name,
+    builtin: fresh.builtin,
+    skill: fresh.skill,
+    documents: readFiles(data?.files).length,
+    name: mode === "duplicate" ? `${fresh.name} copy` : fresh.name,
+    folder: fresh.builtin ? libraryFolder(treeFolder(fresh)) : treeFolder(fresh),
+    description: fresh.description,
+    families: fresh.families.join(", "),
+    tags: fresh.tags.join(", "),
+    text: typeof data?.text === "string" ? data.text : "",
+  };
+}
+
+/**
+ * A draft for a new prompt.
+ *
+ * @param {string} folder - The folder in force on the picker.
+ * @returns {object} The draft.
+ */
+function newDraft(folder) {
+  const inBuiltin = folder === library.builtinFolder || folder.startsWith(`${library.builtinFolder}/`);
+  return {
+    mode: "copy",
+    source: "",
+    sourceName: "",
+    builtin: false,
+    skill: false,
+    documents: 0,
+    name: "",
+    folder: inBuiltin ? libraryFolder(folder) : folder,
+    description: "",
+    families: "",
+    tags: "",
+    text: "",
+  };
+}
+
+/**
+ * The folders of the library's own prompts, every level, for the folder field's suggestions.
+ *
+ * @returns {string[]} The folders, sorted.
+ */
+function libraryFolders() {
+  const found = new Set();
+  for (const entry of library.entries) {
+    if (entry.builtin) continue;
+    const parts = treeFolder(entry) ? treeFolder(entry).split("/") : [];
+    for (let depth = 1; depth <= parts.length; depth += 1) found.add(parts.slice(0, depth).join("/"));
+  }
+  return [...found].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+/**
+ * Build the editor for one prompt: its name, folder, description, families, tags and text.
+ *
+ * @param {object} draft - What the fields open with, from `draftFor` or `newDraft`.
+ * @param {object} options - `{onSaved, onCancel}`: `onSaved(key)` once Save or Ctrl+S has
+ *   written the prompt, `onCancel()` when Cancel is pressed.
+ * @returns {{element: HTMLElement, dirty: () => boolean, name: () => string,
+ *   save: () => Promise<string|null>, focus: () => void, dispose: () => void}} The editor;
+ *   `save` answers the saved key, or null when nothing was saved.
+ */
+function createEditor(draft, { onSaved, onCancel }) {
+  const editing = draft.mode === "edit";
+  const root = el("div", "box-sizing:border-box;width:100%;height:100%;display:flex;flex-direction:column;"
+    + `min-height:0;overflow:hidden;color:${LOOK.text};font:13px/1.45 ${SANS}`);
+
+  const toolbar = el("div", "flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;"
+    + `border-bottom:1px solid ${LOOK.border};background:${LOOK.surface}`);
+  const heading = editing ? `Edit ${draft.sourceName}`
+    : draft.source ? `${draft.builtin ? "Edit a copy of" : "Duplicate"} ${draft.sourceName}`
+      : "New system prompt";
+  const title = el("span", `flex:0 1 auto;min-width:0;font:600 14px ${SANS};overflow:hidden;`
+    + "text-overflow:ellipsis;white-space:nowrap", heading);
+  const status = el("span", `flex:1 1 auto;min-width:0;text-align:right;font:12px ${SANS};color:${LOOK.muted};`
+    + "overflow:hidden;text-overflow:ellipsis;white-space:nowrap");
+  const cancel = button("Cancel", () => { if (!busy) onCancel?.(); }, { hint: "Back to the library", kind: "tool", logName: EXT_NAME });
+  const saveButton = button("Save", () => { saveAndReport(); }, { hint: "Save (Ctrl+S)", kind: "go", logName: EXT_NAME });
+  toolbar.append(title, status, cancel, saveButton);
+
+  const body = el("div", "flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:12px;"
+    + `padding:14px 16px;overflow:auto;box-sizing:border-box;${SCROLLBARS}`);
+  const line = (value, placeholder) => {
+    const box = focusRing(el("input", `${FIELD};width:100%`));
+    box.type = "text";
+    box.value = value;
+    box.placeholder = placeholder;
+    box.spellcheck = false;
+    return box;
+  };
+  const nameBox = line(draft.name, "Detailed Caption");
+  nameBox.maxLength = 200;
+  const folderBox = line(draft.folder, "Top of the library");
+  const listId = `was-system-prompt-folders-${Math.random().toString(36).slice(2)}`;
+  const suggestions = el("datalist");
+  suggestions.id = listId;
+  for (const folder of libraryFolders()) {
+    const option = document.createElement("option");
+    option.value = folder;
+    suggestions.appendChild(option);
+  }
+  folderBox.setAttribute("list", listId);
+  if (editing) {
+    folderBox.readOnly = true;
+    folderBox.style.color = LOOK.muted;
+  }
+  const descriptionBox = line(draft.description, "One line saying what the prompt is for");
+  descriptionBox.maxLength = 500;
+  const familiesBox = line(draft.families, "FLUX, Qwen-Image");
+  const tagsBox = line(draft.tags, "caption, detailed");
+  const textArea = textBox(14, "flex:1 1 220px;min-height:160px;resize:none");
+  textArea.value = draft.text;
+
+  const pair = (left, right) => {
+    const row = el("div", "flex:0 0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px");
+    row.append(left, right);
+    return row;
+  };
+  const where = el("div", `flex:0 0 auto;font:12px/1.4 ${SANS};color:${LOOK.muted};overflow-wrap:anywhere`);
+  const count = el("span", `font:12px ${SANS};color:${LOOK.muted};font-variant-numeric:tabular-nums`);
+  const textHead = el("div", "flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;gap:8px");
+  textHead.append(el("span", LABEL, editing && draft.skill ? "SKILL.md" : "Text"), count);
+  body.append(
+    pair(
+      field("Name", nameBox, "", "Listed name and file name"),
+      field("Folder", folderBox, "", editing ? "Fixed while editing" : "Library folder, / between levels"),
+    ),
+    field("Description", descriptionBox, "", "Shown under the name"),
+    pair(
+      field("Model families", familiesBox, "", "Separated by commas"),
+      field("Tags", tagsBox, "", "Separated by commas"),
+    ),
+    where, textHead, textArea, suggestions,
+  );
+  root.append(toolbar, body);
+
+  const read = () => ({
+    name: nameBox.value,
+    folder: folderBox.value,
+    description: descriptionBox.value,
+    families: familiesBox.value,
+    tags: tagsBox.value,
+    text: textArea.value,
+  });
+  let initial = JSON.stringify(read());
+  let busy = false;
+  let disposed = false;
+
+  /**
+   * Whether a field differs from what the editor opened with or last saved.
+   *
+   * @returns {boolean} True while there is something unsaved.
+   */
+  function dirty() {
+    return JSON.stringify(read()) !== initial;
+  }
+
+  /**
+   * Say where the prompt is written and how long its text is.
+   *
+   * @returns {void}
+   */
+  function describe() {
+    const folder = folderBox.value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+    const facts = [editing ? `${LIBRARY_PATH}/${draft.source}` : `Saves to ${LIBRARY_PATH}${folder ? `/${folder}` : ""}`];
+    if (draft.source && !editing) facts.push(`copy of ${draft.source}`);
+    if (draft.skill) facts.push(`${draft.documents} ${draft.documents === 1 ? "document" : "documents"}`);
+    where.textContent = facts.join(" · ");
+    const characters = textArea.value.length;
+    count.textContent = `${characters.toLocaleString()} ${characters === 1 ? "character" : "characters"}`;
+    title.textContent = `${heading}${dirty() ? " •" : ""}`;
+  }
+
+  /**
+   * Show a line beside the buttons.
+   *
+   * @param {string} text - What it says.
+   * @param {string} [tone] - A CSS colour.
+   * @returns {void}
+   */
+  function say(text, tone = LOOK.muted) {
+    status.textContent = text;
+    status.title = text;
+    status.style.color = tone;
+  }
+
+  /**
+   * Write the prompt into the library.
+   *
+   * @returns {Promise<string|null>} The saved key once the library holds it, or null.
+   */
+  async function save() {
+    if (busy || disposed) return null;
+    const form = read();
+    if (!form.name.trim()) {
+      say("Type a name", LOOK.warning);
+      nameBox.focus();
+      return null;
+    }
+    if (!form.text.trim()) {
+      say("Type the prompt's text", LOOK.warning);
+      textArea.focus();
+      return null;
+    }
+    busy = true;
+    setDisabled(saveButton, true);
+    say("Saving");
+    try {
+      const fields = {
+        name: form.name, description: form.description, families: form.families, tags: form.tags, text: form.text,
+      };
+      const payload = editing ? { edit: draft.source, ...fields }
+        : { copy: draft.source, folder: form.folder, replace: false, ...fields };
+      let answer = await postImport(payload);
+      if (!editing && answer.status === 409 && answer.data.exists) {
+        const replace = await ask(
+          "Replace in the library?",
+          `${typeof answer.data.error === "string" ? answer.data.error : "That prompt is already in the library"}. `
+            + "Write this one over it?",
+        );
+        if (!replace) {
+          say("Not saved: name taken", LOOK.warning);
+          return null;
+        }
+        payload.replace = true;
+        answer = await postImport(payload);
+      }
+      if (answer.status !== 200 || typeof answer.data.key !== "string") {
+        const reason = typeof answer.data.error === "string" ? answer.data.error : `The save failed (HTTP ${answer.status}).`;
+        say(reason, LOOK.danger);
+        tell("error", reason);
+        return null;
+      }
+      initial = JSON.stringify(read());
+      describe();
+      say("");
+      await loadLibrary(true);
+      return answer.data.key;
+    } catch (error) {
+      console.error(`[${EXT_NAME}] Failed to save the system prompt:`, error);
+      say("Not saved: see the console", LOOK.danger);
+      return null;
+    } finally {
+      busy = false;
+      if (!disposed) setDisabled(saveButton, false);
+    }
+  }
+
+  /**
+   * Save, and hand the key on once the library holds it.
+   *
+   * @returns {Promise<void>} Resolved once the save has finished.
+   */
+  async function saveAndReport() {
+    const key = await save();
+    if (key && !disposed) onSaved?.(key);
+  }
+
+  const onInput = () => {
+    describe();
+    if (!busy) say("");
+  };
+  const onKey = (event) => {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      event.stopPropagation();
+      saveAndReport();
+    }
+  };
+  root.addEventListener("input", onInput);
+  root.addEventListener("keydown", onKey);
+  describe();
+
+  return {
+    element: root,
+    dirty,
+    name: () => nameBox.value.trim() || draft.name,
+    save,
+    focus() {
+      (draft.name ? textArea : nameBox).focus({ preventScroll: true });
+    },
+    dispose() {
+      disposed = true;
+      root.removeEventListener("input", onInput);
+      root.removeEventListener("keydown", onKey);
+      root.remove();
+    },
+  };
+}
+
+/**
+ * Open the editor in the library window on an entry's draft, or on a new prompt.
+ *
+ * @param {object} node - The Load System Prompt node the saved prompt is loaded on.
+ * @param {object|null} entry - The entry, or null for a new prompt.
+ * @param {string} mode - `edit`, `copy` or `duplicate`, as `draftFor` takes it.
+ * @param {string} [folder] - For a new prompt, the folder in force on the picker.
+ * @returns {Promise<void>} Resolved once the editor is open.
+ */
+async function openEditor(node, entry, mode, folder = "") {
+  const draft = entry ? await draftFor(entry, mode) : newDraft(folder);
+  if (!draft) {
+    tell("warn", `${entry.name} is no longer in the library.`);
+    loadLibrary(true);
     return;
   }
-  await loadLibrary(true);
-  const key = answer.data.key;
-  if (node?.graph && !promptLinked(node) && library.entries.some((each) => each.key === key) && writeKey(node, key)) {
-    redraw(node);
-  }
-  tell("success", `Copied ${entry.name} to ${key} in ${LIBRARY_PATH}. Edit that file to make it your own.`);
+  libraryWindow().edit(node, draft);
 }
 
 /**
@@ -813,6 +1143,11 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     toolbar.appendChild(where);
   }
   toolbar.appendChild(button("↻", () => loadLibrary(true), { hint: "Read the folder again", kind: "tool", logName: EXT_NAME }));
+  toolbar.appendChild(button("New", () => {
+    openEditor(node, null, "copy", state.folder).catch((error) => {
+      console.error(`[${EXT_NAME}] Failed to open the editor:`, error);
+    });
+  }, { hint: "Write a new prompt", kind: "tool", logName: EXT_NAME }));
   toolbar.appendChild(button("Import", () => importFolder(node), {
     hint: "Add a skill folder, one holding SKILL.md and its references, or a folder of .txt and .md prompts",
     kind: "tool",
@@ -1176,20 +1511,24 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     if (entry.skill) head.appendChild(skillPill(entry));
     if (entry.builtin) head.appendChild(builtinPill());
     if (entry.families.length) head.appendChild(familyPills(entry.families, entry.families.length));
-    if (entry.builtin) {
-      const copy = button("Copy", () => {
-        copyBuiltin(node, entry).catch((error) => {
-          console.error(`[${EXT_NAME}] Failed to copy the built-in prompt:`, error);
-          tell("error", "The built-in prompt could not be copied. The browser console names the cause.");
-        });
-      }, {
-        hint: `Copy into ${LIBRARY_PATH} as an editable file, and load the copy`,
-        kind: "tool",
-        logName: EXT_NAME,
+    const actions = el("span", "margin-left:auto;display:inline-flex;align-items:center;gap:6px;flex:0 0 auto");
+    const editor = (mode) => () => {
+      openEditor(node, entry, mode).catch((error) => {
+        console.error(`[${EXT_NAME}] Failed to open the editor:`, error);
+        tell("error", "The prompt could not be opened. The browser console names the cause.");
       });
-      copy.style.marginLeft = "auto";
-      head.appendChild(copy);
+    };
+    if (entry.builtin) {
+      actions.appendChild(button("Edit a copy", editor("copy"), {
+        hint: "Saves as your own copy", kind: "tool", logName: EXT_NAME,
+      }));
+    } else {
+      actions.appendChild(button("Edit", editor("edit"), { hint: "Edit this prompt", kind: "tool", logName: EXT_NAME }));
+      actions.appendChild(button("Duplicate", editor("duplicate"), {
+        hint: "Edit a copy of it", kind: "tool", logName: EXT_NAME,
+      }));
     }
+    head.appendChild(actions);
     preview.appendChild(head);
     const facts = entry.builtin
       ? [entry.folder, "ships with the pack", readableBytes(entry.size)]
@@ -1412,14 +1751,30 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
 let held = null;
 
 /**
- * The larger view, built on first use and shared by every node.
+ * Load a saved prompt on the node and say where it went.
  *
- * @returns {{open: (node: object) => void, close: () => void, nodeRemoved: (node: object) => void}}
- *   The window.
+ * @param {object} node - The Load System Prompt node.
+ * @param {string} key - The saved prompt's key.
+ * @param {boolean} edited - True for a prompt rewritten where it was.
+ * @returns {void}
+ */
+function savedPrompt(node, key, edited) {
+  const entry = library.entries.find((each) => each.key === key);
+  if (entry && node?.graph && !promptLinked(node) && writeKey(node, key)) redraw(node);
+  const name = entry?.name ?? key;
+  tell("success", edited ? `Saved ${name}.` : `Saved ${name} as ${key} in ${LIBRARY_PATH}.`);
+}
+
+/**
+ * The larger view, built on first use and shared by every node: the picker, or the editor.
+ *
+ * @returns {{open: (node: object) => Promise<void>, edit: (node: object, draft: object) => Promise<void>,
+ *   close: () => void, nodeRemoved: (node: object) => void}} The window.
  */
 function libraryWindow() {
   if (held) return held;
   let picker = null;
+  let editor = null;
   const win = createFloatingWindow({
     title: "System Prompts",
     icon: BOOK_ICON,
@@ -1429,32 +1784,114 @@ function libraryWindow() {
     minHeight: WINDOW_MIN_HEIGHT,
     storageKey: STORAGE_KEY,
     logName: EXT_NAME,
-    onClose: () => release(),
+    onClose: () => {
+      closeAsked().catch((error) => console.error(`[${EXT_NAME}] Failed to close the window:`, error));
+    },
   });
 
   /**
-   * Take the picker out of the window.
+   * Take the picker and the editor out of the window.
    *
    * @returns {void}
    */
   function release() {
     picker?.dispose();
     picker = null;
+    editor?.dispose();
+    editor = null;
+  }
+
+  /**
+   * Settle the editor's unsaved changes: save them, drop them, or keep editing.
+   *
+   * @param {object} node - The node a saved prompt is loaded on.
+   * @param {boolean} edited - True while the editor rewrites a prompt where it is.
+   * @returns {Promise<boolean>} True when the editor may be left.
+   */
+  async function settled(node, edited) {
+    if (!editor?.dirty()) return true;
+    const answer = await askUnsaved(editor.name());
+    if (answer === null) return false;
+    if (answer === false) return true;
+    const key = await editor.save();
+    if (key) savedPrompt(node, key, edited);
+    return Boolean(key);
+  }
+
+  // The node and mode the editor was opened for, as `{node, edited}`.
+  let editing = null;
+
+  /**
+   * Answer the close button or Escape: an editor holding unsaved changes asks first.
+   *
+   * @returns {Promise<void>} Resolved once the window is closed or kept open.
+   */
+  async function closeAsked() {
+    if (editor && editing && editor.dirty()) {
+      win.open();
+      if (!(await settled(editing.node, editing.edited))) return;
+      win.close();
+    }
+    release();
+    editing = null;
+  }
+
+  /**
+   * Draw the picker for a node.
+   *
+   * @param {object} node - The Load System Prompt node.
+   * @returns {void}
+   */
+  function showPicker(node) {
+    release();
+    editing = null;
+    picker = createPicker(node, { layout: "window", onDone: () => held.close() });
+    win.body.appendChild(picker.element);
+    win.setBadge(`#${node.id} ${node.title || "Load System Prompt"}`);
+    win.open();
+    win.expand();
+    loadLibrary(true).then(() => picker?.revealChosen());
+    picker.focusSearch();
   }
 
   held = {
-    open(node) {
+    async open(node) {
+      if (editing && !(await settled(editing.node, editing.edited))) {
+        win.open();
+        return;
+      }
+      showPicker(node);
+    },
+    async edit(node, draft) {
+      if (editing && !(await settled(editing.node, editing.edited))) {
+        win.open();
+        return;
+      }
+      // An editor opened from the window's picker goes back to it; one opened from a node closes.
+      const back = Boolean(picker) && win.isOpen();
+      const edited = draft.mode === "edit";
+      const leave = () => (back ? showPicker(node) : held.close());
       release();
-      picker = createPicker(node, { layout: "window", onDone: () => held.close() });
-      win.body.appendChild(picker.element);
+      editor = createEditor(draft, {
+        onSaved: (key) => {
+          savedPrompt(node, key, edited);
+          leave();
+        },
+        onCancel: () => {
+          settled(node, edited).then((done) => { if (done) leave(); })
+            .catch((error) => console.error(`[${EXT_NAME}] Failed to leave the editor:`, error));
+        },
+      });
+      editing = { node, edited };
+      win.body.appendChild(editor.element);
       win.setBadge(`#${node.id} ${node.title || "Load System Prompt"}`);
       win.open();
       win.expand();
-      loadLibrary(true).then(() => picker?.revealChosen());
-      picker.focusSearch();
+      editor.focus();
     },
     close() {
       release();
+      editing = null;
       win.close();
     },
     nodeRemoved(node) {

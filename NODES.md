@@ -1762,7 +1762,7 @@ Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif
 | `bit_depth` | `COMBO` | Yes |  | `8-bit`, `16-bit`, `32-bit float` | `8-bit` = 256 levels, every format but `exr`; `16-bit` = 65536 levels, `png` or `exr`, keeps gradients banding-free through grading; `32-bit float` = `exr` only, keeps light above 1.0. A depth the format cannot hold fails the prompt. |
 | `profile` | `WAS_COLOUR_PROFILE` | No |  |  | A colour profile from Image Load. The images are converted from sRGB into that space and the file is written carrying it, so a photograph goes out tagged the way it came in. Left unconnected, the file is written in sRGB and carries no profile. |
 | `filenames` | `ARRAY,STRING` | No |  |  | One name per image, as filename_list from Load Image Batch. The folders in filename_prefix still apply: `training/laracroft/` and `cat` save training/laracroft/cat.png. A name already there gets a number unless overwrite_mode is on. Several lines are several names. |
-| `captions` | `ARRAY,STRING` | No |  |  | One caption per image, written as UTF-8 text under the image's own name: cat.png gets cat.txt. A single caption goes beside every image. Surrounding blank lines and spaces are trimmed. |
+| `captions` | `ARRAY,STRING` | No |  |  | One caption per image, written as UTF-8 text under the image's own name: cat.png gets cat.txt. A single caption goes beside every image. An image whose caption is blank is not saved. Surrounding blank lines and spaces are trimmed. |
 
 **Outputs**
 
@@ -10914,6 +10914,8 @@ Make MiniMax H3 generate video and sound in 4 to 8 steps from a PTD file loaded 
 |---|---|---|---|---|---|
 | `model` | `MODEL` | Yes |  |  | A plain MiniMax H3 transformer of the kind the file was trained on, ref2va or fl2va, pruned and quantized ones included, after any LoRA. |
 | `model_patch` | `MODEL_PATCH` | Yes |  |  | A PTD file from Load Model Patch, kept in ComfyUI/models/model_patches or ComfyUI/models/ptd: bf16 or int8, Ref2VA or fl2va. |
+| `sound_mix` | `FLOAT` | No |  |  | For a file with a sound adapter: its share of the sound, `0` = the file's step adapters alone, `1` = the sound adapter alone, `0.5` = half of each. Unwired = the file's own mix. |
+| `sound_text` | `BOOLEAN` | No |  |  | For a file with a sound adapter: `true` = the prompt's text tokens take the sound mix too, `false` = they take the step adapters. Unwired = the file's own setting. |
 
 **Outputs**
 
@@ -13107,7 +13109,7 @@ Load a saved or built-in system prompt or skill to steer a language or vision mo
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `system_prompt` | `COMBO,STRING` | Yes |  |  | Which prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt Upsampler.md`. `Built-in/` entries ship with the pack; Copy on the library makes an editable copy in ComfyUI/user/was-node-suite/system_prompts. A wired path, such as `E:\images\cat.png`, works too. |
+| `system_prompt` | `COMBO,STRING` | Yes |  |  | Which prompt or skill to load, by its place in the library, such as `Captioning/Detailed Caption.txt` or `Built-in/FLUX/FLUX.2 Prompt Upsampler.md`. `Built-in/` entries are read-only; Edit a copy, Edit, Duplicate and New on the library write into ComfyUI/user/was-node-suite/system_prompts. A wired path, such as `E:\images\cat.png`, works too. |
 
 **Outputs**
 
@@ -20799,8 +20801,8 @@ Display anything wired in and pass it on unchanged: Markdown with diagrams and m
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `content` | `*` | No |  |  | What to display: text, a list of strings, a parsed object or an image batch; the view that recognises it draws it. A list arrives as numbered panes, each with a tick box that keeps or drops it and a copy button. |
-| `manual_content` | `STRING` | No |  |  | What was typed into the node with the Edit button. Written by the viewer rather than by hand, and saved with the workflow, so an edit survives a reload and takes precedence over the wired content. |
-| `viewer_meta` | `STRING` | No | {"lastInputHash": "", "excluded": []} |  | Which list items are unticked, as JSON. Written by the viewer; unticked items are shown but left out of the output. |
+| `manual_content` | `STRING` | No |  |  | What was typed into the node with the Edit button. Written by the viewer rather than by hand, and saved with the workflow, so an edit survives a reload and replaces the wired content until that content changes. |
+| `viewer_meta` | `STRING` | No | {"lastInputHash": "", "excluded": []} |  | Which list items are unticked, as JSON. Written by the viewer; unticked items are shown but left out of the output until the wired content changes. |
 | `view_state` | `STRING` | No | {} |  | Which view is selected and anything that view has stored, as JSON. Written by the viewer, and what lets a composited canvas or a rendered frame survive a reload without re-running the graph. |
 | `hold_for_edit` | `BOOLEAN` | No | False |  | `false` shows the content and carries on. `true` stops the run here until Continue is pressed, and sends on whatever was edited. Set from Pause Workflow on the viewer's own bar. |
 | `hold_timeout` | `FLOAT` | No | 600.0 |  | Seconds to wait before carrying on with what arrived. 600 is ten minutes, 0 waits with no limit. The whole queue holds still. |

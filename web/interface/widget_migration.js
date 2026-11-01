@@ -60,6 +60,20 @@ function namesArray(named, saved) {
 }
 
 /**
+ * Whether a save's `{name: value}` record names exactly the node's widgets, in another order.
+ *
+ * @param {object} named - The saved `widgets_values_named`.
+ * @param {string[]} names - The node's serialised widget names, in order.
+ * @returns {boolean} True for the same names in a different order.
+ */
+function reordered(named, names) {
+  const keys = Object.keys(named);
+  if (keys.length !== names.length) return false;
+  const known = new Set(names);
+  return keys.every((key) => known.has(key)) && keys.some((key, index) => key !== names[index]);
+}
+
+/**
  * The first input spec named `key` anywhere under a part of a node definition.
  *
  * @param {*} scope - Part of the definition's `input`.
@@ -134,8 +148,10 @@ export function migrateWidgetValues(node, order) {
       const saved = arrived ?? info?.widgets_values;
       const named = arrivedNamed ?? (isRecord(info?.widgets_values_named) ? info.widgets_values_named : null);
       const current = (this.widgets ?? []).filter(serialised);
-      const byNames = Array.isArray(saved) && named && saved.length !== current.length
-        && namesArray(named, saved);
+      // A record that agrees with its array is followed when the count differs or the same
+      // widgets were saved in another order.
+      const byNames = Array.isArray(saved) && named && namesArray(named, saved)
+        && (saved.length !== current.length || reordered(named, current.map((widget) => widget.name)));
       const candidates = orders.flatMap((each) => [withLinked(current, each), each]);
       const matched = Array.isArray(saved) && !byNames
         ? candidates.find((names) => names.length === saved.length && current.length !== names.length)

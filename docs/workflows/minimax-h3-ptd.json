@@ -202,8 +202,7 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            28,
-            29
+            28
           ]
         },
         {
@@ -218,9 +217,7 @@
           "localized_name": "steps",
           "name": "steps",
           "type": "INT",
-          "links": [
-            30
-          ]
+          "links": []
         }
       ],
       "properties": {
@@ -624,81 +621,6 @@
       ],
       "widgets_values_named": {
         "sampler_name": "euler"
-      }
-    },
-    {
-      "id": 11,
-      "type": "BasicScheduler",
-      "pos": [
-        1450,
-        172
-      ],
-      "size": [
-        270,
-        106
-      ],
-      "flags": {},
-      "order": 18,
-      "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 29
-        },
-        {
-          "localized_name": "scheduler",
-          "name": "scheduler",
-          "type": "COMBO",
-          "widget": {
-            "name": "scheduler"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "steps",
-          "name": "steps",
-          "type": "INT",
-          "widget": {
-            "name": "steps"
-          },
-          "link": 30
-        },
-        {
-          "localized_name": "denoise",
-          "name": "denoise",
-          "type": "FLOAT",
-          "widget": {
-            "name": "denoise"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "localized_name": "SIGMAS",
-          "name": "SIGMAS",
-          "type": "SIGMAS",
-          "links": null
-        }
-      ],
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "BasicScheduler"
-      },
-      "widgets_values": [
-        "simple",
-        4,
-        1
-      ],
-      "widgets_values_named": {
-        "scheduler": "simple",
-        "steps": 4,
-        "denoise": 1
       }
     },
     {
@@ -2219,22 +2141,6 @@
       12,
       0,
       "MODEL"
-    ],
-    [
-      29,
-      4,
-      0,
-      11,
-      0,
-      "MODEL"
-    ],
-    [
-      30,
-      4,
-      2,
-      11,
-      2,
-      "INT"
     ],
     [
       31,

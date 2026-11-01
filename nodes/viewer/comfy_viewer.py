@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import zlib
 
 from comfy_api.latest import io
 
@@ -82,8 +83,8 @@ def input_hash(values) -> str:
 
 
 def content_hash(source: str) -> str:
-    """A cheap change marker for content the frontend has already been sent."""
-    return f"{len(source)}_{hash(source) & 0xFFFFFFFF}"
+    """A change marker for content sent to the frontend, the same in every session."""
+    return f"{len(source)}_{zlib.crc32(source.encode('utf-8', errors='replace'))}"
 
 
 def as_list(value) -> list:
@@ -114,19 +115,36 @@ def expand_lists(items: list) -> list:
     return opened
 
 
-def excluded_indexes(viewer_meta) -> list:
-    """The list item indexes the user has unticked, read out of the frontend's metadata."""
+def viewer_state(viewer_meta) -> dict:
+    """The frontend's metadata as a mapping, empty where it is missing or unreadable."""
     if not viewer_meta:
-        return []
+        return {}
     raw = viewer_meta[0] if isinstance(viewer_meta, list) else viewer_meta
     try:
         parsed = json.loads(raw)
     except (TypeError, ValueError):
-        return []
-    if not isinstance(parsed, dict):
-        return []
-    excluded = parsed.get("excluded")
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def excluded_indexes(viewer_meta) -> list:
+    """The list item indexes the user has unticked, read out of the frontend's metadata."""
+    excluded = viewer_state(viewer_meta).get("excluded")
     return excluded if isinstance(excluded, list) else []
+
+
+def edit_is_stale(viewer_meta, source: str) -> bool:
+    """Whether the edit and unticked items were made on content other than ``source``.
+
+    Args:
+        viewer_meta: The ``viewer_meta`` widget, as the list this node receives.
+        source: The wired content, joined as the frontend is sent it.
+
+    Returns:
+        True when content is wired and the marker stored with the edit names other content.
+    """
+    made_on = viewer_state(viewer_meta).get("lastInputHash")
+    return bool(source) and isinstance(made_on, str) and bool(made_on) and made_on != content_hash(source)
 
 
 def cached_output(view_state, current: str):
@@ -218,7 +236,8 @@ class WASComfyViewer(io.ComfyNode):
                     tooltip=(
                         "What was typed into the node with the Edit button. Written by the "
                         "viewer rather than by hand, and saved with the workflow, so an edit "
-                        "survives a reload and takes precedence over the wired content."
+                        "survives a reload and replaces the wired content until that content "
+                        "changes."
                     ),
                 ),
                 io.String.Input(
@@ -228,7 +247,8 @@ class WASComfyViewer(io.ComfyNode):
                     socketless=True,
                     tooltip=(
                         "Which list items are unticked, as JSON. Written by the viewer; "
-                        "unticked items are shown but left out of the output."
+                        "unticked items are shown but left out of the output until the "
+                        "wired content changes."
                     ),
                 ),
                 io.String.Input(
@@ -355,6 +375,13 @@ class WASComfyViewer(io.ComfyNode):
             return cls._output(display, display, handled["content_hash"], handled["output_values"], current)
 
         source = LIST_SEPARATOR.join(to_string(item) for item in content) if content else ""
+        if edit_is_stale(viewer_meta, source):
+            if has_content(manual_content) or excluded:
+                logger.info(
+                    "the wired content changed since the viewer was edited, so the new content "
+                    "goes on and the earlier edit and unticked items are set aside"
+                )
+            manual_content, excluded = [], []
 
         if holding:
             from ...modules.interface.pause import wait_for_resume

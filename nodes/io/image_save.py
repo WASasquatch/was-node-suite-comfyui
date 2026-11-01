@@ -99,27 +99,35 @@ def spread(value, total: int, name: str, lines: bool = False) -> list[str] | Non
         lines: Read a string holding several lines as one entry per line.
 
     Returns:
-        ``total`` strings, or None where nothing arrived.
+        ``total`` strings, a missing entry kept in its place as ``""``, or None where
+        nothing arrived.
 
     Raises:
         ValueError: More than one entry arrived and not one per image.
     """
-    found = []
+    found, arrived = [], False
     for item in _items(value):
         if item is None:
+            found.append("")
             continue
+        arrived = True
         for entry in item if isinstance(item, (list, tuple)) else [item]:
             text = "" if entry is None else str(entry)
             parts = [part for part in text.splitlines() if part.strip()] if lines else []
             found.extend(parts if len(parts) > 1 else [text])
-    if not found:
+    if not arrived:
         return None
     if len(found) == 1:
         return found * total
     if len(found) != total:
+        hint = (
+            ". To leave an image out, blank its caption instead of unticking or deleting it"
+            if name == "captions" else ""
+        )
         raise ValueError(
-            f"{len(found)} {name} arrived for {total} image(s). Wire one per image, in the "
-            f"images' order, or a single one for all of them"
+            f"{len(found)} {name} arrived for {total} image(s), and they pair by position, so "
+            f"none can be matched. Wire one per image, in the images' order, or a single one "
+            f"for all of them{hint}"
         )
     return found
 
@@ -376,7 +384,8 @@ class ImageSave(io.ComfyNode):
                     tooltip=(
                         "One caption per image, written as UTF-8 text under the image's own "
                         "name: cat.png gets cat.txt. A single caption goes beside every "
-                        "image. Surrounding blank lines and spaces are trimmed."
+                        "image. An image whose caption is blank is not saved. Surrounding "
+                        "blank lines and spaces are trimmed."
                     ),
                 ),
             ],
@@ -461,20 +470,34 @@ class ImageSave(io.ComfyNode):
         texts = spread(captions, total, "captions")
 
         claimed: set = set()
-        plans, start = [], 0
-        for chosen in each:
+        plans, owners, start = [], [], 0
+        for number, chosen in enumerate(each):
             count = int(chosen["images"].shape[0])
-            plans.append(cls.plan_batch(
-                **chosen,
-                stems=stems[start:start + count] if stems else None,
-                texts=texts[start:start + count] if texts else None,
-                claimed=claimed,
-            ))
+            kept = [
+                start + index for index in range(count)
+                if texts is None or texts[start + index].strip()
+            ]
+            if kept:
+                batch = chosen["images"]
+                if len(kept) < count:
+                    batch = batch[[index - start for index in kept]]
+                plans.append(cls.plan_batch(
+                    **{**chosen, "images": batch},
+                    stems=[stems[index] for index in kept] if stems else None,
+                    texts=[texts[index] for index in kept] if texts else None,
+                    claimed=claimed,
+                ))
+                owners.append(number)
             start += count
+        skipped = total - sum(len(plan.names) for plan in plans)
+        if skipped:
+            logger.warning(
+                "Image Save left out %d of %d image(s) whose caption is blank", skipped, total,
+            )
 
         written = cls.encode_all(plans)
 
-        per_pass: list[list[str]] = [[] for _ in plans]
+        per_pass: list[list[str]] = [[] for _ in each]
         captioned, previews = [], []
         for (number, position), output_file in written:
             if output_file is None:
@@ -482,7 +505,7 @@ class ImageSave(io.ComfyNode):
             plan = plans[number]
             name = plan.names[position]
             logger.info("image file saved to: %s", output_file)
-            per_pass[number].append(output_file)
+            per_pass[owners[number]].append(output_file)
             if plan.texts is not None:
                 caption = write_caption(
                     plan.destination, os.path.splitext(name)[0] + CAPTION_EXTENSION,
@@ -504,7 +527,7 @@ class ImageSave(io.ComfyNode):
             history.update_history_output_images(files)
 
         first = each[0]
-        if first["show_history"] and first["show_previews"]:
+        if plans and first["show_history"] and first["show_previews"]:
             previews += cls.history_previews(
                 folder_paths.get_output_directory(), plans[0].subfolder, plans[0].prefix,
                 first["show_history_by_prefix"],
@@ -513,11 +536,13 @@ class ImageSave(io.ComfyNode):
         facts = {"overwrite": first["overwrite_mode"], "depth": first["bit_depth"]}
         if texts is not None:
             facts["captions"] = len(captioned)
+        if skipped:
+            facts["left out"] = f"{skipped} with a blank caption"
         file_report.publish(
             files,
-            intended=total,
-            kind=plans[0].extension,
-            folder=str(plans[0].destination),
+            intended=total - skipped,
+            kind=plans[0].extension if plans else first["extension"],
+            folder=str(plans[0].destination) if plans else None,
             facts=facts,
         )
         return io.NodeOutput(

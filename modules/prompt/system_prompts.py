@@ -6,9 +6,11 @@ separated path. A ``SKILL.md`` folder is one skill.
 
 from __future__ import annotations
 
+import filecmp
 import hashlib
 import io
 import os
+import shutil
 import stat
 import threading
 import time
@@ -53,7 +55,8 @@ __all__ = [
     "SkillFile",
     "builtin_directory",
     "compose",
-    "copy_builtin",
+    "copy_entry",
+    "edit_entry",
     "entry_at",
     "find",
     "import_archive",
@@ -170,6 +173,9 @@ MAX_SKILL_MEDIA_TOTAL = 512 * 1024 * 1024
 
 #: Bytes of one uploaded zip, at most.
 MAX_ARCHIVE_BYTES = 256 * 1024 * 1024
+
+#: Bytes read at a time when a skill's file is copied as it is.
+COPY_CHUNK = 1024 * 1024
 
 #: Pixels of one imported picture, at most.
 MAX_IMAGE_PIXELS = 64 * 1024 * 1024
@@ -307,7 +313,7 @@ class CopyExists(FolderExists):
 
 
 class Copied(NamedTuple):
-    """What a copy of a built-in prompt wrote.
+    """What a copy of a prompt or skill wrote.
 
     Attributes:
         key: The copy's key in the library.
@@ -1126,51 +1132,224 @@ def _media_refusal(path: str, data: bytes) -> str:
     return ""
 
 
-def copy_builtin(key: str, replace: bool = False) -> Copied:
-    """Copy one of the pack's own prompts into the library, where it can be edited.
+def copy_entry(
+    source: str,
+    text: str,
+    name: str,
+    folder: str = "",
+    families=(),
+    description: str = "",
+    tags=(),
+    replace: bool = False,
+) -> Copied:
+    """Write an edited copy of a prompt or skill into the library, or a new prompt.
 
     Args:
-        key: A built-in key, such as ``Built-in/FLUX/FLUX.2 Prompt Upsampler.md``. A skill is
-            copied with all of its files.
-        replace: Write over files at the copy's path that hold different text.
+        source: The key of the prompt or skill copied, built-in or the library's own. Empty for
+            a new prompt.
+        text: The prompt's text, without front matter.
+        name: The copy's name. Its file, or a skill's folder, is named after it, and keeps the
+            source's own file name while the name is the source's.
+        folder: The folder below the library written into, ``/`` separated, empty for the top.
+        families: Model families, as :func:`normalise_families` takes them.
+        description: One line saying what the prompt is for.
+        tags: Tags, as a list or a comma separated string.
+        replace: Write over files at the copy's path holding other text.
 
     Returns:
-        What was written, and the copy's key: the built-in key without ``Built-in/``.
+        The copy's key and what was written. A skill is copied with every file it holds.
 
     Raises:
-        CopyExists: A file at the copy's path holds different text and ``replace`` is off.
-        ImportRefused: The key names no built-in prompt, or a file cannot be read or written.
+        CopyExists: A file at the copy's path holds other text and ``replace`` is off.
+        FolderExists: A skill copy's folder is in the library and ``replace`` is off.
+        ImportRefused: The source is not listed, the name, folder or text is unusable, the
+            folder is ``Built-in`` or inside a skill, or a file cannot be read or written.
+    """
+    wanted = str(source or "")
+    entry = None
+    meta: dict = {}
+    if wanted:
+        entry = find(wanted, fresh=True)
+        if entry is None:
+            raise ImportRefused(f"`{wanted[:120]}` is not in the system prompt library. Refresh the library and pick it again")
+        try:
+            meta = read(entry).meta
+        except (ValueError, sandbox.PathNotAllowed) as error:
+            raise ImportRefused(str(error)) from None
+    cleaned, content = _composed(meta, text, name, families, description, tags)
+
+    typed = str(folder or "").strip().replace("\\", "/").strip("/")
+    below = _import_segments(typed, "folder") if typed else ""
+    if _reserved(below):
+        raise ImportRefused(
+            f"`{BUILTIN_FOLDER}` holds the pack's own prompts, so nothing is written into it. Pick another folder"
+        )
+    same_name = entry is not None and cleaned.casefold() == entry.name.casefold()
+    try:
+        stem = _stem(cleaned)
+    except ValueError as error:
+        raise ImportRefused(str(error)) from None
+
+    try:
+        root = sandbox.resolve_write(library_directory())
+    except sandbox.PathNotAllowed:
+        raise ImportRefused("the system prompt library cannot be written") from None
+    if _inside_skill(root, below):
+        raise ImportRefused(
+            f"`{below}` is a skill's folder, so a prompt written there would be one of its documents. Pick another folder"
+        )
+    if entry is not None and entry.skill:
+        source_folder = os.path.dirname(entry.path)
+        folder_name = os.path.basename(source_folder) if same_name else stem
+        target = f"{below}/{folder_name}" if below else folder_name
+        kept: list[tuple[str, bytes | Path]] = [(os.path.basename(entry.path), content)]
+        files, _skipped = skill_files(entry)
+        for found in files:
+            try:
+                kept.append((found.relative, _readable(entry, found.path)))
+            except (ValueError, sandbox.PathNotAllowed) as error:
+                raise ImportRefused(str(error)) from None
+        held_at = Path(os.path.realpath(source_folder))
+        try:
+            landing = sandbox.resolve_write_file(root, target)
+        except sandbox.PathNotAllowed:
+            raise ImportRefused(f"the folder `{target}` cannot be written in the library") from None
+        if landing != held_at and sandbox.contains(held_at, landing):
+            raise ImportRefused("a skill cannot be copied into its own folder. Pick another folder")
+        with _lock:
+            counts = _write_files(target, kept, replace, whole_folder=True)
+        key = f"{target}/{os.path.basename(entry.path)}"
+    else:
+        suffix = os.path.splitext(entry.path)[1].lower() if entry is not None else ".md"
+        file_stem = os.path.splitext(os.path.basename(entry.path))[0] if same_name else stem
+        with _lock:
+            counts = _write_files(below, [(f"{file_stem}{suffix}", content)], replace, whole_folder=False)
+        key = f"{below}/{file_stem}{suffix}" if below else f"{file_stem}{suffix}"
+    logger.info(
+        "wrote `%s` into the system prompt library%s: %d new, %d replaced, %d unchanged",
+        key, f" from `{entry.key}`" if entry is not None else "",
+        counts["new"], counts["replaced"], counts["unchanged"],
+    )
+    return Copied(key, counts["new"], counts["replaced"], counts["unchanged"])
+
+
+def edit_entry(key: str, text: str, name: str, families=(), description: str = "", tags=()) -> Saved:
+    """Rewrite one of the library's own prompts, or a skill's ``SKILL.md``, where it is.
+
+    Args:
+        key: The entry's key. Its file and key stay as they are.
+        text: The prompt's text, without front matter.
+        name: What the entry is called.
+        families: Model families, as :func:`normalise_families` takes them.
+        description: One line saying what the prompt is for.
+        tags: Tags, as a list or a comma separated string.
+
+    Returns:
+        The entry as written, and ``replaced`` or ``unchanged``. Front matter keys the form
+        does not carry are kept.
+
+    Raises:
+        ImportRefused: The key is not in the library, names a built-in prompt, the name or
+            text is unusable, or the file is not a plain file inside the library.
     """
     wanted = str(key or "")
     entry = find(wanted, fresh=True)
-    if entry is None or not entry.builtin:
-        raise ImportRefused(f"`{wanted[:120]}` is not one of the pack's built-in prompts")
-    relative = entry.key[len(BUILTIN_FOLDER) + 1:]
+    if entry is None:
+        raise ImportRefused(f"`{wanted[:120]}` is not in the system prompt library. Refresh the library and pick it again")
+    if entry.builtin:
+        raise ImportRefused(f"`{entry.key}` ships with the pack and is read-only. Edit a copy of it instead")
     try:
-        kept: list[tuple[str, bytes]] = [(os.path.basename(entry.path), _text_of(entry).encode("utf-8"))]
+        meta = read(entry).meta
     except (ValueError, sandbox.PathNotAllowed) as error:
         raise ImportRefused(str(error)) from None
-    below = relative.rsplit("/", 1)[0] if "/" in relative else ""
-    if entry.skill:
-        read_files, _skipped = read_skill_files(entry)
-        kept.extend((found.relative, text.encode("utf-8")) for found, text in read_files)
-    if not below:
-        raise ImportRefused(f"`{entry.key}` sits at the top of the built-in prompts and has no folder to copy into")
+    _cleaned, content = _composed(meta, text, name, families, description, tags)
+    try:
+        root = sandbox.resolve_write(library_directory())
+        target = sandbox.resolve_write_file(root, entry.key)
+    except sandbox.PathNotAllowed:
+        raise ImportRefused(f"`{entry.key}` cannot be written in the library") from None
+    if not sandbox.contains(root, target):
+        raise ImportRefused(f"`{entry.key}` lies outside the library")
     with _lock:
-        counts = _write_files(below, kept, replace, whole_folder=False)
-    logger.info(
-        "copied the built-in `%s` into the system prompt library: %d new, %d replaced, %d unchanged",
-        entry.key, counts["new"], counts["replaced"], counts["unchanged"],
-    )
-    return Copied(relative, counts["new"], counts["replaced"], counts["unchanged"])
+        if not os.path.isfile(target) or _junction(target):
+            raise ImportRefused(f"`{entry.key}` in the library is not a plain file, so it was not written")
+        with open(target, "rb") as handle:
+            held = handle.read(MAX_FILE_BYTES + 1)
+        status = "unchanged" if held == content else "replaced"
+        if status == "replaced":
+            with open(target, "wb") as handle:
+                handle.write(content)
+        invalidate()
+    logger.info("rewrote `%s` in the system prompt library (%s)", entry.key, status)
+    return Saved(find(entry.key) or entry, status)
 
 
-def _write_files(below: str, kept: list[tuple[str, bytes]], replace: bool, whole_folder: bool) -> Counter:
+def _composed(held: dict, text, name, families, description, tags) -> tuple[str, bytes]:
+    """A file's front matter merged with an editor's fields, and the file they make.
+
+    Returns:
+        ``(name, bytes)``: the cleaned name, and the file as UTF-8.
+
+    Raises:
+        ImportRefused: The name or text is empty, or the file is past :data:`MAX_FILE_BYTES`.
+    """
+    cleaned = " ".join(str(name or "").split())[:MAX_NAME_CHARS]
+    if not cleaned:
+        raise ImportRefused("the name is empty. Type a name such as Detailed Caption")
+    body = str(text or "")
+    if not body.strip():
+        raise ImportRefused("the prompt's text is empty. Type the instructions the model is given")
+    meta = dict(held or {})
+    meta["name"] = cleaned
+    for family_key in FAMILY_KEYS:
+        meta.pop(family_key, None)
+    chosen = normalise_families(families)
+    if chosen:
+        meta["model_family"] = list(chosen)
+    note = " ".join(str(description or "").split())[:MAX_DESCRIPTION_CHARS]
+    if note:
+        meta["description"] = note
+    else:
+        meta.pop("description", None)
+    labels_given = _names(tags, MAX_TAGS, MAX_TAG_CHARS)
+    if labels_given:
+        meta["tags"] = list(labels_given)
+    else:
+        meta.pop("tags", None)
+    ordered = {key: meta[key] for key in ("name", "description", "model_family", "tags") if key in meta}
+    ordered.update({key: value for key, value in meta.items() if key not in ordered})
+    content = compose(ordered, body).encode("utf-8")
+    if len(content) > MAX_FILE_BYTES:
+        raise ImportRefused(
+            f"the prompt comes to {len(content)} bytes, past the {MAX_FILE_BYTES} a system prompt holds. "
+            "Shorten it or split it into two prompts"
+        )
+    return cleaned, content
+
+
+def _inside_skill(root: Path, below: str) -> bool:
+    """Whether the library folder ``below``, or a folder above it, holds a ``SKILL.md``."""
+    if not below:
+        return False
+    parts = below.split("/")
+    for depth in range(1, len(parts) + 1):
+        try:
+            directory = sandbox.resolve_write_file(root, "/".join(parts[:depth]))
+            with os.scandir(directory) as listing:
+                if any(item.name.casefold() == SKILL_FILE for item in listing):
+                    return True
+        except (OSError, sandbox.PathNotAllowed):
+            return False
+    return False
+
+
+def _write_files(below: str, kept: list[tuple[str, bytes | Path]], replace: bool, whole_folder: bool) -> Counter:
     """Write files into the library folder ``below``, checking every target before the first write.
 
     Args:
-        below: The folder below the library, ``/`` separated.
-        kept: ``(path below the folder, bytes)`` pairs.
+        below: The folder below the library, ``/`` separated, empty for the top.
+        kept: ``(path below the folder, bytes)`` pairs, or ``(path, file)`` for a file copied
+            as it is, already resolved for reading.
         replace: Write over files holding different bytes.
         whole_folder: Refuse a folder already in the library. Off, only a file holding
             different bytes is refused.
@@ -1185,7 +1364,7 @@ def _write_files(below: str, kept: list[tuple[str, bytes]], replace: bool, whole
     """
     try:
         root = sandbox.resolve_write(library_directory())
-        destination = sandbox.resolve_write_file(root, below)
+        destination = sandbox.resolve_write_file(root, below) if below else root
     except sandbox.PathNotAllowed:
         raise ImportRefused(f"the folder `{below}` cannot be written in the library") from None
     if not sandbox.contains(root, destination):
@@ -1196,10 +1375,11 @@ def _write_files(below: str, kept: list[tuple[str, bytes]], replace: bool, whole
     if exists and whole_folder and not replace:
         raise FolderExists(f"`{below}` is already in the system prompt library")
 
-    planned: list[tuple[Path, bytes, str]] = []
+    planned: list[tuple[Path, bytes | Path, str]] = []
     for path, data in kept:
+        shown = f"{below}/{path}" if below else path
         try:
-            target = sandbox.resolve_write_file(root, f"{below}/{path}")
+            target = sandbox.resolve_write_file(root, shown)
         except sandbox.PathNotAllowed:
             raise ImportRefused(f"`{path}` cannot be written in the library") from None
         if not sandbox.contains(destination, target):
@@ -1207,12 +1387,15 @@ def _write_files(below: str, kept: list[tuple[str, bytes]], replace: bool, whole
         status = "new"
         if os.path.lexists(target):
             if os.path.islink(target) or not os.path.isfile(target):
-                raise ImportRefused(f"`{below}/{path}` in the library is not a plain file, so nothing was written")
-            with open(target, "rb") as handle:
-                held = handle.read(len(data) + 1)
-            status = "unchanged" if held == data else "replaced"
+                raise ImportRefused(f"`{shown}` in the library is not a plain file, so nothing was written")
+            if isinstance(data, bytes):
+                with open(target, "rb") as handle:
+                    same = handle.read(len(data) + 1) == data
+            else:
+                same = filecmp.cmp(data, target, shallow=False)
+            status = "unchanged" if same else "replaced"
             if status == "replaced" and not whole_folder and not replace:
-                raise CopyExists(f"`{below}/{path}` is already in the system prompt library with different text")
+                raise CopyExists(f"`{shown}` is already in the system prompt library with different text")
         planned.append((target, data, status))
 
     counts: Counter = Counter()
@@ -1222,7 +1405,11 @@ def _write_files(below: str, kept: list[tuple[str, bytes]], replace: bool, whole
             continue
         os.makedirs(os.path.dirname(target), exist_ok=True)
         with open(target, "wb" if status == "replaced" else "xb") as handle:
-            handle.write(data)
+            if isinstance(data, bytes):
+                handle.write(data)
+            else:
+                with open(data, "rb") as copied:
+                    shutil.copyfileobj(copied, handle, COPY_CHUNK)
     invalidate()
     return counts
 

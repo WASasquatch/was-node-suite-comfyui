@@ -63,6 +63,27 @@ unless its front matter names it, and lists nothing else inside the folder.
 The `documents` output carries nothing for a plain prompt, or while `features.llm` is off. Scripts
 in a skill are read as text and never run.
 
+## Editing and copying
+
+The chosen prompt's preview on Load System Prompt carries the buttons below, and **New** sits on
+the library's toolbar. Each opens an editor for the name, folder, description, model families,
+tags and text. **Save** or Ctrl+S writes the file and loads it on the node.
+
+| Button | On | Writes |
+|---|---|---|
+| **Edit** | A prompt or skill of your own | Its own file, keeping its key, so a workflow naming it still finds it. The folder is fixed |
+| **Duplicate** | A prompt or skill of your own | A new file named after the name typed, in the folder typed |
+| **Edit a copy** | A built-in | A copy at the built-in's path without `Built-in/`, such as `FLUX/FLUX.2 Prompt Upsampler.md`, while the name is unchanged, and under the name typed otherwise. The built-in is unchanged |
+| **New** | The toolbar | A new `.md` prompt in the folder typed |
+
+| | |
+|---|---|
+| A skill | **Edit** rewrites its `SKILL.md`. A copy is a new skill folder named after the name typed, holding every file of the skill |
+| Front matter | Keys the editor does not show, such as `source` and `license`, are kept |
+| A name already in that folder | Written over only when the dialog is answered yes |
+| Leaving with unsaved changes | Cancel and the window's close button ask: **Save**, **Discard**, or close the dialog to keep editing |
+| Folders refused | `Built-in`, a folder inside a skill, a name starting with `.`, and a folder leaving the library |
+
 ## Importing a folder
 
 **Import** on Load System Prompt opens a folder picker and writes the folder into the library
@@ -89,7 +110,7 @@ the library, one folder per model family, and are read-only.
 |---|---|
 | Where they are | `ComfyUI/custom_nodes/was-node-suite-comfyui/modules/data/system_prompts` |
 | Key on Load System Prompt | `Built-in/` then the folder and file, such as `Built-in/FLUX/FLUX.2 Prompt Upsampler.md` |
-| Editing one | **Copy** on the built-in's preview writes it into the library at the same path without `Built-in/`, such as `FLUX/FLUX.2 Prompt Upsampler.md`, and loads the copy on the node. A copy whose file already holds other text is replaced only when the dialog is answered yes |
+| Editing one | **Edit a copy** on the built-in's preview, as in [Editing and copying](#editing-and-copying) |
 | A folder of your own named `Built-in` | Not listed. Rename it |
 | Origin and licence | Front matter `source`, `license` and, where the text was changed, `changes`. `NOTICE.md` beside the prompts lists every project, commit and change |
 
@@ -285,7 +306,9 @@ Most take the idea as it is typed. These want something more:
 | A built-in is missing from the menu | Press the refresh button at the top of the library. A workflow from a newer version of the pack can name a built-in this version lacks: update the pack |
 | `holds the pack's own prompts, so nothing is saved into it` | Save System Prompt and Import do not write into `Built-in`. Type another folder |
 | A folder of your own named `Built-in` is not listed | Rename it. That name is where the pack's own prompts are listed |
-| `is already in the system prompt library with different text` on Copy | An earlier copy was edited. Answer yes to replace it with the built-in text, or no to keep the edit |
+| `is already in the system prompt library with different text` on Save | That folder holds a prompt of that name. Answer yes to write over it, or change the name or the folder |
+| `is a skill's folder` on Save | A prompt saved there would be one of that skill's documents. Pick another folder |
+| `ships with the pack and is read-only` | Built-in prompts are not edited where they are. Use **Edit a copy** |
 | An answer carries `<think>` text or a JSON wrapper | Turn `thinking` off on the generating node, or use a built-in that answers in plain text |
 | `documents` is empty for a skill | `features.llm` is off, or the skill's other files are of a type not read |
 | `holds no .txt or .md prompt and no SKILL.md` | The folder picked holds no file the library takes. Pick the folder holding `SKILL.md` itself |

@@ -1,7 +1,7 @@
-"""The system prompt library as JSON a node interface draws, and the imports it sends.
+"""The system prompt library as JSON a node interface draws, and what it writes back.
 
 ``GET /was/interface/api/system_prompts`` lists the entries, or with ``key`` one with its text.
-``POST`` imports a folder or copies a built-in; :data:`ARCHIVE_ROUTE` takes a zip.
+``POST`` imports a folder or saves an editor's prompt; :data:`ARCHIVE_ROUTE` takes a zip.
 """
 
 from __future__ import annotations
@@ -16,20 +16,22 @@ from .channel import NO_STORE, REFUSAL_HEADER
 __all__ = [
     "ARCHIVE_FAILED",
     "ARCHIVE_ROUTE",
-    "COPY_FAILED",
     "IMPORT_FAILED",
     "MAX_BODY_BYTES",
+    "MAX_FORM_NAMES",
     "MAX_KEY_CHARS",
     "MAX_LISTED_FILES",
     "MAX_TEXT_CHARS",
     "REFUSAL",
     "ROUTE",
     "WORKERS",
+    "WRITE_FAILED",
     "archive_payload",
+    "copy_payload",
+    "edit_payload",
     "entry_fields",
     "entry_payload",
     "import_payload",
-    "copy_payload",
     "listing_payload",
     "register_routes",
 ]
@@ -63,8 +65,11 @@ IMPORT_FAILED = "the folder could not be imported. The server log names the caus
 #: What a zip import that failed for a reason outside the request answers.
 ARCHIVE_FAILED = "the zip could not be imported. The server log names the cause"
 
-#: What a copy that failed for a reason outside the request answers.
-COPY_FAILED = "the built-in prompt could not be copied. The server log names the cause"
+#: What a copy or an edit that failed for a reason outside the request answers.
+WRITE_FAILED = "the prompt could not be saved. The server log names the cause"
+
+#: Families or tags one editor save carries, at most.
+MAX_FORM_NAMES = 64
 
 #: The words a refusal carries.
 REFUSAL = "not in the system prompt library"
@@ -163,38 +168,91 @@ def entry_payload(key) -> dict | None:
 
 
 def copy_payload(sent: dict) -> tuple[int, dict]:
-    """Copy the built-in prompt a request names into the library. Never raises.
+    """Write the edited copy, or the new prompt, a request carries. Never raises.
 
     Args:
-        sent: The request body, ``{"copy": key, "replace": bool}``.
+        sent: The request body, ``{"copy", "name", "folder", "description", "families",
+            "tags", "text", "replace"}``, ``copy`` the key copied or empty for a new prompt.
 
     Returns:
         ``(status, payload)``: 200 with ``{"key", "written", "replaced", "unchanged"}``, ``key``
-        the copy's; 409 with ``{"error", "exists"}`` when a file at the copy's path holds other
-        text and ``replace`` is not true; otherwise 400 with ``{"error"}``.
+        the copy's; 409 with ``{"error", "exists"}`` when the copy's path holds other text and
+        ``replace`` is not true; otherwise 400 with ``{"error"}``.
     """
-    key = sent.get("copy")
-    if not isinstance(key, str) or not key:
-        return 400, {"error": "copy has to name a built-in prompt"}
+    source = sent.get("copy")
+    form = _form(sent)
+    if not isinstance(source, str) or isinstance(form, str):
+        return 400, {"error": form if isinstance(form, str) else "copy has to be a key, or empty for a new prompt"}
+    folder = sent.get("folder", "")
+    if not isinstance(folder, str):
+        return 400, {"error": "folder has to be text"}
     try:
-        done = system_prompts.copy_builtin(key[:MAX_KEY_CHARS], replace=sent.get("replace") is True)
+        done = system_prompts.copy_entry(
+            source[:MAX_KEY_CHARS], folder=folder[:MAX_KEY_CHARS], replace=sent.get("replace") is True, **form,
+        )
     except system_prompts.FolderExists as error:
         return 409, {"error": str(error), "exists": True}
     except system_prompts.ImportRefused as error:
         return 400, {"error": str(error)}
     except Exception as error:
-        logger.warning("%s could not copy a built-in prompt (%s)", ROUTE, type(error).__name__)
+        logger.warning("%s could not write a copy (%s)", ROUTE, type(error).__name__)
         logger.debug("%s copy failed", ROUTE, exc_info=True)
-        return 400, {"error": COPY_FAILED}
+        return 400, {"error": WRITE_FAILED}
     return 200, {"key": done.key, "written": done.written, "replaced": done.replaced, "unchanged": done.unchanged}
 
 
-def import_payload(body: bytes) -> tuple[int, dict]:
-    """Write the folder an import body carries, or the copy of a built-in prompt it names. Never raises.
+def edit_payload(sent: dict) -> tuple[int, dict]:
+    """Rewrite the library's own prompt a request names, where it is. Never raises.
 
     Args:
-        body: The request body, ``{"folder", "replace", "files": [{"path", "text"}]}``, or
-            ``{"copy", "replace"}`` for :func:`copy_payload`.
+        sent: The request body, ``{"edit", "name", "description", "families", "tags", "text"}``,
+            ``edit`` the entry's key.
+
+    Returns:
+        ``(status, payload)``: 200 with ``{"key", "status"}``, ``status`` ``replaced`` or
+        ``unchanged``; otherwise 400 with ``{"error"}``.
+    """
+    key = sent.get("edit")
+    form = _form(sent)
+    if not isinstance(key, str) or not key or isinstance(form, str):
+        return 400, {"error": form if isinstance(form, str) else "edit has to name a prompt of the library"}
+    try:
+        done = system_prompts.edit_entry(key[:MAX_KEY_CHARS], **form)
+    except system_prompts.ImportRefused as error:
+        return 400, {"error": str(error)}
+    except Exception as error:
+        logger.warning("%s could not rewrite a prompt (%s)", ROUTE, type(error).__name__)
+        logger.debug("%s edit failed", ROUTE, exc_info=True)
+        return 400, {"error": WRITE_FAILED}
+    return 200, {"key": done.entry.key, "status": done.status}
+
+
+def _form(sent: dict) -> dict | str:
+    """The editor's fields of a request, or why they cannot be read."""
+    form = {}
+    for field in ("name", "description", "text"):
+        value = sent.get(field, "")
+        if not isinstance(value, str):
+            return f"{field} has to be text"
+        form[field] = value
+    for field in ("families", "tags"):
+        value = sent.get(field, "")
+        if isinstance(value, list):
+            if len(value) > MAX_FORM_NAMES or not all(isinstance(item, str) for item in value):
+                return f"{field} has to be at most {MAX_FORM_NAMES} names"
+        elif not isinstance(value, str):
+            return f"{field} has to be text or a list of names"
+        form[field] = value
+    return form
+
+
+def import_payload(body: bytes) -> tuple[int, dict]:
+    """Write the folder an import body carries, or the prompt an editor saved. Never raises.
+
+    Args:
+        body: The request body, ``{"folder", "replace", "files": [{"path", "text"}]}``,
+            ``{"copy", ...}`` for :func:`copy_payload` or ``{"edit", ...}`` for
+            :func:`edit_payload`.
 
     Returns:
         ``(status, payload)``: 200 with ``{"folder", "skills", "written", "replaced",
@@ -207,6 +265,8 @@ def import_payload(body: bytes) -> tuple[int, dict]:
         return 400, {"error": "the body has to be JSON"}
     if not isinstance(sent, dict):
         return 400, {"error": "the body has to be a JSON object"}
+    if "edit" in sent:
+        return edit_payload(sent)
     if "copy" in sent:
         return copy_payload(sent)
     listed = sent.get("files")
