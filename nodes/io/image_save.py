@@ -334,8 +334,8 @@ class ImageSave(io.ComfyNode):
                     default=True,
                     tooltip=(
                         "Whether to store the workflow inside the file, so dragging the "
-                        "image back into ComfyUI rebuilds the graph. Only png and webp can "
-                        "carry it, and nothing is stored if ComfyUI was started with "
+                        "image back into ComfyUI rebuilds the graph. Supported for png, webp, "
+                        "and jpg/jpeg (via EXIF), and nothing is stored if ComfyUI was started with "
                         "--disable-metadata."
                     ),
                 ),
@@ -646,8 +646,8 @@ class ImageSave(io.ComfyNode):
                 claimed=claimed,
             )
 
-        # Only png and webp carry the workflow, and ComfyUI's --disable-metadata drops it
-        # from both.
+        # Only png, webp, and jpg/jpeg carry the workflow, and ComfyUI's --disable-metadata drops it
+        # from all formats.
         metadata_source = cls if embed_workflow else None
         return _Plan(
             images=images,
@@ -741,8 +741,48 @@ class ImageSave(io.ComfyNode):
                 tag = {"icc_profile": icc} if icc and extension in PROFILE_FORMATS else {}
                 quality, optimize = options["quality"], options["optimize_image"]
                 if extension in ("jpg", "jpeg"):
+                    exif_data = None
+                    text_chunks = options.get("text")
+                    if text_chunks:
+                        img_exif = img.getexif()
+                        if "prompt" in text_chunks:
+                            img_exif[0x010F] = "Prompt:" + text_chunks["prompt"]
+                        workflow_metadata = ""
+                        if "workflow" in text_chunks:
+                            workflow_metadata = text_chunks["workflow"]
+                        else:
+                            workflow_metadata = "".join(v for k, v in text_chunks.items() if k != "prompt")
+                        if workflow_metadata:
+                            img_exif[0x010E] = "Workflow:" + workflow_metadata
+                        try:
+                            raw_exif = img_exif.tobytes()
+                            if len(raw_exif) > 65533:
+                                if 0x010E in img_exif:
+                                    del img_exif[0x010E]
+                                    try:
+                                        raw_exif = img_exif.tobytes()
+                                    except Exception:
+                                        raw_exif = b""
+                                if len(raw_exif) > 65533:
+                                    logger.warning(
+                                        "Prompt EXIF data is too large (%d bytes) for JPEG format. "
+                                        "Saving without metadata. Use PNG or WebP for large workflows.",
+                                        len(raw_exif),
+                                    )
+                                    raw_exif = b""
+                                else:
+                                    logger.warning(
+                                        "Workflow EXIF data is too large for JPEG format. "
+                                        "Saved prompt only without full workflow. Use PNG or WebP for large workflows."
+                                    )
+                            exif_data = raw_exif if raw_exif else None
+                        except Exception as error:
+                            logger.debug("failed to serialize JPEG EXIF (%s)", error)
+                            exif_data = None
+
+                    exif_tag = {"exif": exif_data} if exif_data else {}
                     img.save(output_file, quality=quality, optimize=optimize,
-                             dpi=(options["dpi"], options["dpi"]), **tag)
+                             dpi=(options["dpi"], options["dpi"]), **exif_tag, **tag)
                 elif extension == "webp":
                     exif_data = ui.ImageSaveHelper._create_webp_metadata(img, options["metadata_source"])
                     img.save(output_file, quality=quality, lossless=options["lossless_webp"],
