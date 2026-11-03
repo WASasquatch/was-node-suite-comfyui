@@ -76,6 +76,7 @@ against.
 | `paths.luts` | path or `null` | `null` | Directory of `.cube` colour lookup tables, and where **Save LUT** writes. `null` means `<user_dir>/was-node-suite/luts`. ComfyUI's `models/LUT` is read after this directory, whichever it is. |
 | `paths.allow_read` | list of paths | `[]` | Extra directories nodes may read from. See [Containment](#containment). |
 | `paths.allow_write` | list of paths | `[]` | Extra directories nodes may write to. See [Containment](#containment). |
+| `paths.menu_limit` | int | `1000` | Most files one file menu lists, `1` to `20000`. Past it, `input`, `output`, `temp` and each `allow_read` folder share the limit, each keeping its newest files, and the log names the kinds of file left out. A path wired into the menu reads a file it leaves out. |
 
 Two folders have no key. **Image Draw Text** reads typefaces from
 `<user_dir>/was-node-suite/fonts`, alongside the nine that ship with the pack, and a `.ttf` or
@@ -90,7 +91,7 @@ A directory added to `allow_read` is offered in every file and folder menu under
 and its files carry that name in brackets: `D:/photos` appears as `photos`, holding
 `sunset.png [photos]`. A directory added to `allow_write` is offered in every `root` menu the
 same way. Folder menus list three levels deep and stop at 2000 entries. Restart ComfyUI after
-changing either list.
+changing either list or `menu_limit`.
 
 Every file and folder menu a node reads from also takes a path wired in as text, such as
 `D:/photos` or `D:\photos\sunset.png` from a String node. It is read only when it lies inside

@@ -1,7 +1,8 @@
 """The numbered file name the pack's save nodes write to.
 
 The convention is ``<prefix><delimiter><counter><extension>``, or the counter first when
-``number_first`` is set. The counter continues past whatever is already in the folder.
+``number_first`` is set, and ``<counter><extension>`` for an empty prefix. The counter
+continues past whatever is already in the folder.
 """
 
 from __future__ import annotations
@@ -24,8 +25,10 @@ def _suffix(extension: str) -> str:
 
 
 def _numbered(prefix: str, delimiter: str, counter: int, padding: int, number_first: bool) -> str:
-    """The name one counter value spells, without an extension."""
+    """The name one counter value spells, without an extension; the number alone for no prefix."""
     number = f"{counter:0{max(1, int(padding))}}"
+    if not prefix:
+        return number
     if number_first:
         return f"{number}{delimiter}{prefix}"
     return f"{prefix}{delimiter}{number}"
@@ -62,7 +65,7 @@ def next_counter(
 
     Args:
         directory: Folder the files are written to.
-        prefix: Text beside the number.
+        prefix: Text beside the number. Empty counts the files named by a number alone.
         delimiter: What separates the prefix from the number.
         number_first: Read the number before the prefix rather than after it.
 
@@ -71,7 +74,7 @@ def next_counter(
     """
     name, number = re.escape(prefix), r"(\d+)"
     order = (number, name) if number_first else (name, number)
-    pattern = f"{order[0]}{re.escape(delimiter)}{order[1]}"
+    pattern = f"{order[0]}{re.escape(delimiter)}{order[1]}" if prefix else r"(\d+)(?:\.|$)"
     seen = []
     try:
         entries = os.listdir(directory)
@@ -100,12 +103,13 @@ def next_names(
 
     Args:
         directory: Folder the files are written to.
-        prefix: Text beside the number.
+        prefix: Text beside the number. Empty names each file by its number alone.
         delimiter: What separates the prefix from the number.
         padding: Digits the number is padded to.
         extension: File extension, with or without its dot.
         count: How many names to answer.
-        overwrite: Answer ``<prefix><extension>`` for every one of them.
+        overwrite: Answer ``<prefix><extension>`` for every one of them, or the first
+            number where the prefix is empty.
         number_first: Put the number before the prefix rather than after it.
         beside: Extensions of files written under the same name, as ``(".txt",)``. A number
             is passed over where any of them is already a file.
@@ -125,7 +129,7 @@ def next_names(
     suffix = _suffix(extension)
     used = claimed if claimed is not None else set()
     if overwrite:
-        names = [f"{prefix}{suffix}"] * count
+        names = [f"{prefix or _numbered('', delimiter, 1, padding, number_first)}{suffix}"] * count
         used.update(os.path.join(directory, name).lower() for name in names)
         return names
     counter = next_counter(directory, prefix, delimiter, number_first)
@@ -218,6 +222,7 @@ def given_names(
     Args:
         directory: Folder the files are written to.
         stems: One name per file, without a folder or extension, as from :func:`stem_of`.
+            An empty one is named by the next number alone.
         delimiter: What separates a taken name from its number.
         padding: Digits the number is padded to.
         extension: File extension, with or without its dot.
@@ -261,7 +266,7 @@ def given_names(
                 f"the file name `{name}` {reason}, so it would be written outside "
                 f"`{directory}`. Wire names without slashes, drives or '..'"
             )
-        if not free(stem, overwrite):
+        if not stem or not free(stem, overwrite):
             counter = next_counter(directory, stem, delimiter, number_first)
             while not free(_numbered(stem, delimiter, counter, padding, number_first), False):
                 counter += 1

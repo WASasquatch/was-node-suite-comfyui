@@ -128,10 +128,10 @@ class TextLoadLineFromFile(io.ComfyNode):
                     "file",
                     options=line_options(),
                     tooltip=(
-                        "Which file to read, one prompt or phrase per line. The menu lists "
-                        "every text file in ComfyUI's input, output and temp folders and in "
-                        "any folder added under paths.allow_read. Ignored when multiline_text "
-                        "is connected."
+                        "Which file to read, one prompt per line. The menu lists the "
+                        "newest text files, up to paths.menu_limit, in ComfyUI's input, "
+                        "output and temp folders and in any folder under paths.allow_read. "
+                        "Ignored when multiline_text is connected."
                     ),
                 )),
                 io.String.Input(

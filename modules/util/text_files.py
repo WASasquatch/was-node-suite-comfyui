@@ -16,7 +16,6 @@ __all__ = [
     "ENCODING",
     "MAX_DEPTH",
     "MAX_EXAMINED",
-    "MAX_OPTIONS",
     "NO_FILES",
     "OPTIONS_TTL",
     "TEXT_EXTENSIONS",
@@ -46,11 +45,6 @@ MAX_DEPTH = file_listing.MAX_DEPTH
 #: How many directory entries that walk examines under one root before it stops.
 MAX_EXAMINED = file_listing.MAX_EXAMINED
 
-#: How many entries reach the combo. The newest by modification time are the ones kept, so a
-#: file that was just written is always in the menu, and ``/object_info`` carries this list
-#: once per node per request.
-MAX_OPTIONS = 500
-
 #: Seconds a built listing is reused for, from the shared walk.
 OPTIONS_TTL = file_listing.LISTING_TTL
 
@@ -64,6 +58,7 @@ COMMENT_PREFIX = "#"
 #: order mark, which is otherwise an invisible character at the front of the first line and
 #: travels into whatever prompt that line becomes.
 ENCODING = "utf-8-sig"
+
 
 def roots() -> list[tuple[str, Path]]:
     """The directories listed, each with the tag its labels carry.
@@ -82,10 +77,10 @@ def listing() -> dict[str, str]:
     Returns:
         The entries in the order the combo shows them: casefolded relative path first, then
         input before output before a configured root, then the raw path. At most
-        :data:`MAX_OPTIONS` of them, the
-        newest by modification time. Empty where nothing was found.
+        ``paths.menu_limit`` of them, the newest by modification time. Empty where nothing
+        was found.
     """
-    return file_listing.listing(TEXT_EXTENSIONS, TEXT_TAGS, MAX_OPTIONS)
+    return file_listing.listing(TEXT_EXTENSIONS, TEXT_TAGS)
 
 
 def options() -> list[str]:

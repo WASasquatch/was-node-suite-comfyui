@@ -43,7 +43,7 @@ TABLE_EXTENSIONS = (".csv", ".tsv", ".json", ".jsonl", ".xlsx", ".sqlite", ".sql
 #: The file menu's entry while no table file is found, never a valid label.
 NO_TABLES = "No table files"
 
-#: Files the menu lists at most.
+#: Files the menu lists at least, above ``paths.menu_limit``.
 MAX_FILE_OPTIONS = 2000
 
 #: Rows read from one table at most, unless the node asks for fewer.
@@ -329,7 +329,9 @@ def _sqlite_tables(path: str, connection: sqlite3.Connection, prefix: str, taken
 def file_options() -> list[str]:
     """The table file menu: every table file under the read roots, or :data:`NO_TABLES`."""
     try:
-        found = file_listing.labels(TABLE_EXTENSIONS, file_listing.ROOTS, MAX_FILE_OPTIONS)
+        found = file_listing.labels(
+            TABLE_EXTENSIONS, file_listing.ROOTS, file_listing.menu_limit(MAX_FILE_OPTIONS)
+        )
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
         found = []

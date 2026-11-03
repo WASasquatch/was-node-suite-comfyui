@@ -17,8 +17,6 @@ logger = log.get_logger("nodes.h3_load_clip")
 
 NODE_NAME = "H3 Load Clip"
 
-#: How many saved clips the menu offers.
-MAX_OPTIONS = 500
 
 #: The menu's only entry while no saved clip exists.
 NO_CLIPS = "no saved clips found"
@@ -46,7 +44,7 @@ NEXT_HINT = (
 def options() -> list[str]:
     """The menu's entries, or ``[NO_CLIPS]`` when there are none."""
     return list(
-        file_listing.labels((h3_clip_file.EXTENSION,), file_listing.ROOTS, MAX_OPTIONS)
+        file_listing.labels((h3_clip_file.EXTENSION,), file_listing.ROOTS)
     ) or [NO_CLIPS]
 
 

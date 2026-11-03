@@ -58,7 +58,7 @@ class NoodleSoupPantryImport(io.ComfyNode):
                     "file",
                     options=pantry_options(),
                     tooltip=(
-                        "Which pantry file to read. The menu lists every .json file in "
+                        "Which pantry file to read. The menu lists the newest .json files in "
                         "ComfyUI's input, output and temp folders and in any folder added "
                         "under paths.allow_read in config.yaml, each labelled with the "
                         "folder it sits in."

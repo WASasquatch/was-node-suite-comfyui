@@ -215,9 +215,10 @@ class ImageSave(io.ComfyNode):
                     default="ComfyUI",
                     tooltip=(
                         "Folders and name below root: `training/laracroft/lara` saves "
-                        "training/laracroft/lara_0001.png; a trailing `/`, as "
-                        "`training/laracroft/`, picks the folder alone. Tokens are expanded, as "
-                        "`[time(%H-%M)]`. Wired filenames replace the name and keep the folders."
+                        "training/laracroft/lara_0001.png, and `training/laracroft/` saves "
+                        "training/laracroft/0001.png. Tokens are expanded in both, as "
+                        "`[time(%Y-%m-%d)]/`. Wired filenames replace the name and keep the "
+                        "folders."
                     ),
                 ),
                 io.String.Input(
@@ -628,7 +629,7 @@ class ImageSave(io.ComfyNode):
         if stems is not None:
             names = naming.given_names(
                 str(destination),
-                [naming.stem_of(stem) or prefix or PLACEHOLDER_PREFIX for stem in stems],
+                [naming.stem_of(stem) or prefix for stem in stems],
                 filename_delimiter, filename_number_padding, extension,
                 overwrite=overwrite_mode,
                 number_first=filename_number_start,

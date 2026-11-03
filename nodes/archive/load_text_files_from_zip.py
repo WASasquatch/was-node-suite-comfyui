@@ -63,8 +63,8 @@ class LoadTextFilesFromZip(io.ComfyNode):
                     "file",
                     options=archive_options(),
                     tooltip=(
-                        "Which archive to read. The menu lists every .zip in ComfyUI's "
-                        "input, output and temp folders and in any folder added under "
+                        "Which archive to read. The menu lists the newest .zip files in ComfyUI's "
+                        "input, output and temp folders and in any folder under "
                         "paths.allow_read, each tagged with where it sits. Ignored while the "
                         "zip socket is connected."
                     ),

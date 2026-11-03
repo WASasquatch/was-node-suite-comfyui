@@ -15,9 +15,6 @@ REQUIRES = "threejs"
 
 logger = get_logger("nodes.threejs")
 
-#: Most entries the menu offers.
-MAX_OPTIONS = 400
-
 #: What the menu says when it found nothing.
 NO_MODELS = "no model files found"
 
@@ -25,7 +22,7 @@ NO_MODELS = "no model files found"
 def options() -> list[str]:
     """The menu's entries, or ``[NO_MODELS]`` when there are none."""
     return list(
-        file_listing.labels(models.SUFFIXES, file_listing.ROOTS, MAX_OPTIONS)
+        file_listing.labels(models.SUFFIXES, file_listing.ROOTS)
     ) or [NO_MODELS]
 
 
@@ -57,9 +54,10 @@ class ThreeLoadModel(io.ComfyNode):
                     "file",
                     options=options(),
                     tooltip=(
-                        "Which model to place. The menu lists every `.glb`, `.gltf`, `.dae`, "
-                        "`.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` in ComfyUI's input, "
-                        "output and temp folders."
+                        "Which model to place. The menu lists the newest `.glb`, `.gltf`, `.dae`, "
+                        "`.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` files in ComfyUI's "
+                        "input, output and temp folders and in any folder under "
+                        "paths.allow_read."
                     ),
                 )),
                 io.String.Input(

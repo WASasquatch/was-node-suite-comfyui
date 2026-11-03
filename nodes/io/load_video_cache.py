@@ -16,8 +16,6 @@ logger = log.get_logger("nodes.load_video_cache")
 
 NODE_NAME = "Load Video Cache"
 
-#: How many caches the menu offers.
-MAX_OPTIONS = 500
 
 #: The menu's only entry while no cache exists.
 NO_CACHES = "no frame caches found"
@@ -26,7 +24,7 @@ NO_CACHES = "no frame caches found"
 def options() -> list[str]:
     """The menu's entries, or ``[NO_CACHES]`` when there are none."""
     return list(
-        file_listing.labels((frame_cache.EXTENSION,), file_listing.ROOTS, MAX_OPTIONS)
+        file_listing.labels((frame_cache.EXTENSION,), file_listing.ROOTS)
     ) or [NO_CACHES]
 
 

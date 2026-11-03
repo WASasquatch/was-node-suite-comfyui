@@ -32,7 +32,7 @@ AUDIO_EXTENSIONS = (".wav", ".mp3", ".flac", ".ogg", ".m4a", ".aac", ".opus", ".
 #: Every file the menu offers.
 EXTENSIONS = (*ALLOWED_EXT, *reader.VIDEO_EXTENSIONS, *AUDIO_EXTENSIONS)
 
-#: How many files the menu offers.
+#: How many files the menu offers at least, above ``paths.menu_limit``.
 MAX_OPTIONS = 5000
 
 FILE_HINT = (
@@ -84,7 +84,9 @@ def file_labels() -> list[str]:
         Every picture, clip and sound under the folders the pack may read, as labels.
     """
     try:
-        found = file_listing.labels(EXTENSIONS, file_listing.ROOTS, MAX_OPTIONS)
+        found = file_listing.labels(
+            EXTENSIONS, file_listing.ROOTS, file_listing.menu_limit(MAX_OPTIONS)
+        )
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
         found = []

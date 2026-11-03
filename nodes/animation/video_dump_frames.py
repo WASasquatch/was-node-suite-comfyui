@@ -57,7 +57,7 @@ class VideoDumpFrames(io.ComfyNode):
                     "video",
                     options=video_options(),
                     tooltip=(
-                        "Which video to read. The menu lists every container in ComfyUI's "
+                        "Which video to read. The menu lists the newest containers in ComfyUI's "
                         "input, output and temp folders and in any folder added under "
                         "paths.allow_read: .mp4, .mkv, .webm, .mov and the rest ffmpeg opens."
                     ),

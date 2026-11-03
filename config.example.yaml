@@ -21,6 +21,7 @@ paths:
   scratch: null          # folder frame batches too large for memory are kept in; null -> ComfyUI temp/
   allow_read: []         # extra readable directories, e.g. ["D:/datasets/prompts"]; Image Save also saves here
   allow_write: []        # extra writable directories, e.g. ["D:/renders"]
+  menu_limit: 1000       # most files one file menu lists, the newest kept; a wired path reads any other
 
 text:
   strip_comments: true   # reserved; comment handling does not read it. See docs/CONFIG.md

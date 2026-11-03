@@ -19,9 +19,6 @@ logger = get_logger("nodes.document")
 #: Menu entry shown when none of the three folders holds a document this node reads.
 NO_DOCUMENTS = "No Documents"
 
-#: How many entries the menu offers.
-MAX_OPTIONS = 500
-
 
 def extensions() -> tuple[str, ...]:
     """Every suffix the menu lists, the container's own and the two it converts."""
@@ -33,7 +30,7 @@ def extensions() -> tuple[str, ...]:
 def options() -> list[str]:
     """The menu's entries, or ``[NO_DOCUMENTS]`` when there are none."""
     return list(
-        file_listing.labels(extensions(), file_listing.ROOTS, MAX_OPTIONS)
+        file_listing.labels(extensions(), file_listing.ROOTS)
     ) or [NO_DOCUMENTS]
 
 
@@ -233,9 +230,10 @@ def _resolved(value: str) -> Path:
     if not text:
         raise container.DocumentError(
             f"no document was given.\n"
-            f"  Pick one in the file menu, which lists every document in ComfyUI's input, "
-            f"output and temp folders, or in a folder added under paths.allow_read in "
-            f"config.yaml. The extensions read are {_extensions()}."
+            f"  Pick one in the file menu, which lists the newest documents in ComfyUI's "
+            f"input, output and temp folders and in any folder added under "
+            f"paths.allow_read in config.yaml, or wire the document's path in as text. "
+            f"The extensions read are {_extensions()}."
         )
     path = sandbox.resolve_read(text)
     if path.is_dir():

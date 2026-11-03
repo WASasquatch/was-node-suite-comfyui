@@ -295,6 +295,7 @@ DEFAULTS = {
         "scratch": None,
         "allow_read": [],
         "allow_write": [],
+        "menu_limit": 1000,
     },
     "text": {
         "strip_comments": True,

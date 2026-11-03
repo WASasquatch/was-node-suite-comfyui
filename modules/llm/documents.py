@@ -91,7 +91,8 @@ TEXT_EXTENSIONS = (
 #: Every extension the single-file menu lists.
 FILE_EXTENSIONS = TEXT_EXTENSIONS + MARKUP_EXTENSIONS + (PDF,) + OFFICE_EXTENSIONS + PACKAGE_EXTENSIONS
 
-#: Entries the single-file menu offers, and what it shows when there are none.
+#: Entries the single-file menu offers at least, above ``paths.menu_limit``, and what it
+#: shows when there are none.
 MAX_FILE_OPTIONS = 2000
 NO_FILES = "No documents"
 
@@ -599,7 +600,9 @@ def load_folder(root: Path, folder: str, extensions: tuple[str, ...], recursive:
 def file_options() -> list[str]:
     """The single-file menu: every readable file under the read roots, or :data:`NO_FILES`."""
     try:
-        found = file_listing.labels(FILE_EXTENSIONS, file_listing.ROOTS, MAX_FILE_OPTIONS)
+        found = file_listing.labels(
+            FILE_EXTENSIONS, file_listing.ROOTS, file_listing.menu_limit(MAX_FILE_OPTIONS)
+        )
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
         found = []

@@ -43,7 +43,7 @@ VERSION = 1
 #: Longest a module file may be.
 MAX_BYTES = 256 * 1024
 
-#: Most module files a menu offers.
+#: Module files a menu offers at least, above ``paths.menu_limit``.
 MAX_OPTIONS = 2000
 
 #: What the menu says when the read roots hold no module.
@@ -371,7 +371,7 @@ def options() -> list[str]:
 
     found = [
         entry.label
-        for entry in file_listing.view(SUFFIXES, file_listing.ROOTS, MAX_OPTIONS)
+        for entry in file_listing.view(SUFFIXES, file_listing.ROOTS, file_listing.menu_limit(MAX_OPTIONS))
         if entry.size <= MAX_BYTES and declares(entry.path)
     ]
     return found or [NONE]

@@ -65,8 +65,10 @@ def listing_payload(extensions=None, limit: int = MAX_ENTRIES) -> dict:
     """
     limit = max(1, min(MOST_ENTRIES, int(limit or MAX_ENTRIES)))
     try:
-        entries = file_listing.view(extensions, tags=file_listing.ROOTS, limit=limit)
-        walked = len(file_listing.view(extensions, tags=file_listing.ROOTS, limit=MOST_ENTRIES))
+        entries = file_listing.view(extensions, tags=file_listing.ROOTS, limit=limit, quiet=True)
+        walked = len(
+            file_listing.view(extensions, tags=file_listing.ROOTS, limit=MOST_ENTRIES, quiet=True)
+        )
         reachable = [tag for tag, _ in file_listing.roots(file_listing.ROOTS)]
     except Exception as error:
         # A listing nobody can build is an empty panel, never a failed request: the widget

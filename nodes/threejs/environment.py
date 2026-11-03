@@ -15,9 +15,6 @@ REQUIRES = "threejs"
 
 logger = get_logger("nodes.threejs")
 
-#: Most entries the menu offers.
-MAX_OPTIONS = 400
-
 #: First entry of the menu, and its default. A saved workflow stores whatever the menu
 #: held, so the value it starts on has to be one every install offers.
 NO_FILES = "none"
@@ -29,7 +26,7 @@ SOURCES = ("studio room", "image", "file", "none")
 def options() -> list[str]:
     """The menu's entries, with :data:`NO_FILES` first."""
     return [NO_FILES] + list(
-        file_listing.labels(environments.SUFFIXES, file_listing.ROOTS, MAX_OPTIONS)
+        file_listing.labels(environments.SUFFIXES, file_listing.ROOTS)
     )
 
 

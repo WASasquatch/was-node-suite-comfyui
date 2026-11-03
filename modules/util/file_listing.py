@@ -26,6 +26,8 @@ __all__ = [
     "MAX_DEPTH",
     "MAX_EXAMINED",
     "MAX_REUSE",
+    "LIMIT_KEY",
+    "MOST_LIMIT",
     "OUTPUT",
     "CONFIGURED",
     "ROOTS",
@@ -41,6 +43,7 @@ __all__ = [
     "path_text",
     "linked",
     "listing",
+    "menu_limit",
     "release_walks",
     "resolve",
     "reuse_until",
@@ -86,8 +89,14 @@ MAX_DEPTH = 64
 #: of its own, and a menu's own limit counts only the files it lists.
 MAX_EXAMINED = 20000
 
-#: How many labels a view offers when it names no limit of its own.
-DEFAULT_LIMIT = 500
+#: How many labels a menu offers where ``paths.menu_limit`` is unset or not a whole number.
+DEFAULT_LIMIT = 1000
+
+#: The most labels ``paths.menu_limit`` can ask a menu for.
+MOST_LIMIT = MAX_EXAMINED
+
+#: The key under ``paths`` naming how many labels a menu offers.
+LIMIT_KEY = "menu_limit"
 
 #: Seconds a walk is reused for at least. Long enough that a burst of ``/object_info``
 #: requests costs one walk, and short enough that a newly saved file is listed before anyone
@@ -133,8 +142,14 @@ _scan_cache: tuple[float, int, tuple["Entry", ...]] = (0.0, 0, ())
 #: can never be mistaken for a current one.
 _walks = 0
 
-#: ``{view key: (walk id, entries)}``.
-_view_cache: dict[tuple, tuple[int, tuple["Entry", ...]]] = {}
+#: ``{view key: (walk id, entries, how many files the view's filter matched)}``.
+_view_cache: dict[tuple, tuple[int, tuple["Entry", ...], int]] = {}
+
+#: View keys whose cut has been logged, each once per process.
+_cuts_logged: set[tuple] = set()
+
+#: Whether an unusable ``paths.menu_limit`` has been logged.
+_limit_warned = False
 
 #: Roots whose walk has been reported as stopping, each logged once per process.
 _stopped: set[str] = set()
@@ -289,10 +304,43 @@ def scan() -> tuple[Entry, ...]:
     return _scan()[2]
 
 
+def menu_limit(at_least: int = 0) -> int:
+    """How many labels a menu offers, from ``paths.menu_limit``.
+
+    Args:
+        at_least: The menu's own floor, answered where the setting is lower.
+
+    Returns:
+        The setting held to 1 to :data:`MOST_LIMIT`, or :data:`DEFAULT_LIMIT` where it is
+        unset or not a whole number; never below ``at_least``.
+    """
+    global _limit_warned
+    try:
+        from ..config import load_config
+
+        value = (load_config().get("paths") or {}).get(LIMIT_KEY, DEFAULT_LIMIT)
+    except Exception as error:
+        logger.debug("paths.%s could not be read (%s)", LIMIT_KEY, error)
+        value = DEFAULT_LIMIT
+    if value is None:
+        value = DEFAULT_LIMIT
+    if isinstance(value, bool) or not isinstance(value, int):
+        if not _limit_warned:
+            _limit_warned = True
+            logger.warning(
+                "paths.%s in config.yaml should be a whole number, not %r, so file menus "
+                "list up to %d files. Write it as %s: 2000",
+                LIMIT_KEY, value, DEFAULT_LIMIT, LIMIT_KEY,
+            )
+        value = DEFAULT_LIMIT
+    return max(int(at_least), min(MOST_LIMIT, max(1, value)))
+
+
 def view(
     extensions: Iterable[str] | None = None,
     tags: Sequence[str] = TAGS,
-    limit: int = DEFAULT_LIMIT,
+    limit: int | None = None,
+    quiet: bool = False,
 ) -> tuple[Entry, ...]:
     """The entries one menu or panel offers, filtered, capped and sorted.
 
@@ -301,41 +349,41 @@ def view(
             keeps every file, whatever it is called.
         tags: Which roots to read, from :data:`TAGS`, plus :data:`CONFIGURED` for every
             directory ``paths.allow_read`` names or one configured tag by name.
-        limit: How many entries the view holds. The newest by modification time are kept, so
-            a file that was just written is always offered.
+        limit: How many entries the view holds, or ``None`` for :func:`menu_limit`. The
+            newest by modification time are kept, so a file just written is always offered.
+        quiet: Leave a cut out of the log, for a caller reporting it itself.
 
     Returns:
         The entries, ordered by casefolded relative path, then by root, then by path.
     """
     wanted = tuple(sorted(_suffixes(extensions))) if extensions is not None else None
     kept = tuple(sorted(_kept(tags)))
-    key = (wanted, kept, max(0, int(limit)))
+    key = (wanted, kept, max(0, int(menu_limit() if limit is None else limit)))
     with _lock:
         _, walk, entries = _scan()
         cached = _view_cache.get(key)
-        if cached is not None and cached[0] == walk:
-            return cached[1]
-        built = _build(entries, wanted, set(kept), key[2])
-        # Only the views built from an earlier walk are dropped. Clearing the whole cache
-        # would make three menus with three different filters rebuild each other's view on
-        # every call, which is the cost this cache exists to avoid.
-        for stale in [name for name, (built_from, _) in _view_cache.items() if built_from != walk]:
-            del _view_cache[stale]
-        _view_cache[key] = (walk, built)
-        return built
+        if cached is None or cached[0] != walk:
+            built, matched = _build(entries, wanted, set(kept), key[2])
+            # Only the views built from an earlier walk are dropped.
+            for stale in [name for name, held in _view_cache.items() if held[0] != walk]:
+                del _view_cache[stale]
+            cached = _view_cache[key] = (walk, built, matched)
+        if not quiet and cached[2] > len(cached[1]):
+            _report_cut(key, cached[2], len(cached[1]))
+        return cached[1]
 
 
 def listing(
     extensions: Iterable[str] | None = None,
     tags: Sequence[str] = TAGS,
-    limit: int = DEFAULT_LIMIT,
+    limit: int | None = None,
 ) -> dict[str, str]:
     """``{label: absolute path}`` for one view, in the order it offers them.
 
     Args:
         extensions: Suffixes to keep, or ``None`` for every file.
         tags: Which roots to read.
-        limit: How many entries the view holds.
+        limit: How many entries the view holds, or ``None`` for :func:`menu_limit`.
 
     Returns:
         A new dictionary. Two files cannot share a label, since a label carries the root's
@@ -347,10 +395,32 @@ def listing(
 def labels(
     extensions: Iterable[str] | None = None,
     tags: Sequence[str] = TAGS,
-    limit: int = DEFAULT_LIMIT,
+    limit: int | None = None,
 ) -> list[str]:
     """The labels of one view, in the order it offers them."""
     return [entry.label for entry in view(extensions, tags, limit)]
+
+
+def _report_cut(key: tuple, matched: int, offered: int) -> None:
+    """Log, once per view, that a menu offers fewer files than its filter matched.
+
+    Args:
+        key: The view's cache key, ``(suffixes, tags, limit)``.
+        matched: Files the view's filter matched.
+        offered: Files the view holds.
+    """
+    if key in _cuts_logged:
+        return
+    _cuts_logged.add(key)
+    suffixes = key[0]
+    kinds = "" if suffixes is None else " " + ", ".join(suffixes[:4]) + (
+        ", ..." if len(suffixes) > 4 else ""
+    )
+    logger.info(
+        "a file menu lists the newest %d of %d%s files. Raise paths.%s in config.yaml to "
+        "list more, or wire the file's path into the menu's input as text to read any of them",
+        offered, matched, kinds, LIMIT_KEY,
+    )
 
 
 def find(
@@ -649,7 +719,7 @@ def _labelled(label: str, wanted: tuple[str, ...] | None, kept: set[str]) -> Ent
 
 def _build(
     entries: tuple[Entry, ...], extensions: tuple[str, ...] | None, tags: set[str], limit: int
-) -> tuple[Entry, ...]:
+) -> tuple[tuple[Entry, ...], int]:
     """Filter, cap and sort one view out of the walk.
 
     Args:
@@ -659,8 +729,9 @@ def _build(
         limit: How many entries survive.
 
     Returns:
-        The view's entries. Each root keeps its own share of the limit, newest by
-        modification time first, and they are then sorted for the menu.
+        ``(entries, matched)``: the view's entries, each root keeping its own share of the
+        limit, newest by modification time first, then sorted for the menu; and how many
+        files the filter matched before the limit.
     """
     kept = [
         entry
@@ -668,10 +739,11 @@ def _build(
         if _holds(entry.tag, tags)
         and (extensions is None or entry.relative.lower().endswith(extensions))
     ]
-    if len(kept) > limit:
+    matched = len(kept)
+    if matched > limit:
         kept = _shared(kept, limit)
     kept.sort(key=lambda row: (row.relative.casefold(), row.order, row.path))
-    return tuple(kept)
+    return tuple(kept), matched
 
 
 def _shared(kept: list[Entry], limit: int) -> list[Entry]:

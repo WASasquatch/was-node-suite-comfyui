@@ -21,13 +21,10 @@ ARCHIVE_EXTENSIONS = (container.SUFFIX,)
 #: where none of them can be found. One empty state rather than several.
 NO_ARCHIVES = "No Archives"
 
-#: How many entries the menu offers.
-MAX_OPTIONS = 500
-
 
 def options() -> list[str]:
     """The menu's entries, or ``[NO_ARCHIVES]`` when there are none."""
-    return list(picker.labels(ARCHIVE_EXTENSIONS)[:MAX_OPTIONS]) or [NO_ARCHIVES]
+    return list(picker.labels(ARCHIVE_EXTENSIONS)) or [NO_ARCHIVES]
 
 
 class ZipOpen(io.ComfyNode):

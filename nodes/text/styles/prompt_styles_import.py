@@ -60,9 +60,9 @@ class PromptStylesImport(io.ComfyNode):
                     "file",
                     options=style_file_options(),
                     tooltip=(
-                        "Which style file to read. The menu lists every .json and .csv "
-                        "file in ComfyUI's input, output and temp folders and in any "
-                        "folder added under paths.allow_read in config.yaml, each labelled "
+                        "Which style file to read. The menu lists the newest .json and .csv "
+                        "files in ComfyUI's input, output and temp folders and in any "
+                        "folder under paths.allow_read in config.yaml, each labelled "
                         "with the folder it sits in."
                     ),
                 )),

@@ -53,8 +53,8 @@ class ThreeCustomMaterial(io.ComfyNode):
                     "module",
                     options=options(),
                     tooltip=(
-                        "Which module builds the material. The menu lists every `.js` and "
-                        "`.txt` file opening with `// was-threejs-module 1` in ComfyUI's "
+                        "Which module builds the material. The menu lists the newest `.js` and "
+                        "`.txt` files opening with `// was-threejs-module 1` in ComfyUI's "
                         "input, output and temp folders and in any folder under "
                         "paths.allow_read."
                     ),

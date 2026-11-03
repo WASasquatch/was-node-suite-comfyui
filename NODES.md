@@ -395,7 +395,7 @@ Save every frame of a video file as a numbered image.
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `video` | `COMBO,STRING` | Yes |  |  | Which video to read. The menu lists every container in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read: .mp4, .mkv, .webm, .mov and the rest ffmpeg opens. A wired path, such as `E:\images\cat.png`, works too. |
+| `video` | `COMBO,STRING` | Yes |  |  | Which video to read. The menu lists the newest containers in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read: .mp4, .mkv, .webm, .mov and the rest ffmpeg opens. A wired path, such as `E:\images\cat.png`, works too. |
 | `root` | `COMBO` | Yes |  |  | Which folder the files land in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. The name below it says the rest. |
 | `folder` | `STRING` | Yes | frames |  | Folder below the root that the stills are written into, created if it is not there. Tokens expand, so '[time(%Y-%m-%d)]/frames' files each day's under a dated folder. |
 | `prefix` | `STRING` | Yes | frame_ |  | Text before the frame number, so 'frame_' gives 'frame_0000.png'. Tokens are expanded here too. Leave it empty to name the files by number alone. |
@@ -901,7 +901,7 @@ Read the .wasdoc documents inside a zip archive, both as one LIST and as a DOC l
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists the newest .zip files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to read, case ignored: '*' = every document at any depth; 'report_*' = documents named so, in any folder; 'drafts/*' = that folder only; 'drafts/**/*' = it and everything under it. |
 | `zip` | `ZIP` | No |  |  | The archive to read, from Open ZIP. Connected, it is used and the menu is ignored, so the archive is opened and indexed once however many nodes read it. |
 
@@ -932,7 +932,7 @@ Read the images inside a zip archive as one batch. A batch is a single tensor, s
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists the newest .zip files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to read; STRING. No '/' matches the file name at any depth; a '/' anchors at the archive root. Case is ignored, and non-images are always skipped. Eg: *, *.png, frames/**/*.png |
 | `resize_mode` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How mixed sizes reach width by height, since one batch holds one size. `fit and pad`: whole image, pad_color bars. `fill and crop`: fills the frame, ends cut. `stretch`: distorts. `crop or pad`: no resampling, original pixels kept. |
 | `width` | `INT` | Yes | 512 |  | How wide every image in the batch comes out, in pixels. Every mode delivers exactly this width, so the batch is this wide whatever the archive held. A multiple of 8 suits a sampler; 512 or 1024 matches most models. |
@@ -970,7 +970,7 @@ Read the text files inside a zip archive, both as one LIST and as a STRING list 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists every .zip in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which archive to read. The menu lists the newest .zip files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read, each tagged with where it sits. Ignored while the zip socket is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `pattern` | `STRING` | Yes | * |  | Which entries to read, case ignored: '*' = every text file at any depth; '*.txt' = every .txt in any folder; 'captions/*.txt' = that folder only; 'captions/**/*.txt' = it and everything under it. |
 | `zip` | `ZIP` | No |  |  | The archive to read, from Open ZIP. Connected, it is used and the menu is ignored, so the archive is opened and indexed once however many nodes read it. |
 
@@ -1987,7 +1987,7 @@ Save every image in a batch as a numbered file in png, jpg, webp, tiff, bmp, gif
 |---|---|---|---|---|---|
 | `images` | `IMAGE` | Yes |  |  | The images to write. Every image in the batch gets its own file, each with the next number in the sequence. |
 | `root` | `COMBO` | Yes |  |  | `output`, `temp` or `input` = ComfyUI's own folders, `input` being where loaders read uploads and datasets from; any folder under paths.allow_write or paths.allow_read in config.yaml is listed by its own name. filename_prefix names the path below it. |
-| `filename_prefix` | `STRING` | Yes | ComfyUI |  | Folders and name below root: `training/laracroft/lara` saves training/laracroft/lara_0001.png; a trailing `/`, as `training/laracroft/`, picks the folder alone. Tokens are expanded, as `[time(%H-%M)]`. Wired filenames replace the name and keep the folders. |
+| `filename_prefix` | `STRING` | Yes | ComfyUI |  | Folders and name below root: `training/laracroft/lara` saves training/laracroft/lara_0001.png, and `training/laracroft/` saves training/laracroft/0001.png. Tokens are expanded in both, as `[time(%Y-%m-%d)]/`. Wired filenames replace the name and keep the folders. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_00001.png' with the default, 'ComfyUI-00001.png' with '-'. |
 | `filename_number_padding` | `INT` | Yes | 4 |  | How many digits the number is padded to with leading zeros. 4 gives '_0001', 1 gives '_1'. The count keeps rising past the padding, so too few digits sorts the files oddly rather than failing. |
 | `filename_number_start` | `BOOLEAN` | Yes | False |  | Where the number goes. Off = last, 'ComfyUI_0001.png'; on = first, '0001_ComfyUI.png', which sorts the files by number rather than by name. |
@@ -12053,7 +12053,7 @@ Read one line of a text file per prompt, or one line by index, to walk a list of
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which file to read, one prompt or phrase per line. The menu lists every text file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read. Ignored when multiline_text is connected. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which file to read, one prompt per line. The menu lists the newest text files, up to paths.menu_limit, in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. Ignored when multiline_text is connected. A wired path, such as `E:\images\cat.png`, works too. |
 | `dictionary_name` | `STRING` | Yes | [filename] |  | The key the list of every line is filed under in the dictionary output, so Text Dictionary Get can fetch it again by name. Used exactly as typed. |
 | `label` | `STRING` | Yes | TextBatch |  | Name this batch's read position is remembered under, surviving a restart. Nodes sharing a label share one position and take turns; different labels advance independently. Pointing a label at a different file starts it over at the first line. |
 | `mode` | `COMBO` | Yes |  | `automatic`, `index` | `automatic` hands out the next line on every run and wraps around at the end of the file, which is what walks a list of prompts one per generation. `index` returns the one line asked for and does not advance. |
@@ -13503,7 +13503,7 @@ Read a style library into this one, from a .json library or from an AUTOMATIC111
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which style file to read. The menu lists every .json and .csv file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which style file to read. The menu lists the newest .json and .csv files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read in config.yaml, each labelled with the folder it sits in. A wired path, such as `E:\images\cat.png`, works too. |
 | `mode` | `COMBO` | Yes |  | `add to the library`, `replace the library` | `add to the library` keeps the styles already saved here and adds the file's. `replace the library` leaves the library holding exactly what the file holds, dropping every other style. |
 
 **Outputs**
@@ -13647,7 +13647,7 @@ Read a Noodle Soup Prompts pantry file into the stored pantry, so a terminology 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which pantry file to read. The menu lists every .json file in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which pantry file to read. The menu lists the newest .json files in ComfyUI's input, output and temp folders and in any folder added under paths.allow_read in config.yaml, each labelled with the folder it sits in. A wired path, such as `E:\images\cat.png`, works too. |
 | `mode` | `COMBO` | Yes |  | `add to the pantry`, `replace the pantry` | `add to the pantry` keeps everything already stored and adds the words the file has that a terminology does not. `replace the pantry` leaves the pantry holding exactly what the file holds, dropping every other terminology. |
 
 **Outputs**
@@ -20148,7 +20148,7 @@ Use any material the pack has no node for, built by a module file on disk whose 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `module` | `COMBO,STRING` | Yes |  |  | Which module builds the material. The menu lists every `.js` and `.txt` file opening with `// was-threejs-module 1` in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
+| `module` | `COMBO,STRING` | Yes |  |  | Which module builds the material. The menu lists the newest `.js` and `.txt` files opening with `// was-threejs-module 1` in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `texture1` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
 | `texture2` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
 | `texture3` | `THREE_TEXTURE` | No |  |  | A texture the module receives under the name its header declares. The first declared texture arrives here, the second in the slot below, and so on. |
@@ -20500,7 +20500,7 @@ Put a model file into the scene as an object, so a mesh made elsewhere can be li
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which model to place. The menu lists every `.glb`, `.gltf`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` in ComfyUI's input, output and temp folders. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which model to place. The menu lists the newest `.glb`, `.gltf`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `scale` | `FLOAT` | Yes | 1.0 |  | Multiplies the model's own size. 1.0 leaves it, 0.01 suits a model authored in centimetres. |
 | `centre` | `BOOLEAN` | Yes | True |  | `true` moves the model so its middle sits at the origin; `false` keeps the coordinates it was saved with. |
 | `cast_shadow` | `BOOLEAN` | Yes | True |  | `true` lets every mesh in the model throw and receive shadows, `false` neither. |
