@@ -1,0 +1,2801 @@
+{
+  "id": "be154244-ea1d-4e2f-9654-4587d2184103",
+  "revision": 0,
+  "last_node_id": 25,
+  "last_link_id": 31,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASLoadDataset",
+      "pos": [
+        0,
+        30
+      ],
+      "size": [
+        390,
+        430
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "caption_extension",
+          "name": "caption_extension",
+          "type": "STRING",
+          "widget": {
+            "name": "caption_extension"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "links": [
+            1,
+            2,
+            3,
+            7,
+            12
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "captioned",
+          "name": "captioned",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "STRING",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLoadDataset"
+      },
+      "widgets_values": [
+        "was_caption_demo [input]",
+        "*",
+        ".txt"
+      ],
+      "widgets_values_named": {
+        "folder": "was_caption_demo [input]",
+        "pattern": "*",
+        "caption_extension": ".txt"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASDatasetHealth",
+      "pos": [
+        480,
+        30
+      ],
+      "size": [
+        460,
+        900
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "shape": 7,
+          "type": "WAS_DATASET",
+          "link": 1
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "caption_extension",
+          "name": "caption_extension",
+          "type": "STRING",
+          "widget": {
+            "name": "caption_extension"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "subject",
+          "name": "subject",
+          "type": "STRING",
+          "widget": {
+            "name": "subject"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_side",
+          "name": "target_side",
+          "type": "INT",
+          "widget": {
+            "name": "target_side"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "check_faces",
+          "name": "check_faces",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "check_faces"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_words",
+          "name": "min_words",
+          "type": "INT",
+          "widget": {
+            "name": "min_words"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "scores",
+          "name": "scores",
+          "type": "DICT",
+          "links": null
+        },
+        {
+          "localized_name": "flagged",
+          "name": "flagged",
+          "type": "ARRAY",
+          "links": [
+            13
+          ]
+        },
+        {
+          "localized_name": "duplicates",
+          "name": "duplicates",
+          "type": "ARRAY",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDatasetHealth"
+      },
+      "widgets_values": [
+        "input",
+        "*",
+        ".txt",
+        "[trigger]",
+        768,
+        true,
+        5
+      ],
+      "widgets_values_named": {
+        "folder": "input",
+        "pattern": "*",
+        "caption_extension": ".txt",
+        "subject": "[trigger]",
+        "target_side": 768,
+        "check_faces": true,
+        "min_words": 5
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASCaptionStatistics",
+      "pos": [
+        1020,
+        30
+      ],
+      "size": [
+        390,
+        654
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING,ARRAY",
+          "link": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": null
+        },
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "shape": 7,
+          "type": "WAS_DATASET",
+          "link": 2
+        },
+        {
+          "localized_name": "subject",
+          "name": "subject",
+          "type": "STRING",
+          "widget": {
+            "name": "subject"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_words",
+          "name": "min_words",
+          "type": "INT",
+          "widget": {
+            "name": "min_words"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_words",
+          "name": "max_words",
+          "type": "INT",
+          "widget": {
+            "name": "max_words"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "top",
+          "name": "top",
+          "type": "INT",
+          "widget": {
+            "name": "top"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "phrases",
+          "name": "phrases",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "flagged",
+          "name": "flagged",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "consistency",
+          "name": "consistency",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "localized_name": "coverage",
+          "name": "coverage",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASCaptionStatistics"
+      },
+      "widgets_values": [
+        "[trigger]",
+        5,
+        0,
+        40
+      ],
+      "widgets_values_named": {
+        "subject": "[trigger]",
+        "min_words": 5,
+        "max_words": 0,
+        "top": 40
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASDatasetToLists",
+      "pos": [
+        0,
+        1240
+      ],
+      "size": [
+        270,
+        158
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "link": 3
+        },
+        {
+          "localized_name": "pictures",
+          "name": "pictures",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "pictures"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "captions",
+          "name": "captions",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "caption_list",
+          "name": "caption_list",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "name_list",
+          "name": "name_list",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDatasetToLists"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "pictures": false
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASTextReplaceWords",
+      "pos": [
+        480,
+        1240
+      ],
+      "size": [
+        400,
+        734
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 5
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING,ARRAY",
+          "widget": {
+            "name": "text"
+          },
+          "link": 4
+        },
+        {
+          "localized_name": "rules",
+          "name": "rules",
+          "type": "STRING",
+          "widget": {
+            "name": "rules"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whole_words",
+          "name": "whole_words",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "whole_words"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ignore_case",
+          "name": "ignore_case",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "ignore_case"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_capitals",
+          "name": "keep_capitals",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "keep_capitals"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tidy",
+          "name": "tidy",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "tidy"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ensure",
+          "name": "ensure",
+          "type": "STRING",
+          "widget": {
+            "name": "ensure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ensure_at",
+          "name": "ensure_at",
+          "type": "COMBO",
+          "widget": {
+            "name": "ensure_at"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "separator",
+          "name": "separator",
+          "type": "STRING",
+          "widget": {
+            "name": "separator"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        },
+        {
+          "localized_name": "texts",
+          "name": "texts",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "changed",
+          "name": "changed",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "unmatched",
+          "name": "unmatched",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASTextReplaceWords"
+      },
+      "widgets_values": [
+        "",
+        "a young woman, a smiling woman, a woman, the woman, one woman, woman -> [trigger]",
+        true,
+        true,
+        true,
+        true,
+        "[trigger]",
+        "start",
+        ", "
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "rules": "a young woman, a smiling woman, a woman, the woman, one woman, woman -> [trigger]",
+        "whole_words": true,
+        "ignore_case": true,
+        "keep_capitals": true,
+        "tidy": true,
+        "ensure": "[trigger]",
+        "ensure_at": "start",
+        "separator": ", "
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASTextCleanup",
+      "pos": [
+        1020,
+        1240
+      ],
+      "size": [
+        400,
+        252
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 6
+        },
+        {
+          "localized_name": "case",
+          "name": "case",
+          "type": "COMBO",
+          "widget": {
+            "name": "case"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whitespace",
+          "name": "whitespace",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "whitespace"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "line_breaks",
+          "name": "line_breaks",
+          "type": "COMBO",
+          "widget": {
+            "name": "line_breaks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "punctuation",
+          "name": "punctuation",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "punctuation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ending",
+          "name": "ending",
+          "type": "COMBO",
+          "widget": {
+            "name": "ending"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quotes",
+          "name": "quotes",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "quotes"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            8
+          ]
+        },
+        {
+          "localized_name": "changed",
+          "name": "changed",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASTextCleanup"
+      },
+      "widgets_values": [
+        "",
+        "keep",
+        true,
+        "keep",
+        true,
+        "period",
+        false
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "case": "keep",
+        "whitespace": true,
+        "line_breaks": "keep",
+        "punctuation": true,
+        "ending": "period",
+        "quotes": false
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASDatasetUpdate",
+      "pos": [
+        1500,
+        1240
+      ],
+      "size": [
+        390,
+        338
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "link": 7
+        },
+        {
+          "localized_name": "captions",
+          "name": "captions",
+          "shape": 7,
+          "type": "STRING,ARRAY",
+          "link": 8
+        },
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "STRING,ARRAY",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "links": [
+            9,
+            10
+          ]
+        },
+        {
+          "localized_name": "changed",
+          "name": "changed",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDatasetUpdate"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 8,
+      "type": "WASCaptionStatistics",
+      "pos": [
+        1970,
+        1240
+      ],
+      "size": [
+        390,
+        654
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING,ARRAY",
+          "link": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": null
+        },
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "shape": 7,
+          "type": "WAS_DATASET",
+          "link": 9
+        },
+        {
+          "localized_name": "subject",
+          "name": "subject",
+          "type": "STRING",
+          "widget": {
+            "name": "subject"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_words",
+          "name": "min_words",
+          "type": "INT",
+          "widget": {
+            "name": "min_words"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_words",
+          "name": "max_words",
+          "type": "INT",
+          "widget": {
+            "name": "max_words"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "top",
+          "name": "top",
+          "type": "INT",
+          "widget": {
+            "name": "top"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "phrases",
+          "name": "phrases",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "flagged",
+          "name": "flagged",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "consistency",
+          "name": "consistency",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "localized_name": "coverage",
+          "name": "coverage",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASCaptionStatistics"
+      },
+      "widgets_values": [
+        "[trigger]",
+        5,
+        0,
+        40
+      ],
+      "widgets_values_named": {
+        "subject": "[trigger]",
+        "min_words": 5,
+        "max_words": 0,
+        "top": 40
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASSaveDataset",
+      "pos": [
+        2450,
+        1240
+      ],
+      "size": [
+        390,
+        386
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "link": 10
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": 11
+        },
+        {
+          "localized_name": "write",
+          "name": "write",
+          "type": "COMBO",
+          "widget": {
+            "name": "write"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "caption_extension",
+          "name": "caption_extension",
+          "type": "STRING",
+          "widget": {
+            "name": "caption_extension"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "existing",
+          "name": "existing",
+          "type": "COMBO",
+          "widget": {
+            "name": "existing"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASSaveDataset"
+      },
+      "widgets_values": [
+        "input",
+        "",
+        "captions",
+        ".txt",
+        "replace"
+      ],
+      "widgets_values_named": {
+        "root": "input",
+        "folder": "",
+        "write": "captions",
+        "caption_extension": ".txt",
+        "existing": "replace"
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASDatasetFilter",
+      "pos": [
+        480,
+        2284
+      ],
+      "size": [
+        390,
+        446
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "link": 12
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 13
+        },
+        {
+          "localized_name": "keep",
+          "name": "keep",
+          "type": "COMBO",
+          "widget": {
+            "name": "keep"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "find",
+          "name": "find",
+          "type": "STRING",
+          "widget": {
+            "name": "find"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "links": [
+            14,
+            15
+          ]
+        },
+        {
+          "localized_name": "removed",
+          "name": "removed",
+          "type": "WAS_DATASET",
+          "links": [
+            16
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "removed_count",
+          "name": "removed_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDatasetFilter"
+      },
+      "widgets_values": [
+        "not named",
+        "[trigger]"
+      ],
+      "widgets_values_named": {
+        "keep": "not named",
+        "find": "[trigger]"
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASSaveDataset",
+      "pos": [
+        1020,
+        2284
+      ],
+      "size": [
+        390,
+        386
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "link": 14
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "write",
+          "name": "write",
+          "type": "COMBO",
+          "widget": {
+            "name": "write"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "caption_extension",
+          "name": "caption_extension",
+          "type": "STRING",
+          "widget": {
+            "name": "caption_extension"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "existing",
+          "name": "existing",
+          "type": "COMBO",
+          "widget": {
+            "name": "existing"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASSaveDataset"
+      },
+      "widgets_values": [
+        "output",
+        "was_caption_demo_clean",
+        "pictures and captions",
+        ".txt",
+        "replace"
+      ],
+      "widgets_values_named": {
+        "root": "output",
+        "folder": "was_caption_demo_clean",
+        "write": "pictures and captions",
+        "caption_extension": ".txt",
+        "existing": "replace"
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASDatasetMerge",
+      "pos": [
+        1500,
+        2284
+      ],
+      "size": [
+        390,
+        338
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "dataset_a",
+          "name": "dataset_a",
+          "type": "WAS_DATASET",
+          "link": 15
+        },
+        {
+          "localized_name": "dataset_b",
+          "name": "dataset_b",
+          "type": "WAS_DATASET",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "dataset",
+          "name": "dataset",
+          "type": "WAS_DATASET",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": [
+            17
+          ]
+        },
+        {
+          "localized_name": "renamed",
+          "name": "renamed",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDatasetMerge"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 13,
+      "type": "PreviewAny",
+      "pos": [
+        1970,
+        2284
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 14,
+      "type": "Load Image Batch",
+      "pos": [
+        0,
+        3040
+      ],
+      "size": [
+        390,
+        546
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "INT",
+          "widget": {
+            "name": "index"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_RGBA_output",
+          "name": "allow_RGBA_output",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "allow_RGBA_output"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_text_extension",
+          "name": "filename_text_extension",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "filename_text_extension"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "filename_text",
+          "name": "filename_text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "image_list",
+          "name": "image_list",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "filename_list",
+          "name": "filename_list",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            19
+          ]
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "STRING",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Load Image Batch"
+      },
+      "widgets_values": [
+        "all_images",
+        484548336398496,
+        "randomize",
+        0,
+        "was_caption_demo [input]",
+        "*",
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "mode": "all_images",
+        "seed": 484548336398496,
+        "control_after_generate": "randomize",
+        "index": 0,
+        "folder": "was_caption_demo [input]",
+        "pattern": "*",
+        "allow_RGBA_output": false,
+        "filename_text_extension": true
+      }
+    },
+    {
+      "id": 16,
+      "type": "WASLoadTextBatch",
+      "pos": [
+        480,
+        3040
+      ],
+      "size": [
+        390,
+        490
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "filenames",
+          "name": "filenames",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 19
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extension",
+          "name": "extension",
+          "type": "STRING",
+          "widget": {
+            "name": "extension"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "texts",
+          "name": "texts",
+          "type": "ARRAY",
+          "links": [
+            23,
+            25
+          ]
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "ARRAY",
+          "links": [
+            24,
+            26
+          ]
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            20,
+            27
+          ]
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            21
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "missing",
+          "name": "missing",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASLoadTextBatch"
+      },
+      "widgets_values": [
+        "was_caption_demo [input]",
+        "*.txt",
+        ".txt"
+      ],
+      "widgets_values_named": {
+        "folder": "was_caption_demo [input]",
+        "pattern": "*.txt",
+        "extension": ".txt"
+      }
+    },
+    {
+      "id": 17,
+      "type": "Save Text File",
+      "pos": [
+        1020,
+        3040
+      ],
+      "size": [
+        400,
+        488
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "filenames",
+          "name": "filenames",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 21
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 20
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": 22
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "file_extension",
+          "name": "file_extension",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "file_extension"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "encoding",
+          "name": "encoding",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "encoding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_suffix",
+          "name": "filename_suffix",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "filename_suffix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Save Text File"
+      },
+      "widgets_values": [
+        "",
+        "output",
+        "ComfyUI",
+        "_",
+        0,
+        ".txt",
+        "utf-8",
+        ""
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "root": "output",
+        "filename_prefix": "ComfyUI",
+        "filename_delimiter": "_",
+        "filename_number_padding": 0,
+        "file_extension": ".txt",
+        "encoding": "utf-8",
+        "filename_suffix": ""
+      }
+    },
+    {
+      "id": 18,
+      "type": "WASTextListFilter",
+      "pos": [
+        1020,
+        3896
+      ],
+      "size": [
+        390,
+        494
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "texts",
+          "name": "texts",
+          "type": "ARRAY,STRING",
+          "link": 23
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 24
+        },
+        {
+          "localized_name": "find",
+          "name": "find",
+          "type": "STRING",
+          "widget": {
+            "name": "find"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "match",
+          "name": "match",
+          "type": "COMBO",
+          "widget": {
+            "name": "match"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ignore_case",
+          "name": "ignore_case",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "ignore_case"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep",
+          "name": "keep",
+          "type": "COMBO",
+          "widget": {
+            "name": "keep"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "texts",
+          "name": "texts",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            28
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "removed",
+          "name": "removed",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASTextListFilter"
+      },
+      "widgets_values": [
+        "[trigger]",
+        "contains",
+        true,
+        "not matching"
+      ],
+      "widgets_values_named": {
+        "find": "[trigger]",
+        "match": "contains",
+        "ignore_case": true,
+        "keep": "not matching"
+      }
+    },
+    {
+      "id": 19,
+      "type": "WASTextListSort",
+      "pos": [
+        1500,
+        3896
+      ],
+      "size": [
+        390,
+        522
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "texts",
+          "name": "texts",
+          "type": "ARRAY,STRING",
+          "link": 25
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 7,
+          "type": "ARRAY,STRING",
+          "link": 26
+        },
+        {
+          "localized_name": "order",
+          "name": "order",
+          "type": "COMBO",
+          "widget": {
+            "name": "order"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dedupe",
+          "name": "dedupe",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dedupe"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ignore_case",
+          "name": "ignore_case",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "ignore_case"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "drop_empty",
+          "name": "drop_empty",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "drop_empty"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "texts",
+          "name": "texts",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            29
+          ]
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "removed",
+          "name": "removed",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASTextListSort"
+      },
+      "widgets_values": [
+        "shortest first",
+        76679753869207,
+        "randomize",
+        true,
+        true,
+        false
+      ],
+      "widgets_values_named": {
+        "order": "shortest first",
+        "seed": 76679753869207,
+        "control_after_generate": "randomize",
+        "dedupe": true,
+        "ignore_case": true,
+        "drop_empty": false
+      }
+    },
+    {
+      "id": 20,
+      "type": "WASTextExtract",
+      "pos": [
+        1970,
+        3896
+      ],
+      "size": [
+        400,
+        220
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 27
+        },
+        {
+          "localized_name": "pattern",
+          "name": "pattern",
+          "type": "STRING",
+          "widget": {
+            "name": "pattern"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "group",
+          "name": "group",
+          "type": "INT",
+          "widget": {
+            "name": "group"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ignore_case",
+          "name": "ignore_case",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "ignore_case"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "matches",
+          "name": "matches",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "first",
+          "name": "first",
+          "type": "STRING",
+          "links": [
+            30
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "match",
+          "name": "match",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASTextExtract"
+      },
+      "widgets_values": [
+        "",
+        "(\\w+(?: \\w+)?) hair",
+        1,
+        true
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "pattern": "(\\w+(?: \\w+)?) hair",
+        "group": 1,
+        "ignore_case": true
+      }
+    },
+    {
+      "id": 21,
+      "type": "PreviewAny",
+      "pos": [
+        1020,
+        4510
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 22,
+      "type": "PreviewAny",
+      "pos": [
+        1500,
+        4538
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 23,
+      "type": "PreviewAny",
+      "pos": [
+        1970,
+        4236
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 24,
+      "type": "Text Multiline",
+      "pos": [
+        0,
+        4970
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dynamic_prompts",
+          "name": "dynamic_prompts",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dynamic_prompts"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Text Multiline"
+      },
+      "widgets_values": [
+        "1girl, solo, (woman:1.2), simple background, white background, smile, solo",
+        true
+      ],
+      "widgets_values_named": {
+        "text": "1girl, solo, (woman:1.2), simple background, white background, smile, solo",
+        "dynamic_prompts": true
+      }
+    },
+    {
+      "id": 25,
+      "type": "WASPromptTagCleanup",
+      "pos": [
+        480,
+        4970
+      ],
+      "size": [
+        400,
+        510
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 31
+        },
+        {
+          "localized_name": "delimiter",
+          "name": "delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "join_with",
+          "name": "join_with",
+          "type": "STRING",
+          "widget": {
+            "name": "join_with"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dedupe",
+          "name": "dedupe",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dedupe"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ignore_case",
+          "name": "ignore_case",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "ignore_case"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ignore_emphasis",
+          "name": "ignore_emphasis",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "ignore_emphasis"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep",
+          "name": "keep",
+          "type": "COMBO",
+          "widget": {
+            "name": "keep"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "remove_empty",
+          "name": "remove_empty",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "remove_empty"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "collapse_whitespace",
+          "name": "collapse_whitespace",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "collapse_whitespace"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sort",
+          "name": "sort",
+          "type": "COMBO",
+          "widget": {
+            "name": "sort"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "limit",
+          "name": "limit",
+          "type": "INT",
+          "widget": {
+            "name": "limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "remove",
+          "name": "remove",
+          "type": "STRING",
+          "widget": {
+            "name": "remove"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "replace",
+          "name": "replace",
+          "type": "STRING",
+          "widget": {
+            "name": "replace"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_first",
+          "name": "keep_first",
+          "type": "INT",
+          "widget": {
+            "name": "keep_first"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "tags",
+          "name": "tags",
+          "type": "ARRAY",
+          "links": null
+        },
+        {
+          "localized_name": "tag_strings",
+          "name": "tag_strings",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "removed",
+          "name": "removed",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASPromptTagCleanup"
+      },
+      "widgets_values": [
+        "",
+        ",",
+        ", ",
+        true,
+        true,
+        true,
+        "first",
+        true,
+        true,
+        "a-z",
+        0,
+        "*background",
+        "woman -> [trigger]",
+        1
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "delimiter": ",",
+        "join_with": ", ",
+        "dedupe": true,
+        "ignore_case": true,
+        "ignore_emphasis": true,
+        "keep": "first",
+        "remove_empty": true,
+        "collapse_whitespace": true,
+        "sort": "a-z",
+        "limit": 0,
+        "remove": "*background",
+        "replace": "woman -> [trigger]",
+        "keep_first": 1
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      2,
+      "WAS_DATASET"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      4,
+      4,
+      1,
+      5,
+      1,
+      "STRING"
+    ],
+    [
+      5,
+      4,
+      2,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      6,
+      5,
+      0,
+      6,
+      0,
+      "STRING"
+    ],
+    [
+      7,
+      1,
+      0,
+      7,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      8,
+      6,
+      0,
+      7,
+      1,
+      "STRING"
+    ],
+    [
+      9,
+      7,
+      0,
+      8,
+      2,
+      "WAS_DATASET"
+    ],
+    [
+      10,
+      7,
+      0,
+      9,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      11,
+      1,
+      3,
+      9,
+      2,
+      "STRING"
+    ],
+    [
+      12,
+      1,
+      0,
+      10,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      13,
+      2,
+      2,
+      10,
+      1,
+      "ARRAY"
+    ],
+    [
+      14,
+      10,
+      0,
+      11,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      15,
+      10,
+      0,
+      12,
+      0,
+      "WAS_DATASET"
+    ],
+    [
+      16,
+      10,
+      1,
+      12,
+      1,
+      "WAS_DATASET"
+    ],
+    [
+      17,
+      12,
+      1,
+      13,
+      0,
+      "INT"
+    ],
+    [
+      19,
+      14,
+      3,
+      16,
+      0,
+      "STRING"
+    ],
+    [
+      20,
+      16,
+      2,
+      17,
+      1,
+      "STRING"
+    ],
+    [
+      21,
+      16,
+      3,
+      17,
+      0,
+      "STRING"
+    ],
+    [
+      22,
+      14,
+      4,
+      17,
+      3,
+      "STRING"
+    ],
+    [
+      23,
+      16,
+      0,
+      18,
+      0,
+      "ARRAY"
+    ],
+    [
+      24,
+      16,
+      1,
+      18,
+      1,
+      "ARRAY"
+    ],
+    [
+      25,
+      16,
+      0,
+      19,
+      0,
+      "ARRAY"
+    ],
+    [
+      26,
+      16,
+      1,
+      19,
+      1,
+      "ARRAY"
+    ],
+    [
+      27,
+      16,
+      2,
+      20,
+      0,
+      "STRING"
+    ],
+    [
+      28,
+      18,
+      3,
+      21,
+      0,
+      "STRING"
+    ],
+    [
+      29,
+      19,
+      2,
+      22,
+      0,
+      "STRING"
+    ],
+    [
+      30,
+      20,
+      1,
+      23,
+      0,
+      "STRING"
+    ],
+    [
+      31,
+      24,
+      0,
+      25,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Check a captioned training set: health and caption statistics",
+      "bounding": [
+        -40,
+        -90,
+        1490,
+        1090
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Fix the captions across the set and save them back in place",
+      "bounding": [
+        -40,
+        1120,
+        2920,
+        924
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Drop the flagged pictures and export the rest",
+      "bounding": [
+        440,
+        2164,
+        1780,
+        636
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "A folder of captions as text lists, saved by name into output",
+      "bounding": [
+        -40,
+        2920,
+        1500,
+        736
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "List tools on the captions",
+      "bounding": [
+        980,
+        3776,
+        1430,
+        954
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Tag captions: remove, rename and pin tags",
+      "bounding": [
+        -40,
+        4850,
+        960,
+        700
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.16666666666666666,
+      "offset": [
+        280,
+        330
+      ]
+    }
+  },
+  "version": 0.4
+}

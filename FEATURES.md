@@ -116,7 +116,9 @@ shades from a height map in 8, 16 or 32 bit and **Image SSDO (Direct Occlusion)*
 and **Image Guided Filter** work on detail. **Image Morphology** erodes, dilates, opens and
 closes with a square kernel, matching core Apply Morphology on any kernel size or batch length.
 **Image Quantize** reduces each frame to a palette of its own, matching core Quantize Image with
-the frames of a batch worked on at once.
+the frames of a batch worked on at once. **Image Filter Adjustments**, **Image Bloom Filter** and
+**Vivid Sharpen** process a whole batch together on the GPU, the filters that work frame by frame
+use several CPU cores at once, and every one of them shows a progress bar on long batches.
 
 **Image Crop Face (YuNet)**, **Image Paste Face**, **Image Crop Region**, **Image Paste Crop**,
 **Image Seamless Texture**, **Image Tiled**, **Image Draw Text**, **Image Pixelate**, **Image
@@ -257,12 +259,19 @@ For driving a setting from something the graph worked out rather than a typed co
 
 ## Text, lists and dictionaries
 
-42 nodes. **Text Multiline**, **Text Multiline (Code Compatible)** and **Rich Text Editor**
+47 nodes. **Text Multiline**, **Text Multiline (Code Compatible)** and **Rich Text Editor**
 author text. **Text List**, **Text Split to List**, **Text List Slice**, **Text List Get** and
-**Text List to Numbers** work on lists. **Text Dictionary New**, **Text Dictionary Get**, **Text
-Dictionary Keys**, **Text Dictionary Items** and **Text Dictionary Update** work on key and
-value pairs. **Prompt Parse**, **Prompt Tag Cleanup**, **Text Parse A1111 Embeddings**, **Text
-Add Tokens** and **Text Parse Tokens** handle prompt syntax. **Text Load Line From File**,
+**Text List to Numbers** work on lists; **Text List Filter** keeps or drops entries that match,
+and **Text List Sort** orders, dedupes and shuffles them, each keeping a list of names in step.
+**Text Dictionary New**, **Text Dictionary Get**, **Text Dictionary Keys**, **Text Dictionary
+Items** and **Text Dictionary Update** work on key and value pairs. **Prompt Parse**, **Prompt
+Tag Cleanup**, **Text Parse A1111 Embeddings**, **Text Add Tokens** and **Text Parse Tokens**
+handle prompt syntax; Prompt Tag Cleanup also removes tags by name with `*` wildcards, renames
+tags keeping their weight, and holds the first tags in front. **Text Replace Words** swaps words
+and phrases across a whole batch from plain rules such as `a woman, woman -> [trigger]`, adds a
+phrase to every text lacking it and reports what changed. **Text Cleanup** tidies case, spacing,
+punctuation and endings, leaving `[tokens]` as written. **Text Extract** pulls regular
+expression matches or one group out as a list. **Text Load Line From File**,
 **Text Random Line** and **Load Text File** read from disk. **Fast Generate Text** writes text
 with the language model in a loaded CLIP, as core Generate Text does, on ComfyUI's graph captured
 decode, takes a system prompt, hands a reasoning model's thinking out on its own socket, and shows
@@ -441,12 +450,16 @@ under **WAS Suite/LLM**. Keys, folders and servers: [`docs/LLM.md`](docs/LLM.md)
 
 ## Files, folders and archives
 
-33 nodes. **Load Image Batch** and **Load Image Sequence** answer a paired `image_list` and
+34 nodes. **Load Image Batch** and **Load Image Sequence** answer a paired `image_list` and
 `filename_list`. Wired into **Image Save**'s `filenames`, the second saves every result under
 the name it came in with, and text wired into `captions` is written beside each image under
 the same name, `cat.png` with `cat.txt`, a captioned training set in one node. Both take one
-value per image from a list output or a `LIST`, or one value for the whole batch. **Image
-Save** also saves into ComfyUI's `input` folder and every folder `paths.allow_read` or
+value per image from a list output or a `LIST`, or one value for the whole batch. **Load Text
+Batch** reads a folder of text files, or the file beside each name Load Image Batch hands on,
+and **Save Text File** writes each text back under its wired name. Load Image Batch and Load
+Text Batch answer the picked folder as `training/tus/`, which in a save node's
+`filename_prefix` writes into the same folder under another root. **Image Save** and **Save
+Text File** also save into ComfyUI's `input` folder and every folder `paths.allow_read` or
 `paths.allow_write` lists, so a dataset is edited where its loaders read it.
 **Image Load**, **Load Image Batch** and **Load Image
 Sequence** read a 16-bit PNG at full precision, and a file marked linear with no curve applied.
@@ -472,6 +485,32 @@ an archive or a document directly.
 [`image-save-captions.json`](docs/workflows/image-save-captions.json),
 [`zip-archives.json`](docs/workflows/zip-archives.json),
 [`document-export.json`](docs/workflows/document-export.json).
+
+---
+
+## A captioned training set, checked and fixed
+
+8 nodes. **Load Dataset** reads a folder of pictures and the caption beside each one once, as a
+dataset every dataset node shares; a node that changes it hands on a new dataset and leaves the
+one it was given as it was, so one dataset feeds any number of nodes. **Dataset to Lists** opens
+it into picture, caption and name lists for any image or text node, and **Dataset Update** puts
+edited captions or pictures back by position or by name. **Dataset Filter** splits it by name, by
+caption presence or by caption words, **Dataset Merge** joins two, and **Save Dataset** writes
+the captions back beside their pictures or exports pictures and captions to another folder,
+untouched pictures copied byte for byte.
+
+**Dataset Health** scores a folder or a dataset on caption coverage, caption consistency,
+picture quality, near-duplicates, aspect balance and, on request, faces, and draws a radar, the
+figures behind each score and every flagged picture with its reasons. **Caption Statistics**
+measures caption lengths, repeats and how many captions name the trigger, and lists the phrases
+most captions share. Both measure and chart as [ZenTrainer](https://github.com/Nynxz/ZenTrainer)
+by Nynxz does.
+
+For preparing a LoRA training set: finding what is wrong, fixing captions such as swapping
+`woman` for `[trigger]` across the whole set, and saving the result where the trainer reads it.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Dataset**. Graph:
+[`caption-datasets.json`](docs/workflows/caption-datasets.json).
 
 ---
 

@@ -88,6 +88,7 @@ class ImageMorphology(io.ComfyNode):
             MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from ....modules.image import scratch
+        from ....modules.image.parallel import frame_progress
 
         device = comfy.model_management.get_torch_device()
         keep = torch.device(comfy.model_management.intermediate_device())
@@ -100,8 +101,11 @@ class ImageMorphology(io.ComfyNode):
             )
         else:
             reshaped = torch.empty(tuple(image.shape), dtype=image.dtype, device=keep)
-        for start in range(0, int(image.shape[0]), CHUNK_FRAMES):
+        starts = range(0, int(image.shape[0]), CHUNK_FRAMES)
+        advance = frame_progress(len(starts))
+        for start in starts:
             planes = image[start:start + CHUNK_FRAMES].to(device).movedim(-1, 1)
             shaped = morphology.morph(planes, operation, int(kernel_size))
             reshaped[start:start + CHUNK_FRAMES] = shaped.movedim(1, -1)
+            advance()
         return io.NodeOutput(reshaped)

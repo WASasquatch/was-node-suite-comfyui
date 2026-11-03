@@ -159,11 +159,13 @@ class ImagePaletteMap(io.ComfyNode):
             MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
         from ....modules.image import scratch
+        from ....modules.image.parallel import frame_progress
 
         sources = cls.palettes(palette, color_palettes)
 
         scale = dynamic.peak(images) if dynamic.carries(images) else 1.0
         planes = image_planes(images)
+        advance = frame_progress(len(planes))
         repainted = None
         for index, plane in enumerate(planes):
             folded = dynamic.fold(plane, scale)
@@ -190,6 +192,7 @@ class ImagePaletteMap(io.ComfyNode):
             repainted[index] = frame
             if folded.scale != 1.0:
                 repainted[index].mul_(folded.scale)
+            advance()
 
         if repainted is None:
             raise ValueError(

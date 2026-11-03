@@ -245,13 +245,14 @@ class ImageDirectOcclusion(io.ComfyNode):
     def execute(cls, images, depth_images, strength, radius, specular_threshold,
                 colored_occlusion) -> io.NodeOutput:
         from ....modules.image import scratch
+        from ....modules.image.parallel import frame_progress
 
         folded = dynamic.fold(images)
         maps = dynamic.fold(depth_images).images
         count = len(folded.images)
+        advance = frame_progress(count)
         batches = None
         for i, image in enumerate(folded.images):
-            logger.info("Processing SSDO image %d/%d ...", i + 1, count)
             composited_image, occlusion_image, occlusion_mask, light_source = (
                 create_direct_occlusion(
                     image,
@@ -280,10 +281,12 @@ class ImageDirectOcclusion(io.ComfyNode):
             batches[0][i] = dynamic.unfold(frames[0][0], folded)
             for batch, frame in zip(batches[1:], frames[1:]):
                 batch[i] = frame[0]
+            advance()
 
         if batches is None:
             raise ValueError(
                 "Image SSDO (Direct Occlusion) was handed an empty image batch. Wire in at "
                 "least one image."
             )
+        logger.info("Image SSDO shaded %d frame(s)", count)
         return io.NodeOutput(*batches)

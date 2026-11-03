@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
-from ....modules.convert.tensors import filtered_planes
+from ....modules.image.batching import as_batch
 
 REQUIRES = "extras"
 
@@ -29,8 +29,8 @@ class WASVividSharpen(io.ComfyNode):
                 io.Image.Input(
                     "images",
                     tooltip=(
-                        "The pictures to sharpen. A batch is handled one frame at a time, "
-                        "so a whole video's worth of frames can go through at once."
+                        "The pictures to sharpen. A whole batch, such as a video's frames, "
+                        "is sharpened together on the GPU."
                     ),
                 ),
                 io.Float.Input(
@@ -63,6 +63,4 @@ class WASVividSharpen(io.ComfyNode):
     def execute(cls, images, radius, strength) -> io.NodeOutput:
         from ....modules.image.sharpen import vivid_sharpen
 
-        return io.NodeOutput(filtered_planes(
-            images, lambda plane: vivid_sharpen(plane, radius=radius, strength=strength)
-        ))
+        return io.NodeOutput(vivid_sharpen(as_batch(images, "images"), radius, strength))

@@ -342,13 +342,14 @@ class ImageAmbientOcclusion(io.ComfyNode):
                 step_count, angle_bias, ao_blur, specular_threshold,
                 enable_specular_masking, precision) -> io.NodeOutput:
         from ....modules.image import scratch
+        from ....modules.image.parallel import frame_progress
 
         folded = dynamic.fold(images)
         maps = dynamic.fold(height_maps).images
         count = len(folded.images)
+        advance = frame_progress(count)
         batches = None
         for i, image in enumerate(folded.images):
-            logger.info("Processing SSAO image %d/%d ...", i + 1, count)
             composited_image, occlusion_image, specular_mask = create_ambient_occlusion(
                 image,
                 maps[i if i < len(maps) else -1],
@@ -376,10 +377,12 @@ class ImageAmbientOcclusion(io.ComfyNode):
             batches[0][i] = dynamic.unfold(frames[0][0], folded)
             for batch, frame in zip(batches[1:], frames[1:]):
                 batch[i] = frame[0]
+            advance()
 
         if batches is None:
             raise ValueError(
                 "Image SSAO (Ambient Occlusion) was handed an empty image batch. Wire in at "
                 "least one image."
             )
+        logger.info("Image SSAO shaded %d frame(s)", count)
         return io.NodeOutput(*batches)

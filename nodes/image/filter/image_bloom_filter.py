@@ -4,34 +4,11 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
-from ....modules.convert.tensors import filtered_planes
+from ....modules.image import dynamic
+from ....modules.image.batching import as_batch
 
-
-def apply_bloom_filter(input_image, radius: float, bloom_factor: float):
-    """Screen a soft glow drawn from an image's own edges back over it.
-
-    Args:
-        input_image: Source PIL image.
-        radius: Blur radius in pixels of the first pass. The glow itself is blurred at
-            twice this.
-        bloom_factor: Strength of the glow, 0.0 to 1.0.
-
-    Returns:
-        A PIL image the same size and mode as the source.
-    """
-    from PIL import Image, ImageChops, ImageEnhance, ImageFilter
-
-    blurred_image = input_image.filter(ImageFilter.GaussianBlur(radius=radius))
-    high_pass_filter = ImageChops.subtract(input_image, blurred_image)
-    bloom_filter = high_pass_filter.filter(ImageFilter.GaussianBlur(radius=radius * 2))
-    bloom_filter = ImageEnhance.Brightness(bloom_filter).enhance(2.0)
-
-    level = int(255 * bloom_factor)
-    bloom_filter = ImageChops.multiply(
-        bloom_filter, Image.new('RGB', input_image.size, (level, level, level))
-    )
-
-    return ImageChops.screen(input_image, bloom_filter)
+#: Fewest runs a batch is split into, each advancing the progress bar.
+PROGRESS_RUNS = 8
 
 
 class ImageBloomFilter(io.ComfyNode):
@@ -51,7 +28,10 @@ class ImageBloomFilter(io.ComfyNode):
             inputs=[
                 io.Image.Input(
                     "image",
-                    tooltip="The image to add the glow to. A batch is handled one image at a time.",
+                    tooltip=(
+                        "The image or batch to add the glow to. A batch is processed together "
+                        "on the GPU where there is one, and a fourth channel passes through."
+                    ),
                 ),
                 io.Float.Input(
                     "radius",
@@ -84,6 +64,20 @@ class ImageBloomFilter(io.ComfyNode):
 
     @classmethod
     def execute(cls, image, radius, intensity) -> io.NodeOutput:
-        return io.NodeOutput(filtered_planes(
-            image, lambda plane: apply_bloom_filter(plane, radius, intensity)
+        """Bloom the whole batch on ComfyUI's compute device, a run of frames at a time.
+
+        Raises:
+            MemoryError: Neither free memory nor a scratch drive can hold the result.
+        """
+        from ....modules.image import accelerate, pillow_exact
+
+        frames = as_batch(image)
+        scale = dynamic.factor(frames)
+        return io.NodeOutput(accelerate.run_frames(
+            frames,
+            lambda run: pillow_exact.bloom(run, float(radius), float(intensity), scale),
+            factor=pillow_exact.working_copies(frames, float(radius) * 2.0),
+            node="Image Bloom Filter",
+            advice="Passing fewer frames also fits it.",
+            runs=PROGRESS_RUNS,
         ))

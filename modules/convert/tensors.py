@@ -256,58 +256,40 @@ def stack_images(
     return batch
 
 
-def _progress(total: int):
-    """A callable advancing the running node's progress bar by one frame.
-
-    Args:
-        total: Frames in the batch.
-
-    Returns:
-        A callable that also stops a cancelled run; it does nothing outside ComfyUI or for a
-        single frame.
-    """
-    if total < 2:
-        return lambda: None
-    try:
-        import comfy.model_management
-        import comfy.utils
-    except ImportError:
-        return lambda: None
-    bar = comfy.utils.ProgressBar(total)
-
-    def step():
-        comfy.model_management.throw_exception_if_processing_interrupted()
-        bar.update(1)
-
-    return step
+#: Float32 copies of a frame a PIL filter holds at its peak, for sizing the frames in flight.
+FILTER_COPIES = 8
 
 
-def filtered_planes(images: torch.Tensor, filter_fn) -> torch.Tensor:
+def filtered_planes(images: torch.Tensor, filter_fn, parallel: bool = True) -> torch.Tensor:
     """Run a PIL filter over every image of a batch, keeping light outside 0 to 1.
 
     Args:
         images: The batch, in the layout :func:`image_planes` reads.
         filter_fn: Called with one PIL image, answering the filtered PIL image.
+        parallel: Filter several images at once on CPU threads. False filters one at a
+            time, for a filter that runs on the GPU.
 
     Returns:
         The filtered batch, assembled by :func:`stack_images`, on the scale it arrived on
         and on the device and floating dtype it arrived on. A batch already inside 0 to 1
         takes the same path it would without this.
     """
-    from ..image import dynamic
+    from ..image import accelerate, dynamic
+    from ..image.parallel import map_frames
 
     scale = dynamic.peak(images) if dynamic.carries(images) else 1.0
     planes = image_planes(images)
-    step = _progress(len(planes))
-    filtered = []
-    for plane in planes:
-        folded = dynamic.fold(plane, scale)
-        filtered.append(filter_fn(tensor2pil(folded.images)))
-        step()
-    result = stack_images(filtered)
-    del filtered
-    if folded.scale != 1.0:
-        result.mul_(folded.scale)
+    limit = None
+    if parallel and len(planes) > 1:
+        limit = accelerate.frames_per_run(images, torch.device("cpu"), FILTER_COPIES)
+
+    def filtered(plane):
+        return filter_fn(tensor2pil(dynamic.fold(plane, scale).images))
+
+    result = stack_images(map_frames(filtered, planes, parallel=parallel, limit=limit))
+    restore = dynamic.factor(images, scale)
+    if restore != 1.0:
+        result.mul_(restore)
     if images.is_floating_point():
         return result.to(device=images.device, dtype=images.dtype)
     return result.to(images.device)

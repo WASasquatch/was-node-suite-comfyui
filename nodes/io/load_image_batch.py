@@ -279,6 +279,14 @@ class LoadImageBatch(io.ComfyNode):
                         "wired too."
                     ),
                 ),
+                io.String.Output(
+                    display_name="folder",
+                    tooltip=(
+                        "The picked folder below its root with a trailing slash: "
+                        "`training/tus [input]` = `training/tus/`; a root itself = empty. Wire it "
+                        "into a save node's filename_prefix to write back into the same folder."
+                    ),
+                ),
             ],
         )
 
@@ -377,7 +385,7 @@ class LoadImageBatch(io.ComfyNode):
             depth=16 if isinstance(image, deep_png.Picture) else 8,
         )
         stem = os.path.splitext(filename)[0]
-        return io.NodeOutput(answered, filename, [answered], [stem])
+        return io.NodeOutput(answered, filename, [answered], [stem], picker.folder_prefix(folder))
 
     @classmethod
     def every_image(cls, loader, folder, allow_RGBA_output, filename_text_extension):
@@ -426,6 +434,7 @@ class LoadImageBatch(io.ComfyNode):
             first,
             images,
             [os.path.splitext(name)[0] for name in names],
+            picker.folder_prefix(folder),
         )
 
     @staticmethod

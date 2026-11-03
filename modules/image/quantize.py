@@ -7,17 +7,12 @@ Frames are ``(height, width, 3)`` uint8 arrays. Dither is ``none``, ``floyd-stei
 from __future__ import annotations
 
 import math
-import os
-from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 from PIL import Image
 
 #: Dither choices, in the order a menu lists them.
 DITHERS = ("none", "floyd-steinberg", "bayer-2", "bayer-4", "bayer-8", "bayer-16")
-
-#: The most frames quantized at once.
-MAX_WORKERS = 8
 
 
 def _bayer_matrix(level: int) -> np.ndarray:
@@ -74,8 +69,6 @@ def frames(batch, colours: int, dither: str) -> list[np.ndarray]:
     Returns:
         The reduced frames, in order.
     """
-    workers = max(1, min(len(batch), os.cpu_count() or 1, MAX_WORKERS))
-    if workers == 1:
-        return [frame(values, colours, dither) for values in batch]
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        return list(pool.map(lambda values: frame(values, colours, dither), batch))
+    from .parallel import map_frames
+
+    return map_frames(lambda values: frame(values, colours, dither), batch)

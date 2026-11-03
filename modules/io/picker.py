@@ -15,7 +15,7 @@ from ..util import file_listing, sandbox
 
 __all__ = [
     "FILE_HINT", "FOLDER_HINT", "INPUT_TAG", "MAX_FOLDERS", "MODEL_HINT", "ROOTS", "folder_label",
-    "folders", "labels", "model_name", "path_input", "resolve", "resolve_folder", "wired_file",
+    "folder_prefix", "folders", "labels", "model_name", "path_input", "resolve", "resolve_folder", "wired_file",
     "written_path",
 ]
 
@@ -317,6 +317,27 @@ def folder_label(value: str, extra=()) -> str:
             relative = os.path.relpath(target, root).replace("\\", "/")
             return name if relative in ("", ".") else f"{relative} [{name}]"
     return chosen
+
+
+def folder_prefix(value: str, extra=()) -> str:
+    """A picked folder below its root, as a save node's ``filename_prefix`` takes it.
+
+    Args:
+        value: A label :func:`folders` offered, or a path wired in as text.
+        extra: The same folders :func:`folders` was given.
+
+    Returns:
+        ``training/tus/`` for ``training/tus [input]``, with a trailing slash, or ``""`` for a
+        root itself.
+
+    Raises:
+        PathNotAllowed: The path lies outside every permitted read root.
+    """
+    label = folder_label(value, extra)
+    if not (label.endswith("]") and " [" in label):
+        return ""
+    relative = label[:-1].rpartition(" [")[0].replace("\\", "/").strip("/")
+    return f"{relative}/" if relative else ""
 
 
 def _rooted(extra) -> list[tuple[str, Path]]:

@@ -594,9 +594,7 @@ class ImageSave(io.ComfyNode):
 
         del show_history_by_prefix
         output_dir = folder_paths.get_output_directory()
-        # The prefix is a path below the root, so its folders are resolved here, where a
-        # refusal can name the root that was chosen. get_save_image_path holds the name to
-        # that folder afterwards, which catches anything this missed.
+        # The prefix's folders resolve below the chosen root, and the name below them.
         wanted = (filename_prefix or "").replace("\\", "/")
         below, _, leaf = wanted.rpartition("/")
         base = str(rooted.save_destination(root, below))

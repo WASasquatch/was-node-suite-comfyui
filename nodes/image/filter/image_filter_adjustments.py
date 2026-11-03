@@ -2,73 +2,14 @@
 
 from __future__ import annotations
 
-import numpy as np
-import torch
 from comfy_api.latest import io
 
-from ....modules.convert.tensors import pil2tensor, tensor2pil
 from ....modules.image import dynamic
+from ....modules.image.batching import as_batch
 from ....modules.interface import preview
 
-
-def filter_adjustments(img, brightness: float, contrast: float, saturation: float,
-                       sharpness: float, blur: int, gaussian_blur: float,
-                       edge_enhance: float, detail_enhance: str):
-    """Apply the eight adjustments to one image tensor, in widget order.
-
-    Args:
-        img: Image tensor scaled to ``[0, 1]``.
-        brightness: Amount added to every sample. 0.0 skips the step.
-        contrast: Multiplier applied to every sample. 1.0 skips the step.
-        saturation: PIL colour enhancement factor. 1.0 skips the step.
-        sharpness: PIL sharpness enhancement factor. 1.0 skips the step.
-        blur: Number of 3x3 box-blur passes. 0 skips the step.
-        gaussian_blur: Gaussian blur radius in pixels. 0.0 skips the step.
-        edge_enhance: Blend weight of an edge-enhanced copy, 0.0 to 1.0. 0.0 skips the step.
-        detail_enhance: Apply PIL's detail filter.
-
-    Returns:
-        ``(adjusted, img)``: the adjusted PIL image, or ``None`` when no step past
-        brightness and contrast ran, alongside the tensor those two produced.
-    """
-    from PIL import Image, ImageEnhance, ImageFilter
-
-    pil_image = None
-
-    if brightness > 0.0 or brightness < 0.0:
-        img = np.clip(img + brightness, 0.0, 1.0)
-
-    if contrast > 1.0 or contrast < 1.0:
-        img = np.clip(img * contrast, 0.0, 1.0)
-
-    if saturation > 1.0 or saturation < 1.0:
-        pil_image = tensor2pil(img)
-        pil_image = ImageEnhance.Color(pil_image).enhance(saturation)
-
-    if sharpness > 1.0 or sharpness < 1.0:
-        pil_image = pil_image if pil_image is not None else tensor2pil(img)
-        pil_image = ImageEnhance.Sharpness(pil_image).enhance(sharpness)
-
-    if blur > 0:
-        pil_image = pil_image if pil_image is not None else tensor2pil(img)
-        for _ in range(blur):
-            pil_image = pil_image.filter(ImageFilter.BLUR)
-
-    if gaussian_blur > 0.0:
-        pil_image = pil_image if pil_image is not None else tensor2pil(img)
-        pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=gaussian_blur))
-
-    if edge_enhance > 0.0:
-        pil_image = pil_image if pil_image is not None else tensor2pil(img)
-        edge_enhanced_img = pil_image.filter(ImageFilter.EDGE_ENHANCE_MORE)
-        blend_mask = Image.new(mode="L", size=pil_image.size, color=(round(edge_enhance * 255)))
-        pil_image = Image.composite(edge_enhanced_img, pil_image, blend_mask)
-
-    if detail_enhance:
-        pil_image = pil_image if pil_image is not None else tensor2pil(img)
-        pil_image = pil_image.filter(ImageFilter.DETAIL)
-
-    return pil_image, img
+#: Fewest runs a batch is split into, each advancing the progress bar.
+PROGRESS_RUNS = 8
 
 
 class ImageFilterAdjustments(io.ComfyNode):
@@ -96,7 +37,10 @@ class ImageFilterAdjustments(io.ComfyNode):
             inputs=[
                 io.Image.Input(
                     "image",
-                    tooltip="The image to adjust. A batch is handled one image at a time.",
+                    tooltip=(
+                        "The image or batch to adjust. A batch is adjusted together on the GPU "
+                        "where there is one."
+                    ),
                 ),
                 io.Float.Input(
                     "brightness",
@@ -195,45 +139,28 @@ class ImageFilterAdjustments(io.ComfyNode):
     @classmethod
     def execute(cls, image, brightness, contrast, saturation, sharpness, blur, gaussian_blur,
                 edge_enhance, detail_enhance) -> io.NodeOutput:
-        """Adjust every image of the batch.
+        """Adjust the whole batch on ComfyUI's compute device, a run of frames at a time.
 
         Raises:
             MemoryError: Neither free memory nor a scratch drive can hold the result.
         """
-        from ....modules.image import scratch
+        from ....modules.image import accelerate, pillow_exact
 
-        settings = (brightness, contrast, saturation, sharpness, blur, gaussian_blur,
-                    edge_enhance, detail_enhance)
+        settings = pillow_exact.Adjustments(
+            brightness, contrast, saturation, sharpness, blur, gaussian_blur, edge_enhance,
+            detail_enhance,
+        )
 
         # Publishes the input for a preview panel to apply the settings to.
         preview.publish(image)
 
-        scale = dynamic.peak(image) if dynamic.carries(image) else 1.0
-        if len(image) > 1:
-            adjusted_batch = None
-            for index, plane in enumerate(image):
-                folded = dynamic.fold(plane, scale)
-                adjusted, img = filter_adjustments(folded.images, *settings)
-                frame = pil2tensor(adjusted)[0] if adjusted is not None else img
-                if adjusted_batch is None:
-                    shape = (len(image),) + tuple(frame.shape)
-                    adjusted_batch = (
-                        scratch.allocate(
-                            shape,
-                            frame.dtype,
-                            node="Image Filter Adjustments",
-                            advice="Passing fewer frames also fits it.",
-                        )
-                        if frame.device.type == "cpu"
-                        else torch.empty(shape, dtype=frame.dtype, device=frame.device)
-                    )
-                adjusted_batch[index] = frame
-                if folded.scale != 1.0:
-                    adjusted_batch[index].mul_(folded.scale)
-        else:
-            folded = dynamic.fold(image, scale)
-            adjusted, img = filter_adjustments(folded.images, *settings)
-            adjusted_batch = pil2tensor(adjusted) if adjusted is not None else img
-            adjusted_batch = dynamic.unfold(adjusted_batch, folded)
-
-        return io.NodeOutput(adjusted_batch)
+        frames = as_batch(image)
+        scale = dynamic.factor(frames)
+        return io.NodeOutput(accelerate.run_frames(
+            frames,
+            lambda run: pillow_exact.adjust(run, settings, scale),
+            factor=pillow_exact.working_copies(frames, float(gaussian_blur)),
+            node="Image Filter Adjustments",
+            advice="Passing fewer frames also fits it.",
+            runs=PROGRESS_RUNS,
+        ))

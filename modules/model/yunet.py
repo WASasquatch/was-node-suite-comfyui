@@ -208,7 +208,8 @@ def detect(
     import torch
 
     framed, scale, left, top = _letterbox(image, detector.width, detector.height)
-    blob = framed.astype(np.float32).transpose(2, 0, 1)[None]
+    # The network reads its channels in BGR order.
+    blob = np.ascontiguousarray(framed[..., ::-1].astype(np.float32).transpose(2, 0, 1)[None])
 
     backend = detector.network
     device = backend.load()

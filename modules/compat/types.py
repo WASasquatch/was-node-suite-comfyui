@@ -16,6 +16,7 @@ __all__ = [
     "CLIPSEG_MODEL",
     "CONDITIONING_SEQ",
     "CROP_DATA",
+    "DATASET",
     "DICT",
     "DOC",
     "EMA_VFI_MODEL",
@@ -133,6 +134,11 @@ MOTION_MODEL = io.Custom("WAS_MOTION_MODEL")
 #: `modules.model.Backend` holding the interpolation network and the checkpoint it was
 #: built from.
 EMA_VFI_MODEL = io.Custom("EMA_VFI_MODEL")
+
+#: Pictures and their captions, from `Load Dataset` to every dataset node. Carries a
+#: `modules.dataset.dataset.Dataset`, an immutable value: a node that changes it answers a new
+#: one, so one dataset may feed any number of nodes.
+DATASET = io.Custom("WAS_DATASET")
 
 #: The dictionary passed between the dictionary nodes. Wire-compatible with core's
 #: `io.Dict`, which emits the same io_type; declared here so all custom sockets resolve

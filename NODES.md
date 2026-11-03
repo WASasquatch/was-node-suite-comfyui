@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **664** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **678** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-578 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+592 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 422 |
+| [Always loaded](#always-loaded) | always on | 436 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,15 +41,16 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-422 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+436 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
 - [WAS Suite/Conditioning](#was-suiteconditioning) (2)
+- [WAS Suite/Dataset](#was-suitedataset) (8)
 - [WAS Suite/Debug](#was-suitedebug) (4)
 - [WAS Suite/Document](#was-suitedocument) (6)
 - [WAS Suite/History](#was-suitehistory) (2)
-- [WAS Suite/IO](#was-suiteio) (18)
+- [WAS Suite/IO](#was-suiteio) (19)
 - [WAS Suite/Image](#was-suiteimage) (12)
 - [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (10)
 - [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (4)
@@ -77,10 +78,10 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Sampling](#was-suitesampling) (31)
 - [WAS Suite/Text](#was-suitetext) (10)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
-- [WAS Suite/Text/List](#was-suitetextlist) (9)
-- [WAS Suite/Text/Operations](#was-suitetextoperations) (6)
+- [WAS Suite/Text/List](#was-suitetextlist) (11)
+- [WAS Suite/Text/Operations](#was-suitetextoperations) (7)
 - [WAS Suite/Text/Parse](#was-suitetextparse) (3)
-- [WAS Suite/Text/Search](#was-suitetextsearch) (5)
+- [WAS Suite/Text/Search](#was-suitetextsearch) (7)
 - [WAS Suite/Text/Styles](#was-suitetextstyles) (5)
 - [WAS Suite/Text/System Prompts](#was-suitetextsystem-prompts) (2)
 - [WAS Suite/Text/Terminology](#was-suitetextterminology) (4)
@@ -1249,6 +1250,247 @@ Turn a Fibo 2.0 caption into conditioning, with up to five images to edit. Hands
 
 </details>
 
+### WAS Suite/Dataset
+
+<a id="node-wascaptionstatistics"></a>
+<details>
+<summary><b>Caption Statistics</b></summary>
+
+Measure a set of captions, from a text list or a dataset, before training: word counts, repeats, short or overlong captions, how many name the subject, and the phrases most of them share, which a LoRA learns to lean on. Hands on a report, the phrase list, the flagged captions and two 0 to 1 scores.
+
+| | |
+|---|---|
+| Node id | `WASCaptionStatistics` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `subject` | `STRING` | Yes | [trigger] |  | What every caption should name: `[trigger]`, `woman`, `ohwx man`. Case ignored, whole words. Phrases holding it leave the phrase table; coverage counts captions holding it. Empty = no subject check. |
+| `min_words` | `INT` | Yes | 5 |  | 0 = off; 5 = a caption under 5 words is flagged short and lowers consistency. |
+| `max_words` | `INT` | Yes | 0 |  | 0 = off; 75 = a caption over 75 words is flagged long, which is about where a CLIP text encoder cuts a caption off. |
+| `top` | `INT` | Yes | 40 |  | Most phrases in the table and the phrases output, most frequent first. 40 = the forty phrases in the most captions. |
+| `text` | `STRING,ARRAY` | No |  |  | The captions, one per picture, such as Load Text Batch's text. A LIST of captions works too. A blank entry counts as an empty caption. Ignored while dataset is wired. |
+| `names` | `ARRAY,STRING` | No |  |  | One name per caption, in the captions' order, such as Load Image Batch's filename_list, so flagged captions are named. A caption with no name is shown by its position, counted from 0. Ignored while dataset is wired. |
+| `dataset` | `WAS_DATASET` | No |  |  | Unwired = captions come from text; wired = the captions and names of a dataset, such as Load Dataset's, as edited upstream. A picture with no caption counts as an empty one. text and names are ignored while it is wired. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `report` | `STRING` | The figures as plain text: counts, word lengths, consistency, subject coverage, the phrase table and every flagged caption with its reasons. |
+| `phrases` | `ARRAY` | The phrases or tags in two or more captions, most frequent first, up to top. Empty when no phrase repeats. |
+| `flagged` | `ARRAY` | Names of the captions flagged empty, short, long, identical or missing the subject, in caption order. Empty when none is. |
+| `consistency` | `FLOAT` | 0 to 1; 1 = even lengths, no repeats, nothing short. Length spread costs up to half; identical and short captions cost their share. |
+| `coverage` | `FLOAT` | 0 to 1: share of captions holding the subject; 1 = every caption. 0 when subject is empty. |
+
+</details>
+
+<a id="node-wasdatasetfilter"></a>
+<details>
+<summary><b>Dataset Filter</b></summary>
+
+Split a dataset into the items to keep and the rest: by a list of names, such as the pictures Dataset Health flagged, by whether a caption is there, or by words the caption holds. Both halves are datasets, so each can be edited, saved or checked on its own.
+
+| | |
+|---|---|
+| Node id | `WASDatasetFilter` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `dataset` | `WAS_DATASET` | Yes |  |  | The dataset to split, from Load Dataset or any node that hands one on. It is left as it is for every other node reading it. |
+| `keep` | `COMBO` | Yes | captioned | `named`, `not named`, `captioned`, `uncaptioned`, `caption matches`, `caption does not match` | `named` / `not named` = the items names lists, or the rest; `captioned` / `uncaptioned` = items with a caption, or without; `caption matches` / `caption does not match` = captions holding a find term, or the rest, uncaptioned items among them. |
+| `find` | `STRING` | Yes | [trigger] |  | For the caption keeps: words or phrases separated by commas, any of which matches, as `[trigger], red hair`. Whole words, case ignored; `[trigger]` is matched as written. |
+| `names` | `ARRAY,STRING` | No |  |  | For named and not named: the item names to pick, as Dataset Health's flagged or Text List Filter's names. `cat`, `cat.png` and `set_b/cat` all work; several lines are several names. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `dataset` | `WAS_DATASET` | The items kept, in their order, for Save Dataset, Dataset to Lists or another filter. May hold no item. |
+| `removed` | `WAS_DATASET` | The items not kept, in their order: the flagged pictures, or the captions still missing the trigger, to fix on their own. |
+| `count` | `INT` | How many items were kept. |
+| `removed_count` | `INT` | How many items were removed. 0 = every item was kept. |
+
+</details>
+
+<a id="node-wasdatasethealth"></a>
+<details>
+<summary><b>Dataset Health</b></summary>
+
+Check a set of training pictures and their captions, from a folder or a dataset, before training: caption coverage and consistency, picture quality flags, near-duplicates, aspect balance and, on request, faces. Draws a score radar, the measurements and every flagged picture on the node, and hands on a report, the scores and the flagged and duplicate names.
+
+| | |
+|---|---|
+| Node id | `WASDatasetHealth` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder of pictures to check. A bare 'input' is that folder itself; 'lora/cats [input]' is that folder below it. Folders under paths.allow_read in config.yaml are listed under their own names. Ignored while dataset is wired. A wired path, such as `E:\images`, works too. |
+| `pattern` | `STRING` | Yes | * |  | Which files to check. '*' = every picture in the folder; 'shot_*.png' = only those; '**/*' = subfolders too. Files that are not pictures are skipped whatever the pattern says. Ignored while dataset is wired. |
+| `caption_extension` | `STRING` | Yes | .txt |  | The caption file beside each picture, under the same name: '.txt' = cat.png reads cat.txt; '.caption' = cat.caption. A picture with no such file counts as uncaptioned. Ignored while dataset is wired. |
+| `subject` | `STRING` | Yes | [trigger] |  | What every caption should name: `[trigger]`, `ohwx woman`. Case ignored, whole words. Captions holding it are counted; phrases holding it leave the phrase list. Empty = no subject check. |
+| `target_side` | `INT` | Yes | 768 |  | 0 = no size check; 768 = a picture whose short side is under 768 pixels is flagged small. Set it to the resolution the set trains at. |
+| `check_faces` | `BOOLEAN` | Yes | False |  | `off` = no face check; `on` = count the faces in every picture, flag no face, several faces or a face under 5% of the picture's height, and add a faces score: the share with exactly one face. For a character set. |
+| `min_words` | `INT` | Yes | 5 |  | 0 = off; 5 = a caption under 5 words counts as short and lowers consistency. |
+| `dataset` | `WAS_DATASET` | No |  |  | Unwired = the folder is read; wired = a dataset, such as Load Dataset's, measured as it stands, with captions and pictures edited upstream and not yet saved. folder, pattern and caption_extension are ignored while it is wired. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `report` | `STRING` | The figures as plain text: the score table, the caption and picture measurements, the flag counts, every flagged picture with its reasons and every near-duplicate pair. |
+| `scores` | `DICT` | Each score from 0 to 1, 1 = healthy: captions, consistency, quality, uniqueness, balance, and faces while check_faces is on. |
+| `flagged` | `ARRAY` | Names of the pictures carrying any flag, most flags first: below the folder, as 'set/cat_03.png', or the dataset's own names, as 'set/cat_03'. Empty when nothing is flagged. |
+| `duplicates` | `ARRAY` | One 'a.png \| b.png' entry per near-duplicate pair, closest first: a resized, re-saved or mirrored copy. Empty when there is none. |
+
+</details>
+
+<a id="node-wasdatasetmerge"></a>
+<details>
+<summary><b>Dataset Merge</b></summary>
+
+Join two datasets into one, the second's items after the first's, so sets loaded from several folders are checked, edited and saved together. A name the first already holds is numbered, as `cat_2`, so no item is lost.
+
+| | |
+|---|---|
+| Node id | `WASDatasetMerge` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `dataset_a` | `WAS_DATASET` | Yes |  |  | The first dataset. Its items come first and keep their names. |
+| `dataset_b` | `WAS_DATASET` | Yes |  |  | The second dataset. Its items follow; one whose name dataset_a already holds, case ignored, is renamed `cat_2`, `cat_3` and so on. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `dataset` | `WAS_DATASET` | Every item of both, dataset_a's first. Save Dataset writes a renamed item under its new name, as cat_2.png with cat_2.txt. |
+| `count` | `INT` | How many items the joined dataset holds. |
+| `renamed` | `INT` | How many of dataset_b's items took a number. 0 = no name was shared. |
+
+</details>
+
+<a id="node-wasdatasettolists"></a>
+<details>
+<summary><b>Dataset to Lists</b></summary>
+
+Open a dataset into lists of its pictures, captions and names, in the same order, so any image or text node can work on them. Dataset Update puts the results back into the dataset.
+
+| | |
+|---|---|
+| Node id | `WASDatasetToLists` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `dataset` | `WAS_DATASET` | Yes |  |  | The dataset to open, such as from Load Dataset. |
+| `pictures` | `BOOLEAN` | Yes | True |  | `on` = decode every picture onto the images output; `off` = captions and names only, and images stops the nodes it feeds. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | One picture per entry, so a node wired here runs once per picture. |
+| `captions` | `STRING` | One caption per picture, empty where a picture has none. |
+| `names` | `STRING` | Each picture's name below its folder without extension, such as `set_b/cat`, for Dataset Update's names or Save Text File's filenames. |
+| `caption_list` | `ARRAY` | The captions on one wire, as a LIST. |
+| `name_list` | `ARRAY` | The names on one wire, as a LIST. |
+| `count` | `INT` | How many pictures the dataset holds. |
+
+</details>
+
+<a id="node-wasdatasetupdate"></a>
+<details>
+<summary><b>Dataset Update</b></summary>
+
+Put edited captions or pictures back into a dataset, such as captions from Text Replace Words or pictures from a resize, and hand on the updated copy. The dataset wired in is left as it was, so other nodes reading it are unaffected.
+
+| | |
+|---|---|
+| Node id | `WASDatasetUpdate` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `dataset` | `WAS_DATASET` | Yes |  |  | The dataset to update, such as from Load Dataset. |
+| `captions` | `STRING,ARRAY` | No |  |  | New captions, one per picture in the dataset's order, or one per name when names is wired. A blank caption leaves its picture uncaptioned. |
+| `images` | `IMAGE` | No |  |  | New pictures, one per picture in the dataset's order, or one per name. |
+| `names` | `STRING,ARRAY` | No |  |  | The names the captions and images belong to, such as Dataset to Lists' names after a filter. Unwired, they pair by position. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `dataset` | `WAS_DATASET` | The updated copy of the dataset. |
+| `changed` | `INT` | How many pictures took a new caption or a new picture. 0 = nothing changed. |
+
+</details>
+
+<a id="node-wasloaddataset"></a>
+<details>
+<summary><b>Load Dataset</b></summary>
+
+Load a folder of training pictures and the caption saved beside each one as a dataset, read once and shared by every dataset node it feeds. Pictures are decoded only when a node needs their pixels.
+
+| | |
+|---|---|
+| Node id | `WASLoadDataset` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `folder` | `COMBO,STRING` | Yes |  |  | The folder holding the pictures: 'input' is ComfyUI's input folder itself; 'training/lara [input]' is that folder inside it. A wired path, such as `E:\images`, works too. |
+| `pattern` | `STRING` | Yes | * |  | Which pictures to load: `*` = every picture in the folder; `**/*` = in subfolders too; `lara_*` = only names starting so. |
+| `caption_extension` | `STRING` | Yes | .txt |  | Extension of the caption beside each picture: `.txt` reads cat.txt for cat.png. A picture with no such file is loaded uncaptioned. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `dataset` | `WAS_DATASET` | The pictures and their captions, for Dataset to Lists, Dataset Filter, Dataset Health, Caption Statistics and Save Dataset. |
+| `count` | `INT` | How many pictures were loaded. |
+| `captioned` | `INT` | How many of them carry a caption. |
+| `folder` | `STRING` | The picked folder below its root with a trailing slash: `training/tus [input]` = `training/tus/`; a root itself = empty. Wire it into a save node's folder or filename_prefix to write back in place. |
+
+</details>
+
+<a id="node-wassavedataset"></a>
+<details>
+<summary><b>Save Dataset</b></summary>
+
+Write a dataset's captions back beside its pictures, or export a copy of the set, pictures and captions, into another folder. Every file takes its item's name, so edited captions return to the pictures they describe.
+
+| | |
+|---|---|
+| Node id | `WASSaveDataset` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `dataset` | `WAS_DATASET` | Yes |  |  | The pictures and captions to write: from Load Dataset, or Dataset Update after the captions were edited. Each item is written under its own name, such as `cat` or `set_b/cat`. |
+| `root` | `COMBO` | Yes |  |  | `input`, `output` or `temp` = ComfyUI's own folders, `input` being where Load Dataset reads; any folder under paths.allow_write or paths.allow_read in config.yaml is listed by its own name. folder names the path below it. |
+| `folder` | `STRING` | Yes |  |  | Folder below root, as `lora/cats`; empty = root itself. Tokens are expanded, as `export/[time(%Y-%m-%d)]`. Point root and folder at the dataset's own folder to save captions back in place. |
+| `write` | `COMBO` | Yes |  | `captions`, `pictures and captions` | `captions` = only the caption files, beside pictures already there; `pictures and captions` = a copy of the set: each picture copied byte for byte, or saved as PNG where a node replaced it, with its caption. |
+| `caption_extension` | `STRING` | Yes | .txt |  | The caption file's ending: `.txt` writes cat.txt beside cat.png; `.caption` writes cat.caption. An item with no caption writes no caption file, and nothing is ever deleted. |
+| `existing` | `COMBO` | Yes | skip | `replace`, `skip`, `number` | Where a file is already there: `replace` = write over it when its content differs, leave it when the same; `skip` = leave it alone; `number` = write under the next free name, as cat_0001.png with cat_0001.txt. |
+
+</details>
+
 ### WAS Suite/Debug
 
 <a id="node-debug-number-to-console"></a>
@@ -1803,6 +2045,7 @@ Load one image from a folder by index, in sequence or at random, or every image 
 | `filename_text` | `STRING` | That image's own file name, without the folders leading to it, for reuse as a caption or a save prefix. |
 | `image_list` | `IMAGE` | One image at a time rather than one batch, so a node wired here runs once per image. On `all_images` that is every match in the folder; on the other three modes it is the one image this run selected. |
 | `filename_list` | `STRING` | One name per image, in the same order as image_list, extension dropped. Wired into Image Save's filenames, each image is saved under its own name, with its caption beside it when captions is wired too. |
+| `folder` | `STRING` | The picked folder below its root with a trailing slash: `training/tus [input]` = `training/tus/`; a root itself = empty. Wire it into a save node's filename_prefix to write back into the same folder. |
 
 </details>
 
@@ -1846,6 +2089,39 @@ Load a numbered image sequence from a folder as one batch, in filename order, re
 | `filenames` | `STRING` | The filename of each loaded frame, in order, one per line. |
 | `image_list` | `IMAGE` | The same frames as one image each rather than one batch, so a node wired here runs once per frame. Pair it with filename_list to put every frame through Image Save under its own name. |
 | `filename_list` | `STRING` | One name per frame, in the same order as image_list, with the extension dropped so it can be wired straight into Image Save's filename_prefix. Image Save adds the extension it writes. |
+
+</details>
+
+<a id="node-wasloadtextbatch"></a>
+<details>
+<summary><b>Load Text Batch</b></summary>
+
+Read a folder of text files, such as a training set's captions, as one LIST and as a STRING list that runs the graph below once per file, each with its name. Wired filenames read the caption beside each image instead, in the images' order, ready to edit and save back by name.
+
+| | |
+|---|---|
+| Node id | `WASLoadTextBatch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `folder` | `COMBO,STRING` | Yes |  |  | Which folder to read. A bare 'input', 'output' or 'temp' is that folder itself; 'training/cats [input]' is that folder below it. Folders under paths.allow_read in config.yaml are listed under their own names. A wired path, such as `E:\images`, works too. |
+| `pattern` | `STRING` | Yes | *.txt |  | Which files to read when filenames is not wired: `*.txt` = every .txt in the folder; `**/*.txt` = in its subfolders too; `cat_*.txt` = only those named that way. Ignored while filenames is wired. |
+| `extension` | `STRING` | Yes | .txt |  | Ending added to each wired name: `.txt` reads cat.txt for `cat`; `.caption` reads cat.caption. An image ending on the name, as `cat.png`, is dropped first. Ignored while filenames is not wired. |
+| `filenames` | `ARRAY,STRING` | No |  |  | One name per text to read, as filename_list from Load Image Batch: `cat` reads cat.txt, `set_b/cat` reads set_b/cat.txt. A name with no readable file gives an empty text in its place, so entry 3 always belongs to name 3. Several lines are several names. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `texts` | `ARRAY` | Every text on one wire, in order, for Text List Get, Text List Slice and Text List Length. Entry 3 here is the text of name 3 in names. |
+| `names` | `ARRAY` | The name each text came from, on one wire and in the same order: the path below the folder without its ending, as `cat` or `set_b/cat`, the form Image Save and Save Text File take as filenames. |
+| `text` | `STRING` | The same texts as a STRING list, so the graph below runs once per file: wire it into a text edit, then into Save Text File's text. |
+| `name` | `STRING` | The name that goes with each run of text. Wire it into Save Text File's filenames to write each edited text back under its own name. |
+| `count` | `INT` | How many entries both lists hold: files read, or names wired. |
+| `missing` | `INT` | 0 = every wired name had a readable file; 3 = three names got an empty text. Always 0 while filenames is not wired. The log names each file that was unreadable or not UTF-8. |
+| `folder` | `STRING` | The picked folder below its root with a trailing slash: `training/tus [input]` = `training/tus/`; a root itself = empty. Wire it into Save Text File's filename_prefix to write back into the same folder. |
 
 </details>
 
@@ -2055,7 +2331,7 @@ Check whether a file or folder is on disk before anything reads or writes it, wi
 <details>
 <summary><b>Save Text File</b></summary>
 
-Write text to a numbered file in the folder picked with root, named from filename_prefix, the number and an optional suffix. Tokens in the prefix expand, so a date can name a subfolder or the file. Padding 0 writes the same file every run.
+Write text to a numbered file in the folder picked with root, named from filename_prefix, the number and an optional suffix; a STRING list writes one file per text. Wired filenames write each text under its own name instead, so edited captions go back beside their images. Padding 0 drops the number and replaces the file.
 
 | | |
 |---|---|
@@ -2066,14 +2342,15 @@ Write text to a numbered file in the folder picked with root, named from filenam
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `text` | `STRING` | Yes |  |  | File contents; STRING, as `a tabby cat`. Written exactly as given. Empty writes an empty file. |
-| `root` | `COMBO` | Yes |  |  | Which folder the file lands in: ComfyUI's own 'output' or 'temp', or any folder added under paths.allow_write in config.yaml, listed by its own name. filename_prefix names the part below it, so '[time(%Y-%m-%d)]/notes' files each day's under a dated folder. |
-| `filename_prefix` | `STRING` | Yes | ComfyUI |  | The name part of each file, before the number. Tokens are expanded here too, so a date or a custom token can go in the name rather than the folder. |
+| `text` | `STRING` | Yes |  |  | File contents; STRING, as `a tabby cat`, written exactly as given. A STRING list writes one file per text. Empty writes an empty file; with filenames wired, an empty text leaves its file alone. |
+| `root` | `COMBO` | Yes |  |  | `output`, `temp` or `input` = ComfyUI's own folders, `input` being where loaders read uploads and datasets from; any folder under paths.allow_write or paths.allow_read in config.yaml is listed by its own name. filename_prefix names the path below it. |
+| `filename_prefix` | `STRING` | Yes | ComfyUI |  | Folders and name below root: `notes/day` writes notes/day_0001.txt. Tokens are expanded, as `[time(%Y-%m-%d)]/notes`. Wired filenames replace the name and keep the folders: `training/cats/` and `cat` write training/cats/cat.txt. |
 | `filename_delimiter` | `STRING` | Yes | _ |  | What sits between the name and the number: 'ComfyUI_0001.txt' with the default, 'ComfyUI0001.txt' if cleared. |
-| `filename_number_padding` | `INT` | Yes | 4 |  | How many digits the number is padded to with leading zeros: 4 gives '_0001', 1 gives '_1'. Set it to 0 to drop the number and the delimiter entirely and write to the same file every run, replacing what was there. |
+| `filename_number_padding` | `INT` | Yes | 4 |  | 4 = '_0001'; 1 = '_1'; 0 = no number, one file replaced every run. With filenames, 0 writes each name as given, leaving a file already holding its text untouched; above 0 numbers it and never replaces. |
 | `file_extension` | `STRING` | No | .txt |  | Ending of the file name, leading dot included: '.txt', '.json', '.csv'. It only names the file; the text is written exactly as it arrives either way. |
 | `encoding` | `STRING` | No | utf-8 |  | Character encoding the file is written in. 'utf-8' handles every language and is what almost everything reads; change it only for a program that insists on something else, such as 'latin-1'. |
 | `filename_suffix` | `STRING` | No |  |  | Extra text placed after the number and before the extension, so a suffix of '_caption' gives 'ComfyUI_0001_caption.txt'. Empty by default. |
+| `filenames` | `ARRAY,STRING` | No |  |  | One name per text, as names from Load Text Batch or filename_list from Load Image Batch: `cat` writes cat.txt, `set_b/cat` writes set_b/cat.txt, below filename_prefix's folders. One text for every name, or one per name. Several lines are several names. |
 
 </details>
 
@@ -3484,7 +3761,7 @@ Add a soft halo of light around the bright, detailed parts of an image, the way 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `image` | `IMAGE` | Yes |  |  | The image to add the glow to. A batch is handled one image at a time. |
+| `image` | `IMAGE` | Yes |  |  | The image or batch to add the glow to. A batch is processed together on the GPU where there is one, and a fourth channel passes through. |
 | `radius` | `FLOAT` | Yes | 10 |  | How far the glow spreads, in pixels. 2 gives a tight sheen on edges, 10 a visible halo, 50 a broad wash of light over the whole frame. 0 leaves the image unchanged. |
 | `intensity` | `FLOAT` | Yes | 1 |  | How bright the glow is. 0.0 adds nothing, 0.3 is a subtle lift, 1.0 is the full effect. |
 
@@ -3710,7 +3987,7 @@ The everyday image controls in one node: brightness, contrast, saturation, sharp
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `image` | `IMAGE` | Yes |  |  | The image to adjust. A batch is handled one image at a time. |
+| `image` | `IMAGE` | Yes |  |  | The image or batch to adjust. A batch is adjusted together on the GPU where there is one. |
 | `brightness` | `FLOAT` | Yes | 0.0 |  | Added to every pixel, where 1.0 is the whole black-to-white range. 0.0 leaves the image alone, 0.1 lifts it slightly, -0.25 darkens it noticeably. |
 | `contrast` | `FLOAT` | Yes | 1.0 |  | Every pixel is multiplied by this, so it brightens as it separates. 1.0 leaves the image alone, 1.3 is a firm push, 0.7 flattens it, and negative values invert and clip it to mostly black. |
 | `saturation` | `FLOAT` | Yes | 1.0 |  | Colour strength. 1.0 leaves the image alone, 0.0 gives black and white, 2.0 doubles the colour, 5.0 is poster-like. |
@@ -12279,6 +12556,40 @@ Join up to 24 lists end to end, in socket order. Unconnected inputs are skipped.
 
 </details>
 
+<a id="node-wastextlistfilter"></a>
+<details>
+<summary><b>Text List Filter</b></summary>
+
+Keep the entries of a text list that match a search, or the ones that do not, such as every caption that mentions a woman. Names wired beside the texts, such as file names, are kept in step, so each caption stays paired with its file.
+
+| | |
+|---|---|
+| Node id | `WASTextListFilter` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `texts` | `ARRAY,STRING` | Yes |  |  | The entries to filter: a LIST, such as Text Split to List's, or a STRING list, such as the captions Load Text Batch reads. Each entry is tested whole. |
+| `find` | `STRING` | Yes |  |  | What to look for. `woman, girl` = either term; with match `regex` the whole box is one pattern, as `\d+ steps`. Empty matches every entry; match `is empty` ignores it. |
+| `match` | `COMBO` | Yes |  | `contains`, `whole words`, `starts with`, `ends with`, `regex`, `is empty` | `contains` = a term anywhere; `whole words` = `cat` but not `category`; `starts with` / `ends with` = at either end, spaces aside; `regex` = a regular expression; `is empty` = blank or only spaces. |
+| `ignore_case` | `BOOLEAN` | Yes | True |  | On = `Woman` matches `woman`; off = case must match. |
+| `keep` | `COMBO` | Yes |  | `matching`, `not matching` | `matching` = keep the entries that match and drop the rest; `not matching` = drop the entries that match, as captions still missing `[trigger]`. |
+| `names` | `ARRAY,STRING` | No |  |  | Optional names running beside texts, one per text, as the filename_list from Load Image Batch. Kept and dropped with their texts. Another count than texts stops the run. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `texts` | `ARRAY` | The entries kept, in their order, on one wire for Text List Get, Text List to Text and the other list nodes. Empty when nothing was kept. |
+| `names` | `ARRAY` | The names of the entries kept, in step with texts. Empty when names is not wired. |
+| `text` | `STRING` | The entries kept as a STRING list, so a node reading it runs once per entry, such as Save Text File. Nothing kept stops the nodes reading it. |
+| `name` | `STRING` | The names kept as a STRING list, in step with text, for Save Text File's filenames. Stops the nodes reading it when names is not wired or nothing was kept. |
+| `count` | `INT` | How many entries were kept. |
+| `removed` | `INT` | How many entries were dropped. 0 = every entry was kept. |
+
+</details>
+
 <a id="node-wastextlistget"></a>
 <details>
 <summary><b>Text List Get</b></summary>
@@ -12360,6 +12671,41 @@ Take a run of entries out of a list, from start to end with both ends included, 
 | `<output0>` | `ARRAY` | The entries taken, on one wire, for Text List Get, Text List Concatenate and Text List to Text. |
 | `strings` | `STRING` | The same entries as a STRING list: a node reading it runs once per entry, so wired into a sampler's prompt it renders every line of the range in turn. An entry that is not text is converted to it. |
 | `count` | `INT` | How many entries the range took. |
+
+</details>
+
+<a id="node-wastextlistsort"></a>
+<details>
+<summary><b>Text List Sort</b></summary>
+
+Put the entries of a text list in order: alphabetical, natural so img2 comes before img10, by length, or shuffled by a seed, optionally dropping repeats and blank entries. Names wired beside the texts, such as file names, move with their texts.
+
+| | |
+|---|---|
+| Node id | `WASTextListSort` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `texts` | `ARRAY,STRING` | Yes |  |  | The entries to order: a LIST, such as Text Split to List's, or a STRING list, such as the captions Load Text Batch reads. |
+| `order` | `COMBO` | Yes |  | `as given`, `a-z`, `z-a`, `natural`, `shortest first`, `longest first`, `shuffle` | `as given` = unchanged; `a-z` / `z-a` = alphabetical; `natural` = digits read as numbers, img2 before img10; `shortest first` / `longest first` = by length; `shuffle` = random, set by seed. |
+| `seed` | `INT` | Yes | 0 |  | The shuffle's seed: the same seed and list always give the same order; another seed gives another. Read only by order `shuffle`. |
+| `dedupe` | `BOOLEAN` | Yes | False |  | On = an entry repeating an earlier one is dropped, the first kept, so `a cat` and ` a cat ` leave one; off = repeats stay. |
+| `ignore_case` | `BOOLEAN` | Yes | True |  | On = `Cat` and `cat` sort together and count as repeats for dedupe; off = capitals sort before lower case and differ. |
+| `drop_empty` | `BOOLEAN` | Yes | False |  | On = an entry holding nothing or only spaces is dropped, so 3 captions with 1 blank give 2; off = blanks stay in place. |
+| `names` | `ARRAY,STRING` | No |  |  | Optional names running beside texts, one per text, as the filename_list from Load Image Batch. Each moves and drops with its text. Another count than texts stops the run. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `texts` | `ARRAY` | The entries in their new order, on one wire for Text List Get, Text List to Text and the other list nodes. |
+| `names` | `ARRAY` | The names in the same order as texts. Empty when names is not wired. |
+| `text` | `STRING` | The entries in their new order as a STRING list, so a node reading it runs once per entry. An empty list stops the nodes reading it. |
+| `name` | `STRING` | The names as a STRING list, in step with text. Stops the nodes reading it when names is not wired or the list is empty. |
+| `count` | `INT` | How many entries came out. |
+| `removed` | `INT` | How many entries dedupe and drop_empty took out. 0 = every entry came through. |
 
 </details>
 
@@ -12479,7 +12825,7 @@ Split text into a list on a delimiter, line breaks, whitespace, a regular expres
 <details>
 <summary><b>Prompt Tag Cleanup</b></summary>
 
-Split a prompt into tags, drop the duplicates and the empty ones, optionally sort and cap the count, and join it back up. Emphasis such as (tag:1.4) is recognised as the same tag as the plain spelling.
+Tidy a tag prompt or caption: rename or drop the tags named, drop duplicates and empty tags, optionally sort and cap the count, and join it back up. Emphasis such as (tag:1.4) counts as the same tag as the plain spelling, so a weighted tag is found and keeps its weight.
 
 | | |
 |---|---|
@@ -12494,13 +12840,16 @@ Split a prompt into tags, drop the duplicates and the empty ones, optionally sor
 | `delimiter` | `STRING` | Yes | , |  | What separates one tag from the next in the incoming text. Leave it empty to treat every word as its own tag. Type \n to split a prompt written one tag to a line. |
 | `join_with` | `STRING` | Yes | , |  | What is put between the tags on the way out. The default ', ' is the ordinary prompt spelling; type \n to get one tag per line, which is easier to read in a saved text file. |
 | `dedupe` | `BOOLEAN` | Yes | True |  | Whether a tag appearing more than once is reduced to one. The survivor keeps the position of the first occurrence, so tidying does not reshuffle the prompt. |
-| `ignore_case` | `BOOLEAN` | Yes | True |  | Whether 'Neon Glow' and 'neon glow' count as the same tag. Off, both survive, which is only useful where a downstream tool treats capitalisation as meaningful. |
-| `ignore_emphasis` | `BOOLEAN` | Yes | True |  | Whether '(neon glow:1.4)' counts as the same tag as 'neon glow'. On with keep set to 'last' is the combination that collapses a prompt onto its weighted spellings, which is normally the intended one, the plain duplicate is usually what a second source contributed. |
+| `ignore_case` | `BOOLEAN` | Yes | True |  | Whether 'Neon Glow' and 'neon glow' count as the same tag, for dedupe, remove and replace. Off, both survive dedupe, which suits a downstream tool that treats capitalisation as meaningful. |
+| `ignore_emphasis` | `BOOLEAN` | Yes | True |  | Whether '(neon glow:1.4)' counts as the same tag as 'neon glow', for dedupe, remove and replace. On with keep set to 'last' collapses a prompt onto its weighted spellings. |
 | `keep` | `COMBO` | Yes |  | `first`, `last` | Which of a set of duplicates survives. `first` keeps the earliest spelling, `last` the latest. Position is the first occurrence either way, so keeping the last spelling does not move the tag to the end of the prompt. |
 | `remove_empty` | `BOOLEAN` | Yes | True |  | Whether tags holding nothing are dropped. This is what clears the run of bare commas an unconnected input leaves behind, which otherwise reaches the text encoder as it stands. |
 | `collapse_whitespace` | `BOOLEAN` | Yes | True |  | Whether runs of spaces, tabs and line breaks inside a tag become a single space. This is what removes the line breaks a multi-line prompt box leaves in the middle of a tag. |
-| `sort` | `COMBO` | Yes |  | `none`, `a-z`, `z-a`, `shortest first`, `longest first` | How the surviving tags are ordered. `none` = as written, keeping the weight early tags carry in most encoders; `a-z` and `z-a` = alphabetical, for comparing prompts by eye; `longest first` = phrases ahead of single words; `shortest first` = the reverse. |
-| `limit` | `INT` | Yes | 0 |  | Keep at most this many tags, counted after everything else has run. 0 keeps all of them. Useful for trimming a caption model's output to the few tags worth keeping. |
+| `sort` | `COMBO` | Yes |  | `none`, `a-z`, `z-a`, `shortest first`, `longest first` | How the surviving tags are ordered. `none` = as written, keeping the weight early tags carry; `a-z` and `z-a` = alphabetical; `longest first` = phrases ahead of single words; `shortest first` = the reverse. Tags held by keep_first stay in front, unsorted. |
+| `limit` | `INT` | Yes | 0 |  | 0 = keep every tag; 20 = keep at most 20, counted after everything else has run, keep_first tags included and never cut. Trims a caption model's output to the tags worth keeping. |
+| `remove` | `STRING` | Yes |  |  | Tags to drop, comma separated, as `watermark, *background`. `*` stands for any run of characters, so `*background` drops `simple background` and `white background`. Compared using ignore_case and ignore_emphasis. Empty = drop nothing. |
+| `replace` | `STRING` | Yes |  |  | One rule per line, `old tag -> new tag`, as `woman -> [trigger]`. Whole tags only, compared like remove; a weighted tag keeps its weight. `watermark ->` drops the tag; `1girl -> [trigger], 1girl` makes two tags. Runs before remove. |
+| `keep_first` | `INT` | Yes | 0 |  | 0 = off; 2 = the first two tags left after replace, remove and dedupe stay where they are, unsorted and never cut by limit. Keeps a trigger word or a subject leading the prompt. |
 
 **Outputs**
 
@@ -12510,7 +12859,39 @@ Split a prompt into tags, drop the duplicates and the empty ones, optionally sor
 | `tags` | `ARRAY` | The surviving tags as one LIST, for Text List Get and the other list nodes. |
 | `tag_strings` | `STRING` | The same tags as a STRING list, so a node reading this runs once per tag, such as one render per tag. A prompt that tidies down to no tags stops the nodes reading this socket; the text output is still delivered. |
 | `count` | `INT` | How many tags survived. |
-| `removed` | `INT` | How many entries the tidy-up took out, counting duplicates, empties and anything past the limit. 0 means the prompt was already clean. |
+| `removed` | `INT` | How many tags the tidy-up took out: duplicates, empties, removed tags, tags replaced with nothing, and anything past the limit. 0 = nothing taken out. |
+
+</details>
+
+<a id="node-wastextcleanup"></a>
+<details>
+<summary><b>Text Cleanup</b></summary>
+
+Tidy a caption or prompt: change its letter case, collapse stray spaces and line breaks, fix the spacing around punctuation, settle how it ends and straighten curly quotes. Bracketed tokens such as [trigger] keep their case, and with every setting off the text passes through untouched.
+
+| | |
+|---|---|
+| Node id | `WASTextCleanup` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING` | Yes |  |  | The caption or prompt to tidy, as `a woman ,stands  on a beach,,`. Wired from a STRING list, the node runs once per text. |
+| `case` | `COMBO` | Yes | keep | `keep`, `lower`, `upper`, `sentence`, `title` | keep = as written; lower; upper; sentence = a capital starts each sentence; title = a capital starts each word. Bracketed tokens such as `[trigger]` keep their case, and sentence and title leave words like NASA or iPhone alone. |
+| `whitespace` | `BOOLEAN` | Yes | True |  | true = runs of spaces and tabs become one space and every line is trimmed, as `a  woman ` to `a woman`; false = spacing as written. |
+| `line_breaks` | `COMBO` | Yes | keep | `keep`, `one line` | `keep` = lines as written; `one line` = every line joined with a space and blank lines dropped, for a caption file or an encoder that wants a single line. |
+| `punctuation` | `BOOLEAN` | Yes | True |  | true = no space before , . ; : ! ?, one space after , ; : before a word, doubled commas and `. .` collapsed, and separators at either end of a line removed; false = punctuation as written. |
+| `ending` | `COMBO` | Yes | keep | `keep`, `period`, `none` | `keep` = as written; `period` = ends with a full stop unless it already ends in . ! or ?; `none` = closing full stops, commas and semicolons removed. |
+| `quotes` | `BOOLEAN` | Yes | False |  | true = curly quotes and apostrophes become straight ones, as “it’s” to "it's"; false = kept as written. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The tidied text. |
+| `changed` | `BOOLEAN` | true when a setting changed the text; false when it came through exactly as it went in. |
 
 </details>
 
@@ -12809,6 +13190,36 @@ Compare two strings, passing both through unchanged with an exact-match flag, a 
 
 </details>
 
+<a id="node-wastextextract"></a>
+<details>
+<summary><b>Text Extract</b></summary>
+
+Pull every match of a regular expression out of a text, or the part one group captures, such as the number in `30 steps`. The matches come out as one LIST, as the first match and its count, and as a STRING list that runs the nodes below once per match.
+
+| | |
+|---|---|
+| Node id | `WASTextExtract` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING` | Yes |  |  | The text searched, as `Steps: 30, CFG scale: 7`. Wired from a STRING list, the node runs once per entry. |
+| `pattern` | `STRING` | Yes |  |  | A regular expression, as `(\d+) steps` or `Steps: (\d+)`. Empty finds nothing. A search past 1 second stops with an error. |
+| `group` | `INT` | Yes | 0 |  | 0 = the whole match; 1 = the first parenthesised group, so `(\d+) steps` gives `30`; 2 = the second. A group the pattern lacks stops the run. |
+| `ignore_case` | `BOOLEAN` | Yes | True |  | On = `steps` matches `Steps`; off = case must match. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `matches` | `ARRAY` | Every match in order, on one wire for Text List Get, Text List Filter and the other list nodes. Empty when nothing matched. |
+| `first` | `STRING` | The first match, or an empty string when nothing matched. |
+| `count` | `INT` | How many matches were found. 0 = none. |
+| `match` | `STRING` | Every match as a STRING list, so a node reading it runs once per match. No match stops the nodes reading it. |
+
+</details>
+
 <a id="node-text-find"></a>
 <details>
 <summary><b>Text Find</b></summary>
@@ -12931,6 +13342,43 @@ Replace every literal occurrence of the find text and report how many replacemen
 | `replacement_count_number` | `NUMBER` | How many occurrences were replaced, for the NUMBER inputs of the suite's own maths and logic nodes. 0 means the term was not present. |
 | `replacement_count_float` | `FLOAT` | The same count as a decimal, for example 3.0. |
 | `replacement_count_int` | `INT` | The same count as a whole number, for a core INT input. |
+
+</details>
+
+<a id="node-wastextreplacewords"></a>
+<details>
+<summary><b>Text Replace Words</b></summary>
+
+Swap words and phrases across a whole batch of captions or prompts, such as every `a woman` or `woman` for `[trigger]`, and make sure each text holds a phrase. It matches whole words, keeps capitals, tidies the commas a deleted word leaves, and names the texts no rule matched.
+
+| | |
+|---|---|
+| Node id | `WASTextReplaceWords` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING,ARRAY` | Yes |  |  | The captions or prompts to change, as `a woman on a beach`: a STRING list such as Load Text Batch's texts, a LIST, or one text typed here. Order is kept, so each text still pairs with its file name. |
+| `rules` | `STRING` | Yes |  |  | One rule per line, as `a woman, the woman, woman -> [trigger]`: commas separate the finds, and nothing after the arrow deletes them, as `blurry ->`. Longer finds win. Lines starting with # and blank lines are skipped. Empty = no change. |
+| `whole_words` | `BOOLEAN` | Yes | True |  | true = `man` never matches inside `woman` or `manly`; false = finds match inside other words too. A find starting or ending in a symbol, such as `[trigger]` or `(red)`, matches wherever it stands. |
+| `ignore_case` | `BOOLEAN` | Yes | True |  | true = `woman` also finds `Woman` and `WOMAN`; false = only the spelling typed. The ensured phrase is looked for the same way. |
+| `keep_capitals` | `BOOLEAN` | Yes | True |  | true = `Woman` becomes `Person` and `WOMAN` becomes `PERSON`; false = every replacement as typed. A replacement not starting with a letter, such as `[trigger]`, is always written as typed. |
+| `tidy` | `BOOLEAN` | Yes | True |  | true = in each text a rule changed, doubled spaces, spaces before commas and the stray commas a deleted word leaves are cleared, so `a woman, , outdoors` becomes `a woman, outdoors`; false = only the replacements are made. |
+| `ensure` | `STRING` | Yes |  |  | A phrase every text has to hold, such as `[trigger]`, added to each text that still lacks it after the rules. It is found the way the finds are. A blank text stays blank. Empty = nothing added. |
+| `ensure_at` | `COMBO` | Yes | start | `start`, `end` | start = `[trigger], a woman on a beach`; end = `a woman on a beach, [trigger]`, placed before a closing full stop when the separator is a comma. |
+| `separator` | `STRING` | Yes | , |  | What joins the ensured phrase to the text: `, ` for tag captions, a space for prose, `\n` for a line of its own. |
+| `names` | `ARRAY,STRING` | No |  |  | The file names that go with the texts, in the same order, such as from Load Text Batch. Used only to name texts in the report; unwired, texts are named by place, counting from 0. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `text` | `STRING` | The texts after the rules, one per text that came in and in the same order, so a node reading this runs once per text, such as a save writing each caption back under its own name. |
+| `texts` | `ARRAY` | The same texts as one LIST, for the list nodes. |
+| `changed` | `INT` | How many texts a rule or the ensured phrase changed. 0 = the batch came through as it went in. |
+| `unmatched` | `INT` | How many texts no rule matched, such as captions that never mention a woman for `woman -> [trigger]`. The report names each one; the ensured phrase may still have been added to them. |
 
 </details>
 
@@ -18118,7 +18566,7 @@ Sharpen images by blending an inverted, blurred copy back over them in vivid lig
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `images` | `IMAGE` | Yes |  |  | The pictures to sharpen. A batch is handled one frame at a time, so a whole video's worth of frames can go through at once. |
+| `images` | `IMAGE` | Yes |  |  | The pictures to sharpen. A whole batch, such as a video's frames, is sharpened together on the GPU. |
 | `radius` | `FLOAT` | Yes | 1.5 |  | Size in pixels of the detail the sharpening picks out. Around 1.0 accents fine texture such as skin and fabric; 5.0 and above accents broad shapes and starts to look like added contrast rather than added detail. |
 | `strength` | `FLOAT` | Yes | 1.0 |  | How much of the sharpened version is mixed back over the original. 0.0 returns the picture untouched, 1.0 uses the sharpened version outright, and 0.3 to 0.6 is the usual range for a subtle pass. |
 

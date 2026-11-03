@@ -7,6 +7,9 @@ from comfy_api.latest import io
 from ....modules.convert.tensors import image_planes, stack_images, tensor2pil
 from ....modules.image import dynamic
 
+#: Float32 copies of a frame one blur holds at its peak, for sizing the frames in flight.
+FRAME_COPIES = 8
+
 
 def portrait_blur(img, mask, radius: int, samples: int, mode: str = 'mock'):
     """Composite a blurred copy of an image back over it through a depth mask.
@@ -123,15 +126,26 @@ class ImageFDOFFilter(io.ComfyNode):
 
     @classmethod
     def execute(cls, image, depth, mode, radius, samples) -> io.NodeOutput:
+        import torch
+
+        from ....modules.image.accelerate import frames_per_run
+        from ....modules.image.parallel import map_frames
+
         folded = dynamic.fold(image)
         maps = dynamic.fold(depth).images
 
-        def blurred(index, img):
+        def blurred(indexed):
+            index, plane = indexed
             return portrait_blur(
-                img, tensor2pil(maps[index if index < len(maps) else -1]), radius, samples, mode
+                tensor2pil(plane), tensor2pil(maps[index if index < len(maps) else -1]),
+                radius, samples, mode,
             )
 
         planes = image_planes(folded.images)
-        return io.NodeOutput(dynamic.unfold(
-            stack_images([blurred(i, tensor2pil(p)) for i, p in enumerate(planes)]), folded
-        ))
+        # The mock blur runs on the GPU, one frame at a time.
+        parallel = mode != "mock"
+        limit = None
+        if parallel and len(planes) > 1:
+            limit = frames_per_run(folded.images, torch.device("cpu"), FRAME_COPIES)
+        filtered = map_frames(blurred, enumerate(planes), parallel=parallel, limit=limit)
+        return io.NodeOutput(dynamic.unfold(stack_images(filtered), folded))

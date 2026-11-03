@@ -109,18 +109,31 @@ def _out_of_memory(error: BaseException) -> bool:
 
 
 def _progress(total: int):
-    """A callable advancing ComfyUI's progress bar by a count of frames, or doing nothing outside it."""
+    """A callable advancing ComfyUI's progress bar by a count of frames.
+
+    Args:
+        total: Frames in the batch.
+
+    Returns:
+        A callable that also stops a cancelled run, or does nothing outside ComfyUI.
+    """
     try:
+        import comfy.model_management
         import comfy.utils
 
         bar = comfy.utils.ProgressBar(total)
-        return bar.update
     except Exception:
         return lambda _count: None
 
+    def advance(count: int) -> None:
+        comfy.model_management.throw_exception_if_processing_interrupted()
+        bar.update(count)
+
+    return advance
+
 
 def run_frames(images: torch.Tensor, work, prefer_gpu: bool = True, factor: float = 8.0,
-               node: str = "", advice: str = "") -> torch.Tensor:
+               node: str = "", advice: str = "", runs: int = 1) -> torch.Tensor:
     """Run a per-frame operation over a batch in runs sized to the free memory where it runs.
 
     Args:
@@ -131,6 +144,8 @@ def run_frames(images: torch.Tensor, work, prefer_gpu: bool = True, factor: floa
         factor: Float32 copies of a frame ``work`` holds at its peak.
         node: Display name of the calling node, for a refusal from scratch memory.
         advice: Closing sentence of that refusal.
+        runs: Fewest runs the batch is split into, each advancing the progress bar. 1 runs
+            a batch that fits in one go.
 
     Returns:
         The result on the device the batch arrived on: a batch from
@@ -143,7 +158,7 @@ def run_frames(images: torch.Tensor, work, prefer_gpu: bool = True, factor: floa
     home = images.device
     device = working_device(prefer_gpu)
     count = int(images.shape[0])
-    run = min(count, frames_per_run(images, device, factor))
+    run = min(count, frames_per_run(images, device, factor), -(-count // max(1, int(runs))))
     if run >= count:
         return run_on(images, work, prefer_gpu)
 

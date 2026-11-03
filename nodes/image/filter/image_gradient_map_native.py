@@ -92,17 +92,18 @@ class ImageGradientMapNative(io.ComfyNode):
             ValueError: No gradient was connected and no stop could be read.
         """
         from ....modules.image.gradient import gradient_map, parse_gradient_stops
+        from ....modules.image.parallel import map_frames
 
         turned = str(flip_left_right).lower() == "true"
         image = dynamic.fold(image).images
         if gradient_image is not None:
-            return io.NodeOutput(stack_images([
-                gradient_map(tensor2pil(plane), tensor2pil(ramp), turned)
-                for plane, ramp in broadcast_image_planes(image, gradient_image)
-            ]))
+            return io.NodeOutput(stack_images(map_frames(
+                lambda pair: gradient_map(tensor2pil(pair[0]), tensor2pil(pair[1]), turned),
+                broadcast_image_planes(image, gradient_image),
+            )))
 
         stops = parse_gradient_stops(gradient_stops)
-        return io.NodeOutput(stack_images([
-            gradient_map(tensor2pil(plane), reverse=turned, stops=stops)
-            for plane in image_planes(image)
-        ]))
+        return io.NodeOutput(stack_images(map_frames(
+            lambda plane: gradient_map(tensor2pil(plane), reverse=turned, stops=stops),
+            image_planes(image),
+        )))

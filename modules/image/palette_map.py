@@ -339,26 +339,26 @@ def _diffuse(pixels: np.ndarray, palette: np.ndarray, cube: np.ndarray) -> np.nd
     reference = palette.astype(np.float32) / 255.0
     result = np.empty_like(working)
     last = CUBE_STEPS - 1
+    rows = np.arange(height)
 
-    for y in range(height):
-        for x in range(width):
-            old = working[y, x]
-            index = cube[
-                int(min(last, max(0, round(old[0] * last)))),
-                int(min(last, max(0, round(old[1] * last)))),
-                int(min(last, max(0, round(old[2] * last)))),
-            ]
-            new = reference[index]
-            result[y, x] = new
-            error = old - new
-            if x + 1 < width:
-                working[y, x + 1] += error * (7 / 16)
-            if y + 1 < height:
-                if x > 0:
-                    working[y + 1, x - 1] += error * (3 / 16)
-                working[y + 1, x] += error * (5 / 16)
-                if x + 1 < width:
-                    working[y + 1, x + 1] += error * (1 / 16)
+    # Pixel (y, x) is taken at step x + 2y, after every pixel that passes it an error.
+    for step in range(width + 2 * (height - 1)):
+        ys = rows[max(0, (step - width + 2) // 2) : min(height - 1, step // 2) + 1]
+        xs = step - 2 * ys
+        old = working[ys, xs]
+        index = np.clip(np.round(old * last), 0, last).astype(np.intp)
+        new = reference[cube[index[:, 0], index[:, 1], index[:, 2]]]
+        result[ys, xs] = new
+        error = old - new
+        # Each pixel receives its shares in the order a row-by-row scan adds them.
+        below = ys + 1 < height
+        right = xs + 1 < width
+        left = below & (xs > 0)
+        working[ys[left] + 1, xs[left] - 1] += error[left] * (3 / 16)
+        working[ys[right], xs[right] + 1] += error[right] * (7 / 16)
+        working[ys[below] + 1, xs[below]] += error[below] * (5 / 16)
+        corner = below & right
+        working[ys[corner] + 1, xs[corner] + 1] += error[corner] * (1 / 16)
     return result
 
 

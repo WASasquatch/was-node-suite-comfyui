@@ -17,6 +17,8 @@ const LOG_NAME = "WASNodeSuite.FileWritten";
 // pictures they wrote, not where they landed; the rest draw nothing at all.
 const NODES = [
   "Image Save",
+  "Save Text File",
+  "WASSaveDataset",
   "WASDNGSave",
   "WASEXRSave",
   "WASLayersSave",
@@ -65,7 +67,7 @@ app.registerExtension({
       name: "Draw the file report",
       tooltip:
         "Draw the number of files, the number of writes, the folder, the format, the first and "
-        + "last names and the bytes on Image Save, EXR Save, Write to GIF, Write to Video, "
+        + "last names and the bytes on Image Save, Save Text File, Save Dataset, EXR Save, Write to GIF, Write to Video, "
         + "Fast Save Animated WEBP, Create Morph Image and H3 Save Clip. A naming scheme that replaces its own "
         + "output on every frame, and a "
         + "write that failed, are drawn in the warning colour. The nodes run the same either "

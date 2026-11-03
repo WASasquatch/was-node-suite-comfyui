@@ -19,30 +19,24 @@ def lingrad(size, direction: str, white_ratio: int):
     Returns:
         A mode ``L`` PIL image of ``size``.
     """
-    from PIL import Image, ImageDraw
+    import numpy as np
+    from PIL import Image
 
-    image = Image.new('RGB', size)
-    draw = ImageDraw.Draw(image)
-    if direction == 'vertical':
-        black_end = size[1] - white_ratio
-        for y in range(size[1]):
-            if y <= black_end:
-                color = (0, 0, 0)
-            else:
-                color_value = int(((y - black_end) / (size[1] - black_end)) * 255)
-                color = (color_value, color_value, color_value)
-            draw.line([(0, y), (size[0], y)], fill=color)
-    elif direction == 'horizontal':
-        black_end = size[0] - white_ratio
-        for x in range(size[0]):
-            if x <= black_end:
-                color = (0, 0, 0)
-            else:
-                color_value = int(((x - black_end) / (size[0] - black_end)) * 255)
-                color = (color_value, color_value, color_value)
-            draw.line([(x, 0), (x, size[1])], fill=color)
+    width, height = int(size[0]), int(size[1])
+    image = np.zeros((height, width), dtype=np.uint8)
+    if direction in ('vertical', 'horizontal'):
+        length = height if direction == 'vertical' else width
+        black_end = length - int(white_ratio)
+        positions = np.arange(length, dtype=np.int64)
+        lit = positions > black_end
+        ramp = np.zeros(length, dtype=np.uint8)
+        if lit.any():
+            ramp[lit] = (((positions[lit] - black_end) / (length - black_end)) * 255).astype(
+                np.int64
+            )
+        image[:] = ramp[:, None] if direction == 'vertical' else ramp[None, :]
 
-    return image.convert("L")
+    return Image.fromarray(image)
 
 
 def create_fade_mask(size, fade_radius: int):
@@ -75,7 +69,7 @@ def create_fade_mask(size, fade_radius: int):
 
 
 def apply_chromatic_aberration(img, r_offset: int, g_offset: int, b_offset: int,
-                               fade_radius: int, intensity: float = 1.0):
+                               fade_radius: int, intensity: float = 1.0, fade_mask=None):
     """Shift an image's colour channels apart, fading the effect out towards the edges.
 
     Args:
@@ -86,6 +80,8 @@ def apply_chromatic_aberration(img, r_offset: int, g_offset: int, b_offset: int,
         fade_radius: Half-width in pixels of the fade back to the unshifted image at the
             frame edges.
         intensity: How much of the shifted image is mixed in, 0.0 to 1.0.
+        fade_mask: The mask :func:`create_fade_mask` answers for this size and radius, or
+            None to build it here. A mask of another size is ignored.
 
     Returns:
         An ``RGB`` PIL image the same size as the source.
@@ -106,7 +102,8 @@ def apply_chromatic_aberration(img, r_offset: int, g_offset: int, b_offset: int,
     strength = min(1.0, max(0.0, float(intensity)))
     if strength < 1.0:
         merged = Image.blend(img.convert("RGB"), merged, strength)
-    fade_mask = create_fade_mask(img.size, fade_radius)
+    if fade_mask is None or fade_mask.size != img.size:
+        fade_mask = create_fade_mask(img.size, fade_radius)
 
     return Image.composite(merged, img, fade_mask).convert("RGB")
 
@@ -207,9 +204,13 @@ class ImageChromaticAberration(io.ComfyNode):
     @classmethod
     def execute(cls, image, red_offset, green_offset, blue_offset, intensity,
                 fade_radius) -> io.NodeOutput:
+        mask = None
+        if getattr(image, "ndim", 0) == 4:
+            mask = create_fade_mask((int(image.shape[2]), int(image.shape[1])), fade_radius)
         return io.NodeOutput(filtered_planes(
             image,
             lambda plane: apply_chromatic_aberration(
-                plane, red_offset, green_offset, blue_offset, fade_radius, intensity
+                plane, red_offset, green_offset, blue_offset, fade_radius, intensity,
+                fade_mask=mask,
             ),
         ))

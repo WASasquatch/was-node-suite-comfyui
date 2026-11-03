@@ -25,13 +25,14 @@ runs.
 | [KaTeX](https://katex.org/) 0.16.9 | MIT, Khan Academy and other contributors | Maths in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
 | [Mermaid](https://mermaid.js.org/) 10.9.5 | MIT, Knut Sveidqvist and contributors | Diagrams in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
 | ⤷ [DOMPurify](https://github.com/cure53/DOMPurify) 3.2.4, bundled into `mermaid.min.txt` | MPL-2.0 **or** Apache-2.0, Dr.-Ing. Mario Heiderich, Cure53 and other contributors | Mermaid's own sanitising of the SVG it builds | [`LICENSE-MPL-2.0.txt`](../web/viewer/views/markdown_scripts/LICENSE-MPL-2.0.txt), [`LICENSE-APACHE-2.0.txt`](../web/viewer/views/markdown_scripts/LICENSE-APACHE-2.0.txt) |
+| [ZenTrainer](https://github.com/Nynxz/ZenTrainer) | MIT, Nynxz | The picture flags, near-duplicate pairs, health scores and caption phrase counts **Dataset Health** and **Caption Statistics** measure, ported into [`modules/dataset/health.py`](../modules/dataset/health.py) and [`modules/prompt/caption_stats.py`](../modules/prompt/caption_stats.py), and the score radar and phrase bars their panels draw | [`LICENSE.zentrainer`](../modules/dataset/LICENSE.zentrainer) |
 | [KaTeX fonts](https://katex.org/) | SIL Open Font License 1.1, Design Science, Inc. and Khan Academy | The six `.woff2` faces KaTeX sets maths in, in [`web/viewer/fonts/`](../web/viewer/fonts/) | [`fonts/LICENSE`](../web/viewer/fonts/LICENSE) |
 | [DejaVu](https://github.com/dejavu-fonts/dejavu-fonts) 2.37 | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | Four faces **Image Draw Text** renders with, in [`modules/data/fonts/dejavu/`](../modules/data/fonts/dejavu/) | [`dejavu/LICENSE`](../modules/data/fonts/dejavu/LICENSE), [`AUTHORS`](../modules/data/fonts/dejavu/AUTHORS) |
 | [Liberation](https://github.com/liberationfonts/liberation-fonts) 2.1.5 | SIL Open Font License 1.1, Red Hat, Inc., with digitized data copyright Google Corporation | Four faces metric-compatible with Arial, Times New Roman and Courier New, in [`modules/data/fonts/liberation/`](../modules/data/fonts/liberation/) | [`liberation/LICENSE`](../modules/data/fonts/liberation/LICENSE), [`AUTHORS`](../modules/data/fonts/liberation/AUTHORS) |
 | [Aileron](https://www.dotcolon.net/font/aileron) 1.102 | CC0 1.0, public domain, Sora Sagano (dot colon) | The first font **Text Encode Fibo 2** draws a caption's text with where Pillow's built-in font lacks a character, as Fibo 2.0's training did, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-Aileron.txt`](../modules/data/fibo2/LICENSE-Aileron.txt) |
 | [DejaVu Sans](https://github.com/dejavu-fonts/dejavu-fonts), Bria's copy | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | The second font it draws with, the file Bria publishes beside Fibo 2.0, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-DejaVu.txt`](../modules/data/fibo2/LICENSE-DejaVu.txt) |
 
-Twelve of the components are MIT in their own code, and two of those compile in a copy of
+Thirteen of the components are MIT in their own code, and two of those compile in a copy of
 DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, three are Apache-2.0, one
 is BSD-3-Clause, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
 is public domain under CC0, and one is Open RAIL++-M.
@@ -45,7 +46,8 @@ Liberation names against modified copies. These are unmodified.
 
 Counting every file rather than every component, the pack carries 166 third-party files, 27.5 MB
 of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
-five networks.
+five networks. ZenTrainer is not among them: its measurements are ported into the pack's own
+modules, and its licence ships beside them.
 
 ## Verifying a copy
 

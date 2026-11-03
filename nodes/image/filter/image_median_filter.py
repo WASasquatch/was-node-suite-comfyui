@@ -79,5 +79,7 @@ class ImageMedianFilter(io.ComfyNode):
         from ....modules.image.basic import medianFilter
 
         return io.NodeOutput(filtered_planes(
-            image, lambda plane: medianFilter(plane, diameter, sigma_color, sigma_space)
+            image,
+            lambda plane: medianFilter(plane, diameter, sigma_color, sigma_space),
+            parallel=False,
         ))

@@ -7,6 +7,9 @@ from comfy_api.latest import io
 from ....modules.convert.tensors import image_planes, pil2tensor, tensor2pil
 from ....modules.image import dynamic
 
+#: Float32 copies of a frame one adjustment holds at its peak, for sizing the frames in flight.
+FRAME_COPIES = 12
+
 
 class ImageShadowsAndHighlights(io.ComfyNode):
     """Brighten or darken the dark and bright ends of an image separately."""
@@ -154,13 +157,22 @@ class ImageShadowsAndHighlights(io.ComfyNode):
         highlight_smoothing,
         simplify_isolation,
     ) -> io.NodeOutput:
+        import threading
+
+        import torch
+
         from ....modules.image import scratch
+        from ....modules.image.accelerate import frames_per_run
         from ....modules.image.filters import shadows_and_highlights
+        from ....modules.image.parallel import map_frames
 
         folded = dynamic.fold(image)
         planes = image_planes(folded.images)
-        batches = None
-        for index, plane in enumerate(planes):
+        held = {}
+        allocating = threading.Lock()
+
+        def adjusted(indexed):
+            index, plane = indexed
             result, shadows, highlights = shadows_and_highlights(
                 tensor2pil(plane),
                 shadow_threshold,
@@ -172,22 +184,29 @@ class ImageShadowsAndHighlights(io.ComfyNode):
                 simplify_isolation,
             )
             frames = (pil2tensor(result), pil2tensor(shadows), pil2tensor(highlights))
-            if batches is None:
-                batches = tuple(
-                    scratch.allocate(
-                        (len(planes),) + tuple(frame.shape[1:]),
-                        node="Image Shadows and Highlights",
-                        advice="Passing fewer or smaller frames also fits it.",
+            with allocating:
+                if "batches" not in held:
+                    held["batches"] = tuple(
+                        scratch.allocate(
+                            (len(planes),) + tuple(frame.shape[1:]),
+                            node="Image Shadows and Highlights",
+                            advice="Passing fewer or smaller frames also fits it.",
+                        )
+                        for frame in frames
                     )
-                    for frame in frames
-                )
+            batches = held["batches"]
             batches[0][index] = dynamic.unfold(frames[0][0], folded)
             for batch, frame in zip(batches[1:], frames[1:]):
                 batch[index] = frame[0]
 
-        if batches is None:
+        limit = None
+        if len(planes) > 1:
+            limit = frames_per_run(folded.images, torch.device("cpu"), FRAME_COPIES)
+        map_frames(adjusted, enumerate(planes), limit=limit)
+
+        if "batches" not in held:
             raise ValueError(
                 "Image Shadows and Highlights was handed an empty image batch. Wire in at "
                 "least one image."
             )
-        return io.NodeOutput(*batches)
+        return io.NodeOutput(*held["batches"])

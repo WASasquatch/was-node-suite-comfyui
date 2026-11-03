@@ -1,7 +1,7 @@
-"""Token expansion for the string inputs of every node in the pack.
+"""Token expansion for every node's string inputs.
 
-Built-in and custom tokens resolve in any ``STRING`` input. A backslash keeps a bracketed
-run as text, and an input in :data:`LITERAL_INPUTS` arrives as written.
+Tokens resolve in each ``STRING`` input and in each string of a list input. A backslash keeps
+a bracketed run as text, and an input in :data:`LITERAL_INPUTS` arrives as written.
 """
 
 from __future__ import annotations
@@ -23,44 +23,16 @@ UNESCAPE = re.compile(r"\\(\[[^\]]*\])")
 #: A value shaped like a Windows path, where a separator before a token reads as a mark.
 WINDOWS_PATH = re.compile(r"^\\\\|[A-Za-z]:\\")
 
-#: ``io_type`` of the inputs this expands. ``COMBO`` widgets are also strings and are
-#: deliberately not included: their value is one of a fixed option list, and a token in it
-#: could only ever produce a value the node rejects.
+#: ``io_type`` of the inputs this expands. ``COMBO`` widgets are not expanded.
 STRING_TYPE = "STRING"
 
 #: Set on a class once :func:`apply` has looked at it, so a class collected twice is
-#: wrapped once. Wrapping twice would be harmless, expansion is idempotent, but it would
-#: put a second frame in every traceback raised from a node body.
+#: wrapped once.
 MARKER = "_was_token_expansion"
 
-#: Node id -> the inputs on it that must reach ``execute`` exactly as the user wrote them.
-#:
-#: Seven kinds of field are listed, and nothing else is:
-#:
-#: * the token-definition widgets. `Text Add Tokens` reads ``[name]: value`` lines and
-#:   `Text Add Token by Input` takes a name and a value, so expanding either would define
-#:   a token named after some earlier token's value, or freeze a value that is meant to be
-#:   stored as written.
-#: * validated identifiers. A repository id is checked against a grammar and then joined
-#:   onto the models directory; a git revision names a ref. An expanded ``[time]`` passes
-#:   that grammar and turns a typo into a lookup for a repository that cannot exist, which
-#:   is a worse error than the one the raw value produces.
-#: * colour strings. ``#RRGGBB`` and ``hsl(...)`` are parsed as colours, and digits from a
-#:   token parse as a different colour rather than as a mistake.
-#: * machine state written by a node's own frontend. The viewer's three widgets carry JSON
-#:   and edited content the frontend round-trips, so a value that came back changed would
-#:   drift from what is on screen. ``drawn_mask``, on every mask node that takes a brush,
-#:   carries a base64 PNG behind a header, and a token in either would make the run decode
-#:   a different picture from the one on the node.
-#: * keys of a listing the pack built. The archive selection holds one menu label per line,
-#:   each ending in ``[input]``, ``[output]`` or ``[temp]``, and a custom token by one of
-#:   those names would rewrite the tag, after which the label names no file at all. The
-#:   terminology pick list is the same: each line names a stored terminology and one of its
-#:   words, and a rewritten name matches nothing in the pantry.
-#: * library text stored for later runs. A saved system prompt keeps its tokens as written,
-#:   and they expand on the node it is wired into when it is used.
-#: * an address the browser fetches from another host. Three Texture URL's ``url`` reaches
-#:   that host as written, so no token value is placed in a request to it.
+#: Node id -> the inputs on it that reach ``execute`` exactly as written: token definitions,
+#: validated identifiers, colour strings, state written by a node's own frontend, keys of a
+#: listing the pack built, stored library text, and addresses fetched from another host.
 LITERAL_INPUTS = {
     "WASComfyViewer": ("manual_content", "viewer_meta", "view_state"),
     "WASImageCurves": ("curve_points",),
@@ -139,11 +111,10 @@ def expand(values: Mapping, names) -> dict:
         names: Input ids that expand, from :func:`text_inputs`.
 
     Returns:
-        ``values`` as a plain dict. Values that are not strings, and strings holding no
-        ``[``, are carried over untouched, so a node whose text has no token is handed
-        the identical object it would have been handed with none of this in place.
+        ``values`` as a plain dict. A list keeps its length and order, each string in it
+        expanded. A value with no string holding ``[`` is the same object passed in.
     """
-    pending = [name for name in names if _expandable(values.get(name))]
+    pending = [name for name in names if _holds_token(values.get(name))]
     if not pending:
         return dict(values)
     table = _table()
@@ -151,16 +122,35 @@ def expand(values: Mapping, names) -> dict:
         return dict(values)
     expanded = dict(values)
     for name in pending:
-        try:
-            expanded[name] = _unescape(table.parseTokens(expanded[name]), name)
-        except Exception as error:
-            # One unparseable value must not take the execution with it: the node is handed
-            # what the user wrote, which is what it would have been handed before this.
-            logger.warning(
-                "the tokens in %s could not be expanded (%s), so it was left as written",
-                name, error,
-            )
+        value = expanded[name]
+        if isinstance(value, list):
+            expanded[name] = [
+                _expand_text(table, item, name) if _expandable(item) else item for item in value
+            ]
+        else:
+            expanded[name] = _expand_text(table, value, name)
     return expanded
+
+
+def _expand_text(table, text: str, name: str) -> str:
+    """One string with its tokens replaced, or as written when expansion raises.
+
+    Args:
+        table: The :class:`TextTokens` for this execution.
+        text: The value to expand.
+        name: The input it came from, for the line logged on a failure.
+
+    Returns:
+        The expanded text, or ``text`` unchanged.
+    """
+    try:
+        return _unescape(table.parseTokens(text), name)
+    except Exception as error:
+        logger.warning(
+            "the tokens in %s could not be expanded (%s), so it was left as written",
+            name, error,
+        )
+        return text
 
 
 def _unescape(text: str, name: str) -> str:
@@ -202,15 +192,14 @@ def apply(node_cls, schema=None) -> None:
 
 
 def _wrap(node_cls, schema=None) -> None:
-    """Do the wrapping. Split out so :func:`apply` owns the one guard around all of it."""
+    """Wrap ``execute`` on one class. :func:`apply` catches what this raises."""
     names = text_inputs(schema if schema is not None else node_cls.GET_SCHEMA())
     setattr(node_cls, MARKER, True)
     if not names:
         return
     declared = node_cls.__dict__.get("execute")
     if not isinstance(declared, classmethod):
-        # Inherited from a shared base, or absent. Wrapping the inherited function here
-        # would bind one node's input names onto every sibling that shares the base.
+        # An execute() inherited from a shared base, or none at all, is left unwrapped.
         logger.debug("%s does not declare execute(), so its tokens are not expanded", node_cls.__name__)
         return
     function = declared.__func__
@@ -233,6 +222,13 @@ def _wrap(node_cls, schema=None) -> None:
 def _expandable(value) -> bool:
     """Is this value a string that could hold a token?"""
     return isinstance(value, str) and "[" in value
+
+
+def _holds_token(value) -> bool:
+    """Is this value, or any item of it when it is a list, a string that could hold a token?"""
+    if isinstance(value, list):
+        return any(_expandable(item) for item in value)
+    return _expandable(value)
 
 
 def _table():

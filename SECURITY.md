@@ -191,9 +191,17 @@ it is read. The file listing and the pack's folder and file menus follow no syml
 junction out of the folder they list. A folder in `paths.allow_read` is listed, previewed and read by the routes below for
 any client that can reach ComfyUI, the same as `input/`.
 
-Image Save is the one node that writes into ComfyUI's `input/` and the `paths.allow_read`
-folders, picked on its `root` menu. It writes pictures and their `.txt` captions under names it
-numbers, replaces an existing file only with `overwrite_mode` on, and deletes nothing. Every
+Three nodes write into ComfyUI's `input/` and the `paths.allow_read` folders, picked on their
+`root` menu: Image Save and Save Text File, which write files one at a time, and Save Dataset,
+which writes a whole dataset. Image Save writes pictures and their
+`.txt` captions under names it numbers, and replaces an existing file only with
+`overwrite_mode` on. Save Text File writes text files under names it numbers, and replaces an
+existing file only at `filename_number_padding` 0, under the fixed name or each text's wired
+name, leaving a file that already holds that text untouched. Save Dataset writes each item's caption
+file, and with `write` on `pictures and captions` a byte-for-byte copy of its picture, or a PNG
+where a node replaced the pixels, under the item's own name; it writes over an existing file
+only with `existing` on `replace` and only where the content differs, and with `number` writes
+under the next free numbered name. None of the three deletes anything. Every
 other node's write into `input/` is moved to `temp/`, and a `paths.allow_read` folder is
 written by no other node.
 

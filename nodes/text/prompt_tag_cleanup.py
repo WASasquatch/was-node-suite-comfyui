@@ -1,4 +1,4 @@
-"""Tidy a comma-separated prompt: split it, drop the repeats, put it back together."""
+"""Tidy a comma-separated prompt: split it, rewrite or drop tags, drop repeats, rejoin it."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from ...modules.prompt import tags as tag_tools
 
 
 class PromptTagCleanup(io.ComfyNode):
-    """Split a prompt into tags, remove duplicates and empties, and rejoin it."""
+    """Split a prompt into tags, replace, remove and dedupe them, and rejoin it."""
 
     @classmethod
     def define_schema(cls) -> io.Schema:
@@ -23,12 +23,17 @@ class PromptTagCleanup(io.ComfyNode):
                 "clean prompt",
                 "tidy prompt",
                 "remove duplicates",
+                "remove tags",
+                "replace tags",
+                "trigger word",
+                "caption cleanup",
             ],
             category="WAS Suite/Text/Operations",
             description=(
-                "Split a prompt into tags, drop the duplicates and the empty ones, "
-                "optionally sort and cap the count, and join it back up. Emphasis such as "
-                "(tag:1.4) is recognised as the same tag as the plain spelling."
+                "Tidy a tag prompt or caption: rename or drop the tags named, drop duplicates "
+                "and empty tags, optionally sort and cap the count, and join it back up. "
+                "Emphasis such as (tag:1.4) counts as the same tag as the plain spelling, so "
+                "a weighted tag is found and keeps its weight."
             ),
             inputs=[
                 io.String.Input(
@@ -72,19 +77,18 @@ class PromptTagCleanup(io.ComfyNode):
                     "ignore_case",
                     default=True,
                     tooltip=(
-                        "Whether 'Neon Glow' and 'neon glow' count as the same tag. Off, "
-                        "both survive, which is only useful where a downstream tool treats "
-                        "capitalisation as meaningful."
+                        "Whether 'Neon Glow' and 'neon glow' count as the same tag, for "
+                        "dedupe, remove and replace. Off, both survive dedupe, which suits a "
+                        "downstream tool that treats capitalisation as meaningful."
                     ),
                 ),
                 io.Boolean.Input(
                     "ignore_emphasis",
                     default=True,
                     tooltip=(
-                        "Whether '(neon glow:1.4)' counts as the same tag as 'neon glow'. On "
-                        "with keep set to 'last' is the combination that collapses a prompt "
-                        "onto its weighted spellings, which is normally the intended one, "
-                        "the plain duplicate is usually what a second source contributed."
+                        "Whether '(neon glow:1.4)' counts as the same tag as 'neon glow', for "
+                        "dedupe, remove and replace. On with keep set to 'last' collapses a "
+                        "prompt onto its weighted spellings."
                     ),
                 ),
                 io.Combo.Input(
@@ -120,9 +124,9 @@ class PromptTagCleanup(io.ComfyNode):
                     options=["none", "a-z", "z-a", "shortest first", "longest first"],
                     tooltip=(
                         "How the surviving tags are ordered. `none` = as written, keeping the "
-                        "weight early tags carry in most encoders; `a-z` and `z-a` = "
-                        "alphabetical, for comparing prompts by eye; `longest first` = "
-                        "phrases ahead of single words; `shortest first` = the reverse."
+                        "weight early tags carry; `a-z` and `z-a` = alphabetical; `longest "
+                        "first` = phrases ahead of single words; `shortest first` = the "
+                        "reverse. Tags held by keep_first stay in front, unsorted."
                     ),
                 ),
                 io.Int.Input(
@@ -132,9 +136,44 @@ class PromptTagCleanup(io.ComfyNode):
                     max=9999,
                     step=1,
                     tooltip=(
-                        "Keep at most this many tags, counted after everything else has run. "
-                        "0 keeps all of them. Useful for trimming a caption model's output "
-                        "to the few tags worth keeping."
+                        "0 = keep every tag; 20 = keep at most 20, counted after everything "
+                        "else has run, keep_first tags included and never cut. Trims a "
+                        "caption model's output to the tags worth keeping."
+                    ),
+                ),
+                io.String.Input(
+                    "remove",
+                    default="",
+                    multiline=False,
+                    tooltip=(
+                        "Tags to drop, comma separated, as `watermark, *background`. `*` "
+                        "stands for any run of characters, so `*background` drops `simple "
+                        "background` and `white background`. Compared using ignore_case and "
+                        "ignore_emphasis. Empty = drop nothing."
+                    ),
+                ),
+                io.String.Input(
+                    "replace",
+                    default="",
+                    multiline=True,
+                    placeholder="woman -> [trigger]",
+                    tooltip=(
+                        "One rule per line, `old tag -> new tag`, as `woman -> [trigger]`. "
+                        "Whole tags only, compared like remove; a weighted tag keeps its "
+                        "weight. `watermark ->` drops the tag; `1girl -> [trigger], 1girl` "
+                        "makes two tags. Runs before remove."
+                    ),
+                ),
+                io.Int.Input(
+                    "keep_first",
+                    default=0,
+                    min=0,
+                    max=9999,
+                    step=1,
+                    tooltip=(
+                        "0 = off; 2 = the first two tags left after replace, remove and "
+                        "dedupe stay where they are, unsorted and never cut by limit. Keeps "
+                        "a trigger word or a subject leading the prompt."
                     ),
                 ),
             ],
@@ -167,8 +206,9 @@ class PromptTagCleanup(io.ComfyNode):
                 io.Int.Output(
                     display_name="removed",
                     tooltip=(
-                        "How many entries the tidy-up took out, counting duplicates, empties "
-                        "and anything past the limit. 0 means the prompt was already clean."
+                        "How many tags the tidy-up took out: duplicates, empties, removed "
+                        "tags, tags replaced with nothing, and anything past the limit. "
+                        "0 = nothing taken out."
                     ),
                 ),
             ],
@@ -189,6 +229,9 @@ class PromptTagCleanup(io.ComfyNode):
         collapse_whitespace=True,
         sort="none",
         limit=0,
+        remove="",
+        replace="",
+        keep_first=0,
     ) -> io.NodeOutput:
         from ...modules.compat.lists import block_if_empty
 
@@ -203,18 +246,21 @@ class PromptTagCleanup(io.ComfyNode):
             collapse_whitespace=collapse_whitespace,
             order=sort,
             limit=limit,
+            remove=remove or "",
+            replace=replace or "",
+            keep_first=keep_first or 0,
         )
         joined = cls.unescape(join_with).join(cleaned)
         return io.NodeOutput(
             joined,
             cleaned,
-            # A list of its own per slot, so a node that edits the LIST it was handed does
-            # not change how many times the graph under tag_strings runs.
+            # tag_strings carries its own copy of the tags.
             block_if_empty(
                 list(cleaned),
                 "Prompt Tag Cleanup tidied the prompt down to no tags at all, so the nodes "
                 "reading its tag_strings output have nothing to run on. The text input is "
-                "empty or held only separators and duplicates.",
+                "empty or held only separators and duplicates, or remove and replace took "
+                "out every tag. Check the text wired in and the remove and replace rules.",
             ),
             len(cleaned),
             removed,
