@@ -5,6 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ....modules.compat.types import WAS_LORA_MERGE_OPTIONS
+from ....modules.lora.options import LOKR_LAYERS
 
 REQUIRES = "extras"
 
@@ -39,9 +40,9 @@ class PowerLoraMergerOptions(io.ComfyNode):
             category="WAS Suite/LoRA",
             description=(
                 "Advanced settings for the Power LoRA Merger: how far the merged LoRA is "
-                "compressed, what precision it is written in, which parts of the model take "
-                "part, and the controls belonging to the moe and block-mix modes. Connect it "
-                "to the merger's options socket."
+                "compressed, how layers from a LoKr are written, what precision it is saved "
+                "in, which parts of the model take part, and the controls belonging to the moe "
+                "and block-mix modes. Connect it to the merger's options socket."
             ),
             inputs=[
                 io.Int.Input(
@@ -227,6 +228,16 @@ class PowerLoraMergerOptions(io.ComfyNode):
                         "style high keeps A's subject in B's look."
                     ),
                 ),
+                io.Combo.Input(
+                    "lokr_layers",
+                    options=list(LOKR_LAYERS),
+                    default="exact",
+                    tooltip=(
+                        "Layers a LoKr is on, in recompressing modes: `exact` = a lone LoKr "
+                        "kept, a mix written whole, large; `lokr` = one fitted LoKr, small, "
+                        "loses part of each source; `lora` = a LoRA at rank, keeps a fraction."
+                    ),
+                ),
             ],
             outputs=[
                 WAS_LORA_MERGE_OPTIONS.Output(
@@ -258,6 +269,7 @@ class PowerLoraMergerOptions(io.ComfyNode):
         block_mix_weighted,
         block_mix_concept_mix,
         block_mix_style_mix,
+        lokr_layers="exact",
     ) -> io.NodeOutput:
         return io.NodeOutput(
             {
@@ -278,5 +290,6 @@ class PowerLoraMergerOptions(io.ComfyNode):
                 "block_mix_weighted": bool(block_mix_weighted),
                 "block_mix_concept_mix": float(block_mix_concept_mix),
                 "block_mix_style_mix": float(block_mix_style_mix),
+                "lokr_layers": str(lokr_layers),
             }
         )

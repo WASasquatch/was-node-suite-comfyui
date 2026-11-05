@@ -41,9 +41,16 @@ BLOCK_SDXL_MID = re.compile(r"^lora_unet_middle_block_", re.IGNORECASE)
 BLOCK_SDXL_TEXT_ENCODER_1 = re.compile(r"^lora_te1_.*?_encoder_layers_(\d+)_", re.IGNORECASE)
 BLOCK_SDXL_TEXT_ENCODER_2 = re.compile(r"^lora_te2_.*?_encoder_layers_(\d+)_", re.IGNORECASE)
 
-#: Key suffixes naming the two halves of a LoRA pair, in every spelling in circulation.
-UP_SUFFIXES = ("lora.up.weight", "lora_up.weight", "loraa.weight", "lora_a.weight")
-DOWN_SUFFIXES = ("lora.down.weight", "lora_down.weight", "lorab.weight", "lora_b.weight")
+#: Key suffixes naming the two halves of a LoRA pair, in every spelling in circulation, and
+#: the first and second factors of a LoKr or LoHa, each of which scales its change linearly.
+UP_SUFFIXES = (
+    "lora.up.weight", "lora_up.weight", "lorab.weight", "lora_b.weight",
+    ".lokr_w1", ".lokr_w1_a", ".hada_w1_a",
+)
+DOWN_SUFFIXES = (
+    "lora.down.weight", "lora_down.weight", "loraa.weight", "lora_a.weight",
+    ".lokr_w2", ".lokr_w2_a", ".hada_w2_a",
+)
 
 
 def infer_preset(keys) -> str:
@@ -204,14 +211,14 @@ def compute_block_scale(
 
 
 def lora_part(key: str) -> Optional[str]:
-    """Say which half of a LoRA pair a key holds.
+    """Say which half of a LoRA pair a key holds, the first or second factor of a LoKr or LoHa.
 
     Args:
         key: A state dict key.
 
     Returns:
-        ``"up"``, ``"down"``, or ``None`` for a key that is neither, an alpha, a
-        magnitude vector, or anything else stored alongside the pair.
+        ``"up"`` for an up half or first factor, ``"down"`` for a down half or second factor,
+        or ``None`` for anything else: an alpha, a magnitude vector, a factor's other half.
     """
     lowered = key.lower()
     if lowered.endswith(UP_SUFFIXES):

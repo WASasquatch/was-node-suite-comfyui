@@ -17,6 +17,7 @@ const LOG_NAME = "WASNodeSuite.H3Reports";
 const NODES = [
   "WASH3LoadClip", "WASH3SceneWriter", "WASH3PromptRewrite", "WASH3PlanTransitions",
   "WASPikaH3FlexLoRA", "WASPikaH3FlexSampling", "WASPikaH3FlexCanvas", "WASH3HiresLatent",
+  "WASH3SoundLoRA",
 ];
 
 // Height of the panel in node units: the summary line, three figures and three fact rows.

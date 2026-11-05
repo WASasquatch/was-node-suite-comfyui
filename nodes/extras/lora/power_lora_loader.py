@@ -77,10 +77,10 @@ class PowerLoraLoader(io.ComfyNode):
             ],
             category="WAS Suite/LoRA",
             description=(
-                "Apply any number of LoRAs in one node. Each row names a file, carries its "
-                "own strength and has a switch, and a list on a row's weight or on strength "
-                "sets it at every sampling step. The lora_stack output hands the rows to Power "
-                "LoRA Merger, which bakes them into a single file."
+                "Apply any number of LoRAs and LoKrs in one node. Each row names a file, "
+                "carries its own strength and has a switch, and a list on a row's weight or on "
+                "strength sets it at every sampling step. The lora_stack output hands the rows "
+                "to Power LoRA Merger, which bakes them into a single file."
             ),
             inputs=[
                 io.Model.Input(
@@ -107,8 +107,8 @@ class PowerLoraLoader(io.ComfyNode):
                     tooltip=(
                         "`false` = one patch per row; `true` = every row joined into one "
                         "patch, cheaper on a long stack, near-identical results within float "
-                        "rounding. A row whose format cannot be joined is carried through, "
-                        "scaled."
+                        "rounding. LoKr and other layers that cannot be joined apply on their "
+                        "own at their row's strength."
                     ),
                 ),
                 io.MultiType.Input(
@@ -602,12 +602,19 @@ class PowerLoraLoader(io.ComfyNode):
         if fuse and len(loaded) > 1:
             from ....modules.lora.fuse import fuse_state_dicts
 
-            combined, paired, carried = fuse_state_dicts(loaded)
-            logger.debug("fused %d module(s), carried %d key(s)", paired, carried)
-            # Strength 1.0: every row's own weight is already folded into the factors.
-            return fit.load_lora_for_models(
-                model, clip, combined, 1.0, 1.0 if clip is not None else 0.0, " + ".join(names)
-            )
+            combined, apart, paired = fuse_state_dicts(loaded)
+            logger.debug("fused %d module(s); %d LoRA(s) keep layers apart", paired, len(apart))
+            if combined:
+                # Strength 1.0: every row's own weight is already folded into the factors.
+                model, clip = fit.load_lora_for_models(
+                    model, clip, combined, 1.0, 1.0 if clip is not None else 0.0, " + ".join(names)
+                )
+            for index, state in apart:
+                weight = loaded[index][1]
+                model, clip = fit.load_lora_for_models(
+                    model, clip, state, weight, weight if clip is not None else 0.0, names[index]
+                )
+            return model, clip
         for (state, weight), name in zip(loaded, names):
             # Each row patches the answer of the one before it, so the stack composes in the
             # order the rows are drawn rather than every row patching the original.

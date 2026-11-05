@@ -11,7 +11,10 @@ from typing import Any, Mapping
 
 from .rows import to_bool
 
-__all__ = ["MergeSettings"]
+__all__ = ["LOKR_LAYERS", "MergeSettings"]
+
+#: How the modes that recompress write a layer a LoKr is on.
+LOKR_LAYERS = ("exact", "lokr", "lora")
 
 
 # The options node emits a plain dictionary, so the socket may also carry one built
@@ -60,6 +63,8 @@ class MergeSettings:
             choosing one of them.
         block_mix_concept_mix: Share of LoRA A in concept and attention modules.
         block_mix_style_mix: Share of LoRA A in style and feed-forward modules.
+        lokr_layers: How the modes that recompress write a layer a LoKr is on: ``exact``,
+            ``lokr`` or ``lora``.
     """
 
     rank: int = 32
@@ -79,6 +84,7 @@ class MergeSettings:
     block_mix_weighted: bool = False
     block_mix_concept_mix: float = 0.5
     block_mix_style_mix: float = 0.5
+    lokr_layers: str = "exact"
 
     @classmethod
     def read(cls, options: Any) -> "MergeSettings":
@@ -92,6 +98,7 @@ class MergeSettings:
             Settings with every field filled in.
         """
         values: Mapping[str, Any] = options if isinstance(options, Mapping) else {}
+        lokr_layers = _str(values, "lokr_layers", "exact")
         return cls(
             rank=_int(values, "rank", 32),
             auto_rank_threshold=_float(values, "auto_rank_threshold", 0.99),
@@ -110,6 +117,7 @@ class MergeSettings:
             block_mix_weighted=to_bool(values.get("block_mix_weighted", False), default=False),
             block_mix_concept_mix=_float(values, "block_mix_concept_mix", 0.5),
             block_mix_style_mix=_float(values, "block_mix_style_mix", 0.5),
+            lokr_layers=lokr_layers if lokr_layers in LOKR_LAYERS else "exact",
         )
 
     @property

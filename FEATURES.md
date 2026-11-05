@@ -929,7 +929,11 @@ a LoRA that fades out once the layout is set, comes in only for the detail, or h
 another LoRA partway through. Graph:
 [`number-sequence-lora-schedule.json`](docs/workflows/number-sequence-lora-schedule.json). Power LoRA Loader
 hands its rows on a LoRA stack wire, and Power LoRA Merger merges a stack from that wire, from the loader's model
-output or from another pack's stack nodes in place of its own rows. The pack's LoRA nodes leave
+output or from another pack's stack nodes in place of its own rows. All three take LoKr files
+too, such as MOSS character LoKrs. Power LoRA Merger keeps a LoKr as a LoKr where it alone
+covers a layer and writes the layer whole where it meets another LoKr or LoRA, so the merged
+file holds every source exactly; `lokr_layers` on Power LoRA Merger Options writes those layers
+as one smaller fitted LoKr, or as a LoRA, instead. The pack's LoRA nodes leave
 out any part of a LoRA that does not fit the model, with one line in the console naming it: a
 LoRA trained on a pruned MiniMax H3 applies to an unpruned one without its time modulation, and
 the reverse. **BLIP Analyze Image** captions,

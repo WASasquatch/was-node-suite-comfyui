@@ -140,8 +140,8 @@ class PowerLoraMerger(io.ComfyNode):
             ],
             category="WAS Suite/LoRA",
             description=(
-                "Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it "
-                "loads like any other. Add rows with the buttons on the node, or link a LoRA "
+                "Merge any number of LoRAs and LoKrs into one new file in the LoRA folder, so "
+                "it loads like any other. Add rows with the buttons on the node, or link a LoRA "
                 "stack into stack_data; connect a model and clip to apply the result straight "
                 "away."
             ),
@@ -664,6 +664,8 @@ class PowerLoraMerger(io.ComfyNode):
         identity = cls._metadata(
             mode, sources, settings, out_dtype, compute_dtype, block_mix_recipe
         )
+        if any(merge_loras_z.holds_lokr(path) for _, path, _ in sources):
+            identity["lokr_layers"] = settings.lokr_layers
         if output.built_from(target, identity):
             logger.info("%s already holds this merge, so it is served as it stands", relative)
             return cls._from_file(
@@ -758,7 +760,19 @@ class PowerLoraMerger(io.ComfyNode):
                     f"  Give output_filename a name that is not in use, or restart ComfyUI "
                     f"to let go of it. The merge itself finished, so only the save was lost."
                 ) from refused
-            logger.info("saved the merged LoRA as %s", relative)
+            counts = merge_loras_z.layer_counts(merged)
+            logger.info(
+                "saved the merged LoRA as %s, %.0f MB: %d LoRA, %d LoKr and %d full layer(s)",
+                relative, target.stat().st_size / 2**20, counts["lora"], counts["lokr"], counts["full"],
+            )
+            if counts["full"]:
+                logger.info(
+                    "%d layer(s) of %s are written whole, the size of the model's own weights "
+                    "there, because a LoKr meets another source on them and no smaller file holds "
+                    "that sum exactly. lokr_layers `lokr` in a recompressing mode such as svd "
+                    "writes one fitted LoKr per layer instead, which loses part of each source.",
+                    counts["full"], relative,
+                )
 
             progress.update_absolute(progress.total)
         finally:
@@ -863,7 +877,11 @@ class PowerLoraMerger(io.ComfyNode):
             "explicit_compute_dtype": compute_dtype,
             "progress_cb": progress_cb,
         }
-        ranked = {"rank_value": settings.rank, "auto_rank_threshold": settings.auto_rank_threshold}
+        ranked = {
+            "rank_value": settings.rank,
+            "auto_rank_threshold": settings.auto_rank_threshold,
+            "lokr_layers": settings.lokr_layers,
+        }
 
         if mode == "add":
             return merge_loras_z.merge_mode_add(

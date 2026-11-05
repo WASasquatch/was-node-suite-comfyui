@@ -15,10 +15,45 @@ H3_FULL_TIME = 2688
 H3_CURVE_TIME = 8
 
 
+def _lokr_shape(weights) -> tuple[int, int] | None:
+    """Rows and columns of a LoKr change, from ``(w1, w2, alpha, w1_a, w1_b, w2_a, w2_b, t2, ...)``."""
+    w1, w2, _alpha, w1_a, w1_b, w2_a, w2_b, t2 = weights[:8]
+    if w1 is not None:
+        p, q = int(w1.shape[0]), int(w1.shape[1])
+    elif w1_a is not None and w1_b is not None:
+        p, q = int(w1_a.shape[0]), int(w1_b.shape[1])
+    else:
+        return None
+    if w2 is not None:
+        rows, cols = int(w2.shape[0]), int(math.prod(w2.shape[1:]))
+    elif w2_a is not None and w2_b is not None and t2 is not None:
+        rows, cols = int(w2_a.shape[1]), int(w2_b.shape[1]) * int(math.prod(t2.shape[2:]))
+    elif w2_a is not None and w2_b is not None:
+        rows, cols = int(w2_a.shape[0]), int(math.prod(w2_b.shape[1:]))
+    else:
+        return None
+    return (p * rows, q * cols)
+
+
+def _loha_shape(weights) -> tuple[int, int] | None:
+    """Rows and columns of a LoHa change, from ``(w1_a, w1_b, alpha, w2_a, w2_b, t1, t2, ...)``."""
+    w1_a, w1_b, _alpha, _w2_a, _w2_b, t1 = weights[:6]
+    if w1_a is None or w1_b is None:
+        return None
+    if t1 is not None:
+        return (int(w1_a.shape[1]), int(w1_b.shape[1]) * int(math.prod(t1.shape[2:])))
+    return (int(w1_a.shape[0]), int(math.prod(w1_b.shape[1:])))
+
+
 def _patch_shape(patch):
     """The shape a patch's change takes, or None where it cannot be told without computing it."""
     weights = getattr(patch, "weights", None)
-    if getattr(patch, "name", None) == "lora" and isinstance(weights, (tuple, list)) and len(weights) >= 2:
+    kind = getattr(patch, "name", None)
+    if kind == "lokr" and isinstance(weights, (tuple, list)) and len(weights) >= 8:
+        return _lokr_shape(weights)
+    if kind == "loha" and isinstance(weights, (tuple, list)) and len(weights) >= 6:
+        return _loha_shape(weights)
+    if kind == "lora" and isinstance(weights, (tuple, list)) and len(weights) >= 2:
         up, down = weights[0], weights[1]
         mid = weights[3] if len(weights) > 3 else None
         reshape = weights[5] if len(weights) > 5 else None
@@ -53,7 +88,7 @@ def fits(patcher, key: str, patch, offset=None) -> bool:
     Args:
         patcher: The ``ModelPatcher`` holding the weight.
         key: The weight's state dict key.
-        patch: The patch, a LoRA adapter or a ``("diff", (tensor,))`` pair.
+        patch: The patch, a LoRA, LoKr or LoHa adapter, or a ``("diff", (tensor,))`` pair.
         offset: The ``(dim, start, length)`` slice the patch lands on, or None.
 
     Returns:

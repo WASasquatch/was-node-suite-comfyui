@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **678** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **680** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-592 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+594 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 436 |
+| [Always loaded](#always-loaded) | always on | 438 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-436 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+438 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -75,7 +75,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (31)
+- [WAS Suite/Sampling](#was-suitesampling) (33)
 - [WAS Suite/Text](#was-suitetext) (10)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (11)
@@ -8694,7 +8694,7 @@ Pick a Pika H3 Flex canvas by resolution, aspect and length, for the width, heig
 <details>
 <summary><b>Power LoRA Loader</b></summary>
 
-Apply any number of LoRAs in one node. Each row names a file, carries its own strength and has a switch, and a list on a row's weight or on strength sets it at every sampling step. The lora_stack output hands the rows to Power LoRA Merger, which bakes them into a single file.
+Apply any number of LoRAs and LoKrs in one node. Each row names a file, carries its own strength and has a switch, and a list on a row's weight or on strength sets it at every sampling step. The lora_stack output hands the rows to Power LoRA Merger, which bakes them into a single file.
 
 | | |
 |---|---|
@@ -8706,7 +8706,7 @@ Apply any number of LoRAs in one node. Each row names a file, carries its own st
 |---|---|---|---|---|---|
 | `model` | `MODEL` | No |  |  | The diffusion model the LoRAs are applied to, in row order. Needed only where the model output is wired; lora_stack alone needs none. |
 | `clip` | `CLIP` | No |  |  | The text encoder the LoRAs are applied to. Optional: left unconnected the model alone is patched, which is what a workflow encoding its prompt elsewhere wants. |
-| `fuse` | `BOOLEAN` | No | False |  | `false` = one patch per row; `true` = every row joined into one patch, cheaper on a long stack, near-identical results within float rounding. A row whose format cannot be joined is carried through, scaled. |
+| `fuse` | `BOOLEAN` | No | False |  | `false` = one patch per row; `true` = every row joined into one patch, cheaper on a long stack, near-identical results within float rounding. LoKr and other layers that cannot be joined apply on their own at their row's strength. |
 | `strength` | `FLOAT,NUMBER,ARRAY` | No | 1.0 |  | Multiplies every row's strength; 1.0 leaves the rows as set. A list, as Number Sequence's values, sets it per sampling step, stretched to fit; the text encoder takes the first value, and steps away from it run slower. |
 | `lora_1_enabled` | `BOOLEAN` | No | True |  | Whether this row takes part. `true` applies it; `false` mutes it and keeps the file and the strength it was set to, so neither is typed again to bring it back. |
 | `lora_1` | `COMBO,STRING` | No | None |  | LoRA file this row uses. `None` leaves the row empty, which counts the same as switching it off. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
@@ -11229,6 +11229,34 @@ Read the trained step times of the PTD file a MiniMax H3 model carries, for Samp
 
 </details>
 
+<a id="node-wash3soundlora"></a>
+<details>
+<summary><b>H3 Sound LoRA</b></summary>
+
+Put a LoRA on MiniMax H3's sound tokens alone, so the picture keeps the model's own LoRAs, such as Pika H3 Flex, while the sound takes another, such as DMAD. Sets the audio shift that LoRA was trained at. Chain a second one on add to mix two on the sound.
+
+| | |
+|---|---|
+| Node id | `WASH3SoundLoRA` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | MiniMax H3 after every LoRA loader, Pika H3 Flex LoRA included; the picture keeps those LoRAs. |
+| `lora_name` | `COMBO,STRING` | Yes |  |  | LoRA in models/loras for the sound tokens, as `dmad_minimax_h3_4step_full_critic_comfyui`. Its text refiner pairs are not used. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | Sound LoRA scale: `1.0` = as trained; `0` = none, the model's LoRAs still dropped on replace. |
+| `mode` | `COMBO` | Yes | replace | `replace`, `add` | `replace` = the sound tokens drop the model's other LoRAs and take this one; `add` = this one on top of them, as a second sound LoRA in a chain. |
+| `audio_shift` | `FLOAT` | Yes | 2.0 |  | Audio flow shift the sound samples at: `2` = DMAD; `3` = Pika H3 Flex and Ref2VA. The video shift is kept. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with its sound tokens on this LoRA at this audio shift. H3 Stream Sampler steps the sound on that shift's sigmas. |
+
+</details>
+
 <a id="node-wash3sparseattention"></a>
 <details>
 <summary><b>H3 Sparse Attention</b></summary>
@@ -11258,6 +11286,32 @@ Run MiniMax H3's attention block-sparse with Sol-Attn, SLA or VSA, faster and li
 |---|---|---|
 | `model` | `MODEL` | The model with the planned layers sparse, for a guider or sampler. |
 | `plan` | `STRING` | The method, and which layers run dense and which sparse, at what setting. |
+
+</details>
+
+<a id="node-wash3streamsampler"></a>
+<details>
+<summary><b>H3 Stream Sampler</b></summary>
+
+Sample MiniMax H3's picture and sound in one pass with different step rules, by default the picture as lcm and the sound as Euler ancestral. The sound steps on its own sigmas from the model's audio shift.
+
+| | |
+|---|---|
+| Node id | `WASH3StreamSampler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `COMBO` | Yes | lcm | `lcm`, `euler`, `euler_ancestral` | Picture step: `lcm` = clean prediction re-noised to the next sigma, as Pika H3 Flex; `euler` = no fresh noise; `euler_ancestral` = fresh noise by eta. |
+| `audio` | `COMBO` | Yes | euler_ancestral | `lcm`, `euler`, `euler_ancestral` | Sound step, on the sound's own sigmas: `euler_ancestral` = fresh noise by eta; `lcm` = re-noised clean prediction; `euler` = no fresh noise. |
+| `eta` | `FLOAT` | Yes | 1.0 |  | Fresh noise in an `euler_ancestral` step: `1.0` = full; `0` = euler. Other rules ignore it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `sampler` | `SAMPLER` | For Sampler Custom Advanced on MiniMax H3, with picture sigmas such as Pika H3 Flex Sampling's. `lcm` on both = core's lcm. |
 
 </details>
 
@@ -19149,7 +19203,7 @@ Load a LoRA, scale its blocks by where they sit in the model, front, middle, bac
 <details>
 <summary><b>Power LoRA Merger</b></summary>
 
-Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads like any other. Add rows with the buttons on the node, or link a LoRA stack into stack_data; connect a model and clip to apply the result straight away.
+Merge any number of LoRAs and LoKrs into one new file in the LoRA folder, so it loads like any other. Add rows with the buttons on the node, or link a LoRA stack into stack_data; connect a model and clip to apply the result straight away.
 
 | | |
 |---|---|
@@ -19263,7 +19317,7 @@ Merge any number of LoRAs into one new LoRA file in the LoRA folder, so it loads
 <details>
 <summary><b>Power LoRA Merger Options</b></summary>
 
-Advanced settings for the Power LoRA Merger: how far the merged LoRA is compressed, what precision it is written in, which parts of the model take part, and the controls belonging to the moe and block-mix modes. Connect it to the merger's options socket.
+Advanced settings for the Power LoRA Merger: how far the merged LoRA is compressed, how layers from a LoKr are written, what precision it is saved in, which parts of the model take part, and the controls belonging to the moe and block-mix modes. Connect it to the merger's options socket.
 
 | | |
 |---|---|
@@ -19291,6 +19345,7 @@ Advanced settings for the Power LoRA Merger: how far the merged LoRA is compress
 | `block_mix_weighted` | `BOOLEAN` | Yes | False |  | block-mix mode only. Blend the two LoRAs in each part of the model by the two ratios below, instead of giving each part to one of them outright. Use it when a straight route swings too far towards one LoRA. |
 | `block_mix_concept_mix` | `FLOAT` | Yes | 0.5 |  | Only read while block_mix_weighted is on: how much of LoRA A goes into the parts carrying subject and composition, with LoRA B making up the rest. 1.0 is all A, 0.0 is all B, 0.5 is even. |
 | `block_mix_style_mix` | `FLOAT` | Yes | 0.5 |  | Only read while block_mix_weighted is on: the same ratio for the parts carrying surface style and texture. Setting concept low and style high keeps A's subject in B's look. |
+| `lokr_layers` | `COMBO` | Yes | exact | `exact`, `lokr`, `lora` | Layers a LoKr is on, in recompressing modes: `exact` = a lone LoKr kept, a mix written whole, large; `lokr` = one fitted LoKr, small, loses part of each source; `lora` = a LoRA at rank, keeps a fraction. |
 
 **Outputs**
 

@@ -1,12 +1,13 @@
-"""Merging one or more LoRA files into a single LoRA.
+"""Merging LoRA and LoKr files into one file.
 
-A LoRA is read as one :class:`LoraPair` per module: ``down`` and ``up`` factors plus the
-``alpha`` scaling them.
+A module is read as a :class:`LoraPair`, ``down`` and ``up`` factors scaled by ``alpha``, or as a
+:class:`LokrPair`, a Kronecker product. A merged module may also be a :class:`FullDelta`.
 """
 
+import math
 import os
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Tuple, Optional
+from dataclasses import dataclass, replace
+from typing import Any, Callable, Dict, List, Tuple, Optional, Union
 
 import torch
 from safetensors import safe_open
@@ -36,6 +37,125 @@ class LoraPair:
     alpha: float
     is_conv: bool
     in_hw: Tuple[int, int]
+
+
+#: Key suffixes of a LoKr module, named as :class:`LokrPair` fields after the ``lokr_`` prefix.
+LOKR_PARTS = ("w1", "w2", "w1_a", "w1_b", "w2_a", "w2_b", "t2")
+
+@dataclass
+class LokrPair:
+    """One LoKr module, the Kronecker product of two factors, each whole or split in two.
+
+    Attributes:
+        w1: The first factor, or ``None`` where ``w1_a`` and ``w1_b`` hold it.
+        w2: The second factor, or ``None`` where ``w2_a`` and ``w2_b`` hold it.
+        w1_a: Left half of a split first factor.
+        w1_b: Right half of a split first factor.
+        w2_a: Left half of a split second factor.
+        w2_b: Right half of a split second factor.
+        t2: Core of a Tucker-split second factor, on a convolution.
+        alpha: The file's alpha, or ``None``.
+        is_conv: Whether the module is a convolution.
+        in_hw: Kernel height and width, ``(1, 1)`` for a linear module.
+    """
+
+    w1: Optional[torch.Tensor] = None
+    w2: Optional[torch.Tensor] = None
+    w1_a: Optional[torch.Tensor] = None
+    w1_b: Optional[torch.Tensor] = None
+    w2_a: Optional[torch.Tensor] = None
+    w2_b: Optional[torch.Tensor] = None
+    t2: Optional[torch.Tensor] = None
+    alpha: Optional[float] = None
+    is_conv: bool = False
+    in_hw: Tuple[int, int] = (1, 1)
+
+    @property
+    def scale(self) -> float:
+        """Multiplier on the product: alpha over the split rank, 1.0 where neither factor is split."""
+        dim = None
+        if self.w1 is None and self.w1_b is not None:
+            dim = int(self.w1_b.shape[0])
+        if self.w2 is None and self.w2_b is not None:
+            dim = int(self.w2_b.shape[0])
+        if self.alpha is None or not dim:
+            return 1.0
+        return float(self.alpha) / float(dim)
+
+    @property
+    def whole(self) -> bool:
+        """Whether both factors are stored whole."""
+        return self.w1 is not None and self.w2 is not None
+
+    def tensors(self) -> List[torch.Tensor]:
+        """Every stored factor."""
+        return [getattr(self, name) for name in LOKR_PARTS if getattr(self, name) is not None]
+
+    def first(self, dtype: torch.dtype) -> torch.Tensor:
+        """The first factor, built from its halves where split, in ``dtype``."""
+        if self.w1 is not None:
+            return self.w1.to(dtype)
+        return self.w1_a.to(dtype) @ self.w1_b.to(dtype)
+
+    def second(self, dtype: torch.dtype) -> torch.Tensor:
+        """The second factor, built from its halves where split, in ``dtype``."""
+        if self.w2 is not None:
+            return self.w2.to(dtype)
+        if self.t2 is not None:
+            return torch.einsum(
+                "i j k l, j r, i p -> p r k l",
+                self.t2.to(dtype), self.w2_b.to(dtype), self.w2_a.to(dtype),
+            )
+        return self.w2_a.to(dtype) @ self.w2_b.to(dtype)
+
+    def factor_shapes(self) -> Tuple[Tuple[int, int], Tuple[int, ...]]:
+        """``((p, q), (m, n, ...))``: the first factor's shape and the second factor's."""
+        if self.w1 is not None:
+            one = (int(self.w1.shape[0]), int(self.w1.shape[1]))
+        else:
+            one = (int(self.w1_a.shape[0]), int(self.w1_b.shape[1]))
+        if self.w2 is not None:
+            two = tuple(int(size) for size in self.w2.shape)
+        elif self.t2 is not None:
+            two = (int(self.w2_a.shape[1]), int(self.w2_b.shape[1]), *(int(s) for s in self.t2.shape[2:]))
+        else:
+            two = (int(self.w2_a.shape[0]), int(math.prod(self.w2_b.shape[1:])))
+        return one, two
+
+    @property
+    def rank(self) -> int:
+        """Largest rank the product can have."""
+        (p, q), two = self.factor_shapes()
+        first = int(self.w1_b.shape[0]) if self.w1 is None else min(p, q)
+        second = int(self.w2_b.shape[0]) if self.w2 is None else min(two[0], int(math.prod(two[1:])))
+        return min(first * second, p * two[0], q * int(math.prod(two[1:])))
+
+    def scaled(self, weight: float) -> "LokrPair":
+        """The same module with ``weight`` folded into its first factor."""
+        if weight == 1.0:
+            return self
+        if self.w1 is not None:
+            return replace(self, w1=self.w1.to(torch.float32) * float(weight))
+        return replace(self, w1_a=self.w1_a.to(torch.float32) * float(weight))
+
+
+@dataclass
+class FullDelta:
+    """One merged module written as its whole change, the size of the weight it patches.
+
+    Attributes:
+        delta: The change.
+        is_conv: Whether the module is a convolution.
+        in_hw: Kernel height and width, ``(1, 1)`` for a linear module.
+    """
+
+    delta: torch.Tensor
+    is_conv: bool
+    in_hw: Tuple[int, int]
+
+
+#: Any module a merge reads or writes.
+ModulePair = Union[LoraPair, LokrPair, FullDelta]
 
 
 def parse_weighted_paths(items: List[str]) -> List[Tuple[str, float]]:
@@ -93,36 +213,32 @@ def is_lora_key(key: str) -> bool:
 
 
 def scan_adapter_compat(keys: List[str], path: str) -> None:
-    """Reject a source file whose adapter format cannot be stacked as a plain LoRA.
+    """Reject a source file whose adapter format the merge cannot read.
 
     Args:
         keys: Tensor names in the file.
         path: Path of the file, named in the message.
 
     Raises:
-        ValueError: The file carries LyCORIS weights that have no up/down pair: LoKr,
-            LoHa or OFT/BOFT.
+        ValueError: The file carries LoHa or OFT/BOFT weights.
     """
     def any_key(*subs: str) -> bool:
         return any(any(sub in k for k in keys) for sub in subs)
 
     unsupported: List[str] = []
-    if any_key("lokr_w1", "lokr_w2"):
-        unsupported.append("LoKr")
     if any_key("hada_w1_a", "hada_w1_b", "hada_w2_a", "hada_w2_b"):
         unsupported.append("LoHa")
     if any_key("oft_blocks", "oft_diag", ".boft_"):
         unsupported.append("OFT/BOFT")
 
     name = os.path.basename(path)
-    # A format with no up/down pair would otherwise be dropped silently, leaving a merge
-    # that is missing that file's entire contribution.
+    # A format left unread would drop that file's whole contribution from the merge.
     if unsupported:
         raise ValueError(
             f"'{name}' uses {', '.join(unsupported)} (LyCORIS) weights, which the WAS LoRA "
-            f"merger cannot stack. It only supports plain LoRA (lora_up/lora_down or "
-            f"lora_A/lora_B). Remove this file from the merge or convert it to a standard "
-            f"LoRA first."
+            f"merger cannot read. It reads plain LoRA (lora_up/lora_down or lora_A/lora_B) "
+            f"and LoKr (lokr_w1/lokr_w2). Remove this file from the merge, or apply it "
+            f"with a loader instead."
         )
 
     if any_key(".dora_scale", "dora_scale"):
@@ -184,12 +300,52 @@ def module_is_included(
     return True
 
 
+def _lokr_part(key: str) -> Optional[Tuple[str, str]]:
+    """``(module, field)`` for a LoKr factor key, as ``x.lokr_w2_a`` is ``("x", "w2_a")``."""
+    head, _, tail = key.rpartition(".")
+    if head and tail.startswith("lokr_") and tail[len("lokr_"):] in LOKR_PARTS:
+        return head, tail[len("lokr_"):]
+    return None
+
+
+def holds_lokr(path: str) -> bool:
+    """Whether a safetensors file holds LoKr factors, read from its header alone.
+
+    Args:
+        path: The file.
+
+    Returns:
+        True where any tensor name is a LoKr factor.
+    """
+    with safe_open(path, framework="pt", device="cpu") as f:
+        return any(_lokr_part(key) is not None for key in f.keys())
+
+
+def _lokr_module(prefix: str, parts: Dict[str, torch.Tensor], alpha: Optional[float]) -> Optional[LokrPair]:
+    """A :class:`LokrPair` from one module's factors, or None where a factor is missing."""
+    has_first = "w1" in parts or ("w1_a" in parts and "w1_b" in parts)
+    has_second = "w2" in parts or ("w2_a" in parts and "w2_b" in parts)
+    if not (has_first and has_second):
+        logger.warning("LoKr module %s is missing a factor and is left out of the merge", prefix)
+        return None
+    lk = LokrPair(alpha=alpha, **{name: parts.get(name) for name in LOKR_PARTS})
+    if lk.w1 is not None:
+        lk.w1_a = lk.w1_b = None
+    if lk.w2 is not None:
+        lk.w2_a = lk.w2_b = lk.t2 = None
+    kernel = lk.w2 if lk.w2 is not None else lk.t2
+    if kernel is not None and kernel.ndim == 4:
+        lk.is_conv = True
+        lk.in_hw = (int(kernel.shape[2]), int(kernel.shape[3]))
+    return lk
+
+
 def load_lora_pairs(
     path: str,
     device: torch.device,
     progress_cb: Optional[ProgressCallback] = None,
-) -> Tuple[Dict[str, LoraPair], Dict[str, str]]:
-    pairs: Dict[str, LoraPair] = {}
+) -> Tuple[Dict[str, ModulePair], Dict[str, str]]:
+    pairs: Dict[str, ModulePair] = {}
     metadata: Dict[str, str] = {}
 
     with safe_open(path, framework="pt", device=str(device)) as f:
@@ -217,11 +373,15 @@ def load_lora_pairs(
         downs: Dict[str, torch.Tensor] = {}
         ups: Dict[str, torch.Tensor] = {}
         alphas: Dict[str, float] = {}
+        lokr: Dict[str, Dict[str, torch.Tensor]] = {}
 
         total_keys = len(keys)
         for i, key in enumerate(keys, start=1):
             _progress(progress_cb, "load.keys", i, total_keys, key)
-            if is_lora_key(key):
+            found = _lokr_part(key)
+            if found is not None:
+                lokr.setdefault(found[0], {})[found[1]] = f.get_tensor(key).to(device)
+            elif is_lora_key(key):
                 tensor = f.get_tensor(key).to(device)
                 prefix = get_module_prefix(key)
                 if "lora_down" in key or "lora_A" in key:
@@ -271,6 +431,12 @@ def load_lora_pairs(
                 is_conv=is_conv,
                 in_hw=in_hw,
             )
+
+        # A LoKr module wins over a LoRA pair under the same name, as it does when applied.
+        for prefix, parts in lokr.items():
+            module = _lokr_module(prefix, parts, alphas.get(prefix))
+            if module is not None:
+                pairs[prefix] = module
 
     return pairs, metadata
 
@@ -325,8 +491,166 @@ def _safe_dot(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     return a32 @ b32
 
 
-def compute_delta(lp: LoraPair, compute_dtype: torch.dtype) -> torch.Tensor:
-    """Compute the full weight-space delta this LoRA module produces."""
+def _tensors(modules) -> List[torch.Tensor]:
+    """Every stored tensor of some modules, as ``[module, ...]`` or ``[(module, weight), ...]``."""
+    found: List[torch.Tensor] = []
+    for item in modules:
+        lp = item[0] if isinstance(item, tuple) else item
+        if isinstance(lp, LoraPair):
+            found += [lp.down, lp.up]
+        elif isinstance(lp, LokrPair):
+            found += lp.tensors()
+        elif isinstance(lp, FullDelta):
+            found.append(lp.delta)
+    return found
+
+
+def _rank_of(lp: ModulePair) -> int:
+    """The rank a module's change can reach."""
+    if isinstance(lp, LoraPair):
+        return int(lp.down.shape[0])
+    if isinstance(lp, LokrPair):
+        return lp.rank
+    return int(min(lp.delta.shape[0], math.prod(lp.delta.shape[1:])))
+
+
+def _lokr_delta(lk: LokrPair) -> torch.Tensor:
+    """The change a LoKr module makes, in float32."""
+    w1 = lk.first(torch.float32).contiguous()
+    w2 = lk.second(torch.float32).contiguous()
+    if w2.ndim == 4:
+        w1 = w1[:, :, None, None]
+    delta = torch.kron(w1, w2) * float(lk.scale)
+    if lk.is_conv and delta.ndim == 2:
+        k_h, k_w = lk.in_hw
+        delta = delta.reshape(delta.shape[0], -1, k_h, k_w)
+    return delta
+
+
+def nearest_lokr(delta: torch.Tensor, like: LokrPair, out_dtype: torch.dtype) -> LokrPair:
+    """The single Kronecker product closest to a change, at another LoKr's factor shapes.
+
+    Args:
+        delta: The change, ``(p*m, q*n)`` or ``(p*m, q*n, k_h, k_w)``.
+        like: The LoKr whose factor shapes and alpha are taken.
+        out_dtype: Precision of the factors.
+
+    Returns:
+        A LoKr with both factors whole. A change that is one Kronecker product comes back as it.
+    """
+    (p, q), two = like.factor_shapes()
+    m, n, kernel = two[0], two[1], tuple(two[2:])
+    # Rows hold the first factor's entries and columns the second's.
+    arranged = delta.to(torch.float64).reshape(p, m, q, n, *kernel)
+    arranged = arranged.permute(0, 2, 1, 3, *range(4, 4 + len(kernel))).reshape(p * q, -1)
+    values, vectors = torch.linalg.eigh(arranged @ arranged.T)
+    top = float(values[-1].clamp_min(0.0).sqrt())
+    first = vectors[:, -1]
+    if top > 0.0:
+        second = (arranged.T @ first) / top
+    else:
+        second = torch.zeros(arranged.shape[1], dtype=torch.float64, device=arranged.device)
+    root = math.sqrt(top)
+    w1 = (first * root).reshape(p, q).to(out_dtype).contiguous()
+    w2 = (second * root).reshape(m, n, *kernel).to(out_dtype).contiguous()
+    return LokrPair(
+        w1=w1, w2=w2, alpha=like.alpha if like.whole else None,
+        is_conv=like.is_conv, in_hw=like.in_hw,
+    )
+
+
+def encode_delta(
+    delta: torch.Tensor,
+    sources: List[ModulePair],
+    rank: int,
+    is_conv: bool,
+    in_hw: Tuple[int, int],
+    auto_rank_threshold: float,
+    out_dtype: torch.dtype,
+    lokr_layers: str = "exact",
+) -> ModulePair:
+    """Write one module's merged change in the form its sources call for.
+
+    Args:
+        delta: The merged change.
+        sources: The modules it was made from.
+        rank: Rank of a LoRA, -1 for one chosen from ``auto_rank_threshold``.
+        is_conv: Whether the module is a convolution.
+        in_hw: Kernel height and width.
+        auto_rank_threshold: Share of singular-value energy an automatic rank keeps.
+        out_dtype: Precision of the written tensors.
+        lokr_layers: Where a LoKr is among ``sources``: ``exact`` keeps a lone LoKr and writes
+            any mix whole, ``lokr`` fits one LoKr, ``lora`` recompresses to a LoRA.
+
+    Returns:
+        The written module: a LoRA at ``rank``, or as ``lokr_layers`` asks.
+    """
+    like = next((lp for lp in sources if isinstance(lp, LokrPair)), None)
+    if like is not None and len(sources) == 1 and lokr_layers != "lora":
+        own = _lokr_delta(like).to(device=delta.device, dtype=torch.float64)
+        share = (delta.to(torch.float64) * own).sum() / (own * own).sum().clamp_min(1e-30)
+        return like.scaled(float(share))
+    if like is not None and lokr_layers == "lokr":
+        return nearest_lokr(delta, like, out_dtype)
+    if like is not None and lokr_layers == "exact":
+        return FullDelta(delta.to(out_dtype).cpu(), is_conv, in_hw)
+    new_down, new_up = delta_to_svd_factors(
+        delta, rank=rank, is_conv=is_conv, auto_rank_threshold=auto_rank_threshold, out_dtype=out_dtype,
+    )
+    return LoraPair(down=new_down, up=new_up, alpha=float(new_down.shape[0]), is_conv=is_conv, in_hw=in_hw)
+
+
+def _stack_exact(
+    present: List[Tuple[ModulePair, float]],
+    is_conv: bool,
+    in_hw: Tuple[int, int],
+    explicit_compute_dtype: Optional[torch.dtype],
+) -> ModulePair:
+    """Join one module's weighted sources without loss.
+
+    Args:
+        present: ``(module, weight)`` per source.
+        is_conv: Whether the module is a convolution.
+        in_hw: Kernel height and width.
+        explicit_compute_dtype: Precision of the arithmetic, or ``None`` for automatic.
+
+    Returns:
+        Plain LoRAs joined along the rank, a lone LoKr scaled, or any other mix as its whole
+        change.
+    """
+    compute_dtype = _resolve_working_dtype(_tensors(present), explicit_compute_dtype)
+    if all(isinstance(lp, LoraPair) for lp, _w in present):
+        downs_list: List[torch.Tensor] = []
+        ups_list: List[torch.Tensor] = []
+        total_rank = 0
+        for lp, w in present:
+            lp = _cast_pair(lp, compute_dtype)
+            rank_i = lp.down.shape[0]
+            downs_list.append(lp.down)
+            ups_list.append(lp.up * float(w * (lp.alpha / max(rank_i, 1))))
+            total_rank += int(rank_i)
+        return LoraPair(
+            down=torch.cat(downs_list, dim=0),
+            up=torch.cat(ups_list, dim=1),
+            alpha=float(total_rank),
+            is_conv=is_conv,
+            in_hw=in_hw,
+        )
+    if len(present) == 1 and isinstance(present[0][0], LokrPair):
+        return present[0][0].scaled(present[0][1])
+    total = None
+    for lp, w in present:
+        part = compute_delta(lp, compute_dtype) * float(w)
+        total = part if total is None else total + part
+    return FullDelta(total.to(compute_dtype).cpu(), is_conv, in_hw)
+
+
+def compute_delta(lp: ModulePair, compute_dtype: torch.dtype) -> torch.Tensor:
+    """Compute the full weight-space delta one module produces."""
+    if isinstance(lp, LokrPair):
+        return _lokr_delta(lp)
+    if isinstance(lp, FullDelta):
+        return lp.delta.to(torch.float32)
     down = lp.down
     up = lp.up
 
@@ -426,17 +750,17 @@ def delta_to_svd_factors(
 
 
 def merge_mode_add(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     include_patterns: List[str],
     exclude_patterns: List[str],
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+) -> Dict[str, ModulePair]:
     all_prefixes = set()
     for pairs, _w in loras:
         all_prefixes.update(pairs.keys())
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -463,42 +787,13 @@ def merge_mode_add(
             if lp.is_conv != is_conv or lp.in_hw != in_hw:
                 raise ValueError(f"Incompatible shapes for module '{prefix}' between LoRAs")
 
-        compute_dtype = _resolve_working_dtype(
-            [p[0].down for p in present] + [p[0].up for p in present],
-            explicit_compute_dtype,
-        )
-
-        downs_list: List[torch.Tensor] = []
-        ups_list: List[torch.Tensor] = []
-        total_rank = 0
-
-        for lp, w in present:
-            lp = _cast_pair(lp, compute_dtype)
-            rank_i = lp.down.shape[0]
-            scale_i = w * (lp.alpha / max(rank_i, 1))
-
-            downs_list.append(lp.down)
-            ups_list.append(lp.up * float(scale_i))
-            total_rank += rank_i
-
-        new_down = torch.cat(downs_list, dim=0)
-        new_up = torch.cat(ups_list, dim=1)
-
-        new_alpha = float(total_rank)
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
-        )
+        merged[prefix] = _stack_exact(present, is_conv, in_hw, explicit_compute_dtype)
 
     return merged
 
 
 def merge_mode_block_mix_weighted(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     method: str,
     rank_value: int,
     preset: str,
@@ -510,7 +805,8 @@ def merge_mode_block_mix_weighted(
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     if len(loras) != 2:
         raise ValueError("block-mix weighted mode requires exactly two LoRAs (A and B).")
 
@@ -533,7 +829,7 @@ def merge_mode_block_mix_weighted(
     c_mix = 0.0 if c_mix < 0.0 else (1.0 if c_mix > 1.0 else c_mix)
     s_mix = 0.0 if s_mix < 0.0 else (1.0 if s_mix > 1.0 else s_mix)
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
     total_modules = len(prefixes_sorted)
     for i, prefix in enumerate(
         tqdm(prefixes_sorted, desc=f"Merging (block-mix-weighted:{method_norm})", unit="module", disable=progress_cb is not None),
@@ -564,38 +860,10 @@ def merge_mode_block_mix_weighted(
                 raise ValueError(f"Incompatible shapes for module '{prefix}' in block-mix weighted mode")
 
         if method_norm == "stack":
-            compute_dtype = _resolve_working_dtype(
-                [t for lp, _w in present for t in (lp.down, lp.up)],
-                explicit_compute_dtype,
-            )
-
-            downs_list: List[torch.Tensor] = []
-            ups_list: List[torch.Tensor] = []
-            total_rank = 0
-            for lp, w in present:
-                lp = _cast_pair(lp, compute_dtype)
-                rank_i = lp.down.shape[0]
-                scale_i = float(w) * (lp.alpha / max(rank_i, 1))
-                downs_list.append(lp.down)
-                ups_list.append(lp.up * float(scale_i))
-                total_rank += int(rank_i)
-
-            new_down = torch.cat(downs_list, dim=0)
-            new_up = torch.cat(ups_list, dim=1)
-            new_alpha = float(total_rank)
-            merged[prefix] = LoraPair(
-                down=new_down,
-                up=new_up,
-                alpha=new_alpha,
-                is_conv=is_conv,
-                in_hw=in_hw,
-            )
+            merged[prefix] = _stack_exact(present, is_conv, in_hw, explicit_compute_dtype)
             continue
 
-        compute_dtype = _resolve_working_dtype(
-            [t for lp, _w in present for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        compute_dtype = _resolve_working_dtype(_tensors(present), explicit_compute_dtype)
 
         merged_delta = None
         for lp, w in present:
@@ -605,32 +873,17 @@ def merge_mode_block_mix_weighted(
         if merged_delta is None:
             continue
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            merged_delta,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            merged_delta, [lp for lp, _w in present], -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
 def block_mix_routing_report(
-    a_pairs: Dict[str, LoraPair],
-    b_pairs: Dict[str, LoraPair],
+    a_pairs: Dict[str, ModulePair],
+    b_pairs: Dict[str, ModulePair],
     preset: str,
     recipe: str,
     include_patterns: List[str],
@@ -815,7 +1068,7 @@ def _block_mix_pick_lora_index(prefix: str, preset: str, recipe: str) -> int:
 
 
 def merge_mode_block_mix(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     method: str,
     rank_value: int,
     preset: str,
@@ -825,7 +1078,8 @@ def merge_mode_block_mix(
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     if len(loras) != 2:
         raise ValueError("block-mix mode requires exactly two LoRAs (A and B).")
 
@@ -843,7 +1097,7 @@ def merge_mode_block_mix(
     if preset_norm == "auto":
         preset_norm = _infer_block_mix_preset(prefixes_sorted)
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
     total_modules = len(prefixes_sorted)
     for i, prefix in enumerate(
         tqdm(prefixes_sorted, desc=f"Merging (block-mix:{method_norm})", unit="module", disable=progress_cb is not None),
@@ -878,38 +1132,10 @@ def merge_mode_block_mix(
                 raise ValueError(f"Incompatible shapes for module '{prefix}' in block-mix mode")
 
         if method_norm == "stack":
-            compute_dtype = _resolve_working_dtype(
-                [t for lp, _w in present for t in (lp.down, lp.up)],
-                explicit_compute_dtype,
-            )
-
-            downs_list: List[torch.Tensor] = []
-            ups_list: List[torch.Tensor] = []
-            total_rank = 0
-            for lp, w in present:
-                lp = _cast_pair(lp, compute_dtype)
-                rank_i = lp.down.shape[0]
-                scale_i = float(w) * (lp.alpha / max(rank_i, 1))
-                downs_list.append(lp.down)
-                ups_list.append(lp.up * float(scale_i))
-                total_rank += int(rank_i)
-
-            new_down = torch.cat(downs_list, dim=0)
-            new_up = torch.cat(ups_list, dim=1)
-            new_alpha = float(total_rank)
-            merged[prefix] = LoraPair(
-                down=new_down,
-                up=new_up,
-                alpha=new_alpha,
-                is_conv=is_conv,
-                in_hw=in_hw,
-            )
+            merged[prefix] = _stack_exact(present, is_conv, in_hw, explicit_compute_dtype)
             continue
 
-        compute_dtype = _resolve_working_dtype(
-            [t for lp, _w in present for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        compute_dtype = _resolve_working_dtype(_tensors(present), explicit_compute_dtype)
         merged_delta = None
         for lp, w in present:
             d = compute_delta(lp, compute_dtype) * float(w)
@@ -918,38 +1144,24 @@ def merge_mode_block_mix(
         if merged_delta is None:
             continue
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            merged_delta,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            merged_delta, [lp for lp, _w in present], -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
 def merge_mode_add_diff(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     rank_value: int,
     include_patterns: List[str],
     exclude_patterns: List[str],
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     if len(loras) < 2:
         raise ValueError("add-diff mode requires at least two LoRAs (base + one or more others).")
 
@@ -959,7 +1171,7 @@ def merge_mode_add_diff(
     for pairs, _w in loras:
         all_prefixes.update(pairs.keys())
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -991,11 +1203,8 @@ def merge_mode_add_diff(
             if lp.is_conv != is_conv or lp.in_hw != in_hw:
                 raise ValueError(f"Incompatible shapes for module '{prefix}' in add-diff (other).")
 
-        compute_dtype = _resolve_working_dtype(
-            ([base_lp.down, base_lp.up] if base_lp is not None else [])
-            + [t for lp, _w in others for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        sources = ([base_lp] if base_lp is not None else []) + [lp for lp, _w in others]
+        compute_dtype = _resolve_working_dtype(_tensors(sources), explicit_compute_dtype)
 
         if base_lp is not None:
             delta_base_raw = compute_delta(base_lp, compute_dtype)
@@ -1013,32 +1222,16 @@ def merge_mode_add_diff(
             else:
                 merged_delta = merged_delta + float(weight_other) * (delta_other - delta_base_raw)
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            merged_delta,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            merged_delta, sources, -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
 def merge_mode_svd(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     rank_value: int,
     preserve_norm: bool,
     cap_mult: Optional[float],
@@ -1047,12 +1240,13 @@ def merge_mode_svd(
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     all_prefixes = set()
     for pairs, _w in loras:
         all_prefixes.update(pairs.keys())
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -1080,10 +1274,7 @@ def merge_mode_svd(
             if lp.is_conv != is_conv or lp.in_hw != in_hw:
                 raise ValueError(f"Incompatible shapes for module '{prefix}' between LoRAs")
 
-        compute_dtype = _resolve_working_dtype(
-            [t for lp, _w in present for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        compute_dtype = _resolve_working_dtype(_tensors(present), explicit_compute_dtype)
 
         deltas: List[torch.Tensor] = []
         norms: List[float] = []
@@ -1109,39 +1300,24 @@ def merge_mode_svd(
             if merged_norm > max_norm and merged_norm > 0.0:
                 merged_delta = merged_delta * (max_norm / merged_norm)
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            merged_delta,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            merged_delta, [lp for lp, _w in present], -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
 def merge_mode_add_orth(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     rank_value: int,
     include_patterns: List[str],
     exclude_patterns: List[str],
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     if len(loras) < 2:
         raise ValueError("add-orth mode requires at least two LoRAs (base + one or more others).")
 
@@ -1151,7 +1327,7 @@ def merge_mode_add_orth(
     for pairs, _w in loras:
         all_prefixes.update(pairs.keys())
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -1173,6 +1349,16 @@ def merge_mode_add_orth(
         if base_lp is None and not present_others:
             continue
 
+        if base_lp is None and any(isinstance(lp, LokrPair) for lp, _w in present_others):
+            first = present_others[0][0]
+            compute_dtype = _resolve_working_dtype(_tensors(present_others), explicit_compute_dtype)
+            total = sum(compute_delta(lp, compute_dtype) * float(w) for lp, w in present_others)
+            merged[prefix] = encode_delta(
+                total, [lp for lp, _w in present_others], -1 if rank_value == 0 else rank_value,
+                first.is_conv, first.in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
+            )
+            continue
+
         if base_lp is None:
             temp_loras = [(pairs, weight) for (pairs, weight) in loras if prefix in pairs]
             temp_pairs_list = []
@@ -1189,10 +1375,8 @@ def merge_mode_add_orth(
             if lp.is_conv != is_conv or lp.in_hw != in_hw:
                 raise ValueError(f"Incompatible shapes for module '{prefix}' in add-orth mode")
 
-        compute_dtype = _resolve_working_dtype(
-            [base_lp.down, base_lp.up] + [t for lp, _w in present_others for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        sources = [base_lp] + [lp for lp, _w in present_others]
+        compute_dtype = _resolve_working_dtype(_tensors(sources), explicit_compute_dtype)
 
         delta_base = compute_delta(base_lp, compute_dtype) * float(base_weight)
         base_flat = delta_base.reshape(-1)
@@ -1214,39 +1398,24 @@ def merge_mode_add_orth(
             orth_delta = orth_flat.view_as(delta_other)
             merged_delta = merged_delta + orth_delta
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            merged_delta,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            merged_delta, sources, -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
 def merge_mode_diff_export(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     rank_value: int,
     include_patterns: List[str],
     exclude_patterns: List[str],
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     if len(loras) < 2:
         raise ValueError("diff-export mode requires at least two LoRAs (base and capability).")
 
@@ -1254,7 +1423,7 @@ def merge_mode_diff_export(
     cap_pairs, cap_weight = loras[1]
 
     all_prefixes = set(base_pairs.keys()) | set(cap_pairs.keys())
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -1281,11 +1450,8 @@ def merge_mode_diff_export(
         if cap_lp is not None and (cap_lp.is_conv != is_conv or cap_lp.in_hw != in_hw):
             raise ValueError(f"Incompatible shapes for module '{prefix}' in capability LoRA (diff-export).")
 
-        compute_dtype = _resolve_working_dtype(
-            ([base_lp.down, base_lp.up] if base_lp is not None else [])
-            + ([cap_lp.down, cap_lp.up] if cap_lp is not None else []),
-            explicit_compute_dtype,
-        )
+        sources = [lp for lp in (base_lp, cap_lp) if lp is not None]
+        compute_dtype = _resolve_working_dtype(_tensors(sources), explicit_compute_dtype)
 
         if base_lp is not None:
             delta_base = compute_delta(base_lp, compute_dtype) * float(base_weight)
@@ -1302,32 +1468,16 @@ def merge_mode_diff_export(
         if torch.allclose(delta_diff, torch.zeros_like(delta_diff)):
             continue
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            delta_diff,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            delta_diff, sources, -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
 def merge_mode_moe(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     rank_value: int,
     moe_temperature: float,
     moe_hard: bool,
@@ -1336,7 +1486,8 @@ def merge_mode_moe(
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     if len(loras) < 1:
         raise ValueError("moe mode requires at least one LoRA.")
 
@@ -1346,7 +1497,7 @@ def merge_mode_moe(
     for pairs, _w in loras:
         all_prefixes.update(pairs.keys())
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -1381,11 +1532,8 @@ def merge_mode_moe(
             if lp.is_conv != is_conv or lp.in_hw != in_hw:
                 raise ValueError(f"Incompatible shapes for module '{prefix}' in moe experts.")
 
-        compute_dtype = _resolve_working_dtype(
-            ([base_lp.down, base_lp.up] if base_lp is not None else [])
-            + [t for lp, _w in experts for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        sources = ([base_lp] if base_lp is not None else []) + [lp for lp, _w in experts]
+        compute_dtype = _resolve_working_dtype(_tensors(sources), explicit_compute_dtype)
 
         if base_lp is not None:
             delta_base = compute_delta(base_lp, compute_dtype) * float(base_weight)
@@ -1418,37 +1566,35 @@ def merge_mode_moe(
             for g, d in zip(gate, deltas_expert):
                 merged_delta = merged_delta + float(g.item()) * d
 
-        svd_rank = rank_value
-        if svd_rank == 0:
-            svd_rank = -1
-
-        new_down, new_up = delta_to_svd_factors(
-            merged_delta,
-            rank=svd_rank,
-            is_conv=is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
-        )
-        new_alpha = float(new_down.shape[0])
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=is_conv,
-            in_hw=in_hw,
+        merged[prefix] = encode_delta(
+            merged_delta, sources, -1 if rank_value == 0 else rank_value,
+            is_conv, in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
 
     return merged
 
 
+def _obfuscate_lokr(lk: LokrPair, weight: float) -> LokrPair:
+    """A LoKr module with ``weight`` folded in and its two factors rescaled by a random pair that cancels."""
+    factor = math.exp(float(torch.randn(()).item())) * (1.0 if torch.rand(()).item() < 0.5 else -1.0)
+    first = "w1" if lk.w1 is not None else "w1_a"
+    second = "w2" if lk.w2 is not None else "w2_a"
+    return replace(
+        lk,
+        **{
+            first: getattr(lk, first).to(torch.float32) * (float(weight) * factor),
+            second: getattr(lk, second).to(torch.float32) / factor,
+        },
+    )
+
+
 def merge_mode_obfuscate(
-    loras: List[Tuple[Dict[str, LoraPair], float]],
+    loras: List[Tuple[Dict[str, ModulePair], float]],
     include_patterns: List[str],
     exclude_patterns: List[str],
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+) -> Dict[str, ModulePair]:
     if len(loras) < 1:
         raise ValueError("obfuscate mode requires at least one LoRA.")
 
@@ -1456,7 +1602,7 @@ def merge_mode_obfuscate(
     for pairs, _w in loras:
         all_prefixes.update(pairs.keys())
 
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(all_prefixes)
     total_modules = len(prefixes_sorted)
@@ -1479,16 +1625,20 @@ def merge_mode_obfuscate(
         ref_lp = present[0][0]
         is_conv = ref_lp.is_conv
         in_hw = ref_lp.in_hw
-        device = ref_lp.down.device
 
         for lp, _w in present[1:]:
             if lp.is_conv != is_conv or lp.in_hw != in_hw:
                 raise ValueError(f"Incompatible shapes for module '{prefix}' between LoRAs in obfuscate mode")
 
-        compute_dtype = _resolve_working_dtype(
-            [t for lp, _w in present for t in (lp.down, lp.up)],
-            explicit_compute_dtype,
-        )
+        if not all(isinstance(lp, LoraPair) for lp, _w in present):
+            if len(present) == 1 and isinstance(ref_lp, LokrPair):
+                merged[prefix] = _obfuscate_lokr(ref_lp, present[0][1])
+            else:
+                merged[prefix] = _stack_exact(present, is_conv, in_hw, explicit_compute_dtype)
+            continue
+
+        device = ref_lp.down.device
+        compute_dtype = _resolve_working_dtype(_tensors(present), explicit_compute_dtype)
 
         down_blocks: List[torch.Tensor] = []
         up_blocks_flat: List[torch.Tensor] = []
@@ -1570,16 +1720,17 @@ def merge_mode_obfuscate(
 
 
 def merge_mode_rebase(
-    lora: Tuple[Dict[str, LoraPair], float],
+    lora: Tuple[Dict[str, ModulePair], float],
     rank_value: int,
     include_patterns: List[str],
     exclude_patterns: List[str],
     auto_rank_threshold: float,
     explicit_compute_dtype: Optional[torch.dtype],
     progress_cb: Optional[ProgressCallback] = None,
-) -> Dict[str, LoraPair]:
+    lokr_layers: str = "exact",
+) -> Dict[str, ModulePair]:
     pairs, weight = lora
-    merged: Dict[str, LoraPair] = {}
+    merged: Dict[str, ModulePair] = {}
 
     prefixes_sorted = sorted(pairs.keys())
     total_modules = len(prefixes_sorted)
@@ -1592,45 +1743,32 @@ def merge_mode_rebase(
             continue
 
         lp = pairs[prefix]
-        compute_dtype = _resolve_working_dtype([lp.down, lp.up], explicit_compute_dtype)
+        compute_dtype = _resolve_working_dtype(_tensors([lp]), explicit_compute_dtype)
+
+        if isinstance(lp, LokrPair) and lokr_layers != "lora":
+            merged[prefix] = lp.scaled(weight)
+            continue
 
         delta = compute_delta(lp, compute_dtype) * float(weight)
-        original_rank = lp.down.shape[0]
+        original_rank = _rank_of(lp)
 
         target_rank = -1 if rank_value == 0 else rank_value
 
-        new_down, new_up = delta_to_svd_factors(
-            delta,
-            rank=target_rank,
-            is_conv=lp.is_conv,
-            auto_rank_threshold=auto_rank_threshold,
-            out_dtype=compute_dtype,
+        written = encode_delta(
+            delta, [lp], target_rank, lp.is_conv, lp.in_hw, auto_rank_threshold, compute_dtype, lokr_layers,
         )
+        if isinstance(written, LoraPair) and written.down.shape[0] > original_rank:
+            written.down = written.down[:original_rank].contiguous()
+            written.up = written.up[:, :original_rank, ...].contiguous()
+            written.alpha = float(original_rank)
 
-        new_rank = new_down.shape[0]
-        if new_rank > original_rank:
-            if lp.is_conv:
-                new_down = new_down[:original_rank].contiguous()
-                new_up = new_up[:, :original_rank, ...].contiguous()
-            else:
-                new_down = new_down[:original_rank].contiguous()
-                new_up = new_up[:, :original_rank].contiguous()
-
-        new_alpha = float(new_down.shape[0])
-
-        merged[prefix] = LoraPair(
-            down=new_down,
-            up=new_up,
-            alpha=new_alpha,
-            is_conv=lp.is_conv,
-            in_hw=lp.in_hw,
-        )
+        merged[prefix] = written
 
     return merged
 
 
 def build_state_dict(
-    merged: Dict[str, LoraPair],
+    merged: Dict[str, ModulePair],
     metadata_ref: Dict[str, str],
     dtype: torch.dtype,
     device: torch.device,
@@ -1644,6 +1782,18 @@ def build_state_dict(
     total_modules = len(items)
     for i, (prefix, lp) in enumerate(items, start=1):
         _progress(progress_cb, "build.state_dict", i, total_modules, prefix)
+        if isinstance(lp, FullDelta):
+            # Whole changes are kept in system memory.
+            tensors[f"{prefix}.diff"] = lp.delta.to(dtype=dtype, device="cpu").contiguous()
+            continue
+        if isinstance(lp, LokrPair):
+            for name in LOKR_PARTS:
+                value = getattr(lp, name)
+                if value is not None:
+                    tensors[f"{prefix}.lokr_{name}"] = value.to(dtype=dtype, device=device).contiguous()
+            if lp.alpha is not None:
+                tensors[get_alpha_key(prefix)] = torch.tensor(float(lp.alpha), dtype=torch.float32, device=device)
+            continue
         down = lp.down.to(dtype=dtype, device=device)
         up = lp.up.to(dtype=dtype, device=device)
         alpha_value = torch.tensor(lp.alpha, dtype=torch.float32, device=device)
@@ -1658,8 +1808,24 @@ def build_state_dict(
     return tensors, meta
 
 
+def layer_counts(merged: Dict[str, ModulePair]) -> Dict[str, int]:
+    """How many merged modules are written as each kind.
+
+    Args:
+        merged: The merged modules.
+
+    Returns:
+        ``{"lora": n, "lokr": n, "full": n}``.
+    """
+    counts = {"lora": 0, "lokr": 0, "full": 0}
+    for lp in merged.values():
+        kind = "lokr" if isinstance(lp, LokrPair) else "full" if isinstance(lp, FullDelta) else "lora"
+        counts[kind] += 1
+    return counts
+
+
 def summarize_pairs(
-    pairs: Dict[str, LoraPair],
+    pairs: Dict[str, ModulePair],
     weight: float,
     explicit_compute_dtype: Optional[torch.dtype],
     include_patterns: List[str],
@@ -1684,14 +1850,21 @@ def summarize_pairs(
 
     for prefix in prefixes[: max_modules]:
         lp = pairs[prefix]
-        compute_dtype = _resolve_working_dtype([lp.down, lp.up], explicit_compute_dtype)
+        compute_dtype = _resolve_working_dtype(_tensors([lp]), explicit_compute_dtype)
         delta = compute_delta(lp, compute_dtype)
         norms.append(tensor_norm(delta) * float(abs(weight)))
-        r = float(lp.down.shape[0])
-        a = float(lp.alpha)
+        r = float(_rank_of(lp))
+        if isinstance(lp, LoraPair):
+            a = float(lp.alpha)
+            scale = a / max(r, 1.0)
+        elif isinstance(lp, LokrPair):
+            scale = lp.scale
+            a = float(lp.alpha) if lp.alpha is not None else 0.0
+        else:
+            a, scale = r, 1.0
         ranks.append(r)
         alphas.append(a)
-        scales.append(float(abs(weight)) * (a / max(r, 1.0)))
+        scales.append(float(abs(weight)) * scale)
 
     return {
         "modules": float(len(prefixes)),

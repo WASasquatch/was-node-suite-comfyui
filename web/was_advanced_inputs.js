@@ -1,12 +1,13 @@
 /**
- * The advanced inputs of the pack's nodes, folded under a bar that opens them.
+ * The advanced inputs of the pack's nodes, folded under a bar that opens them. A wired one stays
+ * drawn.
  *
- * The bar's state is kept in the node's properties. `widgets_values` carries every widget
- * whether it is drawn or not.
+ * The bar's state is kept in the node's properties. `widgets_values` carries every widget, drawn
+ * or not.
  */
 import { app } from "../../scripts/app.js";
 import { addSectionHeader } from "./interface/decoration.js";
-import { setWidgetHidden } from "./interface/visibility.js";
+import { isWidgetWired, setWidgetHidden } from "./interface/visibility.js";
 
 const EXT_NAME = "WASNodeSuite.AdvancedInputs";
 
@@ -37,20 +38,21 @@ function advancedNames(nodeData) {
  *
  * @param {object} node - The node.
  * @param {Set<string>} names - Advanced input names.
- * @returns {object[]} Widgets in node order.
+ * @returns {Array<[object, object]>} `[widget, input widget]` pairs in node order, the second
+ *   being the advanced input the widget belongs to.
  */
 function advancedWidgets(node, names) {
   const found = [];
   for (const widget of node.widgets ?? []) {
     if (!names.has(widget.name)) continue;
-    found.push(widget);
-    for (const linked of widget.linkedWidgets ?? []) found.push(linked);
+    found.push([widget, widget]);
+    for (const linked of widget.linkedWidgets ?? []) found.push([linked, widget]);
   }
   return found;
 }
 
 /**
- * Draw or fold a node's advanced widgets to match its bar.
+ * Draw or fold a node's advanced widgets to match its bar. A wired input is always drawn.
  *
  * @param {object} node - The node.
  * @param {Set<string>} names - Advanced input names.
@@ -59,11 +61,12 @@ function advancedWidgets(node, names) {
 function fold(node, names) {
   const open = Boolean(node.properties?.[OPEN_PROPERTY]);
   let changed = false;
-  for (const widget of advancedWidgets(node, names)) {
+  for (const [widget, input] of advancedWidgets(node, names)) {
     // The bar decides, on either renderer.
     widget.advanced = false;
     if (widget.options) widget.options.advanced = false;
-    if (setWidgetHidden(widget, !open)) changed = true;
+    const shown = open || isWidgetWired(input, node);
+    if (setWidgetHidden(widget, !shown)) changed = true;
   }
   if (!changed) return;
   // Only the height is taken from the recomputed size.
@@ -117,6 +120,17 @@ app.registerExtension({
     const originalOnConfigure = proto.onConfigure;
     proto.onConfigure = function () {
       const result = originalOnConfigure?.apply(this, arguments);
+      try {
+        fold(this, names);
+      } catch (error) {
+        console.error(`[${EXT_NAME}] Failed to fold ${this.type}:`, error);
+      }
+      return result;
+    };
+
+    const originalOnConnectionsChange = proto.onConnectionsChange;
+    proto.onConnectionsChange = function () {
+      const result = originalOnConnectionsChange?.apply(this, arguments);
       try {
         fold(this, names);
       } catch (error) {
