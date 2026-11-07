@@ -58,14 +58,21 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "bluepixel_turbo_int8_convrot.safetensors",
+            "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/bluepixel/diffusion_models/bluepixel_turbo_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
-        "BluePixel\\bluepixel_turbo_int8_convrot.safetensors",
+        "bluepixel_turbo_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "BluePixel\\bluepixel_turbo_int8_convrot.safetensors",
+        "unet_name": "bluepixel_turbo_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -192,7 +199,14 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "qwen_3_8b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen_3_8b.safetensors",
@@ -248,7 +262,14 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "dc-ae-f64c128-mix-1.0.safetensors",
+            "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/bluepixel/vae/dc-ae-f64c128-mix-1.0.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "dc-ae-f64c128-mix-1.0.safetensors"
@@ -1007,5 +1028,22 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "bluepixel_turbo_int8_convrot.safetensors",
+      "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/bluepixel/diffusion_models/bluepixel_turbo_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen_3_8b.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "dc-ae-f64c128-mix-1.0.safetensors",
+      "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/bluepixel/vae/dc-ae-f64c128-mix-1.0.safetensors",
+      "directory": "vae"
+    }
+  ]
 }

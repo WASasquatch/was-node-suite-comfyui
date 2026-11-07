@@ -57,10 +57,17 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "flux-2-klein-9b-fp8.safetensors",
+            "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-9b-fp8/resolve/main/flux-2-klein-9b-fp8.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
-        "Klein\\flux-2-klein-9b-int8-convrot.safetensors",
+        "flux-2-klein-9b-fp8.safetensors",
         "default"
       ],
       "widgets_values_named": {
@@ -132,7 +139,14 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "qwen_3_8b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen_3_8b.safetensors",
@@ -189,7 +203,14 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "flux2-vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "flux2-vae.safetensors"
@@ -264,7 +285,14 @@
           },
           "version": "8.0",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "qwen3.5_9b_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen3.5_9b_int8_convrot.safetensors",
@@ -2733,5 +2761,27 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "flux-2-klein-9b-fp8.safetensors",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-9b-fp8/resolve/main/flux-2-klein-9b-fp8.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen_3_8b.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "flux2-vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "qwen3.5_9b_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors",
+      "directory": "text_encoders"
+    }
+  ]
 }
