@@ -11278,8 +11278,8 @@ Give a FLUX 3 Image Klein base model the distilled checkpoint's target-time bran
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `MODEL` | Yes |  |  | The FLUX 3 Image Klein base model, before or after the distillation LoRA: Load Diffusion Model on flux3_image_klein_bf16, then Load LoRA on flux3_image_klein_distill_r256, r64, r32 or r16. |
-| `checkpoint` | `COMBO,STRING` | Yes |  |  | The distilled checkpoint the branch is read from: flux3_image_klein_sd_bf16 or flux3_image_klein_sd_int8_convrot. Both hold the same bf16 branch. A file with no _sd_ holds none. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `model` | `MODEL` | Yes |  |  | The FLUX 3 Image Klein base model, before or after the distillation LoRA: Load Diffusion Model on flux3-image-klein-base-bf16, then Load LoRA on flux3_image_klein_distill_r256, r64, r32 or r16. |
+| `checkpoint` | `COMBO,STRING` | Yes |  |  | The distilled checkpoint the branch is read from: flux3-image-klein-bf16 or flux3-image-klein-int8-convrot. Both hold the same bf16 branch. A -base file holds none. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 
 **Outputs**
 

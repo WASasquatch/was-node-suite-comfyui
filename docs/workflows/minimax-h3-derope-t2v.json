@@ -34,7 +34,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/silveroxides/MiniMax-H3_tests/resolve/main/silver_official_releases/diffusion_models/minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
         "minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
@@ -138,7 +145,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
@@ -184,7 +198,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "minimax_h3_video_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "minimax_h3_video_vae_fp16.safetensors"
@@ -224,7 +245,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "minimax_h3_audio_vae_fp32.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "minimax_h3_audio_vae_fp32.safetensors"
@@ -1396,14 +1424,21 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+            "url": "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
       },
       "widgets_values": [
-        "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
         1
       ],
       "widgets_values_named": {
-        "lora_name": "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
         "strength_model": 1
       }
     },
@@ -2088,5 +2123,32 @@
       "39": 0
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
+      "url": "https://huggingface.co/silveroxides/MiniMax-H3_tests/resolve/main/silver_official_releases/diffusion_models/minimax_h3_ref2va_silverturbo_pruned_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "minimax_h3_video_vae_fp16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "minimax_h3_audio_vae_fp32.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "url": "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "directory": "loras"
+    }
+  ]
 }

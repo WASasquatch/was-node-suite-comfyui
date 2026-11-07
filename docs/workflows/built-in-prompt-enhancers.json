@@ -65,7 +65,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "CLIPLoader"
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen_3_4b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen_3_4b.safetensors",
@@ -517,7 +524,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "UNETLoader"
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "z_image_turbo_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
         "z_image_turbo_bf16.safetensors",
@@ -637,7 +651,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "VAELoader"
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "ae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "ae.safetensors"
@@ -1371,7 +1392,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "CLIPLoader"
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3.5_9b_w4a8_gptq.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen3.5_9b_w4a8_gptq.safetensors",
@@ -1617,5 +1645,27 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "qwen_3_4b.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "z_image_turbo_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "ae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "qwen3.5_9b_w4a8_gptq.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+      "directory": "text_encoders"
+    }
+  ]
 }

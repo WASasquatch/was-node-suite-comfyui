@@ -71,8 +71,8 @@ def read_branch(name: str) -> dict[str, torch.Tensor]:
 
     if not str(name).lower().endswith(_SAFETENSORS):
         raise ValueError(
-            f"{name!r} is not a .safetensors file. Pick flux3_image_klein_sd_bf16 or "
-            f"flux3_image_klein_sd_int8_convrot from the checkpoint menu."
+            f"{name!r} is not a .safetensors file. Pick flux3-image-klein-bf16 or "
+            f"flux3-image-klein-int8-convrot from the checkpoint menu."
         )
     path = folder_paths.get_full_path(FOLDER, name)
     if not path or not os.path.isfile(path):
@@ -87,8 +87,8 @@ def read_branch(name: str) -> dict[str, torch.Tensor]:
                 return {key.split("ref_time_in.", 1)[1]: handle.get_tensor(key) for key in keys}
     raise ValueError(
         f"{name!r} holds no ref_time_in weights, so it is not a distilled FLUX 3 Image Klein "
-        f"checkpoint. Pick one with _sd_ in its name, such as "
-        f"flux3_image_klein_sd_bf16.safetensors."
+        f"checkpoint. Pick a file without -base in its name, such as "
+        f"flux3-image-klein-bf16.safetensors from black-forest-labs/flux-3-image-klein-comfy."
     )
 
 
@@ -114,7 +114,7 @@ def attach(model, name: str):
         raise ValueError(
             f"Flux 3 Flow Map Patch takes a FLUX 3 Image model, and this one is "
             f"{type(transformer).__name__}. Wire the Load Diffusion Model that loads "
-            f"flux3_image_klein_bf16, or a LoRA after it."
+            f"flux3-image-klein-base-bf16, or a LoRA after it."
         )
     # Read from the checkpoint and this patcher, never the live module, which still carries the
     # object patches of whichever clone was loaded last.

@@ -75,7 +75,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "4xNomosWebPhoto_RealPLKSR.safetensors",
+            "url": "https://huggingface.co/Phips/4xNomosWebPhoto_RealPLKSR/resolve/main/4xNomosWebPhoto_RealPLKSR.safetensors",
+            "directory": "upscale_models"
+          }
+        ]
       },
       "widgets_values": [
         "4xNomosWebPhoto_RealPLKSR.safetensors"
@@ -114,7 +121,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "sea_raft_s_spring.safetensors",
+            "url": "https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-S/resolve/main/model.safetensors",
+            "directory": "optical_flow"
+          }
+        ]
       },
       "widgets_values": [
         "sea_raft_s_spring.safetensors",
@@ -297,7 +311,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "ours_small_t.safetensors",
+            "url": "https://huggingface.co/WAS/EMA-VFI/resolve/main/ours_small_t.safetensors",
+            "directory": "ema_vfi"
+          }
+        ]
       },
       "widgets_values": [
         "ours_small_t.safetensors"
@@ -633,5 +654,22 @@
     "VHS_MetadataImage": true,
     "VHS_KeepIntermediate": true
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "4xNomosWebPhoto_RealPLKSR.safetensors",
+      "url": "https://huggingface.co/Phips/4xNomosWebPhoto_RealPLKSR/resolve/main/4xNomosWebPhoto_RealPLKSR.safetensors",
+      "directory": "upscale_models"
+    },
+    {
+      "name": "sea_raft_s_spring.safetensors",
+      "url": "https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-S/resolve/main/model.safetensors",
+      "directory": "optical_flow"
+    },
+    {
+      "name": "ours_small_t.safetensors",
+      "url": "https://huggingface.co/WAS/EMA-VFI/resolve/main/ours_small_t.safetensors",
+      "directory": "ema_vfi"
+    }
+  ]
 }

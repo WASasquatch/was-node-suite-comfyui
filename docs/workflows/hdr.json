@@ -95,7 +95,14 @@
           "widget_ue_connectable": {},
           "version": "7.8",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "autismmixSDXL_autismmixConfetti.safetensors",
+            "url": "https://civitai.com/api/download/models/324524",
+            "directory": "checkpoints"
+          }
+        ]
       },
       "widgets_values": [
         "autismmixSDXL_autismmixConfetti.safetensors"
@@ -2857,5 +2864,12 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "autismmixSDXL_autismmixConfetti.safetensors",
+      "url": "https://civitai.com/api/download/models/324524",
+      "directory": "checkpoints"
+    }
+  ]
 }

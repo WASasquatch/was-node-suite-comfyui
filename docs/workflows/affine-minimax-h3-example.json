@@ -518,7 +518,34 @@
           },
           "version": "7.8",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          },
+          {
+            "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "directory": "text_encoders"
+          },
+          {
+            "name": "minimax_h3_video_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+            "directory": "vae"
+          },
+          {
+            "name": "minimax_h3_audio_vae_fp32.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+            "directory": "vae"
+          },
+          {
+            "name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+            "url": "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
       },
       "widgets_values": [
         "integrated_multimodal_description: [Shot 1] Live-action, cinematic, ultra-realistic DSLR photography. A tall athletic cybernetic woman stands on a rain-darkened rooftop platform overlooking a vast dystopian city at night, framed full-body from a dramatic low angle with a 50mm photographic look, shallow depth of field and hard urban backlighting. Behind her, dense megatowers disappear into polluted haze, stacked highways thread between buildings, giant industrial structures crowd the skyline, broken neon signage flickers through drifting steam, distant windows glow unevenly, and red aircraft warning lights blink across the smog-filled city.\n\nShe has pale natural tan skin, a short neat black bob with blunt bangs, a fitted cropped white shirt, long powerful robotic legs, and a narrow waist. Her entire left arm is a massive exposed mechanical assembly of titanium servos, pistons, articulated joints and hydraulic actuators. Her hips, pelvis and legs transition into intricate matte-black cybernetic anatomy with worn metal, polymer, mechanical seams and micro-scratches. An open compartment in her thigh contains a large futuristic revolver.\n\nThe camera slowly pushes toward her as wind moves her shirt and hair and city haze drifts behind her. She lowers her hand to the open thigh compartment, grips the revolver and pulls it free in one fast, mechanically precise motion. Small servos shift around the compartment as the weapon clears her leg. Without breaking eye contact with the camera, she pivots her upper body, raises the revolver and extends it directly toward the lens until the barrel dominates the foreground. Her mechanical arm locks into position with visible piston movement.\n\n[Shot 2] At 00:04.000, the camera holds nearly static on the revolver aimed directly into the lens. The dystopian skyline remains visible behind her through haze and flickering neon. She tightens her grip and fires. A violent muzzle flash fills the frame, the revolver snaps backward with sharp recoil, her mechanical wrist and forearm absorb the movement through contracting pistons, and smoke bursts toward the camera.\n\n[Shot 3] At 00:04.500, the image cuts instantly to pure black and remains completely black through the end of the video.\n\noverall_soundscape: Distant city traffic, low industrial machinery, wind between towers, electrical hum, faint sirens and rooftop ventilation under subtle mechanical servo whirs, hydraulic movement and metallic clicks. The revolver clears its compartment with a solid mechanical scrape, followed by one extremely loud gunshot and a brief decay into silence after the cut to black.\n\nnon_diegetic_music: N/A",
@@ -531,7 +558,7 @@
         "minimax_h3_video_vae_fp16.safetensors",
         "minimax_h3_audio_vae_fp32.safetensors",
         false,
-        "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
         0.7,
         8,
         true,
@@ -551,7 +578,7 @@
         "vae_name": "minimax_h3_video_vae_fp16.safetensors",
         "vae_name_1": "minimax_h3_audio_vae_fp32.safetensors",
         "value": false,
-        "lora_name": "H3\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
         "strength_model_1": 0.7,
         "value_2": 8,
         "boolean": true,
@@ -3808,5 +3835,32 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "minimax_h3_video_vae_fp16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "minimax_h3_audio_vae_fp32.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "url": "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "directory": "loras"
+    }
+  ]
 }

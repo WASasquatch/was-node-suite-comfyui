@@ -192,7 +192,24 @@
           },
           "version": "7.8",
           "input_ue_unconnectable": {}
-        }
+        },
+        "models": [
+          {
+            "name": "krea2_raw_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_raw_bf16.safetensors",
+            "directory": "diffusion_models"
+          },
+          {
+            "name": "qwen3vl_4b_fp8_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors",
+            "directory": "text_encoders"
+          },
+          {
+            "name": "wan_2.1_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "Cinematic DSLR side-profile photograph of a Spartan warrior lunging across rugged rocky terrain, captured in a dramatic battlefield moment. He drives forward with powerful motion, spear gripped in one hand, round shield raised to protect himself from flying debris. Bronze helmet, weathered armor, leather straps, ash-streaked skin, intense heroic presence. Smoke, embers, dust, and shattered rock erupt around him, warm firelight cutting through the haze, shallow depth of field, rich texture, gritty ultra-real realism.\n",
@@ -1832,6 +1849,11 @@
                   "name": "krea2_darkbrush.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/loras/krea2_darkbrush.safetensors",
                   "directory": "loras"
+                },
+                {
+                  "name": "krea2_raw_to_turbo_r256_comfy.safetensors",
+                  "url": "https://civitai.com/api/download/models/3066079",
+                  "directory": "loras"
                 }
               ],
               "ue_properties": {
@@ -1841,11 +1863,11 @@
               }
             },
             "widgets_values": [
-              "Krea2\\krea2_raw_to_turbo_r256_comfy.safetensors",
+              "krea2_raw_to_turbo_r256_comfy.safetensors",
               0.8
             ],
             "widgets_values_named": {
-              "lora_name": "Krea2\\krea2_raw_to_turbo_r256_comfy.safetensors",
+              "lora_name": "krea2_raw_to_turbo_r256_comfy.safetensors",
               "strength_model": 0.8
             }
           },
@@ -3147,5 +3169,37 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "krea2_raw_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_raw_bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "wan_2.1_vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "krea2_turbo_fp8_scaled.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_fp8_scaled.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "krea2_raw_to_turbo_r256_comfy.safetensors",
+      "url": "https://civitai.com/api/download/models/3066079",
+      "directory": "loras"
+    },
+    {
+      "name": "qwen_image_vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors",
+      "directory": "vae"
+    }
+  ]
 }

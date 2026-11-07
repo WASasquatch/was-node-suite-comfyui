@@ -123,7 +123,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "UNETLoader"
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "qwen_image_edit_2509_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/diffusion_models/qwen_image_edit_2509_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
         "qwen_image_edit_2509_int8_convrot.safetensors",
@@ -1059,5 +1066,12 @@
     "ue_links": [],
     "links_added_by_ue": []
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "qwen_image_edit_2509_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/diffusion_models/qwen_image_edit_2509_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    }
+  ]
 }

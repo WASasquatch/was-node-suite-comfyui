@@ -36,7 +36,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "qwen_image_edit_2509_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/diffusion_models/qwen_image_edit_2509_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
         "qwen_image_edit_2509_int8_convrot.safetensors",
@@ -77,7 +84,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "marigold_v2_depth_log_stage2_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/vae/marigold_v2_depth_log_stage2_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "marigold_v2_depth_log_stage2_vae.safetensors"
@@ -153,7 +167,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "marigold_v2_normals_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/vae/marigold_v2_normals_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "marigold_v2_normals_vae.safetensors"
@@ -316,7 +337,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.8"
-        }
+        },
+        "models": [
+          {
+            "name": "marigold_v2_albedo_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/vae/marigold_v2_albedo_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "marigold_v2_albedo_vae.safetensors"
@@ -774,5 +802,27 @@
     "ue_links": [],
     "links_added_by_ue": []
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "qwen_image_edit_2509_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/diffusion_models/qwen_image_edit_2509_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "marigold_v2_depth_log_stage2_vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/vae/marigold_v2_depth_log_stage2_vae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "marigold_v2_normals_vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/vae/marigold_v2_normals_vae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "marigold_v2_albedo_vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/vae/marigold_v2_albedo_vae.safetensors",
+      "directory": "vae"
+    }
+  ]
 }

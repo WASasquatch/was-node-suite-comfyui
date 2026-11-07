@@ -53,14 +53,21 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "UNETLoader"
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "flux3-image-klein-base-bf16.safetensors",
+            "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-base-bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
-        "flux3_image_klein_bf16.safetensors",
+        "flux3-image-klein-base-bf16.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "flux3_image_klein_bf16.safetensors",
+        "unet_name": "flux3-image-klein-base-bf16.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -119,7 +126,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "LoraLoaderModelOnly"
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "models": [
+          {
+            "name": "flux3_image_klein_distill_r256.safetensors",
+            "url": "https://huggingface.co/WAS/flux3_klein/resolve/main/flux3_image_klein_distill_r256.safetensors",
+            "directory": "loras"
+          }
+        ]
       },
       "widgets_values": [
         "flux3_image_klein_distill_r256.safetensors",
@@ -177,13 +191,20 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "WASFlux3FlowMapPatch"
+        "Node name for S&R": "WASFlux3FlowMapPatch",
+        "models": [
+          {
+            "name": "flux3-image-klein-bf16.safetensors",
+            "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
-        "flux3_image_klein_sd_bf16.safetensors"
+        "flux3-image-klein-bf16.safetensors"
       ],
       "widgets_values_named": {
-        "checkpoint": "flux3_image_klein_sd_bf16.safetensors"
+        "checkpoint": "flux3-image-klein-bf16.safetensors"
       }
     },
     {
@@ -246,7 +267,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "CLIPLoader"
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3vl_4b_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen3vl_4b_int8_convrot.safetensors",
@@ -412,7 +440,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "VAELoader"
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "flux2-vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "flux2-vae.safetensors"
@@ -1254,5 +1289,32 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "flux3-image-klein-base-bf16.safetensors",
+      "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-base-bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "flux3_image_klein_distill_r256.safetensors",
+      "url": "https://huggingface.co/WAS/flux3_klein/resolve/main/flux3_image_klein_distill_r256.safetensors",
+      "directory": "loras"
+    },
+    {
+      "name": "flux3-image-klein-bf16.safetensors",
+      "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_4b_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "flux2-vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+      "directory": "vae"
+    }
+  ]
 }

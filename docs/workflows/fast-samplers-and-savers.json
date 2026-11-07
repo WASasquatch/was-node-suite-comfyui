@@ -61,7 +61,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "CheckpointLoaderSimple"
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "models": [
+          {
+            "name": "autismmixSDXL_autismmixConfetti.safetensors",
+            "url": "https://civitai.com/api/download/models/324524",
+            "directory": "checkpoints"
+          }
+        ]
       },
       "widgets_values": [
         "autismmixSDXL_autismmixConfetti.safetensors"
@@ -949,5 +956,12 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "autismmixSDXL_autismmixConfetti.safetensors",
+      "url": "https://civitai.com/api/download/models/324524",
+      "directory": "checkpoints"
+    }
+  ]
 }

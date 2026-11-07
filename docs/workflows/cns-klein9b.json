@@ -28,7 +28,14 @@
     }
    ],
    "properties": {
-    "Node name for S&R": "UNETLoader"
+    "Node name for S&R": "UNETLoader",
+    "models": [
+     {
+      "name": "flux-2-klein-9b-fp8.safetensors",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-9b-fp8/resolve/main/flux-2-klein-9b-fp8.safetensors",
+      "directory": "diffusion_models"
+     }
+    ]
    },
    "widgets_values": [
     "flux-2-klein-9b-fp8.safetensors",
@@ -60,7 +67,14 @@
     }
    ],
    "properties": {
-    "Node name for S&R": "CLIPLoader"
+    "Node name for S&R": "CLIPLoader",
+    "models": [
+     {
+      "name": "qwen_3_8b_fp8mixed.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors",
+      "directory": "text_encoders"
+     }
+    ]
    },
    "widgets_values": [
     "qwen_3_8b_fp8mixed.safetensors",
@@ -95,7 +109,14 @@
     }
    ],
    "properties": {
-    "Node name for S&R": "VAELoader"
+    "Node name for S&R": "VAELoader",
+    "models": [
+     {
+      "name": "flux2-vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+      "directory": "vae"
+     }
+    ]
    },
    "widgets_values": [
     "flux2-vae.safetensors"
@@ -1334,5 +1355,22 @@
    ]
   }
  },
- "version": 0.4
+ "version": 0.4,
+ "models": [
+  {
+   "name": "flux-2-klein-9b-fp8.safetensors",
+   "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-9b-fp8/resolve/main/flux-2-klein-9b-fp8.safetensors",
+   "directory": "diffusion_models"
+  },
+  {
+   "name": "qwen_3_8b_fp8mixed.safetensors",
+   "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors",
+   "directory": "text_encoders"
+  },
+  {
+   "name": "flux2-vae.safetensors",
+   "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+   "directory": "vae"
+  }
+ ]
 }

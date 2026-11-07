@@ -881,16 +881,28 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "WASPowerLoraLoader"
+        "Node name for S&R": "WASPowerLoraLoader",
+        "models": [
+          {
+            "name": "skin_detail_slider_krea2_ZT-V1.safetensors",
+            "url": "https://civitai.com/api/download/models/3323867",
+            "directory": "loras"
+          },
+          {
+            "name": "day_&_night_slider_0ts-krea2-v1.safetensors",
+            "url": "https://civitai.com/api/download/models/3350109",
+            "directory": "loras"
+          }
+        ]
       },
       "widgets_values": [
         false,
         1,
         true,
-        "Krea2\\skin_detail_slider_krea2_ZT-V1.safetensors",
+        "skin_detail_slider_krea2_ZT-V1.safetensors",
         1,
         true,
-        "Krea2\\day_&_night_slider_0ts-krea2-v1.safetensors",
+        "day_&_night_slider_0ts-krea2-v1.safetensors",
         0.5,
         true,
         "None",
@@ -969,10 +981,10 @@
         "fuse": false,
         "strength": 1,
         "lora_1_enabled": true,
-        "lora_1": "Krea2\\skin_detail_slider_krea2_ZT-V1.safetensors",
+        "lora_1": "skin_detail_slider_krea2_ZT-V1.safetensors",
         "lora_1_weight": 1,
         "lora_2_enabled": true,
-        "lora_2": "Krea2\\day_&_night_slider_0ts-krea2-v1.safetensors",
+        "lora_2": "day_&_night_slider_0ts-krea2-v1.safetensors",
         "lora_2_weight": 0.5,
         "lora_3_enabled": true,
         "lora_3": "None",
@@ -3326,5 +3338,17 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "skin_detail_slider_krea2_ZT-V1.safetensors",
+      "url": "https://civitai.com/api/download/models/3323867",
+      "directory": "loras"
+    },
+    {
+      "name": "day_&_night_slider_0ts-krea2-v1.safetensors",
+      "url": "https://civitai.com/api/download/models/3350109",
+      "directory": "loras"
+    }
+  ]
 }

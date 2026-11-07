@@ -34,7 +34,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "UNETLoader"
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "kandinsky6_lite_distill_5s_int8_convrot.safetensors",
+            "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/diffusion_models/kandinsky6_lite_distill_5s_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
         "kandinsky6_lite_distill_5s_int8_convrot.safetensors",
@@ -75,7 +82,19 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "DualCLIPLoader"
+        "Node name for S&R": "DualCLIPLoader",
+        "models": [
+          {
+            "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "directory": "text_encoders"
+          },
+          {
+            "name": "clip_l.safetensors",
+            "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/text_encoders/clip_l.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen_2.5_vl_7b_fp8_scaled.safetensors",
@@ -120,7 +139,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "VAELoader"
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "hunyuan_video_vae_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged/resolve/main/split_files/vae/hunyuan_video_vae_bf16.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "hunyuan_video_vae_bf16.safetensors"
@@ -159,7 +185,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "WASKandinsky6AudioVAELoader"
+        "Node name for S&R": "WASKandinsky6AudioVAELoader",
+        "models": [
+          {
+            "name": "kandinsky6_audio_vae.safetensors",
+            "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/vae/kandinsky6_audio_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "kandinsky6_audio_vae.safetensors"
@@ -1236,5 +1269,32 @@
     },
     "frontendVersion": "1.53.6"
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "kandinsky6_lite_distill_5s_int8_convrot.safetensors",
+      "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/diffusion_models/kandinsky6_lite_distill_5s_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "clip_l.safetensors",
+      "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/text_encoders/clip_l.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "hunyuan_video_vae_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged/resolve/main/split_files/vae/hunyuan_video_vae_bf16.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "kandinsky6_audio_vae.safetensors",
+      "url": "https://huggingface.co/WAS/was-node-suite-weights/resolve/main/models/kandinsky6/vae/kandinsky6_audio_vae.safetensors",
+      "directory": "vae"
+    }
+  ]
 }

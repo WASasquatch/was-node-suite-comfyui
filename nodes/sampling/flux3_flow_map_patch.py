@@ -7,8 +7,13 @@ from comfy_api.latest import io
 from ...modules.io import picker
 from ...modules.model import flux3_flow_map
 
-#: The distilled checkpoint the menu starts on, where the folder holds it.
-DISTILLED = "flux3_image_klein_sd_bf16.safetensors"
+#: Distilled checkpoints the menu starts on, the first the folder holds: BFL's published names, then older ones.
+DISTILLED = (
+    "flux3-image-klein-bf16.safetensors",
+    "flux3-image-klein-int8-convrot.safetensors",
+    "flux3_image_klein_sd_bf16.safetensors",
+    "flux3_image_klein_sd_int8_convrot.safetensors",
+)
 
 
 class Flux3FlowMapPatch(io.ComfyNode):
@@ -17,8 +22,8 @@ class Flux3FlowMapPatch(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         options = flux3_flow_map.checkpoints()
-        default = next((name for name in options if name.replace("\\", "/").endswith(DISTILLED)),
-                       next((name for name in options if "_sd_" in name), None))
+        plain = {name.replace("\\", "/").rsplit("/", 1)[-1]: name for name in options}
+        default = next((plain[name] for name in DISTILLED if name in plain), None)
         return io.Schema(
             node_id="WASFlux3FlowMapPatch",
             display_name="Flux 3 Flow Map Patch",
@@ -44,7 +49,7 @@ class Flux3FlowMapPatch(io.ComfyNode):
                     "model",
                     tooltip=(
                         "The FLUX 3 Image Klein base model, before or after the distillation LoRA: "
-                        "Load Diffusion Model on flux3_image_klein_bf16, then Load LoRA on "
+                        "Load Diffusion Model on flux3-image-klein-base-bf16, then Load LoRA on "
                         "flux3_image_klein_distill_r256, r64, r32 or r16."
                     ),
                 ),
@@ -54,8 +59,8 @@ class Flux3FlowMapPatch(io.ComfyNode):
                     default=default,
                     tooltip=(
                         "The distilled checkpoint the branch is read from: "
-                        "flux3_image_klein_sd_bf16 or flux3_image_klein_sd_int8_convrot. Both hold "
-                        "the same bf16 branch. A file with no _sd_ holds none."
+                        "flux3-image-klein-bf16 or flux3-image-klein-int8-convrot. Both hold "
+                        "the same bf16 branch. A -base file holds none."
                     ),
                 ), model=True),
             ],

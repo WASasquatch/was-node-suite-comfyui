@@ -363,7 +363,14 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "WASImageSkinMask"
+        "Node name for S&R": "WASImageSkinMask",
+        "models": [
+          {
+            "name": "sapiens2_1b_seg.safetensors",
+            "url": "https://huggingface.co/facebook/sapiens2-seg-1b/resolve/main/sapiens2_1b_seg.safetensors",
+            "directory": "sapiens"
+          }
+        ]
       },
       "widgets_values": [
         "sapiens2_1b_seg.safetensors",
@@ -428,5 +435,12 @@
   "groups": [],
   "config": {},
   "extra": {},
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "sapiens2_1b_seg.safetensors",
+      "url": "https://huggingface.co/facebook/sapiens2-seg-1b/resolve/main/sapiens2_1b_seg.safetensors",
+      "directory": "sapiens"
+    }
+  ]
 }

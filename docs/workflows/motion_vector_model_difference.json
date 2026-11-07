@@ -75,7 +75,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "WASVideoMotionModelLoader"
+        "Node name for S&R": "WASVideoMotionModelLoader",
+        "models": [
+          {
+            "name": "sea_raft_m_spring.safetensors",
+            "url": "https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-M/resolve/main/model.safetensors",
+            "directory": "optical_flow"
+          }
+        ]
       },
       "widgets_values": [
         "sea_raft_m_spring.safetensors",
@@ -376,5 +383,12 @@
     "VHS_MetadataImage": true,
     "VHS_KeepIntermediate": true
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "sea_raft_m_spring.safetensors",
+      "url": "https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-M/resolve/main/model.safetensors",
+      "directory": "optical_flow"
+    }
+  ]
 }

@@ -53,14 +53,21 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "UNETLoader"
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "fibo2_dev_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Fibo-2.0/resolve/main/diffusion_models/fibo2_dev_bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
-        "fibo2\\fibo2_dev_bf16.safetensors",
+        "fibo2_dev_bf16.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "fibo2\\fibo2_dev_bf16.safetensors",
+        "unet_name": "fibo2_dev_bf16.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -125,7 +132,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "CLIPLoader"
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3vl_4b_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Fibo-2.0/resolve/main/text_encoders/qwen3vl_4b_bf16.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "qwen3vl_4b_bf16.safetensors",
@@ -180,7 +194,14 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "VAELoader"
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "flux2-vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+            "directory": "vae"
+          }
+        ]
       },
       "widgets_values": [
         "flux2-vae.safetensors"
@@ -810,14 +831,21 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "UNETLoader"
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "fibo2_edit_turbo_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Fibo-2.0/resolve/main/diffusion_models/fibo2_edit_turbo_bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
       },
       "widgets_values": [
-        "fibo2\\fibo2_edit_turbo_bf16.safetensors",
+        "fibo2_edit_turbo_bf16.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "fibo2\\fibo2_edit_turbo_bf16.safetensors",
+        "unet_name": "fibo2_edit_turbo_bf16.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -1909,5 +1937,27 @@
       ]
     }
   },
-  "version": 0.4
+  "version": 0.4,
+  "models": [
+    {
+      "name": "fibo2_dev_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Fibo-2.0/resolve/main/diffusion_models/fibo2_dev_bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_4b_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Fibo-2.0/resolve/main/text_encoders/qwen3vl_4b_bf16.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "flux2-vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "fibo2_edit_turbo_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Fibo-2.0/resolve/main/diffusion_models/fibo2_edit_turbo_bf16.safetensors",
+      "directory": "diffusion_models"
+    }
+  ]
 }
