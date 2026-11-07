@@ -398,7 +398,10 @@ def figures(report: DecodeReport) -> tuple[str, dict, dict]:
         summary = f"{report.new_tokens} tokens, written at {rate:.1f} tokens/s"
     else:
         summary = f"{report.new_tokens} tokens in {report.seconds:.2f} s"
-    counts = {"tokens": report.new_tokens, "tokens/s": round(rate, 1), "seconds": round(report.seconds, 2)}
+    counts = {"tokens": report.new_tokens}
+    if rate > 0:
+        counts["tokens/s"] = round(rate, 1)
+    counts["seconds"] = round(report.seconds, 2)
     facts = {"decode": report.path}
     if report.reason:
         facts["why not fast"] = report.reason

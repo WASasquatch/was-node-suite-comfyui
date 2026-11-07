@@ -23,7 +23,8 @@ class BluePixelScheduler(io.ComfyNode):
             category="WAS Suite/Sampling",
             description=(
                 "The sampling schedule BluePixel was released with, shifted for the latent's size. Hands "
-                "sigmas to SamplerCustomAdvanced with euler and a CFG Guider at 3."
+                "sigmas to SamplerCustomAdvanced with euler and a CFG Guider: 3 to edit, 1.5 to "
+                "generate from text."
             ),
             inputs=[
                 io.Int.Input(
@@ -32,7 +33,10 @@ class BluePixelScheduler(io.ComfyNode):
                 ),
                 io.Latent.Input(
                     "latent",
-                    tooltip="The latent being edited, as Text Encode BluePixel hands on; its size sets the shift.",
+                    tooltip=(
+                        "The latent being sampled: Text Encode BluePixel's to edit, Empty Latent Image's "
+                        "to generate. Its size sets the shift."
+                    ),
                 ),
             ],
             outputs=[io.Sigmas.Output(tooltip="steps + 1 sigmas from 1 down to 0.")],

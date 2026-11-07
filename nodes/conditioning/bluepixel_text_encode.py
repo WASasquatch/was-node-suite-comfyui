@@ -66,7 +66,7 @@ class TextEncodeBluePixel(io.ComfyNode):
                     "positive", tooltip="The instruction with the picture as its reference, for positive on CFG Guider.",
                 ),
                 io.Conditioning.Output(
-                    "negative", tooltip="The negative with the same reference, for negative on CFG Guider at cfg 3.",
+                    "negative", tooltip="The negative with the same reference, for negative on CFG Guider at CFG 3.",
                 ),
                 io.Latent.Output(
                     "latent", tooltip="An empty latent of the edit's size, for SamplerCustomAdvanced and BluePixel Scheduler.",

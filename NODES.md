@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **684** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **687** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-598 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+601 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 442 |
+| [Always loaded](#always-loaded) | always on | 445 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-442 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+445 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -53,7 +53,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/IO](#was-suiteio) (19)
 - [WAS Suite/Image](#was-suiteimage) (12)
 - [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (10)
-- [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (4)
+- [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (5)
 - [WAS Suite/Image/Bound](#was-suiteimagebound) (17)
 - [WAS Suite/Image/Filter](#was-suiteimagefilter) (23)
 - [WAS Suite/Image/Generate](#was-suiteimagegenerate) (6)
@@ -76,7 +76,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
 - [WAS Suite/Sampling](#was-suitesampling) (34)
-- [WAS Suite/Text](#was-suitetext) (10)
+- [WAS Suite/Text](#was-suitetext) (12)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (11)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (7)
@@ -1237,7 +1237,7 @@ Turn a BluePixel edit instruction and the picture it changes into conditioning f
 | Name | Type | What it is |
 |---|---|---|
 | `positive` | `CONDITIONING` | The instruction with the picture as its reference, for positive on CFG Guider. |
-| `negative` | `CONDITIONING` | The negative with the same reference, for negative on CFG Guider at cfg 3. |
+| `negative` | `CONDITIONING` | The negative with the same reference, for negative on CFG Guider at CFG 3. |
 | `latent` | `LATENT` | An empty latent of the edit's size, for SamplerCustomAdvanced and BluePixel Scheduler. |
 | `image` | `IMAGE` | The picture brought to the edit's size, the before for a comparison. |
 
@@ -3284,6 +3284,40 @@ Measure brightness, contrast, sharpness, saturation, clipping and entropy for ev
 | `entropy` | `FLOAT` | How much of the tonal range is in use, in bits, 0.0 to 8.0. A detailed photograph sits around 7; a flat or nearly empty frame sits far below it, which makes this a good test for a render that collapsed. |
 | `stats` | `DICT` | Every measurement for that image in one dictionary, for Dictionary to Console, Text Dictionary Get or writing out beside the image. |
 | `summary` | `STRING` | The measurements as one line of text per image, for a log or a caption burnt in with Image Draw Text. |
+
+</details>
+
+<a id="node-wasjudgeimages"></a>
+<details>
+<summary><b>Judge Images</b></summary>
+
+Score each picture in a batch, as several seeds of one prompt make, from 0 to 10 with a language model that reads them. Edits are scored on following, consistency and quality against their source; generations on following and quality. Hands on the best and its notes.
+
+| | |
+|---|---|
+| Node id | `WASJudgeImages` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | qwen3.5_9b_int8_convrot.safetensors from Load CLIP with type krea2, or another Qwen-VL model. |
+| `images` | `IMAGE` | Yes |  |  | The pictures to score, 1 to 6, as VAE Decode gives a batch from Repeat Latent Batch. |
+| `prompt` | `STRING` | Yes |  |  | The instruction the edits followed or the prompt the pictures came from, as 'Make it snow'. |
+| `least_following` | `INT` | Yes | 9 |  | The following score a picture needs to pass, 0 to 10. |
+| `least_consistency` | `INT` | Yes | 8 |  | The consistency score an edit needs to pass, 0 to 10. Unused without a source. |
+| `least_quality` | `INT` | Yes | 6 |  | The quality score a picture needs to pass, 0 to 10. |
+| `source` | `IMAGE` | No |  |  | The picture before the edit. Unwired = the pictures are judged as generations. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `best` | `IMAGE` | The picture kept: the best that passes, or the best of all when none does. |
+| `index` | `INT` | The kept picture's place in the batch, from 0. |
+| `passed` | `BOOLEAN` | True when the kept picture reaches every least score. |
+| `scores` | `STRING` | Every picture's scores and notes as a JSON list, in batch order. |
+| `notes` | `STRING` | The flaws found in the kept picture, for Generate Edit Instruction's feedback. |
 
 </details>
 
@@ -8862,7 +8896,7 @@ Apply any number of LoRAs and LoKrs in one node. Each row names a file, carries 
 <details>
 <summary><b>BluePixel Model Loader</b></summary>
 
-Load BluePixel-Turbo, the 4K instruction image editor built on FLUX.2 Klein 9B, for Text Encode BluePixel and BluePixel Scheduler. The panel shows the file's size, its parameter count and how its weights are stored.
+Load BluePixel-Turbo, the 4K image editor built on FLUX.2 Klein 9B, which also generates from text. Pairs with Text Encode BluePixel and BluePixel Scheduler. The panel shows the file's size, its parameter count and how its weights are stored.
 
 | | |
 |---|---|
@@ -8879,7 +8913,7 @@ Load BluePixel-Turbo, the 4K instruction image editor built on FLUX.2 Klein 9B, 
 
 | Name | Type | What it is |
 |---|---|---|
-| `<output0>` | `MODEL` | BluePixel, for a CFG Guider at 3 with Text Encode BluePixel's conditioning and BluePixel Scheduler's sigmas. |
+| `<output0>` | `MODEL` | BluePixel, for a CFG Guider with BluePixel Scheduler's sigmas: CFG 3 with Text Encode BluePixel to edit, CFG 1.5 with CLIP Text Encode to generate. |
 
 </details>
 
@@ -8887,7 +8921,7 @@ Load BluePixel-Turbo, the 4K instruction image editor built on FLUX.2 Klein 9B, 
 <details>
 <summary><b>BluePixel VAE Loader</b></summary>
 
-Load DC-AE f64c128, the autoencoder BluePixel edits on, as a VAE for Text Encode BluePixel, VAE Encode, VAE Decode and VAE Decode (Tiled). One latent unit covers 64 by 64 pixels in 128 channels.
+Load DC-AE f64c128, the autoencoder BluePixel works on, as a VAE for Text Encode BluePixel, VAE Encode, VAE Decode and VAE Decode (Tiled). One latent unit covers 64 by 64 pixels in 128 channels.
 
 | | |
 |---|---|
@@ -8898,6 +8932,7 @@ Load DC-AE f64c128, the autoencoder BluePixel edits on, as a VAE for Text Encode
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `vae_name` | `COMBO,STRING` | Yes |  |  | The DC-AE f64c128 file in models/vae, such as dc-ae-f64c128-mix-1.0.safetensors: vae/diffusion_pytorch_model.safetensors from openvivo/BluePixel-Turbo. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `even_rows` | `BOOLEAN` | Yes | True |  | On = decoded pictures lose the faint shading every 64-pixel latent row repeats, seen as horizontal lines on smooth areas; off = the decoder's output as it is. |
 
 **Outputs**
 
@@ -11044,7 +11079,7 @@ Decide how strong an affine is at each step of a sampler run: where it starts, w
 <details>
 <summary><b>BluePixel Scheduler</b></summary>
 
-The sampling schedule BluePixel was released with, shifted for the latent's size. Hands sigmas to SamplerCustomAdvanced with euler and a CFG Guider at 3.
+The sampling schedule BluePixel was released with, shifted for the latent's size. Hands sigmas to SamplerCustomAdvanced with euler and a CFG Guider: 3 to edit, 1.5 to generate from text.
 
 | | |
 |---|---|
@@ -11055,7 +11090,7 @@ The sampling schedule BluePixel was released with, shifted for the latent's size
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `steps` | `INT` | Yes | 4 |  | Denoising steps: 4, the count BluePixel-Turbo was distilled for. |
-| `latent` | `LATENT` | Yes |  |  | The latent being edited, as Text Encode BluePixel hands on; its size sets the shift. |
+| `latent` | `LATENT` | Yes |  |  | The latent being sampled: Text Encode BluePixel's to edit, Empty Latent Image's to generate. Its size sets the shift. |
 
 **Outputs**
 
@@ -12063,6 +12098,37 @@ Write text with the language model inside a loaded CLIP, as core Generate Text d
 
 </details>
 
+<a id="node-wasgenerateeditinstruction"></a>
+<details>
+<summary><b>Generate Edit Instruction</b></summary>
+
+Turn a short edit request into an explicit instruction an image editing model follows fully, written by a language model that reads the picture: what changes, implied effects included, and what stays. With a judge's notes wired in, it corrects the last attempt.
+
+| | |
+|---|---|
+| Node id | `WASGenerateEditInstruction` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | qwen3.5_9b_int8_convrot.safetensors from Load CLIP with type krea2, or another Qwen-VL model. |
+| `image` | `IMAGE` | Yes |  |  | The picture to edit. The first of a batch is read. |
+| `instruction` | `STRING` | Yes |  |  | The edit as written, as 'Make it a snowy winter night'. |
+| `temperature` | `FLOAT` | Yes | 0.0 |  | 0 = the likeliest words, the same instruction every time; 0.7 = varied wording per seed. |
+| `seed` | `INT` | Yes | 0 |  | The seed sampling draws from. Ignored at temperature 0. |
+| `max_length` | `INT` | Yes | 256 |  | The most tokens the instruction may run to: 256 covers about 180 words. |
+| `feedback` | `STRING` | No |  |  | Judge Images' notes on the last attempt, as 'the sky is blown out and shows no snow'. Unwired or empty = a first attempt. |
+| `last_instruction` | `STRING` | No |  |  | The instruction the last attempt was made from, as 'Add falling snow and a dark blue sky'. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `instruction` | `STRING` | The explicit instruction, for the edit model's prompt and Judge Images. |
+
+</details>
+
 <a id="node-wasgeneratefibo2prompt"></a>
 <details>
 <summary><b>Generate Fibo 2 Prompt</b></summary>
@@ -12123,6 +12189,37 @@ Turn the caption or box layout a language model drafted, such as with the MOSS-I
 |---|---|---|
 | `prompt` | `STRING` | The caption, or the layout as one line of JSON, which MOSS-Image reads as it is. Wire it straight into CLIP Text Encode with a MOSS-Image text encoder. |
 | `caption` | `STRING` | The caption as plain text, also for a layout, for a preview or a node that reads plain text. |
+
+</details>
+
+<a id="node-wasreviseprompt"></a>
+<details>
+<summary><b>Revise Prompt</b></summary>
+
+Rewrite a text-to-image prompt from a judge's notes so the next attempt shows what the last one missed, keeping the prompt's subject and style. Without notes the prompt passes through as written, so a retry loop's first pass uses it unchanged.
+
+| | |
+|---|---|
+| Node id | `WASRevisePrompt` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | qwen3.5_9b_int8_convrot.safetensors from Load CLIP with type krea2, or any language model CLIP. |
+| `prompt` | `STRING` | Yes |  |  | The prompt as written, as 'three red apples on a blue plate'. |
+| `temperature` | `FLOAT` | Yes | 0.0 |  | 0 = the likeliest words, the same revision every time; 0.7 = varied wording per seed. |
+| `seed` | `INT` | Yes | 0 |  | The seed sampling draws from. Ignored at temperature 0. |
+| `max_length` | `INT` | Yes | 384 |  | The most tokens the revised prompt may run to: 384 covers about 280 words. |
+| `feedback` | `STRING` | No |  |  | Judge Images' notes on the last attempt, as 'only two apples, the plate is white'. Unwired or empty = the prompt passes through as written. |
+| `last_prompt` | `STRING` | No |  |  | The prompt the last attempt was made from, as 'three red apples on a blue plate'. |
+| `last_image` | `IMAGE` | No |  |  | The last attempt's picture, as Judge Images' best. Read only by a model that sees pictures. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `prompt` | `STRING` | The prompt for the next attempt, for CLIP Text Encode. |
 
 </details>
 

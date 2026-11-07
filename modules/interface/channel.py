@@ -213,15 +213,31 @@ def executing_node_id() -> str | None:
         logger.debug("the executing node id could not be read (%s)", error)
         return None
     # A graph expanded at run time, which is what a loop body and an expanding node both
-    # become, files its clones under a prefix joined by dots. Those ids exist for one run and
-    # for one iteration, no interface composes them, and one loop would fill an entire store
-    # with keys nobody can fetch. A subgraph path is joined by colons, so the dot is exact.
+    # become, files its clones under a prefix joined by dots, the canvas node's id last. A
+    # clone files under that canvas node, so a loop body's panel shows the latest iteration.
+    # A subgraph path is joined by colons, so the dot is exact.
     if isinstance(node_id, str) and "." in node_id:
-        logger.debug(
-            "node %s is an expansion clone, so it publishes nothing to its interface", node_id,
-        )
-        return None
+        shown = _displayed(node_id)
+        if shown is None:
+            logger.debug(
+                "node %s is an expansion clone with no canvas node to publish to", node_id,
+            )
+        return shown
     return node_id
+
+
+def _displayed(clone: str) -> str | None:
+    """The canvas node an expansion clone is drawn as, when ComfyUI's own record agrees with the clone's id."""
+    try:
+        import server
+
+        shown = getattr(server.PromptServer.instance, "last_node_id", None)
+    except Exception as error:
+        logger.debug("the displayed node could not be read (%s)", error)
+        return None
+    if isinstance(shown, str) and shown and "." not in shown and clone.rsplit(".", 1)[-1] == shown:
+        return shown
+    return None
 
 
 def executing_prompt_id() -> str | None:

@@ -29,7 +29,7 @@ class BluePixelVAELoader(io.ComfyNode):
             ],
             category="WAS Suite/Loaders",
             description=(
-                "Load DC-AE f64c128, the autoencoder BluePixel edits on, as a VAE for Text Encode "
+                "Load DC-AE f64c128, the autoencoder BluePixel works on, as a VAE for Text Encode "
                 "BluePixel, VAE Encode, VAE Decode and VAE Decode (Tiled). One latent unit covers 64 "
                 "by 64 pixels in 128 channels."
             ),
@@ -43,6 +43,13 @@ class BluePixelVAELoader(io.ComfyNode):
                         "vae/diffusion_pytorch_model.safetensors from openvivo/BluePixel-Turbo."
                     ),
                 ), model=True),
+                io.Boolean.Input(
+                    "even_rows", default=True,
+                    tooltip=(
+                        "On = decoded pictures lose the faint shading every 64-pixel latent row repeats, "
+                        "seen as horizontal lines on smooth areas; off = the decoder's output as it is."
+                    ),
+                ),
             ],
             outputs=[
                 io.Vae.Output(
@@ -55,7 +62,7 @@ class BluePixelVAELoader(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, vae_name) -> io.NodeOutput:
+    def execute(cls, vae_name, even_rows=True) -> io.NodeOutput:
         """Build the autoencoder from ``vae_name``.
 
         Raises:
@@ -73,7 +80,7 @@ class BluePixelVAELoader(io.ComfyNode):
                 "from openvivo/BluePixel-Turbo into ComfyUI/models/vae, then refresh the node list."
             )
         path = folder_paths.get_full_path_or_raise(dcae.FOLDER, vae_name)
-        vae = dcae.load(path)
+        vae = dcae.load(path, rows=bool(even_rows))
         run_result.publish(
             status=run_result.OK,
             summary=f"{os.path.basename(vae_name)} is ready",
@@ -85,6 +92,7 @@ class BluePixelVAELoader(io.ComfyNode):
                 "autoencoder": "DC-AE f64c128",
                 "latent": f"{dcae.CHANNELS} channels at 1/{dcae.COMPRESSION}",
                 "working dtype": str(vae.vae_dtype).replace("torch.", ""),
+                "decoded rows": "evened" if even_rows else "as decoded",
                 "device": str(vae.device),
             },
         )

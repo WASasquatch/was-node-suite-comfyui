@@ -29,9 +29,9 @@ class BluePixelModelLoader(io.ComfyNode):
             ],
             category="WAS Suite/Loaders",
             description=(
-                "Load BluePixel-Turbo, the 4K instruction image editor built on FLUX.2 Klein 9B, for "
-                "Text Encode BluePixel and BluePixel Scheduler. The panel shows the file's size, "
-                "its parameter count and how its weights are stored."
+                "Load BluePixel-Turbo, the 4K image editor built on FLUX.2 Klein 9B, which also "
+                "generates from text. Pairs with Text Encode BluePixel and BluePixel Scheduler. The panel "
+                "shows the file's size, its parameter count and how its weights are stored."
             ),
             inputs=[
                 picker.path_input(io.Combo.Input(
@@ -54,7 +54,10 @@ class BluePixelModelLoader(io.ComfyNode):
             ],
             outputs=[
                 io.Model.Output(
-                    tooltip="BluePixel, for a CFG Guider at 3 with Text Encode BluePixel's conditioning and BluePixel Scheduler's sigmas.",
+                    tooltip=(
+                        "BluePixel, for a CFG Guider with BluePixel Scheduler's sigmas: CFG 3 with Text "
+                        "Encode BluePixel to edit, CFG 1.5 with CLIP Text Encode to generate."
+                    ),
                 ),
             ],
         )

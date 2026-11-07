@@ -46,6 +46,22 @@ DECODE_BYTES_PER_PIXEL = 375
 #: Working memory on top of the per-pixel figure, per byte of the working dtype.
 BASE_BYTES = 64 * 1024 * 1024
 
+#: Vertical blur, in pixels, that parts the row shading from the scene.
+ROW_SIGMA = 24.0
+
+#: Latent rows above and below, and 64-pixel strips either side, the row shading is read from.
+ROW_REACH = 3
+ROW_ACROSS = 4
+
+#: Detail, in levels of 255, above which a pixel counts as scene and is left out of the reading.
+ROW_DETAIL = 12.0
+
+#: Swing, in levels of 255, above which a cell's reading counts as scene and nothing is taken out.
+ROW_SWING = 6.0
+
+#: Share of a cell that must be smooth for its shading to be read.
+ROW_SMOOTH = 0.25
+
 
 def offered() -> tuple[list[str], str | None]:
     """The files in ComfyUI's vae folders, and the one most likely to be DC-AE f64c128."""
@@ -161,7 +177,78 @@ def _blend(before: torch.Tensor, after: torch.Tensor, extent: int, axis: int) ->
     return after
 
 
-def build(state_dict, device=None, dtype=None, disable_dynamic: bool = False):
+def _blur_rows(t: torch.Tensor, sigma: float) -> torch.Tensor:
+    """``t`` ``(C, H, W)`` blurred down its rows by a Gaussian, mirrored at the ends."""
+    import torch.nn.functional as F
+
+    reach = min(int(3 * sigma), t.shape[1] - 1)
+    x = torch.arange(-reach, reach + 1, dtype=t.dtype, device=t.device)
+    kernel = torch.exp(-0.5 * (x / sigma) ** 2)
+    kernel = (kernel / kernel.sum()).view(1, 1, -1, 1).repeat(t.shape[0], 1, 1, 1)
+    return F.conv2d(F.pad(t[None], (0, 0, reach, reach), mode="reflect"), kernel, groups=t.shape[0])[0]
+
+
+def even_rows(image: torch.Tensor, sigma: float = ROW_SIGMA, reach: int = ROW_REACH,
+              across: int = ROW_ACROSS) -> torch.Tensor:
+    """Take the shading every 64-pixel latent row repeats out of decoded pictures, in place, read from smooth pixels only.
+
+    Args:
+        image: Pictures ``(B, C, H, W)`` in ``[-1, 1]`` as the decoder gives them, rows aligned to the latent.
+        sigma: Vertical blur, in pixels, that parts the shading from the scene.
+        reach: Latent rows above and below each one the shading is read from, by median.
+        across: 64-pixel strips either side the shading is read from, by mean.
+
+    Returns:
+        ``image``.
+    """
+    import math
+
+    import torch.nn.functional as F
+
+    level = 2.0 / 255.0
+    cell = COMPRESSION
+    rows = image.shape[-2] // cell
+    edge = math.ceil(3 * sigma / cell)
+    if rows < 2 * edge + 2:
+        return image
+    height, width = rows * cell, image.shape[-1]
+    strips = max(1, width // cell)
+    groups = max(1, width // 8)
+    taps = 2 * reach + 1
+
+    def spread(t):
+        """``t`` ``(C, H, groups)`` summed into strips and shared with ``across`` strips either side."""
+        t = F.adaptive_avg_pool2d(t[None], (height, strips))[0]
+        if across > 0 and strips > 1:
+            t = F.avg_pool2d(F.pad(t[None], (across, across, 0, 0), mode="replicate"), (1, 2 * across + 1), stride=1)[0]
+        return t
+
+    for picture in image:
+        pixels = picture[:, :height].float()
+        channels = pixels.shape[0]
+        fine = F.adaptive_avg_pool2d(pixels[None], (height, groups))[0]
+        detail = fine - _blur_rows(fine, sigma)
+        smooth = (detail.abs().amax(0, keepdim=True) <= ROW_DETAIL * level).float()
+        share = spread(smooth)
+        reading = spread(detail * smooth) / share.clamp_min(1e-6)
+        share = share.reshape(1, rows, cell, strips).mean(2, keepdim=True)
+        reading = reading.reshape(channels, rows, cell, strips)
+        reading = torch.where(share >= ROW_SMOOTH, reading, torch.full_like(reading, float("nan")))
+        cells = reading.permute(0, 2, 3, 1).reshape(-1, 1, rows)
+        shading = F.pad(cells, (reach, reach), mode="replicate").unfold(2, taps, 1).nanmedian(-1).values
+        shading = torch.nan_to_num(shading.reshape(channels, cell, strips, rows), nan=0.0)
+        shading = shading - shading.mean(1, keepdim=True)
+        swing = shading.amax(1, keepdim=True) - shading.amin(1, keepdim=True)
+        shading = torch.where(swing <= ROW_SWING * level, shading, torch.zeros_like(shading))
+        shading[..., :edge] = shading[..., edge:edge + 1]
+        shading[..., rows - edge:] = shading[..., rows - edge - 1:rows - edge]
+        field = shading.permute(0, 3, 1, 2).reshape(1, channels, height, strips)
+        field = F.interpolate(field, size=(height, width), mode="bilinear", align_corners=False)[0]
+        picture[:, :height] -= field.to(picture.dtype)
+    return image
+
+
+def build(state_dict, device=None, dtype=None, disable_dynamic: bool = False, rows: bool = True):
     """A ComfyUI VAE around DC-AE f64c128.
 
     Args:
@@ -169,6 +256,7 @@ def build(state_dict, device=None, dtype=None, disable_dynamic: bool = False):
         device: Where it runs, ComfyUI's VAE device when ``None``.
         dtype: Its working dtype, ComfyUI's choice for the device when ``None``.
         disable_dynamic: Build a patcher that loads every weight at once.
+        rows: Take the shading every latent row repeats out of decoded pictures.
 
     Returns:
         A ``comfy.sd.VAE``.
@@ -195,7 +283,12 @@ def build(state_dict, device=None, dtype=None, disable_dynamic: bool = False):
     vae.output_channels = 3
     vae.pad_channel_value = None
     vae.process_input = lambda image: image * 2.0 - 1.0
-    vae.process_output = lambda image: image.add_(1.0).div_(2.0).clamp_(0.0, 1.0)
+    def finish(image):
+        if rows:
+            even_rows(image)
+        return image.add_(1.0).div_(2.0).clamp_(0.0, 1.0)
+
+    vae.process_output = finish
     vae.working_dtypes = [torch.bfloat16, torch.float32]
     vae.memory_used_encode = lambda shape, dtype: _memory(shape, dtype, ENCODE_BYTES_PER_PIXEL, 1)
     vae.memory_used_decode = lambda shape, dtype: _memory(shape, dtype, DECODE_BYTES_PER_PIXEL, COMPRESSION)
@@ -234,21 +327,22 @@ def build(state_dict, device=None, dtype=None, disable_dynamic: bool = False):
 
 
 def _memory(shape, dtype, per_pixel: int, scale: int) -> int:
+    """Working memory for one picture of ``shape``, whatever the batch."""
     import comfy.model_management as mm
 
-    pixels = int(shape[0]) * int(shape[-2]) * int(shape[-1]) * scale * scale
+    pixels = int(shape[-2]) * int(shape[-1]) * scale * scale
     return (pixels * per_pixel + BASE_BYTES) * mm.dtype_size(dtype)
 
 
-def load(path: str, disable_dynamic: bool = False):
-    """Load DC-AE f64c128 from a file as a ComfyUI VAE.
+def load(path: str, disable_dynamic: bool = False, rows: bool = True):
+    """Load DC-AE f64c128 from a file as a ComfyUI VAE, evening its decoded rows when ``rows`` is True.
 
     Raises:
         ValueError: The file is not DC-AE f64c128.
     """
     import comfy.utils
 
-    vae = build(comfy.utils.load_torch_file(path, safe_load=True), disable_dynamic=disable_dynamic)
+    vae = build(comfy.utils.load_torch_file(path, safe_load=True), disable_dynamic=disable_dynamic, rows=rows)
     vae.patcher.cached_patcher_init = (load_patcher, (path,))
     return vae
 

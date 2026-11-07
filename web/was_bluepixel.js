@@ -1,8 +1,7 @@
 /**
- * The reports drawn on the BluePixel loaders and scheduler.
+ * The reports drawn on the BluePixel nodes.
  *
- * The model loader shows the file and how its weights are stored, the VAE loader the
- * autoencoder it built, and the scheduler the shift and the sigmas.
+ * Loaders show what they built and the scheduler its sigmas.
  */
 
 import { app } from "../../scripts/app.js";
