@@ -14,15 +14,45 @@ const LOG_NAME = "WASNodeSuite.Grow";
 const MIN_VISIBLE = 2;
 
 /**
- * Whether a widget holds something a user put there.
+ * Whether a widget value is something a user put there.
  *
- * @param {object} widget - The widget to read.
- * @returns {boolean} True for any value other than empty, null or undefined.
+ * @param {*} value - The value to read.
+ * @param {Set<*>|null} [empty] - Values that count as empty besides `""`, null and undefined.
+ * @returns {boolean} True for any other value.
  */
-function filled(widget, empty) {
-  const value = widget?.value;
+export function holdsValue(value, empty) {
   if (value === "" || value === undefined || value === null) return false;
   return !empty?.has(value);
+}
+
+/**
+ * How many of a node's groups are drawn: every group up to the last one in use, one more, and
+ * never fewer than `minVisible`.
+ *
+ * @param {string[][]} groups - Widget names, one array per group, in the order they are drawn.
+ * @param {(names: string[]) => boolean} used - Whether a group is in use, given its voting names.
+ * @param {object} [options] - Settings.
+ * @param {number} [options.minVisible] - Groups drawn however empty, two by default.
+ * @param {number} [options.forced] - Groups held open regardless of what they hold.
+ * @param {number|null} [options.decidesAt] - Position within a group of the one widget that
+ *   votes. Every widget in the group votes when it is left out.
+ * @returns {number} How many groups are drawn, counted from the first.
+ */
+export function drawnGroupCount(groups, used, options = {}) {
+  const minVisible = Number.isFinite(options.minVisible) ? options.minVisible : MIN_VISIBLE;
+  const forced = Number.isFinite(options.forced) ? options.forced : 0;
+  const decidesAt = Number.isFinite(options.decidesAt) ? options.decidesAt : null;
+
+  // The last group holding anything, rather than the first empty one, so a gap in the middle
+  // stays open instead of folding away a box somebody filled in below an empty one. It starts
+  // two below the minimum, with one more than it drawn: an empty node shows `minVisible`
+  // boxes, and the next appears only once one of those is filled.
+  let lastUsed = Math.max(minVisible - 2, forced - 2);
+  groups.forEach((names, index) => {
+    const voting = decidesAt === null ? names : names.slice(decidesAt, decidesAt + 1);
+    if (used(voting)) lastUsed = Math.max(lastUsed, index);
+  });
+  return Math.min(groups.length, lastUsed + 2);
 }
 
 /**
@@ -49,23 +79,16 @@ function linked(node, name) {
  */
 function fold(node, groups, minVisible, empty, decidesAt) {
   const widgets = new Map((node.widgets ?? []).map((widget) => [widget.name, widget]));
-
-  // The last group holding anything, rather than the first empty one, so a gap in the middle
-  // stays open instead of folding away a box somebody filled in below an empty one. It starts
-  // two below the minimum, with one more than it drawn: an empty node shows `minVisible`
-  // boxes, and the next appears only once one of those is filled.
-  // Groups held open regardless of what they hold.
-  const forced = Number.isFinite(node.__was_forced_groups) ? node.__was_forced_groups : 0;
-  let lastUsed = Math.max(minVisible - 2, forced - 2);
-  groups.forEach((names, index) => {
-    const voting = decidesAt === null ? names : names.slice(decidesAt, decidesAt + 1);
-    const used = voting.some((name) => filled(widgets.get(name), empty) || linked(node, name));
-    if (used) lastUsed = Math.max(lastUsed, index);
-  });
+  const drawn = drawnGroupCount(
+    groups,
+    (voting) => voting.some((name) => holdsValue(widgets.get(name)?.value, empty) || linked(node, name)),
+    // Groups held open regardless of what they hold.
+    { minVisible, decidesAt, forced: node.__was_forced_groups },
+  );
 
   let changed = false;
   groups.forEach((names, index) => {
-    const hide = index > lastUsed + 1;
+    const hide = index >= drawn;
     for (const name of names) {
       if (setWidgetHidden(widgets.get(name), hide)) changed = true;
     }

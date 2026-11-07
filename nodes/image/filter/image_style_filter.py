@@ -150,7 +150,8 @@ class ImageStyleFilter(io.ComfyNode):
         if style == SPARKLE_STYLE:
             from ....modules.image.filters import sparkle
 
-            result = filtered_planes(image, sparkle)
+            # Frames run one at a time, drawing glitter from the shared random stream in batch order.
+            result = filtered_planes(image, sparkle, parallel=False)
         elif not recipes.known(style):
             raise ValueError(
                 f"{style!r} is not a look this node has. Choose one of the {len(STYLES)} "

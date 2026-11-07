@@ -49,6 +49,7 @@ const NODES = [
   "WASLatentScaleToMaxDimension",
   "WASPSSRSuperResolution",
   "WASNSTiledImageUpscaleWithModel",
+  "WASTextEncodeBluePixel",
 ];
 
 // The face crops answer a picture whose whole point is what it looks like, so they draw the

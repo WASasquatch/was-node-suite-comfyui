@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **680** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **684** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-594 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+598 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 438 |
+| [Always loaded](#always-loaded) | always on | 442 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,11 +41,11 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-438 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+442 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
-- [WAS Suite/Conditioning](#was-suiteconditioning) (2)
+- [WAS Suite/Conditioning](#was-suiteconditioning) (3)
 - [WAS Suite/Dataset](#was-suitedataset) (8)
 - [WAS Suite/Debug](#was-suitedebug) (4)
 - [WAS Suite/Document](#was-suitedocument) (6)
@@ -68,14 +68,14 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
 - [WAS Suite/Latent/Video](#was-suitelatentvideo) (23)
 - [WAS Suite/LoRA](#was-suitelora) (1)
-- [WAS Suite/Loaders](#was-suiteloaders) (4)
+- [WAS Suite/Loaders](#was-suiteloaders) (6)
 - [WAS Suite/Logic](#was-suitelogic) (6)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (33)
+- [WAS Suite/Sampling](#was-suitesampling) (34)
 - [WAS Suite/Text](#was-suitetext) (10)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (11)
@@ -1208,6 +1208,38 @@ Encode a prompt with CLIP after substituting Noodle Soup Prompts terminology or 
 | `conditioning` | `CONDITIONING` | The encoded prompt, for a sampler's positive or negative input. |
 | `parsed_text` | `STRING` | The prompt after substitution, the words that were actually encoded. Worth saving alongside the image, since a new seed produces different words. |
 | `raw_text` | `STRING` | The prompt exactly as typed, markup and all, before any substitution. |
+
+</details>
+
+<a id="node-wastextencodebluepixel"></a>
+<details>
+<summary><b>Text Encode BluePixel</b></summary>
+
+Turn a BluePixel edit instruction and the picture it changes into conditioning for a CFG Guider. Hands on the prompt and negative, both carrying the picture, an empty latent of the edit's size, and the picture at that size.
+
+| | |
+|---|---|
+| Node id | `WASTextEncodeBluePixel` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | qwen_3_8b.safetensors or qwen_3_8b_fp8mixed.safetensors from Load CLIP with type flux2. |
+| `prompt` | `STRING` | Yes |  |  | The edit in English, as 'Change the gray sweater to burgundy red. Preserve the person, pose and background.' |
+| `vae` | `VAE` | Yes |  |  | DC-AE f64c128 from BluePixel VAE Loader. |
+| `image` | `IMAGE` | Yes |  |  | The picture to edit. A batch edits each picture with the same instruction. |
+| `resolution` | `INT` | Yes | 4096 |  | The edit's pixel count as a square side: 4096 = 16.8 MP, as released, where faces hold best; 2048 = 4.2 MP; 0 = the picture's own. The shape follows the picture in steps of 64. |
+| `negative_prompt` | `STRING` | Yes |  |  | What guidance steers away from, as 'blurry, oversaturated'. Empty = BluePixel's own, the empty instruction. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | The instruction with the picture as its reference, for positive on CFG Guider. |
+| `negative` | `CONDITIONING` | The negative with the same reference, for negative on CFG Guider at cfg 3. |
+| `latent` | `LATENT` | An empty latent of the edit's size, for SamplerCustomAdvanced and BluePixel Scheduler. |
+| `image` | `IMAGE` | The picture brought to the edit's size, the before for a comparison. |
 
 </details>
 
@@ -8826,6 +8858,55 @@ Apply any number of LoRAs and LoKrs in one node. Each row names a file, carries 
 
 ### WAS Suite/Loaders
 
+<a id="node-wasbluepixelmodelloader"></a>
+<details>
+<summary><b>BluePixel Model Loader</b></summary>
+
+Load BluePixel-Turbo, the 4K instruction image editor built on FLUX.2 Klein 9B, for Text Encode BluePixel and BluePixel Scheduler. The panel shows the file's size, its parameter count and how its weights are stored.
+
+| | |
+|---|---|
+| Node id | `WASBluePixelModelLoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `unet_name` | `COMBO,STRING` | Yes |  |  | A BluePixel transformer in models/diffusion_models: bluepixel_turbo_int8_convrot (9.4 GB), _w6a8 (7.5 GB), _w4a8 (5.6 GB) or _bf16 (18 GB). A Diffusers single file is converted on loading. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `weight_dtype` | `COMBO` | Yes | default | `default`, `fp8_e4m3fn`, `fp8_e4m3fn_fast`, `fp8_e5m2` | default = as stored; fp8_e4m3fn or fp8_e5m2 = store a bf16 file at 8 bits, half the memory; fp8_e4m3fn_fast = also multiply at 8 bits on cards that can. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `MODEL` | BluePixel, for a CFG Guider at 3 with Text Encode BluePixel's conditioning and BluePixel Scheduler's sigmas. |
+
+</details>
+
+<a id="node-wasbluepixelvaeloader"></a>
+<details>
+<summary><b>BluePixel VAE Loader</b></summary>
+
+Load DC-AE f64c128, the autoencoder BluePixel edits on, as a VAE for Text Encode BluePixel, VAE Encode, VAE Decode and VAE Decode (Tiled). One latent unit covers 64 by 64 pixels in 128 channels.
+
+| | |
+|---|---|
+| Node id | `WASBluePixelVAELoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vae_name` | `COMBO,STRING` | Yes |  |  | The DC-AE f64c128 file in models/vae, such as dc-ae-f64c128-mix-1.0.safetensors: vae/diffusion_pytorch_model.safetensors from openvivo/BluePixel-Turbo. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `VAE` | The autoencoder, 64 times smaller on each side. A 4096 square decodes in about 12 GB at bf16; VAE Decode tiles when that does not fit. |
+
+</details>
+
 <a id="node-wasemavfimodelloader"></a>
 <details>
 <summary><b>EMA-VFI Video Model Loader</b></summary>
@@ -10956,6 +11037,31 @@ Decide how strong an affine is at each step of a sampler run: where it starts, w
 | Name | Type | What it is |
 |---|---|---|
 | `affine_schedule` | `DICT` | The curve, for the affine_schedule socket of any Affine sampler. |
+
+</details>
+
+<a id="node-wasbluepixelscheduler"></a>
+<details>
+<summary><b>BluePixel Scheduler</b></summary>
+
+The sampling schedule BluePixel was released with, shifted for the latent's size. Hands sigmas to SamplerCustomAdvanced with euler and a CFG Guider at 3.
+
+| | |
+|---|---|
+| Node id | `WASBluePixelScheduler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `steps` | `INT` | Yes | 4 |  | Denoising steps: 4, the count BluePixel-Turbo was distilled for. |
+| `latent` | `LATENT` | Yes |  |  | The latent being edited, as Text Encode BluePixel hands on; its size sets the shift. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `SIGMAS` | steps + 1 sigmas from 1 down to 0. |
 
 </details>
 

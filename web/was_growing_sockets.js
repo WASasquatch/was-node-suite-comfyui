@@ -6,7 +6,8 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { growSockets } from "./interface/grow_sockets.js";
+import { drawnGroups, growSockets } from "./interface/grow_sockets.js";
+import { foldedOnPlacing, placedStandIn } from "./interface/node_preview.js";
 
 const EXT_NAME = "WASNodeSuite.GrowingSockets";
 
@@ -262,6 +263,9 @@ const GROWING = {
   "Image Batch": lettered("images", 26),
   "Mask Batch": lettered("masks", 26),
   "Latent Batch": lettered("latent", 26),
+  // The pictures one stitch joins: the frozen pair, then the slots appended for v3, drawn as
+  // they are wired.
+  "Image Stitch": lettered("image", 26),
   // The expression variables, drawn as they are wired. They are link-only, so the widget
   // grower never sees them.
   WASNumberExpression: BARE_LETTER_SLOTS,
@@ -310,13 +314,13 @@ const GROWING = {
 };
 
 /**
- * Grow one node's sockets, taking the count from its widgets when it has one.
+ * The `growSockets` options for one node, each read from the node when it is called.
  *
- * @param {object} node - The node to grow.
+ * @param {object} node - The node, or a stand-in carrying its widget values.
  * @param {object} entry - Its `GROWING` entry, already normalised to the object form.
- * @returns {() => void} The refit to call again when a watched widget changes.
+ * @returns {object} `select`, `exactCount` or `minVisible`, as the entry calls for.
  */
-function apply(node, entry) {
+function readings(node, entry) {
   const options = {};
   if (entry.select) {
     // A node whose visible set changes rather than only its length, as a mode swapping one
@@ -334,7 +338,48 @@ function apply(node, entry) {
     // this is a floor rather than a limit.
     options.minVisible = () => Math.max(1, entry.count(node));
   }
-  return growSockets(node, entry.slots, options);
+  return options;
+}
+
+/**
+ * Grow one node's sockets, taking the count from its widgets when it has one.
+ *
+ * @param {object} node - The node to grow.
+ * @param {object} entry - Its `GROWING` entry, already normalised to the object form.
+ * @returns {() => void} The refit to call again when a watched widget changes.
+ */
+function apply(node, entry) {
+  return growSockets(node, entry.slots, readings(node, entry));
+}
+
+/**
+ * The repeated sockets a newly placed node folds away: every slot past the ones it draws.
+ *
+ * @param {object} entry - Its `GROWING` entry, already normalised to the object form.
+ * @param {object} definition - The node definition the frontend files.
+ * @returns {{inputs: string[], outputs: string[]}} The socket names on each side.
+ */
+function foldedSlots(entry, definition) {
+  const groups = entry.slots.map((group) => (Array.isArray(group) ? group : [group]));
+  const options = readings(placedStandIn(definition), entry);
+  const drawn = drawnGroups(groups.length, {
+    minVisible: options.minVisible?.(),
+    exactCount: options.exactCount?.() ?? null,
+  });
+  const folded = groups.filter((group, index) => !drawn(index)).flat();
+  const inputs = new Set(Object.keys(definition?.inputs ?? {}));
+  const outputs = new Set((definition?.outputs ?? []).map((output) => output?.name));
+  return {
+    inputs: folded.filter((name) => inputs.has(name)),
+    outputs: folded.filter((name) => outputs.has(name)),
+  };
+}
+
+for (const [nodeId, declared] of Object.entries(GROWING)) {
+  const entry = Array.isArray(declared) ? { slots: declared } : declared;
+  // A mode chooses these sockets, so each is an input of its own rather than a repeat.
+  if (entry.select) continue;
+  foldedOnPlacing(nodeId, (definition) => foldedSlots(entry, definition));
 }
 
 app.registerExtension({

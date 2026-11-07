@@ -375,6 +375,59 @@ Sample with `euler` in SamplerCustomAdvanced. Dev generates and edits; Edit Turb
 | Edit Turbo comes out oversaturated and harsh | It is sampled off its settings. Give it 4 steps, CFG 1 and `euler` |
 | An edit comes out cropped or soft | `width` and `height` are typed. At 0 an edit samples about one megapixel in image_1's shape |
 
+## BluePixel
+
+Nothing is fetched. The pack publishes the transformers and the autoencoder at
+<https://huggingface.co/WAS/was-node-suite-weights> under `models/bluepixel/`, laid out as
+ComfyUI's `models` folder. The transformers are vivo's
+[BluePixel-Turbo](https://huggingface.co/openvivo/BluePixel-Turbo) in the layout ComfyUI reads.
+The autoencoder is the same file as vivo's and MIT Han Lab's. The text encoder is Comfy-Org's,
+with the same weights as vivo's.
+
+| File | Goes in | Size | Loaded by |
+|---|---|--:|---|
+| [`bluepixel_turbo_int8_convrot.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/bluepixel/diffusion_models/bluepixel_turbo_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 9.4 GB | BluePixel Model Loader |
+| [`bluepixel_turbo_w6a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/bluepixel/diffusion_models/bluepixel_turbo_w6a8.safetensors) | `ComfyUI/models/diffusion_models` | 7.5 GB | BluePixel Model Loader |
+| [`bluepixel_turbo_w4a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/bluepixel/diffusion_models/bluepixel_turbo_w4a8.safetensors) | `ComfyUI/models/diffusion_models` | 5.6 GB | BluePixel Model Loader |
+| [`bluepixel_turbo_bf16.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/bluepixel/diffusion_models/bluepixel_turbo_bf16.safetensors) | `ComfyUI/models/diffusion_models` | 18.2 GB | BluePixel Model Loader |
+| [`dc-ae-f64c128-mix-1.0.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/bluepixel/vae/dc-ae-f64c128-mix-1.0.safetensors) | `ComfyUI/models/vae` | 2.7 GB | BluePixel VAE Loader |
+| [`qwen_3_8b.safetensors`](https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/blob/main/split_files/text_encoders/qwen_3_8b.safetensors) | `ComfyUI/models/text_encoders` | 16.4 GB | Load CLIP, type `flux2` |
+| [`qwen_3_8b_fp8mixed.safetensors`](https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/blob/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors) | `ComfyUI/models/text_encoders` | 8.7 GB | Load CLIP, type `flux2` |
+
+| Transformer | Weights |
+|---|---|
+| `_bf16` | bfloat16, as vivo's pipeline runs it |
+| `_int8_convrot` | 8-bit, run as 8-bit |
+| `_w6a8` | 6-bit, run with 8-bit activations |
+| `_w4a8` | 4-bit, run with 8-bit activations, the smallest |
+
+Each format runs on the cards [Quantized models](#quantized-models) names for it.
+
+| Node | Setting |
+|---|---|
+| Text Encode BluePixel | `resolution` 4096 |
+| BluePixel Scheduler | 4 steps |
+| CFG Guider | CFG 3, with Text Encode BluePixel's `positive` and `negative` |
+| KSamplerSelect | `euler`, into SamplerCustomAdvanced |
+
+A 4096 edit encodes in about 11 GB and decodes in about 12 GB at bfloat16. VAE Decode tiles the
+decode when the card holds less.
+
+| File | Licence |
+|---|---|
+| The BluePixel transformers | **FLUX Non-Commercial License, non-commercial use only**, Black Forest Labs. BluePixel-Turbo is vivo's modified FLUX.2 [klein] 9B; commercial use needs a licence from Black Forest Labs at <https://bfl.ai/licensing> |
+| `dc-ae-f64c128-mix-1.0.safetensors` | Apache-2.0, MIT Han Lab |
+| `qwen_3_8b.safetensors`, `qwen_3_8b_fp8mixed.safetensors` | **FLUX Non-Commercial License**, as the repository is labelled |
+
+| What you see | What it means |
+|---|---|
+| `needs DC-AE f64c128` | The `vae` input holds another autoencoder. Load `dc-ae-f64c128-mix-1.0.safetensors` with BluePixel VAE Loader |
+| `needs FLUX.2 Klein 9B's text features` | Load CLIP holds another text encoder, or its type is not `flux2`. Load `qwen_3_8b.safetensors` with type `flux2` |
+| `is a ... model, not a FLUX.2 transformer` | BluePixel Model Loader is set to another model. Pick a `bluepixel_turbo_` file |
+| `This file is not the DC-AE f64c128 autoencoder` | BluePixel VAE Loader is set to another file in `models/vae` |
+| Faces come out garbled or soft | `resolution` is under 4096. Faces hold best at 4096 |
+| Areas the instruction does not name come out softer than the source | BluePixel redraws the whole picture through its autoencoder, at bfloat16 and in every quantized form |
+
 ## Language models
 
 **Language Model Loader** lists every file in `ComfyUI/models/text_encoders` and reads two kinds:
@@ -479,7 +532,9 @@ Each is searched under its folder in these layouts, and Hugging Face's own cache
 ## Example workflows
 
 The graphs in `docs/workflows` load these files through ComfyUI's own loaders. The Kandinsky 6,
-Marigold v2, EMA-VFI and optical flow files they read are in those sections above. A graph names
+BluePixel, Marigold v2, EMA-VFI and optical flow files they read are in those sections above.
+`bluepixel-edit.json` edits `bluepixel_test_input.jpg` in `ComfyUI/input`, which is
+`assets/test_input.jpg` from <https://github.com/vivo/BluePixel>. A graph names
 some LoRAs inside a subfolder, as `H3/taomate_h3_3step_comfy.safetensors`: a file kept in that
 subfolder loads as the graph names it, and one kept elsewhere is picked again from the loader.
 

@@ -90,4 +90,5 @@ class ImageMonitorEffectsFilter(io.ComfyNode):
                 return tv_vhs_distortion(distorted, amplitude)
             return distorted
 
-        return io.NodeOutput(filtered_planes(image, damage))
+        # Frames run one at a time, drawing damage from the shared random stream in batch order.
+        return io.NodeOutput(filtered_planes(image, damage, parallel=False))

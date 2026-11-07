@@ -737,6 +737,25 @@ Suite/Text**. Weights and settings: [`docs/MODELS.md`](docs/MODELS.md#fibo-20). 
 
 ---
 
+## BluePixel 4K image edits
+
+vivo's BluePixel-Turbo edits a picture at its full 4K size from one English instruction, in four
+steps. **BluePixel Model Loader** loads the transformer, **BluePixel VAE Loader** loads the DC-AE
+autoencoder it works on, **Text Encode BluePixel** turns the instruction and the picture into the
+prompt, the negative and an empty latent at the edit's size, and **BluePixel Scheduler** gives
+the released schedule. ComfyUI's own Load CLIP, CFG Guider, SamplerCustomAdvanced and VAE Decode
+do the rest. The transformer comes in bfloat16 and as the int8 ConvRot, W6A8 and W4A8 checkpoints
+the pack publishes.
+
+For recolouring, retexturing or replacing one thing in a large photograph, such as a garment or a
+hat, without scaling the picture down to edit it.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Loaders**, **WAS Suite/Conditioning** and **WAS
+Suite/Sampling**. Weights and settings: [`docs/MODELS.md`](docs/MODELS.md#bluepixel). Graph:
+[`bluepixel-edit.json`](docs/workflows/bluepixel-edit.json).
+
+---
+
 ## Fast motion held for a refining pass
 
 **H3 De-RoPE Stretch** finds where a MiniMax H3 clip moves fastest from its own latent, shows

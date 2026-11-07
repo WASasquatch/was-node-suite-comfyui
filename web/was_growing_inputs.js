@@ -6,7 +6,8 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { growWidgets } from "./interface/grow.js";
+import { drawnGroupCount, growWidgets, holdsValue } from "./interface/grow.js";
+import { foldedOnPlacing, startingValue } from "./interface/node_preview.js";
 import { sceneTint } from "./interface/h3_timeline.js";
 import { addLabelHeader, addRowHeaders, rowColourMenu, rowName } from "./interface/row_headers.js";
 
@@ -204,8 +205,6 @@ const GROWING = {
   "Text Concatenate": lettered("text"),
   // These three also grow sockets, in `was_growing_sockets.js`, which draws the output each box
   // feeds. Both growers count a box as used the same way, so the two sides agree.
-  // The frozen pair plus the slots appended for v3, revealed as each one fills.
-  "Image Stitch": ["image_a", "image_b", "image_c", "image_d", "image_e", "image_f", "image_g", "image_h", "image_i", "image_j", "image_k", "image_l", "image_m", "image_n", "image_o", "image_p", "image_q", "image_r", "image_s", "image_t", "image_u", "image_v", "image_w", "image_x", "image_y", "image_z"],
   "Text String": ["text", ...lettered("text").slice(1)],
   "Text String Truncate": ["text", ...lettered("text").slice(1)],
   "CLIPSeg Batch Masking": lettered("text"),
@@ -241,6 +240,51 @@ const GROWING_PAIRS = {
   ]),
 };
 
+/**
+ * How one node's repeated inputs grow.
+ *
+ * @param {object|string[]|undefined} entry - The node's `GROWING` entry.
+ * @param {string[][]|undefined} pairs - The node's `GROWING_PAIRS` entry.
+ * @returns {{groups: string[][], options: object}|null} Its groups and `growWidgets` options,
+ *   or null where the node has none.
+ */
+function growthOf(entry, pairs) {
+  const listed = Array.isArray(entry) ? entry : entry?.names;
+  const groups = entry?.groups ?? pairs ?? listed?.map((name) => [name]);
+  if (!groups) return null;
+  const options = {};
+  if (entry && !Array.isArray(entry)) {
+    if (entry.empty) options.empty = entry.empty;
+    if (Number.isFinite(entry.minVisible)) options.minVisible = entry.minVisible;
+    if (Number.isFinite(entry.decidesAt)) options.decidesAt = entry.decidesAt;
+  }
+  return { groups, options };
+}
+
+/**
+ * The repeated inputs a newly placed node folds away: every group past the ones it draws.
+ *
+ * @param {{groups: string[][], options: object}} growth - How the node's inputs grow.
+ * @param {object} definition - The node definition the frontend files.
+ * @returns {{inputs: string[]}} The input names.
+ */
+function foldedRows(growth, definition) {
+  const { groups, options } = growth;
+  const empty = options.empty ? new Set(options.empty) : null;
+  const starting = (name) => startingValue(definition?.inputs?.[name]);
+  const drawn = drawnGroupCount(
+    groups,
+    (voting) => voting.some((name) => holdsValue(starting(name), empty)),
+    options,
+  );
+  return { inputs: groups.slice(drawn).flat() };
+}
+
+for (const nodeId of [...Object.keys(GROWING), ...Object.keys(GROWING_PAIRS)]) {
+  const growth = growthOf(GROWING[nodeId], GROWING_PAIRS[nodeId]);
+  if (growth) foldedOnPlacing(nodeId, (definition) => foldedRows(growth, definition));
+}
+
 app.registerExtension({
   name: EXT_NAME,
 
@@ -252,15 +296,9 @@ app.registerExtension({
 
   async beforeRegisterNodeDef(nodeType, nodeData) {
     const entry = GROWING[nodeData?.name];
-    const listed = Array.isArray(entry) ? entry : entry?.names;
-    const groups = entry?.groups ?? GROWING_PAIRS[nodeData?.name] ?? listed?.map((name) => [name]);
-    if (!groups) return;
-    const options = {};
-    if (entry && !Array.isArray(entry)) {
-      if (entry.empty) options.empty = entry.empty;
-      if (Number.isFinite(entry.minVisible)) options.minVisible = entry.minVisible;
-      if (Number.isFinite(entry.decidesAt)) options.decidesAt = entry.decidesAt;
-    }
+    const growth = growthOf(entry, GROWING_PAIRS[nodeData?.name]);
+    if (!growth) return;
+    const { groups, options } = growth;
     const labels = Array.isArray(entry) ? [] : entry?.labels ?? [];
     const rowHeaders = Array.isArray(entry) ? null : entry?.rowHeaders;
 

@@ -41,21 +41,48 @@ function asGroups(growable) {
 }
 
 /**
- * How many of a growable list to draw: those in use, plus one spare.
+ * The last group of a growable list with anything wired to it.
  *
  * @param {object} node - The node.
- * @param {"inputs"|"outputs"} side - Which list to count.
+ * @param {"inputs"|"outputs"} side - Which list to read.
  * @param {string[][]} groups - The growable groups, in declared order.
- * @param {number} minVisible - The fewest to draw.
- * @returns {number} A count between `minVisible` and `groups.length`.
+ * @returns {number} The group's index, or -1 where none is wired.
  */
-function wantedCount(node, side, groups, minVisible) {
+function lastWiredGroup(node, side, groups) {
   const byName = new Map((node[side] ?? []).map((socket, slot) => [socket.name, slot]));
   let lastUsed = -1;
   groups.forEach((names, index) => {
     if (names.some((name) => wired(node, side, byName.get(name) ?? -1))) lastUsed = index;
   });
-  return Math.max(minVisible, Math.min(lastUsed + 2, groups.length));
+  return lastUsed;
+}
+
+/**
+ * Which groups of a growable list are drawn: those in use plus one spare, a count named
+ * outright, or a chosen set.
+ *
+ * @param {number} count - How many groups the list declares.
+ * @param {object} [reading] - What decides it.
+ * @param {number} [reading.minVisible] - The fewest drawn, two by default.
+ * @param {number} [reading.lastWired] - Index of the last group with a wire, -1 for none.
+ * @param {number|null} [reading.exactCount] - How many to draw, overriding the two above.
+ * @param {number[]|null} [reading.chosen] - The groups to draw by index, overriding every count.
+ * @returns {(index: number) => boolean} Whether the group at an index is drawn.
+ */
+export function drawnGroups(count, reading = {}) {
+  if (Array.isArray(reading.chosen)) {
+    const chosen = new Set(reading.chosen.map(Number));
+    return (index) => chosen.has(index);
+  }
+  const asked = reading.exactCount === null || reading.exactCount === undefined
+    ? Number.NaN
+    : Number(reading.exactCount);
+  const minVisible = Number.isFinite(reading.minVisible) ? reading.minVisible : MIN_VISIBLE;
+  const lastWired = Number.isFinite(reading.lastWired) ? reading.lastWired : -1;
+  const wanted = Number.isFinite(asked)
+    ? Math.max(0, Math.min(asked, count))
+    : Math.max(minVisible, Math.min(lastWired + 2, count));
+  return (index) => index < wanted;
 }
 
 /**
@@ -217,11 +244,10 @@ function linksBySocket(graph, node, side) {
  * @param {object} node - The node to grow or shrink.
  * @param {"inputs"|"outputs"} side - Which list to work on.
  * @param {object} plan - The captured declaration for this side.
- * @param {number} wanted - How many growable sockets this side should draw.
- * @param {Set<number>|null} chosen - The group indices to draw, or null to draw the first `wanted`.
+ * @param {(index: number) => boolean} drawn - Whether the group at an index is drawn.
  * @returns {boolean} Whether anything changed.
  */
-function fitSide(node, side, plan, wanted, chosen) {
+function fitSide(node, side, plan, drawn) {
   const sockets = node[side];
   if (!Array.isArray(sockets) || plan.types.size === 0) return false;
 
@@ -232,7 +258,6 @@ function fitSide(node, side, plan, wanted, chosen) {
   // socket off the node takes its link with it, which would quietly delete a connection the
   // user made. A group is dropped socket by socket for the same reason, so a wired output keeps
   // its place while an unused socket beside it folds away.
-  const drawn = (index) => (chosen ? chosen.has(index) : index < wanted);
   for (let index = plan.groups.length - 1; index >= 0; index -= 1) {
     if (drawn(index)) continue;
     for (const name of plan.groups[index]) {
@@ -368,21 +393,21 @@ export function growSockets(node, growable, options = {}) {
       // One count for both sides, taken from whichever is further along. On a loop's Open node
       // a carried value arrives as an input and is read as an output, so revealing the input
       // alone would leave the value with nowhere to be read from.
-      const minVisible = readMinVisible();
       const picked = readSelect ? readSelect() : null;
-      const chosen = Array.isArray(picked) ? new Set(picked.map(Number)) : null;
-      const asked = readExactCount ? Number(readExactCount()) : null;
-      const wanted = Number.isFinite(asked)
-        ? Math.max(0, Math.min(asked, groups.length))
-        : Math.max(
-            wantedCount(node, "inputs", plans.inputs.groups, minVisible),
-            wantedCount(node, "outputs", plans.outputs.groups, minVisible),
-          );
+      const drawn = drawnGroups(groups.length, {
+        minVisible: readMinVisible(),
+        lastWired: Math.max(
+          lastWiredGroup(node, "inputs", plans.inputs.groups),
+          lastWiredGroup(node, "outputs", plans.outputs.groups),
+        ),
+        exactCount: readExactCount ? readExactCount() : null,
+        chosen: Array.isArray(picked) ? picked : null,
+      });
       // Before anything is counted or moved, since a duplicate makes both meaningless.
       const dedupedIn = dedupe(node, "inputs");
       const dedupedOut = dedupe(node, "outputs");
-      const changedIn = fitSide(node, "inputs", plans.inputs, wanted, chosen);
-      const changedOut = fitSide(node, "outputs", plans.outputs, wanted, chosen);
+      const changedIn = fitSide(node, "inputs", plans.inputs, drawn);
+      const changedOut = fitSide(node, "outputs", plans.outputs, drawn);
       // Ordered on every fit, whether or not this fit changed anything.
       reorder(node, "inputs", plans.inputs.order);
       reorder(node, "outputs", plans.outputs.order);
