@@ -4,7 +4,16 @@
 
 import { app } from "../../scripts/app.js";
 import { addButton, addSectionHeader, refreshButtons } from "./interface/decoration.js";
-import { menuText, rowColour, rowName, setRowColours, setRowNames } from "./interface/row_headers.js";
+import { withGraphChange } from "./interface/region.js";
+import {
+  addHeaderEntries,
+  menuOpener,
+  menuText,
+  rowColour,
+  rowName,
+  setRowColours,
+  setRowNames,
+} from "./interface/row_headers.js";
 
 const EXT_NAME = "WASNodeSuite.PowerLoraRows";
 
@@ -251,8 +260,77 @@ function removeRow(node, at) {
   const rows = readRows(node);
   if (at < 0 || at >= rows.length) return;
   rows.splice(at, 1);
-  writeRows(node, rows);
-  refold(node);
+  withGraphChange(() => {
+    writeRows(node, rows);
+    refold(node);
+  });
+}
+
+/**
+ * Whether a row carries a LoRA.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} index - The row's number, from one.
+ * @returns {boolean} True when the row's file is set.
+ */
+function rowFilled(node, index) {
+  const name = rowWidgets(node, index).name?.value;
+  return Boolean(name) && name !== EMPTY;
+}
+
+/**
+ * Whether an empty row has a LoRA somewhere below it, so taking it away closes a gap.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} index - The row's number, from one.
+ * @returns {boolean} True when a later row carries a LoRA.
+ */
+function filledBelow(node, index) {
+  for (let later = index + 1; later <= MAX_ROWS; later += 1) {
+    if (rowFilled(node, later)) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether one row can be taken away: it carries a LoRA, it leaves a gap above another, or it
+ * is an empty row held open.
+ *
+ * @param {object} node - The node to read.
+ * @param {number} index - The row's number, from one.
+ * @returns {boolean} True when removing the row changes the node.
+ */
+function canRemoveAt(node, index) {
+  if (stackLinked(node)) return false;
+  if (rowFilled(node, index) || filledBelow(node, index)) return true;
+  return visibleRows(node) > naturalRows(node);
+}
+
+/**
+ * Take one row away by its number and close the gap behind it.
+ *
+ * @param {object} node - The node to remove from.
+ * @param {number} index - The row's number, from one.
+ * @returns {void}
+ */
+function removeAt(node, index) {
+  if (!canRemoveAt(node, index)) return;
+  if (rowFilled(node, index)) {
+    let at = 0;
+    for (let earlier = 1; earlier < index; earlier += 1) {
+      if (rowFilled(node, earlier)) at += 1;
+    }
+    removeRow(node, at);
+    return;
+  }
+  if (filledBelow(node, index)) {
+    withGraphChange(() => {
+      writeRows(node, readRows(node));
+      refold(node);
+    });
+    return;
+  }
+  refold(node, visibleRows(node) - 1);
 }
 
 /**
@@ -262,8 +340,10 @@ function removeRow(node, at) {
  * @returns {void}
  */
 function clearRows(node) {
-  writeRows(node, []);
-  refold(node);
+  withGraphChange(() => {
+    writeRows(node, []);
+    refold(node);
+  });
 }
 
 /**
@@ -317,6 +397,25 @@ function queueButtonRefresh(node) {
   }, 0);
 }
 
+/**
+ * Entries a row header's menu takes: removing that row.
+ *
+ * @param {object} node - The node the header belongs to.
+ * @param {number|string} row - The header's row number, from one.
+ * @param {string} label - The header's name in menus, as `LoRA 2`.
+ * @returns {object[]} Menu entries.
+ */
+function headerEntries(node, row, label) {
+  const index = Number(row);
+  return [
+    {
+      content: menuText(`➖ Remove ${label}`),
+      disabled: !canRemoveAt(node, index),
+      callback: () => removeAt(node, index),
+    },
+  ];
+}
+
 app.registerExtension({
   name: EXT_NAME,
 
@@ -327,12 +426,11 @@ app.registerExtension({
     return [
       null,
       { content: "➕ Add LoRA", disabled: linked || atCeiling(node), callback: () => addRow(node) },
-      {
+      menuOpener({
         content: "➖ Remove LoRA",
         disabled: linked || rows.length === 0,
-        has_submenu: !linked && rows.length > 0,
-        submenu: { options: removeEntries(node) },
-      },
+        entries: () => removeEntries(node),
+      }),
       {
         content: "❌ Clear LoRAs",
         disabled: linked || nothingToClear(node),
@@ -387,6 +485,7 @@ app.registerExtension({
           label: "♻️ Refresh LoRA List",
           onClick: refreshCatalog,
         });
+        addHeaderEntries(this, headerEntries);
         // Picking, switching or wiring a row changes what the buttons can do.
         for (let index = 1; index <= MAX_ROWS; index += 1) {
           for (const row of Object.values(rowWidgets(this, index))) {

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **687** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **689** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-601 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+603 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 445 |
+| [Always loaded](#always-loaded) | always on | 447 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-445 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+447 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -76,9 +76,9 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
 - [WAS Suite/Sampling](#was-suitesampling) (34)
-- [WAS Suite/Text](#was-suitetext) (12)
+- [WAS Suite/Text](#was-suitetext) (13)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
-- [WAS Suite/Text/List](#was-suitetextlist) (11)
+- [WAS Suite/Text/List](#was-suitetextlist) (12)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (7)
 - [WAS Suite/Text/Parse](#was-suitetextparse) (3)
 - [WAS Suite/Text/Search](#was-suitetextsearch) (7)
@@ -12193,6 +12193,34 @@ Turn the caption or box layout a language model drafted, such as with the MOSS-I
 
 </details>
 
+<a id="node-wasmultilinetextadvanced"></a>
+<details>
+<summary><b>Multiline Text (Advanced)</b></summary>
+
+Write a prompt one part per line and hand on the lines that are kept as one text, joined by line breaks, spaces or commas. Each line can be switched off without deleting it, and # or // lines are notes for organising the prompt.
+
+| | |
+|---|---|
+| Node id | `WASMultilineTextAdvanced` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `lines` | `STRING` | Yes |  |  | One part per line, as `a red fox in snow`. A line starting with ~ is switched off; # and // start a note, and /* */ wraps several lines of notes. Ignored while a STRING is wired into text. |
+| `skip_blank_lines` | `BOOLEAN` | Yes | False |  | `off` = empty lines stay as paragraph breaks when joined by line breaks; `on` = they are left out. Joined by spaces or commas, empty lines are always left out. |
+| `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes (#, // and /* */ lines) are left out; `off` = each note line is kept as written, marker included. |
+| `join_with` | `COMBO` | Yes | line break | `line break`, `space`, `comma` | `line break` = lines as written, indents kept; `space` = one line of text; `comma` = a tag prompt, `red fox,` and `snow` giving `red fox, snow`. |
+| `text` | `STRING` | No |  |  | A STRING to use instead of the typed lines, such as `a fox\na heron`, read the same way: one part per line, ~ lines off, # and // notes. Unwired, the typed lines are used. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `STRING` | The kept lines as one text, empty when every line is off or a note. |
+
+</details>
+
 <a id="node-wasreviseprompt"></a>
 <details>
 <summary><b>Revise Prompt</b></summary>
@@ -12719,6 +12747,34 @@ Merge two to 24 dictionaries into one. Keys present in more than one input take 
 </details>
 
 ### WAS Suite/Text/List
+
+<a id="node-wasstringlist"></a>
+<details>
+<summary><b>String List</b></summary>
+
+Type one prompt per line and hand them on as a STRING list, so everything downstream runs once per line. Each line can be switched off without deleting it, and # or // lines are notes for organising the list. A STRING wired into text replaces the typed lines.
+
+| | |
+|---|---|
+| Node id | `WASStringList` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `lines` | `STRING` | Yes |  |  | One entry per line, as `a red fox in snow`. A line starting with ~ is switched off; # and // start a note, and /* */ wraps several lines of notes. Ignored while a STRING is wired into text. |
+| `skip_blank_lines` | `BOOLEAN` | Yes | True |  | `on` = empty lines are left out; `off` = each empty line is an empty entry, for a list whose positions have to line up with another list's. |
+| `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes (#, // and /* */ lines) are left out; `off` = each note line is handed on as written, marker included. |
+| `text` | `STRING` | No |  |  | A STRING to use instead of the typed lines, such as `a fox\na heron`, read the same way: one entry per line, ~ lines off, # and // notes. Unwired, the typed lines are used. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `strings` | `STRING` | One entry per line as a STRING list: a node reading it runs once per entry, so wired into a prompt it renders each line in turn. A list with nothing in it stops the prompt. |
+| `count` | `INT` | How many entries the list holds. |
+
+</details>
 
 <a id="node-text-list"></a>
 <details>

@@ -1,0 +1,575 @@
+{
+  "id": "e84e1ac2-e008-4f54-8431-be3eec2a56fe",
+  "revision": 0,
+  "last_node_id": 8,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASStringList",
+      "pos": [
+        480,
+        0
+      ],
+      "size": [
+        440,
+        470
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "lines",
+          "name": "lines",
+          "type": "STRING",
+          "widget": {
+            "name": "lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_blank_lines",
+          "name": "skip_blank_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_blank_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_comment_lines",
+          "name": "skip_comment_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_comment_lines"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "strings",
+          "name": "strings",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASStringList"
+      },
+      "widgets_values": [
+        "# Animals at dawn\na red fox asleep in long grass, morning haze, soft rim light\na heron standing in still water, mist, reeds, muted greens\na snow hare in a birch wood, low winter sun\n~a grey wolf on a ridge at dusk, wind in the fur\n\n// City scenes\na rain-soaked neon alley at night, reflections, umbrellas\n/* ideas to try later:\na tram crossing a bridge in fog\n*/\na lighthouse on black rocks under a storm, spray, long exposure\nan old library with dust in the light",
+        true,
+        true
+      ],
+      "widgets_values_named": {
+        "lines": "# Animals at dawn\na red fox asleep in long grass, morning haze, soft rim light\na heron standing in still water, mist, reeds, muted greens\na snow hare in a birch wood, low winter sun\n~a grey wolf on a ridge at dusk, wind in the fur\n\n// City scenes\na rain-soaked neon alley at night, reflections, umbrellas\n/* ideas to try later:\na tram crossing a bridge in fog\n*/\na lighthouse on black rocks under a storm, spray, long exposure\nan old library with dust in the light",
+        "skip_blank_lines": true,
+        "skip_comment_lines": true
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASDisplayAny",
+      "pos": [
+        1000,
+        0
+      ],
+      "size": [
+        440,
+        380
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDisplayAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 3,
+      "type": "WASDisplayAny",
+      "pos": [
+        1000,
+        470
+      ],
+      "size": [
+        440,
+        170
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 6,
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDisplayAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 4,
+      "type": "WASMultilineTextAdvanced",
+      "pos": [
+        480,
+        950
+      ],
+      "size": [
+        440,
+        380
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "lines",
+          "name": "lines",
+          "type": "STRING",
+          "widget": {
+            "name": "lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_blank_lines",
+          "name": "skip_blank_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_blank_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_comment_lines",
+          "name": "skip_comment_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_comment_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "join_with",
+          "name": "join_with",
+          "type": "COMBO",
+          "widget": {
+            "name": "join_with"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASMultilineTextAdvanced"
+      },
+      "widgets_values": [
+        "// Subject\na red fox curled up in deep snow,\n~wearing a tiny knitted scarf,\n// Style\nsoft rim light, shallow depth of field,\n~black and white,\n/* camera notes:\n85mm, f/1.8 */\nfilm grain, muted colours",
+        false,
+        true,
+        "comma"
+      ],
+      "widgets_values_named": {
+        "lines": "// Subject\na red fox curled up in deep snow,\n~wearing a tiny knitted scarf,\n// Style\nsoft rim light, shallow depth of field,\n~black and white,\n/* camera notes:\n85mm, f/1.8 */\nfilm grain, muted colours",
+        "skip_blank_lines": false,
+        "skip_comment_lines": true,
+        "join_with": "comma"
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASDisplayAny",
+      "pos": [
+        1000,
+        950
+      ],
+      "size": [
+        440,
+        220
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDisplayAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 6,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        0,
+        1640
+      ],
+      "size": [
+        400,
+        220
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "// Wired in from another node\na paper boat drifting on a puddle, overcast light\n~a kite over dunes, hard noon sun\na glasshouse full of ferns, condensation on the panes"
+      ],
+      "widgets_values_named": {
+        "value": "// Wired in from another node\na paper boat drifting on a puddle, overcast light\n~a kite over dunes, hard noon sun\na glasshouse full of ferns, condensation on the panes"
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASStringList",
+      "pos": [
+        480,
+        1640
+      ],
+      "size": [
+        440,
+        346
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": 4
+        },
+        {
+          "localized_name": "lines",
+          "name": "lines",
+          "type": "STRING",
+          "widget": {
+            "name": "lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_blank_lines",
+          "name": "skip_blank_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_blank_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_comment_lines",
+          "name": "skip_comment_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_comment_lines"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "strings",
+          "name": "strings",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASStringList"
+      },
+      "widgets_values": [
+        "These typed lines are kept, and the wired text is used while the wire is in",
+        true,
+        true
+      ],
+      "widgets_values_named": {
+        "lines": "These typed lines are kept, and the wired text is used while the wire is in",
+        "skip_blank_lines": true,
+        "skip_comment_lines": true
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASDisplayAny",
+      "pos": [
+        1000,
+        1640
+      ],
+      "size": [
+        440,
+        220
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASDisplayAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      1,
+      1,
+      3,
+      0,
+      "INT"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      6,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      5,
+      7,
+      0,
+      8,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "String List: one entry per line, notes and switched-off lines left out",
+      "bounding": [
+        440,
+        -120,
+        1040,
+        830
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Multiline Text (Advanced): the kept lines joined into one prompt",
+      "bounding": [
+        440,
+        830,
+        1040,
+        570
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "A STRING wired into text replaces the typed lines",
+      "bounding": [
+        -40,
+        1520,
+        1520,
+        536
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        120,
+        200
+      ]
+    }
+  },
+  "version": 0.4
+}

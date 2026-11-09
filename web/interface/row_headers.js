@@ -43,6 +43,85 @@ const SWATCH = {
 const HEADERS = new WeakMap();
 
 /**
+ * Open a menu of entries wherever the pointer is.
+ *
+ * @param {Array<object|null>} entries - Menu entries, null drawing a rule. An entry with
+ *   `submenu: {options}` opens those options beside the menu when picked.
+ * @param {object} [options] - Settings.
+ * @param {string} [options.title] - Text above the entries.
+ * @param {Event} [options.event] - What opened the menu, used to place it.
+ * @param {object} [options.parentMenu] - A menu this one opens beside.
+ * @returns {boolean} True when the menu opened.
+ */
+export function openMenu(entries, { title, event, parentMenu } = {}) {
+  const ContextMenu = window.LiteGraph?.ContextMenu;
+  if (!ContextMenu) return false;
+  const settings = { title, event: event ?? window.event };
+  if (parentMenu instanceof ContextMenu) settings.parentMenu = parentMenu;
+  new ContextMenu(entries, settings);
+  return true;
+}
+
+/**
+ * A node menu entry that opens its choices in a menu of their own at the pointer.
+ *
+ * @param {object} options - Settings.
+ * @param {string} options.content - Text of the entry, drawn with a trailing ellipsis.
+ * @param {string} [options.title] - Text above the choices, the entry's own text by default.
+ * @param {boolean} [options.disabled] - Grey the entry out.
+ * @param {() => Array<object|null>} options.entries - Called when the entry is picked; answers
+ *   the choices.
+ * @returns {object} An entry for `getNodeMenuItems`.
+ */
+export function menuOpener({ content, title, disabled = false, entries }) {
+  return {
+    content: menuText(`${content}…`),
+    disabled,
+    callback: (value, options, event, parentMenu) => {
+      try {
+        const opened = openMenu(entries(), { title: title ?? content, event, parentMenu });
+        // Keeps a canvas menu open under the one it opened.
+        return opened && Boolean(parentMenu);
+      } catch (error) {
+        console.error(`[${LOG_NAME}] Failed to open ${content}:`, error);
+        return false;
+      }
+    },
+  };
+}
+
+/**
+ * Add entries to the menu of every header on a node.
+ *
+ * @param {object} node - The node whose headers take the entries.
+ * @param {(node: object, key: number|string, label: string) => Array<object|null>} entries -
+ *   Called when a header's menu is built, with the row number or label key and the header's
+ *   name in menus, as `LoRA 2`.
+ * @returns {void}
+ */
+export function addHeaderEntries(node, entries) {
+  if (node) node.__was_header_entries = entries;
+}
+
+/**
+ * The entries a node adds to one header's menu.
+ *
+ * @param {object} node - The node the header belongs to.
+ * @param {object} entry - The header, as `{key, label}`.
+ * @returns {Array<object|null>} Entries, or none where the node adds nothing.
+ */
+function headerActions(node, entry) {
+  const entries = node?.__was_header_entries;
+  if (typeof entries !== "function") return [];
+  try {
+    return entries(node, entry.key, entry.label) ?? [];
+  } catch (error) {
+    console.error(`[${LOG_NAME}] Failed to build ${entry.label}'s entries:`, error);
+    return [];
+  }
+}
+
+/**
  * Record one colourable header on a node.
  *
  * @param {object} node - The node the header is on.
@@ -123,21 +202,6 @@ export function colourEntries(node, row) {
     callback: () => setRowColour(node, row, null),
   });
   return entries;
-}
-
-/**
- * Open the colour list for one header wherever the pointer is.
- *
- * @param {object} node - The node the header belongs to.
- * @param {number|string} row - Row number from 1, or a label's key.
- * @param {string} title - Menu title.
- * @param {Event} [event] - What opened the menu, used to place it.
- * @returns {void}
- */
-export function askRowColour(node, row, title, event) {
-  const ContextMenu = window.LiteGraph?.ContextMenu;
-  if (!ContextMenu) return;
-  new ContextMenu(colourEntries(node, row), { title, event: event ?? window.event });
 }
 
 /**
@@ -255,8 +319,8 @@ function setRowSwitch(node, widget, on) {
 }
 
 /**
- * Entries for one header's own menu: its on switch where it has one, renaming where it can be
- * renamed, then its colours.
+ * Entries for one header's own menu: its on switch, renaming, whatever its node adds, then its
+ * colours.
  *
  * @param {object} node - The node the header belongs to.
  * @param {object} entry - The header, as `{key, label, renamable, switchName}`.
@@ -283,6 +347,8 @@ function headerEntries(node, entry) {
       null,
     );
   }
+  const actions = headerActions(node, entry);
+  if (actions.length) entries.push(...actions, null);
   return [...entries, ...colourEntries(node, entry.key)];
 }
 
@@ -295,10 +361,8 @@ function headerEntries(node, entry) {
  * @returns {void}
  */
 function askHeader(node, entry, event) {
-  const ContextMenu = window.LiteGraph?.ContextMenu;
-  if (!ContextMenu) return;
   const title = entry.renamable ? entry.label : `${entry.label} colour`;
-  new ContextMenu(headerEntries(node, entry), { title, event: event ?? window.event });
+  openMenu(headerEntries(node, entry), { title, event });
 }
 
 /**
@@ -398,7 +462,7 @@ export function drawnHeaders(node) {
 
 /**
  * Node menu entries colouring and renaming its headers: the one under the pointer directly, any
- * otherwise.
+ * otherwise, each list in a menu of its own.
  *
  * @param {object} node - The node the menu was opened on.
  * @returns {object[]} Entries for `getNodeMenuItems`.
@@ -409,11 +473,11 @@ export function rowColourMenu(node) {
     if (under !== null) {
       const entries = [
         null,
-        {
+        menuOpener({
           content: menuText(`🎨 ${under.label} Colour`),
-          has_submenu: true,
-          submenu: { options: colourEntries(node, under.key) },
-        },
+          title: menuText(`${under.label} colour`),
+          entries: () => colourEntries(node, under.key),
+        }),
       ];
       if (under.renamable) {
         entries.push({
@@ -421,42 +485,42 @@ export function rowColourMenu(node) {
           callback: () => askRowName(node, under.key, under.label),
         });
       }
+      entries.push(...headerActions(node, under).filter(Boolean));
       return entries;
     }
     const drawn = drawnHeaders(node);
     if (!drawn.length) return [];
     const entries = [
       null,
-      {
+      menuOpener({
         content: "🎨 Header Colour",
-        has_submenu: true,
-        submenu: {
-          options: drawn.map(({ key, label }) => {
+        entries: () =>
+          drawnHeaders(node).map(({ key, label }) => {
             const colour = rowColour(node, key);
             return {
               content: menuText(`${colour ? SWATCH[colour] + " " : ""}${label}`),
-              callback: (value, options, event) =>
-                askRowColour(node, key, `${label} colour`, event),
+              has_submenu: true,
+              submenu: { options: colourEntries(node, key) },
             };
           }),
-        },
-      },
+      }),
     ];
-    const renamable = drawn.filter((entry) => entry.renamable);
-    if (renamable.length) {
-      entries.push({
-        content: "✏️ Rename Header",
-        has_submenu: true,
-        submenu: {
-          options: renamable.map(({ key, label }) => {
-            const named = rowName(node, key);
-            return {
-              content: menuText(named ? `${label} · ${named}` : label),
-              callback: () => askRowName(node, key, label),
-            };
-          }),
-        },
-      });
+    if (drawn.some((entry) => entry.renamable)) {
+      entries.push(
+        menuOpener({
+          content: "✏️ Rename Header",
+          entries: () =>
+            drawnHeaders(node)
+              .filter((entry) => entry.renamable)
+              .map(({ key, label }) => {
+                const named = rowName(node, key);
+                return {
+                  content: menuText(named ? `${label} · ${named}` : label),
+                  callback: () => askRowName(node, key, label),
+                };
+              }),
+        }),
+      );
     }
     return entries;
   } catch (error) {

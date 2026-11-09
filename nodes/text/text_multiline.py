@@ -55,9 +55,7 @@ class TextMultiline(io.ComfyNode):
 
     @classmethod
     def execute(cls, text, dynamic_prompts=True) -> io.NodeOutput:
-        # StringIO rather than splitlines(): it splits on \n, \r\n and \r only, where
-        # splitlines() also breaks on form feed and the unicode line separators, which
-        # would cut a line a prompt box treats as one.
+        # Splits on \n, \r\n and \r only.
         from io import StringIO
 
         kept = []
