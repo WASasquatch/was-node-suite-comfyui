@@ -28,7 +28,7 @@ without it the pack needs no packages. [What it covers](FEATURES.md#llama-index-
 # Installation
 
 > [!WARNING]
-> **WAS Node Suite v3** should not be installed through ComfyUI Manager. ComfyUI Manager is broken and will silently downgrade, and break your installation without warning. Either directly clone the repository or use the [Open Manager](https://github.com/WASasquatch/open-manager-comfyui).
+> **WAS Node Suite v3** should not be installed through ComfyUI Manager unless intalling a approved version, or it will silently downgrade your installation and may break things. Either directly clone the repository or use the [Open Manager](https://github.com/WASasquatch/open-manager-comfyui).
 
 ### Manually clone into `custom_nodes`:
 
