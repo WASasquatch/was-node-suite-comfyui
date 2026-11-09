@@ -8,7 +8,16 @@ import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
 import * as THREE from "../vendor/three/three.module.js";
 
-import { createPathTracer, prepareFrame, traceFrame } from "./pathtrace.js";
+import {
+    TilePacer,
+    compilesInline,
+    createTracer,
+    disposeTracer,
+    prepareFrame,
+    presentTrace,
+    traceFrame,
+    tracingStation,
+} from "./pathtrace.js";
 import { createRuntime, toneMappingConstant } from "./runtime.js";
 
 const ROUTE = "/was/threejs/api/render";
@@ -33,6 +42,9 @@ const MAX_SUPERSAMPLE = 4;
 // Draws thrown away before the first frame is kept, so both composer targets are
 // written at least once.
 const WARM_UP_DRAWS = 3;
+
+// Milliseconds given to a progress line to reach the page before a shader compile holds it.
+const NOTE_SETTLE_MS = 500;
 
 let running = false;
 
@@ -83,9 +95,19 @@ async function drawJob(job, onFrame, onProgress) {
     const spec = job.app;
     const times = Array.isArray(job.times) && job.times.length ? job.times : [0];
 
-    const canvas = document.createElement("canvas");
-    canvas.width = drawWidth;
-    canvas.height = drawHeight;
+    // A traced job draws on the page's tracing station, whose shader is compiled once a page.
+    const station = job.trace
+        ? tracingStation({
+            alpha: Boolean(job.transparent),
+            antialias: spec.params?.antialias !== false,
+        })
+        : null;
+    if (station?.holder) throw new Error("Another path traced render is still drawing.");
+    const canvas = station ? station.canvas : document.createElement("canvas");
+    if (!station) {
+        canvas.width = drawWidth;
+        canvas.height = drawHeight;
+    }
 
     // Drawn oversize and scaled down here, which is what smooths an edge the renderer's own
     // antialias leaves stepped. At 1 the two are the same canvas.
@@ -106,21 +128,40 @@ async function drawJob(job, onFrame, onProgress) {
 
     const runtime = createRuntime(canvas, null, { network: job.network === true });
     let renderer = null;
+    let scene = null;
     let tracer = null;
+    let pacer = null;
     try {
-        renderer = new THREE.WebGLRenderer({
-            canvas,
-            antialias: spec.params?.antialias !== false && !spec.deps?.effects,
-            alpha: Boolean(job.transparent),
-            preserveDrawingBuffer: true,
-        });
-        renderer.setPixelRatio(1);
-        renderer.setSize(drawWidth, drawHeight, false);
-        renderer.shadowMap.enabled = spec.params?.shadows !== false;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.toneMapping = toneMappingConstant(spec.params?.toneMapping);
-        renderer.toneMappingExposure = Number(spec.params?.exposure) || 1;
-        if (job.transparent) renderer.setClearAlpha(0);
+        if (station) {
+            station.holder = job;
+            renderer = station.renderer;
+            renderer.setRenderTarget(null);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.setClearColor(0x000000, job.transparent ? 0 : 1);
+        } else {
+            renderer = new THREE.WebGLRenderer({
+                canvas,
+                antialias: spec.params?.antialias !== false && !spec.deps?.effects,
+                alpha: Boolean(job.transparent),
+                preserveDrawingBuffer: true,
+            });
+            renderer.shadowMap.enabled = spec.params?.shadows !== false;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            if (job.transparent) renderer.setClearAlpha(0);
+        }
+        const toneMapping = toneMappingConstant(spec.params?.toneMapping);
+        const exposure = Number(spec.params?.exposure) || 1;
+        // Sets the renderer to this job's size and output.
+        const claim = () => {
+            renderer.setRenderTarget(null);
+            if (renderer.getPixelRatio() !== 1) renderer.setPixelRatio(1);
+            if (canvas.width !== drawWidth || canvas.height !== drawHeight) {
+                renderer.setSize(drawWidth, drawHeight, false);
+            }
+            renderer.toneMapping = toneMapping;
+            renderer.toneMappingExposure = exposure;
+        };
+        claim();
         runtime.ctx.renderer = renderer;
 
         // Per-capture motion is read against the run this job covers, so the last frame
@@ -133,7 +174,7 @@ async function drawJob(job, onFrame, onProgress) {
         // in and the surroundings are captured differently for a traced render.
         runtime.ctx.shadowMapSize = Number(spec.params?.shadowMapSize) || 2048;
         runtime.ctx.tracing = Boolean(job.trace);
-        const scene = await runtime.buildScene(spec.deps?.scene);
+        scene = await runtime.buildScene(spec.deps?.scene);
         if (job.transparent) scene.background = null;
         const camera = runtime.buildCamera(spec.deps?.camera, width / height);
         runtime.attachCameraTrack(camera, spec.deps?.camera, scene);
@@ -147,7 +188,8 @@ async function drawJob(job, onFrame, onProgress) {
         let drawPicture = null;
         const wanted = Math.max(1, Math.floor(job.trace?.samples) || 1);
         if (job.trace) {
-            tracer = await createPathTracer(renderer, job.trace);
+            tracer = await createTracer(station, job.trace);
+            pacer = new TilePacer(renderer);
             // Only a scene that moves needs its hierarchy rebuilt each frame; one that only
             // has the camera moving is built once.
             const moves = runtime.ctx.updateFunctions.length > 0;
@@ -155,13 +197,24 @@ async function drawJob(job, onFrame, onProgress) {
             drawPicture = async (index) => {
                 prepareFrame(tracer, scene, camera, moves || !built);
                 built = true;
-                await traceFrame(tracer, wanted, job.trace.patience, (standing) => {
+                if (!station.warm && compilesInline(renderer)) {
+                    await onProgress?.({
+                        done: 0,
+                        note: "compiling the path tracer, the tab pauses",
+                    });
+                    await new Promise((resolve) => setTimeout(resolve, NOTE_SETTLE_MS));
+                }
+                await traceFrame(tracer, pacer, wanted, job.trace.patience, (standing) => {
                     onProgress?.({
                         done: index * wanted + Math.floor(standing),
                         note: `frame ${index + 1} of ${times.length}, `
                             + `${Math.floor(standing)} of ${wanted} samples`,
                     });
-                });
+                }, claim);
+                station.warm = true;
+                // Drawn again here, in the same task as the read that follows.
+                claim();
+                presentTrace(tracer);
             };
         } else {
             drawPicture = async () => {
@@ -211,17 +264,27 @@ async function drawJob(job, onFrame, onProgress) {
             });
         }
     } finally {
+        pacer?.dispose();
         try {
-            tracer?.dispose?.();
+            disposeTracer(tracer);
         } catch (error) {
             console.warn("[WAS ThreeJS] The path tracer was not fully released.", error);
         }
         try {
+            // Frees each light's shadow map.
+            scene?.traverse((child) => child.isLight && child.dispose?.());
             runtime.dispose();
         } catch (error) {
             console.warn("[WAS ThreeJS] Render job resources were not fully released.", error);
         }
-        renderer?.dispose?.();
+        if (station) {
+            renderer.setSize(1, 1, false);
+            station.holder = null;
+        } else {
+            renderer?.dispose?.();
+            // Releases the job's context now rather than when its canvas is collected.
+            renderer?.forceContextLoss?.();
+        }
     }
 }
 

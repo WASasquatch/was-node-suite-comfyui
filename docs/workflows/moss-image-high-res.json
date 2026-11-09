@@ -988,14 +988,14 @@
       "widgets_values": [
         "16:9",
         "long edge",
-        2561,
+        2560,
         1,
         32
       ],
       "widgets_values_named": {
         "aspect_ratio": "16:9",
         "size_by": "long edge",
-        "size": 2561,
+        "size": 2560,
         "megapixels": 1,
         "multiple_of": 32
       }

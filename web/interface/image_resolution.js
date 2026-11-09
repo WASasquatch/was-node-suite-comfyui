@@ -8,6 +8,22 @@ import { roundHalfEven } from "./python_arithmetic.js";
 /** Largest side either edge may reach. */
 export const MAX_EDGE = 16384;
 
+/** Pixels in one megapixel, 1024 by 1024, as ComfyUI counts it. */
+export const MEGAPIXEL = 1024 * 1024;
+
+/** Pixels in one megapixel counted as a round million. */
+export const REALWORLD_MEGAPIXEL = 1_000_000;
+
+/**
+ * Pixels in one megapixel.
+ *
+ * @param {boolean} realworld - True for `REALWORLD_MEGAPIXEL`, false for `MEGAPIXEL`.
+ * @returns {number} The pixel count.
+ */
+export function megapixelUnit(realworld) {
+  return realworld ? REALWORLD_MEGAPIXEL : MEGAPIXEL;
+}
+
 /**
  * The same shape the other way round.
  *
@@ -65,17 +81,20 @@ function snap(value, multiple) {
  * @param {string} ratio - A menu entry, width first.
  * @param {string} driver - `megapixels`, `long edge`, `short edge`, `width` or `height`.
  * @param {number} size - The measurement in pixels, read by every driver but `megapixels`.
- * @param {number} megapixels - The measurement in millions of pixels.
+ * @param {number} megapixels - The measurement in megapixels.
  * @param {number} multiple - Step both sides land on.
+ * @param {number} [megapixel] - Pixels in one megapixel, from `megapixelUnit`.
  * @returns {number[]} `[width, height]`, both a whole number of steps.
  */
-export function resolve(ratio, driver = "megapixels", size = 1024, megapixels = 1.0, multiple = 64) {
+export function resolve(
+  ratio, driver = "megapixels", size = 1024, megapixels = 1.0, multiple = 64, megapixel = MEGAPIXEL,
+) {
   const [wide, high] = parseRatio(ratio);
   const shape = wide / high;
   let width;
   let height;
   if (driver === "megapixels") {
-    const area = Math.max(Number(megapixels) || 0, 0) * 1_000_000;
+    const area = Math.max(Number(megapixels) || 0, 0) * Math.max(1, Math.trunc(Number(megapixel) || 0));
     width = area > 0 ? Math.sqrt(area * shape) : 0;
     height = shape > 0 ? width / shape : 0;
   } else {

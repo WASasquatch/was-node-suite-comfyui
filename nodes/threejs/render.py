@@ -220,7 +220,7 @@ class ThreeRender(io.ComfyNode):
                 f"viewer's own error line usually says more."
             )
         return io.NodeOutput(
-            cls.as_batch(bodies["png"]),
+            cls.as_batch(bodies["png"], alpha=bool(transparent)),
             cls.as_batch(bodies["depth"]),
             cls.as_batch(bodies["normal"]),
             len(bodies["png"]),
@@ -245,15 +245,17 @@ class ThreeRender(io.ComfyNode):
         return [start + step * index for index in range(num_frames)]
 
     @staticmethod
-    def as_batch(bodies: list[bytes], node: str = "Three Render"):
+    def as_batch(bodies: list[bytes], node: str = "Three Render", alpha: bool = False):
         """Frames as one ``IMAGE`` batch.
 
         Args:
             bodies: The PNG bytes the browser posted back, in time order.
             node: Display name of the node asking, for the refusal.
+            alpha: Keep an alpha channel, for RGBA frames; otherwise RGB.
 
         Returns:
-            A float tensor shaped ``(frames, height, width, channels)`` in ``[0, 1]``.
+            A float tensor shaped ``(frames, height, width, channels)`` in ``[0, 1]``, with
+            4 channels where ``alpha`` is set and 3 otherwise.
 
         Raises:
             ValueError: ``bodies`` is empty, or its frames differ in size or channel count.
@@ -275,7 +277,7 @@ class ThreeRender(io.ComfyNode):
         batch = None
         for index, body in enumerate(bodies):
             picture = Image.open(_io.BytesIO(body))
-            picture = picture.convert("RGBA" if "A" in picture.getbands() else "RGB")
+            picture = picture.convert("RGBA" if alpha else "RGB")
             frame = torch.from_numpy(np.asarray(picture).astype(np.float32) / 255.0)
             if batch is None:
                 batch = scratch.allocate(

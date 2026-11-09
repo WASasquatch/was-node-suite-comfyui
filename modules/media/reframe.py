@@ -10,12 +10,12 @@ import torch.nn.functional as F
 
 __all__ = ["ASPECTS", "FOLLOW", "crop_size", "cropped", "follow", "marked"]
 
-#: Aspects offered, as ``label: width / height``.
+#: Aspects offered, as ``label: width / height``, sorted by the first number and then the second.
 ASPECTS = {
-    "9:16": 9 / 16,
-    "4:5": 4 / 5,
     "1:1": 1.0,
     "4:3": 4 / 3,
+    "4:5": 4 / 5,
+    "9:16": 9 / 16,
     "16:9": 16 / 9,
     "21:9": 21 / 9,
 }

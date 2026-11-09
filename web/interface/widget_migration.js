@@ -118,12 +118,15 @@ function declaredDefault(node, name) {
  * Restore an earlier save's widget values onto a node that has since gained or lost widgets.
  *
  * @param {object} node - The node being created.
- * @param {string[]|string[][]} order - The widgets an earlier save's array holds, in the order
- *   it holds them, or one such order per earlier layout.
+ * @param {string[]|Array<string[]|{names: string[], when: (saved: Array) => boolean}>} order -
+ *   The widgets an earlier save's array holds, in the order it holds them, or one such layout
+ *   per earlier save. A `{names, when}` layout also matches a save as long as the node's
+ *   widgets, when `when(saved)` holds for the saved array.
  * @returns {void}
  */
 export function migrateWidgetValues(node, order) {
-  const orders = Array.isArray(order[0]) ? order : [order];
+  const orders = (typeof order[0] === "string" ? [order] : order)
+    .map((each) => (isRecord(each) ? each : { names: each, when: null }));
   const defaults = new Map((node.widgets ?? []).map((widget) => [widget.name, widget.value]));
 
   // The frontend pads `widgets_values` to the current widgets before `onConfigure`, so the array
@@ -152,10 +155,11 @@ export function migrateWidgetValues(node, order) {
       // widgets were saved in another order.
       const byNames = Array.isArray(saved) && named && namesArray(named, saved)
         && (saved.length !== current.length || reordered(named, current.map((widget) => widget.name)));
-      const candidates = orders.flatMap((each) => [withLinked(current, each), each]);
-      const matched = Array.isArray(saved) && !byNames
-        ? candidates.find((names) => names.length === saved.length && current.length !== names.length)
-        : null;
+      const candidates = orders.flatMap(({ names, when }) =>
+        [withLinked(current, names), names].map((each) => ({ names: each, when })));
+      const fits = ({ names, when }) => names.length === saved.length
+        && (when ? Boolean(when(saved)) : current.length !== names.length);
+      const matched = Array.isArray(saved) && !byNames ? candidates.find(fits)?.names : null;
       const target = byNames ? new Map(Object.entries(named))
         : matched ? new Map(matched.map((name, index) => [name, saved[index]])) : null;
       if (target) {

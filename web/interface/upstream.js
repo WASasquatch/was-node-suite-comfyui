@@ -5,7 +5,7 @@
  * reroutes are followed through.
  */
 
-import { resolve as resolveResolution } from "./image_resolution.js";
+import { megapixelUnit, resolve as resolveResolution } from "./image_resolution.js";
 import { floorMod, truncate } from "./python_arithmetic.js";
 
 const LOG_NAME = "WASNodeSuite.Upstream";
@@ -128,10 +128,11 @@ const READERS = {
   PrimitiveInt: (read) => [read("value")],
   PrimitiveFloat: (read) => [read("value")],
   WASResolutionSelector: (read) => {
+    const unit = megapixelUnit(read("realworld_mp") === true);
     const [width, height] = resolveResolution(
-      read("aspect_ratio"), read("size_by"), read("size"), read("megapixels"), read("multiple_of"),
+      read("aspect_ratio"), read("size_by"), read("size"), read("megapixels"), read("multiple_of"), unit,
     );
-    return [width, height, width / height, (width * height) / 1_000_000];
+    return [width, height, width / height, (width * height) / unit];
   },
   "Constant Number": (read) => {
     const type = read("number_type");

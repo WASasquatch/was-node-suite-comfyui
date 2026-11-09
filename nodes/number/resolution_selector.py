@@ -37,8 +37,8 @@ class ResolutionSelector(io.ComfyNode):
                     default="1:1",
                     tooltip=(
                         "The shape, width:height. 16:9 is widescreen, 9:16 the same shape "
-                        "portrait, 1:1 square. Listed square first, then landscape from 5:4 to "
-                        "3:1 and the film ratios 1.43:1 to 2.39:1, then the same shapes portrait."
+                        "portrait, 1:1 square. Sorted by the first number, then the second, "
+                        "from 1:1 to 21:9."
                     ),
                 ),
                 io.Combo.Input(
@@ -54,7 +54,7 @@ class ResolutionSelector(io.ComfyNode):
                 io.Int.Input(
                     "size",
                     default=1024,
-                    min=1,
+                    min=8,
                     max=resolution.MAX_EDGE,
                     step=8,
                     tooltip=(
@@ -69,8 +69,9 @@ class ResolutionSelector(io.ComfyNode):
                     max=64.0,
                     step=0.01,
                     tooltip=(
-                        "The area in millions of pixels, read when size_by is `megapixels`. "
-                        "1.0 is 1024 by 1024 at 1:1 and 1344 by 768 at 16:9."
+                        "The area in megapixels, read when size_by is `megapixels` and counted "
+                        "as realworld_mp says. With it off, 1.0 is 1024 by 1024 at 1:1, and "
+                        "1344 by 768 at 16:9 on a step of 64."
                     ),
                 ),
                 io.Int.Input(
@@ -83,6 +84,16 @@ class ResolutionSelector(io.ComfyNode):
                         "model families were trained on. Snapping moves a side by up to half "
                         "a step, so the ratio output may differ slightly from the one asked "
                         "for."
+                    ),
+                ),
+                io.Boolean.Input(
+                    "realworld_mp",
+                    default=False,
+                    tooltip=(
+                        "Off: a megapixel is 1024 by 1024, as ComfyUI counts it. On: 1,000,000 "
+                        "pixels. Applies to megapixels, the megapixels output and the label. "
+                        "Both sides still land on the step: 0.98 at 16:9 on 32 is 1344 by 768 "
+                        "off, 1312 by 736 on."
                     ),
                 ),
             ],
@@ -105,14 +116,15 @@ class ResolutionSelector(io.ComfyNode):
                 io.Float.Output(
                     display_name="megapixels",
                     tooltip=(
-                        "Area of the pair in millions of pixels, whichever way it was sized. "
+                        "Area of the pair in megapixels as realworld_mp counts them, whichever "
+                        "way it was sized. "
                         "Read it to keep two different shapes to the same cost."
                     ),
                 ),
                 io.String.Output(
                     display_name="label",
                     tooltip=(
-                        "The pair written out, as '1024 x 576, 16:9, 0.59 MP'. Feed it to a "
+                        "The pair written out, as '1024 x 576, 16:9, 0.56 MP'. Feed it to a "
                         "filename prefix or a caption so a render records its own size."
                     ),
                 ),
@@ -122,6 +134,7 @@ class ResolutionSelector(io.ComfyNode):
     @classmethod
     def execute(
         cls, aspect_ratio, size_by="megapixels", size=1024, megapixels=1.0, multiple_of=64,
+        realworld_mp=False,
     ) -> io.NodeOutput:
         """Work out the pair and describe it.
 
@@ -129,13 +142,15 @@ class ResolutionSelector(io.ComfyNode):
             aspect_ratio: The shape, as an entry from the widget's list, width first.
             size_by: Which measurement is being given.
             size: The measurement in pixels.
-            megapixels: The measurement in millions of pixels.
+            megapixels: The measurement in megapixels.
             multiple_of: Step both sides land on.
+            realworld_mp: Count a megapixel as 1,000,000 pixels rather than 1024 by 1024.
 
         Returns:
             The width and height, the ratio and area they came to, and a label.
         """
-        width, height = resolution.resolve(aspect_ratio, size_by, size, megapixels, multiple_of)
-        area = width * height / 1_000_000.0
+        unit = resolution.megapixel_unit(bool(realworld_mp))
+        width, height = resolution.resolve(aspect_ratio, size_by, size, megapixels, multiple_of, unit)
+        area = width * height / unit
         label = f"{width} x {height}, {aspect_ratio}, {area:.2f} MP"
         return io.NodeOutput(width, height, width / height, area, label)

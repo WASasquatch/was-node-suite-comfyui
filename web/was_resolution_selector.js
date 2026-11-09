@@ -5,7 +5,7 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { mirrored, parseRatio, resolve } from "./interface/image_resolution.js";
+import { megapixelUnit, mirrored, parseRatio, resolve } from "./interface/image_resolution.js";
 import { captureWheel, elementPoint } from "./interface/pointer.js";
 import { withGraphChange } from "./interface/region.js";
 import { refreshRelevantWidgets, watchRelevantWidgets } from "./interface/relevant_widgets.js";
@@ -31,7 +31,7 @@ const MODES = {
 };
 
 // Widgets the readout and the frame are worked out from.
-const READ_WIDGETS = ["aspect_ratio", "size_by", "size", "megapixels", "multiple_of"];
+const READ_WIDGETS = ["aspect_ratio", "size_by", "size", "megapixels", "multiple_of", "realworld_mp"];
 
 // Panel height in node units, and the room kept round the frame in layout pixels.
 const PANEL_HEIGHT = 170;
@@ -185,8 +185,10 @@ function createFramePanel(node) {
   function writeReadout() {
     const value = (name, fallback) => widgetOf(node, name)?.value ?? fallback;
     const ratio = shownRatio();
+    const unit = megapixelUnit(Boolean(value("realworld_mp", false)));
     const [width, height] = resolve(
       ratio, value("size_by", "megapixels"), value("size", 1024), value("megapixels", 1), value("multiple_of", 64),
+      unit,
     );
     readout.textContent = "";
     const size = document.createElement("span");
@@ -194,7 +196,7 @@ function createFramePanel(node) {
     size.textContent = `${width} × ${height}`;
     const rest = document.createElement("span");
     rest.style.cssText = `color:${themeVar("fgMuted")}`;
-    const area = (width * height) / 1_000_000;
+    const area = (width * height) / unit;
     const note = linked(node, "aspect_ratio") ? "  ·  aspect_ratio is wired in" : "";
     rest.textContent = `  ·  ${ratio}  ·  ${area.toFixed(2)} MP${note}`;
     readout.append(size, rest);

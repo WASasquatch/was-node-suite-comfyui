@@ -584,7 +584,7 @@ Crop a clip to another aspect, such as 9:16 for a phone, with the window followi
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `video` | `VIDEO` | Yes |  |  | The clip to reframe. |
-| `aspect` | `COMBO` | Yes | 9:16 | `9:16`, `4:5`, `1:1`, `4:3`, `16:9`, `21:9` | Width to height of the crop: '9:16' = phone; '4:5' = portrait post; '1:1' = square. |
+| `aspect` | `COMBO` | Yes | 9:16 | `1:1`, `4:3`, `4:5`, `9:16`, `16:9`, `21:9` | Width to height of the crop: '9:16' = phone; '4:5' = portrait post; '1:1' = square. |
 | `smoothing` | `FLOAT` | Yes | 0.5 |  | Seconds of movement averaged in the path: 0 = locked to the subject; 0.5 = default; 2 = a slow, steady follow. |
 | `zoom` | `FLOAT` | Yes | 1.0 |  | How much tighter than the largest crop that fits: 1.0 = full height; 1.5 = closer. |
 | `follow` | `COMBO` | Yes | largest | `largest`, `everything` | What of the mask the window follows: 'largest' = its biggest region, held from frame to frame, for one subject among several; 'everything' = the centre of all of it. |
@@ -8298,7 +8298,7 @@ Prompt every segment of a MiniMax H3 video on one node, each row with its own pr
 | `clip` | `CLIP` | Yes |  |  | A minimax CLIP, from Load CLIP with type `minimax`. |
 | `vae` | `VAE` | Yes |  |  | The H3 video VAE, which encodes first_frame, last_frame, images and the reference pictures and clips. |
 | `mode` | `COMBO` | Yes | t2va | `t2va`, `i2va`, `fl2va`, `fl2va_batched`, `ref2va` | `t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, closes on last_frame; `fl2va_batched` = each segment between two neighbouring images; `ref2va` = the ref inputs added to every segment. Assets add to any mode. |
-| `aspect_ratio` | `COMBO` | Yes | custom | `custom`, `1:1`, `5:4`, `4:3`, `3:2`, `16:10`, `16:9`, `2:1`, `21:9`, `4:5`, `3:4`, `2:3` and 4 more | Canvas shape, as `16:9` or `9:16`. `custom` takes it from the first picture the mode reads, and 16:9 where it reads none. A width or height above `0` sets that side itself, so the shape is whatever those give. |
+| `aspect_ratio` | `COMBO` | Yes | custom | `custom`, `1:1`, `1:2`, `2:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `9:21` and 4 more | Canvas shape, as `16:9` or `9:16`. `custom` takes it from the first picture the mode reads, and 16:9 where it reads none. A width or height above `0` sets that side itself, so the shape is whatever those give. |
 | `megapixels` | `FLOAT` | Yes | 0.4 |  | Canvas area in millions of pixels, as `0.4` for 832x480 or `1.0` for 1344x736. Worked against aspect_ratio. Ignored when both width and height are set. |
 | `width` | `INT` | Yes | 0 |  | Canvas width in pixels, as `1024`. `0` works it out from megapixels. Rounded to a multiple of 32. |
 | `height` | `INT` | Yes | 0 |  | Canvas height in pixels, as `576`. `0` works it out from megapixels. Rounded to a multiple of 32. |
@@ -8740,8 +8740,8 @@ Pick a Pika H3 Flex canvas by resolution, aspect and length, for the width, heig
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `resolution` | `COMBO` | Yes | 480p |  | `480p` = 832x480 at 16:9; `768p` = 1344x768 at 16:9. |
-| `aspect` | `COMBO` | Yes | 16:9 | `21:9`, `16:9`, `3:2`, `4:3`, `5:4`, `1:1`, `4:5`, `3:4`, `2:3`, `9:16`, `9:21` | Width to height: at 480p, `16:9` = 832x480, `9:16` = 480x832, `1:1` = 480x480. |
+| `resolution` | `COMBO` | Yes | 480p | `480p`, `768p` | `480p` = 832x480 at 16:9; `768p` = 1344x768 at 16:9. |
+| `aspect` | `COMBO` | Yes | 16:9 | `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `9:21`, `16:9`, `21:9` | Width to height: at 480p, `16:9` = 832x480, `9:16` = 480x832, `1:1` = 480x480. |
 | `seconds` | `INT` | Yes | 5 |  | Clip length: `5` = 124 frames, `10` = 243, `15` = 362, at 24 fps. |
 
 **Outputs**
@@ -10359,11 +10359,12 @@ Pick a shape and an area in megapixels, and get the width and height that match.
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `aspect_ratio` | `COMBO` | Yes | 1:1 | `1:1`, `5:4`, `4:3`, `3:2`, `16:10`, `16:9`, `2:1`, `21:9`, `3:1`, `1.43:1`, `1.66:1`, `1.85:1` and 15 more | The shape, width:height. 16:9 is widescreen, 9:16 the same shape portrait, 1:1 square. Listed square first, then landscape from 5:4 to 3:1 and the film ratios 1.43:1 to 2.39:1, then the same shapes portrait. |
+| `aspect_ratio` | `COMBO` | Yes | 1:1 | `1:1`, `1:1.43`, `1:1.66`, `1:1.85`, `1:2`, `1:2.2`, `1:2.39`, `1:3`, `1.43:1`, `1.66:1`, `1.85:1`, `2:1` and 15 more | The shape, width:height. 16:9 is widescreen, 9:16 the same shape portrait, 1:1 square. Sorted by the first number, then the second, from 1:1 to 21:9. |
 | `size_by` | `COMBO` | Yes | megapixels | `megapixels`, `long edge`, `short edge`, `width`, `height` | How the size is set. `megapixels` holds the area at the megapixels widget whatever the shape. `long edge`, `short edge`, `width` and `height` hold that side at the pixels typed in size instead. |
 | `size` | `INT` | Yes | 1024 |  | The side in pixels, read when size_by is `long edge`, `short edge`, `width` or `height`. 1024 on the long edge of 16:9 is 1024 by 576. |
-| `megapixels` | `FLOAT` | Yes | 1.0 |  | The area in millions of pixels, read when size_by is `megapixels`. 1.0 is 1024 by 1024 at 1:1 and 1344 by 768 at 16:9. |
+| `megapixels` | `FLOAT` | Yes | 1.0 |  | The area in megapixels, read when size_by is `megapixels` and counted as realworld_mp says. With it off, 1.0 is 1024 by 1024 at 1:1, and 1344 by 768 at 16:9 on a step of 64. |
 | `multiple_of` | `INT` | Yes | 64 |  | Step both sides land on. 8 = the least a latent takes; 64 = what most model families were trained on. Snapping moves a side by up to half a step, so the ratio output may differ slightly from the one asked for. |
+| `realworld_mp` | `BOOLEAN` | Yes | False |  | Off: a megapixel is 1024 by 1024, as ComfyUI counts it. On: 1,000,000 pixels. Applies to megapixels, the megapixels output and the label. Both sides still land on the step: 0.98 at 16:9 on 32 is 1344 by 768 off, 1312 by 736 on. |
 
 **Outputs**
 
@@ -10372,8 +10373,8 @@ Pick a shape and an area in megapixels, and get the width and height that match.
 | `width` | `INT` | Width in pixels, a whole number of steps. |
 | `height` | `INT` | Height in pixels, a whole number of steps. |
 | `ratio` | `FLOAT` | Width divided by height as it came out, after the step was applied. Compare it with the shape you asked for to see what the step cost. |
-| `megapixels` | `FLOAT` | Area of the pair in millions of pixels, whichever way it was sized. Read it to keep two different shapes to the same cost. |
-| `label` | `STRING` | The pair written out, as '1024 x 576, 16:9, 0.59 MP'. Feed it to a filename prefix or a caption so a render records its own size. |
+| `megapixels` | `FLOAT` | Area of the pair in megapixels as realworld_mp counts them, whichever way it was sized. Read it to keep two different shapes to the same cost. |
+| `label` | `STRING` | The pair written out, as '1024 x 576, 16:9, 0.56 MP'. Feed it to a filename prefix or a caption so a render records its own size. |
 
 </details>
 

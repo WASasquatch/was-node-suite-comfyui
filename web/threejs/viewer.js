@@ -18,7 +18,16 @@ import { captureWheel } from "../interface/pointer.js";
 import { surfaceRatio, watchSurfaceRatio } from "../interface/resolution.js";
 import { appendInterfaceWidget } from "../interface/widget.js";
 import { onNodeFinished } from "../interface/run_events.js";
-import { createPathTracer, prepareFrame } from "./pathtrace.js";
+import {
+    TilePacer,
+    VIEW_LATENCY_MS,
+    compilesInline,
+    createTracer,
+    disposeTracer,
+    prepareFrame,
+    traceBatch,
+    tracingStation,
+} from "./pathtrace.js";
 
 const VIEWER_NODE = "WASThreeViewer";
 const TRACE_VIEWER_NODE = "WASThreePathTraceViewer";
@@ -148,6 +157,12 @@ class ViewerController {
         this.elements = elements;
         this.tracing = Boolean(tracing);
         this.tracer = null;
+        this.pacer = null;
+        this.station = null;
+        this.screen = null;
+        this.frame = null;
+        this.loopToken = null;
+        this.compileNoted = false;
         this.tracedFrom = null;
         this.tracedShape = null;
         this.wanted = 512;
@@ -198,26 +213,43 @@ class ViewerController {
             const runtime = createRuntime(elements.canvas, elements.status, { network: payload.network === true });
             this.runtime = runtime;
 
-            const renderer = new THREE.WebGLRenderer({
-                canvas: elements.canvas,
-                antialias: appSpec.params?.antialias !== false && !appSpec.deps?.effects,
-                alpha: appSpec.deps?.scene?.params?.backgroundMode === "transparent",
-            });
-            this.renderer = renderer;
-            runtime.ctx.renderer = renderer;
-
+            const transparent = appSpec.deps?.scene?.params?.backgroundMode === "transparent";
             const ratioLimit = Math.max(0.25, Number(appSpec.params?.pixelRatioLimit) || 2);
             const drawRatio = () => {
                 const measured = Number(surfaceRatio(elements.canvas));
                 return Math.min(Number.isFinite(measured) && measured > 0 ? measured : 1, ratioLimit);
             };
-            renderer.setPixelRatio(drawRatio());
-            renderer.setSize(width, height, false);
-            renderer.shadowMap.enabled = appSpec.params?.shadows !== false;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.toneMapping = toneMappingConstant(appSpec.params?.toneMapping);
-            renderer.toneMappingExposure = Number(appSpec.params?.exposure) || 1;
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            this.drawRatio = drawRatio;
+            this.toneMapping = toneMappingConstant(appSpec.params?.toneMapping);
+            this.exposure = Number(appSpec.params?.exposure) || 1;
+
+            let renderer = null;
+            if (this.tracing) {
+                // A traced view draws on the page's tracing station and copies each batch
+                // onto its own canvas.
+                this.station = tracingStation({
+                    alpha: transparent,
+                    antialias: appSpec.params?.antialias !== false,
+                });
+                renderer = this.station.renderer;
+                this.screen = elements.canvas.getContext("2d");
+                this.fitScreen(width, height);
+            } else {
+                renderer = new THREE.WebGLRenderer({
+                    canvas: elements.canvas,
+                    antialias: appSpec.params?.antialias !== false && !appSpec.deps?.effects,
+                    alpha: transparent,
+                });
+                renderer.setPixelRatio(drawRatio());
+                renderer.setSize(width, height, false);
+                renderer.shadowMap.enabled = appSpec.params?.shadows !== false;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                renderer.toneMapping = this.toneMapping;
+                renderer.toneMappingExposure = this.exposure;
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+            }
+            this.renderer = renderer;
+            runtime.ctx.renderer = renderer;
 
             runtime.ctx.shadowMapSize = Number(appSpec.params?.shadowMapSize) || 2048;
             runtime.ctx.tracing = this.tracing;
@@ -238,7 +270,8 @@ class ViewerController {
 
             if (this.tracing) {
                 elements.status.textContent = "Building the path tracer…";
-                this.tracer = await createPathTracer(renderer, payload.trace || {});
+                this.tracer = await createTracer(this.station, payload.trace || {});
+                this.pacer = new TilePacer(renderer, VIEW_LATENCY_MS);
                 this.wanted = Math.max(1, Math.floor(payload.trace?.samples) || 512);
                 prepareFrame(this.tracer, scene, camera, true);
 
@@ -280,7 +313,8 @@ class ViewerController {
                 const nextRect = elements.canvasWrap.getBoundingClientRect();
                 const nextWidth = Math.max(2, Math.floor(nextRect.width));
                 const nextHeight = Math.max(2, Math.floor(nextRect.height));
-                this.renderer.setSize(nextWidth, nextHeight, false);
+                if (this.station) this.fitScreen(nextWidth, nextHeight);
+                else this.renderer.setSize(nextWidth, nextHeight, false);
                 this.composer?.setSize(nextWidth, nextHeight);
                 this.runtime.updateCameraAspect(this.camera, nextWidth / nextHeight);
             };
@@ -290,11 +324,11 @@ class ViewerController {
 
             this.stopRatio = watchSurfaceRatio(elements.canvas, () => {
                 if (!this.renderer) return;
-                this.renderer.setPixelRatio(drawRatio());
+                if (!this.station) this.renderer.setPixelRatio(drawRatio());
                 resize();
             });
 
-            renderer.setAnimationLoop((milliseconds) => {
+            const step = (milliseconds) => {
                 if (!this.renderer || !this.scene || !this.camera || !this.runtime) return;
 
                 const time = milliseconds * 0.001;
@@ -324,7 +358,21 @@ class ViewerController {
                 }
                 if (this.composer) this.composer.render();
                 else this.renderer.render(this.scene, this.camera);
-            });
+            };
+
+            if (this.station) {
+                // The station is shared, so a traced view keeps its own frame loop.
+                const token = {};
+                this.loopToken = token;
+                const tick = (milliseconds) => {
+                    if (this.loopToken !== token) return;
+                    step(milliseconds);
+                    this.frame = requestAnimationFrame(tick);
+                };
+                this.frame = requestAnimationFrame(tick);
+            } else {
+                renderer.setAnimationLoop(step);
+            }
         } catch (error) {
             console.error("[WAS ThreeJS] Viewer failed.", error);
             elements.status.textContent = `Error: ${error?.message || error}`;
@@ -332,11 +380,18 @@ class ViewerController {
     }
 
     /**
-     * Add one tile of samples, starting the picture over where the view has moved.
+     * Add a batch of tiles, starting the picture over where the view has moved.
      *
      * @returns {void}
      */
     traceStep() {
+        // Nothing more is sent while the GPU is still on the last batch.
+        if (!this.pacer.idle) return;
+        if (this.station.holder) {
+            this.elements.status.textContent = "Waiting for a render";
+            return;
+        }
+
         const tracer = this.tracer;
         const camera = this.camera;
         camera.updateMatrixWorld();
@@ -378,10 +433,56 @@ class ViewerController {
             this.elements.status.textContent = `Settled at ${standing} samples`;
             return;
         }
-        tracer.renderSample();
+        if (!this.station.warm && !this.compileNoted && compilesInline(this.renderer)) {
+            // Shows the notice for one frame before the compile starts.
+            this.compileNoted = true;
+            this.elements.status.textContent = "Compiling the tracer, tab pauses";
+            return;
+        }
+        this.configureStation();
+        const batch = traceBatch(tracer, this.pacer, this.wanted);
+        if (batch.drawn > 0) this.station.warm = true;
+        const screen = this.screen;
+        screen.clearRect(0, 0, screen.canvas.width, screen.canvas.height);
+        screen.drawImage(this.station.canvas, 0, 0);
         this.elements.status.textContent = tracer.isCompiling
             ? "Compiling the tracer…"
             : `${Math.floor(tracer.samples)} of ${this.wanted} samples`;
+    }
+
+    /**
+     * Size the traced view's own canvas to its box at the drawing ratio.
+     *
+     * @param {number} width - Box width in CSS pixels.
+     * @param {number} height - Box height in CSS pixels.
+     * @returns {void}
+     */
+    fitScreen(width, height) {
+        const canvas = this.elements.canvas;
+        const ratio = this.drawRatio?.() || 1;
+        const nextWidth = Math.max(1, Math.floor(width * ratio));
+        const nextHeight = Math.max(1, Math.floor(height * ratio));
+        if (canvas.width !== nextWidth) canvas.width = nextWidth;
+        if (canvas.height !== nextHeight) canvas.height = nextHeight;
+    }
+
+    /**
+     * Set the shared station to this view's size and output before it draws for the view.
+     *
+     * @returns {void}
+     */
+    configureStation() {
+        const renderer = this.renderer;
+        const canvas = this.elements.canvas;
+        renderer.setRenderTarget(null);
+        if (renderer.getPixelRatio() !== 1) renderer.setPixelRatio(1);
+        const surface = this.station.canvas;
+        if (surface.width !== canvas.width || surface.height !== canvas.height) {
+            renderer.setSize(canvas.width, canvas.height, false);
+        }
+        renderer.toneMapping = this.toneMapping;
+        renderer.toneMappingExposure = this.exposure;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
     }
 
     resetCamera() {
@@ -397,8 +498,13 @@ class ViewerController {
 
     async disposeRenderer() {
         this.composer = null;
+        this.loopToken = null;
+        if (this.frame !== null) cancelAnimationFrame(this.frame);
+        this.frame = null;
+        this.pacer?.dispose();
+        this.pacer = null;
         try {
-            this.tracer?.dispose?.();
+            disposeTracer(this.tracer);
         } catch {}
         this.tracer = null;
         this.tracedFrom = null;
@@ -408,8 +514,11 @@ class ViewerController {
         } catch {}
         this.resizeObserver = null;
 
+        // The station's renderer is shared and kept for the page.
+        const ownRenderer = this.station ? null : this.renderer;
+        this.station = null;
         try {
-            this.renderer?.setAnimationLoop?.(null);
+            ownRenderer?.setAnimationLoop?.(null);
         } catch {}
 
         try {
@@ -427,7 +536,7 @@ class ViewerController {
         } catch {}
 
         try {
-            this.renderer?.dispose?.();
+            ownRenderer?.dispose?.();
         } catch {}
 
         this.runtime = null;

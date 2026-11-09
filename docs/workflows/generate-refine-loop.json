@@ -18,29 +18,9 @@
       "flags": {},
       "order": 0,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "unet_name",
-          "name": "unet_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "unet_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "weight_dtype",
-          "name": "weight_dtype",
-          "type": "COMBO",
-          "widget": {
-            "name": "weight_dtype"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -91,34 +71,13 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 1
-        },
-        {
-          "localized_name": "shift",
-          "name": "shift",
-          "type": "FLOAT",
-          "widget": {
-            "name": "shift"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "sampling",
-          "name": "sampling",
-          "shape": 7,
-          "type": "COMBO",
-          "widget": {
-            "name": "sampling"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -160,39 +119,9 @@
       "flags": {},
       "order": 1,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "clip_name",
-          "name": "clip_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "clip_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "type",
-          "name": "type",
-          "type": "COMBO",
-          "widget": {
-            "name": "type"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "device",
-          "name": "device",
-          "shape": 7,
-          "type": "COMBO",
-          "widget": {
-            "name": "device"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "CLIP",
           "name": "CLIP",
           "type": "CLIP",
           "links": [
@@ -244,20 +173,9 @@
       "flags": {},
       "order": 2,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "vae_name",
-          "name": "vae_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "vae_name"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "VAE",
           "name": "VAE",
           "type": "VAE",
           "links": [
@@ -303,39 +221,9 @@
       "flags": {},
       "order": 3,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "clip_name",
-          "name": "clip_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "clip_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "type",
-          "name": "type",
-          "type": "COMBO",
-          "widget": {
-            "name": "type"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "device",
-          "name": "device",
-          "shape": 7,
-          "type": "COMBO",
-          "widget": {
-            "name": "device"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "CLIP",
           "name": "CLIP",
           "type": "CLIP",
           "links": [
@@ -389,20 +277,9 @@
       "flags": {},
       "order": 4,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "value",
-          "name": "value",
-          "type": "STRING",
-          "widget": {
-            "name": "value"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -423,10 +300,10 @@
         }
       },
       "widgets_values": [
-        "Three yellow rubber ducks and two orange cats sitting on a blue velvet sofa, a framed sign on the wall above them reads 'TRY AGAIN', a green umbrella leaning against the left arm of the sofa, soft window light"
+        "Three yellow rubber ducks and two orange cats and a dog sitting on a blue velvet sofa, a framed sign on the wall above them reads 'TRY AGAIN', a green umbrella leaning against the left arm of the sofa, soft window light"
       ],
       "widgets_values_named": {
-        "value": "Three yellow rubber ducks and two orange cats sitting on a blue velvet sofa, a framed sign on the wall above them reads 'TRY AGAIN', a green umbrella leaning against the left arm of the sofa, soft window light"
+        "value": "Three yellow rubber ducks and two orange cats and a dog sitting on a blue velvet sofa, a framed sign on the wall above them reads 'TRY AGAIN', a green umbrella leaning against the left arm of the sofa, soft window light"
       }
     },
     {
@@ -443,38 +320,9 @@
       "flags": {},
       "order": 5,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "width",
-          "name": "width",
-          "type": "INT",
-          "widget": {
-            "name": "width"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "height",
-          "name": "height",
-          "type": "INT",
-          "widget": {
-            "name": "height"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "batch_size",
-          "name": "batch_size",
-          "type": "INT",
-          "widget": {
-            "name": "batch_size"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "LATENT",
           "name": "LATENT",
           "type": "LATENT",
           "links": [
@@ -521,55 +369,32 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "value_1",
           "name": "value_1",
           "shape": 7,
           "type": "*",
           "link": null
         },
         {
-          "localized_name": "value_2",
           "name": "value_2",
           "shape": 7,
           "type": "*",
           "link": null
         },
         {
-          "localized_name": "value_3",
           "name": "value_3",
           "shape": 7,
           "type": "*",
           "link": null
         },
         {
-          "localized_name": "value_4",
           "name": "value_4",
           "shape": 7,
           "type": "*",
-          "link": null
-        },
-        {
-          "localized_name": "max_iterations",
-          "name": "max_iterations",
-          "type": "INT",
-          "widget": {
-            "name": "max_iterations"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "start",
-          "name": "start",
-          "type": "INT",
-          "widget": {
-            "name": "start"
-          },
           "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "iterator",
           "name": "iterator",
           "type": "WAS_LOOP",
           "links": [
@@ -577,7 +402,6 @@
           ]
         },
         {
-          "localized_name": "index",
           "name": "index",
           "type": "INT",
           "links": [
@@ -585,13 +409,11 @@
           ]
         },
         {
-          "localized_name": "metadata",
           "name": "metadata",
           "type": "DICT",
           "links": null
         },
         {
-          "localized_name": "value_1",
           "name": "value_1",
           "type": "*",
           "links": [
@@ -599,7 +421,6 @@
           ]
         },
         {
-          "localized_name": "value_2",
           "name": "value_2",
           "type": "*",
           "links": [
@@ -607,7 +428,6 @@
           ]
         },
         {
-          "localized_name": "value_3",
           "name": "value_3",
           "type": "*",
           "links": [
@@ -615,7 +435,6 @@
           ]
         },
         {
-          "localized_name": "value_4",
           "name": "value_4",
           "type": "*",
           "links": null
@@ -633,11 +452,11 @@
         }
       },
       "widgets_values": [
-        3,
+        6,
         0
       ],
       "widgets_values_named": {
-        "max_iterations": 3,
+        "max_iterations": 6,
         "start": 0
       }
     },
@@ -657,72 +476,39 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 2
         },
         {
-          "localized_name": "feedback",
           "name": "feedback",
           "shape": 7,
           "type": "STRING",
           "link": 4
         },
         {
-          "localized_name": "last_prompt",
           "name": "last_prompt",
           "shape": 7,
           "type": "STRING",
           "link": 5
         },
         {
-          "localized_name": "last_image",
           "name": "last_image",
           "shape": 7,
           "type": "IMAGE",
           "link": 6
         },
         {
-          "localized_name": "prompt",
           "name": "prompt",
           "type": "STRING",
           "widget": {
             "name": "prompt"
           },
           "link": 3
-        },
-        {
-          "localized_name": "temperature",
-          "name": "temperature",
-          "type": "FLOAT",
-          "widget": {
-            "name": "temperature"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "seed",
-          "name": "seed",
-          "type": "INT",
-          "widget": {
-            "name": "seed"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "max_length",
-          "name": "max_length",
-          "type": "INT",
-          "widget": {
-            "name": "max_length"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "prompt",
           "name": "prompt",
           "type": "STRING",
           "links": [
@@ -776,13 +562,11 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 8
         },
         {
-          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "widget": {
@@ -793,7 +577,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "CONDITIONING",
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
@@ -835,7 +618,6 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "conditioning",
           "name": "conditioning",
           "type": "CONDITIONING",
           "link": 9
@@ -843,7 +625,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "CONDITIONING",
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
@@ -876,64 +657,30 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "a",
           "name": "a",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
           "link": 10
         },
         {
-          "localized_name": "b",
           "name": "b",
           "shape": 7,
           "type": "FLOAT,NUMBER,INT,BOOLEAN",
-          "link": null
-        },
-        {
-          "localized_name": "expression",
-          "name": "expression",
-          "type": "STRING",
-          "widget": {
-            "name": "expression"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "decimals",
-          "name": "decimals",
-          "shape": 7,
-          "type": "INT",
-          "widget": {
-            "name": "decimals"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "on_error",
-          "name": "on_error",
-          "shape": 7,
-          "type": "COMBO",
-          "widget": {
-            "name": "on_error"
-          },
           "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "number",
           "name": "number",
           "type": "NUMBER",
           "links": null
         },
         {
-          "localized_name": "float",
           "name": "float",
           "type": "FLOAT",
           "links": null
         },
         {
-          "localized_name": "int",
           "name": "int",
           "type": "INT",
           "links": [
@@ -941,13 +688,11 @@
           ]
         },
         {
-          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "links": null
         },
         {
-          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "links": null
@@ -992,87 +737,36 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 11
         },
         {
-          "localized_name": "positive",
           "name": "positive",
           "type": "CONDITIONING",
           "link": 13
         },
         {
-          "localized_name": "negative",
           "name": "negative",
           "type": "CONDITIONING",
           "link": 14
         },
         {
-          "localized_name": "latent_image",
           "name": "latent_image",
           "type": "LATENT",
           "link": 15
         },
         {
-          "localized_name": "seed",
           "name": "seed",
           "type": "INT",
           "widget": {
             "name": "seed"
           },
           "link": 12
-        },
-        {
-          "localized_name": "steps",
-          "name": "steps",
-          "type": "INT",
-          "widget": {
-            "name": "steps"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "cfg",
-          "name": "cfg",
-          "type": "FLOAT",
-          "widget": {
-            "name": "cfg"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "sampler_name",
-          "name": "sampler_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "sampler_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "scheduler",
-          "name": "scheduler",
-          "type": "COMBO",
-          "widget": {
-            "name": "scheduler"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "denoise",
-          "name": "denoise",
-          "type": "FLOAT",
-          "widget": {
-            "name": "denoise"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "LATENT",
           "name": "LATENT",
           "type": "LATENT",
           "links": [
@@ -1130,13 +824,11 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "samples",
           "name": "samples",
           "type": "LATENT",
           "link": 16
         },
         {
-          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 17
@@ -1144,7 +836,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -1170,71 +861,39 @@
       ],
       "size": [
         391,
-        842
+        194
       ],
       "flags": {},
       "order": 14,
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 18
         },
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 19
         },
         {
-          "localized_name": "source",
           "name": "source",
           "shape": 7,
           "type": "IMAGE",
           "link": null
         },
         {
-          "localized_name": "prompt",
           "name": "prompt",
           "type": "STRING",
           "widget": {
             "name": "prompt"
           },
           "link": 20
-        },
-        {
-          "localized_name": "least_following",
-          "name": "least_following",
-          "type": "INT",
-          "widget": {
-            "name": "least_following"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "least_consistency",
-          "name": "least_consistency",
-          "type": "INT",
-          "widget": {
-            "name": "least_consistency"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "least_quality",
-          "name": "least_quality",
-          "type": "INT",
-          "widget": {
-            "name": "least_quality"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "best",
           "name": "best",
           "type": "IMAGE",
           "links": [
@@ -1242,13 +901,11 @@
           ]
         },
         {
-          "localized_name": "index",
           "name": "index",
           "type": "INT",
           "links": null
         },
         {
-          "localized_name": "passed",
           "name": "passed",
           "type": "BOOLEAN",
           "links": [
@@ -1256,13 +913,11 @@
           ]
         },
         {
-          "localized_name": "scores",
           "name": "scores",
           "type": "STRING",
           "links": null
         },
         {
-          "localized_name": "notes",
           "name": "notes",
           "type": "STRING",
           "links": [
@@ -1304,8 +959,8 @@
       "id": 18,
       "type": "Logic NOT",
       "pos": [
-        2855,
-        1022
+        2990.745116279069,
+        335.1702325581441
       ],
       "size": [
         272,
@@ -1316,7 +971,6 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "boolean",
           "name": "boolean",
           "type": "BOOLEAN",
           "widget": {
@@ -1327,7 +981,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "BOOLEAN",
           "name": "BOOLEAN",
           "type": "BOOLEAN",
           "links": [
@@ -1368,73 +1021,55 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "iterator",
           "name": "iterator",
           "type": "WAS_LOOP",
           "link": 22
         },
         {
-          "localized_name": "value_1",
           "name": "value_1",
           "shape": 7,
           "type": "*",
           "link": 24
         },
         {
-          "localized_name": "value_2",
           "name": "value_2",
           "shape": 7,
           "type": "*",
           "link": 25
         },
         {
-          "localized_name": "value_3",
           "name": "value_3",
           "shape": 7,
           "type": "*",
           "link": 26
         },
         {
-          "localized_name": "value_4",
           "name": "value_4",
           "shape": 7,
           "type": "*",
           "link": null
         },
         {
-          "localized_name": "continue_loop",
           "name": "continue_loop",
           "type": "BOOLEAN,NUMBER,INT,FLOAT",
           "widget": {
             "name": "continue_loop"
           },
           "link": 23
-        },
-        {
-          "localized_name": "accumulate",
-          "name": "accumulate",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "accumulate"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "metadata",
           "name": "metadata",
           "type": "DICT",
           "links": null
         },
         {
-          "localized_name": "value_1",
           "name": "value_1",
           "type": "STRING",
           "links": null
         },
         {
-          "localized_name": "value_2",
           "name": "value_2",
           "type": "STRING",
           "links": [
@@ -1442,7 +1077,6 @@
           ]
         },
         {
-          "localized_name": "value_3",
           "name": "value_3",
           "type": "IMAGE",
           "links": [
@@ -1451,7 +1085,6 @@
           ]
         },
         {
-          "localized_name": "value_4",
           "name": "value_4",
           "type": "*",
           "links": null
@@ -1496,64 +1129,32 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 27
         },
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 28
         },
         {
-          "localized_name": "source",
           "name": "source",
           "shape": 7,
           "type": "IMAGE",
           "link": null
         },
         {
-          "localized_name": "prompt",
           "name": "prompt",
           "type": "STRING",
           "widget": {
             "name": "prompt"
           },
           "link": 29
-        },
-        {
-          "localized_name": "least_following",
-          "name": "least_following",
-          "type": "INT",
-          "widget": {
-            "name": "least_following"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "least_consistency",
-          "name": "least_consistency",
-          "type": "INT",
-          "widget": {
-            "name": "least_consistency"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "least_quality",
-          "name": "least_quality",
-          "type": "INT",
-          "widget": {
-            "name": "least_quality"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "best",
           "name": "best",
           "type": "IMAGE",
           "links": [
@@ -1561,25 +1162,21 @@
           ]
         },
         {
-          "localized_name": "index",
           "name": "index",
           "type": "INT",
           "links": null
         },
         {
-          "localized_name": "passed",
           "name": "passed",
           "type": "BOOLEAN",
           "links": null
         },
         {
-          "localized_name": "scores",
           "name": "scores",
           "type": "STRING",
           "links": null
         },
         {
-          "localized_name": "notes",
           "name": "notes",
           "type": "STRING",
           "links": null
@@ -1628,24 +1225,13 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 30
-        },
-        {
-          "localized_name": "filename_prefix",
-          "name": "filename_prefix",
-          "type": "STRING",
-          "widget": {
-            "name": "filename_prefix"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "links": null
@@ -1684,7 +1270,6 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "value",
           "name": "value",
           "type": "*",
           "link": 31
@@ -1692,7 +1277,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "value",
           "name": "value",
           "shape": 6,
           "type": "STRING",
@@ -1726,7 +1310,6 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 32
@@ -1734,7 +1317,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "links": null
@@ -2063,34 +1645,45 @@
     "ue_links": [],
     "links_added_by_ue": [],
     "ds": {
-      "scale": 0.5429292929292929,
+      "scale": 0.49357208448117873,
       "offset": [
-        762,
-        501.24186046511636
+        2013.8201424001197,
+        1054.4723522158627
       ]
-    }
+    },
+    "frontendVersion": "1.58.5",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "extensions": {
+    "models": [
+      {
+        "name": "z_image_turbo_bf16.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+        "directory": "diffusion_models"
+      },
+      {
+        "name": "qwen_3_4b.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+        "directory": "text_encoders"
+      },
+      {
+        "name": "ae.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+        "directory": "vae"
+      },
+      {
+        "name": "qwen3.5_9b_int8_convrot.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors",
+        "directory": "text_encoders"
+      }
+    ]
   },
   "version": 0.4,
-  "models": [
-    {
-      "name": "z_image_turbo_bf16.safetensors",
-      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
-      "directory": "diffusion_models"
-    },
-    {
-      "name": "qwen_3_4b.safetensors",
-      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
-      "directory": "text_encoders"
-    },
-    {
-      "name": "ae.safetensors",
-      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
-      "directory": "vae"
-    },
-    {
-      "name": "qwen3.5_9b_int8_convrot.safetensors",
-      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors",
-      "directory": "text_encoders"
-    }
-  ]
+  "seed_widgets": {
+    "11": 3,
+    "15": 0
+  }
 }

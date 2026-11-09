@@ -53,7 +53,8 @@ function tiledLayouts(lead) {
 
 // Node id -> the widgets an earlier save's `widgets_values` holds, in the order it holds them. Read
 // left to right against the node's current widgets: anything the node has that is not named here
-// is new, and takes its default rather than a value that was meant for the widget before it.
+// is new, and takes its default rather than a value that was meant for the widget before it. A
+// `{names, when}` layout is read only when `when` holds for the saved array.
 const V2_WIDGET_ORDER = {
   // The Tiled Captioned samplers' affine group gained `affine_keep_colour`. A save made with the
   // group open puts its prompt, style and system prompt back on those widgets.
@@ -66,9 +67,16 @@ const V2_WIDGET_ORDER = {
   // dropped rather than landing on the module menu.
   "WASThreeCustomMaterial": ["javascript", "module"],
   "WASImageGradientMapNative": ["flip_left_right"],
-  // Resolution Selector (Advanced) took the shape's orientation from a widget of its own. A save
-  // holding portrait opens on the landscape entry of the same shape.
-  "WASResolutionSelector": ["aspect_ratio", "orientation", "size_by", "size", "multiple_of", "megapixels"],
+  // Resolution Selector (Advanced) took the shape's orientation from a widget of its own, and
+  // later took no realworld_mp. A save holding portrait opens on the landscape entry of the same
+  // shape, and a save with no realworld_mp opens with it off.
+  "WASResolutionSelector": [
+    {
+      names: ["aspect_ratio", "orientation", "size_by", "size", "multiple_of", "megapixels"],
+      when: (saved) => ["landscape", "portrait", "square"].includes(saved[1]),
+    },
+    ["aspect_ratio", "size_by", "size", "megapixels", "multiple_of"],
+  ],
   // Film Grain's v2 settings name no current widget, so a v2 save opens on the defaults.
   "Image Film Grain": ["density", "intensity", "highlights", "supersample_factor"],
   "Image SSAO (Ambient Occlusion)": [

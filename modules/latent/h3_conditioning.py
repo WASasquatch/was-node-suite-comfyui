@@ -71,14 +71,19 @@ CANVAS_MULTIPLE = 32
 #: Width over height used when a megapixel target alone decides both sides.
 DEFAULT_ASPECT = 16 / 9
 
-#: Canvas shapes offered: `custom`, the square, the wide shapes from narrowest to widest,
-#: then the same shapes turned over. Each is a whole-number pair, the scale coming from
-#: megapixels.
+#: Canvas shapes offered: `custom`, then each width:height pair sorted by the first number and
+#: then the second. Each is a whole-number pair, the scale coming from megapixels.
 ASPECTS: tuple[str, ...] = (
     "custom",
-    "1:1",
-    "5:4", "4:3", "3:2", "16:10", "16:9", "2:1", "21:9",
-    "4:5", "3:4", "2:3", "10:16", "9:16", "1:2", "9:21",
+    "1:1", "1:2",
+    "2:1", "2:3",
+    "3:2", "3:4",
+    "4:3", "4:5",
+    "5:4",
+    "9:16", "9:21",
+    "10:16",
+    "16:9", "16:10",
+    "21:9",
 )
 
 #: Images each mode takes, in the order they are drawn.

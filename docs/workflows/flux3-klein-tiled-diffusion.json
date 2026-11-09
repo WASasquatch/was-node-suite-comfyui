@@ -853,15 +853,15 @@
       "widgets_values": [
         "16:9",
         "megapixels",
-        1025,
-        3,
+        1024,
+        2.8,
         64
       ],
       "widgets_values_named": {
         "aspect_ratio": "16:9",
         "size_by": "megapixels",
-        "size": 1025,
-        "megapixels": 3,
+        "size": 1024,
+        "megapixels": 2.8,
         "multiple_of": 64
       }
     },

@@ -10,34 +10,46 @@ import math
 
 __all__ = [
     "DRIVERS",
-    "MULTIPLES",
+    "MEGAPIXEL",
     "RATIOS",
+    "REALWORLD_MEGAPIXEL",
+    "megapixel_unit",
     "parse_ratio",
     "resolve",
 ]
 
-#: Every shape offered: square, then landscape, then portrait in the same order. Each
-#: orientation lists the screen and photo ratios from nearest square outward, then the film
-#: ratios the same way.
+#: Every shape offered, width:height, sorted by the first number and then the second.
 RATIOS: tuple[str, ...] = (
-    "1:1",
-    "5:4", "4:3", "3:2", "16:10", "16:9", "2:1", "21:9", "3:1",
-    "1.43:1", "1.66:1", "1.85:1", "2.2:1", "2.39:1",
-    "4:5", "3:4", "2:3", "10:16", "9:16", "1:2", "9:21", "1:3",
-    "1:1.43", "1:1.66", "1:1.85", "1:2.2", "1:2.39",
+    "1:1", "1:1.43", "1:1.66", "1:1.85", "1:2", "1:2.2", "1:2.39", "1:3",
+    "1.43:1", "1.66:1", "1.85:1",
+    "2:1", "2:3", "2.2:1", "2.39:1",
+    "3:1", "3:2", "3:4",
+    "4:3", "4:5",
+    "5:4",
+    "9:16", "9:21",
+    "10:16",
+    "16:9", "16:10",
+    "21:9",
 )
 
 #: Which measurement is being given, and so what the other one is worked out from. The area
 #: comes first, then the edges set by hand.
 DRIVERS: tuple[str, ...] = ("megapixels", "long edge", "short edge", "width", "height")
 
-#: Steps a side may land on. 8 is what a latent needs; 64 is what most model families
-#: were trained on.
-MULTIPLES: tuple[int, ...] = (1, 8, 16, 32, 64, 128)
-
 #: Largest side either edge may reach, which keeps a mistyped figure from asking for a
 #: latent that cannot be allocated.
 MAX_EDGE = 16384
+
+#: Pixels in one megapixel, 1024 by 1024, as ComfyUI counts it.
+MEGAPIXEL = 1024 * 1024
+
+#: Pixels in one megapixel counted as a round million.
+REALWORLD_MEGAPIXEL = 1_000_000
+
+
+def megapixel_unit(realworld: bool) -> int:
+    """Pixels in one megapixel: :data:`REALWORLD_MEGAPIXEL` when ``realworld``, else :data:`MEGAPIXEL`."""
+    return REALWORLD_MEGAPIXEL if realworld else MEGAPIXEL
 
 
 def parse_ratio(text: str) -> tuple[float, float]:
@@ -80,6 +92,7 @@ def resolve(
     size: int = 1024,
     megapixels: float = 1.0,
     multiple: int = 64,
+    megapixel: int = MEGAPIXEL,
 ) -> tuple[int, int]:
     """The width and height a ratio and one measurement come to.
 
@@ -87,8 +100,9 @@ def resolve(
         ratio: An entry from :data:`RATIOS`, or anything :func:`parse_ratio` reads, width first.
         driver: An entry from :data:`DRIVERS`, naming the measurement being given.
         size: The measurement in pixels, read by every driver but ``megapixels``.
-        megapixels: The measurement in millions of pixels, read by ``megapixels`` alone.
-        multiple: Step both sides land on, from :data:`MULTIPLES`.
+        megapixels: The measurement in megapixels, read by ``megapixels`` alone.
+        multiple: Step both sides land on, in pixels.
+        megapixel: Pixels in one megapixel, from :func:`megapixel_unit`.
 
     Returns:
         ``(width, height)``, both a whole number of steps and both at least one step.
@@ -97,7 +111,7 @@ def resolve(
     shape = wide / high
 
     if driver == "megapixels":
-        area = max(float(megapixels), 0.0) * 1_000_000.0
+        area = max(float(megapixels), 0.0) * max(1, int(megapixel))
         width = math.sqrt(area * shape) if area > 0 else 0.0
         height = width / shape if shape > 0 else 0.0
     else:

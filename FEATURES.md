@@ -247,8 +247,9 @@ end or from typed values, shaped by a curve, repeated as a sawtooth, a wave or a
 drawn on the node with its points dragged into place. **Number List Plot** draws up to four
 lists on the node. **Image Size to Number**, **Latent Size to
 Number** and **Image Aspect Ratio** read a size. **Resolution Selector (Advanced)** picks one
-from a shape and an area in megapixels, or from one edge in pixels, with every shape listed
-portrait and landscape and set by dragging the corner of the frame it draws.
+from a shape and an area in megapixels, counted as ComfyUI counts them or as a round million, or
+from one edge in pixels, with every shape listed portrait and landscape and set by dragging the
+corner of the frame it draws.
 **Curve to Numbers** turns a drawn curve into values.
 
 For driving a setting from something the graph worked out rather than a typed constant.
