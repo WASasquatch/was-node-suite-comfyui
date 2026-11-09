@@ -25,13 +25,15 @@ class StringList(io.ComfyNode):
                 "lines to list",
                 "multiline list",
                 "list of strings",
+                "dynamic prompts",
+                "prompt variations",
             ],
             category="WAS Suite/Text/List",
             description=(
                 "Type one prompt per line and hand them on as a STRING list, so everything "
-                "downstream runs once per line. Each line can be switched off without deleting "
-                "it, and # or // lines are notes for organising the list. A STRING wired into "
-                "text replaces the typed lines."
+                "downstream runs once per line. Lines can be switched off, kept as notes, grouped "
+                "under == headings, given versions that take turns between runs, and use $terms "
+                "and {a|b} choices."
             ),
             inputs=[
                 io.String.Input(
@@ -41,9 +43,9 @@ class StringList(io.ComfyNode):
                     dynamic_prompts=False,
                     placeholder="One prompt per line",
                     tooltip=(
-                        "One entry per line, as `a red fox in snow`. A line starting with ~ is "
-                        "switched off; # and // start a note, and /* */ wraps several lines of "
-                        "notes. Ignored while a STRING is wired into text."
+                        "One entry per line. `~` switches a line off, `#` starts a note, `== name` "
+                        "a heading, `| text` a version of the line above, `$name = value` a term; "
+                        "`{a|b}` draws one option. Ignored while a STRING is wired into text."
                     ),
                 ),
                 io.Boolean.Input(
@@ -68,8 +70,20 @@ class StringList(io.ComfyNode):
                     force_input=True,
                     tooltip=(
                         "A STRING to use instead of the typed lines, such as `a fox\\na heron`, "
-                        "read the same way: one entry per line, ~ lines off, # and // notes. "
-                        "Unwired, the typed lines are used."
+                        "read the same way. Unwired, the typed lines are used."
+                    ),
+                ),
+                io.Int.Input(
+                    "seed",
+                    default=0,
+                    min=0,
+                    max=0xFFFFFFFF,
+                    control_after_generate=True,
+                    advanced=True,
+                    tooltip=(
+                        "Which option each `{a|b}` choice draws: the same seed and lines give the "
+                        "same entries. A new seed is drawn after a run only while a line holds a "
+                        "choice."
                     ),
                 ),
             ],
@@ -92,18 +106,19 @@ class StringList(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, lines="", skip_blank_lines=True, skip_comment_lines=True, text=None
+        cls, lines="", skip_blank_lines=True, skip_comment_lines=True, text=None, seed=0
     ) -> io.NodeOutput:
         from ....modules.compat.lists import require_values
         from ....modules.prompt.prompt_lines import list_lines
 
         source = lines if text is None else text
-        entries = list_lines(source, skip_blank_lines, skip_comment_lines)
+        entries = list_lines(source, skip_blank_lines, skip_comment_lines, seed)
         logger.debug("String List handed on %d entries", len(entries))
         require_values(
             entries,
             "String List has no lines to hand on, so nothing below it can run. Every line is "
-            "switched off, a note or blank, or the text wired in is empty. Switch a line on, or "
-            "turn skip_blank_lines or skip_comment_lines off to hand those lines on.",
+            "switched off, a note, a term, a heading or blank, or the text wired in is empty. "
+            "Switch a line on, or turn skip_blank_lines or skip_comment_lines off to hand those "
+            "lines on.",
         )
         return io.NodeOutput(entries, len(entries))

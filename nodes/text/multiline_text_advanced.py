@@ -1,4 +1,4 @@
-"""A multiline text built from lines that can be switched off or kept as notes."""
+"""A multiline text built from lines that can be switched off, versioned or kept as notes."""
 
 from __future__ import annotations
 
@@ -20,12 +20,14 @@ class MultilineTextAdvanced(io.ComfyNode):
                 "prompt with comments",
                 "text box with comments",
                 "toggle lines",
+                "dynamic prompts",
+                "prompt variables",
             ],
             category="WAS Suite/Text",
             description=(
-                "Write a prompt one part per line and hand on the lines that are kept as one "
-                "text, joined by line breaks, spaces or commas. Each line can be switched off "
-                "without deleting it, and # or // lines are notes for organising the prompt."
+                "Write a prompt one part per line and hand on the kept lines as one text, joined "
+                "by line breaks, spaces or commas. Lines can be switched off, kept as notes, "
+                "given versions that take turns between runs, and use $terms and {a|b} choices."
             ),
             inputs=[
                 io.String.Input(
@@ -35,9 +37,9 @@ class MultilineTextAdvanced(io.ComfyNode):
                     dynamic_prompts=False,
                     placeholder="One part per line",
                     tooltip=(
-                        "One part per line, as `a red fox in snow`. A line starting with ~ is "
-                        "switched off; # and // start a note, and /* */ wraps several lines of "
-                        "notes. Ignored while a STRING is wired into text."
+                        "One part per line. `~` switches a line off, `#` starts a note, `== name` "
+                        "a heading, `| text` a version of the line above, `$name = value` a term; "
+                        "`{a|b}` draws one option. Ignored while a STRING is wired into text."
                     ),
                 ),
                 io.Boolean.Input(
@@ -73,8 +75,20 @@ class MultilineTextAdvanced(io.ComfyNode):
                     force_input=True,
                     tooltip=(
                         "A STRING to use instead of the typed lines, such as `a fox\\na heron`, "
-                        "read the same way: one part per line, ~ lines off, # and // notes. "
-                        "Unwired, the typed lines are used."
+                        "read the same way. Unwired, the typed lines are used."
+                    ),
+                ),
+                io.Int.Input(
+                    "seed",
+                    default=0,
+                    min=0,
+                    max=0xFFFFFFFF,
+                    control_after_generate=True,
+                    advanced=True,
+                    tooltip=(
+                        "Which option each `{a|b}` choice draws: the same seed and lines give the "
+                        "same text. A new seed is drawn after a run only while a line holds a "
+                        "choice."
                     ),
                 ),
             ],
@@ -87,9 +101,15 @@ class MultilineTextAdvanced(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, lines="", skip_blank_lines=False, skip_comment_lines=True, join_with="line break", text=None
+        cls,
+        lines="",
+        skip_blank_lines=False,
+        skip_comment_lines=True,
+        join_with="line break",
+        text=None,
+        seed=0,
     ) -> io.NodeOutput:
         from ...modules.prompt.prompt_lines import join_lines
 
         source = lines if text is None else text
-        return io.NodeOutput(join_lines(source, skip_blank_lines, skip_comment_lines, join_with))
+        return io.NodeOutput(join_lines(source, skip_blank_lines, skip_comment_lines, join_with, seed))
