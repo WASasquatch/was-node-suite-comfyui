@@ -58,10 +58,19 @@ own and cannot move its frame.
 
 Choosing `Marigold v2` on Power Preprocessor names any of its ten files the model folders lack
 in ComfyUI's missing models list, each with its fixed address under
-`https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/`. ComfyUI's frontend asks Hugging
-Face for each listed file's size, whatever `features.network` is set to, and downloads one only
-when its Download button is pressed, as it does for any workflow that lists its models. No other
-outside address appears in the pack's own browser code.
+`https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/`. The example workflows in
+`docs/workflows/` list the models they load, and opening one puts the listed files the model
+folders lack in the same list. Every listed model is a `.safetensors` file at an `https` address
+on one of two hosts: a file under a repository's `resolve/` path on `huggingface.co`, or the
+`https://civitai.com/api/download/models/` address of one model version on Civitai.
+
+For each file in the missing models list, ComfyUI's frontend asks Hugging Face for the file's
+size, or asks Civitai's `api/v1/model-versions/` address for the size of that version, whatever
+`features.network` is set to. A file is downloaded only when its Download button is pressed, by
+the browser or by ComfyUI Desktop. Nothing in this pack fetches any of these addresses. Note
+and document text in the workflows also links to this pack's GitHub repository and to RES4LYF's,
+and nothing fetches those links either. No other outside address appears in the pack's own
+browser code or in a shipped workflow.
 
 Two modules are HTTP clients, both loaded only with `features.llm` on and both refusing every
 request while `features.network` is off. `modules/llm/documents.py` fetches a web page for LLM
