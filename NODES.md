@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **689** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **690** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-603 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+604 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 447 |
+| [Always loaded](#always-loaded) | always on | 448 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-447 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+448 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -62,7 +62,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Image/Layers](#was-suiteimagelayers) (20)
 - [WAS Suite/Image/Masking](#was-suiteimagemasking) (29)
 - [WAS Suite/Image/Process](#was-suiteimageprocess) (24)
-- [WAS Suite/Image/Transform](#was-suiteimagetransform) (9)
+- [WAS Suite/Image/Transform](#was-suiteimagetransform) (10)
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
@@ -7388,6 +7388,40 @@ Scale, rotate and paste image_overlay onto image, with an optional soft edge. Th
 | Name | Type | What it is |
 |---|---|---|
 | `<output0>` | `IMAGE` | The background with the overlay composited onto it, in RGBA. Nodes that need three channels want Images to RGB after this. |
+
+</details>
+
+<a id="node-wasimagescaletototalpixels"></a>
+<details>
+<summary><b>Scale Image to Total Pixels (Advanced)</b></summary>
+
+Scale pictures to a total pixel count with their shape kept and both sides on a whole step. The panel draws the source frame against the scaled one, and dragging its corner sets megapixels. The width, height, megapixels and pixel ratio it came to are handed on to size the rest of a graph.
+
+| | |
+|---|---|
+| Node id | `WASImageScaleToTotalPixels` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures to scale. Every picture in a batch comes out at the same size. |
+| `upscale_method` | `COMBO` | Yes | lanczos | `nearest-exact`, `bilinear`, `area`, `bicubic`, `lanczos` | `nearest-exact` = blocky, hard pixels kept; `bilinear` = soft; `area` = averages, suits shrinking; `bicubic` = sharper; `lanczos` = sharpest, rounded to 8 bits a channel. |
+| `megapixels` | `FLOAT` | Yes | 1.0 |  | The area to scale to, counted as realworld_mp says. With it off, 1.0 is 1024 x 1024 pixels, and 4.0 turns 1024 x 1024 into 2048 x 2048. Dragging a corner of the scaled frame on the panel sets it. |
+| `resolution_steps` | `INT` | Yes | 8 |  | Step both sides land on. 1 = the exact area; 8 = the least a latent takes; 64 = what most model families were trained on. Snapping moves a side by up to half a step, so the area drifts slightly. |
+| `scale_mode` | `COMBO` | Yes | always | `always`, `downscale_only`, `upscale_only` | `always` = scales to the area from either side; `downscale_only` = megapixels is a ceiling, smaller pictures pass through untouched; `upscale_only` = megapixels is a floor, larger pictures pass through untouched. |
+| `crop` | `COMBO` | Yes | disabled | `disabled`, `center` | `disabled` = the picture is stretched onto the stepped size, a sliver off its shape; `center` = the source is trimmed to the stepped shape first, so nothing is stretched. |
+| `realworld_mp` | `BOOLEAN` | Yes | False |  | Off: a megapixel is 1024 x 1024, as ComfyUI counts it. On: 1,000,000 pixels. Applies to megapixels, the megapixels output and the panel. 4.0 on a square picture is 2048 x 2048 off, 2000 x 2000 on. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | The scaled pictures, or the input untouched where scale_mode rules the scale out or the size already matches. |
+| `width` | `INT` | Width of the scaled pictures in pixels. Feed it to anything built at the same size, such as an empty latent or a mask. |
+| `height` | `INT` | Height of the scaled pictures in pixels. |
+| `megapixels` | `FLOAT` | Area of the scaled pictures in megapixels, counted as realworld_mp says. It sits within a step of the megapixels asked for. |
+| `mp_ratio` | `FLOAT` | Pixels out divided by pixels in. 4.0 = four times the pixels, each side about twice as long; 1.0 = unchanged; 0.25 = a quarter. |
 
 </details>
 

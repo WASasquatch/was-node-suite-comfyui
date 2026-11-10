@@ -1,7 +1,7 @@
-"""Working a width and a height out of an aspect ratio and one measurement.
+"""Working a width and a height out of an aspect ratio, or a frame, and one measurement.
 
-The ratio fixes the shape and the measurement fixes the scale, given as an edge in pixels
-or as an area in megapixels.
+The shape is fixed by the ratio or the frame, and the scale by an edge in pixels or an area
+in megapixels.
 """
 
 from __future__ import annotations
@@ -13,9 +13,11 @@ __all__ = [
     "MEGAPIXEL",
     "RATIOS",
     "REALWORLD_MEGAPIXEL",
+    "SCALE_MODES",
     "megapixel_unit",
     "parse_ratio",
     "resolve",
+    "scale_to_total",
 ]
 
 #: Every shape offered, width:height, sorted by the first number and then the second.
@@ -45,6 +47,10 @@ MEGAPIXEL = 1024 * 1024
 
 #: Pixels in one megapixel counted as a round million.
 REALWORLD_MEGAPIXEL = 1_000_000
+
+#: Which way :func:`scale_to_total` may move a frame. ``downscale_only`` leaves a frame already
+#: at or under the area alone, ``upscale_only`` one already at or over it.
+SCALE_MODES: tuple[str, ...] = ("always", "downscale_only", "upscale_only")
 
 
 def megapixel_unit(realworld: bool) -> int:
@@ -123,3 +129,39 @@ def resolve(
             height, width = edge, edge * shape
 
     return _snap(width, multiple), _snap(height, multiple)
+
+
+def scale_to_total(
+    width: int,
+    height: int,
+    megapixels: float = 1.0,
+    step: int = 1,
+    megapixel: int = MEGAPIXEL,
+    mode: str = "always",
+) -> tuple[int, int, bool]:
+    """The size a frame comes to when scaled to an area, its shape kept.
+
+    Args:
+        width: The frame's width in pixels.
+        height: The frame's height in pixels.
+        megapixels: The area wanted, in megapixels.
+        step: Step both sides land on, rounded to the nearest whole step and never below one.
+        megapixel: Pixels in one megapixel, from :func:`megapixel_unit`.
+        mode: An entry from :data:`SCALE_MODES`.
+
+    Returns:
+        ``(width, height, scaled)``. ``scaled`` is False where ``mode`` left the frame at its
+        own size, which is then returned unchanged and unsnapped.
+    """
+    width, height = max(1, int(width)), max(1, int(height))
+    area = width * height
+    target = max(float(megapixels), 0.0) * max(1, int(megapixel))
+    if (mode == "downscale_only" and area <= target) or (mode == "upscale_only" and area >= target):
+        return width, height, False
+    scale = math.sqrt(target / area)
+    unit = max(1, int(step))
+    return (
+        max(unit, int(round(width * scale / unit)) * unit),
+        max(unit, int(round(height * scale / unit)) * unit),
+        True,
+    )

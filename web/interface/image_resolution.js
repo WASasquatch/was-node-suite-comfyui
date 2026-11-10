@@ -14,6 +14,9 @@ export const MEGAPIXEL = 1024 * 1024;
 /** Pixels in one megapixel counted as a round million. */
 export const REALWORLD_MEGAPIXEL = 1_000_000;
 
+/** Which way `scaleToTotal` may move a frame. */
+export const SCALE_MODES = ["always", "downscale_only", "upscale_only"];
+
 /**
  * Pixels in one megapixel.
  *
@@ -108,4 +111,33 @@ export function resolve(
     }
   }
   return [snap(width, multiple), snap(height, multiple)];
+}
+
+/**
+ * The size a frame comes to when scaled to an area, its shape kept.
+ *
+ * @param {number} width - The frame's width in pixels.
+ * @param {number} height - The frame's height in pixels.
+ * @param {number} megapixels - The area wanted, in megapixels.
+ * @param {number} [step] - Step both sides land on, never below one.
+ * @param {number} [megapixel] - Pixels in one megapixel, from `megapixelUnit`.
+ * @param {string} [mode] - An entry from `SCALE_MODES`.
+ * @returns {{width: number, height: number, scaled: boolean}} `scaled` is false where `mode` left
+ *   the frame at its own size, which is then answered unchanged and unsnapped.
+ */
+export function scaleToTotal(width, height, megapixels, step = 1, megapixel = MEGAPIXEL, mode = "always") {
+  const wide = Math.max(1, Math.trunc(Number(width) || 0));
+  const high = Math.max(1, Math.trunc(Number(height) || 0));
+  const area = wide * high;
+  const target = Math.max(Number(megapixels) || 0, 0) * Math.max(1, Math.trunc(Number(megapixel) || 0));
+  if ((mode === "downscale_only" && area <= target) || (mode === "upscale_only" && area >= target)) {
+    return { width: wide, height: high, scaled: false };
+  }
+  const scale = Math.sqrt(target / area);
+  const unit = Math.max(1, Math.trunc(Number(step) || 0));
+  return {
+    width: Math.max(unit, roundHalfEven((wide * scale) / unit) * unit),
+    height: Math.max(unit, roundHalfEven((high * scale) / unit) * unit),
+    scaled: true,
+  };
 }

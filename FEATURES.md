@@ -158,8 +158,12 @@ For feeding a ControlNet, and for relighting, defocus, parallax, masking and sty
 
 ## Geometry and transforms
 
-13 nodes. **Image Resize**, **Image Rotate (Advanced)**, **Image Perspective**, **Image Flip**,
-**Image Transpose**, **Image Padding** and **Image Displacement Warp** move pixels. **Image
+14 nodes. **Image Resize**, **Image Rotate (Advanced)**, **Image Perspective**, **Image Flip**,
+**Image Transpose**, **Image Padding** and **Image Displacement Warp** move pixels. **Scale
+Image to Total Pixels (Advanced)** brings a picture to an area in megapixels with its shape kept,
+only ever down or only ever up if asked, hands on the width, height, megapixels and pixel ratio it
+came to, and draws the source frame against the scaled one with a corner dragged to set the area.
+**Image
 Tile Extract (Grid)**, **Image Tile Extract (Quadrants)**, **Image Tile Shuffle** and **Image
 Stitch (Advanced)** split an image and put it back. **Tiled Image Upscale (With Model)** runs an
 upscale model over overlapping tiles and cross-fades them, to any magnification rather than the
@@ -168,7 +172,8 @@ safe.
 
 For tiled work and for fitting an image to a target without leaving the canvas.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Image/Transform** and **WAS Suite/Image/Upscaling**.
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Transform** and **WAS Suite/Image/Upscaling**. Graph:
+[`scale-to-total-pixels.json`](docs/workflows/scale-to-total-pixels.json).
 
 ---
 
