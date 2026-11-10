@@ -105,20 +105,26 @@ def _noise(shape, seed: int, device, dtype) -> torch.Tensor:
     return drawn.to(device=device, dtype=dtype)
 
 
-def downscale(x: torch.Tensor, scale: float) -> torch.Tensor:
+def downscale(x: torch.Tensor, scale: float, size: tuple[int, int] | None = None) -> torch.Tensor:
     """Truncate a latent to a fraction of its size by dropping its high DCT coefficients.
 
     Args:
         x: Latent whose trailing two axes are spatial.
         scale: Fraction of the current size to keep. A value of 1.0 or above is a no-op.
+        size: Exact ``(height, width)`` to keep, in place of ``scale``.
 
     Returns:
-        The truncated latent, or ``x`` unchanged when ``scale`` is 1.0 or above.
+        The truncated latent, or ``x`` unchanged when nothing is dropped.
     """
-    if scale >= 1.0:
-        return x
     height, width = x.shape[-2], x.shape[-1]
-    kept_h, kept_w = round(height * scale), round(width * scale)
+    if size is None:
+        if scale >= 1.0:
+            return x
+        kept_h, kept_w = round(height * scale), round(width * scale)
+    else:
+        kept_h, kept_w = min(int(size[0]), height), min(int(size[1]), width)
+        if (kept_h, kept_w) == (height, width):
+            return x
     coefficients = dct_2d(x.to(_working_dtype(x.dtype)))
     return idct_2d(coefficients[..., :kept_h, :kept_w].contiguous()).to(x.dtype)
 

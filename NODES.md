@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **690** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **691** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-604 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+605 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 448 |
+| [Always loaded](#always-loaded) | always on | 449 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-448 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+449 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -75,7 +75,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (34)
+- [WAS Suite/Sampling](#was-suitesampling) (35)
 - [WAS Suite/Text](#was-suitetext) (13)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (12)
@@ -11321,6 +11321,32 @@ Give a FLUX 3 Image Klein base model the distilled checkpoint's target-time bran
 | Name | Type | What it is |
 |---|---|---|
 | `model` | `MODEL` | The model with the branch, for a KSampler at 16 steps: CFG 1 for the distilled picture, 2.5 to 3.5 for more contrast and colour. |
+
+</details>
+
+<a id="node-wash3imagesampler"></a>
+<details>
+<summary><b>H3 Image Sampler</b></summary>
+
+Sample MiniMax H3 Image at 4 to 16 megapixels with cleaner fine texture. By default the first steps run on a smaller latent that grows partway, and the step into the final one takes fresh noise. Use it with Sampler Custom on six steps of the simple scheduler.
+
+| | |
+|---|---|
+| Node id | `WASH3ImageSampler` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `progressive` = the first steps on a smaller latent, grown to full size partway; `standard` = every step at full size, with the composition of the model's own Euler sampler. |
+| `renoise_steps` | `INT` | Yes | 1 |  | Last steps that re-noise the prediction with fresh noise, as lcm does. `0` = the model's Euler sampler exactly; `1` = only the step into the final one; `5` on six steps = lcm. |
+| `noise_scale` | `FLOAT` | Yes | 1.0 |  | Fresh noise in a renoised step. `1.0` = as lcm; `0.9` = softer texture; `1.1` = crisper fine detail; `1.2` = close to Euler's crunch again. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `sampler` | `SAMPLER` | For Sampler Custom with MiniMax H3 Image, on six steps of the simple scheduler. |
 
 </details>
 
