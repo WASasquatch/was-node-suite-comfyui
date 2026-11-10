@@ -5,6 +5,7 @@
  * presentation only: `widgets_values` carries every widget whether it is drawn or not.
  */
 import { redrawHeaders } from "./decoration.js";
+import { startingInput } from "./node_preview.js";
 import { setWidgetHidden } from "./visibility.js";
 
 const LOG_NAME = "WASNodeSuite.Grow";
@@ -53,6 +54,25 @@ export function drawnGroupCount(groups, used, options = {}) {
     if (used(voting)) lastUsed = Math.max(lastUsed, index);
   });
   return Math.min(groups.length, lastUsed + 2);
+}
+
+/**
+ * The groups a newly placed node folds away: every group past the ones its starting values
+ * draw.
+ *
+ * @param {string[][]} groups - Widget names, one array per group, in the order they are drawn.
+ * @param {object} definition - The node definition the frontend files.
+ * @param {object} [options] - The `growWidgets` options.
+ * @returns {{inputs: string[]}} The input names.
+ */
+export function foldedGroups(groups, definition, options = {}) {
+  const empty = options.empty ? new Set(options.empty) : null;
+  const drawn = drawnGroupCount(
+    groups,
+    (voting) => voting.some((name) => holdsValue(startingInput(definition, name), empty)),
+    options,
+  );
+  return { inputs: groups.slice(drawn).flat() };
 }
 
 /**

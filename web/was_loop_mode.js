@@ -5,7 +5,8 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { followMode } from "./interface/mode_widgets.js";
+import { foldedByMode, followMode } from "./interface/mode_widgets.js";
+import { foldedOnPlacing } from "./interface/node_preview.js";
 
 const EXT_NAME = "WASNodeSuite.LoopMode";
 
@@ -18,6 +19,8 @@ const BY_MODE = {
   iterations: ["iterations"],
   total_frames: ["total_frames", "max_iterations"],
 };
+
+foldedOnPlacing(NODE, (definition) => foldedByMode(definition, CONTROLLER, BY_MODE));
 
 app.registerExtension({
   name: EXT_NAME,

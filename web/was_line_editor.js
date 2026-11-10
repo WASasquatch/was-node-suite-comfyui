@@ -10,9 +10,10 @@ import { CARD_LOOK, cardChip, cardRule } from "./interface/card.js";
 import { ICON, ICON_SIZE, drawFidelityGlyph } from "./interface/icons.js";
 import {
   addLine, addVersion, advance, advanceLists, groupAt, holdsChoice, leadOf, listsTakeTurns, pickVersion,
-  setMode, switchLine, takesTurns, writeLists,
+  setMode, switchAll, switchLine, switchOf, takesTurns, writeLists,
 } from "./interface/line_edits.js";
 import { growSockets } from "./interface/grow_sockets.js";
+import { foldedOnPlacing, startingInput } from "./interface/node_preview.js";
 import { captureWheel, wheelPixels } from "./interface/pointer.js";
 import { openPopupMenu } from "./interface/popup_menu.js";
 import {
@@ -623,7 +624,7 @@ function openModeMenu(anchor, heading, choices, current, onPick) {
  *   it is read-only, `context()` answering `{seed, skipBlank, skipComments, terms, numbering,
  *   joined, pick, all}`, `scroller` for keeping the caret in view, `hint`, `fill` to take the
  *   whole height, and `onStats(stats)` hearing what each draw counted.
- * @returns {object} `{element, box, render, schedule, sync, focus, dispose}`.
+ * @returns {object} `{element, box, render, schedule, sync, setAll, focus, dispose}`.
  */
 function createLineBox(host) {
   const sheet = document.createElement("div");
@@ -905,6 +906,7 @@ function createLineBox(host) {
     const unknown = new Set();
     let off = 0;
     let notes = 0;
+    const switches = { on: 0, total: 0 };
     state = raw.map((value, index) => {
       const line = parsed[index];
       const kind = line?.kind ?? END;
@@ -918,18 +920,20 @@ function createLineBox(host) {
       if (kind === NOTE && !switchableNote) notes += 1;
       let look = PLAIN_LOOK;
       let glyph = null;
-      let boxState = null;
+      const boxState = switchOf(line, skipComments);
       let pickable = false;
+      if (boxState && !locked) {
+        switches.total += 1;
+        if (boxState === "on") switches.on += 1;
+      }
       if (kind === SECTION) {
         look = ownOff ? OFF_LOOK : SECTION_LOOK;
-        boxState = ownOff ? "off" : "on";
         glyph = { text: "≡", colour: CARD_LOOK.title, title: "Heading" };
       } else if (spot) {
         const { group, position, colour } = spot;
         const chosen = group.mode === ALL ? group.live.includes(position) : position === group.pick;
         const inUse = chosen && (!picking || Boolean(item?.inUse));
         look = isOff ? OFF_LOOK : inUse ? lit(colour) : dim(colour);
-        boxState = ownOff ? "off" : "on";
         if (group.versions.length > 1) {
           pickable = !isOff && !chosen && group.mode !== ALL ? "version" : false;
           glyph = chosen && !isOff
@@ -945,8 +949,7 @@ function createLineBox(host) {
         }
       } else if (kind === NOTE) {
         look = NOTE_LOOK;
-        if (switchableNote) boxState = "on";
-        else glyph = { text: "i", colour: ACCENT, title: "Note, left out" };
+        if (!switchableNote) glyph = { text: "i", colour: ACCENT, title: "Note, left out" };
       } else if (kind === BLANK && !skipBlank) {
         look = KEPT_BLANK_LOOK;
       }
@@ -991,7 +994,7 @@ function createLineBox(host) {
     if (hovered >= 0) showTools(hovered);
     host.onStats({
       text, entries, off, notes, terms: own.size, unknown, candidates: candidates.length,
-      choices: !locked && holdsChoice(text), turns: takesTurns(text),
+      choices: !locked && holdsChoice(text), turns: takesTurns(text), switches,
     });
   };
 
@@ -1063,6 +1066,9 @@ function createLineBox(host) {
     render,
     schedule,
     sync,
+    setAll(on) {
+      applyText(switchAll(box.value, on, host.context().skipComments));
+    },
     focus() {
       box.focus({ preventScroll: true });
       box.setSelectionRange(box.value.length, box.value.length);
@@ -1075,15 +1081,34 @@ function createLineBox(host) {
 }
 
 /**
- * The header over an editor: its summary, chips, and New draw, Preview and syntax buttons.
+ * The header over an editor: a switch over every switch below it, its summary, chips, and New
+ * draw, Preview and syntax buttons.
  *
- * @param {object} handlers - `{onDraw, onPreview}`.
- * @returns {object} `{element, summary, chips, drawButton, viewButton, paint}`, `paint` writing the
- *   summary from counts.
+ * @param {object} handlers - `{onDraw, onPreview, onSwitchAll}`, the last given true for on.
+ * @returns {object} `{element, summary, chips, drawButton, viewButton, paint, paintSwitch}`,
+ *   `paint` writing the summary from counts.
  */
 function createHead(handlers) {
   const head = document.createElement("div");
-  head.style.cssText = "flex:none;display:flex;align-items:center;gap:4px;min-width:0;padding:5px 6px 3px 8px";
+  head.style.cssText = "flex:none;display:flex;align-items:center;gap:4px;min-width:0;"
+    + `padding:5px 6px 3px ${STRIPE + 5}px`;
+  const master = document.createElement("input");
+  master.type = "checkbox";
+  master.tabIndex = -1;
+  master.style.cssText = `flex:none;margin:0 2px 0 0;width:${BOX}px;height:${BOX}px;cursor:pointer;`
+    + `accent-color:${ACCENT}`;
+  let everyOn = false;
+  master.addEventListener("pointerdown", (event) => event.stopPropagation());
+  master.addEventListener("click", (event) => {
+    event.stopPropagation();
+    // Kept as drawn; the lines redraw it once they change.
+    master.checked = everyOn;
+    try {
+      handlers.onSwitchAll(!everyOn);
+    } catch (error) {
+      console.error(`[${EXT_NAME}] Failed to switch every line:`, error);
+    }
+  });
   const summary = document.createElement("div");
   summary.style.cssText = "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;"
     + `white-space:nowrap;font:11.5px/16px system-ui,sans-serif;color:${CARD_LOOK.muted}`;
@@ -1108,8 +1133,24 @@ function createHead(handlers) {
     element.style.padding = "1px 6px";
     element.style.fontSize = "11.5px";
   }
-  head.append(summary, chips, drawButton, viewButton, helpButton);
+  head.append(master, summary, chips, drawButton, viewButton, helpButton);
   head.addEventListener("contextmenu", (event) => event.preventDefault());
+
+  /**
+   * Draw the switch over every switch below it.
+   *
+   * @param {{on: number, total: number, locked?: boolean}} counts - How many switches are on, of
+   *   how many, and whether they are read-only.
+   * @returns {void}
+   */
+  const paintSwitch = ({ on, total, locked = false }) => {
+    everyOn = total > 0 && on === total;
+    master.style.visibility = total > 0 ? "visible" : "hidden";
+    master.checked = everyOn;
+    master.indeterminate = on > 0 && on < total;
+    master.disabled = locked;
+    master.title = everyOn ? "Switch everything off" : "Switch everything on";
+  };
 
   /**
    * Write the summary and chips.
@@ -1152,7 +1193,7 @@ function createHead(handlers) {
     }
   };
 
-  return { element: head, summary, chips, drawButton, viewButton, paint };
+  return { element: head, summary, chips, drawButton, viewButton, paint, paintSwitch };
 }
 
 /**
@@ -1274,7 +1315,7 @@ function newDraw(node) {
 /**
  * The panel shell every editor shares: header, rule, a scrolling body and the preview.
  *
- * @param {object} handlers - `{onDraw, onPreview}`.
+ * @param {object} handlers - `{onDraw, onPreview, onSwitchAll}`.
  * @returns {object} `{root, head, scroller, preview, releaseWheel}`.
  */
 function createShell(handlers) {
@@ -1322,6 +1363,7 @@ function createEditor(node, setup) {
       previewing = !previewing;
       lines.render();
     },
+    onSwitchAll: (on) => lines.setAll(on),
   });
   const { head, scroller, preview } = shell;
 
@@ -1354,6 +1396,7 @@ function createEditor(node, setup) {
       wired, text: stats.text, parts, title, over: false, empty: !stats.entries,
       emptyChip: setup.output === "joined" ? "empty text" : "nothing to hand on", unknown: stats.unknown,
     });
+    head.paintSwitch({ ...stats.switches, locked: wired });
     head.drawButton.style.display = stats.choices && !wired ? "" : "none";
     head.viewButton.textContent = previewing ? "Edit" : "Preview";
     const showPreview = previewing && !wired;
@@ -1455,6 +1498,7 @@ function createListsEditor(node, setup) {
       previewing = !previewing;
       paint();
     },
+    onSwitchAll: (on) => switchEverything(on),
   });
   const { head, scroller, preview } = shell;
   const body = document.createElement("div");
@@ -1576,6 +1620,30 @@ function createListsEditor(node, setup) {
     });
     rebuild();
     if (focus >= 0) cards[focus]?.lines.focus();
+  };
+
+  /**
+   * Switch every unwired list's lines on or off, and each list while its switch is drawn, as one
+   * undo step.
+   *
+   * @param {boolean} on - True for on.
+   * @returns {void}
+   */
+  const switchEverything = (on) => {
+    const { skipComments } = flags();
+    const wasPlain = plain();
+    const next = lists.map((entry, index) => ({
+      ...entry,
+      on: wasPlain ? entry.on : on,
+      lines: wiredAt(index) ? entry.lines : switchAll(normalise(entry.lines), on, skipComments),
+    }));
+    withGraphChange(() => {
+      lists = next;
+      store();
+    });
+    for (const card of cards) card.lines.sync();
+    if (wasPlain !== plain()) rebuild();
+    else renderAll();
   };
 
   const addList = () => {
@@ -1814,6 +1882,17 @@ function createListsEditor(node, setup) {
       wired: !several && wiredOn > 0, text: lists.some((entry) => entry.lines) || wiredOn > 0, parts, title, over,
       empty: !wiredOn && !entries.length, emptyChip: "nothing to hand on", unknown,
     });
+    // Every line switch in a box that is not wired, and each list's own switch while drawn.
+    const switches = { on: 0, total: 0 };
+    for (const card of cards) {
+      switches.on += card.stats()?.switches.on ?? 0;
+      switches.total += card.stats()?.switches.total ?? 0;
+    }
+    if (!plain()) {
+      switches.on += lists.filter((entry) => entry.on).length;
+      switches.total += lists.length;
+    }
+    head.paintSwitch(switches);
     head.drawButton.style.display = choices ? "" : "none";
     head.viewButton.textContent = previewing ? "Edit" : "Preview";
     head.viewButton.disabled = wiredOn > 0;
@@ -2032,6 +2111,27 @@ function attachEditor(node, setup) {
 
   panel.sync();
 }
+
+/**
+ * What a newly placed Multiline Text Lists node folds away: the sockets past its lists, and the
+ * joining widgets its starting `combine` does not read.
+ *
+ * @param {object} definition - The node definition the frontend files.
+ * @returns {{inputs: string[], widgets: string[]}} The names folded away.
+ */
+function foldedLists(definition) {
+  const lists = readLists(normalise(startingInput(definition, NODES.WASStringList.text))).length;
+  const widgets = [];
+  if (interfaceEnabled()) {
+    const how = startingInput(definition, COMBINE_WIDGET);
+    const named = typeof how === "string" ? how : CONCATENATE;
+    if (named === CONCATENATE) widgets.push(JOIN_WIDGET);
+    if (named !== PRECOMPILE) widgets.push(ITEMS_WIDGET);
+  }
+  return { inputs: TEXT_SOCKETS.slice(lists), widgets };
+}
+
+foldedOnPlacing("WASStringList", foldedLists);
 
 app.registerExtension({
   name: EXT_NAME,

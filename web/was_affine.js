@@ -6,6 +6,7 @@
  */
 
 import { app } from "../../scripts/app.js";
+import { foldedOnPlacing, startingInput } from "./interface/node_preview.js";
 import { createPictureBand } from "./interface/picture_band.js";
 import { createReportPanel } from "./interface/report_panel.js";
 import { setWidgetHidden } from "./interface/visibility.js";
@@ -96,6 +97,22 @@ function enabled() {
 }
 
 /**
+ * The settings Affine Options folds away for the values it holds.
+ *
+ * @param {(name: string) => *} valueOf - Reads a widget's value by name.
+ * @returns {Set<string>} The names folded away.
+ */
+function foldedOptions(valueOf) {
+  const shown = new Set(BY_PATTERN[valueOf("pattern")] ?? []);
+  if (String(valueOf("content_gate") ?? "off") !== "off") shown.add(CONTENT_WINDOW);
+  const folded = new Set([...PER_PATTERN].filter((name) => !shown.has(name)));
+  // Sharpening settings while nothing is sharpened, clamp bounds while clamping is off.
+  if (Number(valueOf("mask_sharpen") ?? 0) === 0) for (const name of SHARPEN) folded.add(name);
+  if (!valueOf("clamp")) for (const name of CLAMP) folded.add(name);
+  return folded;
+}
+
+/**
  * Draw the settings the chosen pattern reads on Affine Options, and fold the rest away.
  *
  * @param {object} node - The Affine Options node to lay out.
@@ -103,22 +120,10 @@ function enabled() {
  */
 function foldOptions(node) {
   const widgets = new Map((node.widgets ?? []).map((widget) => [widget.name, widget]));
-  const pattern = widgets.get("pattern");
-  const shown = new Set(BY_PATTERN[pattern?.value] ?? []);
-  const gated = String(widgets.get("content_gate")?.value ?? "off") !== "off";
-  if (gated) shown.add(CONTENT_WINDOW);
+  const folded = foldedOptions((name) => widgets.get(name)?.value);
   let moved = false;
-
-  for (const name of PER_PATTERN) {
-    if (setWidgetHidden(widgets.get(name), !shown.has(name))) moved = true;
-  }
-  const sharpening = Number(widgets.get("mask_sharpen")?.value ?? 0) !== 0;
-  for (const name of SHARPEN) {
-    if (setWidgetHidden(widgets.get(name), !sharpening)) moved = true;
-  }
-  const clamping = Boolean(widgets.get("clamp")?.value);
-  for (const name of CLAMP) {
-    if (setWidgetHidden(widgets.get(name), !clamping)) moved = true;
+  for (const name of [...PER_PATTERN, ...SHARPEN, ...CLAMP]) {
+    if (setWidgetHidden(widgets.get(name), folded.has(name))) moved = true;
   }
   if (!moved) return;
 
@@ -214,6 +219,10 @@ function attach(node, options) {
     console.error(`[${EXT_NAME}] Failed to build the affine report:`, error);
   }
 }
+
+foldedOnPlacing(OPTIONS_NODE, (definition) => ({
+  widgets: foldedOptions((name) => startingInput(definition, name)),
+}));
 
 app.registerExtension({
   name: EXT_NAME,

@@ -5,6 +5,7 @@
  * rest.
  */
 // A hidden widget is still serialised and still configured.
+import { startingInput } from "./node_preview.js";
 import { setWidgetHidden } from "./visibility.js";
 
 /**
@@ -128,4 +129,18 @@ export function refreshRelevantWidgets(node, controlName, modes) {
   if (!control) return;
   // What a workflow stored is what the user chose, so nothing is moved to a start here.
   apply(node, control, modes, governedBy(modes), false);
+}
+
+/**
+ * The widgets a newly placed node folds away for the mode it starts on.
+ *
+ * @param {object} definition - The node definition the frontend files.
+ * @param {string} controlName - Name of the widget holding the mode.
+ * @param {Record<string, Record<string, object>>} modes - The mode table.
+ * @returns {{widgets: string[]}} The names folded away.
+ */
+export function foldedByRelevance(definition, controlName, modes) {
+  const specs = modes[startingInput(definition, controlName)] ?? {};
+  const governed = [...governedBy(modes)];
+  return { widgets: governed.filter((name) => name !== controlName && specs[name] === undefined) };
 }

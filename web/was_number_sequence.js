@@ -8,7 +8,8 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { ICON } from "./interface/icons.js";
-import { followMode } from "./interface/mode_widgets.js";
+import { foldedByMode, followMode } from "./interface/mode_widgets.js";
+import { foldedOnPlacing } from "./interface/node_preview.js";
 import { createNumberPlot } from "./interface/number_plot.js";
 import {
   CURVE_NAMES,
@@ -429,6 +430,8 @@ function attachPlot(node) {
 
   repaint();
 }
+
+foldedOnPlacing(NODE_ID, (definition) => foldedByMode(definition, "mode", BY_MODE));
 
 app.registerExtension({
   name: EXT_NAME,

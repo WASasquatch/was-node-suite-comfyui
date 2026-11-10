@@ -3,7 +3,8 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { followMode } from "./interface/mode_widgets.js";
+import { foldedByMode, followMode } from "./interface/mode_widgets.js";
+import { foldedOnPlacing } from "./interface/node_preview.js";
 
 const EXT_NAME = "WASNodeSuite.CNSMode";
 
@@ -15,6 +16,8 @@ const BY_MODE = {
   auto: [],
   manual: ["bands", "divider", "power", "tilt_start", "tilt_end", "sharpness", "energy"],
 };
+
+foldedOnPlacing(NODE, (definition) => foldedByMode(definition, CONTROLLER, BY_MODE));
 
 app.registerExtension({
   name: EXT_NAME,

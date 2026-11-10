@@ -6,9 +6,10 @@
 
 import { app } from "../../scripts/app.js";
 import { megapixelUnit, mirrored, parseRatio, resolve } from "./interface/image_resolution.js";
+import { foldedOnPlacing } from "./interface/node_preview.js";
 import { captureWheel, elementPoint } from "./interface/pointer.js";
 import { withGraphChange } from "./interface/region.js";
-import { refreshRelevantWidgets, watchRelevantWidgets } from "./interface/relevant_widgets.js";
+import { foldedByRelevance, refreshRelevantWidgets, watchRelevantWidgets } from "./interface/relevant_widgets.js";
 import { surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
 import { onThemeChange, readTheme, themeVar } from "./interface/theme.js";
 import { appendInterfaceWidget, chainWidgetCallback, graphLoading } from "./interface/widget.js";
@@ -442,6 +443,8 @@ function attachPanel(node) {
   };
   panel.schedulePaint();
 }
+
+foldedOnPlacing(NODE_NAME, (definition) => foldedByRelevance(definition, CONTROL_WIDGET, MODES));
 
 app.registerExtension({
   name: EXT_NAME,

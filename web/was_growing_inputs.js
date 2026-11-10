@@ -6,8 +6,8 @@
  */
 
 import { app } from "../../scripts/app.js";
-import { drawnGroupCount, growWidgets, holdsValue } from "./interface/grow.js";
-import { foldedOnPlacing, startingValue } from "./interface/node_preview.js";
+import { foldedGroups, growWidgets } from "./interface/grow.js";
+import { foldedOnPlacing } from "./interface/node_preview.js";
 import { sceneTint } from "./interface/h3_timeline.js";
 import { addLabelHeader, addRowHeaders, rowColourMenu, rowName } from "./interface/row_headers.js";
 
@@ -261,28 +261,10 @@ function growthOf(entry, pairs) {
   return { groups, options };
 }
 
-/**
- * The repeated inputs a newly placed node folds away: every group past the ones it draws.
- *
- * @param {{groups: string[][], options: object}} growth - How the node's inputs grow.
- * @param {object} definition - The node definition the frontend files.
- * @returns {{inputs: string[]}} The input names.
- */
-function foldedRows(growth, definition) {
-  const { groups, options } = growth;
-  const empty = options.empty ? new Set(options.empty) : null;
-  const starting = (name) => startingValue(definition?.inputs?.[name]);
-  const drawn = drawnGroupCount(
-    groups,
-    (voting) => voting.some((name) => holdsValue(starting(name), empty)),
-    options,
-  );
-  return { inputs: groups.slice(drawn).flat() };
-}
-
 for (const nodeId of [...Object.keys(GROWING), ...Object.keys(GROWING_PAIRS)]) {
   const growth = growthOf(GROWING[nodeId], GROWING_PAIRS[nodeId]);
-  if (growth) foldedOnPlacing(nodeId, (definition) => foldedRows(growth, definition));
+  if (!growth) continue;
+  foldedOnPlacing(nodeId, (definition) => foldedGroups(growth.groups, definition, growth.options));
 }
 
 app.registerExtension({

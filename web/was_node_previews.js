@@ -1,13 +1,16 @@
 /**
- * Node previews in search and the node library, listing repeated rows and slots as a newly
- * placed node draws them.
+ * Node previews in search and the node library, drawn as a newly placed node draws itself.
  *
- * A folded input stays on the definition under its name and a folded output at its slot.
+ * Folded inputs and outputs keep their names and slots. Folded widgets stay listed. A widget
+ * taking other wires is listed under its widget's type.
  */
 import { app } from "../../scripts/app.js";
 import { foldedNames, foldsOnPlacing } from "./interface/node_preview.js";
 
 const EXT_NAME = "WASNodeSuite.NodePreviews";
+
+// Only this pack's own nodes.
+const OWNED = "WAS Suite";
 
 /**
  * The class the frontend files node definitions as, read off a registered node.
@@ -21,15 +24,57 @@ function definitionClass(nodeId) {
 }
 
 /**
- * Leave a node's folded inputs and outputs out of every listing of its definition.
+ * Whether an input is drawn as a widget on a placed node while its type names other wires too.
+ *
+ * @param {string|string[]} type - The input's type, such as `COMBO,STRING`.
+ * @param {object|undefined} options - Its options.
+ * @returns {boolean} True for a widget input that also takes another type of wire.
+ */
+function widenedWidget(type, options) {
+  return typeof type === "string" && type.includes(",") && typeof options?.widgetType === "string"
+    && !options.forceInput;
+}
+
+/**
+ * Whether a served definition holds a widget input that also takes other wires.
+ *
+ * @param {object} served - A node definition as the server sends it.
+ * @returns {boolean} True where any input is such a widget.
+ */
+function holdsWidenedWidget(served) {
+  for (const group of ["required", "optional"]) {
+    for (const spec of Object.values(served?.input?.[group] ?? {})) {
+      if (Array.isArray(spec) && widenedWidget(spec[0], spec[1])) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Lay a node's definition out as a newly placed node draws it.
  *
  * @param {object} definition - The definition the frontend files, as built from the server's.
- * @param {{inputs: Set<string>, outputs: Set<string>}} folded - The names to leave out.
+ * @param {{inputs: Set<string>, outputs: Set<string>, widgets: Set<string>}} folded - The names
+ *   to leave out.
  * @returns {void}
  */
 function listAsPlaced(definition, folded) {
   const inputs = definition.inputs;
   if (inputs && typeof inputs === "object") {
+    for (const name of Object.keys(inputs)) {
+      const held = Object.getOwnPropertyDescriptor(inputs, name);
+      const spec = held?.value;
+      if (!held?.configurable || !spec || typeof spec !== "object") continue;
+      const widened = widenedWidget(spec.type, spec);
+      const hidden = folded.widgets.has(name);
+      if (!widened && !hidden) continue;
+      // A copy typed as its widget, and flagged advanced where folded: the drawn preview skips
+      // an advanced input and the input lists keep it.
+      const fitted = { ...spec };
+      if (widened) fitted.type = spec.widgetType;
+      if (hidden) fitted.advanced = true;
+      Object.defineProperty(inputs, name, { value: fitted });
+    }
     for (const name of folded.inputs) {
       const held = Object.getOwnPropertyDescriptor(inputs, name);
       // Kept under its name, skipped by anything that walks the inputs.
@@ -56,7 +101,9 @@ app.registerExtension({
     if (!Array.isArray(definitions)) return;
     definitions.forEach((served, index) => {
       const nodeId = served?.name;
-      if (!nodeId || !foldsOnPlacing(nodeId)) return;
+      if (!nodeId) return;
+      const owned = String(served?.category ?? "").startsWith(OWNED);
+      if (!foldsOnPlacing(nodeId) && !(owned && holdsWidenedWidget(served))) return;
       try {
         const Definition = definitionClass(nodeId);
         if (!Definition) return;

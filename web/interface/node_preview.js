@@ -1,7 +1,8 @@
 /**
- * The inputs and outputs a newly placed node folds away, for node previews.
+ * What a newly placed node folds away, for node previews.
  *
- * A rule per node id reads the frontend's node definition: `inputs` by name, `outputs` in order.
+ * A rule per node id reads the node definition and names the repeated `inputs` and `outputs` a
+ * new node leaves off and the `widgets` it folds.
  */
 
 // Node id -> the rules naming what a new node of that id folds away.
@@ -11,8 +12,9 @@ const RULES = new Map();
  * Register what a newly placed node of one id folds away.
  *
  * @param {string} nodeId - The node id.
- * @param {(definition: object) => {inputs?: Iterable<string>, outputs?: Iterable<string>}} rule -
- *   The names of the inputs and outputs a new node does not draw.
+ * @param {(definition: object) => {inputs?: Iterable<string>, outputs?: Iterable<string>,
+ *   widgets?: Iterable<string>}} rule - The names of the repeated inputs and outputs a new node
+ *   does not draw, and of the widgets it folds away.
  * @returns {void}
  */
 export function foldedOnPlacing(nodeId, rule) {
@@ -33,22 +35,24 @@ export function foldsOnPlacing(nodeId) {
 }
 
 /**
- * Every input and output a newly placed node of one id folds away.
+ * Every input, output and widget a newly placed node of one id folds away.
  *
  * @param {string} nodeId - The node id.
  * @param {object} definition - The node definition the frontend files.
- * @returns {{inputs: Set<string>, outputs: Set<string>}} The names, empty where no rule names
- *   the id.
+ * @returns {{inputs: Set<string>, outputs: Set<string>, widgets: Set<string>}} The names, empty
+ *   where no rule names the id.
  */
 export function foldedNames(nodeId, definition) {
   const inputs = new Set();
   const outputs = new Set();
+  const widgets = new Set();
   for (const rule of RULES.get(String(nodeId)) ?? []) {
     const named = rule(definition) ?? {};
     for (const name of named.inputs ?? []) inputs.add(String(name));
     for (const name of named.outputs ?? []) outputs.add(String(name));
+    for (const name of named.widgets ?? []) widgets.add(String(name));
   }
-  return { inputs, outputs };
+  return { inputs, outputs, widgets };
 }
 
 /**
@@ -62,6 +66,17 @@ export function startingValue(spec) {
   if (spec.default !== undefined && spec.default !== null) return spec.default;
   if (Array.isArray(spec.options) && spec.options.length) return spec.options[0];
   return undefined;
+}
+
+/**
+ * The value a new node's input starts on, read off its definition.
+ *
+ * @param {object} definition - The node definition the frontend files.
+ * @param {string} name - The input's name.
+ * @returns {*} Its starting value, or undefined where it names none.
+ */
+export function startingInput(definition, name) {
+  return startingValue(definition?.inputs?.[name]);
 }
 
 /**

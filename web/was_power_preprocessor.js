@@ -7,7 +7,8 @@
 import { app } from "../../scripts/app.js";
 import { clearSpot, inputLink, slotOf } from "./interface/h3_asset_chain.js";
 import { withGraphChange } from "./interface/region.js";
-import { refreshRelevantWidgets, watchRelevantWidgets } from "./interface/relevant_widgets.js";
+import { foldedOnPlacing, startingInput } from "./interface/node_preview.js";
+import { foldedByRelevance, refreshRelevantWidgets, watchRelevantWidgets } from "./interface/relevant_widgets.js";
 import { growSockets } from "./interface/grow_sockets.js";
 import { setWidgetHidden } from "./interface/visibility.js";
 
@@ -145,6 +146,23 @@ function wiredModelChosen(node) {
   // The question is read as well as the model.
   const offered = MODES[question]?.model_name?.values || [];
   return chosen === WIRED_MODEL && offered.includes(WIRED_MODEL);
+}
+
+/**
+ * The widgets and wired-model sockets a newly placed node folds away.
+ *
+ * @param {object} definition - The node definition the frontend files.
+ * @returns {{inputs: string[], widgets: string[]}} The names folded away.
+ */
+function foldedWhenPlaced(definition) {
+  if (!hidingEnabled()) return { inputs: [], widgets: [] };
+  const { widgets } = foldedByRelevance(definition, CONTROL_WIDGET, MODES);
+  const offered = MODES[startingInput(definition, CONTROL_WIDGET)]?.model_name?.values || [];
+  const named = startingInput(definition, MODEL_WIDGET);
+  // A model the question does not offer is moved to the first it does.
+  const chosen = offered.includes(named) ? named : offered[0];
+  if (chosen === WIRED_MODEL) return { inputs: [], widgets };
+  return { inputs: WIRED_INPUTS, widgets: [...widgets, ...WIRED_WIDGETS] };
 }
 
 /**
@@ -514,6 +532,8 @@ function watchMarigold(node) {
     };
   }
 }
+
+foldedOnPlacing(NODE_NAME, foldedWhenPlaced);
 
 app.registerExtension({
   name: EXT_NAME,

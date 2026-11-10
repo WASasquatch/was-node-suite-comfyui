@@ -3,6 +3,7 @@
  *
  * Hiding is presentation only: `widgets_values` carries every widget whether it is drawn or not.
  */
+import { startingInput } from "./node_preview.js";
 import { setWidgetHidden } from "./visibility.js";
 
 const LOG_NAME = "WASNodeSuite.ModeWidgets";
@@ -71,4 +72,18 @@ export function followMode(node, controllerName, byMode) {
 
   refold();
   return refold;
+}
+
+/**
+ * The widgets a newly placed node folds away for the mode it starts on.
+ *
+ * @param {object} definition - The node definition the frontend files.
+ * @param {string} controllerName - The widget whose value chooses the mode.
+ * @param {Object<string, string[]>} byMode - Widget names to draw, keyed on the mode's value.
+ * @returns {{widgets: string[]}} The names folded away.
+ */
+export function foldedByMode(definition, controllerName, byMode) {
+  const shown = new Set(byMode[startingInput(definition, controllerName)] ?? []);
+  const governed = new Set(Object.values(byMode).flat());
+  return { widgets: [...governed].filter((name) => !shown.has(name)) };
 }

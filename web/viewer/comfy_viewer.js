@@ -25,6 +25,7 @@ import { computeThemeTokens, getFullTheme, themeToCssVars } from "./utils/theme.
 import { createControlsBar, CONTROLS_HEIGHT, updateViewSelector, updateControlsForUI, updateTypeLabel } from "./controls/controls_bar.js";
 import { buildIframeContent, LIST_SEPARATOR } from "./iframe/iframe_builder.js";
 import { appendInterfaceWidget } from "../interface/widget.js";
+import { foldedOnPlacing } from "../interface/node_preview.js";
 import { keepWidgetHidden } from "../interface/visibility.js";
 
 const EXT_NAME = "WAS.ContentViewer";
@@ -1016,6 +1017,9 @@ window.addEventListener("message", (event) => {
     handleViewMessage(messageType, event.data, node, app, event.source);
   }
 });
+
+// A new node folds every widget it declares.
+foldedOnPlacing(NODE_NAME, (definition) => ({ widgets: Object.keys(definition?.inputs ?? {}) }));
 
 app.registerExtension({
   name: EXT_NAME,

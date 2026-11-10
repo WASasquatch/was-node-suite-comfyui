@@ -7,8 +7,9 @@
 
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { growWidgets } from "./interface/grow.js";
+import { foldedGroups, growWidgets } from "./interface/grow.js";
 import { ICON, ICON_SIZE, drawIcon, hoverTitles, iconTitle } from "./interface/icons.js";
+import { foldedOnPlacing } from "./interface/node_preview.js";
 import { captureWheel } from "./interface/pointer.js";
 import { PREVIEW_STATE } from "./interface/preview.js";
 import { surfaceRatio, watchSurfaceRatio } from "./interface/resolution.js";
@@ -1682,21 +1683,24 @@ const PAIR_NAME = /^(find|replace)_(\d+)$/;
 /**
  * The node's find and replace boxes, grouped into pairs.
  *
- * @param {object} node - The node to read.
+ * @param {Iterable<string>} names - The node's widget or input names.
  * @returns {string[][]} One `[find, replace]` per pair, first pair first.
  */
-function pairGroups(node) {
+function pairGroups(names) {
   const numbered = new Map();
-  for (const widget of node.widgets ?? []) {
-    const parsed = PAIR_NAME.exec(widget.name ?? "");
+  for (const name of names) {
+    const parsed = PAIR_NAME.exec(name ?? "");
     if (!parsed) continue;
     const index = Number(parsed[2]);
-    numbered.set(index, [...(numbered.get(index) ?? []), widget.name]);
+    numbered.set(index, [...(numbered.get(index) ?? []), name]);
   }
   const order = [...numbered.keys()].sort((a, b) => a - b);
   return [["find", "replace"], ...order.map((index) => numbered.get(index))];
 }
 
+foldedOnPlacing(NODE_NAME, (definition) => (
+  foldedGroups(pairGroups(Object.keys(definition?.inputs ?? {})), definition)
+));
 
 app.registerExtension({
   name: EXT_NAME,
@@ -1745,7 +1749,7 @@ app.registerExtension({
         console.error(`[${EXT_NAME}] Failed to build the run readout:`, error);
       }
       try {
-        growWidgets(this, pairGroups(this));
+        growWidgets(this, pairGroups((this.widgets ?? []).map((widget) => widget.name)));
       } catch (error) {
         console.error(`[${EXT_NAME}] Failed to fold the find and replace pairs:`, error);
       }

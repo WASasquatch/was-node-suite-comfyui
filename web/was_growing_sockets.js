@@ -353,7 +353,7 @@ function apply(node, entry) {
 }
 
 /**
- * The repeated sockets a newly placed node folds away: every slot past the ones it draws.
+ * The sockets a newly placed node folds away: every slot it does not draw.
  *
  * @param {object} entry - Its `GROWING` entry, already normalised to the object form.
  * @param {object} definition - The node definition the frontend files.
@@ -365,6 +365,7 @@ function foldedSlots(entry, definition) {
   const drawn = drawnGroups(groups.length, {
     minVisible: options.minVisible?.(),
     exactCount: options.exactCount?.() ?? null,
+    chosen: options.select?.() ?? null,
   });
   const folded = groups.filter((group, index) => !drawn(index)).flat();
   const inputs = new Set(Object.keys(definition?.inputs ?? {}));
@@ -377,8 +378,6 @@ function foldedSlots(entry, definition) {
 
 for (const [nodeId, declared] of Object.entries(GROWING)) {
   const entry = Array.isArray(declared) ? { slots: declared } : declared;
-  // A mode chooses these sockets, so each is an input of its own rather than a repeat.
-  if (entry.select) continue;
   foldedOnPlacing(nodeId, (definition) => foldedSlots(entry, definition));
 }
 

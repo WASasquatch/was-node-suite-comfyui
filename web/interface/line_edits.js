@@ -6,8 +6,8 @@
  */
 
 import {
-  ALL, BLANK, DECREMENT, FIXED, INCREMENT, MODE, OFF_MARK, PICKED_MARK, PICK_LIMIT, PROMPT, RANDOM, SECTION,
-  TERM, VERSION, VERSION_MARK, classify, groupLines, listEntries, parseChoices, readLists,
+  ALL, BLANK, DECREMENT, FIXED, INCREMENT, MODE, NOTE, OFF_MARK, PICKED_MARK, PICK_LIMIT, PROMPT, RANDOM,
+  SECTION, TERM, VERSION, VERSION_MARK, classify, groupLines, listEntries, parseChoices, readLists,
 } from "./prompt_lines.js";
 
 // The modes that move on after a run.
@@ -60,6 +60,35 @@ function markPick(all, group, chosen) {
 }
 
 /**
+ * One line with its switch flipped: `~` added at its start or after a version's mark, or taken
+ * away.
+ *
+ * @param {string} line - The line as written.
+ * @param {object} known - The line from `classify`.
+ * @returns {string} The line edited.
+ */
+function flipped(line, known) {
+  const at = leadOf(line) + (known.kind === VERSION ? 1 : 0);
+  return line.slice(at).startsWith(OFF_MARK)
+    ? line.slice(0, at) + line.slice(at + OFF_MARK.length)
+    : line.slice(0, at) + OFF_MARK + line.slice(at);
+}
+
+/**
+ * The switch a line draws.
+ *
+ * @param {object|undefined} known - The line from `classify`.
+ * @param {boolean} [skipComments] - Whether notes are left out, so carry no switch.
+ * @returns {"on"|"off"|null} Its state, or null for a line with no switch.
+ */
+export function switchOf(known, skipComments = true) {
+  if (!known) return null;
+  if ([SECTION, PROMPT, TERM, VERSION].includes(known.kind)) return known.off ? "off" : "on";
+  if (known.kind === NOTE && !skipComments && !known.block) return "on";
+  return null;
+}
+
+/**
  * Switch a line on or off: `~` at its start, or after a version's mark.
  *
  * @param {string} text - The text.
@@ -70,12 +99,28 @@ export function switchLine(text, index) {
   const all = text.split("\n");
   const known = classify(text)[index];
   if (!known || known.kind === BLANK) return text;
-  const line = all[index];
-  const at = leadOf(line) + (known.kind === VERSION ? 1 : 0);
-  all[index] = line.slice(at).startsWith(OFF_MARK)
-    ? line.slice(0, at) + line.slice(at + OFF_MARK.length)
-    : line.slice(0, at) + OFF_MARK + line.slice(at);
+  all[index] = flipped(all[index], known);
   return all.join("\n");
+}
+
+/**
+ * Switch every line that draws a switch on, or every one off.
+ *
+ * @param {string} text - The text.
+ * @param {boolean} on - True for on.
+ * @param {boolean} [skipComments] - Whether notes are left out, so carry no switch.
+ * @returns {string} The text edited, or as it was where nothing changes.
+ */
+export function switchAll(text, on, skipComments = true) {
+  const all = text.split("\n");
+  let changed = false;
+  classify(text).forEach((known, index) => {
+    const state = switchOf(known, skipComments);
+    if (!state || (state === "on") === on) return;
+    all[index] = flipped(all[index], known);
+    changed = true;
+  });
+  return changed ? all.join("\n") : text;
 }
 
 /**
