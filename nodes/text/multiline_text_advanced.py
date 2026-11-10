@@ -83,12 +83,12 @@ class MultilineTextAdvanced(io.ComfyNode):
                     default=0,
                     min=0,
                     max=0xFFFFFFFF,
-                    control_after_generate=True,
+                    control_after_generate=io.ControlAfterGenerate.fixed,
                     advanced=True,
                     tooltip=(
                         "Which option each `{a|b}` choice draws: the same seed and lines give the "
-                        "same text. A new seed is drawn after a run only while a line holds a "
-                        "choice."
+                        "same text. The control starts `fixed`; `randomize` draws again after each "
+                        "run while a line holds a choice."
                     ),
                 ),
             ],

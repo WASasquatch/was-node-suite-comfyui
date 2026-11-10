@@ -16,16 +16,17 @@ export const BLANK = "blank";
 /** What a heading starts with. */
 export const SECTION_MARK = "==";
 
-/** How several lists are put together into entries. */
-export const CYCLE = "cycle";
+/** How lists are put together: one after another, joined whole into strings, or every combination. */
+export const CONCATENATE = "concatenate";
+export const PRECOMPILE = "precompile";
 export const EVERY = "every combination";
-export const COMBINES = Object.freeze([CYCLE, EVERY]);
+export const COMBINES = Object.freeze([CONCATENATE, PRECOMPILE, EVERY]);
 
 /** The most entries every combination may make. */
 export const MAX_COMBINED = 10000;
 
 /** The most lists one node reads, and the highest line a list's pick names. */
-export const LIST_LIMIT = 64;
+export const LIST_LIMIT = 16;
 export const PICK_LIMIT = 999999;
 
 /** The first character of a line that is switched off, and the one after a version's mark. */
@@ -86,6 +87,13 @@ const TERM_DEPTH = 8;
 // Arithmetic of the draw.
 const GOLDEN = 0x9e3779b9;
 const SPAN = 4294967296;
+
+// Where the draws for turns start, past any line a text holds: a group's at this plus its first
+// line, a list's just below.
+const TURN_DRAW = 0x40000000;
+
+/** The most strings one run of single strings makes. */
+export const ITEM_LIMIT = 1000;
 
 // Python's `str.strip()`, `str.lstrip()`, `str.rstrip()` and `str.rstrip(",")`.
 const strip = (line) => line.replace(/^\s+|\s+$/gu, "");
@@ -559,19 +567,52 @@ export function hiddenLines(lines) {
 }
 
 /**
+ * Where something that takes turns stands after a number of turns.
+ *
+ * @param {number} position - Where it stands now, from zero.
+ * @param {string} mode - `INCREMENT`, `DECREMENT` or `RANDOM`; any other stays.
+ * @param {number} turn - How many turns on.
+ * @param {number} count - How many places there are.
+ * @param {() => number} drawNext - Draws for `RANDOM`.
+ * @returns {number} The place, from zero: `turn` on, `turn` back, or drawn, wrapping round.
+ */
+function turning(position, mode, turn, count, drawNext) {
+  if (!turn || count < 2) return position;
+  if (mode === INCREMENT) return (position + turn) % count;
+  if (mode === DECREMENT) return (((position - turn) % count) + count) % count;
+  if (mode === RANDOM) return Math.floor(drawNext() * count);
+  return position;
+}
+
+/**
+ * The version of a group in use a number of turns on.
+ *
+ * @param {object} group - From `groupLines`.
+ * @param {number} turn - How many turns on, 0 for the one marked in use.
+ * @param {number} seed - What a `RANDOM` group draws from.
+ * @returns {number} A position in `group.versions`.
+ */
+export function turned(group, turn, seed) {
+  if (!turn || !group.live.includes(group.pick)) return group.pick;
+  const at = group.live.indexOf(group.pick);
+  return group.live[turning(at, group.mode, turn, group.live.length, stream(seed, TURN_DRAW + group.versions[0]))];
+}
+
+/**
  * Every term switched on, by name, its choices drawn once.
  *
  * @param {object[]} lines - Every line, from `classify`.
  * @param {object[]} groups - From `groupLines`.
  * @param {number} seed - The seed.
+ * @param {number} [turn] - How many turns on a term whose versions take turns stands.
  * @returns {Map<string, string>} Name to value. A name written twice takes its last value.
  */
-export function glossary(lines, groups, seed) {
+export function glossary(lines, groups, seed, turn = 0) {
   const hidden = hiddenLines(lines);
   const terms = new Map();
   for (const entry of groups) {
     if (entry.kind !== TERM || entry.off || hidden[entry.versions[0]]) continue;
-    const index = entry.versions[entry.pick];
+    const index = entry.versions[turned(entry, turn, seed)];
     terms.set(entry.name, draw(lines[index].body, seed, index));
   }
   return terms;
@@ -584,15 +625,16 @@ export function glossary(lines, groups, seed) {
  * @param {number} [seed] - What the choices draw from.
  * @param {Map<string, string>} [terms] - Terms from elsewhere, such as another list; the text's own
  *   replace them.
+ * @param {number} [turn] - How many turns on each line whose versions take turns stands.
  * @returns {Array<{kind: string, text: string, line: number}>} In order, `kind` one of `PROMPT`,
  *   `SECTION`, `NOTE` and `BLANK`, a heading giving its name, and `line` the index of the line it
  *   came from. A prompt in mode `ALL` gives each of its versions. A switched-off heading gives
  *   nothing, nor do the lines under it.
  */
-export function resolve(text, seed = 0, terms = null) {
+export function resolve(text, seed = 0, terms = null, turn = 0) {
   const lines = classify(text);
   const groups = groupLines(lines);
-  const known = new Map([...(terms ?? new Map()), ...glossary(lines, groups, seed)]);
+  const known = new Map([...(terms ?? new Map()), ...glossary(lines, groups, seed, turn)]);
   const hidden = hiddenLines(lines);
   const heads = new Map(groups.map((entry) => [entry.versions[0], entry]));
   const out = [];
@@ -608,7 +650,7 @@ export function resolve(text, seed = 0, terms = null) {
       const entry = heads.get(index);
       if (entry.off || entry.kind === TERM) return;
       const indent = line.line.slice(0, line.line.length - lstrip(line.line).length);
-      const chosen = entry.mode === ALL ? entry.live : [entry.pick];
+      const chosen = entry.mode === ALL ? entry.live : [turned(entry, turn, seed)];
       for (const position of chosen) {
         const at = entry.versions[position];
         out.push({ kind: PROMPT, text: indent + finished(lines[at].body, seed, at, known), line: at });
@@ -695,42 +737,64 @@ export function joinParts(parts, joinWith) {
 /**
  * One list read from what a node stored.
  *
- * @param {*} entry - An object with any of `name`, `mode`, `pick`, `on` and `lines`, or a string of
- *   lines.
- * @returns {object|null} `{name, mode, pick, on, lines}` with every field filled, or null for
- *   anything else.
+ * @param {object} entry - An object with `lines` and any of `name`, `mode`, `pick`, `start` and `on`.
+ * @returns {object} `{name, mode, pick, start, on, lines}` with every field filled; `start` is the
+ *   line a list that takes turns starts over from.
  */
 function oneList(entry) {
-  const found = typeof entry === "string" ? { lines: entry } : entry;
-  if (!found || typeof found !== "object" || Array.isArray(found)) return null;
-  const { name, mode, pick, lines } = found;
-  const counted = typeof pick === "number" && Number.isInteger(pick);
+  const { name, mode, lines } = entry;
   return {
     name: typeof name === "string" ? name : "",
     mode: MODES.includes(mode) ? mode : ALL,
-    pick: counted && pick >= 1 && pick <= PICK_LIMIT ? pick : 1,
-    on: found.on !== false,
+    pick: lineNumber(entry.pick),
+    start: lineNumber(entry.start),
+    on: entry.on !== false,
     lines: typeof lines === "string" ? lines : "",
   };
 }
 
 /**
- * The lists a String List (Sections) node stores, as JSON.
+ * A stored line number.
  *
- * @param {string} value - A JSON array of lists, each `{name, mode, pick, on, lines}`. Text that is
- *   not one is read as a single list of lines.
- * @returns {object[]} Up to `LIST_LIMIT` lists, every field filled.
+ * @param {*} value - What was stored.
+ * @returns {number} The number when it is a whole number from 1 to `PICK_LIMIT`, else 1.
+ */
+function lineNumber(value) {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= PICK_LIMIT ? value : 1;
+}
+
+/**
+ * The lists in text holding them as JSON.
+ *
+ * @param {string} text - A widget value.
+ * @returns {object[]|null} The array, when the text is a JSON array of one or more objects each with
+ *   string `lines`; null for any other text.
+ */
+function storedLists(text) {
+  if (!strip(text).startsWith("[")) return null;
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(data) || !data.length) return null;
+  const valid = data.every((entry) => entry && typeof entry === "object" && !Array.isArray(entry)
+    && typeof entry.lines === "string");
+  return valid ? data : null;
+}
+
+/**
+ * The lists a String List holds: plain text for one, JSON for several.
+ *
+ * @param {string} value - Lines of text, or a JSON array of lists, each `{name, mode, pick, on, lines}`.
+ * @returns {object[]} Up to `LIST_LIMIT` lists, every field filled. Plain text is one list.
  */
 export function readLists(value) {
   const text = String(value ?? "");
-  let data;
-  try {
-    data = strip(text) ? JSON.parse(text) : [];
-  } catch {
-    return [oneList(text)];
-  }
-  if (!Array.isArray(data)) return [oneList(text)];
-  return data.slice(0, LIST_LIMIT).map(oneList).filter(Boolean);
+  const data = storedLists(text);
+  if (!data) return [oneList({ lines: text })];
+  return data.slice(0, LIST_LIMIT).map(oneList);
 }
 
 /**
@@ -745,55 +809,80 @@ export function listSeed(seed, index) {
 }
 
 /**
- * Each switched-on list's finished prompts, a list in a mode other than `ALL` giving one.
+ * Each switched-on list's kept lines, trimmed; a list in a mode other than `ALL` gives one.
  *
  * @param {object[]} lists - From `readLists`.
  * @param {number} [seed] - The node's seed.
+ * @param {boolean} [skipBlankLines] - Leave out empty lines rather than giving each as "".
+ * @param {boolean} [skipCommentLines] - Leave out notes rather than giving each as written.
+ * @param {number} [turn] - How many turns on every list and line that takes turns stands.
  * @returns {Array<{list: number, entries: string[], candidates: Array<{text: string, line: number}>}>}
  *   One per switched-on list, in order: its place among all the lists, its entries, and every
- *   prompt it could hand on with the line it came from. Terms from any list reach every list.
+ *   line it could hand on with the line it came from. Terms from any list reach every list.
  */
-export function listEntries(lists, seed = 0) {
+export function listEntries(lists, seed = 0, skipBlankLines = true, skipCommentLines = true, turn = 0) {
   const texts = lists
     .map((entry, index) => ({ entry, index, own: listSeed(seed, index) }))
     .filter(({ entry }) => entry.on);
   const terms = new Map();
   for (const { entry, own } of texts) {
     const lines = classify(entry.lines);
-    for (const [name, value] of glossary(lines, groupLines(lines), own)) terms.set(name, value);
+    for (const [name, value] of glossary(lines, groupLines(lines), own, turn)) terms.set(name, value);
   }
   return texts.map(({ entry, index, own }) => {
-    const candidates = resolve(entry.lines, own, terms)
-      .filter((item) => item.kind === PROMPT && strip(item.text))
+    const candidates = resolve(entry.lines, own, terms, turn)
+      .filter((item) => handedOn(item.kind, skipBlankLines, skipCommentLines))
       .map((item) => ({ text: strip(item.text), line: item.line }));
     let entries = candidates.map((item) => item.text);
-    if (entry.mode !== ALL && entries.length) entries = [entries[(entry.pick - 1) % entries.length]];
+    if (entry.mode !== ALL && entries.length) {
+      const count = entries.length;
+      entries = [entries[turning((entry.pick - 1) % count, entry.mode, turn, count, stream(own, TURN_DRAW - 1))]];
+    }
     return { list: index, entries, candidates };
   });
 }
 
 /**
- * Put several lists together into one, each entry taking one line from every list.
+ * Strings made from the lists, each joined whole, each a turn on from the one before.
  *
- * @param {string[][]} lists - The lists, in the order their lines are joined. An empty one is left
- *   out.
- * @param {string} [how] - `CYCLE` or `EVERY`.
+ * @param {object[]} lists - From `readLists`.
+ * @param {number} [seed] - The node's seed; string `k` draws its choices from `seed + k`.
+ * @param {number} [count] - How many strings, at most `ITEM_LIMIT`.
+ * @param {boolean} [skipBlankLines] - Leave out empty lines.
+ * @param {boolean} [skipCommentLines] - Leave out notes.
  * @param {string} [joinWith] - A key of `JOINS`.
- * @returns {string[]|null} The entries, or null where every combination would make more than
- *   `MAX_COMBINED`, or `how` or `joinWith` is unknown.
+ * @returns {string[]} The strings in order, the first as the lists stand now; an empty one is left
+ *   out.
  */
-export function combine(lists, how = CYCLE, joinWith = "comma") {
+export function precompiled(lists, seed = 0, count = 1, skipBlankLines = true, skipCommentLines = true,
+  joinWith = "comma") {
+  const strings = [];
+  for (let turn = 0; turn < Math.max(1, Math.min(count, ITEM_LIMIT)); turn += 1) {
+    const found = listEntries(lists, ((Number(seed) || 0) + turn) >>> 0, skipBlankLines, skipCommentLines, turn);
+    strings.push(...(combine(found.map((entry) => entry.entries), PRECOMPILE, joinWith) ?? []));
+  }
+  return strings;
+}
+
+/**
+ * Put several lists together into one.
+ *
+ * @param {string[][]} lists - The lists, in order. An empty one is left out.
+ * @param {string} [how] - `CONCATENATE`, `PRECOMPILE` or `EVERY`; one list alone is handed on as it is
+ *   by every combination.
+ * @param {string} [joinWith] - A key of `JOINS`, for the two that join.
+ * @returns {string[]|null} The entries, `PRECOMPILE` giving one string or none, or null where every
+ *   combination would make more than `MAX_COMBINED`, or `how` or `joinWith` is unknown.
+ */
+export function combine(lists, how = CONCATENATE, joinWith = "comma") {
   if (!COMBINES.includes(how) || !Object.hasOwn(JOINS, joinWith)) return null;
   const kept = lists.filter((entries) => entries.length);
-  if (!kept.length) return [];
-  if (how === CYCLE) {
-    const longest = Math.max(...kept.map((entries) => entries.length));
-    const rows = [];
-    for (let index = 0; index < longest; index += 1) {
-      rows.push(kept.map((entries) => entries[index % entries.length]));
-    }
-    return rows.map((row) => joinParts(row, joinWith));
+  const flat = kept.flat();
+  if (how === PRECOMPILE) {
+    const joined = joinParts(flat, joinWith);
+    return joined ? [joined] : [];
   }
+  if (how === CONCATENATE || kept.length < 2) return flat;
   let total = 1;
   for (const entries of kept) total *= entries.length;
   if (total > MAX_COMBINED) return null;

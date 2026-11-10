@@ -77,6 +77,11 @@ const V2_WIDGET_ORDER = {
     },
     ["aspect_ratio", "size_by", "size", "megapixels", "multiple_of"],
   ],
+  // Multiline Text Lists took a `precompile_list` switch before `precompile` was a combine mode.
+  // The switch's value is dropped and `num_items` takes its own.
+  "WASStringList": [
+    ["lines", "skip_blank_lines", "skip_comment_lines", "seed", "combine", "join_with", "precompile_list", "num_items"],
+  ],
   // Film Grain's v2 settings name no current widget, so a v2 save opens on the defaults.
   "Image Film Grain": ["density", "intensity", "highlights", "supersample_factor"],
   "Image SSAO (Ambient Occlusion)": [
@@ -184,6 +189,7 @@ const H3_CONTINUITY_RENAMED = { reference: "reference (video)" };
 // Node id -> `[widget names, {saved option: current option}]` for combos whose options were renamed.
 const RENAMED_OPTIONS = {
   WASH3ExtendWindow: [["continuity"], H3_CONTINUITY_RENAMED],
+  WASStringList: [["combine"], { "line by line": "precompile" }],
   WASMiniMaxH3Conditioning: [
     Array.from({ length: 24 }, (unused, index) => `continuity_${index + 1}`),
     { ...H3_CONTINUITY_RENAMED, "as set": "carry" },

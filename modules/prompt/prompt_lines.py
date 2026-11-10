@@ -15,12 +15,14 @@ __all__ = [
     "ALL",
     "BLANK",
     "COMBINES",
-    "CYCLE",
+    "CONCATENATE",
     "DECREMENT",
     "EVERY",
     "FIXED",
     "INCREMENT",
+    "ITEM_LIMIT",
     "JOINS",
+    "PRECOMPILE",
     "LIST_LIMIT",
     "MAX_COMBINED",
     "MODES",
@@ -54,9 +56,11 @@ __all__ = [
     "parse_choices",
     "read_lists",
     "resolve",
+    "precompiled",
     "split_lines",
     "stream",
     "tidy",
+    "turned",
     "unescape",
 ]
 
@@ -71,17 +75,18 @@ BLANK = "blank"
 #: What a heading starts with.
 SECTION_MARK = "=="
 
-#: How several lists are put together into entries: line by line, the shorter ones starting
-#: over, or every combination.
-CYCLE = "cycle"
+#: How lists are put together: one after another, joined whole into strings, or every
+#: combination.
+CONCATENATE = "concatenate"
+PRECOMPILE = "precompile"
 EVERY = "every combination"
-COMBINES = (CYCLE, EVERY)
+COMBINES = (CONCATENATE, PRECOMPILE, EVERY)
 
 #: The most entries every combination may make.
 MAX_COMBINED = 10000
 
 #: The most lists one node reads, and the highest line a list's pick names.
-LIST_LIMIT = 64
+LIST_LIMIT = 16
 PICK_LIMIT = 999999
 
 #: The first character of a line that is switched off, and the one after a version's mark.
@@ -143,6 +148,13 @@ TERM_DEPTH = 8
 MASK = 0xFFFFFFFF
 GOLDEN = 0x9E3779B9
 SPAN = 4294967296
+
+#: Where the draws for turns start, past any line a text holds: a group's at this plus its first
+#: line, a list's just below.
+TURN_DRAW = 0x40000000
+
+#: The most strings one run of single strings makes.
+ITEM_LIMIT = 1000
 
 
 class Line(NamedTuple):
@@ -689,13 +701,56 @@ def hidden_lines(lines: list[Line]) -> list[bool]:
     return hidden
 
 
-def glossary(lines: list[Line], groups: list[Group], seed: int) -> dict:
+def _turning(position: int, mode: str, turn: int, count: int, draw_next: Callable[[], float]) -> int:
+    """Where something that takes turns stands after a number of turns.
+
+    Args:
+        position: Where it stands now, from zero.
+        mode: :data:`INCREMENT`, :data:`DECREMENT` or :data:`RANDOM`; any other stays.
+        turn: How many turns on.
+        count: How many places there are.
+        draw_next: Draws for :data:`RANDOM`.
+
+    Returns:
+        The place, from zero: ``turn`` on, ``turn`` back, or drawn, wrapping round.
+    """
+    if not turn or count < 2:
+        return position
+    if mode == INCREMENT:
+        return (position + turn) % count
+    if mode == DECREMENT:
+        return (position - turn) % count
+    if mode == RANDOM:
+        return int(draw_next() * count)
+    return position
+
+
+def turned(group: Group, turn: int, seed: int) -> int:
+    """The version of a group in use a number of turns on.
+
+    Args:
+        group: From :func:`group_lines`.
+        turn: How many turns on, 0 for the one marked in use.
+        seed: What a :data:`RANDOM` group draws from.
+
+    Returns:
+        A position in ``group.versions``.
+    """
+    if not turn or group.pick not in group.live:
+        return group.pick
+    at = group.live.index(group.pick)
+    step = _turning(at, group.mode, turn, len(group.live), stream(seed, TURN_DRAW + group.versions[0]))
+    return group.live[step]
+
+
+def glossary(lines: list[Line], groups: list[Group], seed: int, turn: int = 0) -> dict:
     """Every term switched on, by name, its choices drawn once.
 
     Args:
         lines: Every line, from :func:`classify`.
         groups: From :func:`group_lines`.
         seed: The seed.
+        turn: How many turns on a term whose versions take turns stands.
 
     Returns:
         Name to value. A name written twice takes its last value.
@@ -704,18 +759,19 @@ def glossary(lines: list[Line], groups: list[Group], seed: int) -> dict:
     terms = {}
     for group in groups:
         if group.kind == TERM and not group.off and not hidden[group.versions[0]]:
-            index = group.versions[group.pick]
+            index = group.versions[turned(group, turn, seed)]
             terms[group.name] = draw(lines[index].body, seed, index)
     return terms
 
 
-def resolve(text: str, seed: int = 0, terms: dict | None = None) -> list[tuple[str, str]]:
+def resolve(text: str, seed: int = 0, terms: dict | None = None, turn: int = 0) -> list[tuple[str, str]]:
     """Every line a node could hand on, finished, before blanks and notes are left out.
 
     Args:
         text: The text, one part per line.
         seed: What the choices draw from.
         terms: Terms from elsewhere, such as another list; the text's own replace them.
+        turn: How many turns on each line whose versions take turns stands.
 
     Returns:
         ``(kind, text)`` in order, ``kind`` one of :data:`PROMPT`, :data:`SECTION`, :data:`NOTE`
@@ -724,7 +780,7 @@ def resolve(text: str, seed: int = 0, terms: dict | None = None) -> list[tuple[s
     """
     lines = classify(text)
     groups = group_lines(lines)
-    known = {**(terms or {}), **glossary(lines, groups, seed)}
+    known = {**(terms or {}), **glossary(lines, groups, seed, turn)}
     hidden = hidden_lines(lines)
     heads = {group.versions[0]: group for group in groups}
     out: list[tuple[str, str]] = []
@@ -742,7 +798,7 @@ def resolve(text: str, seed: int = 0, terms: dict | None = None) -> list[tuple[s
             if group.off or group.kind == TERM:
                 continue
             indent = line.line[:len(line.line) - len(line.line.lstrip())]
-            chosen = group.live if group.mode == ALL else (group.pick,)
+            chosen = group.live if group.mode == ALL else (turned(group, turn, seed),)
             for position in chosen:
                 at = group.versions[position]
                 out.append((PROMPT, indent + _finished(lines[at].body, seed, at, known)))
@@ -859,32 +915,42 @@ def join_parts(parts: list[str], join_with: str) -> str:
     return JOINS[join_with].join(part for part in trimmed if part)
 
 
-def _one_list(entry) -> dict | None:
+def _one_list(entry: dict) -> dict:
     """One list read from what a node stored.
 
     Args:
-        entry: A dict with any of ``name``, ``mode``, ``pick``, ``on`` and ``lines``, or a string
-            of lines.
+        entry: A dict with ``lines`` and any of ``name``, ``mode``, ``pick``, ``start`` and ``on``.
 
     Returns:
-        ``{name, mode, pick, on, lines}`` with every field filled, or None for anything else.
+        ``{name, mode, pick, start, on, lines}`` with every field filled; ``start`` is the line a
+        list that takes turns starts over from.
     """
-    if isinstance(entry, str):
-        entry = {"lines": entry}
-    if not isinstance(entry, dict):
-        return None
     name = entry.get("name")
     mode = entry.get("mode")
-    pick = entry.get("pick")
     lines = entry.get("lines")
-    counted = isinstance(pick, (int, float)) and not isinstance(pick, bool) and float(pick).is_integer()
     return {
         "name": name if isinstance(name, str) else "",
         "mode": mode if mode in MODES else ALL,
-        "pick": int(pick) if counted and 1 <= pick <= PICK_LIMIT else 1,
+        "pick": _line_number(entry.get("pick")),
+        "start": _line_number(entry.get("start")),
         "on": entry.get("on") is not False,
         "lines": lines if isinstance(lines, str) else "",
     }
+
+
+def _line_number(value) -> int:
+    """A stored line number.
+
+    Args:
+        value: What was stored.
+
+    Returns:
+        The number when it is a whole number from 1 to :data:`PICK_LIMIT`, else 1.
+    """
+    if isinstance(value, bool):
+        return 1
+    counted = isinstance(value, int) or (isinstance(value, float) and value.is_integer())
+    return int(value) if counted and 1 <= value <= PICK_LIMIT else 1
 
 
 def _no_constant(name: str):
@@ -899,25 +965,43 @@ def _no_constant(name: str):
     raise ValueError(f"{name} is not JSON")
 
 
-def read_lists(value: str) -> list[dict]:
-    """The lists a String List (Sections) node stores, as JSON.
+def _stored_lists(text: str) -> list | None:
+    """The lists in text holding them as JSON.
 
     Args:
-        value: A JSON array of lists, each ``{name, mode, pick, on, lines}``. Text that is not
-            one is read as a single list of lines.
+        text: A widget value.
 
     Returns:
-        Up to :data:`LIST_LIMIT` lists, every field filled.
+        The array, when the text is a JSON array of one or more objects each with string
+        ``lines``; None for any other text.
+    """
+    if not text.strip().startswith("["):
+        return None
+    try:
+        data = json.loads(text, parse_constant=_no_constant)
+    except ValueError:
+        return None
+    if not isinstance(data, list) or not data:
+        return None
+    if not all(isinstance(entry, dict) and isinstance(entry.get("lines"), str) for entry in data):
+        return None
+    return data
+
+
+def read_lists(value: str) -> list[dict]:
+    """The lists a String List holds: plain text for one, JSON for several.
+
+    Args:
+        value: Lines of text, or a JSON array of lists, each ``{name, mode, pick, on, lines}``.
+
+    Returns:
+        Up to :data:`LIST_LIMIT` lists, every field filled. Plain text is one list.
     """
     text = value or ""
-    try:
-        data = json.loads(text, parse_constant=_no_constant) if text.strip() else []
-    except ValueError:
-        return [_one_list(text)]
-    if not isinstance(data, list):
-        return [_one_list(text)]
-    found = (_one_list(entry) for entry in data[:LIST_LIMIT])
-    return [entry for entry in found if entry is not None]
+    data = _stored_lists(text)
+    if data is None:
+        return [_one_list({"lines": text})]
+    return [_one_list(entry) for entry in data[:LIST_LIMIT]]
 
 
 def list_seed(seed: int, index: int) -> int:
@@ -933,12 +1017,21 @@ def list_seed(seed: int, index: int) -> int:
     return (seed + index * GOLDEN) & MASK
 
 
-def list_entries(lists: list[dict], seed: int = 0) -> list[list[str]]:
-    """Each switched-on list's finished prompts, a list in a mode other than ``all`` giving one.
+def list_entries(
+    lists: list[dict],
+    seed: int = 0,
+    skip_blank_lines: bool = True,
+    skip_comment_lines: bool = True,
+    turn: int = 0,
+) -> list[list[str]]:
+    """Each switched-on list's kept lines, trimmed; a list in a mode other than ``all`` gives one.
 
     Args:
         lists: From :func:`read_lists`.
         seed: The node's seed.
+        skip_blank_lines: Leave out empty lines rather than giving each as ``""``.
+        skip_comment_lines: Leave out notes rather than giving each as written.
+        turn: How many turns on every list and line that takes turns stands.
 
     Returns:
         One list of entries per switched-on list, in order. Terms from any list reach every list.
@@ -949,30 +1042,65 @@ def list_entries(lists: list[dict], seed: int = 0) -> list[list[str]]:
     terms: dict = {}
     for entry, own in texts:
         lines = classify(entry["lines"])
-        terms.update(glossary(lines, group_lines(lines), own))
+        terms.update(glossary(lines, group_lines(lines), own, turn))
     found = []
     for entry, own in texts:
         items = [
-            line.strip() for kind, line in resolve(entry["lines"], own, terms) if kind == PROMPT and line.strip()
+            line.strip()
+            for kind, line in resolve(entry["lines"], own, terms, turn)
+            if handed_on(kind, skip_blank_lines, skip_comment_lines)
         ]
         if entry["mode"] != ALL and items:
-            items = [items[(entry["pick"] - 1) % len(items)]]
+            count = len(items)
+            at = _turning((entry["pick"] - 1) % count, entry["mode"], turn, count, stream(own, TURN_DRAW - 1))
+            items = [items[at]]
         found.append(items)
     return found
 
 
-def combine(lists: list[list[str]], how: str = CYCLE, join_with: str = "comma") -> list[str]:
-    """Put several lists together into one, each entry taking one line from every list.
+def precompiled(
+    lists: list[dict],
+    seed: int = 0,
+    count: int = 1,
+    skip_blank_lines: bool = True,
+    skip_comment_lines: bool = True,
+    join_with: str = "comma",
+) -> list[str]:
+    """Strings made from the lists, each joined whole, each a turn on from the one before.
 
     Args:
-        lists: The lists, in the order their lines are joined. An empty one is left out.
-        how: :data:`CYCLE` = entry ``i`` takes line ``i`` of each list, a shorter list starting
-            over, as many entries as the longest list; :data:`EVERY` = every combination, the
-            last list changing fastest.
+        lists: From :func:`read_lists`.
+        seed: The node's seed; string ``k`` draws its choices from ``seed + k``.
+        count: How many strings, at most :data:`ITEM_LIMIT`.
+        skip_blank_lines: Leave out empty lines.
+        skip_comment_lines: Leave out notes.
         join_with: A key of :data:`JOINS`.
 
     Returns:
-        The entries.
+        The strings in order, the first as the lists stand now; an empty one is left out.
+
+    Raises:
+        ValueError: ``join_with`` is not a key of :data:`JOINS`.
+    """
+    strings = []
+    for turn in range(max(1, min(count, ITEM_LIMIT))):
+        found = list_entries(lists, (seed + turn) & MASK, skip_blank_lines, skip_comment_lines, turn)
+        strings.extend(combine(found, PRECOMPILE, join_with))
+    return strings
+
+
+def combine(lists: list[list[str]], how: str = CONCATENATE, join_with: str = "comma") -> list[str]:
+    """Put several lists together into one.
+
+    Args:
+        lists: The lists, in order. An empty one is left out.
+        how: :data:`CONCATENATE` = every list's lines one after another; :data:`PRECOMPILE` =
+            every line of every list joined into one string; :data:`EVERY` = every combination
+            joined, the last list changing fastest, one list alone handed on as it is.
+        join_with: A key of :data:`JOINS`, for the two that join.
+
+    Returns:
+        The entries; for :data:`PRECOMPILE` one string, or none when it would be empty.
 
     Raises:
         ValueError: ``how`` is not one of :data:`COMBINES`, ``join_with`` is not a key of
@@ -983,12 +1111,12 @@ def combine(lists: list[list[str]], how: str = CYCLE, join_with: str = "comma") 
     if join_with not in JOINS:
         raise ValueError(f"join_with is {join_with!r}; it takes one of {', '.join(JOINS)}.")
     lists = [entries for entries in lists if entries]
-    if not lists:
-        return []
-    if how == CYCLE:
-        longest = max(len(entries) for entries in lists)
-        rows = [[entries[index % len(entries)] for entries in lists] for index in range(longest)]
-        return [join_parts(row, join_with) for row in rows]
+    flat = [entry for entries in lists for entry in entries]
+    if how == PRECOMPILE:
+        joined = join_parts(flat, join_with)
+        return [joined] if joined else []
+    if how == CONCATENATE or len(lists) < 2:
+        return flat
     total = 1
     for entries in lists:
         total *= len(entries)
@@ -997,7 +1125,7 @@ def combine(lists: list[list[str]], how: str = CYCLE, join_with: str = "comma") 
         raise ValueError(
             f"Every combination of these lists ({sizes}) makes {total} entries, more than the "
             f"{MAX_COMBINED} one run takes. Switch a list off or shorten one, or set combine "
-            f"to {CYCLE}."
+            f"to {CONCATENATE} or {PRECOMPILE}."
         )
     rows = [[]]
     for entries in lists:

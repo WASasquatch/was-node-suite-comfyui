@@ -6,8 +6,8 @@
  */
 
 import {
-  BLANK, DECREMENT, FIXED, INCREMENT, MODE, OFF_MARK, PICKED_MARK, PROMPT, RANDOM, SECTION, TERM, VERSION,
-  VERSION_MARK, classify, groupLines, listEntries, parseChoices,
+  ALL, BLANK, DECREMENT, FIXED, INCREMENT, MODE, OFF_MARK, PICKED_MARK, PICK_LIMIT, PROMPT, RANDOM, SECTION,
+  TERM, VERSION, VERSION_MARK, classify, groupLines, listEntries, parseChoices, readLists,
 } from "./prompt_lines.js";
 
 // The modes that move on after a run.
@@ -173,11 +173,12 @@ export function addLine(text, heading) {
  * @param {number} at - The position in use now.
  * @param {number} count - How many there are.
  * @param {() => number} random - Draws in `[0, 1)`.
- * @returns {number} The next position: the one after, the one before, or another at random.
+ * @param {number} [steps] - How many turns on, for `INCREMENT` and `DECREMENT`.
+ * @returns {number} The next position: `steps` after, `steps` before, or another at random.
  */
-function nextOf(mode, at, count, random) {
-  if (mode === INCREMENT) return (at + 1) % count;
-  if (mode === DECREMENT) return (at - 1 + count) % count;
+function nextOf(mode, at, count, random, steps = 1) {
+  if (mode === INCREMENT) return (at + steps) % count;
+  if (mode === DECREMENT) return (((at - steps) % count) + count) % count;
   const step = 1 + Math.min(count - 2, Math.floor(random() * (count - 1)));
   return (at + step) % count;
 }
@@ -187,15 +188,17 @@ function nextOf(mode, at, count, random) {
  *
  * @param {string} text - The text.
  * @param {() => number} [random] - Draws in `[0, 1)` for `RANDOM`.
+ * @param {number} [steps] - How many turns the run took.
  * @returns {string} The text with each `>` moved, or as it was when no line takes turns.
  */
-export function advance(text, random = Math.random) {
+export function advance(text, random = Math.random, steps = 1) {
   const all = text.split("\n");
   let changed = false;
   for (const group of groupLines(classify(text))) {
     if (group.off || group.live.length < 2 || !TURNING.includes(group.mode)) continue;
     const at = Math.max(0, group.live.indexOf(group.pick));
-    if (markPick(all, group, group.live[nextOf(group.mode, at, group.live.length, random)])) changed = true;
+    const next = nextOf(group.mode, at, group.live.length, random, steps);
+    if (markPick(all, group, group.live[next])) changed = true;
   }
   return changed ? all.join("\n") : text;
 }
@@ -216,18 +219,27 @@ export function takesTurns(text) {
  *
  * @param {object[]} lists - From `readLists`.
  * @param {number} seed - The node's seed.
+ * @param {{skipBlank?: boolean, skipComments?: boolean}} [kept] - Which lines a list hands on.
  * @param {() => number} [random] - Draws in `[0, 1)` for `RANDOM`.
+ * @param {Set<number>} [wired] - Lists fed by a socket, whose lines are not known here: the next
+ *   one up, the one before down to the first, or any at random.
+ * @param {number} [steps] - How many turns the run took.
  * @returns {object[]} The lists, a new array when anything moved, or the same one.
  */
-export function advanceLists(lists, seed, random = Math.random) {
-  const counts = new Map(listEntries(lists, seed).map((found) => [found.list, found.candidates.length]));
+export function advanceLists(lists, seed, kept = {}, random = Math.random, wired = new Set(), steps = 1) {
+  const counts = lineCounts(lists, seed, kept);
   let changed = false;
   const moved = lists.map((entry, index) => {
-    const lines = entry.on ? advance(entry.lines, random) : entry.lines;
+    const fed = wired.has(index);
+    const lines = entry.on && !fed ? advance(entry.lines, random, steps) : entry.lines;
     const count = counts.get(index) ?? 0;
     let pick = entry.pick;
-    if (entry.on && TURNING.includes(entry.mode) && count > 1) {
-      pick = nextOf(entry.mode, (entry.pick - 1) % count, count, random) + 1;
+    if (entry.on && TURNING.includes(entry.mode) && fed) {
+      if (entry.mode === INCREMENT) pick = ((entry.pick - 1 + steps) % PICK_LIMIT) + 1;
+      else if (entry.mode === DECREMENT) pick = Math.max(1, entry.pick - steps);
+      else pick = 1 + Math.floor(random() * PICK_LIMIT);
+    } else if (entry.on && TURNING.includes(entry.mode) && count > 1) {
+      pick = nextOf(entry.mode, (entry.pick - 1) % count, count, random, steps) + 1;
     }
     if (lines === entry.lines && pick === entry.pick) return entry;
     changed = true;
@@ -241,12 +253,42 @@ export function advanceLists(lists, seed, random = Math.random) {
  *
  * @param {object[]} lists - From `readLists`.
  * @param {number} seed - The node's seed.
+ * @param {{skipBlank?: boolean, skipComments?: boolean}} [kept] - Which lines a list hands on.
+ * @param {Set<number>} [wired] - Lists fed by a socket.
  * @returns {boolean} True when a switched-on list, or a line inside one, has something to move to.
  */
-export function listsTakeTurns(lists, seed) {
-  const counts = new Map(listEntries(lists, seed).map((found) => [found.list, found.candidates.length]));
-  return lists.some((entry, index) => entry.on && ((TURNING.includes(entry.mode) && (counts.get(index) ?? 0) > 1)
-    || takesTurns(entry.lines)));
+export function listsTakeTurns(lists, seed, kept = {}, wired = new Set()) {
+  const counts = lineCounts(lists, seed, kept);
+  return lists.some((entry, index) => entry.on && ((TURNING.includes(entry.mode)
+    && ((counts.get(index) ?? 0) > 1 || wired.has(index))) || (!wired.has(index) && takesTurns(entry.lines))));
+}
+
+/**
+ * How many lines each switched-on list could hand on.
+ *
+ * @param {object[]} lists - From `readLists`.
+ * @param {number} seed - The node's seed.
+ * @param {{skipBlank?: boolean, skipComments?: boolean}} kept - Which lines a list hands on.
+ * @returns {Map<number, number>} List place to count.
+ */
+function lineCounts(lists, seed, kept) {
+  const found = listEntries(lists, seed, kept.skipBlank ?? true, kept.skipComments ?? true);
+  return new Map(found.map((entry) => [entry.list, entry.candidates.length]));
+}
+
+/**
+ * What a String List stores for its lists: one list's lines as plain text, or JSON for anything more.
+ *
+ * @param {object[]} lists - The lists.
+ * @returns {string} The widget value, which `readLists` reads back to the same lists.
+ */
+export function writeLists(lists) {
+  const [first] = lists;
+  if (lists.length === 1 && first.mode === ALL && first.on) {
+    const back = readLists(first.lines);
+    if (back.length === 1 && back[0].lines === first.lines) return first.lines;
+  }
+  return JSON.stringify(lists);
 }
 
 /**

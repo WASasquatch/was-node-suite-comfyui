@@ -1,7 +1,7 @@
 /**
- * Line editor for String List, String List (Sections) and Multiline Text (Advanced).
+ * Line editor for Multiline Text Lists and Multiline Text (Advanced).
  *
- * Each list is a box of coloured lines with switches, versions and hover tools; Sections stacks
+ * Each list is a box of coloured lines with switches, versions and hover tools, stacked when
  * several. Versions and lists that take turns move on after each run.
  */
 
@@ -10,14 +10,15 @@ import { CARD_LOOK, cardChip, cardRule } from "./interface/card.js";
 import { ICON, ICON_SIZE, drawFidelityGlyph } from "./interface/icons.js";
 import {
   addLine, addVersion, advance, advanceLists, groupAt, holdsChoice, leadOf, listsTakeTurns, pickVersion,
-  setMode, switchLine, takesTurns,
+  setMode, switchLine, takesTurns, writeLists,
 } from "./interface/line_edits.js";
+import { growSockets } from "./interface/grow_sockets.js";
 import { captureWheel, wheelPixels } from "./interface/pointer.js";
 import { openPopupMenu } from "./interface/popup_menu.js";
 import {
-  ALL, BLANK, CYCLE, DECREMENT, FIXED, INCREMENT, MAX_COMBINED, MODE, MODES, NOTE, OFF_MARK, PROMPT,
+  ALL, BLANK, CONCATENATE, DECREMENT, FIXED, INCREMENT, ITEM_LIMIT, LIST_LIMIT, MAX_COMBINED, MODE, MODES, NOTE, OFF_MARK, PRECOMPILE, PROMPT,
   RANDOM, REFERENCE, SECTION, TERM, VERSION, classify, combine, glossary, groupLines, handedOn,
-  hiddenLines, joinLines, listEntries, listLines, listSeed, parseChoices, readLists, resolve,
+  hiddenLines, joinLines, listEntries, listLines, listSeed, parseChoices, precompiled, readLists, resolve,
 } from "./interface/prompt_lines.js";
 import { withGraphChange } from "./interface/region.js";
 import { watchSurfaceRatio } from "./interface/resolution.js";
@@ -32,29 +33,28 @@ const SETTING_ID = "WAS.LineEditor.ShowInterface";
 const CONTROL_MODE_SETTING = "Comfy.WidgetControlMode";
 
 const WIRE_INPUT = "text";
+
+// The socket feeding each list of String List, in list order.
+const TEXT_SOCKETS = [WIRE_INPUT, ...Array.from({ length: 15 }, (_, index) => `text_${index + 2}`)];
 const BLANK_WIDGET = "skip_blank_lines";
 const COMMENT_WIDGET = "skip_comment_lines";
 const JOIN_WIDGET = "join_with";
 const COMBINE_WIDGET = "combine";
 const SEED_WIDGET = "seed";
+const ITEMS_WIDGET = "num_items";
 
 // The nodes this draws on: the widget holding the text, what a kept line is called, the schema's
 // blank-line default, whether kept lines are numbered, what the node hands on, and what the panel
 // says over no lines.
 const NODES = {
   WASStringList: {
-    text: "lines", one: "entry", many: "entries", skipBlank: true, numbered: true, output: "list",
+    text: "lines", one: "entry", many: "entries", skipBlank: true, numbered: true, output: "lists",
     hint: "One prompt per line · ~ switches a line off · # starts a note · ? lists the rest",
     all: "Every version, each its own entry",
   },
   WASMultilineTextAdvanced: {
     text: "lines", one: "line kept", many: "lines kept", skipBlank: false, numbered: false, output: "joined",
     hint: "One part per line · ~ switches a line off · # starts a note · ? lists the rest",
-    all: "Every version, each its own line",
-  },
-  WASStringListSections: {
-    text: "lists", one: "entry", many: "entries", skipBlank: true, numbered: true, output: "lists",
-    hint: "Type or paste one line per item",
     all: "Every version, each its own line",
   },
 };
@@ -164,6 +164,7 @@ const PLUS_PATHS = ["M8 3.5v9", "M3.5 8h9"];
 const DONE_PATHS = ["M3.5 8.5l3 3 6-7"];
 const REMOVE_PATHS = ["M4.5 4.5l7 7", "M11.5 4.5l-7 7"];
 const UP_PATHS = ["M8 12.5v-9", "M4.5 7l3.5-3.5 3.5 3.5"];
+const RESET_PATHS = ["M3.6 6.2a4.6 4.6 0 1 1 .3 4.3", "M3.2 2.8v3.6h3.6"];
 const DOWN_PATHS = ["M8 3.5v9", "M4.5 9l3.5 3.5 3.5-3.5"];
 
 /**
@@ -213,6 +214,17 @@ function readSwitch(node, name, fallback) {
 function readName(node, name, fallback) {
   const value = findWidget(node, name)?.value;
   return typeof value === "string" ? value : fallback;
+}
+
+/**
+ * Read how many strings a precompiled list makes.
+ *
+ * @param {object} node - Node holding it.
+ * @returns {number} The count, from 1 to `ITEM_LIMIT`.
+ */
+function readItems(node) {
+  const value = Math.floor(Number(findWidget(node, ITEMS_WIDGET)?.value));
+  return Number.isFinite(value) ? Math.max(1, Math.min(ITEM_LIMIT, value)) : 1;
 }
 
 /**
@@ -760,7 +772,11 @@ function createLineBox(host) {
     openModeMenu(element, "Versions", modes.map((mode) => [mode, MODE_NAMES[mode], MODE_HINTS[mode] ?? all]),
       found.group.mode, (mode) => applyText(setMode(box.value, index, mode)));
   });
-  tools.append(copyButton, addButton, modeButton);
+  const resetButton = toolButton(icon(RESET_PATHS), "Start over", () => {
+    const head = state[hovered]?.head ?? -1;
+    if (head >= 0) applyText(pickVersion(box.value, head));
+  });
+  tools.append(copyButton, addButton, modeButton, resetButton);
 
   /**
    * Hide the hover tools.
@@ -791,6 +807,7 @@ function createLineBox(host) {
     addButton.title = spot.heading ? "Add a line" : "Add a version";
     modeButton.style.display = spot.mode ? "" : "none";
     if (spot.mode) modeLabel.textContent = `${MODE_NAMES[spot.mode]} ▾`;
+    resetButton.style.display = spot.mode === INCREMENT || spot.mode === DECREMENT ? "" : "none";
     tools.style.display = "flex";
     tools.style.top = `${rows[index].row.offsetTop + 2}px`;
   };
@@ -860,7 +877,7 @@ function createLineBox(host) {
       group.versions.forEach((line, position) => place.set(line, { group, position, colour }));
     }
 
-    // Entry numbers, the prompts a list could hand on, and how many sit under each heading.
+    // Entry numbers, the lines a list could hand on, and how many sit under each heading.
     const numberAt = new Map();
     const candidates = [];
     const underHeading = new Map();
@@ -872,16 +889,10 @@ function createLineBox(host) {
         underHeading.set(heading, 0);
         continue;
       }
-      const prompt = item.kind === PROMPT && Boolean(item.text.trim());
-      if (prompt) {
-        candidates.push(item.line);
-        if (heading >= 0) underHeading.set(heading, underHeading.get(heading) + 1);
-      }
-      const kept = context.numbering === "items"
-        ? prompt
-        : handedOn(item.kind, skipBlank, skipComments) && !(context.joined && item.kind === BLANK);
-      if (!kept) continue;
+      if (!handedOn(item.kind, skipBlank, skipComments) || (context.joined && item.kind === BLANK)) continue;
       entries += 1;
+      candidates.push(item.line);
+      if (heading >= 0) underHeading.set(heading, underHeading.get(heading) + 1);
       if (context.numbering !== "none") numberAt.set(item.line, entries);
     }
 
@@ -936,7 +947,7 @@ function createLineBox(host) {
         look = NOTE_LOOK;
         if (switchableNote) boxState = "on";
         else glyph = { text: "i", colour: ACCENT, title: "Note, left out" };
-      } else if (kind === BLANK && !skipBlank && context.numbering !== "items") {
+      } else if (kind === BLANK && !skipBlank) {
         look = KEPT_BLANK_LOOK;
       }
       if (under) look = isOff ? OFF_LOOK : HIDDEN_LOOK;
@@ -948,7 +959,7 @@ function createLineBox(host) {
         number = underHeading.get(index) ?? 0;
         numberTitle = `${number} under this heading`;
       } else if (number) {
-        numberTitle = context.numbering === "items" ? `Line ${number} of this list` : `Entry ${number} of the list`;
+        numberTitle = context.several ? `Line ${number} of this list` : `Entry ${number} of the list`;
       }
       paintRow(rows[index], {
         look, runs, rule: kind === SECTION, current: index === current, box: boxState, locked, glyph,
@@ -968,6 +979,7 @@ function createLineBox(host) {
         addable: kind === PROMPT || kind === TERM || kind === VERSION || kind === SECTION,
         heading: kind === SECTION,
         mode: spot && spot.group.versions.length > 1 ? spot.group.mode : null,
+        head: spot ? spot.group.versions[0] : -1,
         pickable,
         position: item?.position ?? -1,
       };
@@ -1414,7 +1426,8 @@ function createEditor(node, setup) {
 }
 
 /**
- * The editor of String List (Sections): a stack of lists, each its own box with a header.
+ * The editor of String List: one box of lines, and a stack of boxes with headers once a list is
+ * added.
  *
  * @param {object} node - The node it draws.
  * @param {object} setup - Its entry in `NODES`.
@@ -1423,7 +1436,12 @@ function createEditor(node, setup) {
  */
 function createListsEditor(node, setup) {
   const widget = () => findWidget(node, setup.text);
-  let lists = readLists(widget()?.value);
+  const wiredAt = (index) => inputLinked(node, TEXT_SOCKETS[index]);
+  const flags = () => ({
+    skipBlank: readSwitch(node, BLANK_WIDGET, setup.skipBlank),
+    skipComments: readSwitch(node, COMMENT_WIDGET, true),
+  });
+  let lists = readLists(normalise(widget()?.value));
   let previewing = false;
   let frame = 0;
   const cards = [];
@@ -1439,17 +1457,29 @@ function createListsEditor(node, setup) {
     },
   });
   const { head, scroller, preview } = shell;
+  const body = document.createElement("div");
+  body.style.cssText = "display:flex;flex-direction:column;min-height:100%;box-sizing:border-box";
   const stack = document.createElement("div");
-  stack.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:6px";
+  stack.style.cssText = "flex:1 1 auto;display:flex;flex-direction:column;min-height:0";
   const addRow = document.createElement("div");
-  addRow.style.cssText = "display:flex;justify-content:center;padding:0 6px 8px";
-  const addButton = button("+ Add list", () => addList(), { kind: "ghost", hint: "A new list under the last", logName: EXT_NAME });
-  addButton.style.padding = "2px 10px";
+  addRow.style.cssText = "flex:none;display:flex;justify-content:center;padding:3px 6px 4px;"
+    + `box-shadow:inset 0 1px 0 ${tint(FG, 10)}`;
+  const addButton = button("+ Add list", () => addList(), {
+    kind: "ghost", hint: "Another list, handed on after this one", logName: EXT_NAME,
+  });
+  addButton.style.padding = "1px 10px";
   addButton.style.fontSize = "11.5px";
   addRow.append(addButton);
-  const body = document.createElement("div");
-  body.append(stack, addRow);
+  body.append(stack);
   scroller.append(body, preview.element);
+  shell.root.append(addRow);
+
+  /**
+   * Whether the lists are one plain list, drawn as String List always was: no header.
+   *
+   * @returns {boolean} True for one switched-on list handing on all its lines.
+   */
+  const plain = () => lists.length === 1 && lists[0].mode === ALL && lists[0].on;
 
   /**
    * Store the lists in the widget.
@@ -1458,8 +1488,8 @@ function createListsEditor(node, setup) {
    */
   const store = () => {
     const target = widget();
-    const value = JSON.stringify(lists);
-    if (!target || target.value === value) return;
+    const value = writeLists(lists);
+    if (!target || normalise(target.value) === value) return;
     target.value = value;
     node.setDirtyCanvas?.(true, true);
   };
@@ -1489,32 +1519,69 @@ function createListsEditor(node, setup) {
    */
   const setList = (index, patch) => {
     if (!lists[index]) return;
+    const wasPlain = plain();
     withGraphChange(() => {
       lists = lists.map((entry, at) => (at === index ? { ...entry, ...patch } : entry));
       store();
     });
-    renderAll();
+    if (wasPlain !== plain()) rebuild();
+    else renderAll();
   };
 
   /**
-   * Change the lists' order or number and draw the cards again.
+   * Move the wires on the lists' sockets so each stays with its list.
+   *
+   * @param {number[]} order - The old place of each list, in its new order.
+   * @returns {void}
+   */
+  const relink = (order) => {
+    const slotOf = (name) => (node.inputs ?? []).findIndex((input) => input.name === name);
+    const held = TEXT_SOCKETS.map((name) => {
+      const slot = slotOf(name);
+      const link = slot >= 0 ? node.getInputLink?.(slot) : null;
+      return link ? { origin: link.origin_id, slot: link.origin_slot } : null;
+    });
+    if (!held.some(Boolean)) {
+      node.__was_fit_sockets?.();
+      return;
+    }
+    TEXT_SOCKETS.forEach((name) => {
+      const slot = slotOf(name);
+      if (slot >= 0 && inputLinked(node, name)) node.disconnectInput(slot);
+    });
+    node.__was_fit_sockets?.();
+    order.forEach((from, to) => {
+      const wire = held[from];
+      const source = wire ? node.graph?.getNodeById(wire.origin) : null;
+      const slot = slotOf(TEXT_SOCKETS[to]);
+      if (source && slot >= 0) source.connect(wire.slot, node, slot);
+    });
+    node.__was_fit_sockets?.();
+  };
+
+  /**
+   * Change the lists' order or number, keep each wire with its list, and draw the cards again.
    *
    * @param {object[]} next - The lists after the change.
+   * @param {number[]} order - The old place of each list in `next`, -1 for a new one.
    * @param {number} [focus] - The list whose box takes the caret after.
    * @returns {void}
    */
-  const reshape = (next, focus = -1) => {
+  const reshape = (next, order, focus = -1) => {
+    if (!next.length || next.length > LIST_LIMIT) return;
     withGraphChange(() => {
       lists = next;
       store();
+      relink(order);
     });
     rebuild();
     if (focus >= 0) cards[focus]?.lines.focus();
   };
 
   const addList = () => {
-    const next = [...lists, { name: `List ${lists.length + 1}`, mode: ALL, pick: 1, on: true, lines: "" }];
-    reshape(next, next.length - 1);
+    const named = lists.map((entry, index) => ({ ...entry, name: entry.name || `List ${index + 1}` }));
+    const next = [...named, { name: `List ${lists.length + 1}`, mode: ALL, pick: 1, start: 1, on: true, lines: "" }];
+    reshape(next, [...lists.keys(), -1], next.length - 1);
   };
 
   /**
@@ -1525,8 +1592,6 @@ function createListsEditor(node, setup) {
    */
   const createCard = (index) => {
     const card = document.createElement("div");
-    card.style.cssText = `border-radius:6px;overflow:hidden;background:${tint(FG, 3)};`
-      + `box-shadow:0 0 0 1px ${tint(FG, 12)}`;
     const header = document.createElement("div");
     header.style.cssText = "display:flex;align-items:center;gap:4px;min-width:0;padding:3px 4px 3px 8px;"
       + `background:${tint(FG, 7)};box-shadow:inset 0 -1px 0 ${tint(DEEP, 55)}`;
@@ -1557,25 +1622,32 @@ function createListsEditor(node, setup) {
     const modeLabel = document.createElement("span");
     const mode = toolButton(modeLabel, "What this list hands on", (element) => {
       openModeMenu(element, "This list hands on", LIST_MODES.map((choice) => [choice, LIST_NAMES[choice], LIST_HINTS[choice]]),
-        lists[index]?.mode, (choice) => setList(index, { mode: choice }));
+        lists[index]?.mode, (choice) => setList(index, { mode: choice, start: lists[index]?.pick ?? 1 }));
     });
     mode.style.color = FG;
+    const reset = toolButton(icon(RESET_PATHS), "Start over", () => {
+      if (lists[index]) setList(index, { pick: lists[index].start });
+    });
+    const swapped = (at) => {
+      const order = [...lists.keys()];
+      [order[at], order[at + 1]] = [order[at + 1], order[at]];
+      return order;
+    };
     const up = toolButton(icon(UP_PATHS), "Move up", () => {
       if (index < 1) return;
-      const next = [...lists];
-      [next[index - 1], next[index]] = [next[index], next[index - 1]];
-      reshape(next);
+      const order = swapped(index - 1);
+      reshape(order.map((from) => lists[from]), order);
     });
     const down = toolButton(icon(DOWN_PATHS), "Move down", () => {
       if (index >= lists.length - 1) return;
-      const next = [...lists];
-      [next[index + 1], next[index]] = [next[index], next[index + 1]];
-      reshape(next);
+      const order = swapped(index);
+      reshape(order.map((from) => lists[from]), order);
     });
     const remove = toolButton(icon(REMOVE_PATHS), "Remove this list", () => {
-      reshape(lists.filter((_, at) => at !== index));
+      const order = [...lists.keys()].filter((at) => at !== index);
+      reshape(order.map((from) => lists[from]), order);
     });
-    header.append(toggle, name, count, mode, up, down, remove);
+    header.append(toggle, name, count, mode, reset, up, down, remove);
     header.addEventListener("contextmenu", (event) => event.preventDefault());
 
     let stats = null;
@@ -1587,16 +1659,20 @@ function createListsEditor(node, setup) {
         store();
         for (const other of cards) if (other.index !== index) other.lines.schedule();
       },
-      locked: () => false,
+      locked: () => wiredAt(index),
       context: () => ({
         seed: listSeed(readSeed(node), index),
-        skipBlank: true,
-        skipComments: true,
+        ...flags(),
         terms: sharedTerms(),
-        numbering: "items",
+        numbering: "entries",
         joined: false,
-        pick: { mode: lists[index]?.mode ?? ALL, pick: lists[index]?.pick ?? 1, onPick: (pick) => setList(index, { pick }) },
+        pick: {
+          mode: lists[index]?.mode ?? ALL,
+          pick: lists[index]?.pick ?? 1,
+          onPick: (pick) => setList(index, { pick, start: pick }),
+        },
         all: setup.all,
+        several: lists.length > 1,
       }),
       scroller,
       hint: setup.hint,
@@ -1610,23 +1686,37 @@ function createListsEditor(node, setup) {
     card.append(header, lines.element);
 
     /**
-     * Write the header from the list and what its box counted.
+     * Write the header from the list and what its box counted, and draw the card as one plain
+     * list or as one of several.
      *
      * @returns {void}
      */
     const paintHeader = () => {
       const entry = lists[index];
       if (!entry) return;
+      const alone = plain();
+      card.style.cssText = alone
+        ? "flex:1 1 auto;display:flex;flex-direction:column;min-height:0"
+        : `flex:none;margin:6px 6px 0;border-radius:6px;overflow:hidden;background:${tint(FG, 3)};`
+          + `box-shadow:0 0 0 1px ${tint(FG, 12)}`;
+      lines.element.style.flex = alone ? "1 1 auto" : "none";
+      header.style.display = alone ? "none" : "flex";
       toggle.checked = entry.on;
       if (document.activeElement !== name) name.value = entry.name;
-      const total = stats?.candidates ?? 0;
-      count.textContent = entry.mode === ALL || !total
-        ? `${total} ${total === 1 ? "line" : "lines"}`
-        : `${((entry.pick - 1) % total) + 1} of ${total}`;
+      const total = stats?.entries ?? 0;
+      if (wiredAt(index)) {
+        count.textContent = entry.mode === ALL ? "wired" : `wired, line ${entry.pick}`;
+      } else {
+        count.textContent = entry.mode === ALL || !total
+          ? `${total} ${total === 1 ? "line" : "lines"}`
+          : `${((entry.pick - 1) % total) + 1} of ${total}`;
+      }
       modeLabel.textContent = `${LIST_NAMES[entry.mode]} ▾`;
-      lines.element.style.opacity = entry.on ? "1" : "0.45";
+      reset.style.display = entry.mode === INCREMENT || entry.mode === DECREMENT ? "" : "none";
+      lines.element.style.opacity = entry.on ? "" : "0.45";
       up.style.visibility = index > 0 ? "visible" : "hidden";
       down.style.visibility = index < lists.length - 1 ? "visible" : "hidden";
+      remove.style.visibility = lists.length > 1 ? "visible" : "hidden";
     };
 
     return { index, element: card, lines, paintHeader, stats: () => stats };
@@ -1668,46 +1758,77 @@ function createListsEditor(node, setup) {
     cancelAnimationFrame(frame);
     frame = 0;
     foldTextBox(node, setup.text);
+    const several = lists.length > 1;
+    const how = readName(node, COMBINE_WIDGET, CONCATENATE);
+    const compiled = how === PRECOMPILE;
+    const joinWith = readName(node, JOIN_WIDGET, "comma");
+    let folded = setWidgetHidden(findWidget(node, JOIN_WIDGET), how === CONCATENATE);
+    folded = setWidgetHidden(findWidget(node, ITEMS_WIDGET), !compiled) || folded;
+    if (folded) node.setDirtyCanvas?.(true, true);
+    const fed = new Set(lists.map((_, index) => index).filter((index) => wiredAt(index)));
+    const wiredOn = lists.filter((entry, index) => entry.on && fed.has(index)).length;
     const seed = readSeed(node);
-    const found = listEntries(lists, seed);
-    const output = combine(found.map((entry) => entry.entries), readName(node, COMBINE_WIDGET, CYCLE),
-      readName(node, JOIN_WIDGET, "comma"));
+    const { skipBlank, skipComments } = flags();
+    const found = listEntries(lists, seed, skipBlank, skipComments);
+    const output = compiled
+      ? precompiled(lists, seed, readItems(node), skipBlank, skipComments, joinWith)
+      : combine(found.map((entry) => entry.entries), how, joinWith);
     const over = output === null;
     const entries = over ? [] : output;
     const unknown = new Set();
     let terms = 0;
+    let off = 0;
+    let notes = 0;
     let choices = false;
     let turns = false;
     for (const card of cards) {
       const stats = card.stats();
-      if (!stats || !lists[card.index]?.on) continue;
+      if (!stats || !lists[card.index]?.on || fed.has(card.index)) continue;
       for (const name of stats.unknown) unknown.add(name);
       terms += stats.terms;
+      off += stats.off;
+      notes += stats.notes;
       choices ||= stats.choices;
       turns ||= stats.turns;
     }
-    const on = lists.filter((entry) => entry.on).length;
-    const parts = [[entries.length, ` ${entries.length === 1 ? setup.one : setup.many}`],
-      [on, on === 1 ? " list" : " lists"]];
-    if (terms) parts.push([terms, terms === 1 ? " term" : " terms"]);
-    const title = lists.map((entry, index) => {
-      const size = found.find((item) => item.list === index)?.candidates.length ?? 0;
-      const name = entry.name || `List ${index + 1}`;
-      return `${name}: ${entry.on ? `${LIST_NAMES[entry.mode]}, ${size} ${size === 1 ? "line" : "lines"}` : "off"}`;
-    }).join("\n");
+    const plural = (count, one, many) => (count === 1 ? one : many);
+    const noun = compiled ? [" string", " strings"] : [` ${setup.one}`, ` ${setup.many}`];
+    const parts = wiredOn ? [] : [[entries.length, plural(entries.length, ...noun)]];
+    if (several) {
+      const on = lists.filter((entry) => entry.on).length;
+      parts.push([on, plural(on, " list", " lists")]);
+    }
+    if (wiredOn) parts.push([wiredOn, " wired"]);
+    if (terms) parts.push([terms, plural(terms, " term", " terms")]);
+    if (off) parts.push([off, " off"]);
+    if (notes) parts.push([notes, plural(notes, " note", " notes")]);
+    const title = several
+      ? lists.map((entry, index) => {
+        const size = found.find((item) => item.list === index)?.candidates.length ?? 0;
+        const label = entry.name || `List ${index + 1}`;
+        const lines = fed.has(index) ? "wired" : `${size} ${plural(size, "line", "lines")}`;
+        return `${label}: ${entry.on ? `${LIST_NAMES[entry.mode]}, ${lines}` : "off"}`;
+      }).join("\n")
+      : "";
     head.paint({
-      wired: false, text: lists.some((entry) => entry.lines), parts, title, over, empty: !entries.length,
-      emptyChip: "nothing to hand on", unknown,
+      wired: !several && wiredOn > 0, text: lists.some((entry) => entry.lines) || wiredOn > 0, parts, title, over,
+      empty: !wiredOn && !entries.length, emptyChip: "nothing to hand on", unknown,
     });
     head.drawButton.style.display = choices ? "" : "none";
     head.viewButton.textContent = previewing ? "Edit" : "Preview";
-    body.style.display = previewing ? "none" : "";
-    preview.element.style.display = previewing ? "block" : "none";
-    if (!previewing) {
+    head.viewButton.disabled = wiredOn > 0;
+    head.viewButton.style.opacity = wiredOn > 0 ? "0.45" : "1";
+    head.viewButton.title = wiredOn > 0 ? "No preview while wired" : "What the next run gives";
+    addRow.style.display = previewing || lists.length >= LIST_LIMIT ? "none" : "flex";
+    const showPreview = previewing && !wiredOn;
+    body.style.display = showPreview ? "none" : "flex";
+    preview.element.style.display = showPreview ? "block" : "none";
+    if (!showPreview) {
       preview.clear();
       return;
     }
-    const movesFirst = runsBefore() && (listsTakeTurns(lists, seed) || turns || (choices && seedMoves(node)));
+    const kept = { skipBlank, skipComments };
+    const movesFirst = runsBefore() && (listsTakeTurns(lists, seed, kept, fed) || turns || (choices && seedMoves(node)));
     preview.render(entries, previewClaim(entries, movesFirst), choices ? `Next run · seed ${seed}` : "Next run", false);
   };
 
@@ -1727,14 +1848,20 @@ function createListsEditor(node, setup) {
    */
   const sync = () => {
     foldTextBox(node, setup.text);
-    const next = readLists(widget()?.value);
+    const next = readLists(normalise(widget()?.value));
     if (JSON.stringify(next) === JSON.stringify(lists) && cards.length === lists.length) {
+      for (const card of cards) {
+        card.lines.schedule();
+        card.paintHeader();
+      }
       schedulePaint();
       return;
     }
-    const sameShape = next.length === cards.length;
+    const sameShape = next.length === cards.length && (next.length > 1) === (lists.length > 1)
+      && plain() === (next.length === 1 && next[0].mode === ALL && next[0].on);
     lists = next;
     if (!sameShape) {
+      node.__was_fit_sockets?.();
       rebuild();
       return;
     }
@@ -1749,11 +1876,14 @@ function createListsEditor(node, setup) {
 
   return {
     element: shell.root,
-    height: PANEL_HEIGHT + 120,
+    height: PANEL_HEIGHT,
     minWidth: PANEL_WIDTH,
     sync,
     schedule: () => {
-      for (const card of cards) card.lines.schedule();
+      for (const card of cards) {
+        card.lines.schedule();
+        card.paintHeader();
+      }
       schedulePaint();
     },
     refresh: sync,
@@ -1778,16 +1908,30 @@ function attachTurns(node, setup) {
   if (!text || text.__was_line_turns) return;
   text.__was_line_turns = true;
   const several = setup.output === "lists";
+  // One socket per list, drawn as the lists are added; a wired one stays drawn.
+  if (several) {
+    node.__was_fit_sockets = growSockets(node, TEXT_SOCKETS, {
+      minVisible: 1,
+      exactCount: () => readLists(normalise(text.value)).length,
+    });
+  }
+  const fed = () => new Set(TEXT_SOCKETS.map((name, index) => (inputLinked(node, name) ? index : -1))
+    .filter((index) => index >= 0));
   let primed = false;
   const turn = () => {
-    if (inputLinked(node, WIRE_INPUT)) return;
     let next;
     if (several) {
-      const lists = readLists(text.value);
-      const moved = advanceLists(lists, readSeed(node));
+      const lists = readLists(normalise(text.value));
+      const kept = {
+        skipBlank: readSwitch(node, BLANK_WIDGET, setup.skipBlank),
+        skipComments: readSwitch(node, COMMENT_WIDGET, true),
+      };
+      const steps = readName(node, COMBINE_WIDGET, CONCATENATE) === PRECOMPILE ? readItems(node) : 1;
+      const moved = advanceLists(lists, readSeed(node), kept, Math.random, fed(), steps);
       if (moved === lists) return;
-      next = JSON.stringify(moved);
+      next = writeLists(moved);
     } else {
+      if (inputLinked(node, WIRE_INPUT)) return;
       const value = normalise(text.value);
       next = advance(value);
       if (next === value) return;
@@ -1797,9 +1941,10 @@ function attachTurns(node, setup) {
     node.setDirtyCanvas?.(true, true);
   };
   const draws = () => {
-    if (inputLinked(node, WIRE_INPUT)) return false;
-    if (!several) return holdsChoice(normalise(text.value));
-    return readLists(text.value).some((entry) => entry.on && holdsChoice(entry.lines));
+    if (!several) return !inputLinked(node, WIRE_INPUT) && holdsChoice(normalise(text.value));
+    const wired = fed();
+    return readLists(normalise(text.value)).some((entry, index) => entry.on && !wired.has(index)
+      && holdsChoice(entry.lines));
   };
   const before = text.beforeQueued;
   text.beforeQueued = function (...args) {
@@ -1848,7 +1993,7 @@ function attachEditor(node, setup) {
   appendInterfaceWidget(node, panel, { name: UI_WIDGET_NAME, type: UI_WIDGET_TYPE });
 
   chainWidgetCallback(node, setup.text, panel.sync, EXT_NAME);
-  for (const name of [BLANK_WIDGET, COMMENT_WIDGET, JOIN_WIDGET, COMBINE_WIDGET, SEED_WIDGET]) {
+  for (const name of [BLANK_WIDGET, COMMENT_WIDGET, JOIN_WIDGET, COMBINE_WIDGET, SEED_WIDGET, ITEMS_WIDGET]) {
     chainWidgetCallback(node, name, panel.schedule, EXT_NAME);
   }
 
@@ -1896,7 +2041,7 @@ app.registerExtension({
       category: ["WAS Node Suite", "Line Editor", "Editor"],
       name: "Show the line editor",
       tooltip:
-        "Draw the lines of String List, String List (Sections) and Multiline Text (Advanced) in "
+        "Draw the lines of Multiline Text Lists and Multiline Text (Advanced) in "
         + "colour, each with a switch and tools on hover. Off, the plain text box is drawn "
         + "instead and reads the same way. This applies to nodes added after the setting "
         + "changes, so a reload shows it everywhere.",

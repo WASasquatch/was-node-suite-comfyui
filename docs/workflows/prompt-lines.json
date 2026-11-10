@@ -1,8 +1,8 @@
 {
-  "id": "e84e1ac2-e008-4f54-8431-be3eec2a56fe",
+  "id": "06ed54b2-9aae-46df-93af-603fce53580d",
   "revision": 0,
-  "last_node_id": 11,
-  "last_link_id": 7,
+  "last_node_id": 13,
+  "last_link_id": 8,
   "nodes": [
     {
       "id": 1,
@@ -61,6 +61,42 @@
             "name": "seed"
           },
           "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "join_with",
+          "name": "join_with",
+          "type": "COMBO",
+          "widget": {
+            "name": "join_with"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "precompile_list",
+          "name": "precompile_list",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "precompile_list"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_items",
+          "name": "num_items",
+          "type": "INT",
+          "widget": {
+            "name": "num_items"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -95,15 +131,22 @@
         "# Animals at dawn\n$light = {soft rim light|golden backlight|low winter sun}\na red fox asleep in long grass, morning haze, $light\n@increment a heron standing in still water, mist, reeds\n> a heron lifting off the water, wings spread\n| a heron with a fish in its beak\n| a heron preening at sunrise\na snow hare in a birch wood, {fresh snow|frost on every branch}\n~a grey wolf on a ridge at dusk, wind in the fur\n\n== City ==\na rain-soaked neon alley at night, reflections in the puddles\na rooftop garden at dusk, string lights, $light\n~== Ocean ==\na lighthouse in a storm, spray over the rocks",
         true,
         true,
-        868398536,
-        "randomize"
+        1117117126,
+        "fixed",
+        "concatenate",
+        "comma",
+        1
       ],
       "widgets_values_named": {
         "lines": "# Animals at dawn\n$light = {soft rim light|golden backlight|low winter sun}\na red fox asleep in long grass, morning haze, $light\n@increment a heron standing in still water, mist, reeds\n> a heron lifting off the water, wings spread\n| a heron with a fish in its beak\n| a heron preening at sunrise\na snow hare in a birch wood, {fresh snow|frost on every branch}\n~a grey wolf on a ridge at dusk, wind in the fur\n\n== City ==\na rain-soaked neon alley at night, reflections in the puddles\na rooftop garden at dusk, string lights, $light\n~== Ocean ==\na lighthouse in a storm, spray over the rocks",
         "skip_blank_lines": true,
         "skip_comment_lines": true,
-        "seed": 868398536,
-        "control_after_generate": "randomize"
+        "seed": 1117117126,
+        "control_after_generate": "fixed",
+        "combine": "concatenate",
+        "join_with": "comma",
+        "precompile_list": false,
+        "num_items": 1
       }
     },
     {
@@ -118,7 +161,7 @@
         380
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -160,7 +203,7 @@
         170
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -282,16 +325,16 @@
         false,
         true,
         "comma",
-        3551127142,
-        "randomize"
+        2292012473,
+        "fixed"
       ],
       "widgets_values_named": {
         "lines": "// Subject\na red fox curled up in deep snow,\n~wearing a tiny knitted scarf,\n// Light\n@random soft rim light\n| golden hour backlight\n| overcast, diffuse light\n// Style\nshallow depth of field{, film grain|}\n~black and white,\n/* camera notes:\n85mm, f/1.8 */\nmuted colours",
         "skip_blank_lines": false,
         "skip_comment_lines": true,
         "join_with": "comma",
-        "seed": 3551127142,
-        "control_after_generate": "randomize"
+        "seed": 2292012473,
+        "control_after_generate": "fixed"
       }
     },
     {
@@ -306,7 +349,7 @@
         220
       ],
       "flags": {},
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -395,10 +438,10 @@
       ],
       "size": [
         440,
-        392
+        416
       ],
       "flags": {},
-      "order": 7,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -443,6 +486,42 @@
             "name": "seed"
           },
           "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "join_with",
+          "name": "join_with",
+          "type": "COMBO",
+          "widget": {
+            "name": "join_with"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "precompile_list",
+          "name": "precompile_list",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "precompile_list"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_items",
+          "name": "num_items",
+          "type": "INT",
+          "widget": {
+            "name": "num_items"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -476,14 +555,21 @@
         true,
         true,
         0,
-        "randomize"
+        "fixed",
+        "concatenate",
+        "comma",
+        1
       ],
       "widgets_values_named": {
         "lines": "These typed lines are kept, and the wired text is used while the wire is in",
         "skip_blank_lines": true,
         "skip_comment_lines": true,
         "seed": 0,
-        "control_after_generate": "randomize"
+        "control_after_generate": "fixed",
+        "combine": "concatenate",
+        "join_with": "comma",
+        "precompile_list": false,
+        "num_items": 1
       }
     },
     {
@@ -498,7 +584,7 @@
         220
       ],
       "flags": {},
-      "order": 10,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
@@ -530,25 +616,80 @@
     },
     {
       "id": 9,
-      "type": "WASStringListSections",
+      "type": "WASStringList",
       "pos": [
         480,
-        2380
+        2382
       ],
       "size": [
         440,
-        640
+        480
       ],
       "flags": {},
       "order": 3,
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "lists",
-          "name": "lists",
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "text_2",
+          "name": "text_2",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "text_3",
+          "name": "text_3",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "text_4",
+          "name": "text_4",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "lines",
+          "name": "lines",
           "type": "STRING",
           "widget": {
-            "name": "lists"
+            "name": "lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_blank_lines",
+          "name": "skip_blank_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_blank_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_comment_lines",
+          "name": "skip_comment_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_comment_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
           },
           "link": null
         },
@@ -571,11 +712,20 @@
           "link": null
         },
         {
-          "localized_name": "seed",
-          "name": "seed",
+          "localized_name": "precompile_list",
+          "name": "precompile_list",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "precompile_list"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_items",
+          "name": "num_items",
           "type": "INT",
           "widget": {
-            "name": "seed"
+            "name": "num_items"
           },
           "link": null
         }
@@ -600,7 +750,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "WASStringListSections",
+        "Node name for S&R": "WASStringList",
         "was_show_advanced": false,
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -609,18 +759,25 @@
         }
       },
       "widgets_values": [
-        "[{\"name\":\"Style\",\"mode\":\"fixed\",\"pick\":2,\"on\":true,\"lines\":\"watercolour illustration, soft paper texture\\nink and wash, loose brushwork\"},{\"name\":\"Prompts\",\"mode\":\"all\",\"pick\":1,\"on\":true,\"lines\":\"a fox reading under a lamp\\na heron fishing at dawn\\na hare in a field of poppies\\nan owl on a frosted branch\\na deer crossing a stream\"},{\"name\":\"Light\",\"mode\":\"random\",\"pick\":1,\"on\":true,\"lines\":\"golden hour\\nblue hour\\novercast noon\"},{\"name\":\"Background\",\"mode\":\"random\",\"pick\":3,\"on\":true,\"lines\":\"a misty forest\\na snowy village\\na quiet harbour\"}]",
-        "cycle",
-        "comma",
+        "[{\"name\":\"Style\",\"mode\":\"fixed\",\"pick\":2,\"start\":1,\"on\":true,\"lines\":\"watercolour illustration, soft paper texture\\nink and wash, loose brushwork\"},{\"name\":\"Prompts\",\"mode\":\"all\",\"pick\":1,\"start\":1,\"on\":true,\"lines\":\"a fox reading under a lamp\\na heron fishing at dawn\\na hare in a field of poppies\\nan owl on a frosted branch\\na deer crossing a stream\"},{\"name\":\"Light\",\"mode\":\"random\",\"pick\":1,\"start\":1,\"on\":true,\"lines\":\"golden hour\\nblue hour\\novercast noon\"},{\"name\":\"Background\",\"mode\":\"random\",\"pick\":3,\"start\":1,\"on\":true,\"lines\":\"a misty forest\\na snowy village\\na quiet harbour\"}]",
+        true,
+        true,
         0,
-        "randomize"
+        "fixed",
+        "concatenate",
+        "comma",
+        1
       ],
       "widgets_values_named": {
-        "lists": "[{\"name\":\"Style\",\"mode\":\"fixed\",\"pick\":2,\"on\":true,\"lines\":\"watercolour illustration, soft paper texture\\nink and wash, loose brushwork\"},{\"name\":\"Prompts\",\"mode\":\"all\",\"pick\":1,\"on\":true,\"lines\":\"a fox reading under a lamp\\na heron fishing at dawn\\na hare in a field of poppies\\nan owl on a frosted branch\\na deer crossing a stream\"},{\"name\":\"Light\",\"mode\":\"random\",\"pick\":1,\"on\":true,\"lines\":\"golden hour\\nblue hour\\novercast noon\"},{\"name\":\"Background\",\"mode\":\"random\",\"pick\":3,\"on\":true,\"lines\":\"a misty forest\\na snowy village\\na quiet harbour\"}]",
-        "combine": "cycle",
-        "join_with": "comma",
+        "lines": "[{\"name\":\"Style\",\"mode\":\"fixed\",\"pick\":2,\"start\":1,\"on\":true,\"lines\":\"watercolour illustration, soft paper texture\\nink and wash, loose brushwork\"},{\"name\":\"Prompts\",\"mode\":\"all\",\"pick\":1,\"start\":1,\"on\":true,\"lines\":\"a fox reading under a lamp\\na heron fishing at dawn\\na hare in a field of poppies\\nan owl on a frosted branch\\na deer crossing a stream\"},{\"name\":\"Light\",\"mode\":\"random\",\"pick\":1,\"start\":1,\"on\":true,\"lines\":\"golden hour\\nblue hour\\novercast noon\"},{\"name\":\"Background\",\"mode\":\"random\",\"pick\":3,\"start\":1,\"on\":true,\"lines\":\"a misty forest\\na snowy village\\na quiet harbour\"}]",
+        "skip_blank_lines": true,
+        "skip_comment_lines": true,
         "seed": 0,
-        "control_after_generate": "randomize"
+        "control_after_generate": "fixed",
+        "combine": "concatenate",
+        "join_with": "comma",
+        "precompile_list": false,
+        "num_items": 1
       }
     },
     {
@@ -628,14 +785,14 @@
       "type": "WASDisplayAny",
       "pos": [
         1000,
-        2380
+        2382
       ],
       "size": [
         440,
         380
       ],
       "flags": {},
-      "order": 8,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -670,14 +827,14 @@
       "type": "WASDisplayAny",
       "pos": [
         1000,
-        2850
+        2852
       ],
       "size": [
         440,
         170
       ],
       "flags": {},
-      "order": 9,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
@@ -693,6 +850,212 @@
           "name": "value",
           "shape": 6,
           "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASDisplayAny",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 12,
+      "type": "WASStringList",
+      "pos": [
+        480,
+        3332
+      ],
+      "size": [
+        440,
+        480
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "text_2",
+          "name": "text_2",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "text_3",
+          "name": "text_3",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "text_4",
+          "name": "text_4",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "lines",
+          "name": "lines",
+          "type": "STRING",
+          "widget": {
+            "name": "lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_blank_lines",
+          "name": "skip_blank_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_blank_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skip_comment_lines",
+          "name": "skip_comment_lines",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "skip_comment_lines"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "join_with",
+          "name": "join_with",
+          "type": "COMBO",
+          "widget": {
+            "name": "join_with"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "precompile_list",
+          "name": "precompile_list",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "precompile_list"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_items",
+          "name": "num_items",
+          "type": "INT",
+          "widget": {
+            "name": "num_items"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "strings",
+          "name": "strings",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            8
+          ]
+        },
+        {
+          "localized_name": "count",
+          "name": "count",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASStringList",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "[{\"name\":\"Style\",\"mode\":\"fixed\",\"pick\":1,\"start\":1,\"on\":true,\"lines\":\"watercolour illustration, soft paper texture\\nink and wash, loose brushwork\"},{\"name\":\"Subject\",\"mode\":\"random\",\"pick\":2,\"start\":1,\"on\":true,\"lines\":\"a fox reading under a lamp\\na heron fishing at dawn\\na hare in a field of poppies\\nan owl on a frosted branch\"},{\"name\":\"Light\",\"mode\":\"increment\",\"pick\":2,\"start\":1,\"on\":true,\"lines\":\"golden hour\\nblue hour\\novercast noon\"},{\"name\":\"Background\",\"mode\":\"random\",\"pick\":3,\"start\":1,\"on\":true,\"lines\":\"a {misty|frozen} forest\\na snowy village\\na quiet harbour\"}]",
+        true,
+        true,
+        0,
+        "fixed",
+        "precompile",
+        "comma",
+        4
+      ],
+      "widgets_values_named": {
+        "lines": "[{\"name\":\"Style\",\"mode\":\"fixed\",\"pick\":1,\"start\":1,\"on\":true,\"lines\":\"watercolour illustration, soft paper texture\\nink and wash, loose brushwork\"},{\"name\":\"Subject\",\"mode\":\"random\",\"pick\":2,\"start\":1,\"on\":true,\"lines\":\"a fox reading under a lamp\\na heron fishing at dawn\\na hare in a field of poppies\\nan owl on a frosted branch\"},{\"name\":\"Light\",\"mode\":\"increment\",\"pick\":2,\"start\":1,\"on\":true,\"lines\":\"golden hour\\nblue hour\\novercast noon\"},{\"name\":\"Background\",\"mode\":\"random\",\"pick\":3,\"start\":1,\"on\":true,\"lines\":\"a {misty|frozen} forest\\na snowy village\\na quiet harbour\"}]",
+        "skip_blank_lines": true,
+        "skip_comment_lines": true,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "combine": "concatenate",
+        "join_with": "comma",
+        "precompile_list": true,
+        "num_items": 4
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASDisplayAny",
+      "pos": [
+        1000,
+        3332
+      ],
+      "size": [
+        440,
+        380
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "*",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "shape": 6,
+          "type": "STRING",
           "links": null
         }
       ],
@@ -764,12 +1127,20 @@
       11,
       0,
       "INT"
+    ],
+    [
+      8,
+      12,
+      0,
+      13,
+      0,
+      "STRING"
     ]
   ],
   "groups": [
     {
       "id": 1,
-      "title": "String List: one entry per line, notes and switched-off lines left out",
+      "title": "Multiline Text Lists: one entry per line, notes and switched-off lines left out",
       "bounding": [
         440,
         -120,
@@ -798,19 +1169,31 @@
         -40,
         1536,
         1520,
-        582
+        606
       ],
       "color": "#3f789e",
       "flags": {}
     },
     {
       "id": 4,
-      "title": "String List (Sections): a style in every entry, the prompts in turn, a random background",
+      "title": "Multiline Text Lists with four lists: a fixed style, every prompt, then a random light and background",
       "bounding": [
         440,
-        2260,
+        2262,
         1040,
         830
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Multiline Text Lists, combine precompile: four whole prompts per run, each a turn on from the last",
+      "bounding": [
+        440,
+        3212,
+        1040,
+        670
       ],
       "color": "#3f789e",
       "flags": {}
@@ -821,7 +1204,7 @@
     "ue_links": [],
     "links_added_by_ue": [],
     "ds": {
-      "scale": 0.45,
+      "scale": 0.4,
       "offset": [
         120,
         200

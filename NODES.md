@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **690** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **689** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-604 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+603 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 448 |
+| [Always loaded](#always-loaded) | always on | 447 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-448 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+447 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -78,7 +78,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Sampling](#was-suitesampling) (34)
 - [WAS Suite/Text](#was-suitetext) (13)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
-- [WAS Suite/Text/List](#was-suitetextlist) (13)
+- [WAS Suite/Text/List](#was-suitetextlist) (12)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (7)
 - [WAS Suite/Text/Parse](#was-suitetextparse) (3)
 - [WAS Suite/Text/Search](#was-suitetextsearch) (7)
@@ -12211,7 +12211,7 @@ Write a prompt one part per line and hand on the kept lines as one text, joined 
 | `skip_blank_lines` | `BOOLEAN` | Yes | False |  | `off` = empty lines stay as paragraph breaks when joined by line breaks; `on` = they are left out. Joined by spaces or commas, empty lines are always left out. |
 | `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes (#, // and /* */ lines) are left out; `off` = each note line is kept as written, marker included. |
 | `join_with` | `COMBO` | Yes | line break | `line break`, `space`, `comma` | `line break` = lines as written, indents kept; `space` = one line of text; `comma` = a tag prompt, `red fox,` and `snow` giving `red fox, snow`. |
-| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same text. A new seed is drawn after a run only while a line holds a choice. |
+| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same text. The control starts `fixed`; `randomize` draws again after each run while a line holds a choice. |
 | `text` | `STRING` | No |  |  | A STRING to use instead of the typed lines, such as `a fox\na heron`, read the same way. Unwired, the typed lines are used. |
 
 **Outputs**
@@ -12751,9 +12751,9 @@ Merge two to 24 dictionaries into one. Keys present in more than one input take 
 
 <a id="node-wasstringlist"></a>
 <details>
-<summary><b>String List</b></summary>
+<summary><b>Multiline Text Lists</b></summary>
 
-Type one prompt per line and hand them on as a STRING list, so everything downstream runs once per line. Lines can be switched off, kept as notes, grouped under == headings, given versions that take turns between runs, and use $terms and {a\|b} choices.
+Type one prompt per line and hand them on as a STRING list, so everything downstream runs once per line. Lines can be switched off, kept as notes, given versions and use $terms and {a\|b} choices; added lists hand on after the first, or everything joins into single strings.
 
 | | |
 |---|---|
@@ -12763,45 +12763,35 @@ Type one prompt per line and hand them on as a STRING list, so everything downst
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `lines` | `STRING` | Yes |  |  | One entry per line. `~` switches a line off, `#` starts a note, `== name` a heading, `\| text` a version of the line above, `$name = value` a term; `{a\|b}` draws one option. Ignored while a STRING is wired into text. |
+| `lines` | `STRING` | Yes |  |  | One entry per line: `~` switches a line off, `#` starts a note, `\| text` adds a version, `$name = value` a term, `{a\|b}` one option. Several lists are kept as JSON. Ignored while text is wired. |
 | `skip_blank_lines` | `BOOLEAN` | Yes | True |  | `on` = empty lines are left out; `off` = each empty line is an empty entry, for a list whose positions have to line up with another list's. |
 | `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes (#, // and /* */ lines) are left out; `off` = each note line is handed on as written, marker included. |
-| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same entries. A new seed is drawn after a run only while a line holds a choice. |
-| `text` | `STRING` | No |  |  | A STRING to use instead of the typed lines, such as `a fox\na heron`, read the same way. Unwired, the typed lines are used. |
+| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same entries. The control starts `fixed`; `randomize` draws again after each run while a line holds a choice. |
+| `combine` | `COMBO` | Yes | concatenate | `concatenate`, `precompile`, `every combination` | `concatenate` = one entry per line, the lists one after another; `precompile` = every line joined into one string, `num_items` of them; `every combination` = each line joined with every line of the other lists, up to `10000`. |
+| `join_with` | `COMBO` | Yes | comma | `comma`, `space`, `line break` | How `precompile` and `every combination` join lines: `comma` = `watercolour, a fox, snow`; `space` = one line with spaces; `line break` = one line each. |
+| `num_items` | `INT` | Yes | 1 |  | With `precompile`, how many strings to make, as a list: `10` = ten strings, each a turn on, so stepped and random lists and `{a\|b}` choices change between them. |
+| `text` | `STRING` | No |  |  | A STRING used instead of the first list's typed lines, such as `a fox\na heron`, read the same way. Unwired, the typed lines are used. |
+| `text_2` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_3` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_4` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_5` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_6` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_7` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_8` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_9` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_10` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_11` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_12` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_13` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_14` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_15` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
+| `text_16` | `STRING` | No |  |  | A STRING used instead of one added list's typed lines, `text_2` for list 2 and on, such as `a fox\na heron`, read the same way. Shown once that list is added. |
 
 **Outputs**
 
 | Name | Type | What it is |
 |---|---|---|
 | `strings` | `STRING` | One entry per line as a STRING list: a node reading it runs once per entry, so wired into a prompt it renders each line in turn. A list with nothing in it stops the prompt. |
-| `count` | `INT` | How many entries the list holds. |
-
-</details>
-
-<a id="node-wasstringlistsections"></a>
-<details>
-<summary><b>String List (Sections)</b></summary>
-
-Type or paste several lists, each in its own box, such as a style, the prompts and the backgrounds, and hand on one STRING per entry with a line from each list joined. A shorter list starts over, and a list can give one fixed, stepped or random line every run.
-
-| | |
-|---|---|
-| Node id | `WASStringListSections` |
-
-**Inputs**
-
-| Name | Type | Required | Default | Choices | What it does |
-|---|---|---|---|---|---|
-| `lists` | `STRING` | Yes | [{"name": "List 1", "mode": "all", "pick": 1, "on": true, "lines": ""}] |  | The lists as JSON, each `{"name": "Style", "mode": "all", "pick": 1, "on": true, "lines": "watercolour\nink"}`; mode is `all`, `fixed`, `increment`, `decrement` or `random`. Plain text is read as one list. |
-| `combine` | `COMBO` | Yes | cycle | `cycle`, `every combination` | `cycle` = entry 1 takes line 1 of each list, a shorter list starting over, as many entries as the longest list; `every combination` = each line with every line of the other lists, up to `10000` entries. |
-| `join_with` | `COMBO` | Yes | comma | `comma`, `space`, `line break` | How one entry's lines are joined: `comma` = `watercolour, a fox, snow`; `space` = one line with spaces; `line break` = one line each. |
-| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lists give the same entries. A new seed is drawn after a run only while a line holds a choice. |
-
-**Outputs**
-
-| Name | Type | What it is |
-|---|---|---|
-| `strings` | `STRING` | One entry per line of the longest list, or per combination, as a STRING list: a node reading it runs once per entry. A list with nothing in it stops the prompt. |
 | `count` | `INT` | How many entries the list holds. |
 
 </details>
