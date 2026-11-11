@@ -595,6 +595,12 @@ class ImageSave(io.ComfyNode):
 
         del show_history_by_prefix
         output_dir = folder_paths.get_output_directory()
+
+        # Ensure tokens are expanded even if plan_batch was called directly
+        if filename_prefix and "[" in str(filename_prefix):
+            from ...modules.state.tokens import TextTokens
+            filename_prefix = TextTokens().parseTokens(str(filename_prefix))
+
         # The prefix's folders resolve below the chosen root, and the name below them.
         wanted = (filename_prefix or "").replace("\\", "/")
         below, _, leaf = wanted.rpartition("/")
@@ -605,6 +611,7 @@ class ImageSave(io.ComfyNode):
             named, base, images[0].shape[1], images[0].shape[0]
         )
         destination = sandbox.resolve_save(full_output_folder)
+        os.makedirs(str(destination), exist_ok=True)
         prefix = resolved if leaf else ""
 
         if extension not in depths.FORMATS:

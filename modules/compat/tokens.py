@@ -128,6 +128,10 @@ def expand(values: Mapping, names) -> dict:
             expanded[name] = [
                 _expand_text(table, item, name) if _expandable(item) else item for item in value
             ]
+        elif isinstance(value, tuple):
+            expanded[name] = tuple(
+                _expand_text(table, item, name) if _expandable(item) else item for item in value
+            )
         else:
             expanded[name] = _expand_text(table, value, name)
     return expanded
@@ -226,8 +230,8 @@ def _expandable(value) -> bool:
 
 
 def _holds_token(value) -> bool:
-    """Is this value, or any item of it when it is a list, a string that could hold a token?"""
-    if isinstance(value, list):
+    """Is this value, or any item of it when it is a list or tuple, a string that could hold a token?"""
+    if isinstance(value, (list, tuple)):
         return any(_expandable(item) for item in value)
     return _expandable(value)
 
