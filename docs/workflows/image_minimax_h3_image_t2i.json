@@ -1,0 +1,3855 @@
+{
+  "id": "6e5d96b7-1687-4e3d-8559-6c3e5468c193",
+  "revision": 0,
+  "last_node_id": 81,
+  "last_link_id": 155,
+  "nodes": [
+    {
+      "id": 23,
+      "type": "b350fbfc-0ff8-4af1-8d09-09f50d84fcaa",
+      "pos": [
+        750,
+        380
+      ],
+      "size": [
+        420,
+        615
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "prompt",
+          "name": "replace",
+          "type": "STRING",
+          "widget": {
+            "name": "replace"
+          },
+          "link": 113
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 111
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 112
+        },
+        {
+          "label": "downsample_megapixels",
+          "name": "megapixels",
+          "type": "FLOAT",
+          "widget": {
+            "name": "megapixels"
+          },
+          "link": null
+        },
+        {
+          "label": "use_h3_sampler",
+          "name": "boolean",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "boolean"
+          },
+          "link": null
+        },
+        {
+          "label": "manual_sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "label": "use_PE",
+          "name": "boolean_1",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "boolean_1"
+          },
+          "link": null
+        },
+        {
+          "label": "PE_LLM_name",
+          "name": "model_name",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        },
+        {
+          "label": "aspect_ratio",
+          "name": "number",
+          "type": "NUMBER,INT,FLOAT",
+          "link": 149
+        },
+        {
+          "label": "megapixels",
+          "name": "number_1",
+          "type": "NUMBER,INT,FLOAT",
+          "link": 155
+        }
+      ],
+      "outputs": [
+        {
+          "label": "base_images",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            57
+          ]
+        },
+        {
+          "label": "downscaled_images",
+          "name": "IMAGE_1",
+          "type": "IMAGE",
+          "links": [
+            85
+          ]
+        }
+      ],
+      "properties": {
+        "previewExposures": [
+          {
+            "name": "$$canvas-image-preview",
+            "sourceNodeId": "7",
+            "sourcePreviewName": "$$canvas-image-preview"
+          },
+          {
+            "name": "$$canvas-image-preview_1",
+            "sourceNodeId": "46",
+            "sourcePreviewName": "$$canvas-image-preview"
+          },
+          {
+            "name": "$$canvas-image-preview_2",
+            "sourceNodeId": "52",
+            "sourcePreviewName": "$$canvas-image-preview"
+          }
+        ],
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "replace": true,
+            "switch": true,
+            "width": true,
+            "height": true,
+            "sampler_name": true,
+            "clip_name_1": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "om_textarea_heights": {
+          "replace": 293
+        }
+      },
+      "widgets_values": [
+        "A homeless cat smokes crack cocaine in an alleyway behind the \"MiniMax Group Inc\" headquarters. ",
+        1337,
+        3104,
+        3104,
+        "MiniMax\\minimax_h3_image_pruned_int8_convrot.safetensors",
+        "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax_h3_image_vae_fp16.safetensors",
+        2,
+        true,
+        "euler",
+        true,
+        "qwen3_32b_w4a8.safetensors"
+      ],
+      "widgets_values_named": {
+        "replace": "A homeless cat smokes crack cocaine in an alleyway behind the \"MiniMax Group Inc\" headquarters. ",
+        "seed": 1337,
+        "width": 3104,
+        "height": 3104,
+        "unet_name": "MiniMax\\minimax_h3_image_pruned_int8_convrot.safetensors",
+        "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "vae_name": "minimax_h3_image_vae_fp16.safetensors",
+        "megapixels": 2,
+        "boolean": true,
+        "sampler_name": "euler",
+        "boolean_1": true,
+        "model_name": "qwen3_32b_w4a8.safetensors"
+      }
+    },
+    {
+      "id": 27,
+      "type": "MarkdownNote",
+      "pos": [
+        404.9468558361168,
+        841.2710031683446
+      ],
+      "size": [
+        304.81720973020947,
+        402
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: size",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "MiniMax H3 Image doesn't work well in low resolution\n\nThis workflow starts at a reduced default resolution(4MP). Raise the size if your GPU has enough memory.\n\n\n## Recommended sizes (16MP)\n\nThe effective working range of MiniMax-H3-Image is about 4 MP to 20 MP, and it generally gives\nthe best results at around 16 MP. Common 16 MP sizes are listed below:\n\n| Aspect ratio | Size (width x height) |\n| --- | --- |\n| 1:1 | 4096x4096 |\n| 4:3 / 3:4 | 4736x3552 / 3552x4736 |\n| 3:2 / 2:3 | 5024x3360 / 3360x5024 |\n| 16:9 / 9:16 | 5472x3072 / 3072x5472 |\n| 21:9 | 6272x2688 |"
+      ],
+      "widgets_values_named": {
+        "text": "MiniMax H3 Image doesn't work well in low resolution\n\nThis workflow starts at a reduced default resolution(4MP). Raise the size if your GPU has enough memory.\n\n\n## Recommended sizes (16MP)\n\nThe effective working range of MiniMax-H3-Image is about 4 MP to 20 MP, and it generally gives\nthe best results at around 16 MP. Common 16 MP sizes are listed below:\n\n| Aspect ratio | Size (width x height) |\n| --- | --- |\n| 1:1 | 4096x4096 |\n| 4:3 / 3:4 | 4736x3552 / 3552x4736 |\n| 3:2 / 2:3 | 5024x3360 / 3360x5024 |\n| 16:9 / 9:16 | 5472x3072 / 3072x5472 |\n| 21:9 | 6272x2688 |"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 28,
+      "type": "MarkdownNote",
+      "pos": [
+        -750.5849142930979,
+        385.7146202480863
+      ],
+      "size": [
+        490,
+        700
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model Links",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MiniMax-H3-Image](https://huggingface.co/Comfy-Org/MiniMax-H3-Image)\n- [Hugging Face:Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n- [Hugging Face:Comfy-Org/Qwen3.8-27B](https://huggingface.co/Comfy-Org/Qwen3.5)\n\n**diffusion_models**\n\n- [minimax_h3_image_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors) (21 GB)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors) (25.28 GB)\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (7.34 GB)\n\n**vae**\n\n- [minimax_h3_image_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors) (1.17 GB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_image_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n│   │   └── qwen3.8_27b_w4a8.safetensors\n│   └── 📂 vae/\n│       └── minimax_h3_image_vae_fp16.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MiniMax-H3-Image](https://huggingface.co/Comfy-Org/MiniMax-H3-Image)\n- [Hugging Face:Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n- [Hugging Face:Comfy-Org/Qwen3.8-27B](https://huggingface.co/Comfy-Org/Qwen3.5)\n\n**diffusion_models**\n\n- [minimax_h3_image_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors) (21 GB)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors) (25.28 GB)\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (7.34 GB)\n\n**vae**\n\n- [minimax_h3_image_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors) (1.17 GB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_image_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n│   │   └── qwen3.8_27b_w4a8.safetensors\n│   └── 📂 vae/\n│       └── minimax_h3_image_vae_fp16.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 32,
+      "type": "SaveImage",
+      "pos": [
+        1820,
+        380
+      ],
+      "size": [
+        560,
+        582.9047307728827
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 85
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "minimax_h3_image_t2_downscale"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "minimax_h3_image_t2_downscale"
+      }
+    },
+    {
+      "id": 34,
+      "type": "WASStringList",
+      "pos": [
+        -216.82339156162942,
+        380
+      ],
+      "size": [
+        587.1153716423163,
+        1117.8722510126959
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "strings",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            113
+          ]
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASStringList",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "was_panel_heights": {
+          "was_line_editor_ui": 958
+        }
+      },
+      "widgets_values": [
+        "~Editorial photograph of inside a narrow overnight sleeper train compartment traveling through the countryside, an adult woman with chin-length ash-blonde hair, dark eyebrows, and tired green eyes sits on the lower bunk repairing a torn leather suitcase. She wears a loose rust-orange knitted sweater with the sleeves pushed to her elbows, charcoal wool trousers, and dark socks. The camera observes her from the compartment doorway at seated eye level, looking diagonally toward the large window occupying the upper right of the composition. She sits sideways on the bunk with both thighs supported by the mattress, her knees bent and her feet resting on the floor. Her left hand holds the separated edges of the suitcase lining together while her right hand guides a curved upholstery needle through the fabric, with the needle and thread clearly visible between her fingers. The open suitcase rests across her lap, its lid leaning against the compartment wall. A small reading lamp illuminates her hands, while folded blankets, an overhead luggage shelf, a hanging coat, and a paper timetable occupy the surrounding compartment. Beyond the rain-speckled window, dark farm fields and distant village lights pass beneath a cloudy violet evening sky. The compartment walls, window frame, and bunk remain clearly separated from the moving landscape outside.\nEditorial photograph of an adult woman with thick dark curly hair, copper-brown skin, and a broad nose working inside an old seaside amusement arcade during the afternoon, viewed from a slightly elevated three-quarter angle between two rows of machines. She wears a loose yellow bowling shirt with green collar trim, navy work trousers, and white sneakers. She crouches beside an open pinball cabinet, her right knee touching the tiled floor and her left foot planted flat with the knee bent in front of her. Her torso leans forward naturally over the machine's open side panel while her left hand steadies a bundle of colored wires and her right hand adjusts a small connector using a screwdriver. The cabinet's glass playfield remains closed above her, with mechanical relays, exposed wiring, and a small circuit board visible inside the maintenance opening. Rows of upright arcade cabinets, claw machines, coin slots, colorful plastic controls, and hanging fluorescent lights extend into the background. A large window on the opposite wall reveals a seaside promenade, a wooden pier, and a strip of ocean beneath a hazy afternoon sky. Sunlight falls diagonally across the machines and tiled floor.\n~Editorial photograph of inside a crowded old natural history museum storage room, an elderly woman with tightly curled gray hair, light brown skin, and small round spectacles carefully cleans an enormous fossilized ammonite resting on a worktable. She wears a pale sage-green laboratory coat over a burgundy blouse, dark trousers, and soft leather shoes. The camera looks diagonally across the tabletop from slightly above her right shoulder, revealing the fossil occupying the lower left foreground. She sits on a wooden stool with both feet planted on the floor and her knees beneath the work surface, leaning forward just enough to examine the fossil. Her left hand steadies a small magnifying lens above the spiral shell while her right hand holds a soft cleaning brush against one narrow groove. The large fossil remains flat on a padded support, with small trays of tools and specimen labels arranged beside it. Behind her, tall wooden cabinets contain drawers, mineral samples, animal skeletons, and glass jars. A partially assembled dinosaur skeleton rises near the back wall, with its long ribs and vertebrae extending beneath the high ceiling.\n~Editorial photograph of an adult woman with short black hair and a narrow face operating an old-fashioned cable car at the top of a steep urban street, viewed from a low three-quarter angle through the open front doorway of the vehicle. She wears a dark green uniform jacket with brass buttons, a cream collared shirt, charcoal trousers, and polished brown shoes. Her right hand grips the vertical brake lever near her hip while her left hand rests on the rounded wooden control handle at waist height. She stands with both feet planted on the carriage floor, her knees relaxed and her shoulders squared toward the track ahead. The open doorway frames her against a steep descending street lined with colorful Victorian houses, overhead utility wires, stone retaining walls, and distant rooftops. Inside the carriage, wooden benches, vertical brass poles, glazed windows, and worn floorboards occupy the surrounding space. The tracks run directly downhill from beneath the vehicle toward a broad blue bay visible between the buildings.\n~Editorial photograph of a young adult woman with a cropped violet bob haircut, pale skin, and prominent dark eyebrows operating a large mechanical telescope on the roof of an isolated desert radio observatory, viewed from a slightly low side angle. She wears a loose cream utility shirt with rolled sleeves, dark copper-colored overalls, a leather equipment belt, and heavy lace-up boots. Her left foot rests on the first step of a fixed metal platform while her right foot remains planted on the rooftop, creating a modest height difference between her legs. Her left hand grips the telescope's adjustment wheel and her right hand supports a small notebook against the instrument housing. The telescope sits on a heavy pivoting mount with a long cylindrical barrel extending diagonally upward toward the night sky. Around her stand angular radar dishes, antenna masts, electrical cabinets, and low concrete buildings. Beyond the station, broad ochre desert plains stretch between black rock formations beneath a sky filled with stars and thin clouds.\n~Editorial photograph of inside an old mountain hotel kitchen during a winter evening, an adult woman with shoulder-length auburn hair, freckles, and a tired expression carefully carries a heavy copper stockpot from a large stove toward a wooden preparation counter. She wears a pale blue work blouse with sleeves rolled above her forearms, a dark brown apron tied around her waist, charcoal trousers, and flat black shoes. The camera looks from the far corner of the kitchen at approximately counter height, with the stove occupying the left foreground and the counter extending diagonally toward the back wall. She carries the pot with both hands gripping its side handles, elbows bent and forearms angled downward, holding the weight directly in front of her waist. Her shoulders remain level, her torso upright, and her right foot steps forward while her left leg supports the weight behind her. Steam rises from the pot beneath hanging copper pans, open wooden shelves, bundles of dried herbs, and an old tiled backsplash. Through a small window above the counter, snow-covered rooftops and the lights of a mountain village are visible.\n~Editorial photograph of a broad industrial canal running beneath an enormous elevated freight railway, with an adult female dock inspector standing on a narrow maintenance platform beside a large steel lock gate. She has dark olive skin, short tightly curled hair, and a serious expression, wearing a mustard-yellow raincoat over dark work trousers and heavy rubber boots. The camera observes her from the opposite bank at a slightly elevated oblique angle, with the canal extending diagonally into the distance. She stands with her feet apart on the grated platform, one hand gripping the safety railing while the other holds a folded inspection clipboard against her hip. The lock gate rises beside her with heavy riveted steel panels, exposed hydraulic cylinders, chains, and a large wheel mechanism. Behind her, brick warehouses, old industrial cranes, smokestacks, and elevated railway girders occupy the canal district. A freight train crosses the upper background, while murky green water reflects the underside of the bridge and neighboring buildings.\n~Editorial photograph of inside a dim old cinema projection booth, an adult woman with long dark red hair tied in a loose ponytail and narrow gray eyes prepares a large film reel for an evening screening. She wears a charcoal sleeveless blouse, high-waisted brown trousers, and a dark leather wristwatch. The camera looks across the booth from a slightly elevated three-quarter angle, with a large mechanical projector occupying the right foreground. She stands beside a wooden worktable, her left hand steadying a circular metal film reel upright on a spindle while her right hand guides a short strip of film through the projector's open threading mechanism. Her elbows remain naturally bent and her torso faces the equipment. The projector contains exposed sprockets, a large lens housing, brass adjustment knobs, and two mounted reels. Several spare reels rest inside round metal storage cases beneath the table. A small rectangular projection window opens toward the dark cinema auditorium, revealing rows of empty seats and a distant screen.\n~Editorial photograph of an adult woman with long black hair gathered into a thick braid and warm brown skin operating a small wooden ferry across a broad river delta, viewed from an elevated three-quarter angle near the bow. She wears a faded coral-red blouse, rolled cream trousers, a woven sash, and flat sandals. She stands near the rear of the ferry with both feet planted on the deck, her hands gripping a long wooden steering pole angled diagonally into the water beside the hull. Her elbows remain slightly bent and her upper body leans gently into the pole as she guides the boat around a shallow sandbank. The ferry carries several empty wicker baskets, a rolled fishing net, and a small wooden canopy. Around the boat, narrow river channels divide low islands covered in tall reeds, scattered palms, and dense mangrove roots. Distant fishing huts stand on stilts near the shoreline, while the river widens toward a hazy horizon.\n~Editorial photograph of inside a spacious municipal swimming pool after closing time, an adult female maintenance worker with short sandy-blonde hair and square glasses replaces a ceiling light above the empty pool deck. She wears a loose navy work jacket, tan utility trousers, and black rubber-soled boots. The camera looks diagonally across the pool from a slightly elevated position on the opposite side, placing the woman and her small portable ladder near the right third of the composition. She stands on the second step of the ladder with both feet supported, her left hand gripping the ladder's upper rail while her right hand carefully inserts a replacement fluorescent tube into a wall-mounted fixture above shoulder height. The fixture is positioned on a tiled pillar beside the pool rather than directly overhead. The broad turquoise swimming pool occupies the foreground, with lane ropes stretching toward the far wall. Tall arched windows, metal changing-room doors, tiled benches, and a large analog clock surround the pool hall. Afternoon light enters through the upper windows and reflects across the still water.\n~Editorial photograph of an adult woman with medium-length silver hair, deep brown skin, and amber eyes inspecting a large atmospheric research balloon inside an enormous aircraft hangar, viewed from a low three-quarter angle near the hangar floor. She wears a pale orange flight jacket, dark green utility trousers, protective gloves, and sturdy brown boots. She stands beside a partially inflated pale white balloon envelope resting inside a long metal support frame. Her left hand holds a thick fabric seam at chest height while her right hand operates a small handheld inspection light directed toward the stitching. The balloon fabric extends upward and away from her into the hangar, supported by overhead cables attached to structural beams. A compact gondola with rounded windows, external instruments, and a metal access ladder rests beneath the balloon. Large hangar doors stand partially open in the background, revealing an empty airfield, grassy plains, and distant cloud-covered hills.\n~Editorial photograph of a young adult woman with short wavy chestnut hair, gray-green eyes, and a small scar through one eyebrow carefully opening a heavy steel floodgate control box inside an underground stormwater tunnel. She wears a bright orange waterproof jacket, dark blue work trousers, protective gloves, and tall rubber boots. The camera looks diagonally along the tunnel from a low platform beside the water channel. She kneels on her right knee with her left foot planted flat, her torso upright and turned toward the wall-mounted control box. Her left hand holds the hinged metal door open while her right hand adjusts a large rotary switch inside the panel. Small indicator lights and labeled metal switches occupy the interior of the box. The tunnel extends into the distance beneath a series of curved concrete arches, with narrow service walkways on either side of a dark central water channel. Exposed pipes, drainage outlets, and maintenance lamps line the damp walls.\n~Editorial photograph of inside a small traditional umbrella workshop, an adult woman with short silver-gray hair, dark eyes, and a broad cheerful smile stretches a sheet of crimson paper over the bamboo frame of a large open parasol. She wears a pale green blouse with rolled sleeves, a dark indigo work apron, and loose cream trousers. The camera looks diagonally across a long wooden workbench, with the umbrella occupying much of the left foreground. She sits upright on a low wooden stool, her knees beneath the work surface and both feet on the floor. Her left hand steadies the central bamboo shaft while her right hand presses the paper against one of the thin curved ribs near the outer rim. Several unfinished umbrellas hang from ceiling beams, while bundles of bamboo strips, paper sheets, brushes, and small ceramic glue pots occupy the shelves and workbench. An open sliding doorway reveals a narrow stone courtyard with moss-covered walls and a small flowering tree.\n~Editorial photograph of an adult woman with a shaved head, warm tan skin, and pale blue eyes preparing an enormous circular stained-glass window inside a cathedral restoration workshop, viewed from an elevated three-quarter angle above a wooden assembly table. She wears a loose burgundy linen shirt, dark work trousers, and a leather apron with narrow tool pockets. The circular window frame lies horizontally across the worktable, divided into curved sections holding pieces of red, blue, amber, and green glass. She leans forward slightly from the waist with both feet planted beneath her, her left palm pressing gently against the edge of a glass panel while her right hand guides a small soldering tool along the lead strip connecting two adjacent pieces. The window occupies the lower and central composition, while wooden templates, cutting tools, rolls of lead came, and unfinished glass fragments surround its edge. Tall stone windows along the workshop wall reveal a neighboring cathedral courtyard and rooftops beyond.\n~Editorial photograph of an adult woman with dark curly hair tied into a loose bun, broad shoulders, and a thoughtful expression seated at an old telegraph desk inside a remote mountain communications cabin. She wears a cream blouse with rolled sleeves, a dark red vest, and charcoal trousers. The camera observes her from a three-quarter angle across the desk, with a large window occupying the background on the right. She sits upright in a wooden chair with both feet resting on the floor, her left hand holding a narrow strip of printed telegraph paper while her right index and middle fingers rest on the lever of a brass telegraph key. Her gaze is directed toward the moving paper strip rather than the viewer. The desk holds copper wiring, a paper spool, an analog meter, handwritten notes, and a shaded oil lamp. Beyond the window, a steep rocky mountain pass winds between dark evergreen trees, with a small stone bridge spanning a narrow gorge.\n~Editorial photograph of a young adult woman with long pale pink hair tied in a low ponytail and bright brown eyes repairing a large rotating advertisement display inside an empty shopping arcade, viewed from a slightly low oblique angle. She wears a black short-sleeved work shirt, loose teal trousers, a bright yellow utility belt, and white sneakers. She stands on a stable portable platform beside the display with both feet planted apart, her left hand holding the edge of an open maintenance panel while her right hand turns a screwdriver inside the exposed gear assembly. The display consists of three vertical rotating panels mounted inside a rectangular metal frame, with one partially turned to reveal its internal mechanism. Closed storefronts, tiled walkways, decorative ceiling lights, and glass display cases extend behind her. A long skylight runs above the arcade, admitting pale afternoon daylight.\n~Editorial photograph of inside a narrow watchmaker's workshop, an adult woman with short curly black hair, pale olive skin, and dark brown eyes repairing a large antique pocket watch beneath a suspended magnifying lamp. She wears a faded cobalt-blue cardigan over a cream blouse and a dark brown apron. The camera looks from slightly above the edge of her workbench, with the open watch occupying the lower center of the frame and her face visible above it. She sits on a stool with her back slightly bent forward, her elbows resting near the edge of the desk. Her left hand steadies the open watch case with a small holding clamp while her right hand carefully places a tiny brass gear inside the exposed mechanism using precision tweezers. Surrounding the watch are organized trays of springs, screws, wheels, and miniature tools. Tall cabinets with dozens of small labeled drawers occupy the walls, while pendulum clocks hang in uneven rows behind her.\n~Editorial photograph of a young adult woman with short strawberry-blonde hair and a small mole beneath her right eye steering a compact retro-future snow crawler across a frozen lake, viewed from a side three-quarter angle through the vehicle's large curved windshield. She wears a dark blue insulated flight jacket, orange gloves, and a cream scarf tucked beneath her collar. She sits upright in the driver's seat with her shoulders facing forward, her left hand holding the upper left portion of a circular steering wheel while her right hand rests on a short control lever mounted beside the seat. Her expression is concentrated as she watches the ice ahead. The crawler has a rounded metal cabin, broad tracked wheels, external headlights, and a roof-mounted antenna. Beyond the glass, an immense frozen lake extends between dark forests and steep snow-covered ridges. Jagged cracks and windblown snow patterns cover the ice, while distant research huts stand near the far shoreline.\n~Editorial photograph of an adult woman with long dark purple hair and a narrow face carefully transferring a small glowing mineral specimen between two glass containers inside an underground geological laboratory. She wears a pale gray protective coat over a dark plum blouse, thick black gloves, and protective goggles pushed above her forehead. The camera looks diagonally across a metal workbench from approximately chest height. She stands with her feet apart and her body facing the bench, using her right hand to lift the small mineral with a long pair of metal tongs while her left hand steadies an open cylindrical specimen container. The mineral emits a soft turquoise light that illuminates her hands and the inside of the glass vessel. The laboratory is built into exposed rock, with steel support beams, sample shelves, drill cores, measuring instruments, and narrow tunnels visible behind her. A large geological cross-section diagram hangs on the rear wall beneath a row of fluorescent lights.\n~Editorial photograph of an elderly woman with short white hair, warm brown eyes, and a broad gentle smile working alone inside a traditional wooden puppet-making studio, viewed from a slightly elevated three-quarter angle beside a narrow window. She wears a dark green blouse, loose gray trousers, and a faded ochre apron. Seated on a low cushioned stool with both feet firmly on the floor, she holds a small wooden marionette torso in her left hand while her right hand threads a fine control string through an attachment point near its shoulder. The puppet's arms and legs rest separately on a padded tabletop, with small carved wooden joints, hooks, and string spools arranged beside them. Behind her, shelves hold completed puppets of different shapes and sizes, carved heads, wooden control bars, jars of paint, and hanging pieces of fabric. Sunlight passes through the narrow window and falls across the worktable, while the rear of the studio remains in shadow.",
+        true,
+        true,
+        0,
+        "fixed",
+        "concatenate",
+        "comma",
+        1
+      ],
+      "widgets_values_named": {
+        "lines": "~Editorial photograph of inside a narrow overnight sleeper train compartment traveling through the countryside, an adult woman with chin-length ash-blonde hair, dark eyebrows, and tired green eyes sits on the lower bunk repairing a torn leather suitcase. She wears a loose rust-orange knitted sweater with the sleeves pushed to her elbows, charcoal wool trousers, and dark socks. The camera observes her from the compartment doorway at seated eye level, looking diagonally toward the large window occupying the upper right of the composition. She sits sideways on the bunk with both thighs supported by the mattress, her knees bent and her feet resting on the floor. Her left hand holds the separated edges of the suitcase lining together while her right hand guides a curved upholstery needle through the fabric, with the needle and thread clearly visible between her fingers. The open suitcase rests across her lap, its lid leaning against the compartment wall. A small reading lamp illuminates her hands, while folded blankets, an overhead luggage shelf, a hanging coat, and a paper timetable occupy the surrounding compartment. Beyond the rain-speckled window, dark farm fields and distant village lights pass beneath a cloudy violet evening sky. The compartment walls, window frame, and bunk remain clearly separated from the moving landscape outside.\nEditorial photograph of an adult woman with thick dark curly hair, copper-brown skin, and a broad nose working inside an old seaside amusement arcade during the afternoon, viewed from a slightly elevated three-quarter angle between two rows of machines. She wears a loose yellow bowling shirt with green collar trim, navy work trousers, and white sneakers. She crouches beside an open pinball cabinet, her right knee touching the tiled floor and her left foot planted flat with the knee bent in front of her. Her torso leans forward naturally over the machine's open side panel while her left hand steadies a bundle of colored wires and her right hand adjusts a small connector using a screwdriver. The cabinet's glass playfield remains closed above her, with mechanical relays, exposed wiring, and a small circuit board visible inside the maintenance opening. Rows of upright arcade cabinets, claw machines, coin slots, colorful plastic controls, and hanging fluorescent lights extend into the background. A large window on the opposite wall reveals a seaside promenade, a wooden pier, and a strip of ocean beneath a hazy afternoon sky. Sunlight falls diagonally across the machines and tiled floor.\n~Editorial photograph of inside a crowded old natural history museum storage room, an elderly woman with tightly curled gray hair, light brown skin, and small round spectacles carefully cleans an enormous fossilized ammonite resting on a worktable. She wears a pale sage-green laboratory coat over a burgundy blouse, dark trousers, and soft leather shoes. The camera looks diagonally across the tabletop from slightly above her right shoulder, revealing the fossil occupying the lower left foreground. She sits on a wooden stool with both feet planted on the floor and her knees beneath the work surface, leaning forward just enough to examine the fossil. Her left hand steadies a small magnifying lens above the spiral shell while her right hand holds a soft cleaning brush against one narrow groove. The large fossil remains flat on a padded support, with small trays of tools and specimen labels arranged beside it. Behind her, tall wooden cabinets contain drawers, mineral samples, animal skeletons, and glass jars. A partially assembled dinosaur skeleton rises near the back wall, with its long ribs and vertebrae extending beneath the high ceiling.\n~Editorial photograph of an adult woman with short black hair and a narrow face operating an old-fashioned cable car at the top of a steep urban street, viewed from a low three-quarter angle through the open front doorway of the vehicle. She wears a dark green uniform jacket with brass buttons, a cream collared shirt, charcoal trousers, and polished brown shoes. Her right hand grips the vertical brake lever near her hip while her left hand rests on the rounded wooden control handle at waist height. She stands with both feet planted on the carriage floor, her knees relaxed and her shoulders squared toward the track ahead. The open doorway frames her against a steep descending street lined with colorful Victorian houses, overhead utility wires, stone retaining walls, and distant rooftops. Inside the carriage, wooden benches, vertical brass poles, glazed windows, and worn floorboards occupy the surrounding space. The tracks run directly downhill from beneath the vehicle toward a broad blue bay visible between the buildings.\n~Editorial photograph of a young adult woman with a cropped violet bob haircut, pale skin, and prominent dark eyebrows operating a large mechanical telescope on the roof of an isolated desert radio observatory, viewed from a slightly low side angle. She wears a loose cream utility shirt with rolled sleeves, dark copper-colored overalls, a leather equipment belt, and heavy lace-up boots. Her left foot rests on the first step of a fixed metal platform while her right foot remains planted on the rooftop, creating a modest height difference between her legs. Her left hand grips the telescope's adjustment wheel and her right hand supports a small notebook against the instrument housing. The telescope sits on a heavy pivoting mount with a long cylindrical barrel extending diagonally upward toward the night sky. Around her stand angular radar dishes, antenna masts, electrical cabinets, and low concrete buildings. Beyond the station, broad ochre desert plains stretch between black rock formations beneath a sky filled with stars and thin clouds.\n~Editorial photograph of inside an old mountain hotel kitchen during a winter evening, an adult woman with shoulder-length auburn hair, freckles, and a tired expression carefully carries a heavy copper stockpot from a large stove toward a wooden preparation counter. She wears a pale blue work blouse with sleeves rolled above her forearms, a dark brown apron tied around her waist, charcoal trousers, and flat black shoes. The camera looks from the far corner of the kitchen at approximately counter height, with the stove occupying the left foreground and the counter extending diagonally toward the back wall. She carries the pot with both hands gripping its side handles, elbows bent and forearms angled downward, holding the weight directly in front of her waist. Her shoulders remain level, her torso upright, and her right foot steps forward while her left leg supports the weight behind her. Steam rises from the pot beneath hanging copper pans, open wooden shelves, bundles of dried herbs, and an old tiled backsplash. Through a small window above the counter, snow-covered rooftops and the lights of a mountain village are visible.\n~Editorial photograph of a broad industrial canal running beneath an enormous elevated freight railway, with an adult female dock inspector standing on a narrow maintenance platform beside a large steel lock gate. She has dark olive skin, short tightly curled hair, and a serious expression, wearing a mustard-yellow raincoat over dark work trousers and heavy rubber boots. The camera observes her from the opposite bank at a slightly elevated oblique angle, with the canal extending diagonally into the distance. She stands with her feet apart on the grated platform, one hand gripping the safety railing while the other holds a folded inspection clipboard against her hip. The lock gate rises beside her with heavy riveted steel panels, exposed hydraulic cylinders, chains, and a large wheel mechanism. Behind her, brick warehouses, old industrial cranes, smokestacks, and elevated railway girders occupy the canal district. A freight train crosses the upper background, while murky green water reflects the underside of the bridge and neighboring buildings.\n~Editorial photograph of inside a dim old cinema projection booth, an adult woman with long dark red hair tied in a loose ponytail and narrow gray eyes prepares a large film reel for an evening screening. She wears a charcoal sleeveless blouse, high-waisted brown trousers, and a dark leather wristwatch. The camera looks across the booth from a slightly elevated three-quarter angle, with a large mechanical projector occupying the right foreground. She stands beside a wooden worktable, her left hand steadying a circular metal film reel upright on a spindle while her right hand guides a short strip of film through the projector's open threading mechanism. Her elbows remain naturally bent and her torso faces the equipment. The projector contains exposed sprockets, a large lens housing, brass adjustment knobs, and two mounted reels. Several spare reels rest inside round metal storage cases beneath the table. A small rectangular projection window opens toward the dark cinema auditorium, revealing rows of empty seats and a distant screen.\n~Editorial photograph of an adult woman with long black hair gathered into a thick braid and warm brown skin operating a small wooden ferry across a broad river delta, viewed from an elevated three-quarter angle near the bow. She wears a faded coral-red blouse, rolled cream trousers, a woven sash, and flat sandals. She stands near the rear of the ferry with both feet planted on the deck, her hands gripping a long wooden steering pole angled diagonally into the water beside the hull. Her elbows remain slightly bent and her upper body leans gently into the pole as she guides the boat around a shallow sandbank. The ferry carries several empty wicker baskets, a rolled fishing net, and a small wooden canopy. Around the boat, narrow river channels divide low islands covered in tall reeds, scattered palms, and dense mangrove roots. Distant fishing huts stand on stilts near the shoreline, while the river widens toward a hazy horizon.\n~Editorial photograph of inside a spacious municipal swimming pool after closing time, an adult female maintenance worker with short sandy-blonde hair and square glasses replaces a ceiling light above the empty pool deck. She wears a loose navy work jacket, tan utility trousers, and black rubber-soled boots. The camera looks diagonally across the pool from a slightly elevated position on the opposite side, placing the woman and her small portable ladder near the right third of the composition. She stands on the second step of the ladder with both feet supported, her left hand gripping the ladder's upper rail while her right hand carefully inserts a replacement fluorescent tube into a wall-mounted fixture above shoulder height. The fixture is positioned on a tiled pillar beside the pool rather than directly overhead. The broad turquoise swimming pool occupies the foreground, with lane ropes stretching toward the far wall. Tall arched windows, metal changing-room doors, tiled benches, and a large analog clock surround the pool hall. Afternoon light enters through the upper windows and reflects across the still water.\n~Editorial photograph of an adult woman with medium-length silver hair, deep brown skin, and amber eyes inspecting a large atmospheric research balloon inside an enormous aircraft hangar, viewed from a low three-quarter angle near the hangar floor. She wears a pale orange flight jacket, dark green utility trousers, protective gloves, and sturdy brown boots. She stands beside a partially inflated pale white balloon envelope resting inside a long metal support frame. Her left hand holds a thick fabric seam at chest height while her right hand operates a small handheld inspection light directed toward the stitching. The balloon fabric extends upward and away from her into the hangar, supported by overhead cables attached to structural beams. A compact gondola with rounded windows, external instruments, and a metal access ladder rests beneath the balloon. Large hangar doors stand partially open in the background, revealing an empty airfield, grassy plains, and distant cloud-covered hills.\n~Editorial photograph of a young adult woman with short wavy chestnut hair, gray-green eyes, and a small scar through one eyebrow carefully opening a heavy steel floodgate control box inside an underground stormwater tunnel. She wears a bright orange waterproof jacket, dark blue work trousers, protective gloves, and tall rubber boots. The camera looks diagonally along the tunnel from a low platform beside the water channel. She kneels on her right knee with her left foot planted flat, her torso upright and turned toward the wall-mounted control box. Her left hand holds the hinged metal door open while her right hand adjusts a large rotary switch inside the panel. Small indicator lights and labeled metal switches occupy the interior of the box. The tunnel extends into the distance beneath a series of curved concrete arches, with narrow service walkways on either side of a dark central water channel. Exposed pipes, drainage outlets, and maintenance lamps line the damp walls.\n~Editorial photograph of inside a small traditional umbrella workshop, an adult woman with short silver-gray hair, dark eyes, and a broad cheerful smile stretches a sheet of crimson paper over the bamboo frame of a large open parasol. She wears a pale green blouse with rolled sleeves, a dark indigo work apron, and loose cream trousers. The camera looks diagonally across a long wooden workbench, with the umbrella occupying much of the left foreground. She sits upright on a low wooden stool, her knees beneath the work surface and both feet on the floor. Her left hand steadies the central bamboo shaft while her right hand presses the paper against one of the thin curved ribs near the outer rim. Several unfinished umbrellas hang from ceiling beams, while bundles of bamboo strips, paper sheets, brushes, and small ceramic glue pots occupy the shelves and workbench. An open sliding doorway reveals a narrow stone courtyard with moss-covered walls and a small flowering tree.\n~Editorial photograph of an adult woman with a shaved head, warm tan skin, and pale blue eyes preparing an enormous circular stained-glass window inside a cathedral restoration workshop, viewed from an elevated three-quarter angle above a wooden assembly table. She wears a loose burgundy linen shirt, dark work trousers, and a leather apron with narrow tool pockets. The circular window frame lies horizontally across the worktable, divided into curved sections holding pieces of red, blue, amber, and green glass. She leans forward slightly from the waist with both feet planted beneath her, her left palm pressing gently against the edge of a glass panel while her right hand guides a small soldering tool along the lead strip connecting two adjacent pieces. The window occupies the lower and central composition, while wooden templates, cutting tools, rolls of lead came, and unfinished glass fragments surround its edge. Tall stone windows along the workshop wall reveal a neighboring cathedral courtyard and rooftops beyond.\n~Editorial photograph of an adult woman with dark curly hair tied into a loose bun, broad shoulders, and a thoughtful expression seated at an old telegraph desk inside a remote mountain communications cabin. She wears a cream blouse with rolled sleeves, a dark red vest, and charcoal trousers. The camera observes her from a three-quarter angle across the desk, with a large window occupying the background on the right. She sits upright in a wooden chair with both feet resting on the floor, her left hand holding a narrow strip of printed telegraph paper while her right index and middle fingers rest on the lever of a brass telegraph key. Her gaze is directed toward the moving paper strip rather than the viewer. The desk holds copper wiring, a paper spool, an analog meter, handwritten notes, and a shaded oil lamp. Beyond the window, a steep rocky mountain pass winds between dark evergreen trees, with a small stone bridge spanning a narrow gorge.\n~Editorial photograph of a young adult woman with long pale pink hair tied in a low ponytail and bright brown eyes repairing a large rotating advertisement display inside an empty shopping arcade, viewed from a slightly low oblique angle. She wears a black short-sleeved work shirt, loose teal trousers, a bright yellow utility belt, and white sneakers. She stands on a stable portable platform beside the display with both feet planted apart, her left hand holding the edge of an open maintenance panel while her right hand turns a screwdriver inside the exposed gear assembly. The display consists of three vertical rotating panels mounted inside a rectangular metal frame, with one partially turned to reveal its internal mechanism. Closed storefronts, tiled walkways, decorative ceiling lights, and glass display cases extend behind her. A long skylight runs above the arcade, admitting pale afternoon daylight.\n~Editorial photograph of inside a narrow watchmaker's workshop, an adult woman with short curly black hair, pale olive skin, and dark brown eyes repairing a large antique pocket watch beneath a suspended magnifying lamp. She wears a faded cobalt-blue cardigan over a cream blouse and a dark brown apron. The camera looks from slightly above the edge of her workbench, with the open watch occupying the lower center of the frame and her face visible above it. She sits on a stool with her back slightly bent forward, her elbows resting near the edge of the desk. Her left hand steadies the open watch case with a small holding clamp while her right hand carefully places a tiny brass gear inside the exposed mechanism using precision tweezers. Surrounding the watch are organized trays of springs, screws, wheels, and miniature tools. Tall cabinets with dozens of small labeled drawers occupy the walls, while pendulum clocks hang in uneven rows behind her.\n~Editorial photograph of a young adult woman with short strawberry-blonde hair and a small mole beneath her right eye steering a compact retro-future snow crawler across a frozen lake, viewed from a side three-quarter angle through the vehicle's large curved windshield. She wears a dark blue insulated flight jacket, orange gloves, and a cream scarf tucked beneath her collar. She sits upright in the driver's seat with her shoulders facing forward, her left hand holding the upper left portion of a circular steering wheel while her right hand rests on a short control lever mounted beside the seat. Her expression is concentrated as she watches the ice ahead. The crawler has a rounded metal cabin, broad tracked wheels, external headlights, and a roof-mounted antenna. Beyond the glass, an immense frozen lake extends between dark forests and steep snow-covered ridges. Jagged cracks and windblown snow patterns cover the ice, while distant research huts stand near the far shoreline.\n~Editorial photograph of an adult woman with long dark purple hair and a narrow face carefully transferring a small glowing mineral specimen between two glass containers inside an underground geological laboratory. She wears a pale gray protective coat over a dark plum blouse, thick black gloves, and protective goggles pushed above her forehead. The camera looks diagonally across a metal workbench from approximately chest height. She stands with her feet apart and her body facing the bench, using her right hand to lift the small mineral with a long pair of metal tongs while her left hand steadies an open cylindrical specimen container. The mineral emits a soft turquoise light that illuminates her hands and the inside of the glass vessel. The laboratory is built into exposed rock, with steel support beams, sample shelves, drill cores, measuring instruments, and narrow tunnels visible behind her. A large geological cross-section diagram hangs on the rear wall beneath a row of fluorescent lights.\n~Editorial photograph of an elderly woman with short white hair, warm brown eyes, and a broad gentle smile working alone inside a traditional wooden puppet-making studio, viewed from a slightly elevated three-quarter angle beside a narrow window. She wears a dark green blouse, loose gray trousers, and a faded ochre apron. Seated on a low cushioned stool with both feet firmly on the floor, she holds a small wooden marionette torso in her left hand while her right hand threads a fine control string through an attachment point near its shoulder. The puppet's arms and legs rest separately on a padded tabletop, with small carved wooden joints, hooks, and string spools arranged beside them. Behind her, shelves hold completed puppets of different shapes and sizes, carved heads, wooden control bars, jars of paint, and hanging pieces of fabric. Sunlight passes through the narrow window and falls across the worktable, while the rear of the studio remains in shadow.",
+        "skip_blank_lines": true,
+        "skip_comment_lines": true,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "combine": "concatenate",
+        "join_with": "comma",
+        "num_items": 1
+      }
+    },
+    {
+      "id": 36,
+      "type": "PreviewImage",
+      "pos": [
+        1190,
+        380
+      ],
+      "size": [
+        596.4367499138535,
+        585.055245788956
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 57
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 61,
+      "type": "WASResolutionSelector",
+      "pos": [
+        401.62688260038755,
+        382.47768940593073
+      ],
+      "size": [
+        308.79999389648435,
+        408
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            111
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            112
+          ]
+        },
+        {
+          "name": "ratio",
+          "type": "FLOAT",
+          "links": [
+            149
+          ]
+        },
+        {
+          "name": "megapixels",
+          "type": "FLOAT",
+          "links": [
+            155
+          ]
+        },
+        {
+          "name": "label",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASResolutionSelector",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "was_panel_heights": {
+          "was_resolution_ui": 170
+        }
+      },
+      "widgets_values": [
+        "16:9",
+        "megapixels",
+        1024,
+        16,
+        64,
+        false
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "16:9",
+        "size_by": "megapixels",
+        "size": 1024,
+        "megapixels": 16,
+        "multiple_of": 64,
+        "realworld_mp": false
+      }
+    }
+  ],
+  "links": [
+    [
+      57,
+      23,
+      0,
+      36,
+      0,
+      "IMAGE"
+    ],
+    [
+      85,
+      23,
+      1,
+      32,
+      0,
+      "IMAGE"
+    ],
+    [
+      111,
+      61,
+      0,
+      23,
+      1,
+      "INT"
+    ],
+    [
+      112,
+      61,
+      1,
+      23,
+      2,
+      "INT"
+    ],
+    [
+      113,
+      34,
+      0,
+      23,
+      0,
+      "STRING"
+    ],
+    [
+      149,
+      61,
+      2,
+      23,
+      8,
+      "FLOAT"
+    ],
+    [
+      155,
+      61,
+      3,
+      23,
+      9,
+      "FLOAT"
+    ]
+  ],
+  "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "b350fbfc-0ff8-4af1-8d09-09f50d84fcaa",
+        "version": 1,
+        "state": {
+          "lastGroupId": 6,
+          "lastNodeId": 81,
+          "lastLinkId": 155,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Text to Image (MiniMax H3 Image)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -684.2081045020349,
+            -181.74133672386503,
+            190.3333282470703,
+            328
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            2558.1820835337276,
+            -250.36616077147738,
+            163.25,
+            88
+          ]
+        },
+        "inputs": [
+          {
+            "id": "b730110f-585d-41f1-a944-5f717eb6cf8c",
+            "name": "replace",
+            "type": "STRING",
+            "linkIds": [
+              35
+            ],
+            "localized_name": "replace",
+            "label": "prompt",
+            "pos": [
+              -517.8747762549646,
+              -157.74133672386503
+            ]
+          },
+          {
+            "id": "f20165be-0789-44a9-9a96-5eb2c103a600",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [
+              98
+            ],
+            "pos": [
+              -517.8747762549646,
+              -137.74133672386503
+            ]
+          },
+          {
+            "id": "2f9019fa-1b1c-4786-910f-974f4a932272",
+            "name": "width",
+            "type": "INT",
+            "linkIds": [
+              36
+            ],
+            "pos": [
+              -517.8747762549646,
+              -117.74133672386503
+            ]
+          },
+          {
+            "id": "6f2f5ca3-02ec-4706-bc9f-e91ac531bf00",
+            "name": "height",
+            "type": "INT",
+            "linkIds": [
+              37
+            ],
+            "pos": [
+              -517.8747762549646,
+              -97.74133672386503
+            ]
+          },
+          {
+            "id": "b723c7f8-0381-4f4c-812d-c37b3bfd5abb",
+            "name": "unet_name",
+            "type": "COMBO",
+            "linkIds": [
+              43
+            ],
+            "pos": [
+              -517.8747762549646,
+              -77.74133672386503
+            ]
+          },
+          {
+            "id": "eb3025ec-fd65-4f5e-b92a-1c747d8d8fdc",
+            "name": "clip_name",
+            "type": "COMBO",
+            "linkIds": [
+              44
+            ],
+            "pos": [
+              -517.8747762549646,
+              -57.74133672386503
+            ]
+          },
+          {
+            "id": "7d162c4f-e430-42a5-9b94-9daf5d27e68e",
+            "name": "vae_name",
+            "type": "COMBO",
+            "linkIds": [
+              45
+            ],
+            "pos": [
+              -517.8747762549646,
+              -37.74133672386503
+            ]
+          },
+          {
+            "id": "be068253-5408-4f8c-b866-f25f6ec403a1",
+            "name": "megapixels",
+            "type": "FLOAT",
+            "linkIds": [
+              102
+            ],
+            "label": "downsample_megapixels",
+            "pos": [
+              -517.8747762549646,
+              -17.741336723865032
+            ]
+          },
+          {
+            "id": "eb9b2859-24e9-4b1b-8eed-c2e0d29be14e",
+            "name": "boolean",
+            "type": "BOOLEAN",
+            "linkIds": [
+              108
+            ],
+            "label": "use_h3_sampler",
+            "pos": [
+              -517.8747762549646,
+              2.2586632761349676
+            ]
+          },
+          {
+            "id": "2b0f456a-2362-4978-a2c1-804ab15c7a29",
+            "name": "sampler_name",
+            "type": "COMBO",
+            "linkIds": [
+              109
+            ],
+            "label": "manual_sampler_name",
+            "pos": [
+              -517.8747762549646,
+              22.258663276134968
+            ]
+          },
+          {
+            "id": "660fceef-89f8-44a7-a8e7-4b93b111f158",
+            "name": "boolean_1",
+            "type": "BOOLEAN",
+            "linkIds": [
+              137,
+              138
+            ],
+            "label": "use_PE",
+            "pos": [
+              -517.8747762549646,
+              42.25866327613497
+            ]
+          },
+          {
+            "id": "1ab087a9-cb22-459c-b73c-b91e44ef31f0",
+            "name": "model_name",
+            "type": "COMBO,STRING",
+            "linkIds": [
+              128
+            ],
+            "label": "PE_LLM_name",
+            "pos": [
+              -517.8747762549646,
+              62.25866327613497
+            ]
+          },
+          {
+            "id": "1129ebef-d246-4bbb-92e4-376e47cb70d7",
+            "name": "number",
+            "type": "NUMBER,INT,FLOAT",
+            "linkIds": [
+              148
+            ],
+            "label": "aspect_ratio",
+            "pos": [
+              -517.8747762549646,
+              82.25866327613497
+            ]
+          },
+          {
+            "id": "ba236bc0-1829-42ac-bfe0-011e52765583",
+            "name": "number_1",
+            "type": "NUMBER,INT,FLOAT",
+            "linkIds": [
+              154
+            ],
+            "label": "megapixels",
+            "pos": [
+              -517.8747762549646,
+              102.25866327613497
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "1540fbe2-fc77-40f8-8aac-348935c0bc12",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              11
+            ],
+            "localized_name": "IMAGE",
+            "label": "base_images",
+            "pos": [
+              2582.1820835337276,
+              -226.36616077147738
+            ]
+          },
+          {
+            "id": "616a0371-b011-4245-b5a6-7dbaf61e7067",
+            "name": "IMAGE_1",
+            "type": "IMAGE",
+            "linkIds": [
+              97
+            ],
+            "label": "downscaled_images",
+            "pos": [
+              2582.1820835337276,
+              -206.36616077147738
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "UNETLoader",
+            "pos": [
+              -188.0525500000001,
+              -240.3369399999999
+            ],
+            "size": [
+              590,
+              90
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "unet_name",
+                "name": "unet_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "unet_name"
+                },
+                "link": 43
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "MODEL",
+                "name": "MODEL",
+                "type": "MODEL",
+                "links": [
+                  91
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "UNETLoader",
+              "models": [
+                {
+                  "name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
+                  "directory": "diffusion_models"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "minimax_h3_image_pruned_int8_convrot.safetensors",
+              "default"
+            ],
+            "widgets_values_named": {
+              "unet_name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+              "weight_dtype": "default"
+            }
+          },
+          {
+            "id": 2,
+            "type": "CLIPLoader",
+            "pos": [
+              -180,
+              -80
+            ],
+            "size": [
+              590,
+              120
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip_name",
+                "name": "clip_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "clip_name"
+                },
+                "link": 44
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  1
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CLIPLoader",
+              "models": [
+                {
+                  "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+                  "directory": "text_encoders"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+              "minimax",
+              "default"
+            ],
+            "widgets_values_named": {
+              "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+              "type": "minimax",
+              "device": "default"
+            }
+          },
+          {
+            "id": 3,
+            "type": "VAELoader",
+            "pos": [
+              -180,
+              110
+            ],
+            "size": [
+              590,
+              70
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "vae_name",
+                "name": "vae_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "vae_name"
+                },
+                "link": 45
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VAE",
+                "name": "VAE",
+                "type": "VAE",
+                "links": [
+                  2,
+                  10
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAELoader",
+              "models": [
+                {
+                  "name": "minimax_h3_image_vae_fp16.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors",
+                  "directory": "vae"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "minimax_h3_image_vae_fp16.safetensors"
+            ],
+            "widgets_values_named": {
+              "vae_name": "minimax_h3_image_vae_fp16.safetensors"
+            }
+          },
+          {
+            "id": 5,
+            "type": "MiniMaxH3ImageConditioning",
+            "pos": [
+              529.9088195529107,
+              375.68687742668146
+            ],
+            "size": [
+              490,
+              196
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 1
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "shape": 7,
+                "type": "VAE",
+                "link": 2
+              },
+              {
+                "localized_name": "image_0",
+                "name": "images.image_0",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "prompt",
+                "name": "prompt",
+                "type": "STRING",
+                "widget": {
+                  "name": "prompt"
+                },
+                "link": 141
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 36
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 37
+              },
+              {
+                "localized_name": "image_1",
+                "name": "images.image_1",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "links": [
+                  4,
+                  89
+                ]
+              },
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  92
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "MiniMaxH3ImageConditioning",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "",
+              3104,
+              3104
+            ],
+            "widgets_values_named": {
+              "prompt": "",
+              "width": 3104,
+              "height": 3104
+            }
+          },
+          {
+            "id": 6,
+            "type": "ConditioningZeroOut",
+            "pos": [
+              705.9509547937248,
+              681.5487457902941
+            ],
+            "size": [
+              300,
+              50
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "conditioning",
+                "name": "conditioning",
+                "type": "CONDITIONING",
+                "link": 4
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "links": [
+                  90
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ConditioningZeroOut",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            }
+          },
+          {
+            "id": 8,
+            "type": "VAEDecode",
+            "pos": [
+              1880.8848241358983,
+              -223.24602169983785
+            ],
+            "size": [
+              210,
+              50
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 125
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 10
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  11,
+                  126
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAEDecode",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            }
+          },
+          {
+            "id": 24,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              -123.28741816322878,
+              517.9124725235305
+            ],
+            "size": [
+              460,
+              88
+            ],
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "STRING",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 35
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  122,
+                  140
+                ]
+              }
+            ],
+            "title": "Text (user_prompt)",
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              ""
+            ],
+            "widgets_values_named": {
+              "value": ""
+            },
+            "color": "#232",
+            "bgcolor": "#353"
+          },
+          {
+            "id": 51,
+            "type": "ManualSigmas",
+            "pos": [
+              1171.1763050168313,
+              -93.51649489478427
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "SIGMAS",
+                "name": "SIGMAS",
+                "type": "SIGMAS",
+                "links": [
+                  87
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ManualSigmas",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              "1.0,0.9675236940383911,0.8875485062599182,0.75,0.5327739119529724,0.23200887441635132,0.0"
+            ],
+            "widgets_values_named": {
+              "sigmas": "1.0,0.9675236940383911,0.8875485062599182,0.75,0.5327739119529724,0.23200887441635132,0.0"
+            }
+          },
+          {
+            "id": 52,
+            "type": "SamplerCustom",
+            "pos": [
+              1171.1763050168313,
+              23.50331923321373
+            ],
+            "size": [
+              271.1666717529297,
+              230
+            ],
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 91
+              },
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 145
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 90
+              },
+              {
+                "localized_name": "sampler",
+                "name": "sampler",
+                "type": "SAMPLER",
+                "link": 110
+              },
+              {
+                "localized_name": "sigmas",
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "link": 87
+              },
+              {
+                "localized_name": "latent_image",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 92
+              },
+              {
+                "localized_name": "noise_seed",
+                "name": "noise_seed",
+                "type": "INT",
+                "widget": {
+                  "name": "noise_seed"
+                },
+                "link": 98
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "LATENT",
+                "links": [
+                  124
+                ]
+              },
+              {
+                "localized_name": "denoised_output",
+                "name": "denoised_output",
+                "type": "LATENT",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "SamplerCustom",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              true,
+              42,
+              "fixed",
+              1
+            ],
+            "widgets_values_named": {
+              "add_noise": true,
+              "noise_seed": 42,
+              "control_after_generate": "fixed",
+              "cfg": 1
+            }
+          },
+          {
+            "id": 54,
+            "type": "WASImageScaleToTotalPixels",
+            "pos": [
+              2135.179061078823,
+              -221.8677488984775
+            ],
+            "size": [
+              357.6000122070312,
+              458
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 126
+              },
+              {
+                "localized_name": "megapixels",
+                "name": "megapixels",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "megapixels"
+                },
+                "link": 102
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "links": [
+                  97
+                ]
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "links": null
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "links": null
+              },
+              {
+                "localized_name": "megapixels",
+                "name": "megapixels",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "mp_ratio",
+                "name": "mp_ratio",
+                "type": "FLOAT",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageScaleToTotalPixels",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              },
+              "was_panel_heights": {
+                "was_scale_total_ui": 196
+              }
+            },
+            "widgets_values": [
+              "lanczos",
+              4,
+              8,
+              "always",
+              "disabled",
+              false
+            ],
+            "widgets_values_named": {
+              "upscale_method": "lanczos",
+              "megapixels": 4,
+              "resolution_steps": 8,
+              "scale_mode": "always",
+              "crop": "disabled",
+              "realworld_mp": false
+            }
+          },
+          {
+            "id": 60,
+            "type": "0abc598d-b316-4145-b012-1cf92a9a3067",
+            "pos": [
+              1171.1763050168313,
+              -235.4635260941314
+            ],
+            "size": [
+              270,
+              82
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "manual_sampler_name",
+                "localized_name": "sampler_name",
+                "name": "sampler_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "sampler_name"
+                },
+                "link": 109
+              },
+              {
+                "label": "use_h3_sampler",
+                "localized_name": "boolean",
+                "name": "boolean",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "boolean"
+                },
+                "link": 108
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "SAMPLER",
+                "links": [
+                  110
+                ]
+              }
+            ],
+            "properties": {
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              },
+              "previewExposures": []
+            },
+            "widgets_values": [
+              "euler",
+              true
+            ],
+            "widgets_values_named": {
+              "sampler_name": "euler",
+              "boolean": true
+            }
+          },
+          {
+            "id": 69,
+            "type": "6894ecdb-5f0f-4901-988c-2a78f36dad3a",
+            "pos": [
+              529.9088195529107,
+              -78.39185231011078
+            ],
+            "size": [
+              390.4953894784052,
+              128
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "prompt",
+                "localized_name": "question",
+                "name": "question",
+                "shape": 7,
+                "type": "STRING",
+                "widget": {
+                  "name": "question"
+                },
+                "link": 122
+              },
+              {
+                "name": "clip",
+                "type": "CLIP",
+                "link": 136
+              },
+              {
+                "label": "aspect_ratio",
+                "name": "number",
+                "type": "NUMBER,INT,FLOAT",
+                "link": 148
+              },
+              {
+                "label": "megapixels",
+                "name": "number_1",
+                "type": "NUMBER,INT,FLOAT",
+                "link": 154
+              }
+            ],
+            "outputs": [
+              {
+                "label": "prompt",
+                "localized_name": "prompt",
+                "name": "prompt",
+                "type": "STRING",
+                "links": [
+                  139
+                ]
+              },
+              {
+                "localized_name": "aspect_ratio",
+                "name": "aspect_ratio",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "question": true
+                },
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              },
+              "previewExposures": []
+            },
+            "widgets_values": [
+              ""
+            ],
+            "widgets_values_named": {
+              "question": ""
+            }
+          },
+          {
+            "id": 71,
+            "type": "WASFreeMemory",
+            "pos": [
+              1567.6577763258545,
+              -221.70159559941015
+            ],
+            "size": [
+              270,
+              234
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "passthrough",
+                "name": "passthrough",
+                "shape": 7,
+                "type": "*",
+                "link": 124
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "passthrough",
+                "name": "passthrough",
+                "type": "LATENT",
+                "links": [
+                  125
+                ]
+              },
+              {
+                "localized_name": "vram_before",
+                "name": "vram_before",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "vram_after",
+                "name": "vram_after",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "freed",
+                "name": "freed",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "report",
+                "name": "report",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASFreeMemory",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              true,
+              true,
+              true,
+              0,
+              false
+            ],
+            "widgets_values_named": {
+              "unload_models": true,
+              "empty_cache": true,
+              "collect_garbage": true,
+              "release_fraction": 0,
+              "always_run": false
+            }
+          },
+          {
+            "id": 72,
+            "type": "WASLanguageModelLoader",
+            "pos": [
+              -178.6391455855172,
+              235.88975523955708
+            ],
+            "size": [
+              590.3699598987789,
+              125.18164616119446
+            ],
+            "flags": {},
+            "order": 13,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model_name",
+                "name": "model_name",
+                "type": "COMBO,STRING",
+                "widget": {
+                  "name": "model_name"
+                },
+                "link": 128
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  135
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLanguageModelLoader",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "model_name": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              },
+              "was_panel_heights": {
+                "was_llm_report_ui": 63
+              }
+            },
+            "widgets_values": [
+              "qwen3_32b_w4a8.safetensors"
+            ],
+            "widgets_values_named": {
+              "model_name": "qwen3_32b_w4a8.safetensors"
+            }
+          },
+          {
+            "id": 74,
+            "type": "Text Input Switch",
+            "pos": [
+              529.9088195529107,
+              140.76381626133497
+            ],
+            "size": [
+              388.6093156912363,
+              166
+            ],
+            "flags": {},
+            "order": 14,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "text_a",
+                "name": "text_a",
+                "type": "STRING",
+                "widget": {
+                  "name": "text_a"
+                },
+                "link": 139
+              },
+              {
+                "localized_name": "text_b",
+                "name": "text_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "text_b"
+                },
+                "link": 140
+              },
+              {
+                "localized_name": "boolean",
+                "name": "boolean",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "boolean"
+                },
+                "link": 137
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  141
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Text Input Switch",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              "",
+              "",
+              true
+            ],
+            "widgets_values_named": {
+              "text_a": "",
+              "text_b": "",
+              "boolean": true
+            }
+          },
+          {
+            "id": 75,
+            "type": "WASExecutionGate",
+            "pos": [
+              529.9088195529107,
+              -261.7621318696198
+            ],
+            "size": [
+              280.3833312988281,
+              106
+            ],
+            "flags": {},
+            "order": 15,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "shape": 7,
+                "type": "*",
+                "link": 135
+              },
+              {
+                "localized_name": "open",
+                "name": "open",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "open"
+                },
+                "link": 138
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "CLIP",
+                "links": [
+                  136
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASExecutionGate",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              true,
+              false,
+              ""
+            ],
+            "widgets_values_named": {
+              "open": true,
+              "bypass_downstream": false,
+              "closed_message": ""
+            }
+          },
+          {
+            "id": 78,
+            "type": "WASFreeMemory",
+            "pos": [
+              876.5708851722194,
+              625.7026229364528
+            ],
+            "size": [
+              270,
+              234
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 16,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "passthrough",
+                "name": "passthrough",
+                "shape": 7,
+                "type": "*",
+                "link": 89
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "passthrough",
+                "name": "passthrough",
+                "type": "CONDITIONING",
+                "links": [
+                  145
+                ]
+              },
+              {
+                "localized_name": "vram_before",
+                "name": "vram_before",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "vram_after",
+                "name": "vram_after",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "freed",
+                "name": "freed",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "report",
+                "name": "report",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASFreeMemory",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              true,
+              true,
+              true,
+              0,
+              false
+            ],
+            "widgets_values_named": {
+              "unload_models": true,
+              "empty_cache": true,
+              "collect_garbage": true,
+              "release_fraction": 0,
+              "always_run": false
+            }
+          }
+        ],
+        "groups": [
+          {
+            "id": 1,
+            "title": "Loaders",
+            "bounding": [
+              -210,
+              -340,
+              651.1390684308763,
+              739.6021852420187
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 2,
+            "title": "Conditioning",
+            "bounding": [
+              470,
+              -340,
+              611.9512220049817,
+              1111.7957662615959
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 3,
+            "title": "Sampling",
+            "bounding": [
+              1097.2286869961401,
+              -335.405683467696,
+              407.6163646924542,
+              923.9135017120439
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 5,
+            "title": "User Prompt",
+            "bounding": [
+              -205.6845659835418,
+              419.0515409544069,
+              644.4670282649554,
+              215.31719525425507
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 6,
+            "title": "Decode and Process",
+            "bounding": [
+              1519.5753074310949,
+              -332.623058575057,
+              1011.068410459776,
+              916.6115904257658
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          }
+        ],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 2,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 4,
+            "origin_id": 5,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 10,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 11,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 35,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 24,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 36,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 5,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 37,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 5,
+            "target_slot": 5,
+            "type": "INT"
+          },
+          {
+            "id": 87,
+            "origin_id": 51,
+            "origin_slot": 0,
+            "target_id": 52,
+            "target_slot": 4,
+            "type": "SIGMAS"
+          },
+          {
+            "id": 89,
+            "origin_id": 5,
+            "origin_slot": 0,
+            "target_id": 78,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 90,
+            "origin_id": 6,
+            "origin_slot": 0,
+            "target_id": 52,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 91,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 52,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 92,
+            "origin_id": 5,
+            "origin_slot": 1,
+            "target_id": 52,
+            "target_slot": 5,
+            "type": "LATENT"
+          },
+          {
+            "id": 97,
+            "origin_id": 54,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 98,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 52,
+            "target_slot": 6,
+            "type": "INT"
+          },
+          {
+            "id": 43,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 44,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 2,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 45,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 102,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 54,
+            "target_slot": 1,
+            "type": "FLOAT"
+          },
+          {
+            "id": 110,
+            "origin_id": 60,
+            "origin_slot": 0,
+            "target_id": 52,
+            "target_slot": 3,
+            "type": "SAMPLER"
+          },
+          {
+            "id": 108,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 60,
+            "target_slot": 1,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 122,
+            "origin_id": 24,
+            "origin_slot": 0,
+            "target_id": 69,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 124,
+            "origin_id": 52,
+            "origin_slot": 0,
+            "target_id": 71,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 125,
+            "origin_id": 71,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 126,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": 54,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 109,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 60,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 135,
+            "origin_id": 72,
+            "origin_slot": 0,
+            "target_id": 75,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 136,
+            "origin_id": 75,
+            "origin_slot": 0,
+            "target_id": 69,
+            "target_slot": 1,
+            "type": "CLIP"
+          },
+          {
+            "id": 139,
+            "origin_id": 69,
+            "origin_slot": 0,
+            "target_id": 74,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 140,
+            "origin_id": 24,
+            "origin_slot": 0,
+            "target_id": 74,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 141,
+            "origin_id": 74,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 3,
+            "type": "STRING"
+          },
+          {
+            "id": 128,
+            "origin_id": -10,
+            "origin_slot": 11,
+            "target_id": 72,
+            "target_slot": 0,
+            "type": "COMBO,STRING"
+          },
+          {
+            "id": 137,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 74,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 138,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 75,
+            "target_slot": 1,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 145,
+            "origin_id": 78,
+            "origin_slot": 0,
+            "target_id": 52,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 148,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 69,
+            "target_slot": 2,
+            "type": "NUMBER,INT,FLOAT"
+          },
+          {
+            "id": 154,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 69,
+            "target_slot": 3,
+            "type": "NUMBER,INT,FLOAT"
+          }
+        ],
+        "extra": {
+          "ue_links": [],
+          "links_added_by_ue": []
+        }
+      },
+      {
+        "id": "0abc598d-b316-4145-b012-1cf92a9a3067",
+        "version": 1,
+        "state": {
+          "lastGroupId": 6,
+          "lastNodeId": 81,
+          "lastLinkId": 155,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Sampler Select",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            285.56598693329454,
+            -611.7467005443602,
+            177.10000610351562,
+            88
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1111.2449577844723,
+            -601.7467005443602,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "36e09705-b47b-4dce-953c-1c3c825b65d6",
+            "name": "sampler_name",
+            "type": "COMBO",
+            "linkIds": [
+              105
+            ],
+            "localized_name": "sampler_name",
+            "label": "manual_sampler_name",
+            "pos": [
+              438.66599303681016,
+              -587.7467005443602
+            ]
+          },
+          {
+            "id": "00d58bf4-5645-4750-b3c9-f2a8e7f9aef4",
+            "name": "boolean",
+            "type": "BOOLEAN",
+            "linkIds": [
+              106
+            ],
+            "localized_name": "boolean",
+            "label": "use_h3_sampler",
+            "pos": [
+              438.66599303681016,
+              -567.7467005443602
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "f27b7421-1a06-4afd-907f-e961f848abe0",
+            "name": "output",
+            "type": "SAMPLER",
+            "linkIds": [
+              107
+            ],
+            "localized_name": "output",
+            "pos": [
+              1135.2449577844723,
+              -577.7467005443602
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 53,
+            "type": "WASH3ImageSampler",
+            "pos": [
+              480.9191845633593,
+              -687.94114937407
+            ],
+            "size": [
+              270,
+              154
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "sampler",
+                "name": "sampler",
+                "type": "SAMPLER",
+                "links": [
+                  103
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASH3ImageSampler",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              "progressive",
+              0.5,
+              3,
+              1,
+              1
+            ],
+            "widgets_values_named": {
+              "mode": "progressive",
+              "mode.start_scale": 0.5,
+              "mode.grow_at": 3,
+              "renoise_steps": 1,
+              "noise_scale": 1
+            }
+          },
+          {
+            "id": 58,
+            "type": "WASAnyInputSwitch",
+            "pos": [
+              781.2449577844721,
+              -685.423340133812
+            ],
+            "size": [
+              270,
+              78
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "input_a",
+                "name": "input_a",
+                "type": "SAMPLER",
+                "link": 103
+              },
+              {
+                "localized_name": "input_b",
+                "name": "input_b",
+                "type": "SAMPLER",
+                "link": 104
+              },
+              {
+                "localized_name": "boolean",
+                "name": "boolean",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "boolean"
+                },
+                "link": 106
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "SAMPLER",
+                "links": [
+                  107
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASAnyInputSwitch",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              true
+            ],
+            "widgets_values_named": {
+              "boolean": true
+            }
+          },
+          {
+            "id": 59,
+            "type": "KSamplerSelect",
+            "pos": [
+              476.1326525827086,
+              -475.5522517146504
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "sampler_name",
+                "name": "sampler_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "sampler_name"
+                },
+                "link": 105
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "SAMPLER",
+                "name": "SAMPLER",
+                "type": "SAMPLER",
+                "links": [
+                  104
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "KSamplerSelect",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {},
+                "version": "8.0"
+              }
+            },
+            "widgets_values": [
+              "euler"
+            ],
+            "widgets_values_named": {
+              "sampler_name": "euler"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 103,
+            "origin_id": 53,
+            "origin_slot": 0,
+            "target_id": 58,
+            "target_slot": 0,
+            "type": "SAMPLER"
+          },
+          {
+            "id": 104,
+            "origin_id": 59,
+            "origin_slot": 0,
+            "target_id": 58,
+            "target_slot": 1,
+            "type": "SAMPLER"
+          },
+          {
+            "id": 107,
+            "origin_id": 58,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "SAMPLER"
+          },
+          {
+            "id": 106,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 58,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 105,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 59,
+            "target_slot": 0,
+            "type": "COMBO"
+          }
+        ],
+        "extra": {
+          "ue_links": [],
+          "links_added_by_ue": []
+        }
+      },
+      {
+        "id": "6894ecdb-5f0f-4901-988c-2a78f36dad3a",
+        "version": 1,
+        "state": {
+          "lastGroupId": 6,
+          "lastNodeId": 81,
+          "lastLinkId": 155,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "H3 Image Prompt Enhancer",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            100,
+            320,
+            128,
+            128
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            4177.009946442234,
+            317.655700076511,
+            128,
+            88
+          ]
+        },
+        "inputs": [
+          {
+            "id": "a9b0e57b-206e-42be-877c-0a1f6041f909",
+            "name": "question",
+            "type": "STRING",
+            "linkIds": [
+              152
+            ],
+            "localized_name": "question",
+            "label": "prompt",
+            "pos": [
+              204,
+              344
+            ]
+          },
+          {
+            "id": "47d4c4ec-3cf0-45d5-a90d-bf7ef1d57d79",
+            "name": "clip",
+            "type": "CLIP",
+            "linkIds": [
+              127
+            ],
+            "pos": [
+              204,
+              364
+            ]
+          },
+          {
+            "id": "63dafe8c-957c-46ba-9f2e-fefd02280e33",
+            "name": "number",
+            "type": "NUMBER,INT,FLOAT",
+            "linkIds": [
+              146
+            ],
+            "label": "aspect_ratio",
+            "pos": [
+              204,
+              384
+            ]
+          },
+          {
+            "id": "2db31dad-8638-4d06-9056-47f2cdf18e65",
+            "name": "number_1",
+            "type": "NUMBER,INT,FLOAT",
+            "linkIds": [
+              150
+            ],
+            "label": "megapixels",
+            "pos": [
+              204,
+              404
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "21b2946d-7248-4054-a933-d92dbcff6eac",
+            "name": "prompt",
+            "type": "STRING",
+            "linkIds": [
+              14
+            ],
+            "localized_name": "prompt",
+            "label": "prompt",
+            "pos": [
+              4201.009946442234,
+              341.655700076511
+            ]
+          },
+          {
+            "id": "aab9246f-9c7e-4551-bbda-c84b44fcf4b4",
+            "name": "aspect_ratio",
+            "type": "STRING",
+            "linkIds": [
+              144
+            ],
+            "localized_name": "aspect_ratio",
+            "pos": [
+              4201.009946442234,
+              361.655700076511
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 21,
+            "type": "WASLLMFromCLIP",
+            "pos": [
+              1480,
+              320
+            ],
+            "size": [
+              270,
+              462
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 127
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "llm",
+                "name": "llm",
+                "type": "WAS_LLM",
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMFromCLIP",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "sampling_mode": true,
+                  "sampling_mode.temperature": true,
+                  "sampling_mode.top_k": true,
+                  "sampling_mode.top_p": true,
+                  "sampling_mode.min_p": true,
+                  "sampling_mode.repetition_penalty": true,
+                  "sampling_mode.seed": true,
+                  "sampling_mode.presence_penalty": true,
+                  "max_tokens": true,
+                  "thinking": true,
+                  "fast_decode": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "on",
+              1,
+              20,
+              0.95,
+              0,
+              1,
+              7,
+              0,
+              8192,
+              true,
+              true
+            ],
+            "widgets_values_named": {
+              "sampling_mode": "on",
+              "sampling_mode.temperature": 1,
+              "sampling_mode.top_k": 20,
+              "sampling_mode.top_p": 0.95,
+              "sampling_mode.min_p": 0,
+              "sampling_mode.repetition_penalty": 1,
+              "sampling_mode.seed": 7,
+              "sampling_mode.presence_penalty": 0,
+              "max_tokens": 8192,
+              "thinking": true,
+              "fast_decode": true
+            }
+          },
+          {
+            "id": 63,
+            "type": "WASLoadSystemPrompt",
+            "pos": [
+              473.2322833028884,
+              117.25333693107109
+            ],
+            "size": [
+              619,
+              772
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "type": "STRING",
+                "links": [
+                  7
+                ]
+              },
+              {
+                "localized_name": "name",
+                "name": "name",
+                "type": "STRING",
+                "links": null
+              },
+              {
+                "localized_name": "documents",
+                "name": "documents",
+                "type": "WAS_LLM_DOCUMENTS",
+                "links": [
+                  114
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLoadSystemPrompt",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "system_prompt": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              },
+              "was_panel_heights": {
+                "was_system_prompt_ui": 694
+              },
+              "was_system_prompt_panes": {
+                "side": 216,
+                "preview": 170,
+                "sideWide": 210,
+                "previewWide": 440
+              }
+            },
+            "widgets_values": [
+              "Built-in/MiniMax H3/minimax-h3-image-prompt-enhancer/SKILL.md"
+            ],
+            "widgets_values_named": {
+              "system_prompt": "Built-in/MiniMax H3/minimax-h3-image-prompt-enhancer/SKILL.md"
+            }
+          },
+          {
+            "id": 64,
+            "type": "WASLLMEmbeddingModel",
+            "pos": [
+              1185.6171082247859,
+              902.0913314551805
+            ],
+            "size": [
+              270,
+              470
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "embedding",
+                "name": "embedding",
+                "type": "WAS_LLM_EMBEDDING",
+                "links": [
+                  3
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMEmbeddingModel",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "source": true,
+                  "source.model": true,
+                  "source.pooling": true,
+                  "source.normalize": true,
+                  "source.query_instruction": true,
+                  "source.text_instruction": true,
+                  "source.max_length": true,
+                  "source.batch_size": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "local",
+              "BAAI/bge-small-en-v1.5",
+              "auto",
+              true,
+              "",
+              "",
+              512,
+              32
+            ],
+            "widgets_values_named": {
+              "source": "local",
+              "source.model": "BAAI/bge-small-en-v1.5",
+              "source.pooling": "auto",
+              "source.normalize": true,
+              "source.query_instruction": "",
+              "source.text_instruction": "",
+              "source.max_length": 512,
+              "source.batch_size": 32
+            }
+          },
+          {
+            "id": 65,
+            "type": "WASLLMVectorIndex",
+            "pos": [
+              1480,
+              900
+            ],
+            "size": [
+              270,
+              392
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "documents",
+                "name": "documents",
+                "type": "WAS_LLM_DOCUMENTS",
+                "link": 114
+              },
+              {
+                "localized_name": "embedding",
+                "name": "embedding",
+                "type": "WAS_LLM_EMBEDDING",
+                "link": 3
+              },
+              {
+                "localized_name": "vector_store",
+                "name": "vector_store",
+                "shape": 7,
+                "type": "WAS_LLM_VECTOR_STORE",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "index",
+                "name": "index",
+                "type": "WAS_LLM_INDEX",
+                "links": [
+                  118
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMVectorIndex",
+              "was_show_advanced": false,
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "batch_size": true,
+                  "chunk_size": true,
+                  "chunk_overlap": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              64,
+              1024,
+              20
+            ],
+            "widgets_values_named": {
+              "batch_size": 64,
+              "chunk_size": 1024,
+              "chunk_overlap": 20
+            }
+          },
+          {
+            "id": 25,
+            "type": "WASLLMIndexRetriever",
+            "pos": [
+              1830,
+              320
+            ],
+            "size": [
+              400,
+              384
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "index",
+                "name": "index",
+                "type": "WAS_LLM_INDEX",
+                "link": 118
+              },
+              {
+                "localized_name": "llm",
+                "name": "llm",
+                "shape": 7,
+                "type": "WAS_LLM",
+                "link": null
+              },
+              {
+                "localized_name": "embedding",
+                "name": "embedding",
+                "shape": 7,
+                "type": "WAS_LLM_EMBEDDING",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "retriever",
+                "name": "retriever",
+                "type": "WAS_LLM_RETRIEVER",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMIndexRetriever",
+              "was_show_advanced": false,
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "top_k": true,
+                  "mode": true,
+                  "metadata_filters": true,
+                  "filters_match": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              3,
+              "default",
+              "",
+              "all"
+            ],
+            "widgets_values_named": {
+              "top_k": 3,
+              "mode": "default",
+              "metadata_filters": "",
+              "filters_match": "all"
+            }
+          },
+          {
+            "id": 66,
+            "type": "WASLLMQueryEngine",
+            "pos": [
+              2310,
+              320
+            ],
+            "size": [
+              400,
+              418
+            ],
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "retriever",
+                "name": "retriever",
+                "type": "WAS_LLM_RETRIEVER",
+                "link": 5
+              },
+              {
+                "localized_name": "llm",
+                "name": "llm",
+                "type": "WAS_LLM",
+                "link": 6
+              },
+              {
+                "localized_name": "postprocessors",
+                "name": "postprocessors",
+                "shape": 7,
+                "type": "WAS_LLM_POSTPROCESSORS",
+                "link": null
+              },
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "shape": 7,
+                "type": "STRING",
+                "link": 7
+              },
+              {
+                "localized_name": "qa_prompt",
+                "name": "qa_prompt",
+                "shape": 7,
+                "type": "STRING",
+                "widget": {
+                  "name": "qa_prompt"
+                },
+                "link": 142
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "query_engine",
+                "name": "query_engine",
+                "type": "WAS_LLM_QUERY_ENGINE",
+                "links": [
+                  8
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMQueryEngine",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "response_mode": true,
+                  "citations": true,
+                  "citation_chunk_size": true,
+                  "qa_prompt": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "compact",
+              false,
+              512,
+              "Reference sections of the MiniMax H3 Image caption brief, retrieved for this request. Apply them where they fit, together with every rule in the system prompt.\n---------------------\n{context_str}\n---------------------\ninput_text: {query_str}\noutput_text: "
+            ],
+            "widgets_values_named": {
+              "response_mode": "compact",
+              "citations": false,
+              "citation_chunk_size": 512,
+              "qa_prompt": "Reference sections of the MiniMax H3 Image caption brief, retrieved for this request. Apply them where they fit, together with every rule in the system prompt.\n---------------------\n{context_str}\n---------------------\ninput_text: {query_str}\noutput_text: "
+            }
+          },
+          {
+            "id": 67,
+            "type": "WASLLMQuery",
+            "pos": [
+              2790,
+              320
+            ],
+            "size": [
+              400,
+              472
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "query_engine",
+                "name": "query_engine",
+                "type": "WAS_LLM_QUERY_ENGINE",
+                "link": 8
+              },
+              {
+                "localized_name": "question",
+                "name": "question",
+                "type": "STRING",
+                "widget": {
+                  "name": "question"
+                },
+                "link": 153
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "answer",
+                "name": "answer",
+                "type": "STRING",
+                "links": [
+                  115,
+                  143
+                ]
+              },
+              {
+                "localized_name": "sources_text",
+                "name": "sources_text",
+                "type": "STRING",
+                "links": null
+              },
+              {
+                "localized_name": "sources",
+                "name": "sources",
+                "type": "WAS_LLM_SOURCES",
+                "links": null
+              },
+              {
+                "localized_name": "thinking",
+                "name": "thinking",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMQuery",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "question": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              ""
+            ],
+            "widgets_values_named": {
+              "question": ""
+            }
+          },
+          {
+            "id": 68,
+            "type": "JsonExtractString",
+            "pos": [
+              3270,
+              320
+            ],
+            "size": [
+              401,
+              200
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "json_string",
+                "name": "json_string",
+                "type": "STRING",
+                "widget": {
+                  "name": "json_string"
+                },
+                "link": 115
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  116
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "JsonExtractString",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "json_string": true,
+                  "key": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "",
+              "expanded_caption"
+            ],
+            "widgets_values_named": {
+              "json_string": "",
+              "key": "expanded_caption"
+            }
+          },
+          {
+            "id": 29,
+            "type": "WASFreeMemory",
+            "pos": [
+              3750,
+              320
+            ],
+            "size": [
+              270,
+              234
+            ],
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "passthrough",
+                "name": "passthrough",
+                "shape": 7,
+                "type": "*",
+                "link": 116
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "passthrough",
+                "name": "passthrough",
+                "type": "STRING",
+                "links": [
+                  14
+                ]
+              },
+              {
+                "localized_name": "vram_before",
+                "name": "vram_before",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "vram_after",
+                "name": "vram_after",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "freed",
+                "name": "freed",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "report",
+                "name": "report",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASFreeMemory",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "unload_models": true,
+                  "empty_cache": true,
+                  "collect_garbage": true,
+                  "release_fraction": true,
+                  "always_run": true
+                },
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              true,
+              true,
+              true,
+              0,
+              false
+            ],
+            "widgets_values_named": {
+              "unload_models": true,
+              "empty_cache": true,
+              "collect_garbage": true,
+              "release_fraction": 0,
+              "always_run": false
+            }
+          },
+          {
+            "id": 76,
+            "type": "WASLoadSystemPrompt",
+            "pos": [
+              473.2322833028884,
+              949.2533369310711
+            ],
+            "size": [
+              619,
+              498
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "type": "STRING",
+                "links": [
+                  142
+                ]
+              },
+              {
+                "localized_name": "name",
+                "name": "name",
+                "type": "STRING",
+                "links": null
+              },
+              {
+                "localized_name": "documents",
+                "name": "documents",
+                "type": "WAS_LLM_DOCUMENTS",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLoadSystemPrompt",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "Built-in/MiniMax H3/MiniMax H3 Image Caption Brief.md"
+            ],
+            "widgets_values_named": {
+              "system_prompt": "Built-in/MiniMax H3/MiniMax H3 Image Caption Brief.md"
+            }
+          },
+          {
+            "id": 77,
+            "type": "JsonExtractString",
+            "pos": [
+              3270,
+              580
+            ],
+            "size": [
+              401,
+              200
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "json_string",
+                "name": "json_string",
+                "type": "STRING",
+                "widget": {
+                  "name": "json_string"
+                },
+                "link": 143
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  144
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "JsonExtractString",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "8.0",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "",
+              "aspect_ratio"
+            ],
+            "widgets_values_named": {
+              "json_string": "",
+              "key": "aspect_ratio"
+            }
+          },
+          {
+            "id": 79,
+            "type": "Text Concatenate",
+            "pos": [
+              2095.1234598404553,
+              849.8060565390908
+            ],
+            "size": [
+              400,
+              460
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "text_b",
+                "name": "text_b",
+                "shape": 7,
+                "type": "STRING",
+                "widget": {
+                  "name": "text_b"
+                },
+                "link": 147
+              },
+              {
+                "localized_name": "text_d",
+                "name": "text_d",
+                "shape": 7,
+                "type": "STRING",
+                "widget": {
+                  "name": "text_d"
+                },
+                "link": 151
+              },
+              {
+                "localized_name": "text_f",
+                "name": "text_f",
+                "shape": 7,
+                "type": "STRING",
+                "widget": {
+                  "name": "text_f"
+                },
+                "link": 152
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  153
+                ]
+              }
+            ],
+            "properties": {
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {}
+              },
+              "Node name for S&R": "Text Concatenate"
+            },
+            "widgets_values": [
+              " ",
+              false,
+              "# Image Specifications\n\nImage Aspect Ratio:\n",
+              "",
+              "Image Megapixels:\n",
+              "",
+              "\n# User Prompt\n",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              ""
+            ],
+            "widgets_values_named": {
+              "delimiter": " ",
+              "clean_whitespace": false,
+              "text_a": "# Image Specifications\n\nImage Aspect Ratio:\n",
+              "text_b": "",
+              "text_c": "Image Megapixels:\n",
+              "text_d": "",
+              "text_e": "\n# User Prompt\n",
+              "text_f": "",
+              "text_g": "",
+              "text_h": "",
+              "text_i": "",
+              "text_j": "",
+              "text_k": "",
+              "text_l": "",
+              "text_m": "",
+              "text_n": "",
+              "text_o": "",
+              "text_p": "",
+              "text_q": "",
+              "text_r": "",
+              "text_s": "",
+              "text_t": "",
+              "text_u": "",
+              "text_v": "",
+              "text_w": "",
+              "text_x": ""
+            }
+          },
+          {
+            "id": 80,
+            "type": "Number to String",
+            "pos": [
+              1882.8254861906441,
+              985.9370324512237
+            ],
+            "size": [
+              152.9166702270508,
+              26
+            ],
+            "flags": {},
+            "order": 13,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "number",
+                "name": "number",
+                "type": "NUMBER,INT,FLOAT",
+                "link": 146
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  147
+                ]
+              }
+            ],
+            "properties": {
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {}
+              },
+              "Node name for S&R": "Number to String"
+            }
+          },
+          {
+            "id": 81,
+            "type": "Number to String",
+            "pos": [
+              1885.9564919987718,
+              1086.4459735233381
+            ],
+            "size": [
+              152.9166702270508,
+              26
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "number",
+                "name": "number",
+                "type": "NUMBER,INT,FLOAT",
+                "link": 150
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  151
+                ]
+              }
+            ],
+            "properties": {
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "input_ue_unconnectable": {}
+              },
+              "Node name for S&R": "Number to String"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 114,
+            "origin_id": 63,
+            "origin_slot": 2,
+            "target_id": 65,
+            "target_slot": 0,
+            "type": "WAS_LLM_DOCUMENTS"
+          },
+          {
+            "id": 3,
+            "origin_id": 64,
+            "origin_slot": 0,
+            "target_id": 65,
+            "target_slot": 1,
+            "type": "WAS_LLM_EMBEDDING"
+          },
+          {
+            "id": 5,
+            "origin_id": 25,
+            "origin_slot": 0,
+            "target_id": 66,
+            "target_slot": 0,
+            "type": "WAS_LLM_RETRIEVER"
+          },
+          {
+            "id": 6,
+            "origin_id": 21,
+            "origin_slot": 0,
+            "target_id": 66,
+            "target_slot": 1,
+            "type": "WAS_LLM"
+          },
+          {
+            "id": 7,
+            "origin_id": 63,
+            "origin_slot": 0,
+            "target_id": 66,
+            "target_slot": 3,
+            "type": "STRING"
+          },
+          {
+            "id": 8,
+            "origin_id": 66,
+            "origin_slot": 0,
+            "target_id": 67,
+            "target_slot": 0,
+            "type": "WAS_LLM_QUERY_ENGINE"
+          },
+          {
+            "id": 115,
+            "origin_id": 67,
+            "origin_slot": 0,
+            "target_id": 68,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 116,
+            "origin_id": 68,
+            "origin_slot": 0,
+            "target_id": 29,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 14,
+            "origin_id": 29,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 142,
+            "origin_id": 76,
+            "origin_slot": 0,
+            "target_id": 66,
+            "target_slot": 4,
+            "type": "STRING"
+          },
+          {
+            "id": 143,
+            "origin_id": 67,
+            "origin_slot": 0,
+            "target_id": 77,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 144,
+            "origin_id": 77,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 127,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 21,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 118,
+            "origin_id": 65,
+            "origin_slot": 0,
+            "target_id": 25,
+            "target_slot": 0,
+            "type": "WAS_LLM_INDEX"
+          },
+          {
+            "id": 146,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 80,
+            "target_slot": 0,
+            "type": "NUMBER,INT,FLOAT"
+          },
+          {
+            "id": 147,
+            "origin_id": 80,
+            "origin_slot": 0,
+            "target_id": 79,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 150,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 81,
+            "target_slot": 0,
+            "type": "NUMBER,INT,FLOAT"
+          },
+          {
+            "id": 151,
+            "origin_id": 81,
+            "origin_slot": 0,
+            "target_id": 79,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 152,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 79,
+            "target_slot": 2,
+            "type": "STRING"
+          },
+          {
+            "id": 153,
+            "origin_id": 79,
+            "origin_slot": 0,
+            "target_id": 67,
+            "target_slot": 1,
+            "type": "STRING"
+          }
+        ],
+        "extra": {
+          "ue_links": [],
+          "links_added_by_ue": []
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "frontendVersion": "1.58.5",
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1.1167815779424775,
+      "offset": [
+        349.7810187496873,
+        -191.0709263955463
+      ]
+    },
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4,
+  "seed_widgets": {
+    "23": 1,
+    "34": 4
+  }
+}
