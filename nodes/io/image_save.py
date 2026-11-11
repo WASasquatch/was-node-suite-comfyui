@@ -254,10 +254,10 @@ class ImageSave(io.ComfyNode):
                     "extension",
                     options=["png", "jpg", "jpeg", "gif", "tiff", "webp", "bmp", "exr"],
                     tooltip=(
-                        "`png` = lossless, up to 16-bit, carries the workflow; `exr` = "
+                        "`png` = lossless, up to 16-bit; `exr` = "
                         "unclipped linear light at 16 or 32 bit; `jpg`/`jpeg` = small, lossy; "
                         "`webp` = small, lossy or lossless; `tiff`/`bmp` = large, lossless; "
-                        "`gif` = 256 colours."
+                        "`gif` = 256 colours. png, webp and jpg/jpeg carry the workflow."
                     ),
                 ),
                 io.Int.Input(
@@ -333,10 +333,10 @@ class ImageSave(io.ComfyNode):
                     "embed_workflow",
                     default=True,
                     tooltip=(
-                        "Whether to store the workflow inside the file, so dragging the "
-                        "image back into ComfyUI rebuilds the graph. Supported for png, webp, "
-                        "and jpg/jpeg (via EXIF), and nothing is stored if ComfyUI was started with "
-                        "--disable-metadata."
+                        "Whether to store the workflow in the file, so dragging the "
+                        "image back into ComfyUI rebuilds the graph. png and webp always "
+                        "carry it; a jpg carries it up to 64 KB and the prompt alone past that. "
+                        "Nothing is stored with --disable-metadata."
                     ),
                 ),
                 io.Boolean.Input(
@@ -649,6 +649,47 @@ class ImageSave(io.ComfyNode):
         # Only png, webp, and jpg/jpeg carry the workflow, and ComfyUI's --disable-metadata drops it
         # from all formats.
         metadata_source = cls if embed_workflow else None
+        jpeg_exif = None
+        webp_exif = None
+        if metadata_source is not None and extension in ("jpg", "jpeg", "webp"):
+            from PIL import Image
+
+            base_exif = ui.ImageSaveHelper._create_webp_metadata(
+                Image.new("RGB", (1, 1)), metadata_source
+            )
+            if base_exif:
+                webp_exif = base_exif
+                if extension in ("jpg", "jpeg"):
+                    raw_exif = base_exif.tobytes()
+                    if len(raw_exif) <= 65533:
+                        jpeg_exif = raw_exif
+                    else:
+                        # Workflow / extra_pnginfo tags exceed 64 KB; keep prompt alone if present
+                        prompt_val = base_exif.get(0x0110)
+                        if prompt_val is not None:
+                            prompt_exif = Image.new("RGB", (1, 1)).getexif()
+                            prompt_exif[0x0110] = prompt_val
+                            raw_prompt = prompt_exif.tobytes()
+                            if len(raw_prompt) <= 65533:
+                                jpeg_exif = raw_prompt
+                                logger.warning(
+                                    "workflow EXIF data is too large for JPEG format (%d bytes). "
+                                    "Saved prompt only without full workflow. Use PNG or WebP for large workflows.",
+                                    len(raw_exif),
+                                )
+                            else:
+                                logger.warning(
+                                    "prompt EXIF data is too large for JPEG format (%d bytes). "
+                                    "Saving without metadata. Use PNG or WebP for large workflows.",
+                                    len(raw_prompt),
+                                )
+                        else:
+                            logger.warning(
+                                "workflow EXIF data is too large for JPEG format (%d bytes). "
+                                "Saving without metadata. Use PNG or WebP for large workflows.",
+                                len(raw_exif),
+                            )
+
         return _Plan(
             images=images,
             names=names,
@@ -665,6 +706,7 @@ class ImageSave(io.ComfyNode):
                 "lossless_webp": lossless_webp, "bit_depth": bit_depth, "profile": profile,
                 "show_history": show_history, "show_previews": show_previews,
                 "metadata_source": metadata_source, "text": cls.text_chunks(metadata_source),
+                "jpeg_exif": jpeg_exif, "webp_exif": webp_exif,
             },
         )
 
@@ -741,52 +783,15 @@ class ImageSave(io.ComfyNode):
                 tag = {"icc_profile": icc} if icc and extension in PROFILE_FORMATS else {}
                 quality, optimize = options["quality"], options["optimize_image"]
                 if extension in ("jpg", "jpeg"):
-                    exif_data = None
-                    text_chunks = options.get("text")
-                    if text_chunks:
-                        img_exif = img.getexif()
-                        if "prompt" in text_chunks:
-                            img_exif[0x010F] = "Prompt:" + text_chunks["prompt"]
-                        workflow_metadata = ""
-                        if "workflow" in text_chunks:
-                            workflow_metadata = text_chunks["workflow"]
-                        else:
-                            workflow_metadata = "".join(v for k, v in text_chunks.items() if k != "prompt")
-                        if workflow_metadata:
-                            img_exif[0x010E] = "Workflow:" + workflow_metadata
-                        try:
-                            raw_exif = img_exif.tobytes()
-                            if len(raw_exif) > 65533:
-                                if 0x010E in img_exif:
-                                    del img_exif[0x010E]
-                                    try:
-                                        raw_exif = img_exif.tobytes()
-                                    except Exception:
-                                        raw_exif = b""
-                                if len(raw_exif) > 65533:
-                                    logger.warning(
-                                        "Prompt EXIF data is too large (%d bytes) for JPEG format. "
-                                        "Saving without metadata. Use PNG or WebP for large workflows.",
-                                        len(raw_exif),
-                                    )
-                                    raw_exif = b""
-                                else:
-                                    logger.warning(
-                                        "Workflow EXIF data is too large for JPEG format. "
-                                        "Saved prompt only without full workflow. Use PNG or WebP for large workflows."
-                                    )
-                            exif_data = raw_exif if raw_exif else None
-                        except Exception as error:
-                            logger.debug("failed to serialize JPEG EXIF (%s)", error)
-                            exif_data = None
-
-                    exif_tag = {"exif": exif_data} if exif_data else {}
+                    exif = options.get("jpeg_exif")
+                    exif_tag = {"exif": exif} if exif else {}
                     img.save(output_file, quality=quality, optimize=optimize,
                              dpi=(options["dpi"], options["dpi"]), **exif_tag, **tag)
                 elif extension == "webp":
-                    exif_data = ui.ImageSaveHelper._create_webp_metadata(img, options["metadata_source"])
+                    exif = options.get("webp_exif")
+                    exif_tag = {"exif": exif} if exif else {}
                     img.save(output_file, quality=quality, lossless=options["lossless_webp"],
-                             exif=exif_data, **tag)
+                             **exif_tag, **tag)
                 elif extension == "bmp":
                     img.save(output_file)
                 elif extension == "tiff":

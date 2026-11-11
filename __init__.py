@@ -679,6 +679,4 @@ else:
     async def comfy_entrypoint() -> WASNodeSuite:
         return WASNodeSuite()
 
-    WEB_DIRECTORY = "./web"
-
-    __all__ = ["comfy_entrypoint", "WEB_DIRECTORY"]
+    __all__ = ["comfy_entrypoint"]
