@@ -35,7 +35,7 @@ function cannotDraw(nodeData) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!String(nodeData?.category ?? "").startsWith(OWNED)) return;
     if (!cannotDraw(nodeData)) return;
 

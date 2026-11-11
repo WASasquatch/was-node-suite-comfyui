@@ -30,7 +30,7 @@ const UI_WIDGET_TYPE = "was_h3_ptd_patch";
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!NODE_IDS.has(nodeData?.name)) return;
 
     const proto = nodeType.prototype;

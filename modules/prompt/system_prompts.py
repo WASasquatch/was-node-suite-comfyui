@@ -13,13 +13,13 @@ import os
 import shutil
 import stat
 import threading
-import time
 import unicodedata
 from collections import Counter
 from pathlib import Path
 from typing import NamedTuple
 
 from .. import log
+from ..util.kept import Kept
 from ..config import paths
 from ..util import file_listing, sandbox
 
@@ -29,7 +29,6 @@ __all__ = [
     "FILE_TYPES",
     "IMPORT_EXTENSIONS",
     "LIBRARY_NAME",
-    "LISTING_TTL",
     "MAX_ARCHIVE_BYTES",
     "MAX_ENTRIES",
     "MAX_FILE_BYTES",
@@ -108,8 +107,6 @@ MAX_ENTRIES = 2000
 #: Folder levels below the library that are walked.
 MAX_DEPTH = 8
 
-#: Seconds a listing is reused before the folder is walked again.
-LISTING_TTL = 5.0
 
 #: Characters kept of a file name stem, a name, a description, one family and one tag.
 MAX_STEM_CHARS = 120
@@ -354,9 +351,6 @@ class Saved(NamedTuple):
 
 _lock = threading.RLock()
 
-#: ``(monotonic time it is reused until, entries)``.
-_listing: tuple[float, tuple[Entry, ...]] | None = None
-
 #: ``(path, mtime_ns, size)`` -> the metadata read from that file.
 _heads: dict[tuple[str, int, int], tuple[str, tuple, str, tuple]] = {}
 
@@ -475,27 +469,23 @@ def compose(meta: dict, body: str) -> str:
 
 
 def scan() -> tuple[Entry, ...]:
-    """Every file in the library, reused for :data:`LISTING_TTL` seconds.
+    """Every file in the library, as a worker thread last read it.
 
     Returns:
         The library's entries ordered by folder and then name, without regard to case, then
         the pack's own under ``Built-in/`` in the same order.
     """
-    global _listing
-    with _lock:
-        now = time.monotonic()
-        if _listing is not None and _listing[0] > now:
-            return _listing[1]
-        found = _walk(library_directory()) + _walk(builtin_directory(), builtin=True)
-        _listing = (time.monotonic() + LISTING_TTL, found)
-        return found
+    return _library.get()
+
+
+def _scan() -> tuple[Entry, ...]:
+    """Every file in the library, read off disk."""
+    return tuple(_walk(library_directory()) + _walk(builtin_directory(), builtin=True))
 
 
 def invalidate() -> None:
-    """Drop the held listing, so the next call walks the folder again."""
-    global _listing
-    with _lock:
-        _listing = None
+    """Have the next request read the library again."""
+    _library.expire()
 
 
 def labels() -> list[str]:
@@ -524,8 +514,7 @@ def find(key: str, fresh: bool = False) -> Entry | None:
             return entry
     if not fresh:
         return None
-    invalidate()
-    for entry in scan():
+    for entry in _library.read_now():
         if entry.key == wanted:
             return entry
     return None
@@ -1729,3 +1718,7 @@ def _head(path: str, info: os.stat_result, below: str) -> tuple[str, tuple, str,
         _heads.clear()
     _heads[key] = result
     return result
+
+
+#: The library listing, read on a worker thread.
+_library = Kept("system prompts", _scan, ())

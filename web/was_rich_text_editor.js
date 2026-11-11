@@ -259,7 +259,7 @@ app.registerExtension({
       attrs: { min: MIN_HEIGHT, max: MAX_HEIGHT, step: 20 },
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_NAME) return;
 
     const proto = nodeType.prototype;

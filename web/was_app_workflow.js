@@ -575,7 +575,7 @@ app.registerExtension({
     }
   },
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE) return;
     const proto = nodeType.prototype;
     if (proto.__was_app_workflow_wrapped) return;

@@ -220,7 +220,8 @@ protocol are refused.
 
 No node reads or writes the pack's settings. In the state directory, every file whose name
 begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`,
-`was_suite_settings.json` or `was_history.json` is refused as a read and a write target. So are
+`was_suite_settings.json`, `was_history.json` or `file_menus.json` is refused as a read and a
+write target. So are
 the config file in use and the one `WAS_CONFIG` names, with every file beside them whose name
 begins with theirs, and the `viewer-extensions/` folder as a write target. Names are compared
 after links are resolved, without regard to case and to trailing dots and spaces. Custom tokens
@@ -255,6 +256,7 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/archive/save.py` | The `.part` file Zip Save writes, renamed over the archive once complete or removed when the write fails, and a leftover `.part` of the same name |
 | `modules/latent/h3_clip_file.py` | The `.part` file H3 Save Clip writes, renamed over the clip once complete |
 | `modules/interface/preview.py` | Mask editor uploads in `input/clipspace/` written in the last ten minutes, as the route table below states |
+| `modules/util/file_listing.py` | Its own `file_menus.json` in `ComfyUI/user/was-node-suite`, replaced through a `.tmp` file beside it, and that `.tmp` file when the write fails |
 | `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4`, `.png` or `.wav`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
 | `modules/viewer/parsers/canvas_parser.py` | The `.part` file the Content Viewer writes a picture into, renamed to `input/was_viewer/<md5>.png` once complete |
 | `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |

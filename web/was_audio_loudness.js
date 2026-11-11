@@ -96,7 +96,7 @@ function curveLayer(ctx, frame, panel) {
 
 app.registerExtension({
   name: EXT_NAME,
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_ID) return;
     const proto = nodeType.prototype;
     if (proto.__was_audio_loudness_wrapped) return;

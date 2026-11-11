@@ -66,8 +66,8 @@ MAX_QA_PROMPT_CHARS = 20000
 #: Characters of one chunk shown in the sources text.
 SOURCE_TEXT_CHARS = 4000
 
-#: A ``{field}`` in a prompt, matched the way llama-index substitutes one.
-_FIELD = re.compile(r"\{([^{}]+)\}")
+#: A ``{field}`` in a prompt, matched the way llama-index names one; a JSON object is not a field.
+_FIELD = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\}")
 
 #: llama-index loggers that write prompt or answer text at INFO.
 _CHATTY = (

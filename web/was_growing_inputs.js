@@ -276,7 +276,7 @@ app.registerExtension({
     return rowColourMenu(node);
   },
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const entry = GROWING[nodeData?.name];
     const growth = growthOf(entry, GROWING_PAIRS[nodeData?.name]);
     if (!growth) return;

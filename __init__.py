@@ -664,12 +664,15 @@ else:
             await register_replacements()
 
         async def get_node_list(self) -> list[type[io.ComfyNode]]:
-            from .modules.util import file_listing
+            from .modules.util import file_listing, kept
 
-            # File menus list nothing until ComfyUI has registered the returned nodes.
+            # File menus wait on no folder while ComfyUI registers the returned nodes.
             file_listing.defer_walks()
             loader = NodeLoader(__name__, config=self.config)
             loader.load_all()
+            # Every menu read off disk starts on a worker thread once the nodes are imported.
+            file_listing.warm()
+            kept.warm_all()
             # After the walk, so an extension cannot take an id this pack is about to
             # register: ComfyUI writes the returned list into its mappings last and would
             # overwrite the extension's node without saying so.

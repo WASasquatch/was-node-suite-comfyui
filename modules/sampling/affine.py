@@ -6,6 +6,8 @@ own ``x`` in place at the opening model call of each scheduled step.
 
 from __future__ import annotations
 
+import inspect
+
 import torch
 
 from .. import log
@@ -731,8 +733,15 @@ def patch_sampler(sampler, spec: AffineSpec):
 
     extra_options = dict(getattr(sampler, "extra_options", {}) or {})
     inpaint_options = dict(getattr(sampler, "inpaint_options", {}) or {})
+    try:
+        inner_takes_noise = "noise_sampler" in inspect.signature(inner).parameters
+    except (TypeError, ValueError):
+        inner_takes_noise = False
 
-    def affine_sampler(model, x, sigmas, extra_args=None, callback=None, disable=None, **kwargs):
+    def affine_sampler(model, x, sigmas, extra_args=None, callback=None, disable=None,
+                       noise_sampler=None, **kwargs):
+        if noise_sampler is not None and inner_takes_noise:
+            kwargs["noise_sampler"] = noise_sampler
         run = _Run(spec, model, x, sigmas, holder)
         if not run.stream_ids:
             logger.warning(

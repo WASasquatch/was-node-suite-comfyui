@@ -7,6 +7,7 @@ scene, and ``load`` takes a menu label or a wired path.
 from __future__ import annotations
 
 import re
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -106,6 +107,12 @@ REFUSED = (
 )
 
 _REFUSED = tuple((re.compile(pattern), reason) for pattern, reason in REFUSED)
+
+#: ``{(path, mtime, size): whether it opens with the marker}`` for the files the menu last read.
+_declared: dict[tuple[str, float, int], bool] = {}
+
+#: Serializes :data:`_declared`, filled from the file listing's worker and read for a menu.
+_declared_lock = threading.Lock()
 
 
 @dataclass
@@ -365,15 +372,24 @@ def options() -> list[str]:
 
     Returns:
         Labels, or ``[NONE]`` where the read roots hold no module. The marker decides
-        membership, not the suffix.
+        membership, not the suffix; a file is opened once per modification time.
     """
     from ..util import file_listing
 
-    found = [
-        entry.label
-        for entry in file_listing.view(SUFFIXES, file_listing.ROOTS, file_listing.menu_limit(MAX_OPTIONS))
-        if entry.size <= MAX_BYTES and declares(entry.path)
-    ]
+    # New headers are read on the listing's worker each time the listing changes.
+    file_listing.when_changed(options)
+    entries = file_listing.view(SUFFIXES, file_listing.ROOTS, file_listing.menu_limit(MAX_OPTIONS))
+    with _declared_lock:
+        known = {}
+        for entry in entries:
+            if entry.size > MAX_BYTES:
+                continue
+            key = (entry.path, entry.mtime, entry.size)
+            marked = _declared.get(key)
+            known[key] = declares(entry.path) if marked is None else marked
+        _declared.clear()
+        _declared.update(known)
+    found = [entry.label for entry in entries if known.get((entry.path, entry.mtime, entry.size))]
     return found or [NONE]
 
 
@@ -429,3 +445,4 @@ def load(label: str, paths: bool = False) -> Declaration:
             f"list, or add its folder to paths.allow_read in config.yaml"
         )
     return read(sandbox.resolve_read(found))
+

@@ -133,11 +133,13 @@ Most take the idea as it is typed. These want something more:
 | Krea 2 Prompt Expansion, MOSS-Image Recaption | `thinking` on, on a model that reasons |
 | MiniMax H3 Image to Video, First and Last Frame, Last Frame | The clip length in seconds in the request, such as `8 seconds` |
 | MiniMax H3 Reference to Video | Each reference by its label, such as `Picture 1: my dog. Audio 1: my voice.`, then what happens |
+| MiniMax H3 Image Prompt Enhancer | The idea as typed, on a model that reasons with `thinking` on. On LLM Query Engine, the skill's `documents` go into an LLM index and `Built-in/MiniMax H3/MiniMax H3 Image Caption Brief.md` into `qa_prompt` |
 
 | Built-in | Its answer goes to |
 |---|---|
 | Fibo 2 | Text Encode Fibo 2 |
 | MOSS-Image Prompt Enhancer | MOSS-Image Compile Prompt, which turns a layout into the prompt MOSS-Image reads |
+| MiniMax H3 Image Prompt Enhancer | JSON Extract String with the key `expanded_caption`, then the H3 Image text encoder. `aspect_ratio` names one of 1:1, 5:4, 4:3, 3:2, 16:9, 21:9, 4:5, 3:4, 2:3 and 9:16 |
 | MiniMax H3 | MiniMax H3 Conditioning |
 | Any other | The model's text encoder |
 

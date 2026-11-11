@@ -33,7 +33,7 @@ const UI_WIDGET_TYPE = "was_image_skin_mask";
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!NODE_IDS.has(nodeData?.name)) return;
 
     const proto = nodeType.prototype;

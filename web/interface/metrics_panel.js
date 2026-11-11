@@ -1,8 +1,8 @@
 /**
  * A band of image measurements, for any interface that holds a picture or two.
  *
- * `createMetricsSection` answers an element and an `update`. Hand it one picture and it reports
- * what that picture is; two and it adds how they differ.
+ * `createMetricsSection` answers an element and an `update`. Given one picture it reports what
+ * the picture is, given two how they differ, measured on a worker thread.
  */
 
 import { comparePair, describeOne, readPixels } from "./image_metrics.js";
@@ -34,6 +34,82 @@ const SINGLE_FIGURES = [
   { key: "entropy", name: "ENTROPY", unit: " b", digits: 2, hint: "detail in the brightness distribution, 0 to 8 bits" },
   { key: "sharpness", name: "EDGES", unit: "", digits: 1, hint: "mean absolute laplacian; higher is more edge energy" },
 ];
+
+// The worker every band measures on, its pending jobs by id, and whether it could not start.
+let worker = null;
+let workerBroken = false;
+let nextJob = 0;
+const pending = new Map();
+
+/**
+ * The shared measuring worker, started on first use.
+ *
+ * @returns {Worker|null} The worker, or null where the browser could not start it.
+ */
+function measuringWorker() {
+  if (worker || workerBroken) return worker;
+  try {
+    const library = new URL("./image_metrics.js", import.meta.url).href;
+    const source = [
+      `import { comparePair, describeOne } from ${JSON.stringify(library)};`,
+      "self.onmessage = ({ data }) => {",
+      "  const { id, a, b, width, height } = data;",
+      "  try {",
+      "    const one = describeOne(a, width, height);",
+      "    const two = b ? describeOne(b, width, height) : null;",
+      "    const pair = b ? comparePair(a, b, width, height) : null;",
+      "    self.postMessage({ id, a: one, b: two, pair }, []);",
+      "  } catch (error) {",
+      "    self.postMessage({ id, error: String(error) }, []);",
+      "  }",
+      "};",
+    ].join("\n");
+    const address = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+    worker = new Worker(address, { type: "module", name: LOG_NAME });
+    worker.onmessage = ({ data }) => {
+      const done = pending.get(data.id);
+      pending.delete(data.id);
+      done?.(data.error ? null : data);
+    };
+    worker.onerror = (event) => {
+      console.error(`[${LOG_NAME}] The measuring worker stopped:`, event.message || event);
+      workerBroken = true;
+      worker = null;
+      for (const done of pending.values()) done(null);
+      pending.clear();
+    };
+  } catch (error) {
+    console.error(`[${LOG_NAME}] The measuring worker could not start:`, error);
+    workerBroken = true;
+    worker = null;
+  }
+  return worker;
+}
+
+/**
+ * Measure one picture or a pair off the main thread.
+ *
+ * @param {Uint8ClampedArray} pixelsA - RGBA bytes of the first picture.
+ * @param {Uint8ClampedArray|null} pixelsB - RGBA bytes of the second, the same size, or null.
+ * @param {number} width - Width of both.
+ * @param {number} height - Height of both.
+ * @returns {Promise<{a: object, b: object|null, pair: object|null}>} What `describeOne` and
+ *   `comparePair` answer, measured on the page where the worker is unavailable.
+ */
+function measurePixels(pixelsA, pixelsB, width, height) {
+  const onPage = () => ({
+    a: describeOne(pixelsA, width, height),
+    b: pixelsB ? describeOne(pixelsB, width, height) : null,
+    pair: pixelsB ? comparePair(pixelsA, pixelsB, width, height) : null,
+  });
+  const measurer = measuringWorker();
+  if (!measurer) return Promise.resolve().then(onPage);
+  return new Promise((resolve) => {
+    const id = (nextJob += 1);
+    pending.set(id, (answer) => resolve(answer || onPage()));
+    measurer.postMessage({ id, a: pixelsA, b: pixelsB, width, height }, []);
+  });
+}
 
 /**
  * The size measurements are taken at, which bounds the work on a large frame.
@@ -96,6 +172,8 @@ export function createMetricsSection(options = {}) {
   root.appendChild(legend);
 
   let last = null;
+  // Counts updates, so a measurement answered after a newer update is dropped.
+  let ticket = 0;
 
   /**
    * Draw one figure.
@@ -178,7 +256,7 @@ export function createMetricsSection(options = {}) {
   };
 
   /**
-   * Measure and draw.
+   * Measure and draw. The figures appear when the worker answers; an older answer is dropped.
    *
    * @param {CanvasImageSource|null} imageA - The first picture.
    * @param {CanvasImageSource|null} [imageB] - The second, for a comparison.
@@ -187,6 +265,7 @@ export function createMetricsSection(options = {}) {
    * @returns {void}
    */
   const update = (imageA, imageB = null, sizes = {}) => {
+    const own = (ticket += 1);
     figures.textContent = "";
     legend.textContent = "";
     if (!imageA) { last = null; drawPlot(); return; }
@@ -202,18 +281,35 @@ export function createMetricsSection(options = {}) {
       const work = workingSize(aw, ah, edge);
       const pixelsA = readPixels(imageA, work.width, work.height);
       if (!pixelsA) { last = null; return; }
-      const a = describeOne(pixelsA, work.width, work.height);
-      let b = null;
-      let pair = null;
-      if (imageB && !refused) {
-        // Both read at the same size, so a comparison of two different resolutions is a
-        // comparison of the same picture area rather than a refusal.
-        const pixelsB = readPixels(imageB, work.width, work.height);
-        if (pixelsB) {
-          b = describeOne(pixelsB, work.width, work.height);
-          pair = comparePair(pixelsA, pixelsB, work.width, work.height);
-        }
-      }
+      // Both read at the same size, so a comparison of two different resolutions is a
+      // comparison of the same picture area rather than a refusal.
+      const pixelsB = imageB && !refused ? readPixels(imageB, work.width, work.height) : null;
+      measurePixels(pixelsA, pixelsB, work.width, work.height)
+        .then(({ a, b, pair }) => {
+          if (own !== ticket) return;
+          show(a, b, pair, { aw, ah, bw, bh, mismatch, refused, work });
+        })
+        .catch((error) => console.error(`[${LOG_NAME}] Failed to measure:`, error));
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to measure:`, error);
+      last = null;
+    }
+  };
+
+  /**
+   * Draw what one measurement answered.
+   *
+   * @param {object} a - What the first picture is.
+   * @param {object|null} b - What the second is, or null.
+   * @param {object|null} pair - How they differ, or null.
+   * @param {object} read - The sizes read, whether they differ, whether B was refused, and the
+   *   working size.
+   * @returns {void}
+   */
+  const show = (a, b, pair, { aw, ah, bw, bh, mismatch, refused, work }) => {
+    try {
+      figures.textContent = "";
+      legend.textContent = "";
       // Whether the two are the same picture, which changes what is worth drawing and saying.
       const identical = Boolean(pair) && pair.rmse === 0;
       last = { a, b, identical };
@@ -256,7 +352,7 @@ export function createMetricsSection(options = {}) {
   return {
     element: root,
     update,
-    clear() { last = null; figures.textContent = ""; legend.textContent = ""; drawPlot(); },
-    dispose() { observer?.disconnect(); stopWatching(); stopTheme(); },
+    clear() { ticket += 1; last = null; figures.textContent = ""; legend.textContent = ""; drawPlot(); },
+    dispose() { ticket += 1; observer?.disconnect(); stopWatching(); stopTheme(); },
   };
 }

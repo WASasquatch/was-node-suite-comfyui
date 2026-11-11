@@ -378,7 +378,7 @@ app.registerExtension({
       defaultValue: true,
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!NODES.includes(nodeData?.name)) return;
     const withChart = NODES_WITH_CHART.includes(nodeData?.name);
 

@@ -51,7 +51,7 @@ def suffixes(text: str) -> tuple[str, ...] | None:
 def listing_payload(extensions=None, limit: int = MAX_ENTRIES) -> dict:
     """The whole listing, as the object the route answers with.
 
-    Never raises. The walk is memoized, so a burst of requests costs one directory walk.
+    Never raises. Answered from the file listing, which reads no folder for a request.
 
     Args:
         extensions: Suffixes to keep, or ``None`` for every file.

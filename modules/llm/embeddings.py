@@ -15,6 +15,7 @@ import time
 from itertools import islice
 
 from .. import deps, log
+from ..util.kept import Kept
 from . import FEATURE, providers, runtime, wires
 
 __all__ = [
@@ -303,7 +304,12 @@ def model_type(folder: str) -> str:
 
 
 def local_choices() -> list[str]:
-    """What the local model menu offers: text folders on disk, then suggested ids not on disk."""
+    """What the local model menu offers, as a worker thread last read it."""
+    return list(_local_menu.get())
+
+
+def _local_choices() -> list[str]:
+    """Text checkpoint folders on disk, then the suggested ids not on disk."""
     found = [label for label in local_folders() if model_type(_local_folder(label) or "") not in PICTURE_TYPES]
     return found + [name for name in SUGGESTED if name not in found]
 
@@ -921,3 +927,7 @@ def provider_embedding(
         dimensions=int(dimensions),
     )
     return wired, target
+
+
+#: The local text model menu, read on a worker thread.
+_local_menu = Kept("LLM text models", _local_choices, list(SUGGESTED))

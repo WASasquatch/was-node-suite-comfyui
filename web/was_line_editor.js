@@ -2149,7 +2149,7 @@ app.registerExtension({
       defaultValue: true,
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const setup = NODES[nodeData?.name];
     if (!setup) return;
     const proto = nodeType.prototype;

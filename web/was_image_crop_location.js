@@ -808,7 +808,7 @@ app.registerExtension({
       defaultValue: true,
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const id = nodeData?.name;
     // Asked for with `hasOwn`, so a node named after something every object inherits is not
     // handed this pack's editor.

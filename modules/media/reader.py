@@ -176,9 +176,8 @@ def video_labels() -> list[str]:
         return []
 
     try:
-        # One sample name per suffix the walk holds, so the menu's limit counts videos alone.
-        suffixes = {os.path.splitext(entry.relative)[1].lower() for entry in file_listing.scan()}
-        samples = [f"video{suffix}" for suffix in sorted(suffixes) if suffix]
+        # One sample name per suffix the listing holds, so the menu's limit counts videos alone.
+        samples = [f"video{suffix}" for suffix in sorted(file_listing.suffixes())]
         videos = folder_paths.filter_files_content_types(samples, ["video"])
         if not videos:
             return []

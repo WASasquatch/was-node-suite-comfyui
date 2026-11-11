@@ -144,7 +144,7 @@ function drawTiles(pen, rect, live) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!NODE_IDS.has(nodeData?.name)) return;
 
     const proto = nodeType.prototype;

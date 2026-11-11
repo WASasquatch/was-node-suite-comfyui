@@ -30,9 +30,7 @@ def lut_choices() -> list[str]:
     """
     names = [CUSTOM]
     names += [name for name, _preset in tables.BUILTIN_PRESETS]
-    # ``define_schema`` runs again for every ``/object_info`` request, so an unmemoized
-    # scan here would be paid on every browser refresh.
-    names += [f"{FILE_PREFIX}{path.name}" for path in tables.cube_files()]
+    names += [f"{FILE_PREFIX}{path.name}" for path in tables.menu_cubes()]
     return names
 
 

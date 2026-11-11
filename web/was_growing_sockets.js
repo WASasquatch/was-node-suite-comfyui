@@ -384,7 +384,7 @@ for (const [nodeId, declared] of Object.entries(GROWING)) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const declared = GROWING[nodeData?.name];
     if (!declared) return;
     const entry = Array.isArray(declared) ? { slots: declared } : declared;

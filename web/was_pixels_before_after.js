@@ -230,7 +230,7 @@ app.registerExtension({
     },
   ],
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const id = nodeData?.name;
     if (!NODES.includes(id)) return;
 

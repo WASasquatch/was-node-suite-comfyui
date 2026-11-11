@@ -13,6 +13,7 @@ import numpy as np
 import torch
 
 from .. import log
+from ..util.kept import Kept
 
 __all__ = [
     "BUILTIN_PRESETS",
@@ -815,6 +816,11 @@ def cube_files() -> list[Path]:
     return list(listed)
 
 
+def menu_cubes() -> list[Path]:
+    """Every ``.cube`` file :func:`cube_files` listed when a worker thread last read them."""
+    return list(_menu_cubes.get())
+
+
 def find_cube(name: str) -> Path:
     """The path of a listed cube file, looked up by its file name.
 
@@ -835,3 +841,7 @@ def find_cube(name: str) -> Path:
         f"there is no LUT file named {name!r} in a models/LUT folder or the pack's luts folder "
         f"(paths.luts in config.yaml). Put the file there, or pick another look"
     )
+
+
+#: The cube files the load menu offers, read on a worker thread.
+_menu_cubes = Kept("LUTs", cube_files, [])

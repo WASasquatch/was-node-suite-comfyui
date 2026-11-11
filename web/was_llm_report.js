@@ -102,7 +102,7 @@ const PANELS = {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const panel = PANELS[nodeData?.name];
     if (!panel) return;
 

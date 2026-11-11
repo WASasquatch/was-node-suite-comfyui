@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..config import paths
+from ..util.kept import Kept
 
 #: Name ending that marks a saved workflow as an app.
 SUFFIX = ".app.json"
@@ -93,7 +94,16 @@ def directory() -> Path | None:
 
 
 def discover() -> list[str]:
-    """Every app workflow found, as a path relative to the workflows directory."""
+    """Every app workflow found, as a path relative to the workflows directory.
+
+    Returns:
+        The paths a worker thread last read, sorted.
+    """
+    return list(_discovered.get())
+
+
+def _discover() -> list[str]:
+    """Every app workflow on disk, as a path relative to the workflows directory, sorted."""
     root = directory()
     if root is None or not root.is_dir():
         return []
@@ -391,3 +401,7 @@ def _reads_many(prompt, node_id) -> bool:
             if isinstance(value, list) and len(value) == 2 and value[0] == node_id:
                 taken.add(value[1])
     return len(taken) > 1
+
+
+#: The app workflows a menu offers, read on a worker thread.
+_discovered = Kept("app workflows", _discover, [])

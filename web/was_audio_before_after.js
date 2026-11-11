@@ -493,7 +493,7 @@ app.registerExtension({
     },
   ],
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const family = FAMILY[nodeData?.name];
     if (!family) return;
     const proto = nodeType.prototype;

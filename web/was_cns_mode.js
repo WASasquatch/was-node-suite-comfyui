@@ -22,7 +22,7 @@ foldedOnPlacing(NODE, (definition) => foldedByMode(definition, CONTROLLER, BY_MO
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE) return;
 
     const proto = nodeType.prototype;

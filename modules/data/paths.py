@@ -12,6 +12,7 @@ from importlib import resources
 from pathlib import Path
 
 from .. import log
+from ..util.kept import Kept
 
 logger = log.get_logger("data.paths")
 
@@ -263,10 +264,10 @@ def font_names() -> tuple[str, ...]:
     """The fonts a widget may offer, in menu order.
 
     Returns:
-        Every key of :func:`font_catalog`: the bundled families first, then whatever was
-        found in the two font directories.
+        Every key of :func:`font_catalog` as a worker thread last built it: the bundled
+        families first, then whatever was found in the two font directories.
     """
-    return tuple(font_catalog())
+    return tuple(_font_menu.get())
 
 
 def font_file(name: str = "font.ttf") -> Path:
@@ -339,3 +340,9 @@ def _resolve(name: str, allowed: tuple[str, ...], directory: Path) -> Path:
             f"Available: {', '.join(allowed)}"
         )
     return directory / name
+
+
+#: The font menu, read on a worker thread.
+_font_menu = Kept(
+    "fonts", lambda: tuple(font_catalog()), tuple(label for label in FONTS if label != "font.ttf")
+)

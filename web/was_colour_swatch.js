@@ -244,7 +244,7 @@ app.registerExtension({
     },
   ],
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const names = COLOUR_WIDGETS[nodeData?.name];
     if (!names) return;
 

@@ -1434,7 +1434,7 @@ app.registerExtension({
       defaultValue: true,
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!NODE_NAMES.includes(nodeData?.name)) return;
 
     const proto = nodeType.prototype;

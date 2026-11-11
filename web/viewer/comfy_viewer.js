@@ -1024,7 +1024,7 @@ foldedOnPlacing(NODE_NAME, (definition) => ({ widgets: Object.keys(definition?.i
 app.registerExtension({
   name: EXT_NAME,
   
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_NAME) return;
 
     const oldOnNodeCreated = nodeType.prototype.onNodeCreated;

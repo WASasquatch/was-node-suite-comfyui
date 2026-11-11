@@ -2002,7 +2002,7 @@ app.registerExtension({
     api.addEventListener("execution_error", settle);
   },
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== LOADER) return;
     const proto = nodeType.prototype;
     // Wrapped once, however often the definitions are registered.

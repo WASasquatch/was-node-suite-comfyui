@@ -1,36 +1,42 @@
 """The files under ComfyUI's own directories, as the labels a widget stores.
 
-A label is ``<relative path> [tag]``, the tag ``input``, ``output``, ``temp`` or a
-``paths.allow_read`` folder. :func:`scan` walks on a worker thread; :func:`find` reads one
-label off disk.
+A label is ``<relative path> [tag]``. The listing is saved in the state folder, and a worker
+thread rereads only the folders whose modified time changed.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import stat
 import threading
 import time
 from collections import deque
 from pathlib import Path
-from typing import Iterable, Iterator, NamedTuple, Sequence
+from typing import Callable, Iterable, Iterator, NamedTuple, Sequence
 
 from .. import log
 
 __all__ = [
+    "CACHE_NAME",
+    "CACHE_VERSION",
     "DEFAULT_LIMIT",
     "DEFER_LIMIT",
     "Entry",
+    "Folder",
     "INPUT",
     "LISTING_TTL",
     "MAX_DEPTH",
-    "MAX_EXAMINED",
+    "MAX_DIRS",
+    "MAX_FILES",
     "MAX_REUSE",
+    "MAX_SAVED_BYTES",
     "LIMIT_KEY",
     "MOST_LIMIT",
     "OUTPUT",
     "CONFIGURED",
     "ROOTS",
+    "SETTLE",
     "SLOW_WALK_SHARE",
     "TAGS",
     "TEMP",
@@ -38,6 +44,7 @@ __all__ = [
     "configured",
     "defer_walks",
     "find",
+    "folders",
     "label_of",
     "labels",
     "path_text",
@@ -49,9 +56,12 @@ __all__ = [
     "reuse_until",
     "roots",
     "scan",
+    "suffixes",
     "typed",
     "view",
     "walks_deferred",
+    "warm",
+    "when_changed",
 ]
 
 logger = log.get_logger("util.file_listing")
@@ -80,70 +90,97 @@ _GETTERS = {
     TEMP: "get_temp_directory",
 }
 
-#: Most directories below a root the walk descends. Every subfolder is listed;
-#: :data:`MAX_EXAMINED` bounds the work, read breadth first.
+#: Most directories below a root the listing descends.
 MAX_DEPTH = 64
 
-#: How many directory entries are examined under one root, breadth first, before that
-#: root's walk stops. Files, folders and skipped names all count. Each root carries a budget
-#: of its own, and a menu's own limit counts only the files it lists.
-MAX_EXAMINED = 20000
+#: Most files the listing holds under one root, read breadth first, so the files nearer the
+#: top of a folder are held first.
+MAX_FILES = 20000
+
+#: Most folders the listing reads under one root, breadth first, whether or not their files
+#: are held.
+MAX_DIRS = 20000
 
 #: How many labels a menu offers where ``paths.menu_limit`` is unset or not a whole number.
 DEFAULT_LIMIT = 1000
 
 #: The most labels ``paths.menu_limit`` can ask a menu for.
-MOST_LIMIT = MAX_EXAMINED
+MOST_LIMIT = MAX_FILES
 
 #: The key under ``paths`` naming how many labels a menu offers.
 LIMIT_KEY = "menu_limit"
 
-#: Seconds a walk is reused for at least. Long enough that a burst of ``/object_info``
-#: requests costs one walk, and short enough that a newly saved file is listed before anyone
-#: has finished reaching for it.
+#: Seconds a pass is trusted for at least before a request checks the folders again.
 LISTING_TTL = 5.0
 
-#: A walk is reused for this many times as long as it took, where that is longer than
+#: A pass is trusted for this many times as long as it took, where that is longer than
 #: :data:`LISTING_TTL`.
 SLOW_WALK_SHARE = 10.0
 
-#: Longest a walk is reused for, in seconds, however long it took.
+#: Longest a pass is trusted for, in seconds, however long it took.
 MAX_REUSE = 120.0
 
-#: Seconds, counted from the start of a walk, a caller waits for it before being answered
-#: from the last walk that finished.
-WALK_WAIT = 1.0
+#: Seconds, counted from the start of a pass, a request waits for it before being answered
+#: from the last pass that finished.
+WALK_WAIT = 0.25
 
-#: Longest :func:`defer_walks` holds walks off, in seconds, where nothing releases them.
+#: Longest :func:`defer_walks` holds requests off the folders, in seconds, where nothing
+#: releases them.
 DEFER_LIMIT = 120.0
 
-#: Serializes the walk and the view cache. Both are read from ComfyUI's server thread, for a
-#: browser panel, and from the prompt thread, for a combo and a node.
+#: File in the pack's state folder the listing is saved to.
+CACHE_NAME = "file_menus.json"
+
+#: Layout of :data:`CACHE_NAME`. A saved listing of any other layout is read again from disk.
+CACHE_VERSION = 1
+
+#: Largest saved listing read back, in bytes.
+MAX_SAVED_BYTES = 64 * 1024 * 1024
+
+#: Seconds a folder's modified time must lie in the past before the folder is reused unread.
+SETTLE = 2.0
+
+#: Serializes the listing and the view cache. Both are read from ComfyUI's server thread, for
+#: a browser panel, and from the prompt thread, for a combo and a node.
 _lock = threading.RLock()
 
-#: Signalled whenever a walk finishes, on :data:`_lock`.
+#: Signalled whenever a pass finishes, on :data:`_lock`.
 _walk_done = threading.Condition(_lock)
 
-#: The worker thread walking the roots, or ``None`` when no walk is running.
+#: The worker thread running a pass, or ``None`` when none is running.
 _walker: threading.Thread | None = None
 
-#: ``time.monotonic()`` the running walk started at.
+#: ``time.monotonic()`` the running pass started at.
 _walk_began = 0.0
 
-#: ``time.monotonic()`` :func:`defer_walks` holds walks off until.
+#: ``time.monotonic()`` :func:`defer_walks` holds requests off until.
 _deferred_until = 0.0
 
-#: ``(monotonic time it is reused until, walk id, entries)``. The id is taken from
-#: :data:`_walks` and changes on every rebuild, so a cached view knows whether the walk under it is the one it was built
-#: from.
+#: ``(monotonic time it is trusted until, listing id, entries)``. The id changes whenever
+#: the folders do, so a cached view knows whether the listing under it is the one it was
+#: built from.
 _scan_cache: tuple[float, int, tuple["Entry", ...]] = (0.0, 0, ())
 
-#: How many walks have been made. Only ever counts up, so a view built from an earlier walk
-#: can never be mistaken for a current one.
+#: How many listings have been published. Only ever counts up.
 _walks = 0
 
-#: ``{view key: (walk id, entries, how many files the view's filter matched)}``.
+#: ``{(tag, root): {relative folder: Folder}}`` in root order, each tree breadth first.
+_trees: dict[tuple[str, str], dict[str, "Folder"]] = {}
+
+#: Whether the saved listing has been read back in this process.
+_loaded = False
+
+#: ``{view key: (listing id, entries, how many files the view's filter matched)}``.
 _view_cache: dict[tuple, tuple[int, tuple["Entry", ...], int]] = {}
+
+#: ``(listing id, tags, [(tag, folder labels)])`` from the last :func:`folders` call.
+_folder_cache: tuple[int, tuple, list] = (-1, (), [])
+
+#: ``(listing id, suffixes)`` from the last :func:`suffixes` call.
+_suffix_cache: tuple[int, frozenset] = (-1, frozenset())
+
+#: Functions run on the worker thread after a pass changes the listing.
+_listeners: list[Callable[[], object]] = []
 
 #: View keys whose cut has been logged, each once per process.
 _cuts_logged: set[tuple] = set()
@@ -151,7 +188,7 @@ _cuts_logged: set[tuple] = set()
 #: Whether an unusable ``paths.menu_limit`` has been logged.
 _limit_warned = False
 
-#: Roots whose walk has been reported as stopping, each logged once per process.
+#: Roots whose files did not all fit, each logged once per process.
 _stopped: set[str] = set()
 
 
@@ -165,7 +202,7 @@ class Entry(NamedTuple):
         label: The stored value, which is ``relative`` followed by ``[tag]``.
         path: Absolute path on disk.
         mtime: Modification time, which decides what survives a view's limit.
-        size: Size in bytes, as the walk saw it.
+        size: Size in bytes, as the listing saw it.
     """
 
     tag: str
@@ -177,8 +214,25 @@ class Entry(NamedTuple):
     size: int
 
 
+class Folder(NamedTuple):
+    """One directory as a pass read it.
+
+    Attributes:
+        stamp: Its ``st_mtime_ns`` when read, or ``0`` where that time was too recent to trust.
+        folders: Names of the directories inside it, sorted casefolded.
+        files: ``(name, mtime, size)`` per file held, in the order read, or ``None`` where none
+            were held.
+        count: How many files it holds in all.
+    """
+
+    stamp: int
+    folders: tuple[str, ...]
+    files: tuple[tuple[str, float, int], ...] | None
+    count: int
+
+
 def roots(tags: Sequence[str] = TAGS) -> list[tuple[str, Path]]:
-    """The directories walked, each with the tag its labels carry.
+    """The directories listed, each with the tag its labels carry.
 
     Args:
         tags: Which roots to answer, in :data:`TAGS` order whatever order they are given in.
@@ -267,8 +321,25 @@ def reuse_until(started: float, finished: float) -> float:
     return finished + min(MAX_REUSE, max(LISTING_TTL, SLOW_WALK_SHARE * took))
 
 
+def warm() -> None:
+    """Start bringing the listing up to date on the worker thread, without waiting for it."""
+    with _lock:
+        _start()
+
+
+def when_changed(callback: Callable[[], object]) -> None:
+    """Run ``callback`` on the worker thread after every pass that changes the listing.
+
+    Args:
+        callback: Called with no arguments. An exception it raises is logged at debug.
+    """
+    with _lock:
+        if callback not in _listeners:
+            _listeners.append(callback)
+
+
 def defer_walks() -> None:
-    """Hold walks off until the running event loop next turns, at most :data:`DEFER_LIMIT` seconds."""
+    """Answer requests without waiting on a pass until the running event loop next turns."""
     global _deferred_until
     import asyncio
 
@@ -289,19 +360,57 @@ def release_walks() -> None:
 
 
 def walks_deferred() -> bool:
-    """Whether :func:`defer_walks` is holding walks off."""
+    """Whether :func:`defer_walks` is holding requests off the folders."""
     return time.monotonic() < _deferred_until
 
 
 def scan() -> tuple[Entry, ...]:
-    """Every listable file under every root, memoized for at least :data:`LISTING_TTL` seconds.
+    """Every listable file under every root, as the last pass left it.
 
     Returns:
-        The entries in the order the roots were walked, unsorted, at most
-        :data:`MAX_EXAMINED` per root. The last finished walk where a refresh outlasts
-        :data:`WALK_WAIT` or walks are deferred. Empty where nothing was found.
+        The entries in root order, each root breadth first, at most :data:`MAX_FILES` per
+        root. A request starts a pass once :data:`LISTING_TTL` has passed and waits up to
+        :data:`WALK_WAIT` for it. Empty where nothing was found.
     """
     return _scan()[2]
+
+
+def suffixes() -> set[str]:
+    """Every lowercased suffix the listing holds, such as ``.mp4``, without its empty one."""
+    global _suffix_cache
+    with _lock:
+        _, walk, entries = _scan()
+        if _suffix_cache[0] != walk:
+            found = frozenset(os.path.splitext(entry.relative)[1].lower() for entry in entries)
+            _suffix_cache = (walk, found - {""})
+        return set(_suffix_cache[1])
+
+
+def folders(tags: Sequence[str] = ROOTS) -> list[tuple[str, list[str]]]:
+    """Each root's folders, as the labels a folder menu stores.
+
+    Args:
+        tags: Which roots to read, as :func:`view` takes them.
+
+    Returns:
+        ``[(tag, labels)]`` in root order, every root the last pass reached included. Each
+        label is ``<relative path> [tag]``, breadth first and casefolded name order within a
+        folder; the root itself is not among them.
+    """
+    global _folder_cache
+    kept = _kept(tags)
+    key = tuple(sorted(kept))
+    with _lock:
+        _, walk, _entries = _scan()
+        if _folder_cache[0] == walk and _folder_cache[1] == key:
+            return [(tag, list(rows)) for tag, rows in _folder_cache[2]]
+        built = [
+            (tag, [f"{relative} [{tag}]" for relative in tree if relative])
+            for (tag, _root), tree in _trees.items()
+            if _holds(tag, kept)
+        ]
+        _folder_cache = (walk, key, built)
+        return [(tag, list(rows)) for tag, rows in built]
 
 
 def menu_limit(at_least: int = 0) -> int:
@@ -364,7 +473,7 @@ def view(
         cached = _view_cache.get(key)
         if cached is None or cached[0] != walk:
             built, matched = _build(entries, wanted, set(kept), key[2])
-            # Only the views built from an earlier walk are dropped.
+            # Only the views built from an earlier listing are dropped.
             for stale in [name for name, held in _view_cache.items() if held[0] != walk]:
                 del _view_cache[stale]
             cached = _view_cache[key] = (walk, built, matched)
@@ -412,9 +521,9 @@ def _report_cut(key: tuple, matched: int, offered: int) -> None:
     if key in _cuts_logged:
         return
     _cuts_logged.add(key)
-    suffixes = key[0]
-    kinds = "" if suffixes is None else " " + ", ".join(suffixes[:4]) + (
-        ", ..." if len(suffixes) > 4 else ""
+    suffixes_ = key[0]
+    kinds = "" if suffixes_ is None else " " + ", ".join(suffixes_[:4]) + (
+        ", ..." if len(suffixes_) > 4 else ""
     )
     logger.info(
         "a file menu lists the newest %d of %d%s files. Raise paths.%s in config.yaml to "
@@ -429,7 +538,7 @@ def find(
     tags: Sequence[str] = TAGS,
     paths: bool = False,
 ) -> Entry | None:
-    """The entry one label names, read straight off disk under the rules the walk keeps.
+    """The entry one label names, read straight off disk under the rules the listing keeps.
 
     Args:
         label: The exact label, such as ``prompts/animals.txt [input]``. Surrounding space
@@ -439,7 +548,7 @@ def find(
         paths: Also read text that is no label as a path, through :func:`typed`.
 
     Returns:
-        The entry, or ``None`` when no file the walk would list carries that label, which
+        The entry, or ``None`` when no file the listing would hold carries that label, which
         covers a file that has been deleted, renamed, or invented, and no path names one.
 
     Raises:
@@ -471,7 +580,7 @@ def resolve(
         paths: Also read text that is no label as a path, through :func:`typed`.
 
     Returns:
-        The absolute path, or ``None`` when no walked file carries that label.
+        The absolute path, or ``None`` when no listed file carries that label.
 
     Raises:
         PathNotAllowed: With ``paths``, the text is a path outside every permitted read root.
@@ -526,7 +635,7 @@ def typed(
     extensions: Iterable[str] | None = None,
     tags: Sequence[str] = TAGS,
 ) -> Entry | None:
-    """The file a path wired in as text names, labelled as the walk labels it.
+    """The file a path wired in as text names, labelled as the listing labels it.
 
     Args:
         value: The text, as :func:`path_text` reads it.
@@ -561,6 +670,30 @@ def typed(
         info = target.stat()
         return Entry(tag, order, relative, f"{relative} [{tag}]", str(target), info.st_mtime, info.st_size)
     return None
+
+
+def linked(entry: os.DirEntry) -> bool:
+    """Whether a directory entry is a symlink or a Windows junction.
+
+    Args:
+        entry: One entry of an ``os.scandir`` listing.
+
+    Returns:
+        True for either, and for an entry that cannot be read. A junction is read off its
+        reparse tag where ``DirEntry.is_junction`` is missing.
+    """
+    try:
+        if entry.is_symlink():
+            return True
+        check = getattr(entry, "is_junction", None)
+        if check is not None:
+            return bool(check())
+        tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", None)
+        if tag is None:
+            return False
+        return getattr(entry.stat(follow_symlinks=False), "st_reparse_tag", 0) == tag
+    except OSError:
+        return True
 
 
 # ---------------------------------------------------------------------- internals
@@ -600,7 +733,7 @@ def _holds(tag: str, tags: set[str]) -> bool:
     Args:
         tag: The entry's tag.
         tags: What :func:`_kept` returned, where :data:`CONFIGURED` stands for every root
-            outside :data:`TAGS`, whose names are only known once the walk has run.
+            outside :data:`TAGS`, whose names are only known once a pass has run.
 
     Returns:
         ``True`` where the entry belongs in the view.
@@ -608,16 +741,23 @@ def _holds(tag: str, tags: set[str]) -> bool:
     return tag in tags or (CONFIGURED in tags and tag not in TAGS)
 
 
-def _scan() -> tuple[float, int, tuple[Entry, ...]]:
-    """The memoized walk, refreshed on a worker thread once expired, waited for up to :data:`WALK_WAIT`."""
+def _start() -> None:
+    """Start a pass on the worker thread unless one is running. Called holding :data:`_lock`."""
     global _walker, _walk_began
+    if _walker is not None:
+        return
+    _walk_began = time.monotonic()
+    _walker = threading.Thread(target=_refresh, name="was-file-listing", daemon=True)
+    _walker.start()
+
+
+def _scan() -> tuple[float, int, tuple[Entry, ...]]:
+    """The published listing, a pass started once it has expired and waited for up to :data:`WALK_WAIT`."""
     with _lock:
-        if (_walks and time.monotonic() < _scan_cache[0]) or walks_deferred():
+        if walks_deferred():
             return _scan_cache
-        if _walker is None:
-            _walk_began = time.monotonic()
-            _walker = threading.Thread(target=_refresh, name="was-file-listing", daemon=True)
-            _walker.start()
+        if _walker is None and time.monotonic() >= _scan_cache[0]:
+            _start()
         deadline = _walk_began + WALK_WAIT
         while _walker is not None:
             left = deadline - time.monotonic()
@@ -628,37 +768,299 @@ def _scan() -> tuple[float, int, tuple[Entry, ...]]:
 
 
 def _refresh() -> None:
-    """Walk every root and publish the result as the memoized walk, on the worker thread."""
-    global _scan_cache, _walks, _walker
+    """Bring every root's folders up to date and publish them, on the worker thread."""
+    global _trees, _loaded, _walker
     began = time.monotonic()
-    found: list[Entry] = []
+    published = False
     try:
-        # ComfyUI's own three first, then whatever the config adds, so a menu offers the
-        # familiar folders before the rest. Each root is walked with its own budget.
-        for order, (tag, directory) in enumerate(roots((*TAGS, CONFIGURED))):
-            rows, stopped = _walk(directory, tag, order, MAX_EXAMINED)
-            found += rows
-            if stopped and str(directory) not in _stopped:
-                _stopped.add(str(directory))
-                logger.info(
-                    "the file menus stopped reading %s (%s) after examining %d entries, %d of "
-                    "them files: files past that point are not listed and cannot be picked. "
-                    "Files nearer the top of the folder are read first, and moving files out "
-                    "of it brings the rest into the menus.",
-                    tag, directory, MAX_EXAMINED, len(rows),
-                )
+        # ComfyUI's own three roots first, then the configured ones.
+        places =[(tag, str(directory)) for tag, directory in roots((*TAGS, CONFIGURED))]
+        if not _loaded:
+            _loaded = True
+            saved = _read_saved()
+            held = {place: saved[place] for place in places if place in saved}
+            if held:
+                _publish(held, 0.0)
+                published = True
+        trees = {place: _pass(place[1], _trees.get(place, {})) for place in places}
+        if list(trees.items()) != list(_trees.items()):
+            _publish(trees, reuse_until(began, time.monotonic()))
+            published = True
+            _save(trees)
     except Exception as error:
         logger.debug("the file listing could not be read: %s", error)
     finally:
         with _lock:
-            _walks += 1
-            _scan_cache = (reuse_until(began, time.monotonic()), _walks, tuple(found))
+            if _scan_cache[0] < time.monotonic():
+                _settle(reuse_until(began, time.monotonic()))
             _walker = None
             _walk_done.notify_all()
+    if published:
+        for callback in list(_listeners):
+            try:
+                callback()
+            except Exception as error:
+                logger.debug("a file listing listener failed: %s", error)
+
+
+def _settle(until: float) -> None:
+    """Trust the published listing until ``until`` without changing it. Called holding :data:`_lock`."""
+    global _scan_cache
+    _scan_cache = (until, _scan_cache[1], _scan_cache[2])
+
+
+def _publish(trees: dict[tuple[str, str], dict[str, Folder]], until: float) -> None:
+    """Make ``trees`` the listing every view reads.
+
+    Args:
+        trees: ``{(tag, root): folders}`` in root order.
+        until: Monotonic time the listing is trusted until, ``0`` to check it at the next
+            request.
+    """
+    global _scan_cache, _trees, _walks
+    found: list[Entry] = []
+    for order, ((tag, root), tree) in enumerate(trees.items()):
+        rows, left = _rows(tree, tag, order, root)
+        found += rows
+        if left and root not in _stopped:
+            _stopped.add(root)
+            logger.info(
+                "the file menus hold the first %d files under %s and leave %d out. Files nearer "
+                "the top of the folder are held first, and a path wired into a menu's input "
+                "reads any of the rest",
+                MAX_FILES, tag, left,
+            )
+    with _lock:
+        _walks += 1
+        _trees = trees
+        _scan_cache = (until, _walks, tuple(found))
+
+
+def _rows(tree: dict[str, Folder], tag: str, order: int, root: str) -> tuple[list[Entry], int]:
+    """One root's entries, breadth first, within :data:`MAX_FILES`.
+
+    Args:
+        tree: The root's folders, breadth first.
+        tag: The tag written into every label.
+        order: The root's position, carried onto every entry.
+        root: The root's absolute path.
+
+    Returns:
+        ``(entries, files left out)``.
+    """
+    rows: list[Entry] = []
+    budget, left = MAX_FILES, 0
+    for relative, folder in tree.items():
+        take = (folder.files or ())[: max(0, budget)]
+        budget -= len(take)
+        left += max(0, folder.count - len(take))
+        if not take:
+            continue
+        base = os.path.join(root, *relative.split("/")) if relative else root
+        prefix = f"{relative}/" if relative else ""
+        for name, mtime, size in take:
+            # A label joins its folders with '/' on every platform.
+            label_path = prefix + name
+            rows.append(
+                Entry(tag, order, label_path, f"{label_path} [{tag}]", os.path.join(base, name), mtime, size)
+            )
+    return rows, left
+
+
+def _pass(root: str, old: dict[str, Folder]) -> dict[str, Folder]:
+    """One root's folders, each reused from ``old`` while its modified time is unchanged.
+
+    Args:
+        root: The root, already resolved.
+        old: The folders the last pass read, ``{relative: Folder}``.
+
+    Returns:
+        ``{relative: Folder}`` breadth first, the root itself under ``""``. A folder that
+        cannot be read holds nothing and stops nothing.
+    """
+    tree: dict[str, Folder] = {}
+    budget, room = MAX_FILES, MAX_DIRS
+    settled = time.time_ns() - int(SETTLE * 1e9)
+    queue: deque[tuple[str, int]] = deque([("", 0)])
+    while queue:
+        relative, depth = queue.popleft()
+        path = os.path.join(root, *relative.split("/")) if relative else root
+        try:
+            info = os.lstat(path)
+        except OSError:
+            continue
+        if _linked_info(info) or not stat.S_ISDIR(info.st_mode):
+            continue
+        folder = old.get(relative)
+        if _current(folder, info.st_mtime_ns, budget):
+            if folder.files is not None and len(folder.files) > budget:
+                folder = folder._replace(files=folder.files[: max(0, budget)] or None)
+        else:
+            folder = _read(path, info.st_mtime_ns, budget, settled)
+        tree[relative] = folder
+        budget -= min(max(0, budget), len(folder.files or ()))
+        if depth >= MAX_DEPTH:
+            continue
+        for name in folder.folders:
+            if room <= 0:
+                break
+            room -= 1
+            queue.append((f"{relative}/{name}" if relative else name, depth + 1))
+    return tree
+
+
+def _current(folder: Folder | None, stamp: int, budget: int) -> bool:
+    """Whether a folder read earlier still answers for one with modified time ``stamp``.
+
+    Args:
+        folder: The folder as the last pass read it, or ``None``.
+        stamp: Its ``st_mtime_ns`` now.
+        budget: Files the root may still hold.
+
+    Returns:
+        True where the time matches a trusted one and the folder holds as many of its files
+        as the budget now asks for.
+    """
+    if folder is None or not folder.stamp or folder.stamp != stamp:
+        return False
+    if budget <= 0:
+        return True
+    held = len(folder.files) if folder.files is not None else 0
+    return held >= min(budget, folder.count)
+
+
+def _read(path: str, stamp: int, budget: int, settled: int) -> Folder:
+    """One folder read off disk.
+
+    Args:
+        path: The folder.
+        stamp: Its ``st_mtime_ns``.
+        budget: Files the root may still hold.
+        settled: ``time.time_ns()`` a trusted stamp must lie before.
+
+    Returns:
+        The folder, holding at most ``budget`` files in the order read. Dotted names, links
+        and junctions are skipped.
+    """
+    names: list[str] = []
+    files: list[tuple[str, float, int]] = []
+    count = 0
+    try:
+        listing_ = os.scandir(path)
+    except OSError:
+        return Folder(0, (), None, 0)
+    with listing_:
+        for entry in _entries(listing_):
+            # A dotted name is editor and tool state. A symlink and a junction are skipped,
+            # whether they name a folder or a file.
+            if entry.name.startswith(".") or linked(entry):
+                continue
+            try:
+                if entry.is_dir(follow_symlinks=False):
+                    names.append(entry.name)
+                    continue
+                if not entry.is_file(follow_symlinks=False):
+                    continue
+                count += 1
+                if len(files) >= budget:
+                    continue
+                info = entry.stat(follow_symlinks=False)
+            except OSError:
+                continue
+            files.append((entry.name, info.st_mtime, max(0, int(info.st_size))))
+    names.sort(key=str.casefold)
+    trusted = stamp if stamp < settled else 0
+    return Folder(trusted, tuple(names), tuple(files) if budget > 0 else None, count)
+
+
+def _saved_file() -> Path | None:
+    """Where the listing is saved, or ``None`` outside ComfyUI."""
+    try:
+        from ..config import comfyui_user_directory, state_file
+
+        if comfyui_user_directory() is None:
+            return None
+        return state_file(CACHE_NAME)
+    except Exception as error:
+        logger.debug("the file listing has nowhere to be saved: %s", error)
+        return None
+
+
+def _save(trees: dict[tuple[str, str], dict[str, Folder]]) -> None:
+    """Write ``trees`` to :data:`CACHE_NAME`, replacing the file in one step."""
+    target = _saved_file()
+    if target is None:
+        return
+    data = {
+        "version": CACHE_VERSION,
+        "roots": [
+            {
+                "tag": tag,
+                "root": root,
+                "folders": [
+                    [
+                        relative,
+                        folder.stamp,
+                        list(folder.folders),
+                        None if folder.files is None else [list(row) for row in folder.files],
+                        folder.count,
+                    ]
+                    for relative, folder in tree.items()
+                ],
+            }
+            for (tag, root), tree in trees.items()
+        ],
+    }
+    scratch = target.with_name(f"{target.name}.{os.getpid()}.tmp")
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        scratch.write_text(json.dumps(data, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+        os.replace(scratch, target)
+    except OSError as error:
+        logger.debug("the file listing could not be saved: %s", error.strerror)
+        try:
+            scratch.unlink()
+        except OSError:
+            pass
+
+
+def _read_saved() -> dict[tuple[str, str], dict[str, Folder]]:
+    """The listing :func:`_save` wrote, ``{}`` where there is none or it will not read."""
+    source = _saved_file()
+    if source is None:
+        return {}
+    try:
+        if source.stat().st_size > MAX_SAVED_BYTES:
+            return {}
+        data = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict) or data.get("version") != CACHE_VERSION:
+        return {}
+    trees = {}
+    for block in data.get("roots") or ():
+        try:
+            tree = {}
+            for relative, stamp, names, files, count in block["folders"]:
+                if relative and not all(_plain(part) for part in str(relative).split("/")):
+                    raise ValueError(relative)
+                held = None
+                if files is not None:
+                    held = tuple((str(name), float(mtime), int(size)) for name, mtime, size in files[:MAX_FILES])
+                    if not all(_plain(row[0]) for row in held):
+                        raise ValueError(relative)
+                kids = tuple(str(name) for name in names)
+                if not all(_plain(name) for name in kids):
+                    raise ValueError(relative)
+                tree[str(relative)] = Folder(int(stamp), kids, held, int(count))
+            trees[(str(block["tag"]), str(block["root"]))] = tree
+        except (KeyError, TypeError, ValueError):
+            continue
+    return trees
 
 
 def _plain(part: str) -> bool:
-    """Whether one segment of a label's relative path is a name the walk lists."""
+    """Whether one segment of a label's relative path is a name the listing holds."""
     if not part or part.startswith(".") or "\0" in part:
         return False
     if os.sep in part or (os.altsep and os.altsep in part):
@@ -720,10 +1122,10 @@ def _labelled(label: str, wanted: tuple[str, ...] | None, kept: set[str]) -> Ent
 def _build(
     entries: tuple[Entry, ...], extensions: tuple[str, ...] | None, tags: set[str], limit: int
 ) -> tuple[tuple[Entry, ...], int]:
-    """Filter, cap and sort one view out of the walk.
+    """Filter, cap and sort one view out of the listing.
 
     Args:
-        entries: The whole walk.
+        entries: The whole listing.
         extensions: Suffixes to keep, or ``None`` for every file.
         tags: Roots to keep, as :func:`_kept` returns them.
         limit: How many entries survive.
@@ -766,7 +1168,7 @@ def _shared(kept: list[Entry], limit: int) -> list[Entry]:
     share = max(1, limit // max(1, len(held)))
     taken: list[Entry] = []
     # Every root the view holds, configured ones included, each taking its share in the
-    # order the walk reached it.
+    # order the listing reached it.
     for tag in sorted(held, key=lambda name: held[name][0].order):
         taken.extend(held[tag][:share])
     # What one root did not need is offered to the rest, newest first.
@@ -778,100 +1180,18 @@ def _shared(kept: list[Entry], limit: int) -> list[Entry]:
     return taken[:limit]
 
 
-def _walk(directory: Path, tag: str, order: int, budget: int) -> tuple[list[Entry], bool]:
-    """Every listable file under one root, breadth first, within a budget of entries.
-
-    Args:
-        directory: The root, already resolved.
-        tag: The tag written into every label from this root.
-        order: The root's position in :data:`TAGS`, carried onto every entry.
-        budget: Directory entries that may be examined, whatever they turn out to be.
-
-    Returns:
-        ``(entries, stopped)``, ``stopped`` being True where the budget ran out with entries
-        left unread. A directory that cannot be read contributes nothing and stops nothing.
-    """
-    found: list[Entry] = []
-    queue: deque[tuple[str, int, str]] = deque([(str(directory), 0, "")])
-    while queue:
-        parent, depth, prefix = queue.popleft()
-        try:
-            listing = os.scandir(parent)
-        except OSError:
-            continue
-        with listing:
-            for entry in _entries(listing):
-                if budget <= 0:
-                    return found, True
-                budget -= 1
-                # A dotted name is editor and tool state. A symlink and a junction are skipped,
-                # whether they name a folder or a file.
-                if entry.name.startswith(".") or linked(entry):
-                    continue
-                try:
-                    if entry.is_dir(follow_symlinks=False):
-                        if depth < MAX_DEPTH:
-                            queue.append((entry.path, depth + 1, f"{prefix}{entry.name}/"))
-                        continue
-                    if not entry.is_file(follow_symlinks=False):
-                        continue
-                    info = entry.stat(follow_symlinks=False)
-                except OSError:
-                    continue
-                # Built with '/' rather than os.sep or os.path.join: the label is the value
-                # written into a saved workflow, and a backslash in it would stop a workflow
-                # saved on Windows matching the same file listed on Linux.
-                relative = f"{prefix}{entry.name}"
-                found.append(
-                    Entry(
-                        tag=tag,
-                        order=order,
-                        relative=relative,
-                        label=f"{relative} [{tag}]",
-                        path=entry.path,
-                        mtime=info.st_mtime,
-                        size=max(0, int(info.st_size)),
-                    )
-                )
-    return found, False
-
-
-def linked(entry: os.DirEntry) -> bool:
-    """Whether a directory entry is a symlink or a Windows junction.
-
-    Args:
-        entry: One entry of an ``os.scandir`` listing.
-
-    Returns:
-        True for either, and for an entry that cannot be read. A junction is read off its
-        reparse tag where ``DirEntry.is_junction`` is missing.
-    """
-    try:
-        if entry.is_symlink():
-            return True
-        check = getattr(entry, "is_junction", None)
-        if check is not None:
-            return bool(check())
-        tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", None)
-        if tag is None:
-            return False
-        return getattr(entry.stat(follow_symlinks=False), "st_reparse_tag", 0) == tag
-    except OSError:
-        return True
-
-
-def _entries(listing) -> Iterator[os.DirEntry]:
+def _entries(listing_) -> Iterator[os.DirEntry]:
     """The entries of an open ``os.scandir`` iterator, read one at a time.
 
     Args:
-        listing: The iterator.
+        listing_: The iterator.
 
     Yields:
         Each entry, until the directory is exhausted or reading it fails.
     """
     while True:
         try:
-            entry = next(listing)
+            entry = next(listing_)
         except (StopIteration, OSError):
             return
         yield entry

@@ -417,11 +417,14 @@ class Run:
         return comfy.utils.pack_latents(parts)[0].to(like.dtype)
 
     def measured(self) -> dict[int, torch.Tensor]:
-        """Each kept prediction's resolved share against the run's last one, stretched per ring."""
+        """Each kept prediction the size of the run's last one, its resolved share against that one."""
         if len(self.kept) < 2:
             return {}
         steps = sorted(self.kept)
         final = self.kept[steps[-1]].float()
+        steps = [step for step in steps if self.kept[step].shape == final.shape]
+        if len(steps) < 2:
+            return {}
         index = band_index(final.shape[-2], final.shape[-1], self.settings.bands, "cpu")
         raw = torch.stack([band_progress(final, self.kept[step].float(), index,
                                          self.settings.bands) for step in steps])

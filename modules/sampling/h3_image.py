@@ -51,7 +51,7 @@ def _step(x, denoised, sigma, sigma_next, fresh, noise_sampler, noise_scale, mod
 
 @torch.no_grad()
 def sample(model, x, sigmas, extra_args=None, callback=None, disable=None, renoise_steps: int = 1,
-           noise_scale: float = 1.0, start_scale: float = 1.0, grow_at: int = 0):
+           noise_scale: float = 1.0, start_scale: float = 1.0, grow_at: int = 0, noise_sampler=None):
     """Sample a latent on ``sigmas``, the last ``renoise_steps`` steps above zero as lcm steps.
 
     Args:
@@ -63,6 +63,8 @@ def sample(model, x, sigmas, extra_args=None, callback=None, disable=None, renoi
         noise_scale: Multiplier on the fresh noise of a renoised step; ``1`` is core's lcm step.
         start_scale: Share of each side the first ``grow_at`` steps run at; ``1`` is off.
         grow_at: Steps run on the smaller grid; ``0`` is off.
+        noise_sampler: ``noise(sigma, sigma_next)`` at the full latent's size for every fresh draw,
+            or None for core's default noise from the run's seed.
 
     Returns:
         The sampled latent.
@@ -79,9 +81,10 @@ def sample(model, x, sigmas, extra_args=None, callback=None, disable=None, renoi
     renoised = _renoised(sigmas, renoise_steps)
     if start_scale < 1.0 and 0 < grow_at < steps:
         return _progressive(model, x, sigmas, extra_args, callback, disable, renoised, noise_scale,
-                            start_scale, int(grow_at), model_sampling)
+                            start_scale, int(grow_at), model_sampling, noise_sampler)
 
-    noise_sampler = k_diffusion.default_noise_sampler(x, seed=extra_args.get("seed", None))
+    if noise_sampler is None:
+        noise_sampler = k_diffusion.default_noise_sampler(x, seed=extra_args.get("seed", None))
     s_in = x.new_ones([x.shape[0]])
     for i in trange(steps, disable=disable):
         sigma, sigma_next = sigmas[i], sigmas[i + 1]
@@ -93,8 +96,8 @@ def sample(model, x, sigmas, extra_args=None, callback=None, disable=None, renoi
 
 
 def _progressive(model, x, sigmas, extra_args, callback, disable, renoised, noise_scale,
-                 start_scale, grow_at, model_sampling):
-    """The first ``grow_at`` steps on a smaller grid, the rest at full size."""
+                 start_scale, grow_at, model_sampling, given=None):
+    """The first ``grow_at`` steps on a smaller grid, the rest at full size, drawing from ``given``."""
     import comfy.k_diffusion.sampling as k_diffusion
     from tqdm.auto import tqdm
 
@@ -115,7 +118,12 @@ def _progressive(model, x, sigmas, extra_args, callback, disable, renoised, nois
     else:
         x = spectral.downscale(x, 1.0, small)
 
-    noise_sampler = k_diffusion.default_noise_sampler(x, seed=seed)
+    if given is None:
+        noise_sampler = k_diffusion.default_noise_sampler(x, seed=seed)
+    else:
+        # Full-size draws, truncated to the small grid.
+        def noise_sampler(sigma, sigma_next):
+            return spectral.downscale(given(sigma, sigma_next), 1.0, small)
     s_in = x.new_ones([x.shape[0]])
     steps = len(sigmas) - 1
     bar = tqdm(total=steps, disable=disable)
@@ -128,7 +136,7 @@ def _progressive(model, x, sigmas, extra_args, callback, disable, renoised, nois
         bar.update(1)
         if i == grow_at - 1:
             grown_seed = None if seed is None else seed + 1
-            noise_sampler = k_diffusion.default_noise_sampler(x.new_empty((*x.shape[:-2], *full)), seed=grown_seed)
+            noise_sampler = given or k_diffusion.default_noise_sampler(x.new_empty((*x.shape[:-2], *full)), seed=grown_seed)
             x, i = _grow(x, denoised, sigmas, i, full, grown_seed, noise_sampler)
             s_in = x.new_ones([x.shape[0]])
             continue

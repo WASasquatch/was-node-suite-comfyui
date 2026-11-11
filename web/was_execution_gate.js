@@ -94,7 +94,7 @@ function apply(gate) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_ID) return;
     const proto = nodeType.prototype;
     if (proto.__was_execution_gate_wrapped) return;

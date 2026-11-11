@@ -421,6 +421,9 @@ def _encoder(config: dict, dtype_llama, quantization, parts: int = 0):
                                                device=device, dtype=dtype)
                         for _ in range(parts)
                     ])
+                    # The split layer runs after the activation, as silu(gate) * up.
+                    if getattr(block.mlp, "merged_input_act", None) is not None:
+                        block.mlp.merged_input_act = None
 
     class WASQwen3TextModel(comfy.sd1_clip.SD1ClipModel):
         """The encoder a ``CLIP`` holds for one dense Qwen3."""

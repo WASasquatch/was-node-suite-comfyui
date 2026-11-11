@@ -248,7 +248,7 @@ function dynamicsFigures(report) {
 
 app.registerExtension({
   name: EXT_NAME,
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const kind = KINDS[nodeData?.name];
     if (!kind) return;
     const proto = nodeType.prototype;

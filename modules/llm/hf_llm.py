@@ -14,6 +14,7 @@ import time
 from dataclasses import dataclass
 
 from .. import deps, log
+from ..util.kept import Kept
 from . import FEATURE, runtime
 from .clip_llm import ASSISTANT, MAX_CONTEXT, THINK_OPEN, TOOL, conversation, local_base
 
@@ -156,8 +157,14 @@ def choices() -> list[str]:
     """What the model menu lists: local folders, then the suggested repositories.
 
     Returns:
-        A suggestion is listed when ``features.network`` is on or it was downloaded already.
+        The entries a worker thread last read. A suggestion is listed when
+        ``features.network`` is on or it was downloaded already.
     """
+    return list(_model_menu.get())
+
+
+def _choices() -> list[str]:
+    """Local model folders, then the suggested repositories the menu may list."""
     from ..model import network_enabled
 
     folders, downloaded = _read_listing()
@@ -680,3 +687,7 @@ def hf_model():
 
     _classes["hf"] = TransformersLLM
     return TransformersLLM
+
+
+#: The model menu, read on a worker thread.
+_model_menu = Kept("LLM models", _choices, [])

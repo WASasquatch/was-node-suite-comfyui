@@ -612,7 +612,7 @@ function createHealthSketch(node) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_ID) return;
 
     const proto = nodeType.prototype;

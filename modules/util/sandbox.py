@@ -66,6 +66,7 @@ PRIVATE = {
     "was_suite_config.json*": "v2 settings",
     "was_suite_settings.json*": "v2 settings",
     "was_history.json*": "v2 file history",
+    "file_menus.json*": "file menu listing",
 }
 
 #: Characters of a refused value repeated in the refusal.

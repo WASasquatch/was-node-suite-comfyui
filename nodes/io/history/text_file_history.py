@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import time
 from io import StringIO
 
 from comfy_api.latest import io
@@ -12,6 +11,7 @@ from ....modules import log
 from ....modules.compat.types import DICT
 from ....modules.io import picker
 from ....modules.state import history
+from ....modules.util.kept import Kept
 from ....modules.util import sandbox, text_files
 
 logger = log.get_logger("nodes.io.history")
@@ -24,11 +24,6 @@ EMPTY = "No History"
 
 #: Widget value that keeps the dictionary keyed on the file's own name.
 FILENAME_KEYWORD = "[filename]"
-
-#: Seconds a combo option list is reused for before the history is read again.
-OPTIONS_TTL = 1.0
-
-_options_cache: tuple[float, list[str]] = (0.0, [])
 
 
 def label(path: str) -> str:
@@ -56,20 +51,23 @@ def labelled_history(limit: int | None = None) -> dict[str, str]:
 
 
 def options() -> list[str]:
-    """The combo's entries: the newest ``history.display_limit()`` text files.
+    """The combo's entries: the newest ``history.display_limit()`` text files, or ``[EMPTY]``.
 
-    Memoized for :data:`OPTIONS_TTL` seconds.
+    Returns:
+        The entries a worker thread last read.
     """
-    global _options_cache
-    stamp, cached = _options_cache
-    now = time.monotonic()
-    if cached and now - stamp < OPTIONS_TTL:
-        return cached
+    return list(_recent.get())
+
+
+def _options() -> list[str]:
+    """The newest ``history.display_limit()`` text files on record that still exist, or ``[EMPTY]``."""
     limit = history.display_limit()
     entries = [label(path) for path in history.recent(HISTORY_KEY, limit)]
-    entries = entries or [EMPTY]
-    _options_cache = (now, entries)
-    return entries
+    return entries or [EMPTY]
+
+
+#: The menu's entries, read on a worker thread.
+_recent = Kept("text file history", _options, [EMPTY])
 
 
 class TextFileHistoryLoader(io.ComfyNode):

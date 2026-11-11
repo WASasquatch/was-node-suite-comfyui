@@ -595,7 +595,7 @@ async function payloadFromRun(promptId, nodeId) {
 app.registerExtension({
     name: "WASNodeSuite.ThreeJS",
 
-    async beforeRegisterNodeDef(nodeType, nodeData) {
+    beforeRegisterNodeDef(nodeType, nodeData) {
         const name = nodeData?.name;
         if (name !== VIEWER_NODE && name !== TRACE_VIEWER_NODE) return;
         const tracing = name === TRACE_VIEWER_NODE;

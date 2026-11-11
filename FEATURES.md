@@ -324,7 +324,7 @@ prompt, and its other text files, such as `references/layout.md`, leave Load Sys
 answers.
 
 The library ships with built-in prompt enhancers under **Built-in**, read-only, one folder per
-model family: FLUX.1 to FLUX 3 Klein, Krea 2, LTX-Video and LTX-2, MiniMax H3, Wan, HunyuanVideo,
+model family: FLUX.1 to FLUX 3 Klein, Krea 2, LTX-Video and LTX-2, MiniMax H3 and H3 Image, Wan, HunyuanVideo,
 Kandinsky 6, Qwen-Image, Z-Image, ERNIE Image, MOSS-Image, Fibo and the tag-based SDXL models. Each
 turns a short idea, a picture or an edit request into the prompt that model reads, and where the
 model's makers publish an enhancer prompt, it is theirs, unchanged or with its changes listed.
@@ -701,6 +701,25 @@ For finished H3 clips at a fraction of the usual steps.
 [`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Files:
 [`docs/MODELS.md`](docs/MODELS.md#minimax-h3). Graph:
 [`minimax-h3-ptd.json`](docs/workflows/minimax-h3-ptd.json).
+
+---
+
+## MiniMax H3 Image at 16 megapixels
+
+**H3 Image Sampler** samples MiniMax H3 Image's six steps in Sampler Custom. By default the first
+three steps run on a latent a quarter of the size, which then grows to full size, and the step
+into the final one takes fresh noise, so skin, hair and fabric come out clean at 4 to 16
+megapixels. `standard` mode keeps every step at full size with the composition of the model's own
+sampler, and `renoise_steps` 0 there is that sampler exactly. The graph runs it at 16 megapixels
+on a 24 GB card with **H3 Low VRAM** and **Free Memory**.
+
+The system prompt library's built-in **MiniMax H3 Image Prompt Enhancer** skill turns a few words
+into the long, literal caption H3 Image follows best, and picks the aspect ratio to render at.
+
+For finished H3 Image pictures at the sizes the model is released for.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
+[`minimax-h3-image-sampler.json`](docs/workflows/minimax-h3-image-sampler.json).
 
 ---
 

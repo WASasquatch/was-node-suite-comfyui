@@ -130,7 +130,8 @@ class _Holder:
     def observe(self, step: int, velocity: torch.Tensor) -> None:
         """Record how fast the fine detail of the velocity changed since the previous step."""
         detail = detail_band(velocity)
-        if self.previous is not None and self.previous[0] == step - 1:
+        if (self.previous is not None and self.previous[0] == step - 1
+                and self.previous[1].shape == detail.shape):
             span = abs(self.sigmas[step] - self.sigmas[step - 1])
             if span > 0:
                 self.rates[step] = float((detail - self.previous[1]).norm()) / span

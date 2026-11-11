@@ -29,6 +29,7 @@ they stay as a copy of the state at the moment it moved into the database.
 | `was_history.json` | Read into `was_state.db` on first start and then left alone. |
 | `styles.json` | Imported into the style library each time the file changes. Never written to. |
 | `nsp_pantry.json` | Read into `was_state.db` on first start and then left alone. Optional: the terminology ships with the pack and seeds the database without it. |
+| `file_menus.json` | The files and folders the file and folder menus list, kept between starts. Each start rereads only the folders changed since; deleted, it is rebuilt from every folder at the next start. |
 | `wildcards/` | Wildcard `.txt` files, unless `paths.wildcards` names another directory. |
 | `cache/` | Files written by `Cache Node`, when `legacy.cache` is on. |
 
@@ -80,7 +81,7 @@ against.
 
 Two folders have no key. **Image Draw Text** reads typefaces from
 `<user_dir>/was-node-suite/fonts`, alongside the nine that ship with the pack, and a `.ttf` or
-`.otf` dropped there joins the `font` menu after a restart. On a portable Windows install that
+`.otf` dropped there joins the `font` menu the next time the node list is refreshed. On a portable Windows install that
 is `ComfyUI_windows_portable\ComfyUI\user\was-node-suite\fonts`. **App Workflow** lists every
 `*.app.json` under `<user_dir>/default/workflows/`, including subfolders.
 
@@ -90,8 +91,10 @@ directory, which for ComfyUI is not a stable place; prefer absolute paths.
 A directory added to `allow_read` is offered in every file and folder menu under its own name,
 and its files carry that name in brackets: `D:/photos` appears as `photos`, holding
 `sunset.png [photos]`. A directory added to `allow_write` is offered in every `root` menu the
-same way. Folder menus list three levels deep and stop at 2000 entries. Restart ComfyUI after
-changing either list or `menu_limit`.
+same way. File menus hold at most 20000 files under each of these folders, those nearest the
+top first, and folder menus stop at 2000 entries. A file added to or removed from one of them
+shows in its menus the next time the node list is refreshed. Restart ComfyUI after changing
+either list or `menu_limit`.
 
 Every file and folder menu a node reads from also takes a path wired in as text, such as
 `D:/photos` or `D:\photos\sunset.png` from a String node. It is read only when it lies inside
@@ -110,7 +113,7 @@ written.
 | ComfyUI `output/` | yes | yes |
 | ComfyUI `temp/` | yes | yes |
 | The pack's own directory, `<user_dir>/was-node-suite/`, or `$WAS_CONFIG_DIR` | yes, except the entries below | yes, except the entries below |
-| Every file in that directory whose name begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`, `was_suite_settings.json` or `was_history.json`; the config file in use and the file `WAS_CONFIG` names, with every file beside them whose name begins with theirs | **no** | **no** |
+| Every file in that directory whose name begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`, `was_suite_settings.json`, `was_history.json` or `file_menus.json`; the config file in use and the file `WAS_CONFIG` names, with every file beside them whose name begins with theirs | **no** | **no** |
 | `viewer-extensions/` in that directory | yes | **no** |
 | Anything in `paths.allow_read` | yes, and listed, previewed and read by the pack's routes for any client that reaches ComfyUI | Image Save, Save Text File and Save Dataset only |
 | Anything in `paths.allow_write` | no | yes |

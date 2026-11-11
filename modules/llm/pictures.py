@@ -17,6 +17,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 from .. import deps, log
+from ..util.kept import Kept
 from . import FEATURE, embeddings, generate, messages, providers, runtime, wires
 
 __all__ = [
@@ -109,7 +110,12 @@ _classes: dict = {}
 
 
 def choices() -> list[str]:
-    """What the picture model menu offers: picture checkpoints on disk, then suggested ids."""
+    """What the picture model menu offers, as a worker thread last read it."""
+    return list(_picture_menu.get())
+
+
+def _choices() -> list[str]:
+    """Picture checkpoint folders on disk, then the suggested ids not on disk."""
     found = []
     for label in embeddings.local_folders():
         folder = embeddings._local_folder(label)
@@ -720,3 +726,7 @@ def to_batch(items, full_size: bool, size: tuple[int, int], mode: str, max_bytes
         values = np.asarray(placed.convert("RGB"), dtype=np.float32) / 255.0
         frames.append(torch.from_numpy(values))
     return torch.stack(frames), rows
+
+
+#: The picture model menu, read on a worker thread.
+_picture_menu = Kept("LLM picture models", _choices, list(SUGGESTED))

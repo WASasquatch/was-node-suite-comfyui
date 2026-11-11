@@ -4124,7 +4124,7 @@ app.registerExtension({
     },
   ],
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_ID) return;
     const proto = nodeType.prototype;
     if (proto.__was_h3_prompt_timeline_wrapped) return;

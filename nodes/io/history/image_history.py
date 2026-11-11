@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import time
 
 from comfy_api.latest import io
 
@@ -12,6 +11,7 @@ from ....modules.constants import ALLOWED_EXT
 from ....modules.convert.tensors import pil2tensor
 from ....modules.io import picker
 from ....modules.state import history
+from ....modules.util.kept import Kept
 from ....modules.util import sandbox
 
 logger = log.get_logger("nodes.io.history")
@@ -21,11 +21,6 @@ HISTORY_KEY = "Images"
 
 #: Combo entry shown when the history holds nothing.
 EMPTY = "No History"
-
-#: Seconds a combo option list is reused for before the history is read again.
-OPTIONS_TTL = 1.0
-
-_options_cache: tuple[float, list[str]] = (0.0, [])
 
 
 def label(path: str) -> str:
@@ -76,17 +71,23 @@ def contained_history(entry: str) -> dict[str, str]:
 
 
 def options() -> list[str]:
-    """The combo's entries: the newest ``history.display_limit()`` images, or ``[EMPTY]``."""
-    global _options_cache
-    stamp, cached = _options_cache
-    now = time.monotonic()
-    if cached and now - stamp < OPTIONS_TTL:
-        return cached
+    """The combo's entries: the newest ``history.display_limit()`` images, or ``[EMPTY]``.
+
+    Returns:
+        The entries a worker thread last read.
+    """
+    return list(_recent.get())
+
+
+def _options() -> list[str]:
+    """The newest ``history.display_limit()`` images on record that still exist, or ``[EMPTY]``."""
     limit = history.display_limit()
     entries = [label(path) for path in history.recent(HISTORY_KEY, limit)]
-    entries = entries or [EMPTY]
-    _options_cache = (now, entries)
-    return entries
+    return entries or [EMPTY]
+
+
+#: The menu's entries, read on a worker thread.
+_recent = Kept("image history", _options, [EMPTY])
 
 
 class ImageHistoryLoader(io.ComfyNode):

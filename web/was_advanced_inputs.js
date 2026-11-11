@@ -78,7 +78,7 @@ function fold(node, names) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (!String(nodeData?.category ?? "").startsWith(OWNED)) return;
     const declared = advancedNames(nodeData);
     if (!declared.length) return;

@@ -259,7 +259,7 @@ function numbersToBooleans(node, names) {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const order = V2_WIDGET_ORDER[nodeData?.name];
     const booleans = V2_BOOLEAN_WIDGETS[nodeData?.name];
     const numbers = V2_NUMBER_BOOLEAN_WIDGETS[nodeData?.name];

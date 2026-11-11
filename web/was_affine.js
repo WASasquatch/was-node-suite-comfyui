@@ -243,7 +243,7 @@ app.registerExtension({
     },
   ],
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const id = nodeData?.name;
     const isOptions = id === OPTIONS_NODE;
     const isSchedule = id === SCHEDULE_NODE;

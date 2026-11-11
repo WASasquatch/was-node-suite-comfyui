@@ -991,7 +991,7 @@ app.registerExtension({
       defaultValue: true,
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const spec = SPECS.get(nodeData?.name);
     if (!spec) return;
 

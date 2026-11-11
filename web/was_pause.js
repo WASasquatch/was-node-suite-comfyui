@@ -143,7 +143,7 @@ app.registerExtension({
     });
   },
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE) return;
     const proto = nodeType.prototype;
     if (proto.__was_pause_wrapped) return;

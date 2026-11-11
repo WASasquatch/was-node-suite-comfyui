@@ -461,7 +461,7 @@ app.registerExtension({
       defaultValue: true,
     },
   ],
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_NAME) return;
     const proto = nodeType.prototype;
     if (proto.__was_resolution_selector_wrapped) return;

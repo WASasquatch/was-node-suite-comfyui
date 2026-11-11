@@ -44,7 +44,7 @@ def _step(rule: str, inner_model, x, denoised, sigma, sigma_next, noise, eta: fl
 
 @torch.no_grad()
 def sample(model, x, sigmas, extra_args=None, callback=None, disable=None,
-           video: str = "lcm", audio: str = "euler_ancestral", eta: float = 1.0):
+           video: str = "lcm", audio: str = "euler_ancestral", eta: float = 1.0, noise_sampler=None):
     """Sample a packed MiniMax H3 latent, the picture by ``video`` and the sound by ``audio``.
 
     Args:
@@ -54,6 +54,8 @@ def sample(model, x, sigmas, extra_args=None, callback=None, disable=None,
         video: The picture's step rule, one of :data:`RULES`.
         audio: The sound's step rule, one of :data:`RULES`.
         eta: Share of fresh noise in an ``euler_ancestral`` step.
+        noise_sampler: ``noise(sigma, sigma_next)`` in the packed layout, or None for core's
+            default noise from the run's seed.
 
     Returns:
         The packed sampled latent.
@@ -80,7 +82,8 @@ def sample(model, x, sigmas, extra_args=None, callback=None, disable=None,
             "latent has no separate sound stream. Use another sampler for it.")
     shift, audio_shift = float(sampling.shift), float(audio_shift)
     scale = shift / audio_shift
-    noise_sampler = k_diffusion.default_noise_sampler(x, seed=extra_args.get("seed", None))
+    if noise_sampler is None:
+        noise_sampler = k_diffusion.default_noise_sampler(x, seed=extra_args.get("seed", None))
     s_in = x.new_ones([x.shape[0]])
     for i in trange(len(sigmas) - 1, disable=disable):
         sigma, sigma_next = sigmas[i], sigmas[i + 1]

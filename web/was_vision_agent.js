@@ -175,7 +175,7 @@ function createJudgeCards() {
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     const options = PANELS[nodeData?.name];
     if (!options) return;
 

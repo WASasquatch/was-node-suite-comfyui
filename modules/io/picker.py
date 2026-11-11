@@ -6,12 +6,11 @@ Input files are listed bare, the rest as ``name [root]``; a folder menu lists ea
 from __future__ import annotations
 
 import os
-import threading
-import time
 from pathlib import Path
 
 from .. import log
 from ..util import file_listing, sandbox
+from ..util.kept import KeptMap
 
 __all__ = [
     "FILE_HINT", "FOLDER_HINT", "INPUT_TAG", "MAX_FOLDERS", "MODEL_HINT", "ROOTS", "folder_label",
@@ -43,15 +42,6 @@ MODEL_HINT = (
 #: Longest a refused path is repeated in an error, in characters.
 SHOWN_LENGTH = 240
 
-#: Serializes the folder walk and its cache, which is read from ComfyUI's server thread for
-#: an ``/object_info`` request and from the prompt thread when a node builds its schema.
-_lock = threading.RLock()
-
-#: ``(monotonic time it is reused until, extra key, labels)`` from the last walk, from
-#: :func:`modules.util.file_listing.reuse_until`.
-_cache: tuple[float, tuple, tuple[str, ...]] = (0.0, (), ())
-
-
 def labels(extensions, extra=()) -> list[str]:
     """Every file of these kinds under the folders a picker offers.
 
@@ -73,7 +63,10 @@ def labels(extensions, extra=()) -> list[str]:
     offered = [
         label[: -len(INPUT_TAG)] if label.endswith(INPUT_TAG) else label for label in found
     ]
-    return offered + [label for label, _path in _own(extensions, extra)]
+    if not extra:
+        return offered
+    key = (tuple(extensions or ()), tuple((tag, str(directory)) for tag, directory in extra))
+    return offered + [label for label, _path in _owned.get(key)]
 
 
 def folders(extra=()) -> list[str]:
@@ -86,34 +79,19 @@ def folders(extra=()) -> list[str]:
         A root's own name for the root itself, and ``<relative path> [tag]`` for each folder
         below it, to :data:`modules.util.file_listing.MAX_DEPTH` levels and
         :data:`MAX_FOLDERS` entries in all, each root taking an equal share. A folder
-        holding no listable file is offered too. Empty outside ComfyUI, where no root can be
-        read, and while file walks are deferred.
+        holding no listable file is offered too. Empty outside ComfyUI and before the file
+        listing has first been read.
     """
-    global _cache
-
-    if file_listing.walks_deferred():
-        return []
-    key = tuple((tag, str(directory)) for tag, directory in (extra or ()))
-    with _lock:
-        until, cached_key, labels = _cache
-        now = time.monotonic()
-        if labels and cached_key == key and now < until:
-            return list(labels)
-
-        # The folders under each root, read straight off disk. A directory-only pass costs
-        # no per-file stat, and it offers an empty folder as readily as a full one.
-        held: list[tuple[str, list[str]]] = []
-        for tag, root in _rooted(extra):
-            if not root.is_dir():
-                continue
-            found, left = _below(root, tag, MAX_FOLDERS)
-            held.append((tag, found))
-            if left <= 0:
-                logger.debug("the folders under %s stopped at %d entries", tag, MAX_FOLDERS)
-
-        offered = _offered(held, MAX_FOLDERS)
-        _cache = (file_listing.reuse_until(now, time.monotonic()), key, tuple(offered))
-        return offered
+    try:
+        held = file_listing.folders(ROOTS)
+    except Exception as error:
+        logger.debug("the folder listing could not be read: %s", error)
+        held = []
+    for tag, directory in extra or ():
+        root = Path(directory)
+        if root.is_dir():
+            held.append((tag, _below(root, tag, MAX_FOLDERS)[0]))
+    return _offered(held, MAX_FOLDERS)
 
 
 def path_input(combo, folder: bool = False, model: bool = False):
@@ -489,3 +467,7 @@ def resolve(label: str, extensions, extra=()) -> str | None:
     if found is None:
         return None
     return str(sandbox.resolve_read(found))
+
+
+#: Files under a node's own folders, keyed by ``(extensions, extra)`` and read on a worker thread.
+_owned = KeptMap("node folders", lambda key: _own(*key), [])

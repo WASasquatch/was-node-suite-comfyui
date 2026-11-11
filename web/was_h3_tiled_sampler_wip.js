@@ -31,7 +31,7 @@ const UI_WIDGET_TYPE = "was_h3_tiled_sampler_wip";
 app.registerExtension({
   name: EXT_NAME,
 
-  async beforeRegisterNodeDef(nodeType, nodeData) {
+  beforeRegisterNodeDef(nodeType, nodeData) {
     if (nodeData?.name !== NODE_ID) return;
 
     const proto = nodeType.prototype;

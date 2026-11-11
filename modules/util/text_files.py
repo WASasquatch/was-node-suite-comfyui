@@ -15,7 +15,7 @@ from . import file_listing
 __all__ = [
     "ENCODING",
     "MAX_DEPTH",
-    "MAX_EXAMINED",
+    "MAX_FILES",
     "NO_FILES",
     "OPTIONS_TTL",
     "TEXT_EXTENSIONS",
@@ -39,13 +39,13 @@ TEXT_EXTENSIONS = (".txt", ".csv", ".tsv", ".json", ".jsonl", ".md", ".yaml", ".
 #: The roots this view reads, and the tag order its labels sort in.
 TEXT_TAGS = (file_listing.INPUT, file_listing.OUTPUT, file_listing.CONFIGURED)
 
-#: How many directories below a root the walk goes, from the shared walk.
+#: How many directories below a root the shared listing goes.
 MAX_DEPTH = file_listing.MAX_DEPTH
 
-#: How many directory entries that walk examines under one root before it stops.
-MAX_EXAMINED = file_listing.MAX_EXAMINED
+#: How many files that listing holds under one root.
+MAX_FILES = file_listing.MAX_FILES
 
-#: Seconds a built listing is reused for, from the shared walk.
+#: Seconds the shared listing is trusted before a request checks its folders again.
 OPTIONS_TTL = file_listing.LISTING_TTL
 
 #: Combo entry shown when no listed directory holds a text file, and outside ComfyUI.

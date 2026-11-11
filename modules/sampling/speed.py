@@ -6,6 +6,7 @@ partway through. :func:`fit_power_spectrum` measures ``A`` and ``beta`` from a l
 
 from __future__ import annotations
 
+import inspect
 import math
 from collections.abc import Sequence
 
@@ -386,6 +387,32 @@ def repack(parts: list[torch.Tensor], shapes: list | None) -> torch.Tensor:
     shapes[:] = sizes
     return packed
 
+
+def _sized(noise_sampler, full_shapes: list | None, size):
+    """``noise_sampler`` with the first latent of each full-resolution draw truncated to ``size``.
+
+    Args:
+        noise_sampler: ``noise(sigma, sigma_next)`` at full resolution.
+        full_shapes: The packed shapes at full resolution, or ``None`` for an unpacked latent.
+        size: The ``(height, width)`` the segment runs at.
+
+    Returns:
+        ``noise(sigma, sigma_next)`` at the segment's size.
+    """
+    def draw(sigma, sigma_next):
+        noise = noise_sampler(sigma, sigma_next)
+        parts = unpack(noise, list(full_shapes) if full_shapes else None)
+        if tuple(parts[0].shape[-2:]) == tuple(size):
+            return noise
+        parts = list(parts)
+        parts[0] = spectral.downscale(parts[0], 1.0, tuple(size))
+        if not full_shapes:
+            return parts[0]
+        import comfy.utils
+
+        return comfy.utils.pack_latents(parts)[0]
+    return draw
+
 def _transition_steps(
     sigmas: torch.Tensor,
     scales: Sequence[float],
@@ -698,6 +725,7 @@ def sample_speed(
     amplitude: float = 203.615097,
     beta: float = 1.915461,
     seed: int = 0,
+    noise_sampler=None,
 ):
     """Sample ``x``, growing its resolution partway through.
 
@@ -719,6 +747,8 @@ def sample_speed(
         amplitude: The ``A`` of the model's power spectrum.
         beta: The decay exponent of the model's power spectrum.
         seed: Seed for the noise filling new frequencies at each transition.
+        noise_sampler: ``noise(sigma, sigma_next)`` at full resolution for a solver that draws
+            fresh noise, truncated to each segment's size, or None for the solver's own.
 
     Returns:
         The sampled latent, at full resolution.
@@ -737,18 +767,21 @@ def sample_speed(
             f"{', '.join(offered)}."
         )
     solver = getattr(k_diffusion, "sample_" + base_sampler)
+    noisy = noise_sampler is not None and "noise_sampler" in inspect.signature(solver).parameters
 
     extra_args = {} if extra_args is None else extra_args
     scales = list(scales)
     if len(scales) < 2:
         return solver(
-            model, x, sigmas, extra_args=extra_args, callback=callback, disable=disable
+            model, x, sigmas, extra_args=extra_args, callback=callback, disable=disable,
+            **({"noise_sampler": noise_sampler} if noisy else {}),
         )
 
     # A model that generates more than one thing at once, such as video with its own audio, is
     # handed every latent flattened into one tensor. Only the first carries a picture; it is
     # the one grown and the rest travel untouched.
     shapes = packed_shapes(model)
+    full_shapes = [tuple(s) for s in shapes] if shapes else None
     parts = unpack(x, shapes)
     spatial_axes_or_refuse(parts[0])
     height, width = parts[0].shape[-2], parts[0].shape[-1]
@@ -770,7 +803,8 @@ def sample_speed(
         # Every transition would land past the end of the schedule, so there is nothing to be
         # gained by segmenting and the latent is never taken off full resolution.
         return solver(
-            model, x, sigmas, extra_args=extra_args, callback=callback, disable=disable
+            model, x, sigmas, extra_args=extra_args, callback=callback, disable=disable,
+            **({"noise_sampler": noise_sampler} if noisy else {}),
         )
 
     picture_conds = conditioned_on_a_picture(model)
@@ -799,9 +833,12 @@ def sample_speed(
             end = transitions[index][0] if index < len(transitions) else len(sigmas) - 1
             segment = sigmas[start : end + 1]
             if len(segment) >= 2:
+                sized = {}
+                if noisy:
+                    sized["noise_sampler"] = _sized(noise_sampler, full_shapes, unpack(x, shapes)[0].shape[-2:])
                 x = solver(
                     model, x, segment, extra_args=extra_args,
-                    callback=_rebased(callback, start), disable=disable,
+                    callback=_rebased(callback, start), disable=disable, **sized,
                 )
             if index >= len(transitions):
                 break
