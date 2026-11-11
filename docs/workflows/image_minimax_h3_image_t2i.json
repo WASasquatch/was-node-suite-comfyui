@@ -8,8 +8,8 @@
       "id": 23,
       "type": "b350fbfc-0ff8-4af1-8d09-09f50d84fcaa",
       "pos": [
-        750,
-        380
+        875.32,
+        385.71
       ],
       "size": [
         420,
@@ -152,14 +152,36 @@
         },
         "om_textarea_heights": {
           "replace": 293
-        }
+        },
+        "models": [
+          {
+            "name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          },
+          {
+            "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+            "directory": "text_encoders"
+          },
+          {
+            "name": "minimax_h3_image_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors",
+            "directory": "vae"
+          },
+          {
+            "name": "qwen3_32b_w4a8.safetensors",
+            "url": "https://huggingface.co/WAS/LLM/resolve/main/Qwen3-32B/qwen3_32b_w4a8.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
       },
       "widgets_values": [
         "A homeless cat smokes crack cocaine in an alleyway behind the \"MiniMax Group Inc\" headquarters. ",
         1337,
         3104,
         3104,
-        "MiniMax\\minimax_h3_image_pruned_int8_convrot.safetensors",
+        "minimax_h3_image_pruned_int8_convrot.safetensors",
         "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "minimax_h3_image_vae_fp16.safetensors",
         2,
@@ -173,7 +195,7 @@
         "seed": 1337,
         "width": 3104,
         "height": 3104,
-        "unet_name": "MiniMax\\minimax_h3_image_pruned_int8_convrot.safetensors",
+        "unet_name": "minimax_h3_image_pruned_int8_convrot.safetensors",
         "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "vae_name": "minimax_h3_image_vae_fp16.safetensors",
         "megapixels": 2,
@@ -187,8 +209,8 @@
       "id": 27,
       "type": "MarkdownNote",
       "pos": [
-        404.9468558361168,
-        841.2710031683446
+        486.53,
+        883.72
       ],
       "size": [
         304.81720973020947,
@@ -243,10 +265,10 @@
         }
       },
       "widgets_values": [
-        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MiniMax-H3-Image](https://huggingface.co/Comfy-Org/MiniMax-H3-Image)\n- [Hugging Face:Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n- [Hugging Face:Comfy-Org/Qwen3.8-27B](https://huggingface.co/Comfy-Org/Qwen3.5)\n\n**diffusion_models**\n\n- [minimax_h3_image_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors) (21 GB)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors) (25.28 GB)\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (7.34 GB)\n\n**vae**\n\n- [minimax_h3_image_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors) (1.17 GB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_image_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n│   │   └── qwen3.8_27b_w4a8.safetensors\n│   └── 📂 vae/\n│       └── minimax_h3_image_vae_fp16.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "## Model Links\n\n**diffusion_models**\n\n- [minimax_h3_image_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors) (21 GB)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors) (25.28 GB)\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (7.34 GB)\n\n**vae**\n\n- [minimax_h3_image_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors) (1.17 GB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_image_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n│   │   └── qwen3.8_27b_w4a8.safetensors\n│   └── 📂 vae/\n│       └── minimax_h3_image_vae_fp16.safetensors\n```\n"
       ],
       "widgets_values_named": {
-        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MiniMax-H3-Image](https://huggingface.co/Comfy-Org/MiniMax-H3-Image)\n- [Hugging Face:Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n- [Hugging Face:Comfy-Org/Qwen3.8-27B](https://huggingface.co/Comfy-Org/Qwen3.5)\n\n**diffusion_models**\n\n- [minimax_h3_image_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors) (21 GB)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors) (25.28 GB)\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (7.34 GB)\n\n**vae**\n\n- [minimax_h3_image_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors) (1.17 GB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_image_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n│   │   └── qwen3.8_27b_w4a8.safetensors\n│   └── 📂 vae/\n│       └── minimax_h3_image_vae_fp16.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "## Model Links\n\n**diffusion_models**\n\n- [minimax_h3_image_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors) (21 GB)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors) (25.28 GB)\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) (7.34 GB)\n\n**vae**\n\n- [minimax_h3_image_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors) (1.17 GB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_image_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n│   │   └── qwen3.8_27b_w4a8.safetensors\n│   └── 📂 vae/\n│       └── minimax_h3_image_vae_fp16.safetensors\n```\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -255,8 +277,8 @@
       "id": 32,
       "type": "SaveImage",
       "pos": [
-        1820,
-        380
+        2051.77,
+        385.71
       ],
       "size": [
         560,
@@ -298,8 +320,8 @@
       "id": 34,
       "type": "WASStringList",
       "pos": [
-        -216.82339156162942,
-        380
+        -180.58,
+        385.71
       ],
       "size": [
         587.1153716423163,
@@ -368,8 +390,8 @@
       "id": 36,
       "type": "PreviewImage",
       "pos": [
-        1190,
-        380
+        1375.33,
+        385.71
       ],
       "size": [
         596.4367499138535,
@@ -405,8 +427,8 @@
       "id": 61,
       "type": "WASResolutionSelector",
       "pos": [
-        401.62688260038755,
-        382.47768940593073
+        486.53,
+        385.72
       ],
       "size": [
         308.79999389648435,
@@ -881,7 +903,7 @@
               "models": [
                 {
                   "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
-                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
                   "directory": "text_encoders"
                 }
               ],
@@ -1709,7 +1731,14 @@
               },
               "was_panel_heights": {
                 "was_llm_report_ui": 63
-              }
+              },
+              "models": [
+                {
+                  "name": "qwen3_32b_w4a8.safetensors",
+                  "url": "https://huggingface.co/WAS/LLM/resolve/main/Qwen3-32B/qwen3_32b_w4a8.safetensors",
+                  "directory": "text_encoders"
+                }
+              ]
             },
             "widgets_values": [
               "qwen3_32b_w4a8.safetensors"
@@ -3851,5 +3880,27 @@
   "seed_widgets": {
     "23": 1,
     "34": 4
-  }
+  },
+  "models": [
+    {
+      "name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "minimax_h3_image_vae_fp16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "qwen3_32b_w4a8.safetensors",
+      "url": "https://huggingface.co/WAS/LLM/resolve/main/Qwen3-32B/qwen3_32b_w4a8.safetensors",
+      "directory": "text_encoders"
+    }
+  ]
 }

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **691** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **692** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-605 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+606 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 449 |
+| [Always loaded](#always-loaded) | always on | 450 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-449 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+450 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -80,7 +80,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (12)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (7)
-- [WAS Suite/Text/Parse](#was-suitetextparse) (3)
+- [WAS Suite/Text/Parse](#was-suitetextparse) (4)
 - [WAS Suite/Text/Search](#was-suitetextsearch) (7)
 - [WAS Suite/Text/Styles](#was-suitetextstyles) (5)
 - [WAS Suite/Text/System Prompts](#was-suitetextsystem-prompts) (2)
@@ -13465,6 +13465,36 @@ Parse a string into a number: a float when it contains a decimal point, an int o
 </details>
 
 ### WAS Suite/Text/Parse
+
+<a id="node-wasjsonvalidate"></a>
+<details>
+<summary><b>JSON Validate</b></summary>
+
+Check that text is valid JSON, such as a language model's answer, before another node reads it. Repair fixes common faults in place: unescaped quotes inside a string, missing or extra commas, comments, single quotes, unclosed brackets, and words or a code fence around the JSON. The panel marks every change.
+
+| | |
+|---|---|
+| Node id | `WASJSONValidate` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `text` | `STRING` | Yes |  |  | The JSON to check, such as an LLM Query answer: `{"caption": "a cat"}`. Up to 16 million characters. |
+| `repair` | `BOOLEAN` | Yes | True |  | true = fix only what breaks the JSON, as `"Closed"` inside a string becoming `\"Closed\"`, plus extra or missing commas, comments, single quotes, unclosed brackets and words around it; false = check only. |
+| `stop_if_invalid` | `BOOLEAN` | Yes | True |  | true = JSON that is still invalid stops the run, naming the line and column; false = the text is passed on as it came, with valid `false` and error saying why. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `json` | `STRING` | The JSON: as it came when valid, or with only the repaired spots changed. For Extract Text from JSON or any node that reads JSON. |
+| `valid` | `BOOLEAN` | true when json is valid JSON; false only when stop_if_invalid is off and the text could not be repaired. |
+| `repaired` | `BOOLEAN` | true when a repair changed the text; the panel marks each change. |
+| `error` | `STRING` | Why the text is not JSON, with its line and column, such as `Expecting ',' delimiter at line 2, column 341`. Empty when json is valid. |
+
+</details>
 
 <a id="node-waspromptparse"></a>
 <details>

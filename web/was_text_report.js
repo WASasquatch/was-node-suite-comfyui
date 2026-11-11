@@ -31,6 +31,7 @@ const PANELS = {
   WASDatasetUpdate: [240, "run to update the dataset", {}],
   WASDatasetFilter: [300, "run to split the dataset", {}],
   WASDatasetMerge: [260, "run to join the datasets", {}],
+  WASJSONValidate: [320, "run to check the JSON", { unit: "" }],
 };
 
 /**
