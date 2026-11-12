@@ -58,6 +58,9 @@ python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-
 python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\vector_stores.txt
 ```
 
+[Open Manager](https://github.com/WASasquatch/open-manager-comfyui) installs the same three
+groups from the **Optional** tab on the pack's page.
+
 Then set `document_export: true`, `llm: true` or `vector_stores: true` under `features:` in `config.yaml`. The `llm`
 group's keys, model folders and servers: [`docs/LLM.md`](docs/LLM.md).
 [`docs/CONFIG.md`](docs/CONFIG.md#features) has every group, what it needs and what it gates.

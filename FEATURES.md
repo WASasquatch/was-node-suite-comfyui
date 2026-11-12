@@ -7,7 +7,7 @@ What the pack does. Every entry names the nodes and what the area is for.
 |---|---|
 | Nodes | **659** across **66** categories |
 | Deprecated | **28**, each naming its replacement |
-| Gated | Nine `legacy` groups and several feature groups in `config.yaml`: [`docs/CONFIG.md`](docs/CONFIG.md) |
+| Gated | Nine `legacy` groups and several feature groups in `config.yaml`. A workflow opened with one of their nodes turned off names the setting that loads it and any package it lacks, with the install command or a way into Open Manager: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 362 nodes draw their own readout, picture or editor on the canvas |
 | Graphs | Runnable examples in [`docs/workflows/`](docs/workflows), linked per area below |
 

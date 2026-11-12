@@ -329,3 +329,18 @@ saved: [`docs/LLM.md`](LLM.md).
 
 `disable` beats `enable`, and both beat the group flags. Names are node ids, which are frozen,
 so an override keeps working across a renamed menu label.
+
+### A workflow using a node that is not loaded
+
+A workflow holding a WAS Node Suite node the server did not load opens a **Disabled WAS Node
+Suite nodes** dialog, once per workflow, and writes the same text to the browser console. A muted
+or bypassed node is not counted.
+
+| Held back by | The dialog names |
+|---|---|
+| A `features` or `legacy` group set to false | The group to set to `true`, the nodes it holds back, and the install command where a package the group needs is not installed. With [Open Manager](https://github.com/WASasquatch/open-manager-comfyui) installed, **Confirm** opens the pack there, and its **Optional** tab installs the same group |
+| `nodes.disable` | The ids to remove from it |
+| A module that failed to import | The ids. The ComfyUI log carries the reason |
+
+The change takes effect after a ComfyUI restart and a page reload. **Settings > WAS Node Suite >
+Workflows** turns the dialog off and keeps the console line.

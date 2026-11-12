@@ -88,7 +88,7 @@ and embedding models reach their providers through those providers' own librarie
 No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
 `urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.
 Three related names do appear, and none of them reaches the network. `aiohttp.web` registers
-this pack's own inbound routes in eighteen modules, and its client half is never used.
+this pack's own inbound routes in nineteen modules, and its client half is never used.
 `urllib.parse` reads strings in ten files: it decodes a `data:` URI and a picture's name in
 the document exporter, unescapes the file names a 3D model refers to, splits the address Three
 Texture URL is given, and splits the addresses the LLM nodes fetch or call and the servers
@@ -296,6 +296,7 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/threejs/api/asset` | key | an in-memory store |
 | `GET`, `POST /was/threejs/api/render` | client id, token, frames | an in-memory job queue |
 | `GET /was/threejs/api/module` | menu label | the file listing, then the allowlist; refused while `threejs.allow_scripts` is off. A module that cannot be read is answered with fixed text naming no path |
+| `GET /was/interface/api/disabled_nodes` | nothing | the node ids held back at startup by a group turned off, by `nodes.disable` or by a failed import, the install command of each group that needs a package, and the config file's name; paths are relative to ComfyUI's folder |
 
 Messages the pack sends over ComfyUI's socket about a run (tile captions, segment previews, held
 runs, render progress notes) go only to the client id that queued it. A run queued without one

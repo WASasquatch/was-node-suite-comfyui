@@ -257,6 +257,12 @@ def register_interface_routes() -> None:
         logger.debug("the Three.js module channel is unavailable (%s)", error)
     else:
         register_three_module()
+    try:
+        from .modules.interface.disabled_nodes import register_routes as register_disabled_nodes
+    except Exception as error:
+        logger.debug("the disabled node channel is unavailable (%s)", error)
+    else:
+        register_disabled_nodes()
 
 
 def register_loop_errors() -> None:
@@ -395,6 +401,8 @@ class NodeLoader:
         self.node_ids: set[str] = set()
         self.timings: dict[str, tuple[float, int, Exception | None]] = {}
         self.skipped: dict[str, list[str]] = {}
+        self.turned_off: set[str] = set()
+        self.failed_ids: set[str] = set()
         self.dropped: list[str] = []
         self.legacy_prefix = f"{package_name}.nodes.legacy."
         self.groups = group_names()
@@ -446,6 +454,18 @@ class NodeLoader:
         except Exception:
             return ""
 
+    def declared_ids(self, finder, name: str) -> list[str]:
+        """The node ids a module's source declares, read without importing it.
+
+        Args:
+            finder: The finder ``pkgutil.walk_packages`` yielded alongside ``name``.
+            name: Dotted module name.
+
+        Returns:
+            Each ``node_id="..."`` the source spells, in order. Empty when it cannot be read.
+        """
+        return [found.group(2) for found in NODE_ID_PATTERN.finditer(self.read_source(finder, name))]
+
     def import_module(self, name: str):
         started = time.perf_counter()
         module = error = None
@@ -493,7 +513,10 @@ class NodeLoader:
                 publish_pixels(node_cls, node_id, schema)
                 kept.append(node_cls)
                 self.node_ids.add(node_id)
-            elif group_on:
+                continue
+            if node_id in self.force_off:
+                self.turned_off.add(node_id)
+            if group_on:
                 logger.debug("%s is turned off by nodes.disable", node_id)
             else:
                 self.skipped.setdefault(key, []).append(node_id)
@@ -523,14 +546,16 @@ class NodeLoader:
             # Finding the ids costs a pass over the whole file, and only a module the
             # config is holding back needs them: nodes.enable names ids, and every id left
             # out is listed at the end of the load.
-            source = self.read_source(finder, name)
-            node_ids = [found.group(2) for found in NODE_ID_PATTERN.finditer(source)]
+            node_ids = self.declared_ids(finder, name)
             # The group came out of the source text, so a module whose group is off costs
             # one small file read and is never imported.
             if not any(self.node_enabled(node_id, False) for node_id in node_ids):
                 self.skipped.setdefault(key, []).extend(node_ids or [self.short_name(name)])
+                self.turned_off.update(self.force_off.intersection(node_ids))
                 return
         module, elapsed, error = self.import_module(name)
+        if module is None:
+            self.failed_ids.update(self.declared_ids(finder, name))
         collected = self.collect(module, group_on, key) if module is not None else []
         self.nodes.extend(collected)
         self.timings[name] = (elapsed, len(collected), error)
@@ -568,14 +593,26 @@ class NodeLoader:
                     # building a schema is dropped alone. Ending the walk would leave
                     # load_custom_node with zero registered nodes for the whole pack.
                     self.module_failed(name, error)
+                    self.failed_ids.update(self.declared_ids(finder, name))
         # The node list is finished by here. Rendering a report about it must not be able
         # to discard it: rich parses table cells as markup and the cells carry exception
         # text this pack did not author.
-        for report in (self.print_summary, self.print_disabled):
+        for report in (self.print_summary, self.print_disabled, self.publish_held):
             try:
                 report()
             except Exception as error:
                 logger.debug("the startup report could not be printed: %s", error)
+
+    def publish_held(self) -> None:
+        """Hand the held-back node ids to the route the workflow load warning reads."""
+        try:
+            # Imported inside the call and guarded: load_custom_node turns anything escaping
+            # comfy_entrypoint into zero registered nodes.
+            from .modules.interface.disabled_nodes import record
+        except Exception as error:
+            logger.debug("the disabled node table is unavailable (%s)", error)
+            return
+        record(self.skipped, self.turned_off, self.failed_ids - self.node_ids)
 
     def reserved_ids(self) -> set[str]:
         """Every node id this pack owns, whether or not its group is on this run.
