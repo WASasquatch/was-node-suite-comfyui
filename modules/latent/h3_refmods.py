@@ -10,9 +10,11 @@ import io
 import json
 import math
 import os
+import re
 import threading
 from collections import OrderedDict
 from pathlib import Path
+from typing import NamedTuple
 
 from .. import log
 from . import h3_extend, h3_references
@@ -22,6 +24,9 @@ __all__ = [
     "KINDS",
     "META_KEY",
     "NONE",
+    "PARTS",
+    "PROMPT_REF",
+    "PromptRef",
     "RefMod",
     "STACK_STRIDE",
     "SUFFIX",
@@ -38,6 +43,9 @@ __all__ = [
     "names",
     "parts",
     "preview_picture",
+    "prompt_name",
+    "prompt_refs",
+    "prompt_tagged",
     "role_kind",
     "save",
     "shown",
@@ -108,6 +116,19 @@ CACHE_BYTES = 1 << 30
 
 #: Suffixes of a picture kept beside a RefMod as its thumbnail.
 PREVIEW_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+
+#: A RefMod a prompt loads: ``<ref:alice>``, ``<ref:cast/alice>``, ``<ref:alice=image,audio>``,
+#: ``<ref:alice:0.6>`` or ``<ref:alice=audio:0.6>``.
+PROMPT_REF = re.compile(
+    r"<ref:\s*([^<>=:\n]+?)\s*(?:=\s*([A-Za-z][A-Za-z ,]*?)\s*)?(?::\s*(\d*\.?\d+)\s*)?>",
+    re.IGNORECASE,
+)
+
+#: The parts a prompt reference may ask for, and the kinds each loads.
+PARTS = {"image": ("image",), "video": ("video",), "audio": ("audio",), "look": ("image", "video")}
+
+#: Most RefMod tokens one prompt reads.
+MOST_PROMPT_REFS = 32
 
 _lock = threading.Lock()
 _cache: OrderedDict = OrderedDict()
@@ -504,6 +525,185 @@ def entries(mods, named: str) -> list[tuple[object, float]]:
             raise ValueError(f"entry {place} on {named} has strength {strength}; RefMod strengths run 0 to 1")
         found.append((mod, strength))
     return found
+
+
+class PromptRef(NamedTuple):
+    """One ``<ref:...>`` token of a prompt, resolved.
+
+    Attributes:
+        name: The RefMod's menu name.
+        kinds: The kinds the token asks for, empty for every kind the file holds.
+        strength: How strongly it is held.
+        assets: One asset per reference it loads, in file order.
+    """
+
+    name: str
+    kinds: tuple
+    strength: float
+    assets: tuple
+
+
+def _stem(name: str) -> str:
+    """A menu name's file name without its folders or suffix."""
+    return os.path.splitext(name.replace("\\", "/").rsplit("/", 1)[-1])[0]
+
+
+def _bare(name: str) -> str:
+    """A menu name with ``/`` separators and no suffix."""
+    return os.path.splitext(name.replace("\\", "/"))[0]
+
+
+def prompt_name(written: str, listing: list[str], named: str) -> str:
+    """The menu name a prompt's ``<ref:...>`` token names.
+
+    Args:
+        written: The name as the token writes it, as ``alice`` or ``cast/alice``.
+        listing: The RefMods on this machine, from :func:`names`.
+        named: The prompt, for the error.
+
+    Returns:
+        The menu name; a file at the top of a folder wins over one in a subfolder.
+
+    Raises:
+        ValueError: No RefMod, or more than one, answers to the name.
+    """
+    wanted = written.strip().replace("\\", "/")
+    if wanted.lower().endswith(SUFFIX):
+        wanted = wanted[: -len(SUFFIX)]
+    nested = "/" in wanted
+    found = [name for name in listing
+             if (_bare(name) if nested else _stem(name)).lower() == wanted.lower()]
+    if not nested:
+        found = [name for name in found if "/" not in _bare(name)] or found
+    if len(found) > 1:
+        found = [name for name in found if (_bare(name) if nested else _stem(name)) == wanted] or found
+    if len(found) == 1:
+        return found[0]
+    if found:
+        raise ValueError(
+            f"{named} loads <ref:{written.strip()}>, and {len(found)} RefMods answer to that name: "
+            f"{', '.join(_bare(name) for name in found[:6])}. Write the folder too, as "
+            f"<ref:{_bare(found[0])}>"
+        )
+    known = ", ".join(_bare(name) for name in listing[:8])
+    raise ValueError(
+        f"{named} loads <ref:{written.strip()}>, and no RefMod in models/refmods is called "
+        f"`{wanted}`. "
+        + (f"RefMods there: {known}{', ...' if len(listing) > 8 else ''}" if listing
+           else "There are none yet; MiniMax H3 Save RefMod saves one")
+    )
+
+
+def prompt_refs(text: str, segment: int, named: str) -> list[PromptRef]:
+    """The RefMods one prompt loads with ``<ref:...>`` tokens, in the order they are written.
+
+    Args:
+        text: The prompt, header and footer included.
+        segment: The segment it prompts, from 1.
+        named: The prompt, for the error.
+
+    Returns:
+        One entry per token; a reference two tokens load is one asset shared by both.
+
+    Raises:
+        ValueError: A token names no RefMod, asks for a part the file lacks, sets a strength
+            outside 0 to 1, or two tokens set one reference to two strengths.
+    """
+    from .h3_assets import Asset
+
+    matches = list(PROMPT_REF.finditer(str(text or "")))
+    if not matches:
+        return []
+    if len(matches) > MOST_PROMPT_REFS:
+        raise ValueError(
+            f"{named} holds {len(matches)} <ref:...> tokens, and a prompt reads at most "
+            f"{MOST_PROMPT_REFS}. Load the shared ones once in the header"
+        )
+    listing = names()
+    held, found = {}, []
+    for match in matches:
+        written, asked, level = match.groups()
+        name = prompt_name(written, listing, named)
+        kinds = []
+        for word in (piece.strip().lower() for piece in str(asked or "").split(",")):
+            if not word:
+                continue
+            if word not in PARTS:
+                raise ValueError(
+                    f"{named}: `{match.group(0)}` asks for `{word}`, and the parts a RefMod gives "
+                    f"are image, video, audio and look"
+                )
+            kinds.extend(kind for kind in PARTS[word] if kind not in kinds)
+        strength = 1.0 if level is None else float(level)
+        if not 0.0 < strength <= 1.0:
+            raise ValueError(
+                f"{named}: `{match.group(0)}` sets strength {level}, and a RefMod in a prompt is "
+                f"held above 0 and at most 1, as `:0.6`"
+            )
+        mods = load(name)
+        chosen = [(place, mod) for place, mod in enumerate(mods) if not kinds or mod.kind in kinds]
+        if not chosen:
+            holds = " and ".join(sorted({mod.kind for mod in mods}))
+            raise ValueError(
+                f"{named}: `{match.group(0)}` asks for {', '.join(kinds)}, and {_bare(name)} holds "
+                f"{holds}. Ask for {holds}"
+            )
+        assets = []
+        for place, mod in chosen:
+            asset = held.get((name, place))
+            if asset is None:
+                asset = Asset(role_kind(mod.kind), int(segment), 0, None, None, mod.name, False, mod, strength)
+                held[(name, place)] = asset
+            elif abs(asset.strength - strength) > 1e-9:
+                raise ValueError(
+                    f"{named} loads {_bare(name)} at strength {asset.strength:g} and at "
+                    f"{strength:g}. Give its tokens one strength"
+                )
+            assets.append(asset)
+        found.append(PromptRef(name, tuple(kinds), strength, tuple(assets)))
+    return found
+
+
+def prompt_tagged(text: str, refs: list[PromptRef], pictures: list, videos: list, sounds: list,
+                  cache: dict) -> tuple[str, list[str]]:
+    """A prompt with each ``<ref:...>`` token written as the tags its references took.
+
+    Args:
+        text: The prompt :func:`prompt_refs` read.
+        refs: What it answered, one per token.
+        pictures: The prompt's encoded pictures, in tag order.
+        videos: Its encoded clips, in tag order.
+        sounds: Its encoded sounds, in tag order.
+        cache: Encoded references by asset identity.
+
+    Returns:
+        ``(prompt, lines)``: each token replaced by its tags joined with ``and``, as
+        ``<Picture 2> and <Audio 1>``, and one report line per token, as
+        ``<ref:alice> = <Picture 2> and <Audio 1>``.
+    """
+    heard = sum(1 for video in videos if video.seconds is not None)
+
+    def tag_of(asset) -> str:
+        part = cache.get(id(asset))
+        for number, each in enumerate(pictures, start=1):
+            if each is part:
+                return f"<Picture {number}>"
+        for number, each in enumerate(videos, start=1):
+            if each is part:
+                return f"<Video {number}>"
+        for number, each in enumerate(sounds, start=1):
+            if each is part:
+                return f"<Audio {heard + number}>"
+        return ""
+
+    resolved, lines = iter(refs), []
+
+    def swapped(match) -> str:
+        tags = " and ".join(tag for tag in map(tag_of, next(resolved).assets) if tag)
+        lines.append(f"{match.group(0)} = {tags}")
+        return tags
+
+    return PROMPT_REF.sub(swapped, str(text)), lines
 
 
 def _jpeg_frames(stored) -> object:

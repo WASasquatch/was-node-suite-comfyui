@@ -1289,7 +1289,8 @@ export function createTimeline(options = {}) {
           kind: "ref", id: asset.id, index, x, y, w: used, h: CHIP_HEIGHT, cursor: "grab",
           title: `${asset.refmod ? "RefMod" : ROLE_NAMES[asset.role] ?? asset.role} in scene ${index + 1}, named `
             + `${asset.tag} in its prompt: ${asset.name}. `
-            + (asset.refmod ? "Drag to another scene" : "Drag to another scene, or onto Pinned frames to pin it"),
+            + (asset.fromPrompt ? "Loaded by the scene's prompt"
+              : asset.refmod ? "Drag to another scene" : "Drag to another scene, or onto Pinned frames to pin it"),
         });
         x += used + 4;
       });
@@ -1635,7 +1636,8 @@ export function createTimeline(options = {}) {
     } else if (region.kind === GRIP.PIN || region.kind === "ref") {
       onSelectAsset(region.id);
       const asset = state.assets.find((each) => each.id === region.id);
-      if (!asset) return;
+      // A RefMod a prompt loads is selected, not dragged.
+      if (!asset || asset.fromPrompt) return;
       drag = { grip: GRIP.ASSET, id: region.id, asset, x, downX: x, downY: y, moved: false,
         target: null, readout: "" };
     } else if (region.kind === GRIP.CLIP) {

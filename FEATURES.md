@@ -562,6 +562,14 @@ input. `(the video being made)` takes one frame of the video itself, for a later
 reference. Asset nodes chain, each into the next one's `assets`, and the last goes into `assets`
 on the conditioning node.
 
+**MiniMax H3 RefMod** adds RefMods to that chain: a character, place or voice encoded once and
+kept in `models/refmods`, which a prompt names as `<Picture N>`, `<Video N>` or `<Audio N>` with
+nothing encoded again. It reads the RefMods other RefMod packs save and takes a RefMod Stack's
+bundle, and **MiniMax H3 Save RefMod** encodes pictures, a clip and a voice into one. A prompt
+loads one by itself with `<ref:alice>`, `<ref:cast/alice=image,audio:0.6>` or the like, no node
+needed ([RefMods](docs/H3_COND_TIMELINE.md#refmods)). For keeping a cast the same across scenes
+and videos without wiring their pictures and sounds again.
+
 **H3 Extend Window** opens each segment for a sampler and **H3 Extend Append** joins the result
 onto the clip so far, dropping what was carried so no frame is written twice. The transition into
 a segment is one of `carry` (the same shot goes on, picture and sound held), `refresh` (carried
@@ -607,6 +615,8 @@ to any part of it.
 [`minimax-h3-prompt-timeline.json`](docs/workflows/minimax-h3-prompt-timeline.json),
 [`minimax-h3-extend-loop.json`](docs/workflows/minimax-h3-extend-loop.json),
 [`minimax-h3-ref2va-extend-loop.json`](docs/workflows/minimax-h3-ref2va-extend-loop.json),
+[`minimax-h3-refmods.json`](docs/workflows/minimax-h3-refmods.json) with its cast saved as
+RefMods,
 [`minimax-h3-flf-pair-loop.json`](docs/workflows/minimax-h3-flf-pair-loop.json),
 [`minimax-h3-scene-loop.json`](docs/workflows/minimax-h3-scene-loop.json),
 [`minimax-h3-extend-loop-audio-carry.json`](docs/workflows/minimax-h3-extend-loop-audio-carry.json),
@@ -619,11 +629,13 @@ with each segment de-roped before it joins.
 
 **The Prompt Timeline** is the editor window MiniMax H3 Conditioning opens from its **Open Prompt
 Timeline** button: the run's scenes along a time ruler with tracks for pinned frames and
-references, a media bin of every picture, clip and sound the pack may read, the chosen scene's
-settings, and a monitor that plays each segment as it samples and the finished video once the run
-saves it. Dragging sets a scene's length, its overlap, its order, a keyframe's frame and which
-scene a reference belongs to. **Reference frame** makes the frame under the playhead a picture
-reference in any scene. Every edit writes the node's rows and a chain of MiniMax H3 Asset nodes, so
+references, a media bin of every picture, clip and sound the pack may read and every RefMod, the
+chosen scene's settings, and a monitor that plays each segment as it samples and the finished video
+once the run saves it. Dragging sets a scene's length, its overlap, its order, a keyframe's frame
+and which scene a reference or RefMod belongs to, and each reference shows the tag its scene's
+prompt names it by, a `<ref:...>` token's included. **Reference frame** makes the frame under the
+playhead a picture reference in any scene. Every edit writes the node's rows and a chain of
+MiniMax H3 Asset and MiniMax H3 RefMod nodes, so
 the graph runs the same with the window closed, and one undo takes back one gesture. The **Show
 the Open Prompt Timeline button** setting, under WAS Node Suite, hides the button.
 

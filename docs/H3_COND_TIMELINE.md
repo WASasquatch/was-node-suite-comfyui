@@ -2,10 +2,12 @@
 
 **MiniMax H3 Conditioning** prompts every segment of a MiniMax H3 video on one node. The
 **Prompt Timeline** is its editor window, opened from the node's **Open Prompt Timeline** button.
-Every edit in the window writes the node's own widgets or a chain of **MiniMax H3 Asset** nodes,
-so the graph runs the same with the window closed. Graph:
+Every edit in the window writes the node's own widgets or a chain of **MiniMax H3 Asset** and
+**MiniMax H3 RefMod** nodes, so the graph runs the same with the window closed. Graphs:
 [`minimax-h3-prompt-timeline.json`](workflows/minimax-h3-prompt-timeline.json), three scenes
-joined by the three common transitions.
+joined by the three common transitions, and
+[`minimax-h3-refmods.json`](workflows/minimax-h3-refmods.json), a cast saved as RefMods and named
+in every scene.
 
 <img src="images/h3-timeline/window.jpg" alt="The Prompt Timeline" width="900">
 
@@ -34,7 +36,7 @@ rows itself.
 | `prompt_header`, `prompt_footer` | Text put before and after every row that takes them; a section a row writes itself replaces theirs |
 | `ref_image_size` | The size reference pictures are encoded at |
 | `loop` | Closes the last scene on the video's first frame |
-| `assets` | The last node of a MiniMax H3 Asset chain |
+| `assets` | The last node of a chain of MiniMax H3 Asset and MiniMax H3 RefMod nodes |
 | `vlm_clip` | A language model for the window's writing tools; never loaded by a render |
 
 Every input, output and tooltip is in [`NODES.md`](../NODES.md) under **WAS Suite/Latent/Video**.
@@ -60,11 +62,58 @@ for the tag anywhere in that scene's prompt, the header and the footer.
 - A name a scene gives takes precedence over the same name in the header.
 - The node's report lists every name and the tag it became.
 
+## RefMods
+
+A RefMod is a reference encoded once and saved: a character, a place, a style or a voice. A
+scene's prompt names it as `<Picture N>`, `<Video N>` or `<Audio N>` like any other reference,
+and nothing is encoded again.
+
+| RefMods live in | |
+|---|---|
+| Windows portable | `ComfyUI_windows_portable\ComfyUI\models\refmods` |
+| Any other install | `ComfyUI/models/refmods` |
+| More folders | A `refmods:` entry under a root in `extra_model_paths.yaml` |
+
+| Which files load | |
+|---|---|
+| Saved by **MiniMax H3 Save RefMod** | One file per name; a look and a voice saved together are one file |
+| Saved by ComfyUI-MiniMaxH3Mod or ComfyUI-Fantastic-MiniMaxH3-PromptBuilder | The same format; a bundle loads every member |
+| A `.png`, `.jpg` or `.webp` of the same name beside it | The RefMod's picture in the Media bin and on its chip |
+
+| A RefMod reaches a scene through | Its tags are numbered |
+|---|---|
+| A **MiniMax H3 RefMod** node on the asset chain, a file picked or a RefMod Stack's bundle wired | In chain order, with the other assets |
+| A RefMod tile dragged from Media onto References or All scenes | As a MiniMax H3 RefMod node at the end of the chain |
+| A `<ref:...>` token in the scene's prompt, header or footer | After everything on the chain, in the order the tokens are written |
+
+### RefMods in a prompt
+
+A `<ref:...>` token loads a RefMod for the scene whose prompt holds it, or for every scene that
+takes the header or footer holding it, and is sent to the model as the tags it took.
+
+| Written | Loads | Sent as |
+|---|---|---|
+| `<ref:alice>` | Everything `alice.safetensors` holds | `<Picture 2> and <Audio 1>` |
+| `<ref:cast/alice>` | The file in the `cast` subfolder | The same |
+| `<ref:alice=image>` | Its picture alone | `<Picture 2>` |
+| `<ref:alice=audio>` | Its voice alone | `<Audio 1>` |
+| `<ref:alice=image,audio>` | Both, as `<ref:alice>` | `<Picture 2> and <Audio 1>` |
+| `<ref:alice:0.6>`, `<ref:alice=image:0.6>` | At strength 0.6; `1` as saved | As above |
+
+- The parts are `image`, `video`, `audio`, and `look` for whichever picture or clip it holds.
+- A name without a folder takes a file at the top of `models/refmods` first; where two subfolders
+  hold the name, the run stops and names both.
+- Case and the `.safetensors` suffix do not matter.
+- A reference two tokens of one scene load is loaded once and both tokens take its tag.
+- The node's report lists each token and the tags it became, as
+  `prompt <ref:alice=image> = <Picture 2>`. The Prompt Timeline shows each on the References track
+  with its tags, and in the Scene tab marked **In the prompt**.
+
 ## The window
 
 | Area | Shows |
 |---|---|
-| Media | Every picture, clip and sound the pack may read, by kind and folder; files dropped here upload to `ComfyUI/input` |
+| Media | Every picture, clip and sound the pack may read, by kind and folder; files dropped here upload to `ComfyUI/input`. Under them, every RefMod in `models/refmods` with what it holds |
 | Scene, Video settings, LLM settings | The chosen scene, the whole video, and the language model tools |
 | Monitor | **Preview**, each segment as it samples, and **Final**, the video the run saved |
 | Timeline bar | Add scene, Write scenes, Plan transitions, Duplicate, Delete, the run's length, the transition legend and zoom |
@@ -88,12 +137,16 @@ for the tag anywhere in that scene's prompt, the header and the footer.
 | References, All scenes | Drag a reference | Moves it to another scene, or onto All scenes |
 | References, All scenes | Drag a reference onto Scenes or Pinned frames | Pins it as an opening frame, closing frame or keyframe, the same as a file dropped there |
 | All scenes | Drop a file | Every scene's prompt can name it |
+| References, All scenes | Drop a RefMod from Media | Adds a MiniMax H3 RefMod for that scene, or for every scene; its chip shows the tags its prompt names it by |
+| Media | Right-click a RefMod tile | Places it in a chosen scene, or in every scene |
+| References | A chip named `<ref:...>` | A RefMod a token in the prompt loads; it moves and goes with the token |
 | Any | Click an asset | Shows it full size in the monitor |
 | Any | Right-click an asset | Gives it another part from the role list |
+| Ruler | Click or drag | Moves the playhead |
 
 A frame of the video being made is saved as a picture in `input/` when it is pinned. It can be
-pinned once a preview or the Final video has drawn it.
-| Ruler | Click or drag | Moves the playhead |
+pinned once a preview or the Final video has drawn it. A RefMod is a reference only and is never
+pinned.
 
 <img src="images/h3-timeline/transition-menu.jpg" alt="The transition menu" width="900">
 
@@ -274,3 +327,11 @@ the asset reads the frame from the video as it is made, and reaches the scenes a
 | The window opens on an empty Scene tab | The node has no prompt yet; write one or use Write scenes |
 | An asset is missing from the timeline | Its MiniMax H3 Asset node is bypassed or muted, and the run leaves it out. A muted one also cuts off every asset chained before it; bypass it (Ctrl+B) to leave out only that one |
 | A name stays as text in the prompt | The name is spelled or capitalised differently from its tag, or sits inside a spoken line or quotes; the report's `names` lists what was matched |
+| The run stops: no RefMod is called `alice` | Save it with MiniMax H3 Save RefMod, or put the file in `models/refmods`; the message lists the RefMods found |
+| The run stops: 2 RefMods answer to that name | Write the folder as well, as `<ref:cast/alice>` |
+| The run stops: a token asks for a part the RefMod lacks | Ask for a part the message names, or leave `=...` off to load everything |
+| The run stops: a RefMod at two strengths | Give every token naming it in that scene one strength |
+| A RefMod saved during this session is missing from MiniMax H3 RefMod's menu | Press R to refresh node definitions; **Refresh** under RefMods in Media reads the folder again |
+| A RefMod chip reads `numbered after a run` | Its name or a RefMod Stack is wired into the node; after one run the chip shows its tags |
+| MiniMax H3 Save RefMod refuses its name | A file of that name was written by something else and is left as it is; type another name |
+| A RefMod tile shows no picture | The RefMod stores no picture; place a `.png` of the same name beside it |

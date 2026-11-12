@@ -578,6 +578,87 @@ function readRefmod(origin, place) {
   };
 }
 
+// A RefMod a prompt loads, as `<ref:alice>`, `<ref:cast/alice=image,audio:0.6>`, and the kinds
+// each part asks for.
+const PROMPT_REF = /<ref:\s*([^<>=:\n]+?)\s*(?:=\s*([A-Za-z][A-Za-z ,]*?)\s*)?(?::\s*(\d*\.?\d+)\s*)?>/gi;
+const PROMPT_PARTS = { image: ["image"], video: ["video"], audio: ["audio"], look: ["image", "video"] };
+
+/**
+ * The RefMod a prompt token names, as the conditioning node finds it.
+ *
+ * @param {string} written - The name in the token, as `alice` or `cast/alice`.
+ * @returns {string} Its menu name, or an empty string where none or several answer.
+ */
+function promptRefmodName(written) {
+  let wanted = String(written ?? "").trim().replace(/\\/g, "/");
+  if (wanted.toLowerCase().endsWith(".safetensors")) wanted = wanted.slice(0, -".safetensors".length);
+  const nested = wanted.includes("/");
+  const bare = (name) => name.replace(/\\/g, "/").replace(/\.safetensors$/i, "");
+  const keyOf = (name) => (nested ? bare(name) : bare(name).split("/").pop());
+  let found = [...refmodListing.keys()].filter((name) => keyOf(name).toLowerCase() === wanted.toLowerCase());
+  if (!nested) {
+    const top = found.filter((name) => !bare(name).includes("/"));
+    if (top.length) found = top;
+  }
+  if (found.length > 1) {
+    const exact = found.filter((name) => keyOf(name) === wanted);
+    if (exact.length) found = exact;
+  }
+  return found.length === 1 ? found[0] : "";
+}
+
+/**
+ * The RefMods each scene's prompt loads with `<ref:...>` tokens, header and footer included.
+ *
+ * @param {object} node - The conditioning node.
+ * @param {object[]} scenes - The scenes, from `readScenes`.
+ * @returns {object[]} One read-only entry per token, `fromPrompt` set, after the chain's assets.
+ */
+function promptRefmods(node, scenes) {
+  const header = String(valueOf(node, "prompt_header", "") ?? "");
+  const footer = String(valueOf(node, "prompt_footer", "") ?? "");
+  const found = [];
+  scenes.forEach((scene, index) => {
+    const head = scene.wrap === "both" || scene.wrap === "header only" ? header : "";
+    const foot = scene.wrap === "both" || scene.wrap === "footer only" ? footer : "";
+    // A reference two tokens of one scene load is counted once.
+    const taken = new Set();
+    for (const match of `${head}\n${scene.prompt}\n${foot}`.matchAll(PROMPT_REF)) {
+      const name = promptRefmodName(match[1]);
+      const listed = name ? refmodListing.get(name) : null;
+      const kinds = String(match[2] ?? "").split(",").map((word) => word.trim().toLowerCase())
+        .flatMap((word) => PROMPT_PARTS[word] ?? []);
+      const wanted = (listed?.members ?? [])
+        .map((member, place) => ({ kind: member.kind, label: member.label, key: `${name}#${place}` }))
+        .filter((member) => !kinds.length || kinds.includes(member.kind));
+      const members = wanted.filter((member) => !taken.has(member.key));
+      if (wanted.length && !members.length) continue;
+      for (const member of members) taken.add(member.key);
+      found.push({
+        id: `ref:${scene.row}:${found.length}`,
+        node: null,
+        place: Infinity,
+        segment: index + 1,
+        role: members.length ? REFMOD_ROLES[members[0].kind] : "reference picture",
+        frame: 0,
+        file: name || match[1].trim(),
+        kind: members.length && members.every((member) => member.kind === "audio") ? "sound" : "",
+        name: match[0],
+        thumb: listed && members.some((member) => member.kind !== "audio") ? refmodThumbUrl(name, listed.mtime) : "",
+        moment: false,
+        frames: 1,
+        tag: "",
+        refmod: true,
+        fromPrompt: true,
+        members,
+        missing: Boolean(listed) && !wanted.length,
+        pending: false,
+      });
+    }
+  });
+  return found;
+}
+
 /**
  * The references one asset puts in a prompt, each with the role its tag is counted under.
  *
@@ -2797,7 +2878,7 @@ function createPromptTimeline(first) {
     if (disposed) return;
     if (!node.graph && !follow()) return;
     const scenes = readScenes(node);
-    const assets = readAssets(node);
+    const assets = [...readAssets(node), ...promptRefmods(node, scenes)];
     tagReferences(assets, scenes.length, socketReferences(node));
     let layout = [];
     try {
@@ -2913,7 +2994,10 @@ function createPromptTimeline(first) {
           : "An asset node has no file chosen and nothing wired", scene, asset.id);
       }
       if (asset.refmod && asset.file && !refmodListing.has(asset.file) && refmodListing.size) {
-        add(`${asset.name} is not in models/refmods on this machine`, scene, asset.id);
+        add(asset.fromPrompt ? `${asset.name} names no single RefMod in models/refmods`
+          : `${asset.name} is not in models/refmods on this machine`, scene, asset.id);
+      } else if (asset.fromPrompt && asset.missing) {
+        add(`${asset.name} asks for a part its RefMod does not hold`, scene, asset.id);
       }
     }
     // A muted asset ends the chain a run reads, so every asset chained before it is lost too.
@@ -3407,7 +3491,12 @@ function createPromptTimeline(first) {
 
     const middle = el("div", "flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px");
     const top = el("div", "display:flex;gap:8px;align-items:center;min-width:0;flex-wrap:wrap");
-    if (asset.refmod) {
+    if (asset.fromPrompt) {
+      const held = asset.members.length ? refmodKinds(asset.members) : "not found";
+      const badge = pill(`In the prompt · ${held}`);
+      badge.title = "Loaded by the prompt's token";
+      top.appendChild(badge);
+    } else if (asset.refmod) {
       const strength = Number(valueOf(asset.node, "strength", 1));
       const held = asset.members.length ? refmodKinds(asset.members) : "numbered after a run";
       const badge = pill(`RefMod · ${held}${strength < 1 ? ` · ${strength.toFixed(2)}` : ""}`);
@@ -3428,20 +3517,24 @@ function createPromptTimeline(first) {
       });
       top.appendChild(role);
     }
-    const where = [[String(EVERY_SEGMENT), "Every scene"]];
-    state.scenes.forEach((unused, at) => where.push([String(at + 1), `Scene ${at + 1}`]));
-    if (asset.segment > state.scenes.length) where.push([String(asset.segment), `Scene ${asset.segment} (none)`]);
-    const scene = makeSelect(where, String(asset.segment));
-    scene.style.width = "auto";
-    scene.style.padding = "4px 8px";
-    scene.title = "Which scene it belongs to";
-    scene.addEventListener("change", () => {
-      commit(node, () => write(asset.node, "segment", Number(scene.value)));
-      const to = Number(scene.value);
-      if (to > 0) selected = to - 1;
-      refresh();
-    });
-    top.appendChild(scene);
+    if (asset.fromPrompt) {
+      top.appendChild(pill(`Scene ${asset.segment}`));
+    } else {
+      const where = [[String(EVERY_SEGMENT), "Every scene"]];
+      state.scenes.forEach((unused, at) => where.push([String(at + 1), `Scene ${at + 1}`]));
+      if (asset.segment > state.scenes.length) where.push([String(asset.segment), `Scene ${asset.segment} (none)`]);
+      const scene = makeSelect(where, String(asset.segment));
+      scene.style.width = "auto";
+      scene.style.padding = "4px 8px";
+      scene.title = "Which scene it belongs to";
+      scene.addEventListener("change", () => {
+        commit(node, () => write(asset.node, "segment", Number(scene.value)));
+        const to = Number(scene.value);
+        if (to > 0) selected = to - 1;
+        refresh();
+      });
+      top.appendChild(scene);
+    }
     if (asset.role === "keyframe" && asset.segment !== EVERY_SEGMENT) {
       const at = makeNumber(durationOf(Math.max(0, asset.frame)).toFixed(2), { min: 0, max: 150, step: 0.04 }, "s in");
       at.input.style.width = "78px";
@@ -3459,10 +3552,12 @@ function createPromptTimeline(first) {
     const tag = String(asset.role).startsWith("reference") && asset.tag ? `${asset.tag}  ` : "";
     name.textContent = `${tag}${asset.name}`;
     const nodeName = asset.refmod ? "MiniMax H3 RefMod" : "MiniMax H3 Asset";
-    name.title = `${asset.file}\n${nodeName} #${asset.id}, number ${asset.place + 1} on the chain`;
+    name.title = asset.fromPrompt ? `${asset.file}\nLoaded by scene ${asset.segment}'s prompt`
+      : `${asset.file}\n${nodeName} #${asset.id}, number ${asset.place + 1} on the chain`;
     if (tag) name.style.fontFamily = MONO;
     middle.appendChild(name);
     card.appendChild(middle);
+    if (asset.fromPrompt) return card;
 
     card.appendChild(makeButton("Show", () => revealNode(asset.node), {
       kind: "ghost", small: true, hint: `Select its ${nodeName} node on the canvas`,
@@ -3700,6 +3795,11 @@ function createPromptTimeline(first) {
    * @returns {Promise<void>}
    */
   async function placeAsset(asset, to) {
+    if (asset.fromPrompt) {
+      say(`${asset.name} is loaded by the scene's prompt. Move the token to another scene's prompt to move it`);
+      refresh(true);
+      return;
+    }
     if (asset.refmod) {
       // A RefMod only ever moves between scenes.
       commit(node, () => write(asset.node, "segment", to.segment));
@@ -3915,6 +4015,10 @@ function createPromptTimeline(first) {
    * @returns {void}
    */
   function removeAsset(asset) {
+    if (asset.fromPrompt) {
+      say(`${asset.name} is loaded by the scene's prompt. Delete the token there to take it off`);
+      return;
+    }
     const removed = commit(node, () => removeFromChain(asset.node));
     if (selectedAsset === asset.id) selectedAsset = null;
     say(removed === false
@@ -4256,6 +4360,11 @@ function createPromptTimeline(first) {
     const asset = state.assets.find((each) => each.id === id);
     if (!asset) return;
     const items = [{ header: asset.name }];
+    if (asset.fromPrompt) {
+      items.push({ label: "Loaded by the scene's prompt", disabled: true });
+      openPopupMenu({ items, x: event.clientX, y: event.clientY, logName: LOG_NAME });
+      return;
+    }
     for (const role of asset.refmod ? [] : ROLES) {
       if (asset.kind && !ROLE_KINDS[role].includes(asset.kind)) continue;
       const undrawn = asset.moment && PINNING.has(role) && !frameDrawn(asset.frame);

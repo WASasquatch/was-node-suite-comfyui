@@ -8,7 +8,7 @@ from comfy_api.latest import io
 
 from ...modules.compat.types import H3_ASSETS, H3_PROMPTS
 from ...modules.interface import segment_preview
-from ...modules.latent import h3_assets, h3_conditioning, h3_extend, h3_references
+from ...modules.latent import h3_assets, h3_conditioning, h3_extend, h3_references, h3_refmods
 
 MODE_HINT = (
     "`t2va` = prompt only; `i2va` = opens on first_frame; `fl2va` = opens on first_frame, "
@@ -100,9 +100,10 @@ REFERENCE_INPUTS = [
 ]
 
 PROMPT_HEADER_HINT = (
-    "Text put before every segment's prompt, as the run's `subject_definitions:`. A tag "
-    "written `<Subject 1: He-Man>` lets every prompt say He-Man for it. A section a row "
-    "writes replaces the header's; a `<d>` line here is spoken in every segment."
+    "Text put before every segment's prompt, as the run's `subject_definitions:`. "
+    "`<Subject 1: He-Man>` lets every prompt say He-Man; `<ref:alice>` loads that RefMod for "
+    "each segment taking the header. A section a row writes replaces the header's; a `<d>` "
+    "line here is spoken everywhere."
 )
 
 PROMPT_FOOTER_HINT = (
@@ -130,9 +131,10 @@ BATCH_HINT = (
 )
 
 SEGMENT_PROMPT_HINT = (
-    "One segment of the video, as `a lone astronaut walks across a red desert plain`. Each "
-    "continues where the last left off; a blank row is skipped. A name given as "
-    "`<Subject 1: He-Man>` here or in the header becomes `<Subject 1>` wherever it appears."
+    "One segment of the video, as `a lone astronaut walks across a red desert plain`. A "
+    "blank row is skipped. `<Subject 1: He-Man>` names a tag; `<ref:alice>` or "
+    "`<ref:cast/alice=image,audio:0.6>` loads that RefMod from models/refmods for this segment "
+    "and becomes its tags."
 )
 
 SEGMENT_ENABLED_HINT = (
@@ -1627,16 +1629,29 @@ class MiniMaxH3Conditioning(io.ComfyNode):
              for number, audio in enumerate(ref_audios, start=1)],
         )
         encoded = {}
+        # Each segment's references, its prompt with RefMod tokens tagged, the report lines and the
+        # tokens, kept for the run.
+        made = {}
 
-        def references_for(index):
-            own = h3_assets.for_segment(assets, index)
+        def references_for(index, text=None):
+            if index in made:
+                return made[index]
+            named = f"segment {numbers[index]}"
+            refs = h3_refmods.prompt_refs(text, index + 1, named) if text else []
+            extra = []
+            for ref in refs:
+                extra.extend(asset for asset in ref.assets if all(asset is not each for each in extra))
             pictures_, videos_, sounds_ = h3_assets.reference_parts(
-                vae, audio_vae, own, width, height, longest, ref_image_size, encoded
+                vae, audio_vae, h3_assets.for_segment(assets, index) + extra, width, height,
+                longest, ref_image_size, encoded,
             )
             parts = (shared[0] + pictures_, shared[1] + videos_, shared[2] + sounds_)
-            if not any(parts):
-                return None
-            return h3_references.assemble(*parts, named=f"segment {numbers[index]}")
+            references = h3_references.assemble(*parts, named=named) if any(parts) else None
+            said = []
+            if refs:
+                text, said = h3_refmods.prompt_tagged(text, refs, *parts, encoded)
+            made[index] = (references, text, [f"prompt {line}" for line in said], refs)
+            return made[index]
 
         notes = []
         pinned_count = 0
@@ -1657,7 +1672,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             latent, frames = segments[0][3], segments[0][1]
             pinned_count = len(drawn)
             for index, segment in enumerate(segments):
-                notes.append(cls.describe(numbers[index] - 1, segment, [], references_for(index)))
+                references, _, said, _ = references_for(index)
+                notes.append(cls.describe(numbers[index] - 1, segment, said, references))
         else:
             segments = []
             wanted = h3_conditioning.MODE_IMAGES[mode]
@@ -1686,7 +1702,7 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                     vae, audio_vae, own, width, height, head, window
                 )
                 shown, blocks = shown + more_shown, blocks + more_blocks
-                references = references_for(index)
+                references, text, said, _ = references_for(index, text)
                 conditioning = h3_conditioning.encode(clip, text, shown, references)
                 encodings.append(h3_conditioning.encoding_of(clip, text, shown, references))
                 if blocks:
@@ -1711,7 +1727,7 @@ class MiniMaxH3Conditioning(io.ComfyNode):
                            choices[index], wired)
                 segments.append(segment)
                 pinned_count += len(blocks)
-                notes.append(cls.describe(numbers[index] - 1, segment, lines, references))
+                notes.append(cls.describe(numbers[index] - 1, segment, lines + said, references))
                 progress.update(1)
             latent, frames = segments[0][3], segments[0][1]
         segments = [(h3_conditioning.held(segment[0], hold),) + tuple(segment[1:])
@@ -1843,7 +1859,8 @@ class MiniMaxH3Conditioning(io.ComfyNode):
             height: Canvas height in pixels.
             filled: The rows carrying a prompt.
             node_helpers: ComfyUI's ``node_helpers``.
-            references_for: Given a segment number from 0, its references or ``None``.
+            references_for: Given a segment number from 0 and its prompt, ``(references or
+                None, the prompt with its RefMod tokens tagged, report lines, the tokens)``.
             choices: Each row's model choice.
             model_fl2va: The wired fl2va model, or ``None``.
             model_ref2va: The wired ref2va model, or ``None``.
@@ -1879,7 +1896,7 @@ class MiniMaxH3Conditioning(io.ComfyNode):
         for index, (text, count, _, _) in enumerate(filled):
             length = h3_extend.snap_clip(count)
             own, _ = h3_conditioning.empty_latent(width, height, length)
-            references = references_for(index)
+            references, text, _, _ = references_for(index, text)
             conditioning = h3_conditioning.encode(
                 clip, text, [pictures[places[index]], pictures[places[index] + 1]], references
             )
