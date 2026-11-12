@@ -47,7 +47,8 @@ class LLMComplete(io.ComfyNode):
             description=(
                 "Ask a language model one question and get its answer as text, such as turning a "
                 "short idea into a detailed image prompt for CLIP Text Encode. Pictures and sound "
-                "can go with the prompt. The answer streams onto the node as it is written."
+                "can go with the prompt. The answer streams onto the node, and the panel shows the "
+                "time taken and a local model's tokens per second."
             ),
             inputs=[
                 LLM.Input(
@@ -162,18 +163,25 @@ class LLMComplete(io.ComfyNode):
         if answer.thinking:
             bodies.append(run_result.body("thinking", answer.thinking))
         empty = not answer.text.strip()
+        counts = {
+            "characters": len(answer.text),
+            "words": len(answer.text.split()),
+            "thinking characters": len(answer.thinking),
+            "seconds": round(answer.seconds, 2),
+        }
+        rate = answer.stats.get("tokens_per_second")
+        if answer.stats:
+            counts["tokens"] = answer.stats["tokens"]
+            if rate:
+                counts["tokens per second"] = rate
         run_result.publish(
             status=run_result.WARNING if empty or (max_tokens and not answer.limited) else run_result.OK,
             summary=(
                 "The model answered nothing." if empty
-                else f"Wrote {len(answer.text.split())} words in {answer.seconds:.1f}s."
+                else f"Wrote {len(answer.text.split())} words in {answer.seconds:.1f}s"
+                + (f", {rate:.1f} tokens/s." if rate else ".")
             ),
-            counts={
-                "characters": len(answer.text),
-                "words": len(answer.text.split()),
-                "thinking characters": len(answer.thinking),
-                "seconds": round(answer.seconds, 2),
-            },
+            counts=counts,
             facts=facts,
             bodies=bodies,
         )

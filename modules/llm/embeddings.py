@@ -103,7 +103,7 @@ MAX_INSTRUCTION = 1000
 PROBE = "dimension probe"
 
 #: The entry a GGUF menu shows when no ``.gguf`` file is found.
-NO_GGUF = "no .gguf file in models/LLM or models/text_encoders"
+NO_GGUF = "no .gguf file in models/LLM, models/text_encoders or LM Studio's folder"
 
 #: Vector length of OpenAI's embedding models at their native size.
 OPENAI_DIMENSIONS = {
@@ -782,7 +782,7 @@ def gguf_embedding(
     if not path:
         raise ValueError(
             f"{node} cannot find `{label[:80]}`. Put a .gguf embedding model in models/LLM or "
-            f"models/text_encoders and pick it from the menu."
+            f"models/text_encoders, or download one in LM Studio, and pick it from the menu."
         )
     if pooling not in POOLINGS:
         raise ValueError(f"{node} does not know the pooling `{str(pooling)[:40]}`. Pick one of {', '.join(POOLINGS)}.")

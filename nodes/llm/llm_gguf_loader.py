@@ -17,7 +17,7 @@ REQUIRES = "llm"
 logger = log.get_logger("llm.models")
 
 #: The model menu's only entry when no ``.gguf`` file is found.
-NO_MODELS = "put a .gguf model in models/LLM or models/text_encoders"
+NO_MODELS = "put a .gguf model in models/LLM or models/text_encoders, or download one in LM Studio"
 
 #: The projector menu's entry for a model read as text only.
 NO_PROJECTOR = "none"
@@ -46,19 +46,25 @@ class WASLLMGGUFLoader(io.ComfyNode):
             ],
             category="WAS Suite/LLM/Models",
             description=(
-                "Load a GGUF language model from models/LLM or models/text_encoders and run it "
-                "on this machine as the LLM for chat, retrieval and agents. An mmproj file lets "
-                "it read pictures. The panel shows the model, its context and whether it runs on "
-                "the GPU."
+                "Load a GGUF language model from models/LLM, models/text_encoders or LM Studio's "
+                "downloads and run it on this machine as the LLM for chat, retrieval and agents. "
+                "An mmproj file lets it read pictures. The panel shows the model, its folder, its "
+                "context and whether it runs on the GPU."
             ),
             inputs=[
                 picker.path_input(io.Combo.Input(
                     "model", options=models or [NO_MODELS],
-                    tooltip="The .gguf model file, from ComfyUI/models/LLM or models/text_encoders, such as a Qwen3 4B Instruct Q8_0.",
+                    tooltip=(
+                        "The .gguf model file, from ComfyUI/models/LLM, models/text_encoders or the "
+                        "folder LM Studio downloads into, such as a Qwen3 4B Instruct Q8_0."
+                    ),
                 ), model=True),
                 picker.path_input(io.Combo.Input(
                     "mmproj", options=[NO_PROJECTOR, *gguf.projector_choices()], default=NO_PROJECTOR,
-                    tooltip="`none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf.",
+                    tooltip=(
+                        "`none` = text only; an mmproj .gguf made for this model = it reads pictures "
+                        "too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. LM Studio keeps it beside the model."
+                    ),
                 ), model=True),
                 io.Int.Input(
                     "n_ctx", default=8192, min=512, max=262144, step=256,
@@ -139,7 +145,7 @@ class WASLLMGGUFLoader(io.ComfyNode):
             The LLM wire.
 
         Raises:
-            PathNotAllowed: A wired path lies outside the LLM and text_encoders folders.
+            PathNotAllowed: A wired path lies outside the LLM, text_encoders and LM Studio folders.
         """
         model = gguf.menu_name(model)
         mmproj = gguf.menu_name(mmproj)
@@ -148,16 +154,23 @@ class WASLLMGGUFLoader(io.ComfyNode):
         if model == NO_MODELS or not model:
             raise ValueError(
                 "LLM GGUF Loader found no .gguf model. Put one in ComfyUI/models/LLM or "
-                "models/text_encoders, then press R in ComfyUI to refresh the menu."
+                "models/text_encoders, or download one in LM Studio, then press R in ComfyUI to "
+                "refresh the menu."
             )
         path = gguf.locate(model)
         if path is None:
-            raise ValueError(f"`{model}` is not a .gguf file in models/LLM or models/text_encoders. Pick one from the menu.")
+            raise ValueError(
+                f"`{model}` is not a .gguf file in models/LLM, models/text_encoders or LM Studio's "
+                "models folder. Pick one from the menu."
+            )
         projector = ""
         if mmproj and mmproj != NO_PROJECTOR:
             projector = gguf.locate(mmproj)
             if projector is None:
-                raise ValueError(f"The mmproj `{mmproj}` is not a .gguf file in models/LLM or models/text_encoders. Pick one from the menu.")
+                raise ValueError(
+                    f"The mmproj `{mmproj}` is not a .gguf file in models/LLM, models/text_encoders "
+                    "or LM Studio's models folder. Pick one from the menu."
+                )
         if chat_format in gguf.VISION_FORMATS and not projector:
             raise ValueError(
                 f"chat_format {chat_format} places pictures, which needs an mmproj. Pick the "
@@ -209,9 +222,10 @@ class WASLLMGGUFLoader(io.ComfyNode):
             warnings.append(f"chat_format {chat_format} reads no pictures, so the mmproj is unused")
         facts = {
             "model": title,
+            "folder": gguf.folder_label(path) or "models",
             "architecture": arch,
             "file": f"{os.path.getsize(path) / 2**30:.2f} GB",
-            "gpu": f"{'every' if layers < 0 else layers} layers" if layers else "CPU only",
+            "gpu": ("every layer" if layers < 0 else f"{layers} layers") if layers else "CPU only",
             "chat format": "from the file" if chat_format == gguf.AUTO else chat_format,
             "pictures": f"through {mmproj}" if projector else "text only",
         }

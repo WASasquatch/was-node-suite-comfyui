@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from .. import deps, log
 from ..util import file_listing, sandbox
 from . import FEATURE, runtime
+from .wires import Wire
 
 __all__ = [
     "MAX_ROWS",
@@ -102,8 +103,8 @@ def table_name(text: str, taken=()) -> str:
     return name
 
 
-@dataclass(eq=False)
-class Tables:
+@dataclass(eq=False, repr=False)
+class Tables(Wire):
     """Tables in one in-memory SQLite database, read only once loaded.
 
     Attributes:

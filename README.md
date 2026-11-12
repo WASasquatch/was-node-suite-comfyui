@@ -47,21 +47,22 @@ database and the wildcard, LUT and view-extension folders are written under
 `<ComfyUI user dir>/was-node-suite/`, and python compiles the pack to bytecode. An update
 recompiles, so it happens once more each time you pull.
 
-Three optional groups want packages and ship off: `document_export`, which lets **Save DOC**
-write `.docx`, `.odt` and `.pdf`, `llm`, the language model nodes, and `vector_stores`, which
-adds Chroma, LanceDB, FAISS and Postgres to the LLM nodes' vector stores.
+Four optional groups want packages and ship off: `document_export`, which lets **Save DOC**
+write `.docx`, `.odt` and `.pdf`, `llm`, the language model nodes, `vector_stores`, which adds
+LanceDB, FAISS and Postgres to the LLM nodes' vector stores, and `chroma`, which adds Chroma.
 
 ```sh
 # portable ComfyUI, from the ComfyUI_windows_portable directory
 python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\document_export.txt
 python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\llm.txt
 python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\vector_stores.txt
+python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\chroma.txt
 ```
 
-[Open Manager](https://github.com/WASasquatch/open-manager-comfyui) installs the same three
+[Open Manager](https://github.com/WASasquatch/open-manager-comfyui) installs the same four
 groups from the **Optional** tab on the pack's page.
 
-Then set `document_export: true`, `llm: true` or `vector_stores: true` under `features:` in `config.yaml`. The `llm`
+Then set `document_export: true`, `llm: true`, `vector_stores: true` or `chroma: true` under `features:` in `config.yaml`. The `llm`
 group's keys, model folders and servers: [`docs/LLM.md`](docs/LLM.md).
 [`docs/CONFIG.md`](docs/CONFIG.md#features) has every group, what it needs and what it gates.
 

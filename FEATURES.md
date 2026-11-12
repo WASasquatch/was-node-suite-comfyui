@@ -385,7 +385,7 @@ pipeline, from the model to the agent, is a node, wired and queued like any othe
 models a graph wires in:
 
 - **Models.** **LLM From CLIP** uses the language model inside a core **Load CLIP** or a
-  **Language Model Loader**, such as Qwen3 or Gemma, with pictures. **LLM GGUF Loader** runs a GGUF file, and **LLM Transformers
+  **Language Model Loader**, such as Qwen3 or Gemma, with pictures. **LLM GGUF Loader** runs a GGUF file, the models LM Studio has downloaded included, and **LLM Transformers
   Loader** a Hugging Face model folder. **LLM OpenAI**, **LLM Anthropic**, **LLM Google Gemini**
   and **LLM Provider** reach hosted models and local servers such as Ollama and LM Studio, with
   keys read from the environment. **LLM Embedding Model** embeds text, and **LLM Unload** frees

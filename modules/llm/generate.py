@@ -13,7 +13,7 @@ import os
 import re
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .. import deps, log
 from . import FEATURE, messages, runtime
@@ -104,12 +104,23 @@ class Reply:
         seconds: Time from the request to the last word.
         limited: True when a requested token limit reached the model, False when it was not
             asked for or the model takes none.
+        stats: A local model's ``tokens``, ``prompt_tokens`` and ``tokens_per_second``, empty
+            for a hosted one.
     """
 
     text: str
     thinking: str
     seconds: float
     limited: bool = False
+    stats: dict = field(default_factory=dict)
+
+
+def _stats(response) -> dict:
+    """The token figures a local model's final response carries, empty for any other."""
+    raw = getattr(response, "raw", None)
+    if not isinstance(raw, dict) or not isinstance(raw.get("tokens"), int):
+        return {}
+    return {key: raw[key] for key in ("tokens", "prompt_tokens", "tokens_per_second") if key in raw}
 
 
 def with_max_tokens(llm, limit: int):
@@ -237,7 +248,7 @@ def reply(model, chat, node: str, max_tokens: int = 0) -> Reply:
     finally:
         stream.finish()
     text, thinking = split_reply(last, "".join(deltas))
-    return Reply(text, thinking, time.monotonic() - started, limited)
+    return Reply(text, thinking, time.monotonic() - started, limited, _stats(last))
 
 
 async def areply(model, chat, node: str, max_tokens: int = 0) -> Reply:
@@ -283,7 +294,7 @@ async def areply(model, chat, node: str, max_tokens: int = 0) -> Reply:
     finally:
         stream.finish()
     text, thinking = split_reply(last, "".join(deltas))
-    return Reply(text, thinking, time.monotonic() - started, limited)
+    return Reply(text, thinking, time.monotonic() - started, limited, _stats(last))
 
 
 def require_vision(model, node: str, pictures: int) -> None:

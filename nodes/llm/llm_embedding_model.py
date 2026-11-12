@@ -108,8 +108,9 @@ class LLMEmbeddingModel(io.ComfyNode):
                     picker.path_input(io.Combo.Input(
                         "model", options=embeddings.gguf_choices(),
                         tooltip=(
-                            "A .gguf embedding model in models/LLM or models/text_encoders, such "
-                            "as a bge or nomic-embed GGUF, read through llama.cpp."
+                            "A .gguf embedding model in models/LLM, models/text_encoders or the "
+                            "folder LM Studio downloads into, such as a bge or nomic-embed GGUF, "
+                            "read through llama.cpp."
                         ),
                     ), model=True),
                     *LOCAL_INPUTS,

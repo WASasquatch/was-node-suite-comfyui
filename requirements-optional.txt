@@ -24,3 +24,4 @@
 -r requirements/document_export.txt
 -r requirements/llm.txt
 -r requirements/vector_stores.txt
+-r requirements/chroma.txt

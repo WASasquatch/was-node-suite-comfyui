@@ -87,9 +87,12 @@ features:                # optional node groups
   llm:         false     # language models, documents, indexes, retrieval, chat, memory and
                          #           agents, on llama-index. Hosted models also need network
                          #           pip install -r requirements/llm.txt
-  vector_stores: false   #  0 nodes: lets LLM Vector Store keep indexes in Chroma, LanceDB, FAISS
-                         #           and Postgres as well as Qdrant
+  vector_stores: false   #  0 nodes: lets LLM Vector Store keep indexes in LanceDB, FAISS and
+                         #           Postgres as well as Qdrant
                          #           pip install -r requirements/vector_stores.txt
+  chroma:      false     #  0 nodes: lets LLM Vector Store keep indexes in Chroma folders and
+                         #           servers
+                         #           pip install -r requirements/chroma.txt
 
                          # extras and viewer are the nodes of two other WAS packs. Set either
                          # to false to run the standalone pack instead.

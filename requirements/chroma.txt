@@ -1,0 +1,5 @@
+# features.chroma: the Chroma backend of LLM Vector Store, folders and servers.
+#
+# chromadb brings in kubernetes, OpenTelemetry with protobuf 5 or newer, onnxruntime and gRPC.
+llama-index-vector-stores-chroma>=0.6,<0.7     # Chroma folders and servers
+chromadb>=1.5                                  # Chroma folders and servers

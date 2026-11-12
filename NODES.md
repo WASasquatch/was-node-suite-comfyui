@@ -15424,7 +15424,7 @@ Talk with a language model one turn at a time. Connect a memory to keep the conv
 <details>
 <summary><b>LLM Complete</b></summary>
 
-Ask a language model one question and get its answer as text, such as turning a short idea into a detailed image prompt for CLIP Text Encode. Pictures and sound can go with the prompt. The answer streams onto the node as it is written.
+Ask a language model one question and get its answer as text, such as turning a short idea into a detailed image prompt for CLIP Text Encode. Pictures and sound can go with the prompt. The answer streams onto the node, and the panel shows the time taken and a local model's tokens per second.
 
 | | |
 |---|---|
@@ -15845,7 +15845,7 @@ Keep an index's vectors in a Qdrant, Chroma, LanceDB or FAISS collection on this
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `store` | `COMBO` | Yes |  |  | `qdrant`, `chroma`, `lancedb`, `faiss` = a folder in ComfyUI/user/was-node-suite/llm/vector_stores, all but qdrant with features.vector_stores on; `server: <name>` = a Qdrant, Chroma or Postgres server under llm.vector_stores. |
+| `store` | `COMBO` | Yes |  |  | `qdrant`, `chroma`, `lancedb`, `faiss` = a folder in ComfyUI/user/was-node-suite/llm/vector_stores, chroma with features.chroma on, lancedb and faiss with features.vector_stores on; `server: <name>` = a Qdrant, Chroma or Postgres server under llm.vector_stores. |
 | `collection` | `STRING` | Yes | documents |  | The collection's name, such as `studio_notes`: letters, digits, dashes and underscores; lower case and no dashes on Postgres. A new name starts an empty one. |
 
 **Outputs**
@@ -16148,7 +16148,7 @@ Use the language model inside a loaded CLIP, such as Qwen3 4B or Gemma 3, as the
 <details>
 <summary><b>LLM GGUF Loader</b></summary>
 
-Load a GGUF language model from models/LLM or models/text_encoders and run it on this machine as the LLM for chat, retrieval and agents. An mmproj file lets it read pictures. The panel shows the model, its context and whether it runs on the GPU.
+Load a GGUF language model from models/LLM, models/text_encoders or LM Studio's downloads and run it on this machine as the LLM for chat, retrieval and agents. An mmproj file lets it read pictures. The panel shows the model, its folder, its context and whether it runs on the GPU.
 
 | | |
 |---|---|
@@ -16159,8 +16159,8 @@ Load a GGUF language model from models/LLM or models/text_encoders and run it on
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `model` | `COMBO,STRING` | Yes |  |  | The .gguf model file, from ComfyUI/models/LLM or models/text_encoders, such as a Qwen3 4B Instruct Q8_0. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
-| `mmproj` | `COMBO,STRING` | Yes | none |  | `none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `model` | `COMBO,STRING` | Yes |  |  | The .gguf model file, from ComfyUI/models/LLM, models/text_encoders or the folder LM Studio downloads into, such as a Qwen3 4B Instruct Q8_0. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `mmproj` | `COMBO,STRING` | Yes | none |  | `none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. LM Studio keeps it beside the model. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `n_ctx` | `INT` | Yes | 8192 |  | The most tokens the model reads at once, conversation and reply together. `8192` suits chat; larger values take more memory. |
 | `gpu_layers` | `INT` | Yes | -1 |  | `-1` = every layer on the GPU; `0` = CPU only; `20` = the first 20 layers. Needs a llama-cpp-python build with GPU support. |
 | `flash_attn` | `BOOLEAN` | Yes | False |  | `true` uses flash attention, which saves memory on a long context where the build supports it. |

@@ -51,8 +51,9 @@ class LLMVectorStore(io.ComfyNode):
                 io.Combo.Input(
                     "store", options=vector_stores.options(),
                     tooltip=(
-                        "`qdrant`, `chroma`, `lancedb`, `faiss` = a folder in ComfyUI/user/was-node-suite/llm/vector_stores, all but "
-                        "qdrant with features.vector_stores on; `server: <name>` = a Qdrant, Chroma or Postgres server under llm.vector_stores."
+                        "`qdrant`, `chroma`, `lancedb`, `faiss` = a folder in ComfyUI/user/was-node-suite/llm/vector_stores, chroma "
+                        "with features.chroma on, lancedb and faiss with features.vector_stores on; `server: <name>` = a Qdrant, "
+                        "Chroma or Postgres server under llm.vector_stores."
                     ),
                 ),
                 io.String.Input(

@@ -16,15 +16,18 @@ from urllib.parse import quote, unquote, urlsplit
 from .. import deps, log
 from ..util import sandbox
 from . import FEATURE, runtime, storage
+from .wires import Wire
 
 __all__ = [
     "BACKENDS",
+    "CHROMA_FEATURE",
     "EXTRA_FEATURE",
     "SERVER_KINDS",
     "SERVER_PREFIX",
     "VectorStore",
     "check_collection",
     "count",
+    "feature_of",
     "open_store",
     "options",
     "servers",
@@ -38,8 +41,18 @@ BACKENDS = ("qdrant", "chroma", "lancedb", "faiss")
 #: Backends a ``llm.vector_stores`` server entry may name in ``kind``.
 SERVER_KINDS = ("qdrant", "chroma", "postgres")
 
-#: The feature group whose packages every backend but Qdrant reads.
+#: The feature group whose packages LanceDB, FAISS and Postgres read.
 EXTRA_FEATURE = "features.vector_stores"
+
+#: The feature group whose packages Chroma reads.
+CHROMA_FEATURE = "features.chroma"
+
+
+def feature_of(kind: str) -> str | None:
+    """The feature group a backend needs on, or ``None`` for Qdrant, which needs only ``llm``."""
+    if kind == "qdrant":
+        return None
+    return CHROMA_FEATURE if kind == "chroma" else EXTRA_FEATURE
 
 #: Label prefix of a server named in ``llm.vector_stores``.
 SERVER_PREFIX = "server: "
@@ -64,8 +77,8 @@ _lock = threading.Lock()
 _clients: dict = {}
 
 
-@dataclass(frozen=True, eq=False)
-class VectorStore:
+@dataclass(frozen=True, eq=False, repr=False)
+class VectorStore(Wire):
     """A collection in a vector store, on the ``WAS_LLM_VECTOR_STORE`` wire.
 
     Attributes:
@@ -189,7 +202,7 @@ def options() -> list[str]:
     """What the store menu offers: Qdrant, the other local backends while their group is on, then servers."""
     from ..config import group_enabled
 
-    local = list(BACKENDS) if group_enabled(EXTRA_FEATURE) else ["qdrant"]
+    local = [kind for kind in BACKENDS if feature_of(kind) is None or group_enabled(feature_of(kind))]
     return [*local, *(SERVER_PREFIX + name for name in servers())]
 
 
@@ -281,10 +294,11 @@ def open_store(where: str, collection, node: str) -> VectorStore:
 
     choice = str(where or "").strip()
     if choice in BACKENDS:
-        if choice != "qdrant" and not group_enabled(EXTRA_FEATURE):
+        feature = feature_of(choice)
+        if feature and not group_enabled(feature):
             raise ValueError(
-                f"{node}: {choice} needs features.vector_stores on in config.yaml and its packages: "
-                f"{deps.install_command(feature='features.vector_stores')}. Turn it on and restart ComfyUI, or pick qdrant."
+                f"{node}: {choice} needs {feature} on in config.yaml and its packages: "
+                f"{deps.install_command(feature=feature)}. Turn it on and restart ComfyUI, or pick qdrant."
             )
         name = check_collection(collection, node, choice)
         settings = {"folder": _folder(choice, name) if choice == "faiss" else _folder(choice)}
@@ -295,10 +309,11 @@ def open_store(where: str, collection, node: str) -> VectorStore:
             f"{node} was given `{choice[:80]}`, which is neither a local store nor a server llm.vector_stores in "
             f"config.yaml names. Pick one from the menu."
         )
-    if entry["kind"] != "qdrant" and not group_enabled(EXTRA_FEATURE):
+    feature = feature_of(entry["kind"])
+    if feature and not group_enabled(feature):
         raise ValueError(
-            f"{node}: a {entry['kind']} server needs features.vector_stores on in config.yaml and its packages: "
-            f"{deps.install_command(feature='features.vector_stores')}."
+            f"{node}: a {entry['kind']} server needs {feature} on in config.yaml and its packages: "
+            f"{deps.install_command(feature=feature)}."
         )
     local = runtime.is_loopback(entry["url"]) or (urlsplit(entry["url"]).hostname or "") in ("localhost", "127.0.0.1", "::1")
     if not local:
@@ -336,8 +351,8 @@ def _make(wire: VectorStore, dimensions: int):
         wire._held["client"] = client
         return store.QdrantVectorStore(collection_name=name, client=client)
     if kind == "chroma":
-        chromadb = deps.require("chromadb", feature="features.vector_stores")
-        store = deps.require("llama_index.vector_stores.chroma", feature="features.vector_stores")
+        chromadb = deps.require("chromadb", feature="features.chroma")
+        store = deps.require("llama_index.vector_stores.chroma", feature="features.chroma")
         quiet = chromadb.Settings(anonymized_telemetry=False)
         if "folder" in settings:
             client = _client(("chroma", settings["folder"]), lambda: chromadb.PersistentClient(path=settings["folder"], settings=quiet))

@@ -214,6 +214,7 @@ FEATURE_GROUPS = (
     "audio",
     "llm",
     "vector_stores",
+    "chroma",
 )
 
 #: Groups that start on. ``extras`` and ``viewer`` are the two other packs this one
@@ -230,11 +231,12 @@ FEATURE_GROUPS = (
 #: costs nothing either: it runs on torch and scipy, which ComfyUI already requires.
 #:
 #: Off, deliberately: network is a consent decision rather than a dependency one, since it
-#: permits outbound requests. ``document_export``, ``llm`` and ``vector_stores`` are the groups
-#: whose packages are not ComfyUI requirements, so they start off and a fresh install brings in
-#: nothing. ``document_export`` gates no node at all: off refuses the three Save DOC formats
-#: written through a library, and the other seven still write. ``llm`` gates every LLM node.
-#: ``vector_stores`` gates no node either: off leaves LLM Vector Store offering Qdrant alone.
+#: permits outbound requests. ``document_export``, ``llm``, ``vector_stores`` and ``chroma`` are
+#: the groups whose packages are not ComfyUI requirements, so they start off and a fresh install
+#: brings in nothing. ``document_export`` gates no node at all: off refuses the three Save DOC
+#: formats written through a library, and the other seven still write. ``llm`` gates every LLM
+#: node. ``vector_stores`` and ``chroma`` gate no node either: with both off, LLM Vector Store
+#: offers Qdrant alone.
 FEATURE_DEFAULTS = {
     **dict.fromkeys(FEATURE_GROUPS, False),
     "extras": True,

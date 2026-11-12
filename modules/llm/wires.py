@@ -14,6 +14,7 @@ from . import runtime
 
 __all__ = [
     "AgentSpec",
+    "Wire",
     "ChatEngine",
     "Documents",
     "EmbeddingModel",
@@ -32,8 +33,26 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True, eq=False)
-class LanguageModel:
+class Wire:
+    """A value on an LLM socket, shown as its class and label alone."""
+
+    def __repr__(self) -> str:
+        for attribute in ("label", "name", "session", "collection"):
+            value = getattr(self, attribute, None)
+            if isinstance(value, str) and value:
+                return f"{type(self).__name__}({value[:120]!r})"
+        items = getattr(self, "items", None)
+        if items is None:
+            items = getattr(self, "names", None)
+        if isinstance(items, (list, tuple, dict)):
+            return f"{type(self).__name__}({len(items)} items)"
+        return f"{type(self).__name__}()"
+
+    __str__ = __repr__
+
+
+@dataclass(frozen=True, eq=False, repr=False)
+class LanguageModel(Wire):
     """A language model on the ``WAS_LLM`` wire.
 
     Attributes:
@@ -76,8 +95,8 @@ class LanguageModel:
         return replace(self, llm=llm)
 
 
-@dataclass(frozen=True, eq=False)
-class EmbeddingModel:
+@dataclass(frozen=True, eq=False, repr=False)
+class EmbeddingModel(Wire):
     """An embedding model on the ``WAS_LLM_EMBEDDING`` wire.
 
     Attributes:
@@ -114,8 +133,8 @@ class EmbeddingModel:
         return self
 
 
-@dataclass(frozen=True, eq=False)
-class Messages:
+@dataclass(frozen=True, eq=False, repr=False)
+class Messages(Wire):
     """A conversation on the ``WAS_LLM_MESSAGES`` wire.
 
     Attributes:
@@ -135,8 +154,8 @@ class Messages:
         return ()
 
 
-@dataclass(frozen=True, eq=False)
-class Documents:
+@dataclass(frozen=True, eq=False, repr=False)
+class Documents(Wire):
     """Documents or chunks on the ``WAS_LLM_DOCUMENTS`` wire.
 
     Attributes:
@@ -172,8 +191,8 @@ class Documents:
         return ()
 
 
-@dataclass(frozen=True, eq=False)
-class Index:
+@dataclass(frozen=True, eq=False, repr=False)
+class Index(Wire):
     """A built index on the ``WAS_LLM_INDEX`` wire.
 
     Attributes:
@@ -201,8 +220,8 @@ class Index:
         return models_in(self.embedding, self.llm, self.pictures)
 
 
-@dataclass(frozen=True, eq=False)
-class Retriever:
+@dataclass(frozen=True, eq=False, repr=False)
+class Retriever(Wire):
     """A retriever on the ``WAS_LLM_RETRIEVER`` wire.
 
     Attributes:
@@ -221,8 +240,8 @@ class Retriever:
         return models_in(*self.depends)
 
 
-@dataclass(frozen=True, eq=False)
-class Postprocessor:
+@dataclass(frozen=True, eq=False, repr=False)
+class Postprocessor(Wire):
     """One step of the ``WAS_LLM_POSTPROCESSORS`` chain.
 
     Attributes:
@@ -239,8 +258,8 @@ class Postprocessor:
         return models_in(*self.depends)
 
 
-@dataclass(frozen=True, eq=False)
-class QueryEngine:
+@dataclass(frozen=True, eq=False, repr=False)
+class QueryEngine(Wire):
     """A query engine on the ``WAS_LLM_QUERY_ENGINE`` wire.
 
     Attributes:
@@ -257,8 +276,8 @@ class QueryEngine:
         return models_in(*self.depends)
 
 
-@dataclass(frozen=True, eq=False)
-class ChatEngine:
+@dataclass(frozen=True, eq=False, repr=False)
+class ChatEngine(Wire):
     """How a chat engine is built around a memory, on the ``WAS_LLM_CHAT_ENGINE`` wire.
 
     Attributes:
@@ -277,8 +296,8 @@ class ChatEngine:
         return models_in(*self.depends)
 
 
-@dataclass(frozen=True, eq=False)
-class AgentSpec:
+@dataclass(frozen=True, eq=False, repr=False)
+class AgentSpec(Wire):
     """One agent on the ``WAS_LLM_AGENTS`` chain.
 
     Attributes:
@@ -305,8 +324,8 @@ class AgentSpec:
         return models_in(self.llm, *self.depends)
 
 
-@dataclass(frozen=True, eq=False)
-class Sources:
+@dataclass(frozen=True, eq=False, repr=False)
+class Sources(Wire):
     """Retrieved chunks with their scores on the ``WAS_LLM_SOURCES`` wire.
 
     Attributes:

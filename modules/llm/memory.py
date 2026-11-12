@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass, field
 
 from . import messages, runtime, storage
-from .wires import EmbeddingModel, LanguageModel, models_in
+from .wires import EmbeddingModel, LanguageModel, Wire, models_in
 
 __all__ = [
     "BLOCK_KINDS",
@@ -44,8 +44,8 @@ BLOCK_KINDS = ("static", "facts", "vector")
 SESSION_VERSION = 1
 
 
-@dataclass(frozen=True, eq=False)
-class BlockSpec:
+@dataclass(frozen=True, eq=False, repr=False)
+class BlockSpec(Wire):
     """One long-term memory block.
 
     Attributes:
@@ -73,8 +73,8 @@ class BlockSpec:
         return models_in(self.llm, self.embedding)
 
 
-@dataclass(frozen=True, eq=False)
-class MemorySpec:
+@dataclass(frozen=True, eq=False, repr=False)
+class MemorySpec(Wire):
     """Where a conversation is kept and how much of it reaches the model.
 
     Attributes:

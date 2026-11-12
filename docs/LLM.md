@@ -10,7 +10,22 @@ Every node, with its inputs and outputs, is in [`NODES.md`](../NODES.md).
 | Install | `pip install -r requirements/llm.txt` with ComfyUI's own python. On the portable build, from `ComfyUI_windows_portable`: `python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\llm.txt` |
 | Enable | `features.llm: true` in `ComfyUI/user/was-node-suite/config.yaml`, then restart ComfyUI |
 | Hosted models | `features.network: true` as well. With it off, every hosted model and web tool refuses to run, and models on this machine still run |
-| GGUF models | A `llama-cpp-python` build matching the machine's CUDA version, from that project's prebuilt wheels. The build PyPI installs runs on the CPU only |
+| GGUF models | A `llama-cpp-python` build with CUDA, below. The build PyPI installs runs on the CPU only |
+
+## GGUF on the GPU
+
+`llama-cpp-python` is built on the machine with CUDA turned on. The build needs the CUDA toolkit
+of the version torch was built for (`python -c "import torch; print(torch.version.cuda)"`) and a
+C++ compiler: Visual Studio's C++ build tools on Windows, `gcc` on Linux. ComfyUI is stopped while
+it installs.
+
+| System | Commands |
+|---|---|
+| Windows portable, from `ComfyUI_windows_portable` in an x64 Native Tools Command Prompt | `set CMAKE_ARGS=-DGGML_CUDA=on`<br>`python_embeded\python.exe -m pip install llama-cpp-python --no-binary llama-cpp-python --force-reinstall --no-deps --no-cache-dir` |
+| Linux | `CMAKE_ARGS="-DGGML_CUDA=on" python -m pip install llama-cpp-python --no-binary llama-cpp-python --force-reinstall --no-deps --no-cache-dir` |
+
+The LLM GGUF Loader panel reads `every layer` under `gpu` once the build uses the GPU, and `CPU
+only` when it does not.
 
 ## Keys
 
@@ -68,9 +83,21 @@ llm:
 | Model | Folder |
 |---|---|
 | Language models for LLM From CLIP | `models/text_encoders`, loaded by core **Load CLIP** |
-| GGUF language and embedding models | `models/LLM` and `models/text_encoders` |
+| GGUF language and embedding models | `models/LLM`, `models/text_encoders` and the folder LM Studio downloads models into |
 | Hugging Face folders: language, embedding and reranker models | `models/LLM`, one folder per model holding its `config.json` |
 | Picture models for LLM Image Embedding Model | `models/LLM`, one CLIP or SigLIP folder holding its `config.json` |
+
+The GGUF menus list LM Studio's downloads under their LM Studio names, such as
+`lmstudio-community/Qwen3-4B-GGUF/Qwen3-4B-Q8_0.gguf`, with the `mmproj` file beside each model on
+the `mmproj` menu. The folder is the one LM Studio uses as its models directory:
+
+| LM Studio home | Models folder |
+|---|---|
+| The folder named in `C:\Users\<name>\.lmstudio-home-pointer` (`~/.lmstudio-home-pointer`) | `downloadsFolder` in that folder's `settings.json`, otherwise its `models` folder |
+| `C:\Users\<name>\.lmstudio` (`~/.lmstudio`) | The same |
+| `C:\Users\<name>\.cache\lm-studio` (`~/.cache/lm-studio`) | The same |
+
+A folder on another machine is not listed.
 
 A suggested repository on **LLM Transformers Loader**, **LLM Embedding Model**, **LLM Image
 Embedding Model** or **LLM Rerank** downloads into `models/LLM/<owner>/<name>` the first time it runs, with `features.network` on.
@@ -145,13 +172,14 @@ Building into a collection replaces the chunks of each document it already holds
 | Store | Where | Needs |
 |---|---|---|
 | `qdrant` | `ComfyUI/user/was-node-suite/llm/vector_stores/qdrant` | `features.llm` |
-| `chroma` | `ComfyUI/user/was-node-suite/llm/vector_stores/chroma` | `features.vector_stores` |
+| `chroma` | `ComfyUI/user/was-node-suite/llm/vector_stores/chroma` | `features.chroma` |
 | `lancedb` | `ComfyUI/user/was-node-suite/llm/vector_stores/lancedb` | `features.vector_stores` |
 | `faiss` | `ComfyUI/user/was-node-suite/llm/vector_stores/faiss/<collection>` | `features.vector_stores` |
-| `server: <name>` | A server `llm.vector_stores` in `config.yaml` names; an address other than this machine needs `features.network` | `features.vector_stores` for Chroma and Postgres |
+| `server: <name>` | A server `llm.vector_stores` in `config.yaml` names; an address other than this machine needs `features.network` | `features.chroma` for Chroma, `features.vector_stores` for Postgres |
 
-`features.vector_stores` is installed with `pip install -r requirements/vector_stores.txt`, run the
-same way as the LLM requirements, and turned on in `config.yaml`.
+`features.vector_stores` is installed with `pip install -r requirements/vector_stores.txt` and
+`features.chroma` with `pip install -r requirements/chroma.txt`, each run the same way as the LLM
+requirements and turned on in `config.yaml`.
 
 ```yaml
 llm:
@@ -194,7 +222,10 @@ llm:
 | `Set OPENAI_API_KEY in the environment ComfyUI starts from` | The variable is not set where ComfyUI runs | Set it and restart ComfyUI |
 | `Nothing answered at the model's address` | A local server such as Ollama is not running | Start it and load the model |
 | `You have no credits remaining` | The provider account has no credit | Add credit with the provider |
-| GGUF runs slowly and its panel says CPU only | `llama-cpp-python` came from PyPI | Install a CUDA build |
+| GGUF runs slowly and its panel says CPU only | `llama-cpp-python` was built without CUDA | Build it with CUDA, as in [GGUF on the GPU](#gguf-on-the-gpu) |
+| The CUDA build fails with `unsupported Microsoft Visual Studio version` | The CUDA toolkit is older than the Visual Studio found first | Run the commands from the Native Tools Command Prompt of a Visual Studio release that toolkit supports |
+| LM Studio's models are missing from the GGUF menus | ComfyUI runs as another user, in WSL or in a container, or the models folder is on another machine | Add the folder under `LLM:` in `extra_model_paths.yaml` and restart ComfyUI |
+| An LM Studio model fails with `unknown model architecture` | LM Studio's own engine is newer than the installed `llama-cpp-python` | Install a newer `llama-cpp-python` build, or run the model in LM Studio and reach it with LLM Provider set to `lmstudio` |
 | `This step needs an embedding model and none was connected` | A step needed embeddings and none was wired | Connect LLM Embedding Model to the node's `embedding` input |
 | A chat answers a repeated message with its last reply | An unchanged message to a saved conversation is answered from it | Change the message to ask again |
 | The conversation menu is empty after a restart | `features.llm` was turned off, or nothing has been saved yet | Turn it on and restart ComfyUI, or send a message |
@@ -209,7 +240,8 @@ llm:
 | `would write more than 64 million characters from one JSON document` | A deeply nested JSON document in `json` split mode | Split it with another splitter, such as `sentence` |
 | `This index lives in the vector store` | LLM Save Index was given an index kept in a vector store | Reopen it with LLM Vector Store and LLM Vector Store Index instead |
 | `holds no vectors yet` | LLM Vector Store Index opened an empty collection | Fill it with LLM Vector Index, its `vector_store` input connected |
-| The store menu offers only `qdrant` | `features.vector_stores` is off | Install `requirements/vector_stores.txt`, turn it on and restart ComfyUI |
+| The store menu offers only `qdrant` | `features.vector_stores` and `features.chroma` are off | Install `requirements/vector_stores.txt` or `requirements/chroma.txt`, turn the group on and restart ComfyUI |
+| `pip check` names kubernetes, opentelemetry-proto or protobuf after installing Chroma | `chromadb` needs protobuf 5 or newer, and another installed package holds it below 5 | Leave `features.chroma` off and uninstall `chromadb`, or update the package that holds protobuf back |
 | `reads its secret from ... which is not set` | The server's `api_key_env` or `password_env` variable is not set where ComfyUI runs | Set it and restart ComfyUI |
 | `type "vector" does not exist` | The Postgres database has no `vector` extension | Run `CREATE EXTENSION vector;` in that database |
 | `cannot turn a ... into documents` | LLM To Documents was given a kind it does not read | Connect text, a list of text, an IMAGE, a VIDEO, a DOC, a conversation, sources or tables |

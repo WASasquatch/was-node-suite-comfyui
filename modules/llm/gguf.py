@@ -1,12 +1,14 @@
 """GGUF language models through llama-cpp-python, as llama-index chat models.
 
-:func:`read_header` reads a GGUF file's metadata without loading it, :func:`load` keeps at most
-:data:`CACHE_LIMIT` models loaded, and :func:`gguf_model` builds the chat model class.
+:func:`read_header` reads a GGUF file's metadata, :func:`load` keeps at most
+:data:`CACHE_LIMIT` models loaded, :func:`gguf_model` builds the chat model class, and
+:func:`lmstudio_folders` adds LM Studio's downloads to the menus.
 """
 
 from __future__ import annotations
 
 import gc
+import json
 import os
 import struct
 import time
@@ -24,7 +26,9 @@ __all__ = [
     "LoadSpec",
     "Loaded",
     "cache_bytes",
+    "folder_label",
     "gguf_model",
+    "lmstudio_folders",
     "load",
     "locate",
     "menu_name",
@@ -66,8 +70,23 @@ CHAT_FORMATS = [AUTO, *TEXT_FORMATS, *VISION_FORMATS]
 #: The model folders searched for ``.gguf`` files, by ``folder_paths`` key.
 FOLDERS = ("LLM", "text_encoders")
 
-#: The ``folder_paths`` key listing ``.gguf`` files across :data:`FOLDERS`.
+#: The ``folder_paths`` key listing ``.gguf`` files across :data:`FOLDERS` and LM Studio's folders.
 LISTING_KEY = "was_llm_gguf"
+
+#: LM Studio's home folders under the user's home, newest layout first.
+LMSTUDIO_HOMES = (".lmstudio", os.path.join(".cache", "lm-studio"))
+
+#: The file in the user's home naming LM Studio's home folder when it was moved.
+LMSTUDIO_POINTER = ".lmstudio-home-pointer"
+
+#: The key in LM Studio's ``settings.json`` naming the folder it downloads models into.
+LMSTUDIO_DOWNLOADS = "downloadsFolder"
+
+#: The largest LM Studio settings or pointer file read.
+MAX_SETTINGS_BYTES = 1024 * 1024
+
+#: The label the panel and messages give a file in one of LM Studio's folders.
+LMSTUDIO_LABEL = "LM Studio"
 
 #: Models kept loaded before the least recently used one is closed.
 CACHE_LIMIT = 2
@@ -95,6 +114,7 @@ _STRING, _ARRAY = 8, 9
 
 _loaded: OrderedDict = OrderedDict()
 _classes: dict = {}
+_lmstudio: dict = {}
 
 
 def require():
@@ -114,8 +134,112 @@ def require():
     return module
 
 
+def _small_file(path: str) -> str | None:
+    """A text file's contents, or ``None`` when it is absent, unreadable or too large."""
+    try:
+        if not os.path.isfile(path) or os.path.getsize(path) > MAX_SETTINGS_BYTES:
+            return None
+        with open(path, encoding="utf-8-sig") as handle:
+            return handle.read(MAX_SETTINGS_BYTES)
+    except (OSError, UnicodeDecodeError) as error:
+        logger.debug("an LM Studio file could not be read (%s)", getattr(error, "strerror", None) or type(error).__name__)
+        return None
+
+
+def _local_folder(value) -> str | None:
+    """An absolute folder on this machine, or ``None`` for anything else."""
+    from ..util.sandbox import names_another_host
+
+    if not isinstance(value, str) or not value.strip():
+        return None
+    folder = os.path.expanduser(value.strip())
+    if not os.path.isabs(folder) or names_another_host(folder) or not os.path.isdir(folder):
+        return None
+    return os.path.normpath(folder)
+
+
+def _lmstudio_homes() -> list[str]:
+    """LM Studio's home folders: the one its pointer file names, then :data:`LMSTUDIO_HOMES`."""
+    home = os.path.expanduser("~")
+    pointer = _small_file(os.path.join(home, LMSTUDIO_POINTER))
+    named = _local_folder(pointer.strip()) if pointer else None
+    homes = [named] if named else []
+    for relative in LMSTUDIO_HOMES:
+        folder = _local_folder(os.path.join(home, relative))
+        if folder and folder not in homes:
+            homes.append(folder)
+    return homes
+
+
+def lmstudio_folders() -> list[str]:
+    """The folders LM Studio keeps its downloaded models in.
+
+    Returns:
+        Each home's :data:`LMSTUDIO_DOWNLOADS` folder from its ``settings.json``, or its
+        ``models`` folder where that names none, absent folders and another machine's left out.
+    """
+    homes = _lmstudio_homes()
+    stamps = []
+    for home in homes:
+        try:
+            stamps.append((home, os.stat(os.path.join(home, "settings.json")).st_mtime_ns))
+        except OSError:
+            stamps.append((home, None))
+    stamp = tuple(stamps)
+    if _lmstudio.get("stamp") == stamp:
+        return list(_lmstudio["folders"])
+    folders: list[str] = []
+    for home in homes:
+        text = _small_file(os.path.join(home, "settings.json"))
+        chosen = None
+        if text:
+            try:
+                settings = json.loads(text)
+            except ValueError:
+                settings = None
+            if isinstance(settings, dict):
+                chosen = _local_folder(settings.get(LMSTUDIO_DOWNLOADS))
+        chosen = chosen or _local_folder(os.path.join(home, "models"))
+        if chosen and os.path.normcase(chosen) not in {os.path.normcase(f) for f in folders}:
+            folders.append(chosen)
+    if folders and folders != _lmstudio.get("folders"):
+        logger.info("listing .gguf models from %d LM Studio folder(s)", len(folders))
+    _lmstudio.update(stamp=stamp, folders=folders)
+    return list(folders)
+
+
+def folder_label(path: str) -> str:
+    """Which listed folder holds a file, as a panel names it.
+
+    Args:
+        path: A file :func:`locate` answered.
+
+    Returns:
+        ``models/LLM``, ``models/text_encoders``, :data:`LMSTUDIO_LABEL`, or ``""`` when no
+        listed folder holds it.
+    """
+    from ..util.sandbox import contains
+
+    try:
+        import folder_paths
+    except ImportError:
+        return ""
+    from pathlib import Path
+
+    target = Path(os.path.realpath(path))
+    for name in FOLDERS:
+        if name in folder_paths.folder_names_and_paths:
+            for root in folder_paths.get_folder_paths(name):
+                if contains(Path(os.path.realpath(root)), target):
+                    return f"models/{name}"
+    for root in lmstudio_folders():
+        if contains(Path(os.path.realpath(root)), target):
+            return LMSTUDIO_LABEL
+    return ""
+
+
 def _register() -> bool:
-    """Point :data:`LISTING_KEY` at every folder of :data:`FOLDERS`, ``.gguf`` files only."""
+    """Point :data:`LISTING_KEY` at :data:`FOLDERS` and LM Studio's folders, ``.gguf`` files only."""
     try:
         import folder_paths
     except ImportError:
@@ -129,6 +253,9 @@ def _register() -> bool:
             for path in folder_paths.get_folder_paths(name):
                 if path not in paths:
                     paths.append(path)
+    for path in lmstudio_folders():
+        if os.path.normcase(path) not in {os.path.normcase(p) for p in paths}:
+            paths.append(path)
     current = folder_paths.folder_names_and_paths.get(LISTING_KEY)
     if current is None or list(current[0]) != paths:
         folder_paths.folder_names_and_paths[LISTING_KEY] = (paths, {".gguf"})
