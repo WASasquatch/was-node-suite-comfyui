@@ -192,6 +192,12 @@ def register_interface_routes() -> None:
     else:
         register_segment_previews()
     try:
+        from .modules.interface.refmods import register_routes as register_refmods
+    except Exception as error:
+        logger.debug("the interface RefMod channel is unavailable (%s)", error)
+    else:
+        register_refmods()
+    try:
         from .modules.interface.pantry import register_routes as register_pantry
     except Exception as error:
         logger.debug("the interface terminology pantry channel is unavailable (%s)", error)

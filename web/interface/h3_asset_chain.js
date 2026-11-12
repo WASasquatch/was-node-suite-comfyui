@@ -1,14 +1,18 @@
 /**
- * The chain of MiniMax H3 Asset nodes feeding an `assets` input, read and rewired on the graph.
+ * The chain of MiniMax H3 Asset and RefMod nodes feeding an `assets` input, read and rewired.
  *
- * A chain runs upstream first: each asset node's `assets` output feeds the next one's `assets`
- * input, and the last feeds the conditioning node.
+ * A chain runs upstream first: each node's `assets` output feeds the next one's `assets` input,
+ * and the last feeds the conditioning node.
  */
 
 const LOG_NAME = "WASNodeSuite.H3AssetChain";
 
-/** The node id of MiniMax H3 Asset. */
+/** The node id of MiniMax H3 Asset, and of MiniMax H3 RefMod. */
 export const ASSET_NODE_ID = "WASMiniMaxH3Asset";
+export const REFMOD_NODE_ID = "WASMiniMaxH3RefMod";
+
+/** Every node id a chain passes through. */
+export const CHAIN_NODE_IDS = new Set([ASSET_NODE_ID, REFMOD_NODE_ID]);
 
 /** The input a chain arrives on, and the output it leaves by, on every node it passes. */
 export const CHAIN_INPUT = "assets";
@@ -166,11 +170,11 @@ export function wiredInto(node, name) {
 }
 
 /**
- * The asset nodes whose assets a run hands to a node's `assets` input.
+ * The asset and RefMod nodes whose assets a run hands to a node's `assets` input.
  *
  * @param {object} node - The node the chain ends on.
- * @returns {object[]} The asset nodes, upstream first. A bypassed one is passed over; a muted one
- *   ends the chain, and every node before it is cut off with it.
+ * @returns {object[]} The chain's nodes, upstream first. A bypassed one is passed over; a muted
+ *   one ends the chain, and every node before it is cut off with it.
  */
 export function liveChainOf(node) {
   const found = [];
@@ -179,7 +183,7 @@ export function liveChainOf(node) {
   for (let step = 0; step < MOST_LINKS && current; step += 1) {
     const slot = slotOf(current, CHAIN_INPUT);
     const live = liveOrigin(current.graph, inputLink(current, slot), current.inputs?.[slot]?.type ?? "*");
-    if (!live || live.node.type !== ASSET_NODE_ID || seen.has(live.node.id)) break;
+    if (!live || !CHAIN_NODE_IDS.has(live.node.type) || seen.has(live.node.id)) break;
     seen.add(live.node.id);
     found.push(live.node);
     current = live.node;
@@ -188,10 +192,10 @@ export function liveChainOf(node) {
 }
 
 /**
- * The asset nodes chained into a node's `assets` input, whatever their mode.
+ * The asset and RefMod nodes chained into a node's `assets` input, whatever their mode.
  *
  * @param {object} node - The node the chain ends on.
- * @returns {object[]} The asset nodes, upstream first. The walk stops at anything else.
+ * @returns {object[]} The chain's nodes, upstream first. The walk stops at anything else.
  */
 export function chainOf(node) {
   const found = [];
@@ -201,7 +205,7 @@ export function chainOf(node) {
     const link = inputLink(current, slotOf(current, CHAIN_INPUT));
     if (!link) break;
     const origin = current.graph?.getNodeById?.(link.origin_id);
-    if (!origin || origin.type !== ASSET_NODE_ID || seen.has(origin.id)) break;
+    if (!origin || !CHAIN_NODE_IDS.has(origin.type) || seen.has(origin.id)) break;
     seen.add(origin.id);
     found.push(origin);
     current = origin;

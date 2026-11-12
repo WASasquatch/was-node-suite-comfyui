@@ -7,12 +7,12 @@
 
 import { api } from "../../scripts/api.js";
 import { app } from "../../scripts/app.js";
-import { KIND_EXTENSIONS, createAssetBrowser, kindOf as entryKind } from "./interface/asset_browser.js";
+import { DRAG_TYPE, KIND_EXTENSIONS, createAssetBrowser, kindOf as entryKind } from "./interface/asset_browser.js";
 import { addButton } from "./interface/decoration.js";
 import { createFloatingWindow } from "./interface/floating_window.js";
 import {
-  ASSET_NODE_ID, BYPASSED_MODE, MUTED_MODE, appendToChain, chainNumberedSockets, chainOf, liveChainOf, placeInChain,
-  removeFromChain,
+  ASSET_NODE_ID, BYPASSED_MODE, MUTED_MODE, REFMOD_NODE_ID, appendToChain, chainNumberedSockets, chainOf, liveChainOf,
+  placeInChain, removeFromChain,
   wiredInto,
 } from "./interface/h3_asset_chain.js";
 import {
@@ -21,7 +21,7 @@ import {
   snapOverlapFor, timeline,
 } from "./interface/h3_extend.js";
 import {
-  ROLE_NAMES, TIMELINE_HEIGHT, TRANSITIONS, TRANSITION_TINTS, clockOf, createTimeline, drawnEndOf,
+  REFMOD_KIND, ROLE_NAMES, TIMELINE_HEIGHT, TRANSITIONS, TRANSITION_TINTS, clockOf, createTimeline, drawnEndOf,
   effectiveTransition, sceneAt, sceneTint, sheetFrameAt, tintKey,
 } from "./interface/h3_timeline.js";
 import {
@@ -116,6 +116,86 @@ const ROLE_KINDS = {
 // Most references of each kind one prompt carries, and the word its tag uses.
 const MOST = { "reference picture": 9, "reference clip": 3, "reference audio": 3 };
 const TAG_WORDS = { "reference picture": "Picture", "reference clip": "Video", "reference audio": "Audio" };
+
+// A RefMod's menu entry naming no file, the node property its last run's references are kept in,
+// and the role each kind of reference it holds plays.
+const REFMOD_NONE = "(none)";
+const REFMOD_PROPERTY = "was_refmods";
+const REFMOD_ROLES = { image: "reference picture", video: "reference clip", audio: "reference audio" };
+
+// The routes listing the RefMods in models/refmods and drawing one.
+const REFMODS_ROUTE = "/was/interface/api/refmods";
+const REFMOD_THUMB_ROUTE = "/was/interface/api/refmod_thumbnail";
+
+// What each RefMod file holds, by menu name, as the route last answered.
+const refmodListing = new Map();
+let refmodReading = null;
+
+/**
+ * Read what every RefMod in models/refmods holds.
+ *
+ * @returns {Promise<boolean>} True when the listing was read.
+ */
+function readRefmods() {
+  if (refmodReading) return refmodReading;
+  refmodReading = (async () => {
+    try {
+      const response = await api.fetchApi(REFMODS_ROUTE, { cache: "no-store" });
+      if (!response.ok) return false;
+      const answer = await response.json();
+      refmodListing.clear();
+      for (const entry of Array.isArray(answer?.refmods) ? answer.refmods : []) {
+        if (typeof entry?.name !== "string" || !Array.isArray(entry.members)) continue;
+        refmodListing.set(entry.name, {
+          name: entry.name,
+          mtime: Number(entry.mtime) || 0,
+          members: entry.members.filter((member) => REFMOD_ROLES[member?.kind])
+            .map((member) => ({ kind: member.kind, label: String(member.label ?? ""), tokens: Number(member.tokens) || 0 })),
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error(`[${LOG_NAME}] Failed to read the RefMods:`, error);
+      return false;
+    } finally {
+      refmodReading = null;
+    }
+  })();
+  return refmodReading;
+}
+
+/**
+ * The picture route for one RefMod.
+ *
+ * @param {string} name - Its menu name.
+ * @param {number} mtime - When it was written, so a rewritten file is a new picture.
+ * @returns {string} The URL.
+ */
+function refmodThumbUrl(name, mtime) {
+  const query = new URLSearchParams({ name, edge: String(THUMB_EDGE), stamp: String(mtime ?? "") });
+  return api.apiURL(`${REFMOD_THUMB_ROUTE}?${query.toString()}`);
+}
+
+/**
+ * A RefMod's file name without its folder or suffix.
+ *
+ * @param {string} name - Its menu name.
+ * @returns {string} The name.
+ */
+function refmodName(name) {
+  return String(name ?? "").split(/[\\/]/).pop().replace(/\.safetensors$/i, "");
+}
+
+/**
+ * The tags one RefMod's references take, in the order a scene numbers them.
+ *
+ * @param {Array<{kind: string}>} members - What it holds.
+ * @returns {string} Its kinds as words, as `Video + Audio`.
+ */
+function refmodKinds(members) {
+  const words = { image: "Picture", video: "Video", audio: "Audio" };
+  return members.map((member) => words[member.kind] ?? member.kind).join(" + ");
+}
 
 /**
  * A symbol drawn in the text's colour rather than as an emoji.
@@ -352,6 +432,19 @@ function inspectedMedia(label, kind) {
 }
 
 /**
+ * What the monitor shows for a RefMod: its picture, or a sound mark for a voice alone.
+ *
+ * @param {object} asset - A RefMod asset, from `readAssets`, or a RefMod picked in the bin.
+ * @returns {{kind: string, url: string}} The picture route at full size, or a sound with no URL.
+ */
+function refmodMedia(asset) {
+  const voices = asset.members?.length && asset.members.every((member) => member.kind === "audio");
+  if (voices || !asset.file) return { kind: "sound", url: "" };
+  const query = new URLSearchParams({ name: asset.file, edge: String(INSPECT_EDGE) });
+  return { kind: "picture", url: api.apiURL(`${REFMOD_THUMB_ROUTE}?${query.toString()}`) };
+}
+
+/**
  * The first line of a prompt that reads as a title.
  *
  * @param {string} prompt - The scene's prompt.
@@ -410,6 +503,7 @@ function readScenes(node) {
  */
 function readAssets(node) {
   return liveChainOf(node).map((origin, place) => {
+    if (origin.type === REFMOD_NODE_ID) return readRefmod(origin, place);
     const file = String(valueOf(origin, "file", WIRED) ?? WIRED);
     const moment = file === MOMENT;
     const fromFile = Boolean(file) && file !== WIRED && !moment;
@@ -438,6 +532,61 @@ function readAssets(node) {
       tag: "",
     };
   });
+}
+
+/**
+ * The asset a MiniMax H3 RefMod node adds to the chain.
+ *
+ * @param {object} origin - The RefMod node.
+ * @param {number} place - Its place on the chain, from 0.
+ * @returns {object} One entry for the node: its references in `members`, `pending` while a
+ *   wired name's or a wired RefMod Stack's are unknown until a run.
+ */
+function readRefmod(origin, place) {
+  const named = wiredInto(origin, "refmod");
+  const stacked = wiredInto(origin, "mods");
+  const held = origin.properties?.[REFMOD_PROPERTY];
+  const ran = held && Array.isArray(held.members) ? held : null;
+  const typed = String(valueOf(origin, "refmod", REFMOD_NONE) ?? REFMOD_NONE);
+  const file = named ? String(ran?.file ?? "") : typed;
+  const chosen = Boolean(file) && file !== REFMOD_NONE;
+  const listed = chosen ? refmodListing.get(file) : null;
+  // A wired name or a RefMod Stack is known from the last run that read it.
+  const fromRun = Boolean(ran) && (named || (stacked && String(ran.file ?? "") === (chosen ? file : "")));
+  let members = fromRun ? ran.members.filter((member) => REFMOD_ROLES[member.kind])
+    : listed ? listed.members.map(({ kind, label }) => ({ kind, label })) : [];
+  const pending = !fromRun && (named || stacked || (chosen && !listed));
+  if (!(Number(valueOf(origin, "strength", 1)) > 0)) members = [];
+  const name = chosen ? refmodName(file) : named ? "wired RefMod" : stacked ? "RefMod Stack" : "nothing chosen";
+  return {
+    id: origin.id,
+    node: origin,
+    place,
+    segment: Number(valueOf(origin, "segment", 1)) || 0,
+    role: members.length ? REFMOD_ROLES[members[0].kind] : "reference picture",
+    frame: 0,
+    file: chosen ? file : "",
+    kind: members.length && members.every((member) => member.kind === "audio") ? "sound" : "",
+    name: pending ? `${name} (numbered after a run)` : name,
+    thumb: chosen ? refmodThumbUrl(file, listed?.mtime) : "",
+    moment: false,
+    frames: 1,
+    tag: "",
+    refmod: true,
+    members,
+    pending,
+  };
+}
+
+/**
+ * The references one asset puts in a prompt, each with the role its tag is counted under.
+ *
+ * @param {object} asset - An asset, from `readAssets`.
+ * @returns {Array<{asset: object, role: string}>} One per reference, a RefMod's in the order it holds them.
+ */
+function referencesOf(asset) {
+  if (!asset.refmod) return [{ asset, role: asset.role }];
+  return asset.members.map((member) => ({ asset, role: REFMOD_ROLES[member.kind] }));
 }
 
 // The asset roles a scene's prompt names as references.
@@ -509,25 +658,25 @@ function socketReferences(node) {
 function tagReferences(assets, count, sockets) {
   const shared = assets.filter((asset) => asset.segment === EVERY_SEGMENT);
   for (let segment = 1; segment <= Math.max(1, count); segment += 1) {
-    const carried = [...shared, ...assets.filter((asset) => asset.segment === segment)];
+    const carried = [...shared, ...assets.filter((asset) => asset.segment === segment)].flatMap(referencesOf);
     // Moments of the video join a scene's prompt after its other pictures.
     const of = (role) => [
-      ...carried.filter((asset) => asset.role === role && !asset.moment),
-      ...carried.filter((asset) => asset.role === role && asset.moment),
+      ...carried.filter((each) => each.role === role && !each.asset.moment),
+      ...carried.filter((each) => each.role === role && each.asset.moment),
     ];
-    const clips = of("reference clip");
     // A clip's soundtrack takes an `<Audio N>` ahead of every sound.
     let heard = sockets.videos.filter((video) => video.sound).length;
     const tags = new Map();
-    of("reference picture").forEach((asset, at) => tags.set(asset, `<Picture ${sockets.pictures.length + at + 1}>`));
-    clips.forEach((asset, at) => {
-      const sound = asset.kind === "clip" ? ` with <Audio ${(heard += 1)}>` : "";
-      tags.set(asset, `<Video ${sockets.videos.length + at + 1}>${sound}`);
+    const add = (asset, tag) => tags.set(asset, [...(tags.get(asset) ?? []), tag]);
+    of("reference picture").forEach((each, at) => add(each.asset, `<Picture ${sockets.pictures.length + at + 1}>`));
+    of("reference clip").forEach((each, at) => {
+      const sound = each.asset.kind === "clip" ? ` with <Audio ${(heard += 1)}>` : "";
+      add(each.asset, `<Video ${sockets.videos.length + at + 1}>${sound}`);
     });
     heard += sockets.sounds.length;
-    of("reference audio").forEach((asset) => tags.set(asset, `<Audio ${(heard += 1)}>`));
-    for (const [asset, tag] of tags) {
-      if (asset.segment === segment || !asset.tag) asset.tag = tag;
+    of("reference audio").forEach((each) => add(each.asset, `<Audio ${(heard += 1)}>`));
+    for (const [asset, list] of tags) {
+      if (asset.segment === segment || !asset.tag) asset.tag = list.join(" + ");
     }
   }
 }
@@ -1463,7 +1612,122 @@ function createPromptTimeline(first) {
   const browserBody = el("div", "flex:1 1 auto;min-height:0");
   browserBody.appendChild(browser.element);
   media.appendChild(browserBody);
+
+  // RefMods in models/refmods, dragged onto References or All scenes as a file is.
+  const refmodBox = el("div", "flex:0 0 auto;max-height:40%;display:flex;flex-direction:column;min-height:0;"
+    + `border-top:1px solid ${LOOK.border}`);
+  const refmodCount = pill("0");
+  const refmodAside = el("div", "display:flex;align-items:center;gap:6px");
+  refmodAside.append(refmodCount, makeButton("Refresh", () => {
+    readRefmods().then(() => {
+      if (disposed) return;
+      renderRefmods();
+      refresh(true);
+    });
+  }, { kind: "ghost", hint: "Read models/refmods again" }));
+  const refmodHead = el("div", "flex:0 0 auto;padding:10px 12px 4px");
+  refmodHead.appendChild(heading("RefMods", refmodAside));
+  refmodHead.title = "Drag onto References tracks";
+  const refmodGrid = el("div", "flex:1 1 auto;min-height:0;overflow:auto;padding:6px 12px 12px;display:flex;"
+    + `flex-wrap:wrap;gap:8px;align-content:flex-start;${SCROLLBARS}`);
+  refmodBox.append(refmodHead, refmodGrid);
+  media.appendChild(refmodBox);
   main.appendChild(media);
+
+  /**
+   * Draw the RefMods the listing holds as tiles.
+   *
+   * @returns {void}
+   */
+  function renderRefmods() {
+    const listed = [...refmodListing.values()];
+    refmodCount.textContent = String(listed.length);
+    refmodGrid.replaceChildren();
+    if (!listed.length) {
+      refmodGrid.appendChild(el("div", `font:12px ${SANS};color:${LOOK.muted};padding:2px 0`,
+        "None in models/refmods. MiniMax H3 Save RefMod saves one."));
+      return;
+    }
+    for (const entry of listed) refmodGrid.appendChild(refmodTile(entry));
+  }
+
+  /**
+   * One RefMod's tile: its picture, name and kinds, dragged onto the tracks or a scene.
+   *
+   * @param {{name: string, mtime: number, members: object[]}} entry - The RefMod.
+   * @returns {HTMLElement} The tile.
+   */
+  function refmodTile(entry) {
+    const label = refmodName(entry.name);
+    const kinds = refmodKinds(entry.members);
+    const tokens = entry.members.reduce((sum, member) => sum + member.tokens, 0);
+    const tile = el("div", `flex:0 0 ${TILE_WIDTH}px;width:${TILE_WIDTH}px;display:flex;flex-direction:column;`
+      + "gap:3px;cursor:grab;min-width:0");
+    tile.draggable = true;
+    tile.title = `${entry.name}\n${kinds}, ${tokens} tokens a step. Drag onto References or All scenes`;
+    const frame = el("div", `width:${TILE_WIDTH}px;height:${TILE_HEIGHT}px;border-radius:6px;overflow:hidden;`
+      + `display:flex;align-items:center;justify-content:center;background:${LOOK.surface};`
+      + `border:1px solid ${LOOK.border};font:18px ${SANS};color:${LOOK.muted}`);
+    if (entry.members.every((member) => member.kind === "audio")) {
+      frame.textContent = "♪";
+    } else {
+      const image = el("img", "width:100%;height:100%;object-fit:cover;display:block");
+      image.src = refmodThumbUrl(entry.name, entry.mtime);
+      image.loading = "lazy";
+      image.draggable = false;
+      image.onerror = () => {
+        image.remove();
+        frame.textContent = "▣";
+      };
+      frame.appendChild(image);
+    }
+    tile.append(
+      frame,
+      el("div", `font:11px ${SANS};color:${LOOK.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`, label),
+      el("div", `font:10px ${SANS};color:${LOOK.muted};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`, kinds),
+    );
+    tile.addEventListener("dragstart", (event) => {
+      try {
+        event.dataTransfer.setData(DRAG_TYPE, entry.name);
+        event.dataTransfer.effectAllowed = "copy";
+      } catch (error) {
+        console.error(`[${LOG_NAME}] Failed to start dragging a RefMod:`, error);
+      }
+      dragging = { kind: REFMOD_KIND, label: entry.name };
+      strip.repaint();
+      lightDropZones(true);
+    });
+    tile.addEventListener("dragend", () => {
+      dragging = null;
+      strip.repaint();
+      lightDropZones(false);
+    });
+    tile.addEventListener("click", () => inspect({
+      id: null, refmod: true, file: entry.name, name: label, members: entry.members, role: "", tag: "", segment: -1,
+    }));
+    tile.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const file = { label: entry.name, kind: REFMOD_KIND };
+      const items = [{ header: label }];
+      state.scenes.forEach((unused, at) => items.push({
+        label: `Reference in scene ${at + 1}`,
+        onSelect: () => place(file, { action: "reference", segment: at + 1, role: "reference picture" }),
+      }));
+      items.push({
+        label: "Reference in every scene",
+        onSelect: () => place(file, { action: "reference", segment: EVERY_SEGMENT, role: "reference picture" }),
+      });
+      openPopupMenu({ items, x: event.clientX, y: event.clientY, logName: LOG_NAME });
+    });
+    return tile;
+  }
+
+  readRefmods().then(() => {
+    if (disposed) return;
+    renderRefmods();
+    refresh(true);
+  });
 
   const inspector = el("div", "display:flex;flex-direction:column;min-height:0;min-width:0");
   const tabs = tabStrip([["scene", "Scene"], ["video", "Video settings"], ["llm", "LLM settings"]], (id) => {
@@ -1759,6 +2023,14 @@ function createPromptTimeline(first) {
     executed: (event) => {
       const detail = event?.detail;
       if (detail?.prompt_id && detail.prompt_id === latestRun) adoptFinished(detail.prompt_id, detail.output);
+      // A RefMod saved or read by the run joins the bin, and a RefMod Stack's references their tags.
+      if (detail?.output?.was_refmod_saved || detail?.output?.[REFMOD_PROPERTY]) {
+        readRefmods().then(() => {
+          if (disposed) return;
+          renderRefmods();
+          refresh(true);
+        });
+      }
     },
   };
   for (const [name, listener] of Object.entries(runListeners)) api.addEventListener(name, listener);
@@ -2057,7 +2329,7 @@ function createPromptTimeline(first) {
     seekKnob.style.left = `${share * 100}%`;
     captionScene.textContent = index >= 0
       ? `Scene ${index + 1}  ·  ${state.scenes[index]?.title || "Untitled scene"}` : "";
-    const media = inspected ? inspectedMedia(inspected.file, inspected.kind) : null;
+    const media = !inspected ? null : inspected.refmod ? refmodMedia(inspected) : inspectedMedia(inspected.file, inspected.kind);
     const final = !media && showingFinal();
     screenCanvas.style.display = final || media ? "none" : "block";
     finalVideo.style.display = final ? "block" : "none";
@@ -2080,13 +2352,15 @@ function createPromptTimeline(first) {
     monitorState.replaceChildren();
     if (media) {
       const element = { picture: inspectPicture, clip: inspectClip, sound: inspectSound }[media.kind];
-      screenNote.textContent = !media.url ? "No preview for this file"
-        : element?.error || (media.kind === "picture" && inspectPicture.complete && !inspectPicture.naturalWidth)
-          ? "File unreadable" : media.kind === "sound" ? `♪  ${inspected.name}` : "";
+      screenNote.textContent = inspected.refmod && !media.url ? `♪  ${inspected.name}`
+        : !media.url ? "No preview for this file"
+          : element?.error || (media.kind === "picture" && inspectPicture.complete && !inspectPicture.naturalWidth)
+            ? (inspected.refmod ? "This RefMod stores no picture" : "File unreadable")
+            : media.kind === "sound" ? `♪  ${inspected.name}` : "";
       captionScene.textContent = [inspected.tag, inspected.name].filter(Boolean).join("  ");
       const where = inspected.segment > 0 ? `Scene ${inspected.segment}`
         : inspected.segment === EVERY_SEGMENT ? "Every scene" : "";
-      const role = inspected.role ? ROLE_NAMES[inspected.role] ?? inspected.role : "Media";
+      const role = inspected.refmod ? "RefMod" : inspected.role ? ROLE_NAMES[inspected.role] ?? inspected.role : "Media";
       monitorState.append(pill(where ? `${role} · ${where}` : role, LOOK.accent), closeInspect);
     } else {
       screenNote.textContent = final ? (finalVideo.error ? "Video unreadable" : "")
@@ -2603,8 +2877,9 @@ function createPromptTimeline(first) {
       }
       const entry = state.layout[index];
       const own = state.assets.filter((asset) => asset.segment === index + 1 || asset.segment === EVERY_SEGMENT);
+      const referenced = own.flatMap(referencesOf);
       for (const role of Object.keys(MOST)) {
-        const count = own.filter((asset) => asset.role === role).length;
+        const count = referenced.filter((each) => each.role === role).length;
         if (count > MOST[role]) add(`${named} has ${count} ${ROLE_NAMES[role].toLowerCase()}s, the model takes ${MOST[role]}`, index);
       }
       if (!entry) return;
@@ -2616,8 +2891,9 @@ function createPromptTimeline(first) {
         }
       }
     });
-    const sounding = state.assets.some((asset) =>
-      asset.kind === "sound" || asset.kind === "clip" || asset.role === "reference audio");
+    // A RefMod's voice is encoded already.
+    const sounding = state.assets.some((asset) => !asset.refmod
+      && (asset.kind === "sound" || asset.kind === "clip" || asset.role === "reference audio"));
     if (sounding && !wiredInto(node, "audio_vae")) {
       add("A clip or sound is placed and audio_vae is not wired");
     }
@@ -2632,7 +2908,13 @@ function createPromptTimeline(first) {
       if (asset.kind && !ROLE_KINDS[asset.role]?.includes(asset.kind)) {
         add(`${asset.name} is a ${asset.kind} and cannot be a ${ROLE_NAMES[asset.role]?.toLowerCase() ?? asset.role}`, scene, asset.id);
       }
-      if (asset.name === "nothing chosen") add("An asset node has no file chosen and nothing wired", scene, asset.id);
+      if (asset.name === "nothing chosen") {
+        add(asset.refmod ? "A RefMod node has no RefMod chosen and no RefMod Stack wired"
+          : "An asset node has no file chosen and nothing wired", scene, asset.id);
+      }
+      if (asset.refmod && asset.file && !refmodListing.has(asset.file) && refmodListing.size) {
+        add(`${asset.name} is not in models/refmods on this machine`, scene, asset.id);
+      }
     }
     // A muted asset ends the chain a run reads, so every asset chained before it is lost too.
     const chain = chainOf(node);
@@ -3125,19 +3407,27 @@ function createPromptTimeline(first) {
 
     const middle = el("div", "flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px");
     const top = el("div", "display:flex;gap:8px;align-items:center;min-width:0;flex-wrap:wrap");
-    const fits = ROLES.filter((role) => !asset.kind || ROLE_KINDS[role].includes(asset.kind) || role === asset.role);
-    const role = makeSelect(fits.map((value) => [value, ROLE_NAMES[value]]), asset.role);
-    role.style.width = "auto";
-    role.style.padding = "4px 8px";
-    role.title = "Its part in the scene";
-    if (asset.moment && !frameDrawn(asset.frame)) {
-      for (const option of role.options) option.disabled = PINNING.has(option.value);
-      role.title = "Frame not drawn yet";
+    if (asset.refmod) {
+      const strength = Number(valueOf(asset.node, "strength", 1));
+      const held = asset.members.length ? refmodKinds(asset.members) : "numbered after a run";
+      const badge = pill(`RefMod · ${held}${strength < 1 ? ` · ${strength.toFixed(2)}` : ""}`);
+      badge.title = "Saved reference, encoded already";
+      top.appendChild(badge);
+    } else {
+      const fits = ROLES.filter((role) => !asset.kind || ROLE_KINDS[role].includes(asset.kind) || role === asset.role);
+      const role = makeSelect(fits.map((value) => [value, ROLE_NAMES[value]]), asset.role);
+      role.style.width = "auto";
+      role.style.padding = "4px 8px";
+      role.title = "Its part in the scene";
+      if (asset.moment && !frameDrawn(asset.frame)) {
+        for (const option of role.options) option.disabled = PINNING.has(option.value);
+        role.title = "Frame not drawn yet";
+      }
+      role.addEventListener("change", () => {
+        if (role.value !== asset.role) placeAsset(asset, withRole(asset, role.value));
+      });
+      top.appendChild(role);
     }
-    role.addEventListener("change", () => {
-      if (role.value !== asset.role) placeAsset(asset, withRole(asset, role.value));
-    });
-    top.appendChild(role);
     const where = [[String(EVERY_SEGMENT), "Every scene"]];
     state.scenes.forEach((unused, at) => where.push([String(at + 1), `Scene ${at + 1}`]));
     if (asset.segment > state.scenes.length) where.push([String(asset.segment), `Scene ${asset.segment} (none)`]);
@@ -3168,13 +3458,14 @@ function createPromptTimeline(first) {
     const name = el("div", `font:12px ${SANS};color:${LOOK.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`);
     const tag = String(asset.role).startsWith("reference") && asset.tag ? `${asset.tag}  ` : "";
     name.textContent = `${tag}${asset.name}`;
-    name.title = `${asset.file}\nMiniMax H3 Asset #${asset.id}, number ${asset.place + 1} on the chain`;
+    const nodeName = asset.refmod ? "MiniMax H3 RefMod" : "MiniMax H3 Asset";
+    name.title = `${asset.file}\n${nodeName} #${asset.id}, number ${asset.place + 1} on the chain`;
     if (tag) name.style.fontFamily = MONO;
     middle.appendChild(name);
     card.appendChild(middle);
 
     card.appendChild(makeButton("Show", () => revealNode(asset.node), {
-      kind: "ghost", small: true, hint: "Select its MiniMax H3 Asset node on the canvas",
+      kind: "ghost", small: true, hint: `Select its ${nodeName} node on the canvas`,
     }));
     card.appendChild(makeButton("✕", () => removeAsset(asset), {
       kind: "ghost", small: true, hint: "Take it off the video",
@@ -3216,6 +3507,10 @@ function createPromptTimeline(first) {
       const files = await filesOf(event);
       if (!files.length) return;
       selected = index;
+      if (files[0].kind === REFMOD_KIND) {
+        place(files[0], { action: "reference", segment: index + 1, role: "reference picture" });
+        return;
+      }
       openRoleMenu(files[0], event.clientX, event.clientY);
     });
     return zone;
@@ -3405,6 +3700,13 @@ function createPromptTimeline(first) {
    * @returns {Promise<void>}
    */
   async function placeAsset(asset, to) {
+    if (asset.refmod) {
+      // A RefMod only ever moves between scenes.
+      commit(node, () => write(asset.node, "segment", to.segment));
+      say(`${asset.name}: ${to.segment === EVERY_SEGMENT ? "every scene" : `scene ${to.segment}`}`);
+      refresh(true);
+      return;
+    }
     const pinning = PINNING.has(to.role);
     const where = to.segment === EVERY_SEGMENT ? (asset.moment && !pinning ? "every later scene" : "every scene")
       : `scene ${to.segment}`;
@@ -3645,13 +3947,48 @@ function createPromptTimeline(first) {
   }
 
   /**
+   * Add a MiniMax H3 RefMod node for a RefMod and chain it in. Called inside a commit.
+   *
+   * @param {string} name - The RefMod's menu name.
+   * @param {number} segment - Its scene, from 1, or 0 for every scene.
+   * @returns {object} The new node.
+   * @throws {Error} The RefMod node is not registered, or the node has no assets input.
+   */
+  function makeRefmod(name, segment) {
+    const made = window.LiteGraph?.createNode?.(REFMOD_NODE_ID);
+    if (!made) throw new Error("MiniMax H3 RefMod is not registered on this server");
+    made.pos = placeInChain(node, chainOf(node), made);
+    node.graph.add(made);
+    write(made, "refmod", name);
+    write(made, "segment", segment);
+    appendToChain(node, made);
+    return made;
+  }
+
+  /**
    * Place one file where a drop or a menu said.
    *
-   * @param {{label: string, kind: string}} file - The file.
+   * @param {{label: string, kind: string}} file - The file, or a RefMod of kind `refmod`.
    * @param {object} target - `{action, scene, segment, role, frame}`.
    * @returns {void}
    */
   function place(file, target) {
+    if (file.kind === REFMOD_KIND) {
+      if (target.action !== "reference") {
+        say("A RefMod is a reference. Drop it on References or All scenes");
+        return;
+      }
+      const made = commit(node, () => makeRefmod(file.label, target.segment));
+      if (!made) {
+        say("The RefMod could not be added. The console says why");
+        return;
+      }
+      if (target.segment > 0) selectScene(target.segment - 1);
+      selectedAsset = made.id;
+      say(`${refmodName(file.label)}: RefMod in ${target.segment === EVERY_SEGMENT ? "every scene" : `scene ${target.segment}`}`);
+      refresh(true);
+      return;
+    }
     const kind = file.kind || kindOf(file.label);
     if (kind && target.action !== "new-scene" && !ROLE_KINDS[target.role]?.includes(kind)) {
       say(`${baseName(file.label)} is a ${kind} and cannot be a ${ROLE_NAMES[target.role].toLowerCase()}`);
@@ -3919,7 +4256,7 @@ function createPromptTimeline(first) {
     const asset = state.assets.find((each) => each.id === id);
     if (!asset) return;
     const items = [{ header: asset.name }];
-    for (const role of ROLES) {
+    for (const role of asset.refmod ? [] : ROLES) {
       if (asset.kind && !ROLE_KINDS[role].includes(asset.kind)) continue;
       const undrawn = asset.moment && PINNING.has(role) && !frameDrawn(asset.frame);
       items.push({

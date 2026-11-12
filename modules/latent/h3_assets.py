@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from typing import NamedTuple
 
-from . import h3_conditioning, h3_extend, h3_references
+from . import h3_conditioning, h3_extend, h3_references, h3_refmods
 
 __all__ = [
     "AUDIO_PER_FRAME",
@@ -78,6 +78,9 @@ class Asset(NamedTuple):
         audio: The sound, or ``None``.
         name: What it is called in a report.
         moment: True for a frame of the video being made, ``frame`` counted on the finished clip.
+        refmod: A saved reference, already encoded, in place of ``frames`` and ``audio``, or
+            ``None``.
+        strength: How strongly ``refmod`` is held, ``0`` to ``1``.
     """
 
     role: str
@@ -87,6 +90,8 @@ class Asset(NamedTuple):
     audio: object
     name: str
     moment: bool = False
+    refmod: object = None
+    strength: float = 1.0
 
 
 #: Bundle entry key holding the moments of the video a segment references, as
@@ -416,7 +421,9 @@ def reference_parts(vae, audio_vae, assets: list[Asset], canvas_width: int, canv
             continue
         key = id(asset)
         if key not in cache:
-            if asset.role == REFERENCE_PICTURE:
+            if asset.refmod is not None:
+                cache[key] = h3_refmods.parts(asset.refmod, asset.strength, vae, cache, asset.name)
+            elif asset.role == REFERENCE_PICTURE:
                 if asset.frames is None:
                     raise ValueError(
                         f"{asset.name} is set to `reference picture` and holds no picture. "
@@ -442,6 +449,8 @@ def reference_parts(vae, audio_vae, assets: list[Asset], canvas_width: int, canv
                     )
                 cache[key] = h3_references.encode_sound(audio_vae, asset.audio, asset.name)
         encoded = cache[key]
+        if encoded is None:
+            continue
         if asset.role == REFERENCE_PICTURE:
             pictures.append(encoded)
         elif asset.role == REFERENCE_CLIP:

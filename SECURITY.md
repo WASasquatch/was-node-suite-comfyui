@@ -88,7 +88,7 @@ and embedding models reach their providers through those providers' own librarie
 No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
 `urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.
 Three related names do appear, and none of them reaches the network. `aiohttp.web` registers
-this pack's own inbound routes in seventeen modules, and its client half is never used.
+this pack's own inbound routes in eighteen modules, and its client half is never used.
 `urllib.parse` reads strings in ten files: it decodes a `data:` URI and a picture's name in
 the document exporter, unescapes the file names a 3D model refers to, splits the address Three
 Texture URL is given, and splits the addresses the LLM nodes fetch or call and the servers
@@ -255,6 +255,7 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/media/temporal_upscale.py` | The files in `temp/` a failed Video Temporal Upscale run was writing |
 | `modules/archive/save.py` | The `.part` file Zip Save writes, renamed over the archive once complete or removed when the write fails, and a leftover `.part` of the same name |
 | `modules/latent/h3_clip_file.py` | The `.part` file H3 Save Clip writes, renamed over the clip once complete |
+| `modules/latent/h3_refmods.py` | The `.part` file MiniMax H3 Save RefMod writes in `models/refmods`, renamed over the RefMod once complete or removed when the write fails. A file of that name the pack did not write is refused before anything is written |
 | `modules/interface/preview.py` | Mask editor uploads in `input/clipspace/` written in the last ten minutes, as the route table below states |
 | `modules/util/file_listing.py` | Its own `file_menus.json` in `ComfyUI/user/was-node-suite`, replaced through a `.tmp` file beside it, and that `.tmp` file when the write fails |
 | `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4`, `.png` or `.wav`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
@@ -263,8 +264,8 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/llm/storage.py` | In `ComfyUI/user/was-node-suite/llm/indexes/<name>/`, the llama-index files and marker it wrote there, before a save under the same name, and only in a folder carrying its marker. In `ComfyUI/user/was-node-suite/llm/sessions/`, a session's `<name>.json` and the `<name>.<block>.vectors.json` files it lists, while LLM Clear Memory's `confirm` or LLM Chat Session's `reset` is on, or when the chat panel deletes that conversation. A rename moves the same files to the new name and refuses a name already saved. Each file is written through a `.part` file renamed over its name |
 
 Some nodes replace a file of the same name: Zip Extract, Save LUT and the save nodes'
-overwrite settings replace files inside the folder they write to, and Power LoRA Merger replaces
-only a LoRA it wrote itself.
+overwrite settings replace files inside the folder they write to, Power LoRA Merger replaces
+only a LoRA it wrote itself, and MiniMax H3 Save RefMod replaces only a RefMod it wrote itself.
 
 ## HTTP routes
 
@@ -281,6 +282,8 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/interface/api/font` | font name | the font catalog |
 | `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most. Symlinks and Windows junctions are not followed |
 | `GET /was/interface/api/file_thumbnail` | menu label, a size | the file listing, then the allowlist; a picture of the file or a video's first frame, 512 pixels a side at most. A source over 64 megapixels is refused before it is decoded |
+| `GET /was/interface/api/refmods` | nothing | names of the `.safetensors` files ComfyUI lists in the `refmods` model folders, 2000 at most, and what each header states it holds; read off the server's event loop |
+| `GET /was/interface/api/refmod_thumbnail` | RefMod name, a size | a name ComfyUI lists in the `refmods` model folders, and nothing else; the picture saved beside it or the first frame it stores, 512 pixels a side at most. A picture over 256 megapixels is refused before it is decoded |
 | `GET /was/interface/api/segment_preview`, `/segment_preview/index` | node id, segment, client id | an in-memory store of preview frames, 384 MB at most, served to the client that queued the run, or to any client for a run queued without one |
 | `GET /was/interface/api/nsp_pantry` | search text | the state database |
 | `GET`, `POST /was/interface/api/system_prompts` | library key; a folder name and its files' paths and text; a listing key to copy or rewrite, with a name, folder, description, families, tags and text | the `system_prompts` folder in the state directory, and the pack's own read-only prompts listed under `Built-in/`; a key its own listing does not hold reads nothing. GET lists 2000 entries and 500 built-in ones and reads 256 KB of text at most. POST writes one folder's text files into that folder, writes an edited copy of one prompt or skill named by its listing key, or a new prompt, into it, or rewrites one of the library's own files named by its listing key in place: a body without a declared length or over 32 MB is refused before it is read, 400 files and 16 MB at most, one written prompt 256 KB at most, a folder or path leaving the library, naming a hidden folder, naming `Built-in`, lying inside a skill's folder or holding a link is refused before anything is written, a folder already there is written over only when the request asks to replace it, and a copy writes over a file holding other text only when the request asks to replace it. A rewrite of a built-in key is refused, and nothing is ever written into the pack's own prompts. Files are written as data and never run. Read and written off the server's event loop |

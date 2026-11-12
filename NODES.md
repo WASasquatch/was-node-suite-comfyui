@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **692** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **694** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-606 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+608 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 450 |
+| [Always loaded](#always-loaded) | always on | 452 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-450 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+452 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -66,7 +66,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (23)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (25)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (6)
 - [WAS Suite/Logic](#was-suitelogic) (6)
@@ -8713,6 +8713,68 @@ Rewrites one MiniMax H3 scene prompt with a language model so it follows a syste
 |---|---|---|
 | `prompt` | `STRING` | The rewritten prompt. |
 | `report` | `STRING` | How long the prompt was before and after. |
+
+</details>
+
+<a id="node-wasminimaxh3refmod"></a>
+<details>
+<summary><b>MiniMax H3 RefMod</b></summary>
+
+Saved MiniMax H3 references, RefMods, for one segment or every one, joined to the asset chain. The segment's prompt names each look and voice as <Picture N>, <Video N> or <Audio N>, and nothing is encoded again. Takes a RefMod from models/refmods, a RefMod Stack's bundle, or both.
+
+| | |
+|---|---|
+| Node id | `WASMiniMaxH3RefMod` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `refmod` | `COMBO,STRING` | Yes | (none) |  | The assets before these, from MiniMax H3 Asset or another MiniMax H3 RefMod. These join the end of that chain. |
+| `segment` | `INT` | Yes | 1 |  | Which segment's prompt names them, as `1` for the opening segment or `3` for Segment 3. `0` = every segment, for a cast member the whole run references. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | `1` = as saved; `0.5` = softer, mixed toward a blurred copy; `0` = left out. Scales the strengths a RefMod Stack set too. |
+| `assets` | `WAS_H3_ASSETS` | No |  |  | The assets before these, from MiniMax H3 Asset or another MiniMax H3 RefMod. These join the end of that chain. |
+| `mods` | `H3_REF_MODS` | No |  |  | A RefMod Stack's mods output, each RefMod with the strength the stack gave it. They join after the file picked in refmod, in the stack's order. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `assets` | `WAS_H3_ASSETS` | The chain with these RefMods at its end, for the next asset node or for assets on MiniMax H3 Conditioning. |
+| `report` | `STRING` | Each RefMod added, its kind, its tokens and the segment naming it. |
+
+</details>
+
+<a id="node-wasminimaxh3saverefmod"></a>
+<details>
+<summary><b>MiniMax H3 Save RefMod</b></summary>
+
+Encode a character, place or voice once and save it in models/refmods as a RefMod, a reference any MiniMax H3 prompt can name again without encoding it. Pictures become one <Picture N> or <Video N>, a clip a <Video N>, a voice an <Audio N>. MiniMax H3 RefMod reads it back.
+
+| | |
+|---|---|
+| Node id | `WASMiniMaxH3SaveRefMod` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vae` | `VAE` | Yes |  |  | The H3 video VAE, which encodes the pictures and the clip. |
+| `name` | `STRING` | Yes | refmod |  | The file in models/refmods, as `alice` or `cast/alice`. A RefMod this node saved under the name is replaced; any other file there is left alone. |
+| `size` | `COMBO` | Yes | 768 | `512`, `768`, `1024`, `1536` | Longest side a picture is encoded at, in pixels: `512` = 256 tokens for a square picture; `768` = 576; `1024` = 1024. More tokens keep more detail and slow every step. |
+| `voice_seconds` | `FLOAT` | Yes | 10.0 |  | Seconds of audio kept from its start, as `10`. Each second costs 80 tokens. |
+| `image` | `IMAGE` | No |  |  | One picture, a `<Picture N>`; or several pictures of one subject at one size, together a `<Video N>`. |
+| `video` | `VIDEO` | No |  |  | A clip, a `<Video N>`, kept from its start for up to 362 frames at 24 fps. |
+| `audio` | `AUDIO` | No |  |  | A voice or sound, an `<Audio N>`. |
+| `audio_vae` | `VAE` | No |  |  | The H3 audio VAE, which encodes audio. Needed only with audio. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `refmod` | `STRING` | The saved RefMod's name, for refmod on MiniMax H3 RefMod. |
+| `report` | `STRING` | What was encoded and where it was saved. |
 
 </details>
 

@@ -196,6 +196,9 @@ export function sheetFrameAt(entry, fields, frame) {
   return offset + Math.max(0, Math.round(frame) - entry.start);
 }
 
+/** The kind a saved RefMod is dragged as: a reference, never a pinned frame. */
+export const REFMOD_KIND = "refmod";
+
 /** What each part an asset plays is called on screen. */
 export const ROLE_NAMES = Object.freeze({
   "first frame": "Opening frame",
@@ -741,9 +744,10 @@ export function createTimeline(options = {}) {
     const pictured = kind !== "sound";
     const referenceRole = kind === "sound" ? "reference audio"
       : kind === "clip" ? "reference clip" : "reference picture";
+    const named = kind === REFMOD_KIND ? "RefMod" : ROLE_NAMES[referenceRole];
     if (lane === "shared") {
       return { valid: true, action: "reference", scene: null, segment: 0, role: referenceRole,
-        frame: 0, label: `${ROLE_NAMES[referenceRole]} in every scene`, lane, x };
+        frame: 0, label: `${named} in every scene`, lane, x };
     }
     if (x < GUTTER) return refused("");
     const frame = frameAt(x);
@@ -753,8 +757,9 @@ export function createTimeline(options = {}) {
       if (!count) return refused("Add a scene first");
       const at = index < 0 ? count - 1 : index;
       return { valid: true, action: "reference", scene: at, segment: at + 1, role: referenceRole,
-        frame: 0, label: `${ROLE_NAMES[referenceRole]} in scene ${at + 1}`, lane, x };
+        frame: 0, label: `${named} in scene ${at + 1}`, lane, x };
     }
+    if (kind === REFMOD_KIND) return refused("A RefMod is a reference. Drop it on References or All scenes");
     if (index < 0 && (lane === "scenes" || !count)) {
       if (!pictured) return refused("A sound cannot open a scene");
       return { valid: true, action: "new-scene", scene: count, segment: count + 1,
@@ -1282,8 +1287,9 @@ export function createTimeline(options = {}) {
         }
         regions.unshift({
           kind: "ref", id: asset.id, index, x, y, w: used, h: CHIP_HEIGHT, cursor: "grab",
-          title: `${ROLE_NAMES[asset.role] ?? asset.role} in scene ${index + 1}, named ${asset.tag} `
-            + `in its prompt: ${asset.name}. Drag to another scene, or onto Pinned frames to pin it`,
+          title: `${asset.refmod ? "RefMod" : ROLE_NAMES[asset.role] ?? asset.role} in scene ${index + 1}, named `
+            + `${asset.tag} in its prompt: ${asset.name}. `
+            + (asset.refmod ? "Drag to another scene" : "Drag to another scene, or onto Pinned frames to pin it"),
         });
         x += used + 4;
       });
@@ -1316,8 +1322,9 @@ export function createTimeline(options = {}) {
         if (!used) break;
         regions.unshift({
           kind: "ref", id: asset.id, index: null, x, y, w: used, h: CHIP_HEIGHT, cursor: "grab",
-          title: `${ROLE_NAMES[asset.role] ?? asset.role} in every scene, named ${asset.tag}: ${asset.name}. `
-            + "Drag to one scene, or onto Pinned frames to pin it",
+          title: `${asset.refmod ? "RefMod" : ROLE_NAMES[asset.role] ?? asset.role} in every scene, named `
+            + `${asset.tag}: ${asset.name}. `
+            + (asset.refmod ? "Drag to one scene" : "Drag to one scene, or onto Pinned frames to pin it"),
         });
         x += used + 4;
       }
@@ -1555,7 +1562,7 @@ export function createTimeline(options = {}) {
    * @returns {object} What `dropTarget` answers, `valid` false where it cannot go.
    */
   const assetTarget = (state, x, y, asset) => {
-    const target = dropTarget(state, x, y, asset.kind || "picture");
+    const target = dropTarget(state, x, y, asset.refmod ? REFMOD_KIND : asset.kind || "picture");
     if (!target.valid) return target;
     const refused = (label) => ({ ...target, valid: false, label });
     if (target.action === "new-scene") return refused("Drop it on a scene");
@@ -1574,7 +1581,7 @@ export function createTimeline(options = {}) {
     // A reference moved between scenes keeps its kind.
     if (REFERENCING.has(asset.role)) {
       target.role = asset.role;
-      target.label = `${ROLE_NAMES[asset.role] ?? asset.role} in ${where}`;
+      target.label = `${asset.refmod ? "RefMod" : ROLE_NAMES[asset.role] ?? asset.role} in ${where}`;
     }
     const entry = target.segment > 0 ? state.layout[target.segment - 1] : null;
     if (asset.moment && entry && entry.start <= asset.frame) {

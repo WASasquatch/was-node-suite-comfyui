@@ -23,6 +23,7 @@ __all__ = [
     "H3_ASSETS",
     "H3_DEROPE",
     "H3_PROMPTS",
+    "H3_REF_MODS",
     "IMAGE_BOUNDS",
     "LIST",
     "LLM",
@@ -106,6 +107,9 @@ H3_PROMPTS = io.Custom("WAS_H3_PROMPTS")
 #: pictures, clips and sounds of a chain, each with the segment it belongs to and the part it
 #: plays there, as a tuple of `modules.latent.h3_assets.Asset` in chain order.
 H3_ASSETS = io.Custom("WAS_H3_ASSETS")
+
+#: A RefMod Stack's `mods` output -> `MiniMax H3 RefMod`. A list of `(RefMod, strength)` pairs.
+H3_REF_MODS = io.Custom("H3_REF_MODS")
 
 #: `Audio Mixer Track` -> the next `Audio Mixer Track` and `Audio Mixer`. The clips of a mix,
 #: each with its fader, pan, mute, solo and start, as a tuple of `modules.audio.mixer.Track` in

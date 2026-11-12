@@ -127,11 +127,13 @@ class Sound(NamedTuple):
         item: What the text encoder is shown.
         block: The ``minimax_refs`` block.
         seconds: How long it runs.
+        named: What the report adds after its length, or blank.
     """
 
     item: dict
     block: dict
     seconds: float
+    named: str = ""
 
 
 def image_name(slot: int) -> str:
@@ -460,7 +462,7 @@ def assemble(pictures: list, videos: list, sounds: list, named: str = "the promp
         heard += 1
         items.append(sound.item)
         blocks.append(sound.block)
-        tags.append(f"<Audio {heard}> {sound.seconds:.1f}s")
+        tags.append(f"<Audio {heard}> {sound.seconds:.1f}s" + (f" {sound.named}" if sound.named else ""))
     return References(items, blocks, tags)
 
 

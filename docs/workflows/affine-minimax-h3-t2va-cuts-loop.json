@@ -378,12 +378,14 @@
         24,
         "auto",
         "sRGB",
+        "auto",
         "none"
       ],
       "widgets_values_named": {
         "fps": 24,
         "bit_depth": "auto",
         "color_space": "sRGB",
+        "chroma_subsampling": "auto",
         "codec": "none"
       }
     },
