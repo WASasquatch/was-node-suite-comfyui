@@ -1,6 +1,7 @@
 """Number inputs held to the range their schema declares, typed, linked or posted alike.
 
-:func:`guard` wraps a node's ``execute`` to refuse an ``INT`` or ``FLOAT`` outside its range.
+:func:`guard` wraps a node's ``execute`` to refuse an ``INT`` or ``FLOAT`` outside its range,
+and to wrap a seed outside it modulo the range's width.
 """
 
 from __future__ import annotations
@@ -8,23 +9,27 @@ from __future__ import annotations
 import functools
 import inspect
 import math
+import re
 import threading
 
 from .. import log
 
-__all__ = ["guard", "out_of_range"]
+__all__ = ["guard", "out_of_range", "wrap_seeds"]
 
 logger = log.get_logger("compat.ranges")
 
 #: Share of a ``FLOAT`` range's bound a value may pass it by, for rounding upstream.
 FLOAT_SLACK = 1e-9
 
+#: Ids of the ``INT`` inputs that choose a random stream: ``seed``, ``noise_seed``, ``seed_3``.
+SEED_ID = re.compile(r"(?:[a-z0-9]+_)*seed(?:_\d+)?")
+
 _lock = threading.Lock()
 _ranges: dict[type, dict] = {}
 
 
 def _collected(inputs, found: dict) -> dict:
-    """Each number input's ``(min, max, is_float)`` by id, a DynamicCombo's nested under its id."""
+    """Each number input's ``(min, max, is_float, is_seed)`` by id, a DynamicCombo's nested."""
     from comfy_api.latest import io
 
     for item in inputs or ():
@@ -32,7 +37,14 @@ def _collected(inputs, found: dict) -> dict:
         widget = getattr(item, "input_override", None) if isinstance(item, io.MultiType.Input) else item
         if isinstance(widget, (io.Int.Input, io.Float.Input)):
             if widget.min is not None or widget.max is not None:
-                found[item.id] = (widget.min, widget.max, isinstance(widget, io.Float.Input))
+                floating = isinstance(widget, io.Float.Input)
+                seed = (
+                    not floating
+                    and widget.min is not None
+                    and widget.max is not None
+                    and SEED_ID.fullmatch(str(item.id)) is not None
+                )
+                found[item.id] = (widget.min, widget.max, floating, seed)
         elif isinstance(item, io.DynamicCombo.Input):
             nested: dict = {}
             for option in item.options:
@@ -71,7 +83,7 @@ def out_of_range(ranges: dict, values: dict) -> tuple[str, object, object, objec
                 if found is not None:
                     return found
             continue
-        low, high, floating = declared
+        low, high, floating, _seed = declared
         for one in value if isinstance(value, list) else (value,):
             if isinstance(one, bool) or not isinstance(one, (int, float)):
                 continue
@@ -84,16 +96,57 @@ def out_of_range(ranges: dict, values: dict) -> tuple[str, object, object, objec
     return None
 
 
-def _refuse(node_class, values: dict) -> None:
-    """Raise when one of a node's number inputs is outside its declared range."""
+def _wrapped(value, low: int, high: int):
+    """``value`` wrapped into ``low`` to ``high`` when it is an ``int`` outside them, else as given."""
+    if isinstance(value, bool) or not isinstance(value, int) or low <= value <= high:
+        return value
+    return low + (value - low) % (high - low + 1)
+
+
+def wrap_seeds(ranges: dict, values: dict) -> dict:
+    """The inputs with every seed outside its range wrapped into it.
+
+    Args:
+        ranges: Declared ranges, as :func:`_collected` builds them.
+        values: The inputs as ``execute`` receives them.
+
+    Returns:
+        ``values`` itself when no seed moved, otherwise a copy holding the wrapped seeds.
+    """
+    moved: dict | None = None
+    for name, declared in ranges.items():
+        value = values.get(name)
+        if isinstance(declared, dict):
+            held = wrap_seeds(declared, value) if isinstance(value, dict) else value
+        else:
+            low, high, _floating, seed = declared
+            if not seed:
+                continue
+            if isinstance(value, list):
+                held = [_wrapped(one, low, high) for one in value]
+                held = value if held == value else held
+            else:
+                held = _wrapped(value, low, high)
+            if held is not value:
+                logger.debug("`%s` received %s and was wrapped to %s", name, value, held)
+        if held is not value:
+            if moved is None:
+                moved = dict(values)
+            moved[name] = held
+    return values if moved is None else moved
+
+
+def _held(node_class, values: dict) -> dict:
+    """A node's inputs with seeds wrapped into range, raising when another number is outside it."""
     try:
         ranges = _declared(node_class)
     except Exception as error:
         logger.debug("the input ranges of %s could not be read (%s)", node_class.__name__, error)
-        return
+        return values
+    values = wrap_seeds(ranges, values)
     found = out_of_range(ranges, values)
     if found is None:
-        return
+        return values
     name, value, low, high = found
     raise ValueError(
         f"`{name}` received {value}, outside its range of {low} to {high}. Bring the value "
@@ -102,7 +155,7 @@ def _refuse(node_class, values: dict) -> None:
 
 
 def guard(node_class):
-    """Refuse number inputs outside their declared range before a node's ``execute`` runs.
+    """Wrap seeds into range and refuse other numbers outside it, before ``execute`` runs.
 
     Args:
         node_class: A ``ComfyNode`` subclass.
@@ -118,13 +171,11 @@ def guard(node_class):
     if inspect.iscoroutinefunction(original):
         @functools.wraps(original)
         async def execute(cls, *args, **kwargs):
-            _refuse(node_class, kwargs)
-            return await original(cls, *args, **kwargs)
+            return await original(cls, *args, **_held(node_class, kwargs))
     else:
         @functools.wraps(original)
         def execute(cls, *args, **kwargs):
-            _refuse(node_class, kwargs)
-            return original(cls, *args, **kwargs)
+            return original(cls, *args, **_held(node_class, kwargs))
 
     execute._was_ranges = True
     node_class.execute = classmethod(execute)

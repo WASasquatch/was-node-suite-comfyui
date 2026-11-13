@@ -20,8 +20,9 @@ input that reaches it is fixed fastest.
 ## Number inputs
 
 Every number input is held to the range its node declares, whether it is typed, linked from
-another node or posted to the API. A value outside that range, or a float that is not finite,
-stops the run before the node does any work.
+another node or posted to the API. A seed outside that range is wrapped into it, modulo the
+range's width. Any other value outside its range, or a float that is not finite, stops the run
+before the node does any work.
 
 Image Resize, Image Padding, Image Transpose, Image Perspective, the layer nodes and Bounded
 Image Blend refuse an output past 30000 pixels a side or 268435456 pixels before allocating it,
