@@ -69,7 +69,10 @@ size, or asks Civitai's `api/v1/model-versions/` address for the size of that ve
 `features.network` is set to. A file is downloaded only when its Download button is pressed, by
 the browser or by ComfyUI Desktop. Nothing in this pack fetches any of these addresses. Note
 and document text in the workflows also links to this pack's GitHub repository and to RES4LYF's,
-and nothing fetches those links either. No other outside address appears in the pack's own
+and the setup notes in the Tripo workflows link to Tripo's API platform at
+`platform.tripo3d.ai` and to the `polyhaven.com` pages of the panoramas the HDRI showcase and the
+cave scene are lit by.
+Nothing fetches those links either. No other outside address appears in the pack's own
 browser code or in a shipped workflow.
 
 Two modules are HTTP clients, both loaded only with `features.llm` on and both refusing every
@@ -88,7 +91,7 @@ and embedding models reach their providers through those providers' own librarie
 No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
 `urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.
 Three related names do appear, and none of them reaches the network. `aiohttp.web` registers
-this pack's own inbound routes in nineteen modules, and its client half is never used.
+this pack's own inbound routes in twenty modules, and its client half is never used.
 `urllib.parse` reads strings in ten files: it decodes a `data:` URI and a picture's name in
 the document exporter, unescapes the file names a 3D model refers to, splits the address Three
 Texture URL is given, and splits the addresses the LLM nodes fetch or call and the servers
@@ -214,9 +217,11 @@ name, leaving a file that already holds that text untouched. Save Dataset writes
 file, and with `write` on `pictures and captions` a byte-for-byte copy of its picture, or a PNG
 where a node replaced the pixels, under the item's own name; it writes over an existing file
 only with `existing` on `replace` and only where the content differs, and with `number` writes
-under the next free numbered name. None of the three deletes anything. Every
-other node's write into `input/` is moved to `temp/`, and a `paths.allow_read` folder is
-written by no other node.
+under the next free numbered name. None of the three deletes anything. Three Load Model writes
+into `input/` alone: given a `keep_as` name, it writes a copy of a model wired into its `path` or
+`model_3d` under a name ending in that model's own format, replacing an earlier copy of the same
+name. Apart from those three and Three Load Model, every node's write into `input/` is moved to
+`temp/`, and a `paths.allow_read` folder is written by no other node.
 
 A video, sound or picture the pack opens with FFmpeg, through PyAV, opens only as a single-file
 container, stream or picture from local disk. A playlist, a concatenation list and any network
@@ -224,7 +229,7 @@ protocol are refused.
 
 No node reads or writes the pack's settings. In the state directory, every file whose name
 begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`,
-`was_suite_settings.json`, `was_history.json` or `file_menus.json` is refused as a read and a
+`was_suite_settings.json`, `was_history.json`, `file_menus.json` or `image_library` is refused as a read and a
 write target. So are
 the config file in use and the one `WAS_CONFIG` names, with every file beside them whose name
 begins with theirs, and the `viewer-extensions/` folder as a write target. Names are compared
@@ -262,8 +267,10 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/latent/h3_refmods.py` | The `.part` file MiniMax H3 Save RefMod writes in `models/refmods`, renamed over the RefMod once complete or removed when the write fails. A file of that name the pack did not write is refused before anything is written |
 | `modules/interface/preview.py` | Mask editor uploads in `input/clipspace/` written in the last ten minutes, as the route table below states |
 | `modules/util/file_listing.py` | Its own `file_menus.json` in `ComfyUI/user/was-node-suite`, replaced through a `.tmp` file beside it, and that `.tmp` file when the write fails |
+| `modules/image/image_library.py` | Its own vector files in `ComfyUI/user/was-node-suite/image_library`, named by 24 hex digits and `-text.npz` or `-picture.npz`, each replaced through a `.tmp` file beside it, and that `.tmp` file when the write fails |
 | `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4`, `.png` or `.wav`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
 | `modules/viewer/parsers/canvas_parser.py` | The `.part` file the Content Viewer writes a picture into, renamed to `input/was_viewer/<md5>.png` once complete |
+| `nodes/threejs/load_model.py` | The `.partial` file Three Load Model writes for `keep_as`, renamed over the model it keeps in `input/` once complete or removed when the write fails |
 | `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
 | `modules/llm/storage.py` | In `ComfyUI/user/was-node-suite/llm/indexes/<name>/`, the llama-index files and marker it wrote there, before a save under the same name, and only in a folder carrying its marker. In `ComfyUI/user/was-node-suite/llm/sessions/`, a session's `<name>.json` and the `<name>.<block>.vectors.json` files it lists, while LLM Clear Memory's `confirm` or LLM Chat Session's `reset` is on, or when the chat panel deletes that conversation. A rename moves the same files to the new name and refuses a name already saved. Each file is written through a `.part` file renamed over its name |
 
@@ -296,6 +303,7 @@ folder that is refused if it would leave it. None takes a path to open.
 | `GET /was/interface/api/compare_file` | a kept file's name | the `compare` folder in the state directory; a name other than 32 hex digits and `.mp4`, `.png` or `.wav`, or a link, reads nothing |
 | `GET /was/interface/api/video_probe` | menu label | the file listing of video files, then the allowlist; read off the server's event loop |
 | `GET`, `POST /was/interface/api/pause` | node id, client id, value | an in-memory hold. GET lists only the holds queued under the asking client id, and POST releases a hold only for that id |
+| `POST /was/interface/api/image_library` | menu labels, prompt text, search settings | the folder listing, then the allowlist; each folder's picture names, captions and index state, and up to 64 matches ranked from vectors already saved in `ComfyUI/user/was-node-suite/image_library`. A body over 256 KB is refused before it is read, a wired path is refused, nothing is embedded and no model is downloaded |
 | `GET /was/interface/api/app_exposure` | saved workflow name | the asking user's workflows folder, `ComfyUI/user/<user>/workflows`, where `--multi-user` takes the user from the `Comfy-User` header and an unknown user reads nothing. A name leaving it is refused before it is read. A file over 16 MB, a subgraph holding itself, nesting past 32 levels or more than 20000 nodes is refused with fixed text, and the work runs off the server's event loop |
 | `GET /was/threejs/api/asset` | key | an in-memory store |
 | `GET`, `POST /was/threejs/api/render` | client id, token, frames | an in-memory job queue |
@@ -344,7 +352,7 @@ whatever the frontend's version.
 ## Vendored code
 
 Six directories under `web/` hold third-party browser libraries. `web/vendor/MANIFEST.json`
-records a SHA-256 for all 92 of those files, alongside the npm package and version each
+records a SHA-256 for all 99 of those files, alongside the npm package and version each
 directory was taken from. Every digest recomputes from the file beside it, and the manifest
 names no file the tree does not hold.
 

@@ -412,7 +412,14 @@ async function readModel(params, manager) {
 
     if (format === "glb" || format === "gltf") {
         const { GLTFLoader } = await import("../vendor/three/loaders/GLTFLoader.js");
-        const gltf = await new GLTFLoader(manager).loadAsync(address);
+        const loader = new GLTFLoader(manager);
+        const decoders = Array.isArray(params.decoders) ? params.decoders : [];
+        if (decoders.includes("meshopt")) {
+            const { MeshoptDecoder } = await import("../vendor/three/libs/meshopt_decoder.module.js");
+            loader.setMeshoptDecoder(MeshoptDecoder);
+        }
+        if (decoders.includes("draco")) loader.setDRACOLoader(await dracoLoader());
+        const gltf = await loader.loadAsync(address);
         // Clips ride on the object, the way three's own loaders leave them.
         gltf.scene.animations = gltf.animations || [];
         return gltf.scene;
@@ -465,6 +472,272 @@ async function readModel(params, manager) {
         );
     }
     throw new Error(`No loader reads a .${format} model.`);
+}
+
+/**
+ * The object a path of child indices leads to, read through the override wrappers.
+ *
+ * @param {THREE.Object3D} root - Where the path starts, the scene.
+ * @param {number[]} path - Child indices, from the root down.
+ * @returns {THREE.Object3D|null} The object, or null where the path leads nowhere.
+ */
+export function objectAtPath(root, path) {
+    let node = root;
+    for (const index of path) {
+        const children = node.children.filter((child) => !child.userData.wasHelper);
+        let next = children[index];
+        while (next?.userData.wasOverride) next = next.children[0]?.children[0];
+        if (!next) return null;
+        node = next;
+    }
+    return node;
+}
+
+/**
+ * The path of child indices from the root to an object, read through the override wrappers.
+ *
+ * @param {THREE.Object3D} root - The scene.
+ * @param {THREE.Object3D} object - An object inside it.
+ * @returns {number[]|null} The path, or null where the object is not inside the root.
+ */
+export function pathToObject(root, object) {
+    const path = [];
+    let node = object;
+    while (node && node !== root) {
+        let parent = node.parent;
+        let holder = node;
+        // An override wrapper and its inner offset group stand in the object's place.
+        if (parent?.userData.wasOverrideInner) {
+            holder = parent.parent;
+            parent = holder.parent;
+        }
+        if (!parent) return null;
+        const children = parent.children.filter((child) => !child.userData.wasHelper);
+        path.unshift(children.indexOf(holder));
+        node = parent;
+    }
+    return node === root ? path : null;
+}
+
+/**
+ * Put an override wrapper around an object, turning about the pivot given, in the object's place.
+ *
+ * @param {THREE.Object3D} object - The object to wrap.
+ * @param {number[]} pivot - The point the wrapper turns about, in the parent's space.
+ * @returns {THREE.Object3D} The wrapper; already wrapped objects answer their own.
+ */
+export function wrapForOverride(object, pivot) {
+    if (object.parent?.userData.wasOverrideInner) return object.parent.parent;
+    const parent = object.parent;
+    const wrapper = new THREE.Group();
+    wrapper.name = `${object.name || "object"} (moved)`;
+    wrapper.userData.wasOverride = true;
+    wrapper.userData.pivot = pivot.slice();
+    wrapper.position.fromArray(pivot);
+    const inner = new THREE.Group();
+    inner.userData.wasOverrideInner = true;
+    inner.position.set(-pivot[0], -pivot[1], -pivot[2]);
+    const at = parent.children.indexOf(object);
+    parent.remove(object);
+    inner.add(object);
+    wrapper.add(inner);
+    parent.add(wrapper);
+    // Kept at the object's own index, so the paths of its siblings do not move.
+    parent.children.splice(parent.children.indexOf(wrapper), 1);
+    parent.children.splice(at, 0, wrapper);
+    return wrapper;
+}
+
+/**
+ * Move the objects a viewer's saved view names, each inside an override wrapper.
+ *
+ * @param {THREE.Object3D} scene - The built scene.
+ * @param {object[]} overrides - `[{path, pivot, position, quaternion, scale}]`.
+ * @returns {void}
+ */
+export function applyObjectOverrides(scene, overrides) {
+    if (!Array.isArray(overrides) || !overrides.length) return;
+    // Deepest first, so wrapping an object never moves the path to one inside it.
+    const ordered = [...overrides].sort((a, b) => (b.path?.length || 0) - (a.path?.length || 0));
+    for (const entry of ordered) {
+        const object = Array.isArray(entry.path) ? objectAtPath(scene, entry.path) : null;
+        if (!object || !Array.isArray(entry.pivot)) continue;
+        const wrapper = wrapForOverride(object, entry.pivot);
+        if (Array.isArray(entry.position)) wrapper.position.fromArray(entry.position);
+        if (Array.isArray(entry.quaternion)) wrapper.quaternion.fromArray(entry.quaternion);
+        if (Array.isArray(entry.scale)) wrapper.scale.fromArray(entry.scale);
+    }
+}
+
+// The page's one Draco decoder, made on first use; its workers outlive a single model.
+let dracoShared = null;
+
+/**
+ * The Draco decoder glTF geometry compressed with `KHR_draco_mesh_compression` is read through.
+ *
+ * Its own loading manager fetches the vendored WebAssembly, outside any model's sidecar list.
+ *
+ * @returns {Promise<object>} A `DRACOLoader`.
+ */
+function dracoLoader() {
+    dracoShared ??= import("../vendor/three/loaders/DRACOLoader.js").then(({ DRACOLoader }) =>
+        new DRACOLoader().setDecoderPath({
+            js: new URL("../vendor/three/libs/draco/gltf/draco_wasm_wrapper.txt", import.meta.url).href,
+            wasm: new URL("../vendor/three/libs/draco/gltf/draco_decoder.wasm", import.meta.url).href,
+        })
+    );
+    return dracoShared;
+}
+
+/**
+ * Scale a loaded model, then move it so the point `origin` names sits at its parent's origin.
+ *
+ * @param {THREE.Object3D} object - The loaded model, not yet parented.
+ * @param {object} params - `{scale, fitSize, origin}` from a Three Load Model descriptor.
+ * @returns {void}
+ */
+function placeModel(object, params) {
+    let factor = Number(params.scale) || 1;
+    const fit = Number(params.fitSize) || 0;
+    if (fit > 0) {
+        object.updateMatrixWorld(true);
+        const size = new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3());
+        const longest = Math.max(size.x, size.y, size.z);
+        if (Number.isFinite(longest) && longest > 0) factor *= fit / longest;
+    }
+    object.scale.multiplyScalar(factor);
+
+    const origin = params.origin || (params.centre === false ? "as saved" : "centre");
+    if (origin === "as saved") return;
+    object.updateMatrixWorld(true);
+    const target = modelCentre(object);
+    if (origin === "base") {
+        const box = new THREE.Box3().setFromObject(object);
+        if (!box.isEmpty()) target.y = box.min.y;
+    }
+    object.position.sub(target);
+}
+
+/**
+ * Turn a model's metal down and take the mirror shine off its smoothest surfaces.
+ *
+ * @param {THREE.Object3D} object - The loaded model, changed in place.
+ * @param {number} metalness - Multiplies how metallic every surface is; 1 keeps the file's.
+ * @param {number} minRoughness - The least roughness any surface keeps; 0 keeps the file's.
+ * @returns {void}
+ */
+function adjustSurfaces(object, metalness, minRoughness) {
+    const scale = Math.min(Math.max(Number.isFinite(metalness) ? metalness : 1, 0), 1);
+    const floor = Math.min(Math.max(Number.isFinite(minRoughness) ? minRoughness : 0, 0), 1);
+    if (scale === 1 && floor === 0) return;
+
+    // A glTF model packs roughness into the green channel of one picture, shared by many
+    // materials, so each picture is remade once with its green raised to the floor.
+    const remade = new Map();
+    const raised = (texture, factor) => {
+        const image = texture?.image;
+        if (!image || !image.width || !image.height || image.data) return texture;
+        const key = `${texture.uuid}:${factor}`;
+        if (remade.has(key)) return remade.get(key);
+        const canvas = typeof document !== "undefined"
+            ? Object.assign(document.createElement("canvas"), { width: image.width, height: image.height })
+            : new OffscreenCanvas(image.width, image.height);
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(image, 0, 0);
+        const pixels = context.getImageData(0, 0, image.width, image.height);
+        const low = Math.min(255, Math.ceil((floor / Math.max(factor, 1e-3)) * 255));
+        const data = pixels.data;
+        for (let index = 1; index < data.length; index += 4) {
+            if (data[index] < low) data[index] = low;
+        }
+        context.putImageData(pixels, 0, 0);
+        const copy = texture.clone();
+        copy.source = new THREE.Source(canvas);
+        copy.needsUpdate = true;
+        remade.set(key, copy);
+        return copy;
+    };
+
+    object.traverse((child) => {
+        if (!child.isMesh) return;
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        for (const material of materials) {
+            if (!material || !("metalness" in material) || !("roughness" in material)) continue;
+            material.metalness *= scale;
+            if (floor > 0) {
+                if (material.roughnessMap) {
+                    const shared = material.metalnessMap === material.roughnessMap;
+                    material.roughnessMap = raised(material.roughnessMap, material.roughness);
+                    if (shared) material.metalnessMap = material.roughnessMap;
+                } else {
+                    material.roughness = Math.max(material.roughness, floor);
+                }
+            }
+            material.needsUpdate = true;
+        }
+    });
+}
+
+/**
+ * A top-down map of a ground's height, from its vertices.
+ *
+ * @param {THREE.Object3D} ground - The ground, in place in the scene.
+ * @param {number} cell - Width of one cell in scene units.
+ * @param {number} ceiling - Vertices above this height are left out, so walls and roofs over
+ *   the path are not read as floor.
+ * @returns {{heights: Float32Array, nx: number, nz: number, cell: number, minX: number,
+ *   minZ: number}} The highest point in each cell, -Infinity where the ground has none.
+ */
+function groundHeights(ground, cell, ceiling) {
+    ground.updateWorldMatrix(true, true);
+    const box = new THREE.Box3().setFromObject(ground);
+    const width = Math.max(box.max.x - box.min.x, 1e-3);
+    const depth = Math.max(box.max.z - box.min.z, 1e-3);
+    // Large grounds take coarser cells rather than an unbounded grid.
+    const size = Math.max(cell, Math.sqrt((width * depth) / 4e6));
+    const nx = Math.ceil(width / size) + 1;
+    const nz = Math.ceil(depth / size) + 1;
+    const heights = new Float32Array(nx * nz).fill(-Infinity);
+    const point = new THREE.Vector3();
+    ground.traverse((mesh) => {
+        const position = mesh.isMesh ? mesh.geometry?.attributes?.position : null;
+        if (!position) return;
+        for (let index = 0; index < position.count; index += 1) {
+            point.fromBufferAttribute(position, index).applyMatrix4(mesh.matrixWorld);
+            if (point.y > ceiling) continue;
+            const at = Math.floor((point.z - box.min.z) / size) * nx + Math.floor((point.x - box.min.x) / size);
+            if (point.y > heights[at]) heights[at] = point.y;
+        }
+    });
+    return { heights, nx, nz, cell: size, minX: box.min.x, minZ: box.min.z };
+}
+
+/**
+ * The height of a ground map under a patch.
+ *
+ * @param {object} map - From groundHeights.
+ * @param {number} x - Patch centre, world x.
+ * @param {number} z - Patch centre, world z.
+ * @param {number} footprint - Patch width in scene units.
+ * @returns {number|null} The 60th percentile height in the patch, or null off the ground.
+ */
+function heightUnder(map, x, z, footprint) {
+    const reach = Math.max(0, Math.floor(footprint / 2 / map.cell));
+    const cx = Math.floor((x - map.minX) / map.cell);
+    const cz = Math.floor((z - map.minZ) / map.cell);
+    const found = [];
+    for (let dz = -reach; dz <= reach; dz += 1) {
+        for (let dx = -reach; dx <= reach; dx += 1) {
+            const ix = cx + dx;
+            const iz = cz + dz;
+            if (ix < 0 || iz < 0 || ix >= map.nx || iz >= map.nz) continue;
+            const value = map.heights[iz * map.nx + ix];
+            if (value > -Infinity) found.push(value);
+        }
+    }
+    if (!found.length) return null;
+    found.sort((a, b) => a - b);
+    return found[Math.min(found.length - 1, Math.floor(found.length * 0.6))];
 }
 
 /**
@@ -573,6 +846,273 @@ function alongFor(units, time, ctx) {
         return span > 0 ? (time - origin) / span : 0;
     }
     return time;
+}
+
+const renderBusyListeners = new Set();
+let renderBusy = false;
+
+/**
+ * Say whether a Three Render job is drawing in this page.
+ *
+ * @param {boolean} busy - True while a job draws.
+ */
+export function setRenderBusy(busy) {
+    if (renderBusy === Boolean(busy)) return;
+    renderBusy = Boolean(busy);
+    for (const listener of renderBusyListeners) {
+        try {
+            listener(renderBusy);
+        } catch (error) {
+            console.error("[WAS ThreeJS] Render state listener failed:", error);
+        }
+    }
+}
+
+/**
+ * Hear when Three Render jobs start and stop drawing in this page.
+ *
+ * @param {(busy: boolean) => void} listener - Called now with the current state, then on
+ *   every change.
+ * @returns {() => void} Stops listening.
+ */
+export function onRenderBusy(listener) {
+    renderBusyListeners.add(listener);
+    listener(renderBusy);
+    return () => renderBusyListeners.delete(listener);
+}
+
+/**
+ * The space a node's position is written in, measured in the root's space.
+ *
+ * @param {THREE.Object3D} root - The animated model.
+ * @param {THREE.Object3D} node - The node the position track moves.
+ * @returns {THREE.Matrix4} From the node's parent space to the root's.
+ */
+function parentToRoot(root, node) {
+    root.updateWorldMatrix(true, true);
+    const toRoot = root.matrixWorld.clone().invert();
+    return node.parent ? toRoot.multiply(node.parent.matrixWorld) : toRoot.identity();
+}
+
+/**
+ * The position track that carries a clip across the ground, and how far one pass moves it.
+ *
+ * @param {THREE.Object3D} root - The object the clip animates, posed at rest.
+ * @param {THREE.AnimationClip} clip - The clip to read.
+ * @returns {{name: string, node: THREE.Object3D, travel: THREE.Vector3, keys: Array}|null}
+ *   The track's name, the node it moves, its ground travel per pass in the root's space and
+ *   each key's parent space and root space position, or null when nothing travels.
+ */
+function groundTravel(root, clip) {
+    const tracks = [];
+    for (const track of clip.tracks) {
+        if (!track.name.endsWith(".position") || track.times.length < 2) continue;
+        const parsed = THREE.PropertyBinding.parseTrackName(track.name);
+        const node = THREE.PropertyBinding.findNode(root, parsed.nodeName);
+        if (node) tracks.push({ track, node });
+    }
+    if (!tracks.length) return null;
+
+    // The rest pose comes back afterwards, whatever the sampling left on the bones.
+    const rest = [];
+    root.traverse((child) => {
+        rest.push([child, child.position.clone(), child.quaternion.clone(), child.scale.clone()]);
+    });
+    const mixer = new THREE.AnimationMixer(root);
+    const action = mixer.clipAction(clip);
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.play();
+
+    const valueAt = (track, key) => {
+        const stride = track.values.length / track.times.length;
+        const base = key * stride + (stride === 9 ? 3 : 0);
+        return new THREE.Vector3().fromArray(track.values, base);
+    };
+    // Each key is measured with the clip's whole pose applied, so a parent turning under the
+    // moving node is part of the measurement.
+    const measure = (entry, key) => {
+        // A finished one-shot action holds its end pose until it is reset.
+        action.reset();
+        mixer.setTime(entry.track.times[key]);
+        const space = parentToRoot(root, entry.node);
+        return { space, at: valueAt(entry.track, key).applyMatrix4(space) };
+    };
+
+    // Every node under the moving one travels with it, so the highest moving node is the one.
+    const depthOf = (node) => {
+        let depth = 0;
+        for (let up = node.parent; up && up !== root; up = up.parent) depth += 1;
+        return depth;
+    };
+    const measured = tracks.map((entry) => {
+        const first = measure(entry, 0).at;
+        const last = measure(entry, entry.track.times.length - 1).at;
+        const travel = last.sub(first).setY(0);
+        return { entry, travel, distance: travel.length(), depth: depthOf(entry.node) };
+    });
+    const furthest = Math.max(...measured.map((one) => one.distance));
+    let best = null;
+    for (const one of measured) {
+        if (one.distance <= 1e-6 || one.distance < furthest * 0.25) continue;
+        if (!best || one.depth < best.depth
+            || (one.depth === best.depth && one.distance > best.distance)) best = one;
+    }
+
+    let motion = null;
+    if (best) {
+        const keys = [];
+        for (let key = 0; key < best.entry.track.times.length; key += 1) {
+            keys.push(measure(best.entry, key));
+        }
+        motion = { name: best.entry.track.name, node: best.entry.node, travel: best.travel, keys };
+    }
+
+    action.stop();
+    mixer.uncacheRoot(root);
+    for (const [child, position, quaternion, scale] of rest) {
+        child.position.copy(position);
+        child.quaternion.copy(quaternion);
+        child.scale.copy(scale);
+    }
+    return motion;
+}
+
+/**
+ * Turn each foot and toe so a planted foot lies the way the model's rest pose holds it.
+ *
+ * @param {THREE.Object3D} root - The object the clip animates, posed at rest.
+ * @param {THREE.AnimationClip} clip - The clip, changed in place.
+ * @returns {number} How many feet were turned.
+ */
+function plantFeet(root, clip) {
+    const trackFor = (bone) => clip.tracks.find((track) => track.name === `${bone.name}.quaternion`);
+    const feet = [];
+    root.traverse((bone) => {
+        if (!bone.isBone || !/foot|ankle/i.test(bone.name)) return;
+        if (/toe|ball|twist|end|ik|pole|roll|ctrl/i.test(bone.name)) return;
+        const toe = bone.children.find((child) => child.isBone && /toe|ball/i.test(child.name));
+        const footTrack = trackFor(bone);
+        if (toe && footTrack) feet.push({ bone, toe, footTrack, toeTrack: trackFor(toe) || null });
+    });
+    if (!feet.length) return 0;
+
+    const up = new THREE.Vector3(0, 1, 0);
+    const inRoot = (object, rootInverse) => new THREE.Vector3()
+        .setFromMatrixPosition(object.matrixWorld).applyMatrix4(rootInverse);
+    const pitchOf = (from, to) => {
+        const along = to.clone().sub(from);
+        return Math.atan2(along.y, Math.hypot(along.x, along.z));
+    };
+
+    const rest = [];
+    root.traverse((child) => {
+        rest.push([child, child.position.clone(), child.quaternion.clone(), child.scale.clone()]);
+    });
+    root.updateWorldMatrix(true, true);
+    let rootInverse = root.matrixWorld.clone().invert();
+    for (const foot of feet) {
+        foot.restPitch = pitchOf(inRoot(foot.bone, rootInverse), inRoot(foot.toe, rootInverse));
+        foot.restToe = foot.toe.quaternion.clone();
+    }
+
+    const mixer = new THREE.AnimationMixer(root);
+    const action = mixer.clipAction(clip);
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.play();
+    const poseAt = (time) => {
+        action.reset();
+        mixer.setTime(time);
+        root.updateWorldMatrix(true, true);
+        rootInverse = root.matrixWorld.clone().invert();
+    };
+
+    // The lowest moment of each ankle is where that foot stands.
+    const samples = Math.max(24, Math.ceil(clip.duration * 60));
+    for (const foot of feet) foot.lowest = { height: Infinity, time: 0 };
+    for (let step = 0; step <= samples; step += 1) {
+        const time = (clip.duration * step) / samples;
+        poseAt(time);
+        for (const foot of feet) {
+            const height = inRoot(foot.bone, rootInverse).y;
+            if (height < foot.lowest.height) foot.lowest = { height, time };
+        }
+    }
+
+    // At that moment the foot takes a constant turn putting its heel to toe line at the rest
+    // angle, and the toe takes its rest bend, so every other moment keeps its angle to it.
+    const footTurn = new THREE.Quaternion();
+    const toeTurn = new THREE.Quaternion();
+    const held = new THREE.Quaternion();
+    const rootTurn = new THREE.Quaternion();
+    for (const foot of feet) {
+        poseAt(foot.lowest.time);
+        const ankle = inRoot(foot.bone, rootInverse);
+        const ball = inRoot(foot.toe, rootInverse);
+        const flat = ball.clone().sub(ankle).setY(0);
+        if (flat.lengthSq() < 1e-12) continue;
+        const side = flat.normalize().cross(up).normalize();
+        const turn = new THREE.Quaternion().setFromAxisAngle(side, foot.restPitch - pitchOf(ankle, ball));
+
+        // The turn is made in the root's space, then carried into the foot's own frame.
+        rootTurn.copy(root.getWorldQuaternion(held).invert())
+            .multiply(foot.bone.getWorldQuaternion(new THREE.Quaternion()));
+        footTurn.copy(rootTurn).invert().multiply(turn).multiply(rootTurn);
+        toeTurn.copy(foot.toe.quaternion).invert().multiply(foot.restToe);
+
+        for (const [track, offset] of [[foot.footTrack, footTurn], [foot.toeTrack, toeTurn]]) {
+            if (!track) continue;
+            const stride = track.values.length / track.times.length;
+            const at = stride === 12 ? 4 : 0;
+            for (let key = 0; key < track.times.length; key += 1) {
+                held.fromArray(track.values, key * stride + at).multiply(offset).normalize();
+                held.toArray(track.values, key * stride + at);
+            }
+        }
+    }
+
+    action.stop();
+    mixer.uncacheRoot(root);
+    for (const [child, position, quaternion, scale] of rest) {
+        child.position.copy(position);
+        child.quaternion.copy(quaternion);
+        child.scale.copy(scale);
+    }
+    return feet.length;
+}
+
+/**
+ * Take a clip's ground travel out of it, keeping its sway and its rise and fall.
+ *
+ * @param {THREE.AnimationClip} clip - The clip, changed in place.
+ * @param {{name: string, travel: THREE.Vector3, keys: Array}} motion - From groundTravel.
+ */
+function holdInPlace(clip, motion) {
+    const track = clip.tracks.find((one) => one.name === motion.name);
+    if (!track) return;
+    const times = track.times;
+    const values = track.values;
+    const stride = values.length / times.length;
+    const start = times[0];
+    const span = times[times.length - 1] - start || 1;
+    const slope = motion.travel.clone().divideScalar(span);
+    for (let key = 0; key < times.length; key += 1) {
+        const share = (times[key] - start) / span;
+        const { space, at } = motion.keys[key];
+        const back = space.clone().invert();
+        const held = at.clone().addScaledVector(motion.travel, -share).applyMatrix4(back);
+        held.toArray(values, key * stride + (stride === 9 ? 3 : 0));
+        if (stride === 9) {
+            // Cubic spline tangents are rates, so the ramp's slope comes off both.
+            const rate = slope.clone().applyMatrix3(new THREE.Matrix3().setFromMatrix4(back));
+            for (const tangent of [key * stride, key * stride + 6]) {
+                values[tangent] -= rate.x;
+                values[tangent + 1] -= rate.y;
+                values[tangent + 2] -= rate.z;
+            }
+        }
+    }
 }
 
 /**
@@ -1092,6 +1632,14 @@ export function createRuntime(canvas, statusElement, options = {}) {
                 );
             }
 
+            const rootMotion = params.root_motion || "as authored";
+            const motion = rootMotion === "as authored" ? null : groundTravel(owner, clip);
+            const flatFeet = params.feet === "flat when planted";
+            if ((motion && rootMotion === "in place") || flatFeet) clip = clip.clone();
+            if (motion && rootMotion === "in place") holdInPlace(clip, motion);
+            if (flatFeet) plantFeet(owner, clip);
+            const passShift = new THREE.Vector3();
+
             const mixer = new THREE.AnimationMixer(owner);
             const action = mixer.clipAction(clip);
             const modes = {
@@ -1118,6 +1666,66 @@ export function createRuntime(canvas, statusElement, options = {}) {
                     ? offset + (time - origin) * speed
                     : offset + along * duration * speed;
                 mixer.setTime(Math.max(0, at));
+                if (motion && rootMotion === "travel" && params.loop !== "ping pong") {
+                    // Each finished pass leaves the model where that pass ended.
+                    const passes = params.loop === "once" ? 0 : Math.floor(Math.max(0, at) / duration);
+                    if (passes) {
+                        const back = new THREE.Matrix3()
+                            .setFromMatrix4(parentToRoot(owner, motion.node).invert());
+                        passShift.copy(motion.travel).multiplyScalar(passes).applyMatrix3(back);
+                        motion.node.position.add(passShift);
+                    }
+                }
+            });
+            return tag(group);
+        }
+
+        if (spec.type === "FollowGround") {
+            const group = new THREE.Group();
+            for (const childSpec of spec.children || []) {
+                group.add(await buildObject(childSpec));
+            }
+            const wanted = String(params.groundId || "");
+            const offset = Number(params.offset) || 0;
+            const footprint = Math.max(0.05, Number(params.footprint) || 0.7);
+            const stand = new THREE.Vector3();
+            const scale = new THREE.Vector3();
+            let map = null;
+            let warned = false;
+
+            updateFunctions.push(() => {
+                // Where the object stands with no lift, measured fresh each frame.
+                group.position.y = 0;
+                const base = group.children[0] || group;
+                base.updateWorldMatrix(true, false);
+                stand.setFromMatrixPosition(base.matrixWorld);
+
+                if (!map) {
+                    let root = group;
+                    while (root.parent) root = root.parent;
+                    let ground = null;
+                    root.traverse((child) => {
+                        if (!ground && child.userData?.wasSpecId === wanted) ground = child;
+                    });
+                    if (!ground) {
+                        if (root.isScene && !warned) {
+                            warned = true;
+                            console.warn(
+                                "[WAS ThreeJS] Three Follow Ground was given a ground that is not "
+                                    + "in the scene. Wire the same object into Three Group or Three "
+                                    + "Scene as well."
+                            );
+                        }
+                        return;
+                    }
+                    // A step above where it was placed: higher ground is wall or roof.
+                    map = groundHeights(ground, footprint / 7, stand.y + Math.max(1, footprint * 2));
+                }
+
+                const height = heightUnder(map, stand.x, stand.z, footprint);
+                if (height === null) return;
+                const parentScale = group.parent ? group.parent.getWorldScale(scale).y || 1 : 1;
+                group.position.y = (height + offset - stand.y) / parentScale;
             });
             return tag(group);
         }
@@ -1238,14 +1846,11 @@ export function createRuntime(canvas, statusElement, options = {}) {
                 // moves out of them is culled and vanishes.
                 if (child.isSkinnedMesh) child.frustumCulled = false;
             });
-                if (params.centre !== false) {
-                const middle = modelCentre(object);
-                object.position.sub(middle);
-            }
-            const factor = Number(params.scale) || 1;
-            object.scale.multiplyScalar(factor);
+            placeModel(object, params);
+            adjustSurfaces(object, Number(params.metalness ?? 1), Number(params.minRoughness ?? 0));
             // Wrapped, so centring and scaling survive being placed by a transform above it.
             const holder = new THREE.Group();
+            holder.name = object.name;
             holder.add(object);
             return tag(holder);
         }
@@ -1312,6 +1917,7 @@ export function createRuntime(canvas, statusElement, options = {}) {
         if (spec.deps?.root) {
             scene.add(await buildObject(spec.deps.root));
         }
+        applyObjectOverrides(scene, params.overrides);
 
         trackObjectResources(scene);
         return scene;
@@ -1449,17 +2055,28 @@ export function createRuntime(canvas, statusElement, options = {}) {
         const at = new THREE.Vector3();
         const want = new THREE.Vector3();
         const look = new THREE.Vector3();
+        const shift = new THREE.Vector3();
+        const turn = new THREE.Quaternion();
+        const mount = new THREE.Quaternion();
+        const ridesObject = params.offsetSpace === "object";
         let started = false;
 
         updateFunctions.push(() => {
             target.getWorldPosition(at);
+            if (ridesObject) target.getWorldQuaternion(turn);
 
             if (follows) {
-                want.set(at.x + Number(offset[0]) || 0, at.y + Number(offset[1]) || 0,
-                         at.z + Number(offset[2]) || 0);
+                shift.set(Number(offset[0]) || 0, Number(offset[1]) || 0, Number(offset[2]) || 0);
+                if (ridesObject) shift.applyQuaternion(turn);
+                want.copy(at).add(shift);
                 // The first frame lands on the mark, so a damped camera does not fly in from
                 // wherever it happened to start.
                 camera.position.lerp(want, started ? 1 - lag : 1);
+                if (ridesObject && !aims) {
+                    // Mounted on the object: the camera keeps the angle it started at to it.
+                    if (!started) mount.copy(turn).invert().multiply(camera.quaternion);
+                    camera.quaternion.copy(turn).multiply(mount);
+                }
             } else {
                 camera.position.copy(rest);
             }

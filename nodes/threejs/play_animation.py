@@ -15,6 +15,12 @@ UNITS = ("per second", "per capture", "per timeline")
 #: What happens at the end of the clip, in the order the menu lists them.
 LOOPS = ("repeat", "once", "ping pong")
 
+#: What becomes of a clip that moves the model across the ground, in menu order.
+ROOT_MOTION = ("in place", "travel", "as authored")
+
+#: How the feet are posed, in menu order.
+FEET = ("as authored", "flat when planted")
+
 
 class ThreePlayAnimation(io.ComfyNode):
     """Run a model's own animation."""
@@ -36,8 +42,8 @@ class ThreePlayAnimation(io.ComfyNode):
             description=(
                 "Play a clip saved inside a .glb, .gltf, .dae or .fbx model, so a rigged "
                 "character walks rather than standing in its bind pose. The clip runs at its "
-                "authored speed, across the captured frames, or across Three App's "
-                "loop_seconds, as `units` chooses."
+                "authored speed or spread across the capture or the timeline. A walk can stay "
+                "on the spot, so a path or a turn moves it instead."
             ),
             inputs=[
                 THREE_OBJECT.Input(
@@ -97,6 +103,30 @@ class ThreePlayAnimation(io.ComfyNode):
                         "pose, `ping pong` runs it backwards and forwards."
                     ),
                 ),
+                io.Combo.Input(
+                    "root_motion",
+                    options=list(ROOT_MOTION),
+                    default="in place",
+                    tooltip=(
+                        "For a clip that moves the model across the ground. `in place` walks "
+                        "on the spot, keeping the sway and the rise and fall. `travel` carries "
+                        "on from where each pass ended. `as authored` jumps back to the start "
+                        "of every pass."
+                    ),
+                    optional=True,
+                ),
+                io.Combo.Input(
+                    "feet",
+                    options=list(FEET),
+                    default="as authored",
+                    tooltip=(
+                        "`flat when planted` turns each foot and toe so a standing foot lies "
+                        "as it does in the model's rest pose, for a clip made on other feet, "
+                        "such as a walk on a character in heeled boots. `as authored` plays "
+                        "the feet as saved."
+                    ),
+                    optional=True,
+                ),
             ],
             outputs=[
                 THREE_OBJECT.Output(
@@ -107,7 +137,17 @@ class ThreePlayAnimation(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, object, clip, units, speed, offset, loop) -> io.NodeOutput:
+    def execute(
+        cls,
+        object,
+        clip,
+        units,
+        speed,
+        offset,
+        loop,
+        root_motion="in place",
+        feet="as authored",
+    ) -> io.NodeOutput:
         """Describe the clip to play.
 
         Raises:
@@ -124,6 +164,8 @@ class ThreePlayAnimation(io.ComfyNode):
                     "speed": float(speed),
                     "offset": float(offset),
                     "loop": loop,
+                    "root_motion": root_motion if root_motion in ROOT_MOTION else "in place",
+                    "feet": feet if feet in FEET else "as authored",
                 },
                 children=[object],
             )

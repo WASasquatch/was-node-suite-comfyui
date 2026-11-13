@@ -38,11 +38,11 @@
           "link": null
         },
         {
-          "localized_name": "centre",
-          "name": "centre",
-          "type": "BOOLEAN",
+          "localized_name": "origin",
+          "name": "origin",
+          "type": "COMBO",
           "widget": {
-            "name": "centre"
+            "name": "origin"
           },
           "link": null
         },
@@ -87,9 +87,10 @@
       "widgets_values": [
         "stormtrooper.dae [input]",
         1,
+        "centre",
         true,
-        true,
-        ""
+        "",
+        0
       ]
     },
     {

@@ -1,0 +1,4595 @@
+{
+  "id": "bb25b64e-5073-466f-8920-8a8884258d89",
+  "revision": 0,
+  "last_node_id": 42,
+  "last_link_id": 46,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        1460,
+        120
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "z_image_turbo_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "z_image_turbo_bf16.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "z_image_turbo_bf16.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 2,
+      "type": "CLIPLoader",
+      "pos": [
+        1460,
+        300
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            22,
+            31,
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "qwen_3_4b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "lumina2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen_3_4b.safetensors",
+        "type": "lumina2",
+        "device": "default"
+      }
+    },
+    {
+      "id": 3,
+      "type": "VAELoader",
+      "pos": [
+        1460,
+        508
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            20,
+            29,
+            37,
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "ae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    {
+      "id": 4,
+      "type": "ModelPatchLoader",
+      "pos": [
+        1460,
+        660
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "COMBO",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL_PATCH",
+          "name": "MODEL_PATCH",
+          "type": "MODEL_PATCH",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelPatchLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors",
+            "url": "https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors",
+            "directory": "model_patches"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors"
+      ],
+      "widgets_values_named": {
+        "name": "Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors"
+      }
+    },
+    {
+      "id": 5,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        1460,
+        836
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            27,
+            35,
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    {
+      "id": 6,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        1810,
+        120
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "localized_name": "shift",
+          "name": "shift",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shift"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampling",
+          "name": "sampling",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sampling"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingAuraFlow",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        3,
+        "flow"
+      ],
+      "widgets_values_named": {
+        "shift": 3,
+        "sampling": "flow"
+      }
+    },
+    {
+      "id": 7,
+      "type": "TripoAPIDraft",
+      "pos": [
+        2700,
+        120
+      ],
+      "size": [
+        401,
+        706
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_left",
+          "name": "image_left",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_back",
+          "name": "image_back",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_right",
+          "name": "image_right",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "apikey",
+          "name": "apikey",
+          "type": "STRING",
+          "widget": {
+            "name": "apikey"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "negative_prompt",
+          "name": "negative_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "negative_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_version",
+          "name": "model_version",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_version"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pbr",
+          "name": "pbr",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "pbr"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "image_seed",
+          "name": "image_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "image_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_seed",
+          "name": "model_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "model_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_seed",
+          "name": "texture_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "texture_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_quality",
+          "name": "texture_quality",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "geometry_quality",
+          "name": "geometry_quality",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "geometry_quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_alignment",
+          "name": "texture_alignment",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_alignment"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "face_limit",
+          "name": "face_limit",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "face_limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quad",
+          "name": "quad",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "quad"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "compress",
+          "name": "compress",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "compress"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generate_parts",
+          "name": "generate_parts",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "generate_parts"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "smart_low_poly",
+          "name": "smart_low_poly",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "smart_low_poly"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_size",
+          "name": "auto_size",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orientation",
+          "name": "orientation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "orientation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "file_prefix",
+          "name": "file_prefix",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "file_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_directory",
+          "name": "output_directory",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "output_directory"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "export_orientation",
+          "name": "export_orientation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "export_orientation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "model_info",
+          "name": "model_info",
+          "type": "MODEL_INFO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TripoAPIDraft",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "text_to_model",
+        "",
+        "a sci-fi pilot helmet with a large domed visor, armoured cheek plates, side vents and two flexible breathing hoses, painted white with worn edges and small brass details",
+        "",
+        "v3.1-20260211",
+        true,
+        true,
+        42,
+        42,
+        42,
+        "standard",
+        "standard",
+        "original_image",
+        -1,
+        false,
+        false,
+        false,
+        false,
+        false,
+        "default",
+        "tripo_render_to_art_",
+        "",
+        "default"
+      ],
+      "widgets_values_named": {
+        "mode": "text_to_model",
+        "apikey": "",
+        "prompt": "a sci-fi pilot helmet with a large domed visor, armoured cheek plates, side vents and two flexible breathing hoses, painted white with worn edges and small brass details",
+        "negative_prompt": "",
+        "model_version": "v3.1-20260211",
+        "texture": true,
+        "pbr": true,
+        "image_seed": 42,
+        "model_seed": 42,
+        "texture_seed": 42,
+        "texture_quality": "standard",
+        "geometry_quality": "standard",
+        "texture_alignment": "original_image",
+        "face_limit": -1,
+        "quad": false,
+        "compress": false,
+        "generate_parts": false,
+        "smart_low_poly": false,
+        "auto_size": false,
+        "orientation": "default",
+        "file_prefix": "tripo_render_to_art_",
+        "output_directory": "",
+        "export_orientation": "default"
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASThreeLoadModel",
+      "pos": [
+        3761,
+        120
+      ],
+      "size": [
+        390,
+        450
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "shape": 7,
+          "type": "FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_PLY",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale",
+          "name": "scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "origin",
+          "name": "origin",
+          "type": "COMBO",
+          "widget": {
+            "name": "origin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "path",
+          "name": "path",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "path"
+          },
+          "link": 2
+        },
+        {
+          "localized_name": "fit_size",
+          "name": "fit_size",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "fit_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_as",
+          "name": "keep_as",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "keep_as"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "metalness",
+          "name": "metalness",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "metalness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_roughness",
+          "name": "min_roughness",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "min_roughness"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeLoadModel",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "three_test/DamagedHelmet.glb [input]",
+        1,
+        "base",
+        true,
+        "",
+        2,
+        "",
+        1,
+        0
+      ],
+      "widgets_values_named": {
+        "file": "three_test/DamagedHelmet.glb [input]",
+        "scale": 1,
+        "origin": "base",
+        "cast_shadow": true,
+        "path": "",
+        "fit_size": 2,
+        "keep_as": "",
+        "metalness": 1,
+        "min_roughness": 0
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASThreeTransformObject",
+      "pos": [
+        4231,
+        120
+      ],
+      "size": [
+        270,
+        298
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "link": 3
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation_x",
+          "name": "rotation_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation_y",
+          "name": "rotation_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation_z",
+          "name": "rotation_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_x",
+          "name": "scale_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_y",
+          "name": "scale_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_z",
+          "name": "scale_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "visible",
+          "name": "visible",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "visible"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeTransformObject",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        0,
+        0,
+        0,
+        0,
+        -90,
+        0,
+        1,
+        1,
+        1,
+        "model",
+        true
+      ],
+      "widgets_values_named": {
+        "position_x": 0,
+        "position_y": 0,
+        "position_z": 0,
+        "rotation_x": 0,
+        "rotation_y": -90,
+        "rotation_z": 0,
+        "scale_x": 1,
+        "scale_y": 1,
+        "scale_z": 1,
+        "name": "model",
+        "visible": true
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASThreePlaneGeometry",
+      "pos": [
+        3761,
+        724
+      ],
+      "size": [
+        390,
+        130
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "FLOAT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "FLOAT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width_segments",
+          "name": "width_segments",
+          "type": "INT",
+          "widget": {
+            "name": "width_segments"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height_segments",
+          "name": "height_segments",
+          "type": "INT",
+          "widget": {
+            "name": "height_segments"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "geometry",
+          "name": "geometry",
+          "type": "THREE_GEOMETRY",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreePlaneGeometry",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        200,
+        200,
+        1,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 200,
+        "height": 200,
+        "width_segments": 1,
+        "height_segments": 1
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASThreeStandardMaterial",
+      "pos": [
+        3761,
+        984
+      ],
+      "size": [
+        390,
+        530
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "map",
+          "name": "map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "normal_map",
+          "name": "normal_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "roughness_map",
+          "name": "roughness_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "metalness_map",
+          "name": "metalness_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "emissive_map",
+          "name": "emissive_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "alpha_map",
+          "name": "alpha_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "bump_map",
+          "name": "bump_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "displacement_map",
+          "name": "displacement_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "ao_map",
+          "name": "ao_map",
+          "shape": 7,
+          "type": "THREE_TEXTURE",
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "roughness",
+          "name": "roughness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "roughness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "metalness",
+          "name": "metalness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "metalness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "emissive",
+          "name": "emissive",
+          "type": "STRING",
+          "widget": {
+            "name": "emissive"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "emissive_intensity",
+          "name": "emissive_intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "emissive_intensity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transparent",
+          "name": "transparent",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "transparent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "wireframe",
+          "name": "wireframe",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "wireframe"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "side",
+          "name": "side",
+          "type": "COMBO",
+          "widget": {
+            "name": "side"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "normal_scale",
+          "name": "normal_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "normal_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bump_scale",
+          "name": "bump_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "bump_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "displacement_scale",
+          "name": "displacement_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "displacement_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "displacement_bias",
+          "name": "displacement_bias",
+          "type": "FLOAT",
+          "widget": {
+            "name": "displacement_bias"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ao_intensity",
+          "name": "ao_intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ao_intensity"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "material",
+          "name": "material",
+          "type": "THREE_MATERIAL",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeStandardMaterial",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "#2a2e35",
+        0.85,
+        0,
+        "#000000",
+        1,
+        1,
+        false,
+        false,
+        "front",
+        1,
+        1,
+        0.1,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "color": "#2a2e35",
+        "roughness": 0.85,
+        "metalness": 0,
+        "emissive": "#000000",
+        "emissive_intensity": 1,
+        "opacity": 1,
+        "transparent": false,
+        "wireframe": false,
+        "side": "front",
+        "normal_scale": 1,
+        "bump_scale": 1,
+        "displacement_scale": 0.1,
+        "displacement_bias": 0,
+        "ao_intensity": 1
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASThreeMesh",
+      "pos": [
+        4231,
+        584
+      ],
+      "size": [
+        270,
+        126
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "geometry",
+          "name": "geometry",
+          "type": "THREE_GEOMETRY",
+          "link": 4
+        },
+        {
+          "localized_name": "material",
+          "name": "material",
+          "type": "THREE_MATERIAL",
+          "link": 5
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "receive_shadow",
+          "name": "receive_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "receive_shadow"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeMesh",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "floor",
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "name": "floor",
+        "cast_shadow": false,
+        "receive_shadow": true
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASThreeTransformObject",
+      "pos": [
+        4581,
+        120
+      ],
+      "size": [
+        278,
+        298
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "link": 6
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation_x",
+          "name": "rotation_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation_y",
+          "name": "rotation_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation_z",
+          "name": "rotation_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_x",
+          "name": "scale_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_y",
+          "name": "scale_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_z",
+          "name": "scale_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "visible",
+          "name": "visible",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "visible"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeTransformObject",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        0,
+        0,
+        0,
+        -90,
+        0,
+        0,
+        1,
+        1,
+        1,
+        "floor",
+        true
+      ],
+      "widgets_values_named": {
+        "position_x": 0,
+        "position_y": 0,
+        "position_z": 0,
+        "rotation_x": -90,
+        "rotation_y": 0,
+        "rotation_z": 0,
+        "scale_x": 1,
+        "scale_y": 1,
+        "scale_z": 1,
+        "name": "floor",
+        "visible": true
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASThreeLight",
+      "pos": [
+        4231,
+        844
+      ],
+      "size": [
+        270,
+        322
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "light_type",
+          "name": "light_type",
+          "type": "COMBO",
+          "widget": {
+            "name": "light_type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ground_color",
+          "name": "ground_color",
+          "type": "STRING",
+          "widget": {
+            "name": "ground_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "intensity",
+          "name": "intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "intensity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "distance",
+          "name": "distance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "distance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decay",
+          "name": "decay",
+          "type": "FLOAT",
+          "widget": {
+            "name": "decay"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "angle",
+          "name": "angle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "angle"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "penumbra",
+          "name": "penumbra",
+          "type": "FLOAT",
+          "widget": {
+            "name": "penumbra"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "light",
+          "name": "light",
+          "type": "THREE_OBJECT",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeLight",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "directional",
+        "#fff1e0",
+        "#404040",
+        2.6,
+        3.5,
+        6,
+        4.5,
+        0,
+        2,
+        45,
+        0,
+        true
+      ],
+      "widgets_values_named": {
+        "light_type": "directional",
+        "color": "#fff1e0",
+        "ground_color": "#404040",
+        "intensity": 2.6,
+        "position_x": 3.5,
+        "position_y": 6,
+        "position_z": 4.5,
+        "distance": 0,
+        "decay": 2,
+        "angle": 45,
+        "penumbra": 0,
+        "cast_shadow": true
+      }
+    },
+    {
+      "id": 15,
+      "type": "WASThreeLight",
+      "pos": [
+        4231,
+        1344
+      ],
+      "size": [
+        270,
+        322
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "light_type",
+          "name": "light_type",
+          "type": "COMBO",
+          "widget": {
+            "name": "light_type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ground_color",
+          "name": "ground_color",
+          "type": "STRING",
+          "widget": {
+            "name": "ground_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "intensity",
+          "name": "intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "intensity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "distance",
+          "name": "distance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "distance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decay",
+          "name": "decay",
+          "type": "FLOAT",
+          "widget": {
+            "name": "decay"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "angle",
+          "name": "angle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "angle"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "penumbra",
+          "name": "penumbra",
+          "type": "FLOAT",
+          "widget": {
+            "name": "penumbra"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "light",
+          "name": "light",
+          "type": "THREE_OBJECT",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeLight",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "hemisphere",
+        "#ffffff",
+        "#2a2d33",
+        0.35,
+        3,
+        5,
+        4,
+        0,
+        2,
+        45,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "light_type": "hemisphere",
+        "color": "#ffffff",
+        "ground_color": "#2a2d33",
+        "intensity": 0.35,
+        "position_x": 3,
+        "position_y": 5,
+        "position_z": 4,
+        "distance": 0,
+        "decay": 2,
+        "angle": 45,
+        "penumbra": 0,
+        "cast_shadow": false
+      }
+    },
+    {
+      "id": 16,
+      "type": "WASThreeGroup",
+      "pos": [
+        4939,
+        120
+      ],
+      "size": [
+        270,
+        222
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "object_1",
+          "name": "object_1",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 7
+        },
+        {
+          "localized_name": "object_2",
+          "name": "object_2",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 8
+        },
+        {
+          "localized_name": "object_3",
+          "name": "object_3",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 9
+        },
+        {
+          "localized_name": "object_4",
+          "name": "object_4",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 10
+        },
+        {
+          "localized_name": "object_5",
+          "name": "object_5",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_6",
+          "name": "object_6",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_7",
+          "name": "object_7",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_8",
+          "name": "object_8",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "visible",
+          "name": "visible",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "visible"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "group",
+          "name": "group",
+          "type": "THREE_OBJECT",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeGroup",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "stage",
+        true
+      ],
+      "widgets_values_named": {
+        "name": "stage",
+        "visible": true
+      }
+    },
+    {
+      "id": 17,
+      "type": "WASThreeEnvironment",
+      "pos": [
+        4581,
+        584
+      ],
+      "size": [
+        278,
+        202
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "COMBO",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "intensity",
+          "name": "intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "intensity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "as_background",
+          "name": "as_background",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "as_background"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_blur",
+          "name": "background_blur",
+          "type": "FLOAT",
+          "widget": {
+            "name": "background_blur"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotation",
+          "name": "rotation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "path",
+          "name": "path",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "path"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "environment",
+          "name": "environment",
+          "type": "THREE_ENVIRONMENT",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeEnvironment",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "studio room",
+        0.9,
+        false,
+        0,
+        0,
+        "none",
+        ""
+      ],
+      "widgets_values_named": {
+        "source": "studio room",
+        "intensity": 0.9,
+        "as_background": false,
+        "background_blur": 0,
+        "rotation": 0,
+        "file": "none",
+        "path": ""
+      }
+    },
+    {
+      "id": 18,
+      "type": "WASThreeScene",
+      "pos": [
+        5289,
+        120
+      ],
+      "size": [
+        270,
+        198
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "root",
+          "name": "root",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 11
+        },
+        {
+          "localized_name": "environment",
+          "name": "environment",
+          "shape": 7,
+          "type": "THREE_ENVIRONMENT",
+          "link": 12
+        },
+        {
+          "localized_name": "background",
+          "name": "background",
+          "type": "STRING",
+          "widget": {
+            "name": "background"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_mode",
+          "name": "background_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "background_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_enabled",
+          "name": "fog_enabled",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fog_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_color",
+          "name": "fog_color",
+          "type": "STRING",
+          "widget": {
+            "name": "fog_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_near",
+          "name": "fog_near",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fog_near"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_far",
+          "name": "fog_far",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fog_far"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "scene",
+          "name": "scene",
+          "type": "THREE_SCENE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeScene",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "#2f333b",
+        "color",
+        true,
+        "#30343c",
+        7.5,
+        16
+      ],
+      "widgets_values_named": {
+        "background": "#2f333b",
+        "background_mode": "color",
+        "fog_enabled": true,
+        "fog_color": "#30343c",
+        "fog_near": 7.5,
+        "fog_far": 16
+      }
+    },
+    {
+      "id": 19,
+      "type": "WASThreePerspectiveCamera",
+      "pos": [
+        4581,
+        936
+      ],
+      "size": [
+        278,
+        250
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "track",
+          "name": "track",
+          "shape": 7,
+          "type": "THREE_TRACK",
+          "link": null
+        },
+        {
+          "localized_name": "fov",
+          "name": "fov",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fov"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "near",
+          "name": "near",
+          "type": "FLOAT",
+          "widget": {
+            "name": "near"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "far",
+          "name": "far",
+          "type": "FLOAT",
+          "widget": {
+            "name": "far"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_x",
+          "name": "target_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_y",
+          "name": "target_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_z",
+          "name": "target_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_z"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "camera",
+          "name": "camera",
+          "type": "THREE_CAMERA",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreePerspectiveCamera",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        35,
+        0.1,
+        1000,
+        2.6,
+        1.7,
+        4.2,
+        0,
+        0.8,
+        0
+      ],
+      "widgets_values_named": {
+        "fov": 35,
+        "near": 0.1,
+        "far": 1000,
+        "position_x": 2.6,
+        "position_y": 1.7,
+        "position_z": 4.2,
+        "target_x": 0,
+        "target_y": 0.8,
+        "target_z": 0
+      }
+    },
+    {
+      "id": 20,
+      "type": "WASThreeApp",
+      "pos": [
+        5639,
+        120
+      ],
+      "size": [
+        270,
+        314
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "scene",
+          "name": "scene",
+          "type": "THREE_SCENE",
+          "link": 13
+        },
+        {
+          "localized_name": "camera",
+          "name": "camera",
+          "type": "THREE_CAMERA",
+          "link": 14
+        },
+        {
+          "localized_name": "effects",
+          "name": "effects",
+          "shape": 7,
+          "type": "THREE_EFFECT",
+          "link": null
+        },
+        {
+          "localized_name": "antialias",
+          "name": "antialias",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "antialias"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orbit_controls",
+          "name": "orbit_controls",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "orbit_controls"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_rotate",
+          "name": "auto_rotate",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_rotate"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_rotate_speed",
+          "name": "auto_rotate_speed",
+          "type": "FLOAT",
+          "widget": {
+            "name": "auto_rotate_speed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tone_mapping",
+          "name": "tone_mapping",
+          "type": "COMBO",
+          "widget": {
+            "name": "tone_mapping"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "loop_seconds",
+          "name": "loop_seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "loop_seconds"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pixel_ratio_limit",
+          "name": "pixel_ratio_limit",
+          "type": "FLOAT",
+          "widget": {
+            "name": "pixel_ratio_limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadow_quality",
+          "name": "shadow_quality",
+          "type": "COMBO",
+          "widget": {
+            "name": "shadow_quality"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "app",
+          "name": "app",
+          "type": "THREE_APP",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeApp",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        false,
+        1,
+        "aces",
+        1,
+        4,
+        2,
+        "2048"
+      ],
+      "widgets_values_named": {
+        "antialias": true,
+        "shadows": true,
+        "orbit_controls": true,
+        "auto_rotate": false,
+        "auto_rotate_speed": 1,
+        "tone_mapping": "aces",
+        "exposure": 1,
+        "loop_seconds": 4,
+        "pixel_ratio_limit": 2,
+        "shadow_quality": "2048"
+      }
+    },
+    {
+      "id": 21,
+      "type": "WASThreeRender",
+      "pos": [
+        5989,
+        120
+      ],
+      "size": [
+        270,
+        446
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "app",
+          "name": "app",
+          "type": "THREE_APP",
+          "link": 15
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transparent",
+          "name": "transparent",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "transparent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_frames",
+          "name": "num_frames",
+          "type": "INT",
+          "widget": {
+            "name": "num_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "timeout",
+          "name": "timeout",
+          "type": "FLOAT",
+          "widget": {
+            "name": "timeout"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "supersample",
+          "name": "supersample",
+          "type": "INT",
+          "widget": {
+            "name": "supersample"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "depth_near",
+          "name": "depth_near",
+          "type": "FLOAT",
+          "widget": {
+            "name": "depth_near"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "depth_far",
+          "name": "depth_far",
+          "type": "FLOAT",
+          "widget": {
+            "name": "depth_far"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            16
+          ]
+        },
+        {
+          "localized_name": "depth",
+          "name": "depth",
+          "type": "IMAGE",
+          "links": [
+            17,
+            21
+          ]
+        },
+        {
+          "localized_name": "normal",
+          "name": "normal",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "frame_count",
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASThreeRender",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        false,
+        1,
+        0,
+        24,
+        120,
+        2,
+        3,
+        7
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "transparent": false,
+        "num_frames": 1,
+        "start": 0,
+        "fps": 24,
+        "timeout": 120,
+        "supersample": 2,
+        "depth_near": 3,
+        "depth_far": 7
+      }
+    },
+    {
+      "id": 22,
+      "type": "PreviewImage",
+      "pos": [
+        6339,
+        120
+      ],
+      "size": [
+        461,
+        26
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "PreviewImage",
+      "pos": [
+        6339,
+        630
+      ],
+      "size": [
+        461,
+        26
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "ZImageFunControlnet",
+      "pos": [
+        7500,
+        120
+      ],
+      "size": [
+        270,
+        206
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 18
+        },
+        {
+          "localized_name": "model_patch",
+          "name": "model_patch",
+          "type": "MODEL_PATCH",
+          "link": 19
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 20
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "localized_name": "inpaint_image",
+          "name": "inpaint_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start_percent",
+          "name": "start_percent",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "start_percent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end_percent",
+          "name": "end_percent",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "end_percent"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            24,
+            32,
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ZImageFunControlnet",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        0.85,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "strength": 0.85,
+        "start_percent": 0,
+        "end_percent": 1
+      }
+    },
+    {
+      "id": 25,
+      "type": "CLIPTextEncode",
+      "pos": [
+        7850,
+        120
+      ],
+      "size": [
+        401,
+        200
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 22
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            23,
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "studio product photograph of an antique bronze and brass deep sea diving helmet with a domed glass visor, green verdigris patina, riveted collar and black rubber breathing hoses, dramatic rim light, dark charcoal backdrop, sharp focus, 85mm lens"
+      ],
+      "widgets_values_named": {
+        "text": "studio product photograph of an antique bronze and brass deep sea diving helmet with a domed glass visor, green verdigris patina, riveted collar and black rubber breathing hoses, dramatic rim light, dark charcoal backdrop, sharp focus, 85mm lens"
+      }
+    },
+    {
+      "id": 26,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        8331,
+        120
+      ],
+      "size": [
+        225,
+        26
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "conditioning",
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            26,
+            34,
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "type": "KSampler",
+      "pos": [
+        8636,
+        120
+      ],
+      "size": [
+        340,
+        540
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 24
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 25
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 26
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 27
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        2026,
+        "fixed",
+        8,
+        1,
+        "res_multistep",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 2026,
+        "control_after_generate": "fixed",
+        "steps": 8,
+        "cfg": 1,
+        "sampler_name": "res_multistep",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 28,
+      "type": "VAEDecode",
+      "pos": [
+        9056,
+        120
+      ],
+      "size": [
+        225,
+        46
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 28
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "type": "SaveImage",
+      "pos": [
+        9361,
+        120
+      ],
+      "size": [
+        460,
+        58
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 30
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "tripo_render_to_art"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "tripo_render_to_art"
+      }
+    },
+    {
+      "id": 30,
+      "type": "CLIPTextEncode",
+      "pos": [
+        7850,
+        410
+      ],
+      "size": [
+        401,
+        200
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 31
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "loose watercolour and ink illustration of a whimsical explorer helmet with a domed visor and coiled hoses, washes of teal and ochre bleeding into textured cream paper, storybook concept art"
+      ],
+      "widgets_values_named": {
+        "text": "loose watercolour and ink illustration of a whimsical explorer helmet with a domed visor and coiled hoses, washes of teal and ochre bleeding into textured cream paper, storybook concept art"
+      }
+    },
+    {
+      "id": 31,
+      "type": "KSampler",
+      "pos": [
+        8636,
+        750
+      ],
+      "size": [
+        340,
+        540
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 32
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 33
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 34
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 35
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        2027,
+        "fixed",
+        8,
+        1,
+        "res_multistep",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 2027,
+        "control_after_generate": "fixed",
+        "steps": 8,
+        "cfg": 1,
+        "sampler_name": "res_multistep",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 32,
+      "type": "VAEDecode",
+      "pos": [
+        9056,
+        264
+      ],
+      "size": [
+        225,
+        46
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 36
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 33,
+      "type": "SaveImage",
+      "pos": [
+        9361,
+        630
+      ],
+      "size": [
+        460,
+        58
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 38
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "tripo_render_to_art"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "tripo_render_to_art"
+      }
+    },
+    {
+      "id": 34,
+      "type": "CLIPTextEncode",
+      "pos": [
+        7850,
+        700
+      ],
+      "size": [
+        401,
+        200
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 39
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "cel-shaded anime mecha pilot helmet with a glossy cyan visor, white and orange armour panels, bold black outlines, flat colours, simple pale blue background, key visual"
+      ],
+      "widgets_values_named": {
+        "text": "cel-shaded anime mecha pilot helmet with a glossy cyan visor, white and orange armour panels, bold black outlines, flat colours, simple pale blue background, key visual"
+      }
+    },
+    {
+      "id": 35,
+      "type": "KSampler",
+      "pos": [
+        8636,
+        1380
+      ],
+      "size": [
+        340,
+        540
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 40
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 41
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 42
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 43
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        2028,
+        "fixed",
+        8,
+        1,
+        "res_multistep",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 2028,
+        "control_after_generate": "fixed",
+        "steps": 8,
+        "cfg": 1,
+        "sampler_name": "res_multistep",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 36,
+      "type": "VAEDecode",
+      "pos": [
+        9056,
+        410
+      ],
+      "size": [
+        225,
+        46
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 44
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 45
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 37,
+      "type": "SaveImage",
+      "pos": [
+        9361,
+        1140
+      ],
+      "size": [
+        460,
+        58
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 46
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "tripo_render_to_art"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "tripo_render_to_art"
+      }
+    },
+    {
+      "id": 38,
+      "type": "MarkdownNote",
+      "pos": [
+        0,
+        120
+      ],
+      "size": [
+        620,
+        482
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "# Tripo3D: one model, any style\n**Tripo** builds the model, the **WAS Node Suite** Three nodes render a three-quarter view and its depth pass, and Z-Image Turbo's Fun ControlNet paints that depth pass in three styles. Every picture keeps the model's exact shape and camera.\n\n## Setup, once\n1. **ComfyUI-Tripo**: in ComfyUI Manager open *Custom Nodes Manager*, search **Tripo for ComfyUI** and install it. It needs the `tripo3d` package; if Manager does not add it, run `pip install \"tripo3d>=1.0.0,<2.0.0\"` in the Python ComfyUI runs on.\n2. **WAS Node Suite v3**: install it from Manager as well. Its Three.js nodes are on out of the box.\n3. **Tripo API key**: create one at [platform.tripo3d.ai](https://platform.tripo3d.ai/), then give it to ComfyUI in one of two ways and restart:\n    - set the environment variable `TRIPO_API_KEY=tsk_...` before ComfyUI starts, or\n    - save `{\"TRIPO_API_KEY\": \"tsk_...\"}` as `ComfyUI/custom_nodes/ComfyUI-Tripo/config.json`.\n\n> Leave the `apikey` box on the Tripo nodes empty. Whatever is typed there is saved in the workflow and in the metadata of every image and video it makes, so a shared render would share the key.\n\n## Use\nQueue, then follow the groups; each has a note on what to set there.\n\n## Running it\n- Keep this ComfyUI tab open while it runs. The Three nodes draw in the browser.\n- Queue again to change lights, camera or timing. Tripo is not called again, and no credits are spent, until something feeding a Tripo node changes.\n- Every output lands in `ComfyUI/output`."
+      ],
+      "widgets_values_named": {
+        "text": "# Tripo3D: one model, any style\n**Tripo** builds the model, the **WAS Node Suite** Three nodes render a three-quarter view and its depth pass, and Z-Image Turbo's Fun ControlNet paints that depth pass in three styles. Every picture keeps the model's exact shape and camera.\n\n## Setup, once\n1. **ComfyUI-Tripo**: in ComfyUI Manager open *Custom Nodes Manager*, search **Tripo for ComfyUI** and install it. It needs the `tripo3d` package; if Manager does not add it, run `pip install \"tripo3d>=1.0.0,<2.0.0\"` in the Python ComfyUI runs on.\n2. **WAS Node Suite v3**: install it from Manager as well. Its Three.js nodes are on out of the box.\n3. **Tripo API key**: create one at [platform.tripo3d.ai](https://platform.tripo3d.ai/), then give it to ComfyUI in one of two ways and restart:\n    - set the environment variable `TRIPO_API_KEY=tsk_...` before ComfyUI starts, or\n    - save `{\"TRIPO_API_KEY\": \"tsk_...\"}` as `ComfyUI/custom_nodes/ComfyUI-Tripo/config.json`.\n\n> Leave the `apikey` box on the Tripo nodes empty. Whatever is typed there is saved in the workflow and in the metadata of every image and video it makes, so a shared render would share the key.\n\n## Use\nQueue, then follow the groups; each has a note on what to set there.\n\n## Running it\n- Keep this ComfyUI tab open while it runs. The Three nodes draw in the browser.\n- Queue again to change lights, camera or timing. Tripo is not called again, and no credits are spent, until something feeding a Tripo node changes.\n- Every output lands in `ComfyUI/output`."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 39,
+      "type": "MarkdownNote",
+      "pos": [
+        780,
+        120
+      ],
+      "size": [
+        600,
+        243
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Models\nComfyUI offers to download any of these that are missing when the workflow opens.\n\n| File | Folder |\n|---|---|\n| `z_image_turbo_bf16.safetensors` | `models/diffusion_models` |\n| `qwen_3_4b.safetensors` | `models/text_encoders` |\n| `ae.safetensors` | `models/vae` |\n| `Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors` | `models/model_patches` |"
+      ],
+      "widgets_values_named": {
+        "text": "## Models\nComfyUI offers to download any of these that are missing when the workflow opens.\n\n| File | Folder |\n|---|---|\n| `z_image_turbo_bf16.safetensors` | `models/diffusion_models` |\n| `qwen_3_4b.safetensors` | `models/text_encoders` |\n| `ae.safetensors` | `models/vae` |\n| `Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors` | `models/model_patches` |"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 40,
+      "type": "MarkdownNote",
+      "pos": [
+        2240,
+        120
+      ],
+      "size": [
+        380,
+        92
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Describe the model\nDescribe the object in **Tripo: Generate model**."
+      ],
+      "widgets_values_named": {
+        "text": "## Describe the model\nDescribe the object in **Tripo: Generate model**."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 41,
+      "type": "MarkdownNote",
+      "pos": [
+        3261,
+        120
+      ],
+      "size": [
+        420,
+        104
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## The view and its depth\n`position` and `target` on **Three Perspective Camera** set the angle. `depth_near` and `depth_far` on **Three Render**, set just around the subject, give the depth pass its detail."
+      ],
+      "widgets_values_named": {
+        "text": "## The view and its depth\n`position` and `target` on **Three Perspective Camera** set the angle. `depth_near` and `depth_far` on **Three Render**, set just around the subject, give the depth pass its detail."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 42,
+      "type": "MarkdownNote",
+      "pos": [
+        6960,
+        120
+      ],
+      "size": [
+        460,
+        130
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Paint it\nWrite a look in each of the three **CLIP Text Encode** prompts: a material, a medium, a mood.\n\n`strength` on **Apply Fun ControlNet**: 0.85 holds the shape, 0.6 lets the style reshape it. For more styles, copy one CLIP Text Encode, KSampler, VAE Decode and Save Image row.\n\nThe pictures are saved as `tripo_render_to_art_00001_.png` and on."
+      ],
+      "widgets_values_named": {
+        "text": "## Paint it\nWrite a look in each of the three **CLIP Text Encode** prompts: a material, a medium, a mood.\n\n`strength` on **Apply Fun ControlNet**: 0.85 holds the shape, 0.6 lets the style reshape it. For more styles, copy one CLIP Text Encode, KSampler, VAE Decode and Save Image row.\n\nThe pictures are saved as `tripo_render_to_art_00001_.png` and on."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      6,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      7,
+      0,
+      8,
+      5,
+      "STRING"
+    ],
+    [
+      3,
+      8,
+      0,
+      9,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      4,
+      10,
+      0,
+      12,
+      0,
+      "THREE_GEOMETRY"
+    ],
+    [
+      5,
+      11,
+      0,
+      12,
+      1,
+      "THREE_MATERIAL"
+    ],
+    [
+      6,
+      12,
+      0,
+      13,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      7,
+      9,
+      0,
+      16,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      8,
+      13,
+      0,
+      16,
+      1,
+      "THREE_OBJECT"
+    ],
+    [
+      9,
+      14,
+      0,
+      16,
+      2,
+      "THREE_OBJECT"
+    ],
+    [
+      10,
+      15,
+      0,
+      16,
+      3,
+      "THREE_OBJECT"
+    ],
+    [
+      11,
+      16,
+      0,
+      18,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      12,
+      17,
+      0,
+      18,
+      1,
+      "THREE_ENVIRONMENT"
+    ],
+    [
+      13,
+      18,
+      0,
+      20,
+      0,
+      "THREE_SCENE"
+    ],
+    [
+      14,
+      19,
+      0,
+      20,
+      1,
+      "THREE_CAMERA"
+    ],
+    [
+      15,
+      20,
+      0,
+      21,
+      0,
+      "THREE_APP"
+    ],
+    [
+      16,
+      21,
+      0,
+      22,
+      0,
+      "IMAGE"
+    ],
+    [
+      17,
+      21,
+      1,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      6,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      19,
+      4,
+      0,
+      24,
+      1,
+      "MODEL_PATCH"
+    ],
+    [
+      20,
+      3,
+      0,
+      24,
+      2,
+      "VAE"
+    ],
+    [
+      21,
+      21,
+      1,
+      24,
+      3,
+      "IMAGE"
+    ],
+    [
+      22,
+      2,
+      0,
+      25,
+      0,
+      "CLIP"
+    ],
+    [
+      23,
+      25,
+      0,
+      26,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      24,
+      24,
+      0,
+      27,
+      0,
+      "MODEL"
+    ],
+    [
+      25,
+      25,
+      0,
+      27,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      26,
+      26,
+      0,
+      27,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      27,
+      5,
+      0,
+      27,
+      3,
+      "LATENT"
+    ],
+    [
+      28,
+      27,
+      0,
+      28,
+      0,
+      "LATENT"
+    ],
+    [
+      29,
+      3,
+      0,
+      28,
+      1,
+      "VAE"
+    ],
+    [
+      30,
+      28,
+      0,
+      29,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      2,
+      0,
+      30,
+      0,
+      "CLIP"
+    ],
+    [
+      32,
+      24,
+      0,
+      31,
+      0,
+      "MODEL"
+    ],
+    [
+      33,
+      30,
+      0,
+      31,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      34,
+      26,
+      0,
+      31,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      35,
+      5,
+      0,
+      31,
+      3,
+      "LATENT"
+    ],
+    [
+      36,
+      31,
+      0,
+      32,
+      0,
+      "LATENT"
+    ],
+    [
+      37,
+      3,
+      0,
+      32,
+      1,
+      "VAE"
+    ],
+    [
+      38,
+      32,
+      0,
+      33,
+      0,
+      "IMAGE"
+    ],
+    [
+      39,
+      2,
+      0,
+      34,
+      0,
+      "CLIP"
+    ],
+    [
+      40,
+      24,
+      0,
+      35,
+      0,
+      "MODEL"
+    ],
+    [
+      41,
+      34,
+      0,
+      35,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      42,
+      26,
+      0,
+      35,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      43,
+      5,
+      0,
+      35,
+      3,
+      "LATENT"
+    ],
+    [
+      44,
+      35,
+      0,
+      36,
+      0,
+      "LATENT"
+    ],
+    [
+      45,
+      3,
+      0,
+      36,
+      1,
+      "VAE"
+    ],
+    [
+      46,
+      36,
+      0,
+      37,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 15,
+      "title": "Read me: setup and use",
+      "bounding": [
+        -40,
+        0,
+        700,
+        672
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 16,
+      "title": "Models: Z-Image Turbo and its Fun ControlNet",
+      "bounding": [
+        740,
+        0,
+        1380,
+        1012
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 17,
+      "title": "Inputs: describe the model",
+      "bounding": [
+        2200,
+        0,
+        941,
+        896
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 18,
+      "title": "Three: a three-quarter view and its depth pass",
+      "bounding": [
+        3221,
+        0,
+        3619,
+        1736
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 19,
+      "title": "Paint it: the depth pass holds the shape, each prompt sets the look",
+      "bounding": [
+        6920,
+        0,
+        2941,
+        1990
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.3474396525603474,
+      "offset": [
+        40,
+        875.4344476744186
+      ]
+    }
+  },
+  "extensions": {
+    "models": [
+      {
+        "name": "z_image_turbo_bf16.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+        "directory": "diffusion_models"
+      },
+      {
+        "name": "qwen_3_4b.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+        "directory": "text_encoders"
+      },
+      {
+        "name": "ae.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+        "directory": "vae"
+      },
+      {
+        "name": "Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors",
+        "url": "https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors",
+        "directory": "model_patches"
+      }
+    ]
+  },
+  "version": 0.4,
+  "models": [
+    {
+      "name": "z_image_turbo_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen_3_4b.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "ae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+      "directory": "vae"
+    },
+    {
+      "name": "Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors",
+      "url": "https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1-2601-8steps.safetensors",
+      "directory": "model_patches"
+    }
+  ]
+}

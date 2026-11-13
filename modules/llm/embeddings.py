@@ -37,6 +37,8 @@ __all__ = [
     "openai_embedding",
     "pool",
     "provider_embedding",
+    "dense_layers",
+    "text_vectors",
     "transformers_embedding",
 ]
 
@@ -76,6 +78,10 @@ DOWNLOAD_FILES = (
     "sentence_bert_config.json",
     "config_sentence_transformers.json",
     "1_Pooling/config.json",
+    "2_Dense/config.json",
+    "2_Dense/model.safetensors",
+    "3_Dense/config.json",
+    "3_Dense/model.safetensors",
     "model.safetensors",
     "model.safetensors.index.json",
     "model-*.safetensors",
@@ -130,6 +136,10 @@ _E5 = re.compile(r"(?:^|[/_\-])(?:multilingual-)?e5(?:[\-_]|$)")
 
 _listing: tuple[float, tuple, tuple] = (0.0, (), ())
 _classes: dict = {}
+_dense: dict = {}
+
+#: Activations a sentence-transformers Dense module may name, by class name.
+DENSE_ACTIVATIONS = ("Identity", "Tanh")
 
 
 def bounded(value, default: int, low: int, high: int) -> int:
@@ -447,6 +457,112 @@ def _forward_names(network) -> frozenset[str]:
     )
 
 
+def dense_layers(folder: str) -> list:
+    """The Dense projections a sentence-transformers folder applies after pooling, in order.
+
+    Args:
+        folder: A transformers checkpoint folder.
+
+    Returns:
+        ``(weight, bias or None, activation)`` per layer, empty for a folder declaring none.
+
+    Raises:
+        ValueError: A layer's weights are not safetensors, or it names another activation.
+    """
+    from safetensors.torch import load_file
+
+    from ..util.sandbox import leaves_folder
+
+    held = os.path.normcase(os.path.abspath(folder))
+    if held in _dense:
+        return _dense[held]
+    layers = []
+    modules = _read_json(os.path.join(folder, "modules.json"))
+    for entry in modules[:16] if isinstance(modules, list) else []:
+        if not isinstance(entry, dict) or not str(entry.get("type") or "").endswith("Dense"):
+            continue
+        path = str(entry.get("path") or "")
+        if not path or leaves_folder(path) is not None:
+            continue
+        weights = os.path.join(folder, path, "model.safetensors")
+        if not os.path.isfile(weights):
+            raise ValueError(
+                f"The embedding model's {path} layer holds no model.safetensors. Only safetensors "
+                f"weights are read; download the model again with that file."
+            )
+        config = _read_json(os.path.join(folder, path, "config.json")) or {}
+        activation = str(config.get("activation_function") or "Identity").rsplit(".", 1)[-1]
+        if activation not in DENSE_ACTIVATIONS:
+            raise ValueError(
+                f"The embedding model's {path} layer uses the {activation[:40]} activation, which is "
+                f"not read. Pick another model."
+            )
+        tensors = load_file(weights)
+        layers.append((tensors["linear.weight"].float(), tensors.get("linear.bias"), activation))
+    _dense[held] = layers
+    return layers
+
+
+def text_vectors(
+    folder: str,
+    texts: list[str],
+    pooling: str,
+    normalize: bool = True,
+    max_length: int = 512,
+    batch_size: int = 32,
+    device: str | None = None,
+):
+    """Embed texts with a transformers checkpoint folder.
+
+    Args:
+        folder: The checkpoint folder.
+        texts: Texts, instructions already placed.
+        pooling: ``cls``, ``mean``, ``max`` or ``last token``.
+        normalize: Scale every vector to length 1.
+        max_length: Tokens read per text at most.
+        batch_size: Texts embedded together.
+        device: Device name, ``None`` for ComfyUI's.
+
+    Returns:
+        A float32 CPU tensor shaped ``(len(texts), width)``.
+    """
+    import torch
+
+    backend = _backend(folder, device)
+    tokenizer, network = backend.processor, backend.model
+    accepted = _forward_names(network)
+    limit = max(1, int(max_length))
+    sane = getattr(tokenizer, "model_max_length", 0) or 0
+    if 0 < sane < 1_000_000:
+        limit = min(limit, int(sane))
+    positions = getattr(network.config, "max_position_embeddings", 0) or 0
+    if positions > 0:
+        limit = min(limit, int(positions))
+    step = max(1, int(batch_size))
+    found = []
+    for start in range(0, len(texts), step):
+        runtime.check_interrupt()
+        load_device = backend.load()
+        encoded = tokenizer(
+            list(texts[start:start + step]), padding=True, truncation=True, max_length=limit,
+            return_tensors="pt",
+        )
+        feed = {name: value.to(load_device) for name, value in encoded.items() if name in accepted}
+        with torch.inference_mode():
+            hidden = network(**feed).last_hidden_state.float()
+        pooled = pool(hidden, encoded["attention_mask"].to(hidden.device), pooling)
+        for weight, bias, activation in dense_layers(folder):
+            pooled = pooled @ weight.to(pooled.device).T
+            if bias is not None:
+                pooled = pooled + bias.float().to(pooled.device)
+            if activation == "Tanh":
+                pooled = torch.tanh(pooled)
+        if normalize:
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=-1)
+        found.append(pooled.cpu())
+    return torch.cat(found) if found else torch.zeros((0, 0))
+
+
 def _transformers_class():
     """The embedding class over a transformers checkpoint folder."""
     if "transformers" in _classes:
@@ -483,34 +599,10 @@ def _transformers_class():
             Returns:
                 One vector per text.
             """
-            import torch
-
-            backend = self.backend()
-            tokenizer, network = backend.processor, backend.model
-            accepted = _forward_names(network)
-            limit = self.max_length
-            sane = getattr(tokenizer, "model_max_length", 0) or 0
-            if 0 < sane < 1_000_000:
-                limit = min(limit, int(sane))
-            positions = getattr(network.config, "max_position_embeddings", 0) or 0
-            if positions > 0:
-                limit = min(limit, int(positions))
-            found: list[list[float]] = []
-            for start in range(0, len(texts), self.embed_batch_size):
-                runtime.check_interrupt()
-                device = backend.load()
-                batch = texts[start:start + self.embed_batch_size]
-                encoded = tokenizer(
-                    batch, padding=True, truncation=True, max_length=limit, return_tensors="pt",
-                )
-                feed = {name: value.to(device) for name, value in encoded.items() if name in accepted}
-                with torch.inference_mode():
-                    hidden = network(**feed).last_hidden_state.float()
-                pooled = pool(hidden, encoded["attention_mask"].to(hidden.device), self.pooling)
-                if self.normalize:
-                    pooled = torch.nn.functional.normalize(pooled, p=2, dim=-1)
-                found.extend(pooled.cpu().tolist())
-            return found
+            return text_vectors(
+                self.folder, texts, self.pooling, self.normalize, self.max_length,
+                self.embed_batch_size, self.device,
+            ).tolist()
 
         def _get_query_embedding(self, query: str) -> list[float]:
             return self.vectors([self.query_instruction + query])[0]

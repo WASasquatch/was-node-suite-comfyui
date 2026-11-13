@@ -33,10 +33,12 @@ __all__ = [
     "is_picture",
     "load_folder",
     "picture_embedding",
+    "picture_vectors",
     "png_bytes",
     "prompt_of",
     "stored_picture",
     "tensor_nodes",
+    "text_vectors",
     "to_batch",
     "video_nodes",
 ]
@@ -93,6 +95,9 @@ MAX_DESCRIBE_TOKENS = 300
 
 #: Pictures one batch output holds at most.
 MAX_BATCH = 256
+
+#: Threads decoding pictures while a batch is embedded.
+DECODERS = 8
 
 #: Input names whose text is a prompt in a ComfyUI graph.
 _TEXT_KEYS = ("text", "text_g", "text_l", "prompt", "positive_prompt", "string", "value", "t5xxl", "clip_l")
@@ -174,6 +179,97 @@ def _pooled(output):
     raise RuntimeError("the picture model answered no vectors")
 
 
+def _feed(encoded, accepted, device, dtype) -> dict:
+    """Processor output moved to the device, floating tensors in the model's precision."""
+    feed = {}
+    for name, value in encoded.items():
+        if name not in accepted:
+            continue
+        value = value.to(device)
+        feed[name] = value.to(dtype) if value.is_floating_point() else value
+    return feed
+
+
+def text_vectors(folder: str, family: str, texts: list[str], batch_size: int = 16, device: str | None = None):
+    """Embed texts with a CLIP or SigLIP checkpoint folder, in the space its pictures share.
+
+    Args:
+        folder: The checkpoint folder.
+        family: ``clip``, ``siglip`` or ``siglip2``.
+        texts: The texts.
+        batch_size: Texts embedded together.
+        device: Device name, ``None`` for ComfyUI's.
+
+    Returns:
+        A float32 CPU tensor shaped ``(len(texts), width)``, each row of length 1.
+    """
+    import torch
+
+    backend = _backend(folder, device)
+    processor, network = backend.processor, backend.model
+    tokenizer = getattr(processor, "tokenizer", processor)
+    accepted = _accepted(network.get_text_features)
+    config = getattr(network.config, "text_config", network.config)
+    limit = int(getattr(config, "max_position_embeddings", 0) or TEXT_TOKENS)
+    siglip = str(family).startswith("siglip")
+    step = max(1, int(batch_size))
+    found = []
+    for start in range(0, len(texts), step):
+        runtime.check_interrupt()
+        load_device = backend.load()
+        batch = list(texts[start:start + step])
+        if siglip:
+            batch = [text.lower() for text in batch]
+        encoded = tokenizer(
+            batch, padding="max_length" if siglip else True, truncation=True,
+            max_length=limit, return_tensors="pt",
+        )
+        with torch.inference_mode():
+            vectors = _pooled(network.get_text_features(**_feed(encoded, accepted, load_device, network.dtype)))
+        found.append(torch.nn.functional.normalize(vectors.float(), p=2, dim=-1).cpu())
+    return torch.cat(found) if found else torch.zeros((0, 0))
+
+
+def picture_vectors(folder: str, pictures, batch_size: int = 16, device: str | None = None, opener=None):
+    """Embed pictures with a CLIP or SigLIP checkpoint folder.
+
+    Args:
+        folder: The checkpoint folder.
+        pictures: PIL pictures, or anything ``opener`` turns into one.
+        batch_size: Pictures embedded together.
+        device: Device name, ``None`` for ComfyUI's.
+        opener: Called on each item, one batch at a time, to make an RGB PIL picture.
+
+    Returns:
+        A float32 CPU tensor shaped ``(len(pictures), width)``, each row of length 1.
+    """
+    import torch
+
+    backend = _backend(folder, device)
+    processor, network = backend.processor, backend.model
+    accepted = _accepted(network.get_image_features)
+    from concurrent.futures import ThreadPoolExecutor
+
+    step = max(1, int(batch_size))
+    items = list(pictures)
+    found = []
+    workers = ThreadPoolExecutor(max_workers=min(DECODERS, step)) if opener is not None else None
+    try:
+        for start in range(0, len(items), step):
+            runtime.check_interrupt()
+            batch = items[start:start + step]
+            opened = list(workers.map(opener, batch)) if workers is not None else batch
+            load_device = backend.load()
+            encoded = processor(images=opened, return_tensors="pt")
+            with torch.inference_mode():
+                vectors = _pooled(network.get_image_features(**_feed(encoded, accepted, load_device, network.dtype)))
+            found.append(torch.nn.functional.normalize(vectors.float(), p=2, dim=-1).cpu())
+    finally:
+        if workers is not None:
+            workers.shutdown(wait=False)
+    return torch.cat(found) if found else torch.zeros((0, 0))
+
+
 def _opened(picture):
     """A PIL picture from what llama-index hands an embedding: a byte stream or raw bytes.
 
@@ -214,62 +310,15 @@ def _picture_class():
             """The managed processor and model."""
             return _backend(self.folder, self.device)
 
-        def _feed(self, encoded, accepted, device, dtype) -> dict:
-            """Processor output moved to the device, floating tensors in the model's precision."""
-            feed = {}
-            for name, value in encoded.items():
-                if name not in accepted:
-                    continue
-                value = value.to(device)
-                feed[name] = value.to(dtype) if value.is_floating_point() else value
-            return feed
-
         def text_vectors(self, texts: list[str]) -> list[list[float]]:
             """Embed texts in batches of ``embed_batch_size``."""
-            import torch
-
-            backend = self.backend()
-            processor, network = backend.processor, backend.model
-            tokenizer = getattr(processor, "tokenizer", processor)
-            accepted = _accepted(network.get_text_features)
-            config = getattr(network.config, "text_config", network.config)
-            limit = int(getattr(config, "max_position_embeddings", 0) or TEXT_TOKENS)
-            siglip = self.family.startswith("siglip")
-            found: list[list[float]] = []
-            for start in range(0, len(texts), self.embed_batch_size):
-                runtime.check_interrupt()
-                device = backend.load()
-                batch = texts[start:start + self.embed_batch_size]
-                if siglip:
-                    batch = [text.lower() for text in batch]
-                encoded = tokenizer(
-                    batch, padding="max_length" if siglip else True, truncation=True,
-                    max_length=limit, return_tensors="pt",
-                )
-                with torch.inference_mode():
-                    vectors = _pooled(network.get_text_features(**self._feed(encoded, accepted, device, network.dtype)))
-                vectors = torch.nn.functional.normalize(vectors.float(), p=2, dim=-1)
-                found.extend(vectors.cpu().tolist())
-            return found
+            return text_vectors(self.folder, self.family, texts, self.embed_batch_size, self.device).tolist()
 
         def picture_vectors(self, pictures: list) -> list[list[float]]:
             """Embed pictures in batches of ``embed_batch_size``."""
-            import torch
-
-            backend = self.backend()
-            processor, network = backend.processor, backend.model
-            accepted = _accepted(network.get_image_features)
-            found: list[list[float]] = []
-            for start in range(0, len(pictures), self.embed_batch_size):
-                runtime.check_interrupt()
-                device = backend.load()
-                opened = [_opened(item) for item in pictures[start:start + self.embed_batch_size]]
-                encoded = processor(images=opened, return_tensors="pt")
-                with torch.inference_mode():
-                    vectors = _pooled(network.get_image_features(**self._feed(encoded, accepted, device, network.dtype)))
-                vectors = torch.nn.functional.normalize(vectors.float(), p=2, dim=-1)
-                found.extend(vectors.cpu().tolist())
-            return found
+            return picture_vectors(
+                self.folder, pictures, self.embed_batch_size, self.device, opener=_opened,
+            ).tolist()
 
         def _get_query_embedding(self, query: str) -> list[float]:
             return self.text_vectors([query])[0]

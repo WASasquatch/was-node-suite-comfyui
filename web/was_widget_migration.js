@@ -189,6 +189,8 @@ const H3_CONTINUITY_RENAMED = { reference: "reference (video)" };
 // Node id -> `[widget names, {saved option: current option}]` for combos whose options were renamed.
 const RENAMED_OPTIONS = {
   WASH3ExtendWindow: [["continuity"], H3_CONTINUITY_RENAMED],
+  // Three Load Model's `centre` checkbox became the `origin` menu in the same place.
+  WASThreeLoadModel: [["origin"], { true: "centre", false: "as saved" }],
   WASStringList: [["combine"], { "line by line": "precompile" }],
   WASMiniMaxH3Conditioning: [
     Array.from({ length: 24 }, (unused, index) => `continuity_${index + 1}`),

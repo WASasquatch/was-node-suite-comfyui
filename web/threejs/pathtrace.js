@@ -333,6 +333,40 @@ export function presentTrace(tracer) {
     }
 }
 
+// The edge-preserving filter each renderer draws a finished frame through, made on first use.
+const denoisers = new WeakMap();
+
+/**
+ * A function that redraws a finished traced frame through the tracer's own denoise filter.
+ *
+ * @param {THREE.WebGLRenderer} renderer - The renderer whose canvas the frames are read from.
+ * @returns {Promise<Function>} `(tracer, strength) => void`; a strength of 0 draws nothing.
+ */
+export async function createDenoiser(renderer) {
+    let quad = denoisers.get(renderer);
+    if (!quad) {
+        const { DenoiseMaterial } = await loadPathTracer();
+        const { FullScreenQuad } = await import("../vendor/three/postprocessing/Pass.js");
+        quad = new FullScreenQuad(new DenoiseMaterial());
+        denoisers.set(renderer, quad);
+    }
+    return (tracer, strength) => {
+        const sigma = Number(strength) || 0;
+        const texture = tracer?.target?.texture;
+        if (sigma <= 0 || !texture) return;
+        const material = quad.material;
+        material.map = texture;
+        material.sigma = sigma;
+        material.kSigma = 1.0;
+        material.threshold = 0.03 + 0.01 * sigma;
+        material.opacity = 1;
+        const held = renderer.getRenderTarget();
+        renderer.setRenderTarget(null);
+        quad.render(renderer);
+        renderer.setRenderTarget(held);
+    };
+}
+
 /**
  * Accumulate one frame.
  *
@@ -342,17 +376,20 @@ export function presentTrace(tracer) {
  * @param {number} patience - Milliseconds the frame is given.
  * @param {Function} [onSample] - Called with the samples standing, as they accumulate.
  * @param {Function} [beforeBatch] - Called just before each batch, to set the renderer up.
+ * @param {Function} [stopped] - Answers true once the frame is no longer wanted, which ends
+ *   it after the batch in hand.
  * @returns {Promise<number>} How many tiles were traced.
  *
  * @throws {Error} The frame did not reach its sample count within its patience.
  */
-export async function traceFrame(tracer, pacer, samples, patience, onSample, beforeBatch) {
+export async function traceFrame(tracer, pacer, samples, patience, onSample, beforeBatch, stopped) {
     const target = Math.max(1, Math.floor(samples));
     const deadline = performance.now() + Math.max(1000, patience);
     let drawn = 0;
     let reported = performance.now();
 
     while (!reached(tracer, target)) {
+        if (stopped?.()) break;
         if (performance.now() > deadline) {
             throw new Error(
                 `Path tracing reached ${Math.floor(tracer.samples)} of ${target} samples per `

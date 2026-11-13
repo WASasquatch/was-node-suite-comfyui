@@ -12,12 +12,14 @@ import {
     assertDescriptor,
     createOrbitControls,
     createRuntime,
+    onRenderBusy,
     toneMappingConstant,
 } from "./runtime.js";
 import { captureWheel } from "../interface/pointer.js";
 import { surfaceRatio, watchSurfaceRatio } from "../interface/resolution.js";
 import { appendInterfaceWidget } from "../interface/widget.js";
 import { onNodeFinished } from "../interface/run_events.js";
+import { Viewport, createViewportBar, hideViewWidget } from "./viewport.js";
 import {
     TilePacer,
     VIEW_LATENCY_MS,
@@ -38,6 +40,8 @@ const UI_WIDGET_TYPE = "was_threejs";
 // The surface opens at this many node units tall, plus the toolbar and status line under
 // it, and is never drawn narrower than the minimum. It grows with the node from there.
 const CHROME_HEIGHT = 54;
+// The viewport tools add a row, which wraps to two on a narrow node.
+const VIEWPORT_ROW_HEIGHT = 64;
 const DEFAULT_VIEWER_HEIGHT = 360;
 const MIN_VIEWER_WIDTH = 320;
 
@@ -68,7 +72,7 @@ function createButton(label) {
     return button;
 }
 
-function createViewerDOM() {
+function createViewerDOM(withViewport = false) {
     const root = document.createElement("div");
     applyViewerStyles(root);
 
@@ -118,7 +122,13 @@ function createViewerDOM() {
 
     toolbar.append(playButton, resetButton, reloadButton, detail);
     canvasWrap.append(canvas, status);
-    root.append(canvasWrap, toolbar);
+    const viewportBar = withViewport ? createViewportBar() : null;
+    if (viewportBar) {
+        canvasWrap.append(viewportBar.overlay);
+        root.append(canvasWrap, viewportBar.row, toolbar);
+    } else {
+        root.append(canvasWrap, toolbar);
+    }
 
     const releaseWheel = claimPointer(root);
 
@@ -132,6 +142,7 @@ function createViewerDOM() {
         reloadButton,
         detail,
         releaseWheel,
+        viewportBar,
     };
 }
 
@@ -139,12 +150,24 @@ function createViewerDOM() {
 // a hair for a while after a drag, and starting over on that would never let it settle.
 const CAMERA_SETTLED = 1e-5;
 
+// Shortest gap between two live frames, in milliseconds: 60 a second on any display.
+const FRAME_MS = 1000 / 60;
+
+// Milliseconds a paused view keeps drawing after the pointer or a key touches it.
+const STIR_MS = 500;
+
 function claimPointer(root) {
     // Stopped at the widget root, so nothing anywhere in the viewer reaches the node's widget
     // grid, which forwards pointer events to the graph canvas and stops them.
     for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel"]) {
         root.addEventListener(type, (event) => event.stopPropagation());
     }
+    // A right drag pans the camera, so a right click opens neither the node's menu nor the
+    // browser's.
+    root.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    });
     // The wheel dollies the camera on the scene's own canvas, which has already run by the time
     // the gesture reaches here, so the viewer claims it rather than dollying and zooming at
     // once. Ctrl or Cmd held reaches the graph.
@@ -176,6 +199,19 @@ class ViewerController {
         this.lastTime = null;
         this.lastPayload = null;
         this.initialCamera = null;
+        this.viewport = elements.viewportBar && !this.tracing ? new Viewport(this, elements.viewportBar) : null;
+        this.renderHeld = false;
+        this.heldStatus = "";
+        this.stopRenderWatch = onRenderBusy((busy) => this.holdForRender(busy));
+        this.drawnAt = 0;
+        this.drawnView = null;
+        this.stirred = 0;
+        const stir = () => {
+            this.stirred = performance.now();
+        };
+        for (const type of ["pointerdown", "pointermove", "wheel", "keydown"]) {
+            elements.root.addEventListener(type, stir, { capture: true, passive: true });
+        }
 
         this.elements.playButton.addEventListener("click", () => {
             this.running = !this.running;
@@ -300,6 +336,7 @@ class ViewerController {
                 runtime.ctx.controls = controls;
                 elements.canvas.__wasControls = controls;
             }
+            if (this.viewport) await this.viewport.attach();
 
             // A moving scene starts a traced picture over every frame, so the animation is
             // held still and Play is what releases it.
@@ -307,6 +344,10 @@ class ViewerController {
             this.lastTime = null;
             elements.playButton.textContent = this.running ? "Pause" : "Play";
             elements.status.textContent = this.tracing ? "Tracing" : "Running";
+            if (this.renderHeld) {
+                this.heldStatus = elements.status.textContent;
+                elements.status.textContent = "Paused while a render draws";
+            }
 
             const resize = () => {
                 if (!this.renderer || !this.camera || !this.runtime) return;
@@ -330,6 +371,14 @@ class ViewerController {
 
             const step = (milliseconds) => {
                 if (!this.renderer || !this.scene || !this.camera || !this.runtime) return;
+                if (this.renderHeld) return;
+                const now = performance.now();
+                if (!this.tracer) {
+                    const since = now - this.drawnAt;
+                    if (since < FRAME_MS) return;
+                    // Carries the remainder, so a 144 Hz display still averages 60.
+                    this.drawnAt = now - (since % FRAME_MS);
+                }
 
                 const time = milliseconds * 0.001;
                 if (this.lastTime === null) this.lastTime = time;
@@ -356,6 +405,8 @@ class ViewerController {
                     this.traceStep();
                     return;
                 }
+                if (!this.running && !this.viewChanged(now)) return;
+                this.viewport?.beforeRender();
                 if (this.composer) this.composer.render();
                 else this.renderer.render(this.scene, this.camera);
             };
@@ -485,6 +536,30 @@ class ViewerController {
         renderer.outputColorSpace = THREE.SRGBColorSpace;
     }
 
+    /**
+     * Whether a paused view has anything new to draw, and note what it is drawing if so.
+     *
+     * @param {number} now - The frame's `performance.now()`.
+     * @returns {boolean} True when the camera, the canvas size or recent input has moved.
+     */
+    viewChanged(now) {
+        const camera = this.camera;
+        const canvas = this.elements.canvas;
+        const pose = [
+            ...camera.position.toArray(),
+            ...camera.quaternion.toArray(),
+            canvas.width,
+            canvas.height,
+        ];
+        const held = this.drawnView;
+        let moved = !held || now - this.stirred < STIR_MS;
+        for (let i = 0; !moved && i < pose.length; i += 1) {
+            moved = Math.abs(pose[i] - held[i]) > CAMERA_SETTLED;
+        }
+        if (moved) this.drawnView = pose;
+        return moved;
+    }
+
     resetCamera() {
         if (!this.camera || !this.initialCamera) return;
         this.camera.position.copy(this.initialCamera.position);
@@ -496,7 +571,29 @@ class ViewerController {
         }
     }
 
+    /**
+     * Stop drawing while a Three Render job uses the page, and pick up again after.
+     *
+     * @param {boolean} busy - True while a job draws.
+     * @returns {void}
+     */
+    holdForRender(busy) {
+        if (busy === this.renderHeld) return;
+        this.renderHeld = busy;
+        const status = this.elements.status;
+        if (busy) {
+            this.heldStatus = status.textContent;
+            status.textContent = "Paused while a render draws";
+            return;
+        }
+        if (status.textContent === "Paused while a render draws") status.textContent = this.heldStatus;
+        // The clock starts again from the next frame rather than jumping the gap.
+        this.lastTime = null;
+    }
+
     async disposeRenderer() {
+        this.viewport?.detach();
+        this.drawnView = null;
         this.composer = null;
         this.loopToken = null;
         if (this.frame !== null) cancelAnimationFrame(this.frame);
@@ -549,6 +646,8 @@ class ViewerController {
     }
 
     async destroy() {
+        this.stopRenderWatch?.();
+        this.stopRenderWatch = null;
         await this.disposeRenderer();
         this.elements.releaseWheel?.();
         this.elements.root.remove();
@@ -604,8 +703,9 @@ app.registerExtension({
         nodeType.prototype.onNodeCreated = function () {
             originalCreated?.apply(this, arguments);
 
-            const elements = createViewerDOM();
+            const elements = createViewerDOM(!tracing);
             const controller = new ViewerController(this, elements, tracing);
+            if (!tracing) hideViewWidget(this);
             this.threeViewerController = controller;
 
             appendInterfaceWidget(
@@ -621,7 +721,7 @@ app.registerExtension({
 
             this.setSize?.([
                 Math.max(this.size?.[0] || 0, MIN_VIEWER_WIDTH),
-                Math.max(this.size?.[1] || 0, DEFAULT_VIEWER_HEIGHT + CHROME_HEIGHT),
+                Math.max(this.size?.[1] || 0, DEFAULT_VIEWER_HEIGHT + CHROME_HEIGHT + (tracing ? 0 : VIEWPORT_ROW_HEIGHT)),
             ]);
 
             this.threeViewerUnwatch = onNodeFinished(this, ({ promptId, nodeId }) => {

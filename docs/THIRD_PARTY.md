@@ -9,6 +9,8 @@ runs.
 | [HugeRTE](https://hugerte.org/) 1.0.12 | MIT, Ephox Corporation DBA Tiny Technologies, Inc., and the HugeRTE contributors | The editor **Rich Text Editor** draws on the node, in [`web/vendor/hugerte/`](../web/vendor/hugerte/) | [`license.txt`](../web/vendor/hugerte/license.txt) |
 | ⤷ [DOMPurify](https://github.com/cure53/DOMPurify) 3.4.11, compiled into two HugeRTE files | MPL-2.0 **or** Apache-2.0, Dr.-Ing. Mario Heiderich, Cure53 and other contributors | The sanitiser HugeRTE's `xss_sanitization` runs | [`LICENSE-MPL-2.0.txt`](../web/vendor/hugerte/LICENSE-MPL-2.0.txt), [`LICENSE-APACHE-2.0.txt`](../web/vendor/hugerte/LICENSE-APACHE-2.0.txt) |
 | [three.js](https://threejs.org/) r185 | MIT, three.js authors | The renderer, scene graph and loaders the Three.js nodes draw with, in [`web/vendor/three/`](../web/vendor/three/). The nodes are off until `features.threejs` is on | [`LICENSE`](../web/vendor/three/LICENSE), [`NOTICE.md`](../web/vendor/three/NOTICE.md) |
+| ⤷ [meshoptimizer](https://github.com/zeux/meshoptimizer) 1.1 decoder | MIT, Arseny Kapoulkine | Reads models compressed with `EXT_meshopt_compression`, such as a Tripo model saved with `compress` on. Taken with three.js | [`meshopt_decoder.LICENSE.md`](../web/vendor/three/libs/meshopt_decoder.LICENSE.md) |
+| ⤷ [Draco](https://github.com/google/draco) glTF decoder | Apache-2.0, Google | Reads models compressed with `KHR_draco_mesh_compression`, as WebAssembly in [`web/vendor/three/libs/draco/`](../web/vendor/three/libs/draco/). Taken with three.js | [`LICENSE`](../web/vendor/three/libs/draco/LICENSE) |
 | [three-gpu-pathtracer](https://github.com/gkjohnson/three-gpu-pathtracer) 0.0.24 | MIT, Garrett Johnson | The tracer **Three Path Trace Render** renders with, in [`web/vendor/pathtracer/`](../web/vendor/pathtracer/). Loaded only when a frame is traced | [`LICENSE.pathtracer`](../web/vendor/pathtracer/LICENSE.pathtracer), [`NOTICE.md`](../web/vendor/pathtracer/NOTICE.md) |
 | ⤷ [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) 0.9.14 | MIT, Garrett Johnson | The hierarchy the tracer traces against, taken with it | [`LICENSE.mesh-bvh`](../web/vendor/pathtracer/LICENSE.mesh-bvh) |
 | [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) | MIT, Shiqi Yu | The face detector **Image Crop Face (YuNet)** uses, as weights converted to safetensors in [`modules/data/models/`](../modules/data/models/) | [`models/LICENSE`](../modules/data/models/LICENSE) |
@@ -20,6 +22,7 @@ runs.
 | [Kandinsky 6](https://github.com/kandinskylab/kandinsky-6) | MIT, Kandinsky Lab | The video and audio transformer and the PiFlow policy the Kandinsky 6 nodes run, vendored in [`modules/vendor/kandinsky6/`](../modules/vendor/kandinsky6/). No weights are bundled | [`LICENSE`](../modules/vendor/kandinsky6/LICENSE), [`NOTICE.md`](../modules/vendor/kandinsky6/NOTICE.md) |
 | ⤷ [MMAudio](https://github.com/hkchengrex/MMAudio) | MIT, Sony Research Inc. | The audio autoencoder **Kandinsky 6 Audio VAE Loader** builds, taken with Kandinsky 6 | [`LICENSE.mmaudio`](../modules/vendor/kandinsky6/licenses/LICENSE.mmaudio) |
 | ⤷ [BigVGAN](https://github.com/NVIDIA/BigVGAN) | MIT, NVIDIA Corporation, with the MIT, Apache-2.0 and BSD-3-Clause notices of the projects it carries | The vocoder that loader builds, taken with Kandinsky 6 | [`LICENSE.bigvgan`](../modules/vendor/kandinsky6/licenses/LICENSE.bigvgan), `LICENSE.bigvgan_1` to `_8` beside it |
+| [transformers](https://github.com/huggingface/transformers), EmbeddingGemma 2 | Apache-2.0, The Hugging Face team | The EmbeddingGemma 2 text and vision towers and picture preprocessing **Image Library Search** runs, ported in [`modules/vendor/embedding_gemma2/`](../modules/vendor/embedding_gemma2/). No weights are bundled | [`LICENSE`](../modules/vendor/embedding_gemma2/LICENSE), [`NOTICE.md`](../modules/vendor/embedding_gemma2/NOTICE.md) |
 | [Qwen2.5-VL-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) | Apache-2.0, Alibaba Cloud | The text encoder's final norm weight, 3,584 numbers, which the Kandinsky 6 model applies to its prompts, in [`modules/data/models/`](../modules/data/models/) | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [Prism.js](https://prismjs.com/) | MIT, Lea Verou | Syntax highlighting in the **Content Viewer** | [`code_scripts/LICENSE`](../web/viewer/views/code_scripts/LICENSE) |
 | [KaTeX](https://katex.org/) 0.16.9 | MIT, Khan Academy and other contributors | Maths in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
@@ -32,8 +35,8 @@ runs.
 | [Aileron](https://www.dotcolon.net/font/aileron) 1.102 | CC0 1.0, public domain, Sora Sagano (dot colon) | The first font **Text Encode Fibo 2** draws a caption's text with where Pillow's built-in font lacks a character, as Fibo 2.0's training did, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-Aileron.txt`](../modules/data/fibo2/LICENSE-Aileron.txt) |
 | [DejaVu Sans](https://github.com/dejavu-fonts/dejavu-fonts), Bria's copy | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | The second font it draws with, the file Bria publishes beside Fibo 2.0, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-DejaVu.txt`](../modules/data/fibo2/LICENSE-DejaVu.txt) |
 
-Thirteen of the components are MIT in their own code, and two of those compile in a copy of
-DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, three are Apache-2.0, one
+Fourteen of the components are MIT in their own code, and two of those compile in a copy of
+DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, four are Apache-2.0, one
 is BSD-3-Clause, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
 is public domain under CC0, and one is Open RAIL++-M.
 All of those permit redistribution. MPL-2.0 is the only copyleft licence here and its conditions
@@ -44,7 +47,7 @@ restrictions. The two font licences ask that the licence and copyright travel wi
 which is what the `LICENSE` and `AUTHORS` beside each family are, and the OFL reserves the
 Liberation names against modified copies. These are unmodified.
 
-Counting every file rather than every component, the pack carries 166 third-party files, 27.5 MB
+Counting every file rather than every component, the pack carries 172 third-party files, 27.8 MB
 of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
 five networks. ZenTrainer is not among them: its measurements are ported into the pack's own
 modules, and its licence ships beside them.

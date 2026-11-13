@@ -83,6 +83,20 @@ BY_FORMAT = {
     ),
 }
 
+#: Geometry decoder -> the files it needs, written only for a model compressed with it.
+BY_DECODER = {
+    "meshopt": (
+        "vendor/three/libs/meshopt_decoder.module.js",
+        "vendor/three/libs/meshopt_decoder.LICENSE.md",
+    ),
+    "draco": (
+        "vendor/three/loaders/DRACOLoader.js",
+        "vendor/three/libs/draco/gltf/draco_wasm_wrapper.txt",
+        "vendor/three/libs/draco/gltf/draco_decoder.wasm",
+        "vendor/three/libs/draco/LICENSE",
+    ),
+}
+
 #: Files every effect chain needs, and then the ones each kind of effect needs on top.
 EFFECT_BASE = (
     "vendor/three/postprocessing/EffectComposer.js",
@@ -281,6 +295,7 @@ def _loaders_for(app: dict) -> tuple[str, ...]:
         Paths under ``web``, each once, in a stable order.
     """
     formats: set[str] = set()
+    decoders: set[str] = set()
     lights: set[str] = set()
     effects: set[str] = set()
     environments: set[str] = set()
@@ -288,7 +303,10 @@ def _loaders_for(app: dict) -> tuple[str, ...]:
     def walk(node) -> None:
         if isinstance(node, dict):
             if node.get("type") == "ModelFile":
-                formats.add(str(node.get("params", {}).get("format", "")).lower())
+                params = node.get("params", {})
+                formats.add(str(params.get("format", "")).lower())
+                for decoder in params.get("decoders") or ():
+                    decoders.add(str(decoder))
             if node.get("kind") == "effect":
                 effects.add(str(node.get("type", "")))
             if node.get("type") == "AreaLight":
@@ -309,6 +327,10 @@ def _loaders_for(app: dict) -> tuple[str, ...]:
     wanted: list[str] = []
     for suffix in sorted(formats):
         for name in BY_FORMAT.get(suffix, ()):
+            if name not in wanted:
+                wanted.append(name)
+    for decoder in sorted(decoders):
+        for name in BY_DECODER.get(decoder, ()):
             if name not in wanted:
                 wanted.append(name)
     if effects:

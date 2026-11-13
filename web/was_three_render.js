@@ -70,6 +70,8 @@ function widgetValue(node, name, fallback) {
  * @returns {number} The seconds, or 0 with no Three App upstream.
  */
 function loopSeconds(node) {
+  // A copy taken while the prompt is built is in no graph, so it has no app to read.
+  if (!node?.graph) return 0;
   try {
     const slot = node.inputs?.findIndex((one) => one.name === "app");
     if (slot === undefined || slot < 0) return 0;

@@ -10,14 +10,21 @@ WebGL renderer, scene graph, loaders and maths used by the Three.js nodes.
 
 | File | Upstream path | Changed |
 |---|---|---|
+| `controls/TransformControls.js` | `examples/jsm/controls/TransformControls.js` | import specifiers |
 | `curves/NURBSCurve.js` | `examples/jsm/curves/NURBSCurve.js` | import specifiers |
 | `curves/NURBSUtils.js` | `examples/jsm/curves/NURBSUtils.js` | import specifiers |
 | `environments/RoomEnvironment.js` | `examples/jsm/environments/RoomEnvironment.js` | import specifiers |
+| `libs/draco/LICENSE` | Draco's own `LICENSE` | no |
+| `libs/draco/gltf/draco_decoder.wasm` | `examples/jsm/libs/draco/gltf/draco_decoder.wasm` | no |
+| `libs/draco/gltf/draco_wasm_wrapper.txt` | `examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js` | renamed to `.txt` |
 | `libs/fflate.module.js` | `examples/jsm/libs/fflate.module.js` | no |
+| `libs/meshopt_decoder.LICENSE.md` | meshoptimizer's own `LICENSE.md` | no |
+| `libs/meshopt_decoder.module.js` | `examples/jsm/libs/meshopt_decoder.module.js` | no |
 | `lights/RectAreaLightTexturesLib.js` | `examples/jsm/lights/RectAreaLightTexturesLib.js` | import specifiers |
 | `lights/RectAreaLightUniformsLib.js` | `examples/jsm/lights/RectAreaLightUniformsLib.js` | import specifiers |
 | `loaders/3MFLoader.js` | `examples/jsm/loaders/3MFLoader.js` | import specifiers |
 | `loaders/ColladaLoader.js` | `examples/jsm/loaders/ColladaLoader.js` | import specifiers |
+| `loaders/DRACOLoader.js` | `examples/jsm/loaders/DRACOLoader.js` | import specifiers |
 | `loaders/EXRLoader.js` | `examples/jsm/loaders/EXRLoader.js` | import specifiers |
 | `loaders/FBXLoader.js` | `examples/jsm/loaders/FBXLoader.js` | import specifiers |
 | `loaders/GLTFLoader.js` | `examples/jsm/loaders/GLTFLoader.js` | import specifiers |
@@ -63,6 +70,24 @@ distribution and taken with it. Its licence and copyright are in the banner at t
 file. `FBXLoader` and `3MFLoader` read compressed data through it.
 
 - Upstream: <https://github.com/101arrowz/fflate>
+
+## meshoptimizer, bundled inside three.js
+
+`libs/meshopt_decoder.module.js` is the meshoptimizer 1.1 decoder by Arseny Kapoulkine, MIT,
+carried inside the three.js distribution and taken with it. Its licence is
+`libs/meshopt_decoder.LICENSE.md`. `GLTFLoader` reads `EXT_meshopt_compression` models through
+it. Its WebAssembly is embedded in the file.
+
+- Upstream: <https://github.com/zeux/meshoptimizer>
+
+## Draco, bundled inside three.js
+
+`libs/draco/gltf/` is Google's Draco decoder, the glTF build three.js r185 carries, Apache
+License 2.0, retained verbatim in `libs/draco/LICENSE`. `DRACOLoader` fetches the wrapper and the
+WebAssembly from this folder to read `KHR_draco_mesh_compression` models. The wrapper is byte for
+byte the published file, renamed to `.txt`. The asm.js fallback build is not taken.
+
+- Upstream: <https://github.com/google/draco>
 
 ## Not taken
 

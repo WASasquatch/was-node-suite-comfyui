@@ -1,0 +1,694 @@
+{
+  "id": "ea22107b-e793-4996-9dcc-51e43fda72ae",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASImageLibrarySearch",
+      "pos": [
+        0,
+        30
+      ],
+      "size": [
+        440,
+        1000
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folders",
+          "name": "folders",
+          "type": "STRING",
+          "widget": {
+            "name": "folders"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "view",
+          "name": "view",
+          "type": "COMBO",
+          "widget": {
+            "name": "view"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filter",
+          "name": "filter",
+          "type": "STRING",
+          "widget": {
+            "name": "filter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "top_k",
+          "name": "top_k",
+          "type": "INT",
+          "widget": {
+            "name": "top_k"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "one_per_group",
+          "name": "one_per_group",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "one_per_group"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pause",
+          "name": "pause",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "pause"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pinned",
+          "name": "pinned",
+          "type": "STRING",
+          "widget": {
+            "name": "pinned"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_model",
+          "name": "text_model",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "text_model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "picture_model",
+          "name": "picture_model",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "picture_model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "picture_weight",
+          "name": "picture_weight",
+          "type": "FLOAT",
+          "widget": {
+            "name": "picture_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "captions",
+          "name": "captions",
+          "type": "COMBO",
+          "widget": {
+            "name": "captions"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "recursive",
+          "name": "recursive",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "recursive"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_files",
+          "name": "max_files",
+          "type": "INT",
+          "widget": {
+            "name": "max_files"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hold_timeout",
+          "name": "hold_timeout",
+          "type": "INT",
+          "widget": {
+            "name": "hold_timeout"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dimensions",
+          "name": "dimensions",
+          "type": "INT",
+          "widget": {
+            "name": "dimensions"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2
+          ]
+        },
+        {
+          "localized_name": "caption",
+          "name": "caption",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "localized_name": "captions",
+          "name": "captions",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "names",
+          "name": "names",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "scores",
+          "name": "scores",
+          "shape": 6,
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageLibrarySearch",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "Photo of a man crouching low on a rooftop at night, squatting with his forearms resting on his knees, side view. Neon city behind him, rain, cinematic lighting.",
+        "poses [input]",
+        "",
+        "auto",
+        "-couples",
+        8,
+        true,
+        false,
+        "",
+        "google/embeddinggemma-2",
+        "google/embeddinggemma-2",
+        0.35,
+        "auto",
+        true,
+        20000,
+        600,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Photo of a man crouching low on a rooftop at night, squatting with his forearms resting on his knees, side view. Neon city behind him, rain, cinematic lighting.",
+        "folder": "poses [input]",
+        "folders": "",
+        "view": "auto",
+        "filter": "-couples",
+        "top_k": 8,
+        "one_per_group": true,
+        "pause": false,
+        "pinned": "",
+        "text_model": "google/embeddinggemma-2",
+        "picture_model": "google/embeddinggemma-2",
+        "picture_weight": 0.35,
+        "captions": "auto",
+        "recursive": true,
+        "max_files": 20000,
+        "hold_timeout": 600,
+        "dimensions": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASPowerPreprocessor",
+      "pos": [
+        520,
+        30
+      ],
+      "size": [
+        340,
+        300
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "preprocessor",
+          "name": "preprocessor",
+          "type": "COMBO",
+          "widget": {
+            "name": "preprocessor"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_name",
+          "name": "model_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resolution",
+          "name": "resolution",
+          "type": "INT",
+          "widget": {
+            "name": "resolution"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threshold_low",
+          "name": "threshold_low",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold_low"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threshold_high",
+          "name": "threshold_high",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold_high"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius",
+          "name": "radius",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tile",
+          "name": "tile",
+          "type": "INT",
+          "widget": {
+            "name": "tile"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "adapter_name",
+          "name": "adapter_name",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "adapter_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "conditioning_name",
+          "name": "conditioning_name",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "conditioning_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASPowerPreprocessor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "depth_map",
+        "Depth Anything V2 Small",
+        512,
+        100,
+        200,
+        6,
+        16,
+        0,
+        "fixed",
+        0,
+        4,
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "preprocessor": "depth_map",
+        "model_name": "Depth Anything V2 Small",
+        "resolution": 512,
+        "threshold_low": 100,
+        "threshold_high": 200,
+        "radius": 6,
+        "strength": 16,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "tile": 0,
+        "steps": 4,
+        "adapter_name": "auto",
+        "vae_name": "auto",
+        "conditioning_name": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "PreviewImage",
+      "pos": [
+        940,
+        30
+      ],
+      "size": [
+        420,
+        620
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        940,
+        770
+      ],
+      "size": [
+        420,
+        620
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        1440,
+        30
+      ],
+      "size": [
+        420,
+        620
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "PreviewAny",
+      "pos": [
+        1440,
+        770
+      ],
+      "size": [
+        420,
+        200
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      1,
+      2,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      1,
+      1,
+      6,
+      0,
+      "STRING"
+    ],
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Find a pose by prompt and turn it into a ControlNet depth map",
+      "bounding": [
+        -40,
+        -90,
+        1940,
+        1550
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.6643617021276594,
+      "offset": [
+        1658.9511609287433,
+        245
+      ]
+    }
+  },
+  "version": 0.4
+}

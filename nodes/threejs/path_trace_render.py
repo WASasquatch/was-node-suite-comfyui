@@ -198,6 +198,19 @@ class ThreePathTraceRender(io.ComfyNode):
                         "Distance the depth pass calls black. 0.0 fits it to what is in shot."
                     ),
                 ),
+                io.Float.Input(
+                    "denoise",
+                    default=0.0,
+                    min=0.0,
+                    max=10.0,
+                    step=0.1,
+                    optional=True,
+                    tooltip=(
+                        "0.0 = the frame as traced; 2.0 = light smoothing; 5.0 = strong. Edges "
+                        "are kept. Lets a few dozen samples stand in for hundreds, at the cost of "
+                        "the finest texture."
+                    ),
+                ),
             ],
             outputs=[
                 io.Image.Output(
@@ -246,6 +259,7 @@ class ThreePathTraceRender(io.ComfyNode):
         texture_size=1024,
         depth_near=0.0,
         depth_far=0.0,
+        denoise=0.0,
     ) -> io.NodeOutput:
         """Ask the browser to trace the frames and wait for them.
 
@@ -268,6 +282,7 @@ class ThreePathTraceRender(io.ComfyNode):
                 "filterGlossy": float(filter_glossy),
                 "tiles": int(tiles),
                 "textureSize": int(texture_size),
+                "denoise": max(0.0, float(denoise or 0.0)),
                 # The browser gives up on a frame no later than the node gives up on the run.
                 "patience": float(timeout) * 1000.0,
             },

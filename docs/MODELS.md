@@ -81,6 +81,13 @@ read through `extra_model_paths.yaml` only where a root carries an entry under t
 | `taeh3.safetensors` | MIT, Ollin Boer Bohan |
 | The PTD and PikaTD files | MiniMax H3 Community License |
 
+## Image Library Search
+
+Text and picture models go in `ComfyUI/models/LLM/<owner>/<name>`, one folder per model,
+downloaded there on first use while `features.network` is on. Every model the node offers, with its
+size, licence and download page, is in [`IMAGE_LIBRARY.md`](IMAGE_LIBRARY.md#models), beside the
+pose and costume sets it searches.
+
 ## HDR reconstruction
 
 [`hdrcnn.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/hdr/hdrcnn.safetensors),

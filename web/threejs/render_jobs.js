@@ -11,6 +11,7 @@ import * as THREE from "../vendor/three/three.module.js";
 import {
     TilePacer,
     compilesInline,
+    createDenoiser,
     createTracer,
     disposeTracer,
     prepareFrame,
@@ -18,7 +19,7 @@ import {
     traceFrame,
     tracingStation,
 } from "./pathtrace.js";
-import { createRuntime, toneMappingConstant } from "./runtime.js";
+import { createRuntime, setRenderBusy, toneMappingConstant } from "./runtime.js";
 
 const ROUTE = "/was/threejs/api/render";
 
@@ -46,7 +47,31 @@ const WARM_UP_DRAWS = 3;
 // Milliseconds given to a progress line to reach the page before a shader compile holds it.
 const NOTE_SETTLE_MS = 500;
 
+// Milliseconds with no job before the page's live viewers draw again, which spans the gap
+// between two render nodes in one run.
+const RESUME_MS = 3000;
+
 let running = false;
+let resumeTimer = null;
+
+/**
+ * Pause the page's live viewers while a job draws, and wake them once jobs stop coming.
+ *
+ * @param {boolean} drawing - True when a poll took a job.
+ */
+function holdViewers(drawing) {
+    if (drawing) {
+        clearTimeout(resumeTimer);
+        resumeTimer = null;
+        setRenderBusy(true);
+        return;
+    }
+    if (resumeTimer) return;
+    resumeTimer = setTimeout(() => {
+        resumeTimer = null;
+        setRenderBusy(false);
+    }, RESUME_MS);
+}
 
 /**
  * Run the scene's updates from one moment to the next.
@@ -190,6 +215,8 @@ async function drawJob(job, onFrame, onProgress) {
         if (job.trace) {
             tracer = await createTracer(station, job.trace);
             pacer = new TilePacer(renderer);
+            const strength = Number(job.trace.denoise) || 0;
+            const denoise = strength > 0 ? await createDenoiser(renderer) : null;
             // Only a scene that moves needs its hierarchy rebuilt each frame; one that only
             // has the camera moving is built once.
             const moves = runtime.ctx.updateFunctions.length > 0;
@@ -210,11 +237,13 @@ async function drawJob(job, onFrame, onProgress) {
                         note: `frame ${index + 1} of ${times.length}, `
                             + `${Math.floor(standing)} of ${wanted} samples`,
                     });
-                }, claim);
+                }, claim, () => job.dropped);
+                if (job.dropped) return;
                 station.warm = true;
                 // Drawn again here, in the same task as the read that follows.
                 claim();
                 presentTrace(tracer);
+                denoise?.(tracer, strength);
             };
         } else {
             drawPicture = async () => {
@@ -238,11 +267,13 @@ async function drawJob(job, onFrame, onProgress) {
         // frame before it however far along the run it sits.
         let standing = 0;
         for (let index = 0; index < times.length; index += 1) {
+            if (job.dropped) return;
             const moment = Number(times[index]) || 0;
             windForward(runtime, standing, moment);
             standing = moment;
             runtime.updateShaderUniforms(moment, drawWidth, drawHeight);
             await drawPicture(index);
+            if (job.dropped) return;
             const png = flatten().toDataURL("image/png");
 
             // The two data passes are drawn from the same pose, straight after it, so they
@@ -312,19 +343,27 @@ async function serveJobs() {
     } catch (error) {
         return 0;
     }
+    holdViewers(taken.length > 0);
 
     for (const job of taken) {
-        const post = (payload) => fetch(ROUTE, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: job.token, ...payload }),
-        });
+        const post = async (payload) => {
+            const answer = await fetch(ROUTE, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: job.token, ...payload }),
+            });
+            // 404 means no node waits under the token any longer, as after a cancelled run,
+            // and the job stops drawing.
+            if (answer.status === 404) job.dropped = true;
+            return answer;
+        };
         try {
             await drawJob(
                 job,
                 (index, pictures) => post({ index, ...pictures }),
                 (progress) => post(progress),
             );
+            if (job.dropped) console.info("[WAS ThreeJS] Render job stopped: its run was cancelled.");
         } catch (error) {
             console.error("[WAS ThreeJS] Render job failed:", error);
             try {

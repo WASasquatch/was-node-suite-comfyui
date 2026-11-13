@@ -12,6 +12,9 @@ REQUIRES = "threejs"
 #: What the tracker does, in the order the menu lists them.
 MODES = ("aim", "follow", "aim and follow")
 
+#: Which axes the offsets are measured along, in menu order.
+OFFSET_SPACES = ("world", "object")
+
 
 class ThreeTrack(io.ComfyNode):
     """Point a camera at an object, or carry it along."""
@@ -100,6 +103,18 @@ class ThreeTrack(io.ComfyNode):
                         "drifts after it and smooths a jittery subject."
                     ),
                 ),
+                io.Combo.Input(
+                    "offset_space",
+                    options=list(OFFSET_SPACES),
+                    default="world",
+                    tooltip=(
+                        "`world` measures the offsets along the scene's axes, so the camera "
+                        "keeps its bearing while the object turns. `object` measures them along "
+                        "the object's own axes, so the camera turns with it, as a chase camera "
+                        "does."
+                    ),
+                    optional=True,
+                ),
             ],
             outputs=[
                 THREE_TRACK.Output(
@@ -111,7 +126,15 @@ class ThreeTrack(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, target, mode, offset_x, offset_y, offset_z, aim_offset_y, damping
+        cls,
+        target,
+        mode,
+        offset_x,
+        offset_y,
+        offset_z,
+        aim_offset_y,
+        damping,
+        offset_space="world",
     ) -> io.NodeOutput:
         """Describe the tracking.
 
@@ -128,6 +151,7 @@ class ThreeTrack(io.ComfyNode):
                     "offset": [float(offset_x), float(offset_y), float(offset_z)],
                     "aimOffsetY": float(aim_offset_y),
                     "damping": float(damping),
+                    "offsetSpace": offset_space if offset_space in OFFSET_SPACES else "world",
                     # The id alone is what finds the object; the descriptor is not rebuilt.
                     "targetId": target.get("id", ""),
                 },

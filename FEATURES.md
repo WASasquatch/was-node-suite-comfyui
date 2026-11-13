@@ -5,7 +5,7 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **659** across **66** categories |
+| Nodes | **696** across **68** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`. A workflow opened with one of their nodes turned off names the setting that loads it and any package it lacks, with the install command or a way into Open Manager: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 362 nodes draw their own readout, picture or editor on the canvas |
@@ -517,6 +517,37 @@ For preparing a LoRA training set: finding what is wrong, fixing captions such a
 
 [`NODES.md`](NODES.md) under **WAS Suite/Dataset**. Graph:
 [`caption-datasets.json`](docs/workflows/caption-datasets.json).
+
+---
+
+## A pose library searched by prompt
+
+**Image Library Search** finds the pictures in a library folder that best match a description or a
+whole generation prompt, and hands on the closest one for a depth or line preprocessor and a
+ControlNet, with the best matches as a list of pictures at their own sizes. Each picture's caption
+is the record a JSON manifest such as a pose set's `poses.json` holds, a `.txt` file beside it, the
+prompt ComfyUI or AUTOMATIC1111 saved in it, or its file name. One model, EmbeddingGemma 2, reads
+both the captions and the pictures themselves, so a photo named only by its file is still found by
+what it shows; a 133 MB text model and SigLIP are lighter choices.
+
+The panel draws the folder tree with each folder's picture count and index state, ticked to choose
+what is searched, a bar for the camera view, filter words, the number of matches and one angle per
+pose, and the matches themselves, which follow the prompt as it is typed. A click pins a match. With
+**Pause** on, the run holds with the matches on the panel until one is clicked and **Continue** is
+pressed. View words in the prompt, such as `side view` or `from below`, choose the angle of the
+matched pose.
+
+Every folder keeps its own index in `ComfyUI/user/was-node-suite/image_library`, made again only
+for the pictures and captions that change. A folder of several pose sets in `ComfyUI/input/poses`,
+or `output` read recursively, searches as one library, each set embedded once.
+
+For finding the reference pose a prompt describes without browsing a gallery, choosing it by eye
+before a generation carries on, and searching a folder of finished renders by the prompts that made
+them.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Library**. Folders, pose sets, manifests and models:
+[`docs/IMAGE_LIBRARY.md`](docs/IMAGE_LIBRARY.md). Graph:
+[`image-library-pose-search.json`](docs/workflows/image-library-pose-search.json).
 
 ---
 
@@ -1070,14 +1101,58 @@ exist: [Image Search](https://github.com/WASasquatch/ComfyUI_Viewer_Image_Search
 
 ## Three.js scenes
 
-43 nodes for geometry, materials, lights, cameras, model loading, rendering and path tracing,
+44 nodes for geometry, materials, lights, cameras, model loading, rendering and path tracing,
 with the scene drawn on the canvas. For building and rendering a 3D scene inside a graph.
 
-The group starts on. Set `features.threejs` to false in `config.yaml` to leave the 43 nodes
+**Three Viewer** is a viewport: orbit and frame a shot inside a gate the size of the Three Render
+it feeds, pick objects and move, turn or scale them with a gizmo, and look from front, side or
+top. With `override` on, that framing and those moves replace the upstream camera and placement
+in the app it hands on, so the render matches what was framed, and they are saved with the
+workflow. **Three Path Trace Render** takes a `denoise` strength, so a few dozen samples stand in
+for hundreds. Every Three Viewer on the page stops drawing while a render draws, and starts again
+when it ends. A viewer draws at most 60 frames a second, and a paused one only while it is
+orbited or touched. **Three Track** with `offset_space` on `object` rides with its target and turns as
+it turns, which is a chase camera. **Three Follow Ground** keeps a walking character on uneven
+ground, a terrain or a cave floor, so it neither floats over dips nor sinks into rocks.
+
+The group starts on. Set `features.threejs` to false in `config.yaml` to leave the 44 nodes
 out.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Three**. Five graphs in
 [`docs/workflows/`](docs/workflows).
+
+---
+
+## Generated 3D models in a Three.js scene
+
+**Three Load Model** takes a model straight from a 3D generator: ComfyUI-Tripo's `model_file` on
+`path`, or the 3D file socket core's Tripo, Hunyuan3D, Meshy, Rodin and Load 3D nodes put out on
+`model_3d`. It reads glTF compressed with meshopt or Draco, resizes the model with `fit_size`,
+stands it on the floor with `origin`, and reports its triangles, textures, clips, bones and
+compression on the node. For lighting, animating and rendering a generated model the moment it
+arrives, without exporting it anywhere. With `keep_as`, it keeps a copy of the model in
+`ComfyUI/input`, so the generator can be bypassed afterwards and the menu still finds it.
+`metalness` and `min_roughness` correct a generated model whose hair, skin or cloth came out
+as polished metal, in the live view and the path tracer alike.
+
+**Three Play Animation** keeps a walk on the spot with `root_motion`, so a path or a turn carries
+the character without it jumping back each step. With `feet` on `flat when planted`, a clip
+retargeted from another skeleton, such as a Tripo preset on a character in heeled boots, stands
+on flat feet.
+
+| Graph | Makes |
+|---|---|
+| [`tripo-turntable.json`](docs/workflows/tripo-turntable.json) | A Tripo model on a studio floor, a seamless 6 second turntable video and a path traced hero still |
+| [`tripo-hdri-showcase.json`](docs/workflows/tripo-hdri-showcase.json) | A Tripo model on a turntable plinth inside an HDRI panorama, path traced with denoising |
+| [`tripo-character-walk.json`](docs/workflows/tripo-character-walk.json) | Z-Image Turbo concept art, made into a rigged Tripo character walking on a turntable |
+| [`tripo-render-to-art.json`](docs/workflows/tripo-render-to-art.json) | A Tripo model's depth pass painted in three styles through Z-Image's Fun ControlNet |
+| [`tripo-reference-sheet.json`](docs/workflows/tripo-reference-sheet.json) | Eight views of a Tripo model as colour, depth and normal sheets |
+| [`tripo-drow-turntable.json`](docs/workflows/tripo-drow-turntable.json) | A drow adventurer from a prompt: concept art, a Tripo model and a path traced HDRI turntable, each stage a subgraph |
+| [`tripo-cave-asset-kit.json`](docs/workflows/tripo-cave-asset-kit.json) | Twelve cave camp props from Tripo text to 3D, kept for the scene and rendered as a lineup |
+| [`tripo-drow-scene.json`](docs/workflows/tripo-drow-scene.json) | The drow rigged and walking through the cave camp, filmed by a wide and a chase camera |
+
+The Tripo graphs need [ComfyUI-Tripo](https://github.com/VAST-AI-Research/ComfyUI-Tripo) and a
+Tripo API key. [`NODES.md`](NODES.md) under **WAS Suite/Three**.
 
 ---
 

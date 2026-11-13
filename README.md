@@ -7,7 +7,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **694 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **696 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video, 
 and Llama-Index in ComfyUI. 
 
@@ -70,7 +70,7 @@ group's keys, model folders and servers: [`docs/LLM.md`](docs/LLM.md).
 
 # What changed since v2
 
-694 nodes across a package of source files. The pack itself needs no packages, and nothing is
+696 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
@@ -79,7 +79,7 @@ listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 | Nodes | 220 | 687 |
 | Default packages installed | 20 | 0 |
 | Installed from a git URL | 3 | 0 |
-| Third-party carried in the repository | SAM and BLIP, 75 files of python | 143 files: browser libraries, fonts, eight face cascades, three sets of weights and two networks, each with its licence |
+| Third-party carried in the repository | SAM and BLIP, 75 files of python | 172 files: browser libraries, fonts, eight face cascades, three sets of weights and five networks, each with its licence |
 | Optional node groups | none | 26 keys in `config.yaml`, 10 of them off out of the box. Per-node disable group. |
 
 213 of the 220 node ids are unchanged. Four are retired onto replacements, three are removed
@@ -89,14 +89,14 @@ on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, sci
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
 belongs to an optional group.
 
-## 420 new nodes
+## 421 new nodes
 
 | Area | New | Area | New |
 |---|--:|---|--:|
 | Llama-Index in ComfyUI | 79 | Bounds | 10 |
 | Three.js scenes | 43 | HDR and linear light | 9 |
 | Audio | 39 | Affine sampling | 7 |
-| Files, archives and documents | 28 | Everything else | 157 |
+| Files, archives and documents | 28 | Everything else | 158 |
 | Logic and flow | 26 | | |
 | Layers | 22 | | |
 
@@ -173,7 +173,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**694 nodes** across 67 categories. [`NODES.md`](NODES.md) carries every input, output and
+**695 nodes** across 67 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 
@@ -213,7 +213,7 @@ explains it. Edit it there as it will survive updates.
 
 # Third-party code in the pack
 
-The suite is MIT, see [`LICENSE`](LICENSE). It bundles 166 third-party files: three.js and
+The suite is MIT, see [`LICENSE`](LICENSE). It bundles 172 third-party files: three.js and
 three-gpu-pathtracer, HugeRTE, Prism.js, KaTeX and Mermaid, the EMA-VFI, SEA-RAFT, FlowSeek,
 MiniMax H3 latent upscaler and Kandinsky 6 networks, the DejaVu, Liberation and Aileron fonts,
 eight face cascades and three sets of weights. Each keeps its own licence text in the folder it

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **694** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **696** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-608 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+610 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -26,9 +26,9 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 | [`features.extras`](#featuresextras) | on | 27 |
 | [`features.midas`](#featuresmidas) | on | 2 |
 | [`features.photoshop`](#featuresphotoshop) | on | 2 |
-| [`features.preprocessors`](#featurespreprocessors) | on | 6 |
+| [`features.preprocessors`](#featurespreprocessors) | on | 7 |
 | [`features.sam`](#featuressam) | on | 4 |
-| [`features.threejs`](#featuresthreejs) | on | 43 |
+| [`features.threejs`](#featuresthreejs) | on | 44 |
 | [`features.viewer`](#featuresviewer) | on | 2 |
 | [`features.yunet`](#featuresyunet) | on | 2 |
 | [`legacy.core_dupes`](#legacycore_dupes) | on | 3 |
@@ -20021,7 +20021,7 @@ Write a layer stack to a file that Photoshop, Affinity Photo, GIMP or Krita open
 
 ## `features.preprocessors`
 
-6 nodes. On in a fresh install: set `features.preprocessors: false` in `config.yaml` and restart ComfyUI to leave these out.
+7 nodes. On in a fresh install: set `features.preprocessors: false` in `config.yaml` and restart ComfyUI to leave these out.
 
 ### WAS Suite/Image/AI
 
@@ -20086,6 +20086,54 @@ Rebuild the light a clipped highlight lost, handing on linear light with everyth
 |---|---|---|
 | `images` | `IMAGE` | The reconstruction, as linear light on a 0 to 1 scale with the recovered highlights above it. A preview clips it back to white, so tone map it or write it to EXR to see the range. |
 | `peak` | `FLOAT` | The largest value anywhere in the result. 40.07 = a clipped disc rebuilt to 40 times white; 1.0 = nothing above white was recovered. Divide by it to scale the frame back into range. |
+
+</details>
+
+### WAS Suite/Image/Library
+
+<a id="node-wasimagelibrarysearch"></a>
+<details>
+<summary><b>Image Library Search</b></summary>
+
+Find the pictures in a library folder, such as a pose set, that best match a description or a whole prompt, ready for a ControlNet preprocessor. The panel browses the folders, shows the matches as the prompt changes, and pins one; pause holds the run until a match is picked.
+
+| | |
+|---|---|
+| Node id | `WASImageLibrarySearch` |
+| Turn off with | `features.preprocessors: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `prompt` | `STRING` | Yes |  |  | What to find, such as `sitting, leaning back on her hands, one knee up`, or a whole prompt. View words such as `side view` or `from below` choose the angle. |
+| `folder` | `COMBO,STRING` | Yes |  |  | The library folder, such as `poses [input]` or a folder of finished pictures in output. A wired path, such as `E:\images`, works too. |
+| `folders` | `STRING` | Yes |  |  | Folders below `folder` searched, one per line, `.` for its own pictures. Empty = every folder. The panel's folder tree ticks them. |
+| `view` | `COMBO` | Yes | auto | `auto`, `any`, `front`, `side`, `diag`, `high`, `low`, `back` | Camera view of the picture sent on: `auto` = the prompt's view words; `any` = the closest; `front`, `side`, `diag`, `high`, `low`, `back` = that view. |
+| `filter` | `STRING` | Yes |  |  | Words a match must carry in its caption or path, and -words it must not: `front -couples` keeps front views of solo poses. Empty = every picture. |
+| `top_k` | `INT` | Yes | 8 |  | How many matches the list outputs carry, best first: `8` = the eight closest. |
+| `one_per_group` | `BOOLEAN` | Yes | True |  | `true` = only the closest picture of each group, such as one angle of each pose, so the list holds different poses; `false` = every angle. |
+| `pause` | `BOOLEAN` | Yes | False |  | `true` = hold the run with the matches on the panel until one is clicked and Continue is pressed; `false` = send the pinned picture, or the closest, at once. |
+| `pinned` | `STRING` | Yes |  |  | The picture sent to `image`, as its path below `folder`, such as `img/full_single_P061_side.png`. Empty = the closest match. Clicking a match pins it. |
+| `text_model` | `COMBO,STRING` | Yes | google/embeddinggemma-2 |  | Reads captions and prompts. embeddinggemma-2 = 1.5 GB, 100+ languages, the same model as the picture model; bge-small-en = 133 MB, English; keywords only = no model. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `picture_model` | `COMBO,STRING` | Yes | google/embeddinggemma-2 |  | Reads the pictures themselves, so `hair` finds photos captioned only by file name. embeddinggemma-2 = also the text model, loaded once; SigLIP 2 = quicker; none = captions alone. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `picture_weight` | `FLOAT` | Yes | 0.35 |  | Share of the ranking the picture model decides for captioned pictures: 0 = captions alone; 1 = pictures alone. A picture named only by its file is ranked 0.9 by itself. |
+| `captions` | `COMBO` | Yes | auto | `auto`, `manifest`, `sidecar text`, `picture prompt`, `file name` | `auto` = a JSON manifest where a folder has one, else each picture's .txt file, saved prompt or file name; `manifest`, `sidecar text`, `picture prompt`, `file name` = that source alone. |
+| `recursive` | `BOOLEAN` | Yes | True |  | `true` = read every folder below `folder`, each through its own manifest where it has one, each keeping its own index; `false` = `folder` alone. |
+| `max_files` | `INT` | Yes | 20000 |  | Most pictures read: 20000 = the usual; the rest are left out and counted on the panel. |
+| `hold_timeout` | `INT` | Yes | 600 |  | Seconds `pause` holds the run: 600 = ten minutes; 0 = no limit. A hold that runs out sends the pinned picture, or the closest. |
+| `dimensions` | `INT` | Yes | 0 |  | Caption vector length compared: 0 = the model's own; 256 = shorter and quicker, for models trained for it, such as EmbeddingGemma at 768, 512, 256 or 128. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | The pinned or picked match at its own size, for a pose, depth or line preprocessor. |
+| `caption` | `STRING` | That match's caption. |
+| `images` | `IMAGE` | Every match as a list, best first, each picture at its own size. |
+| `captions` | `STRING` | Each match's caption, in the same order as images. |
+| `names` | `STRING` | Each match's file name without its extension, in the same order. |
+| `scores` | `FLOAT` | Each match's score, higher is closer: about 0 to 1 for captions alone, or a blend centred on 0 when picture_weight mixes in the picture model. |
 
 </details>
 
@@ -20341,7 +20389,7 @@ Load a Segment Anything model for SAM Image Mask, which turns clicked points int
 
 ## `features.threejs`
 
-43 nodes. On in a fresh install: set `features.threejs: false` in `config.yaml` and restart ComfyUI to leave these out.
+44 nodes. On in a fresh install: set `features.threejs: false` in `config.yaml` and restart ComfyUI to leave these out.
 
 ### WAS Suite/Three
 
@@ -20796,6 +20844,34 @@ Light the scene from all around, which gives metal and glass something to reflec
 
 </details>
 
+<a id="node-wasthreefollowground"></a>
+<details>
+<summary><b>Three Follow Ground</b></summary>
+
+Keep an object standing on uneven ground as it moves, so a character walking a path over rocks and dips neither floats nor sinks. Wire the walker into object and the floor model into ground; the height under it is read every frame.
+
+| | |
+|---|---|
+| Node id | `WASThreeFollowGround` |
+| Turn off with | `features.threejs: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `object` | `THREE_OBJECT` | Yes |  |  | The object to keep on the ground, such as a walking character. It is wrapped rather than changed. |
+| `ground` | `THREE_OBJECT` | Yes |  |  | The floor to stand on, such as a terrain or cave model. Wire the same object into Three Group or Three Scene as well, so it is in the scene to be found. |
+| `offset` | `FLOAT` | Yes | 0.0 |  | Height above the ground. 0.0 stands on it; 0.05 lifts the object a little; -0.05 sinks it into soft ground. |
+| `footprint` | `FLOAT` | Yes | 0.7 |  | Width of the patch of ground the height is read from. 0.7 suits a person and steps over pits and pebbles; 0.2 follows every bump; 3.0 suits a vehicle. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `grounded` | `THREE_OBJECT` | The object kept on the ground, for Three Group or the root socket on Three Scene. |
+
+</details>
+
 <a id="node-wasthreegridhelper"></a>
 <details>
 <summary><b>Three Grid Helper</b></summary>
@@ -20976,7 +21052,7 @@ One light, wired into a group or straight into the scene; a standard or physical
 <details>
 <summary><b>Three Load Model</b></summary>
 
-Put a model file into the scene as an object, so a mesh made elsewhere can be lit, animated and rendered here. Reads .glb, .gltf, .dae, .fbx, .obj, .3mf, .stl and .ply; an .obj takes its materials from a .mtl beside it, and an .stl or .ply arrives with a plain default surface.
+Put a model into the scene as an object, so a mesh made elsewhere, such as a Tripo or Hunyuan3D generation, can be lit, animated and rendered here. Reads .glb, .gltf, .dae, .fbx, .obj, .3mf, .stl and .ply, compressed glTF included, and reports what the file holds.
 
 | | |
 |---|---|
@@ -20988,10 +21064,15 @@ Put a model file into the scene as an object, so a mesh made elsewhere can be li
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `file` | `COMBO,STRING` | Yes |  |  | Which model to place. The menu lists the newest `.glb`, `.gltf`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
-| `scale` | `FLOAT` | Yes | 1.0 |  | Multiplies the model's own size. 1.0 leaves it, 0.01 suits a model authored in centimetres. |
-| `centre` | `BOOLEAN` | Yes | True |  | `true` moves the model so its middle sits at the origin; `false` keeps the coordinates it was saved with. |
+| `scale` | `FLOAT` | Yes | 1.0 |  | Multiplies the model's size, after fit_size where that is set. 1.0 leaves it, 0.01 suits a model authored in centimetres. |
+| `origin` | `COMBO` | Yes | centre | `centre`, `base`, `as saved` | Which point of the model lands on the scene's origin. centre = its middle; base = the middle of its underside, so it stands on a floor at height 0; as saved = the coordinates in the file. |
 | `cast_shadow` | `BOOLEAN` | Yes | True |  | `true` lets every mesh in the model throw and receive shadows, `false` neither. |
-| `path` | `STRING` | No |  |  | A model somewhere else, as a full path. Wire Load 3D's mesh_path here. Filled in, it is used instead of the menu. |
+| `path` | `STRING` | No |  |  | A model somewhere else, as a full path. Wire ComfyUI-Tripo's model_file or Load 3D's mesh_path here. Filled in, it is used instead of the menu. |
+| `fit_size` | `FLOAT` | No | 0.0 |  | 0.0 = the model's own size; 2.0 = resized so its longest side is 2 units. Generated models arrive at any size, so this frames each one the same. |
+| `model_3d` | `FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_PLY` | No |  |  | A model from a 3D generator or Load 3D, such as the GLB from Tripo, Hunyuan3D, Meshy or Rodin. Wired, it is used instead of path and the menu. |
+| `keep_as` | `STRING` | No |  |  | A name such as `tripo_assets/tent.glb` keeps a copy of the model that came in on path or model_3d in ComfyUI's input folder, replacing an older copy, so the menu still finds it with the generator bypassed. Empty keeps nothing. |
+| `metalness` | `FLOAT` | No | 1.0 |  | Multiplies how metallic every surface is. 1.0 keeps the file's metal; 0.3 turns hair or leather a generator marked as metal back into a plain surface while armour keeps a sheen; 0.0 makes nothing metal. |
+| `min_roughness` | `FLOAT` | No | 0.0 |  | The least roughness any surface keeps. 0.0 keeps the file's; 0.45 takes the mirror shine off surfaces a generator made glass smooth; 1.0 makes everything matt. |
 
 **Outputs**
 
@@ -21124,6 +21205,7 @@ Render the scene by following light as it bounces, so soft shadows, colour bleed
 | `texture_size` | `INT` | Yes | 1024 |  | Size every texture in the scene is fitted to for tracing. 1024 suits most work; 2048 keeps fine detail in a close-up, at more memory. |
 | `depth_near` | `FLOAT` | Yes | 0.0 |  | Distance the depth pass calls white. 0.0 fits it to what is in shot. |
 | `depth_far` | `FLOAT` | Yes | 0.0 |  | Distance the depth pass calls black. 0.0 fits it to what is in shot. |
+| `denoise` | `FLOAT` | No | 0.0 |  | 0.0 = the frame as traced; 2.0 = light smoothing; 5.0 = strong. Edges are kept. Lets a few dozen samples stand in for hundreds, at the cost of the finest texture. |
 
 **Outputs**
 
@@ -21293,7 +21375,7 @@ A flat rectangle facing +Z, the usual carrier for a texture and, laid flat with 
 <details>
 <summary><b>Three Play Animation</b></summary>
 
-Play a clip saved inside a .glb, .gltf, .dae or .fbx model, so a rigged character walks rather than standing in its bind pose. The clip runs at its authored speed, across the captured frames, or across Three App's loop_seconds, as `units` chooses.
+Play a clip saved inside a .glb, .gltf, .dae or .fbx model, so a rigged character walks rather than standing in its bind pose. The clip runs at its authored speed or spread across the capture or the timeline. A walk can stay on the spot, so a path or a turn moves it instead.
 
 | | |
 |---|---|
@@ -21310,6 +21392,8 @@ Play a clip saved inside a .glb, .gltf, .dae or .fbx model, so a rigged characte
 | `speed` | `FLOAT` | Yes | 1.0 |  | On 'per second', the playback rate: 1.0 is the authored speed, 0.5 half of it. On the two spread units, how many passes fill the span: 1.0 is one, 2.0 is two. Negative runs it backwards. |
 | `offset` | `FLOAT` | Yes | 0.0 |  | Seconds into the clip the run begins at. 0.0 starts at the beginning; give copies 0.0, 0.4 and 0.8 so a crowd does not march in step. |
 | `loop` | `COMBO` | Yes | repeat | `repeat`, `once`, `ping pong` | `repeat` runs the clip again from the start, `once` holds the last pose, `ping pong` runs it backwards and forwards. |
+| `root_motion` | `COMBO` | No | in place | `in place`, `travel`, `as authored` | For a clip that moves the model across the ground. `in place` walks on the spot, keeping the sway and the rise and fall. `travel` carries on from where each pass ended. `as authored` jumps back to the start of every pass. |
+| `feet` | `COMBO` | No | as authored | `as authored`, `flat when planted` | `flat when planted` turns each foot and toe so a standing foot lies as it does in the model's rest pose, for a clip made on other feet, such as a walk on a character in heeled boots. `as authored` plays the feet as saved. |
 
 **Outputs**
 
@@ -21646,6 +21730,7 @@ Aim a camera at an object, carry the camera along with it, or both, so a moving 
 | `offset_z` | `FLOAT` | Yes | 0.0 |  | How far back it sits. 8.0 trails the object by eight units. |
 | `aim_offset_y` | `FLOAT` | Yes | 0.0 |  | Raises the point it aims at, above the object's own middle. 1.5 aims at the head of a figure whose middle is at the waist. |
 | `damping` | `FLOAT` | Yes | 0.0 |  | How much the camera lags behind. 0.0 is locked to the object, 0.85 drifts after it and smooths a jittery subject. |
+| `offset_space` | `COMBO` | No | world | `world`, `object` | `world` measures the offsets along the scene's axes, so the camera keeps its bearing while the object turns. `object` measures them along the object's own axes, so the camera turns with it, as a chase camera does. |
 
 **Outputs**
 
@@ -21695,7 +21780,7 @@ Place an object in the scene by wrapping it in a parent that carries position, r
 <details>
 <summary><b>Three Viewer</b></summary>
 
-Draw the scene live on this node, in the browser, with no image output. Drag to orbit, wheel to zoom, middle-drag or hold shift to pan while Three App's orbit control is on; Pause stops the animation and Reset Camera returns to the camera node's values.
+A live viewport for the scene: orbit, frame a shot, and pick and move objects with a gizmo. With override on, that view and those moves replace the upstream camera and placement, on screen and in the app handed on to Three Render, so the render matches what was framed here.
 
 | | |
 |---|---|
@@ -21708,6 +21793,15 @@ Draw the scene live on this node, in the browser, with no image output. Drag to 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `app` | `THREE_APP` | Yes |  |  | The scene, camera and renderer settings, from Three App. |
+| `override` | `BOOLEAN` | Yes | False |  | `false` = the camera and objects follow the nodes upstream; `true` = the view framed here and the objects moved here are used instead, and saved with the workflow. |
+| `view` | `STRING` | No |  |  | The framed camera and moved objects as JSON, written by the viewer, as `{"camera": {"position": [0, 1.5, 6], "target": [0, 0.8, 0], "fov": 32}}`. Reset view clears it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `app` | `THREE_APP` | The app with this viewer's view in place where override is on, for Three Render, Three Path Trace Render or Three Compile. |
+| `camera` | `THREE_CAMERA` | The camera the app above draws from, for another Three App. |
 
 </details>
 

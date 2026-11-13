@@ -234,6 +234,12 @@ def register_interface_routes() -> None:
     else:
         register_pause()
     try:
+        from .modules.interface.image_library import register_routes as register_image_library
+    except Exception as error:
+        logger.debug("the picture library search channel is unavailable (%s)", error)
+    else:
+        register_image_library()
+    try:
         from .modules.interface.app_exposure import register_routes as register_app_exposure
     except Exception as error:
         logger.debug("the app workflow exposure channel is unavailable (%s)", error)

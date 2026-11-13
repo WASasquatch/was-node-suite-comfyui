@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-__all__ = ["FORMATS", "MAX_BYTES", "MAX_SIDECARS", "SIDECARS", "SUFFIXES", "carried"]
+__all__ = [
+    "FORMATS", "MAX_BYTES", "MAX_SIDECARS", "SIDECARS", "SUFFIXES", "Carried", "carried", "carried_bytes",
+    "checked_suffix",
+]
 
 import json
 import re
 from pathlib import Path, PureWindowsPath
+from typing import NamedTuple
 from urllib.parse import unquote
 
 from ..interface import three_asset
@@ -257,40 +261,92 @@ def _sidecars(path: Path) -> dict[str, str]:
     return found
 
 
-def carried(path: Path) -> tuple[str, str, dict[str, str]]:
+class Carried(NamedTuple):
+    """One model held for the browser.
+
+    Attributes:
+        url: The address the browser fetches it from.
+        format: Its suffix without the dot, which picks the loader.
+        resources: ``{file name: url}`` for the files beside it that it names.
+        body: The file's bytes.
+    """
+
+    url: str
+    format: str
+    resources: dict
+    body: bytes
+
+
+def checked_suffix(name: str, suffix: str, size: int) -> str:
+    """A model's suffix, lowercase with its dot, once a loader reads it and its size fits.
+
+    Args:
+        name: The file name, for the refusal.
+        suffix: The suffix, with or without its dot.
+        size: The file's size in bytes.
+
+    Returns:
+        The suffix as a key of :data:`FORMATS`.
+
+    Raises:
+        ValueError: No loader reads the suffix, or the file is larger than :data:`MAX_BYTES`.
+    """
+    suffix = str(suffix or "").strip().lower()
+    if suffix and not suffix.startswith("."):
+        suffix = "." + suffix
+    if suffix not in FORMATS:
+        raise ValueError(
+            f"{name} is a {suffix or 'suffixless'} file and the viewer reads "
+            f"{', '.join(SUFFIXES)}. Convert it, or load it with Load 3D and save a .glb."
+        )
+    if size > MAX_BYTES:
+        raise ValueError(
+            f"{name} is {size / 1048576:.0f} MB and the limit is "
+            f"{MAX_BYTES // 1048576} MB. A model that large will not draw smoothly in a "
+            f"browser either; decimate it first."
+        )
+    return suffix
+
+
+def carried(path: Path) -> Carried:
     """Hold one model file for the browser and answer where to fetch it.
 
     Args:
         path: The model on disk, already resolved through the containment layer.
 
     Returns:
-        ``(url, format, sidecars)``: the address the browser fetches, the suffix without its
-        dot, and ``{file name: url}`` for the files inside its folder that it names.
+        The model held, with the files inside its folder that it names.
 
     Raises:
         ValueError: The suffix has no loader, or the file is larger than :data:`MAX_BYTES`.
         OSError: The file could not be read.
     """
-    suffix = path.suffix.lower()
-    if suffix not in FORMATS:
-        raise ValueError(
-            f"{path.name} is a {suffix or 'suffixless'} file and the viewer reads "
-            f"{', '.join(SUFFIXES)}. Convert it, or load it with Load 3D and save a .glb."
-        )
-
-    size = path.stat().st_size
-    if size > MAX_BYTES:
-        raise ValueError(
-            f"{path.name} is {size / 1048576:.0f} MB and the limit is "
-            f"{MAX_BYTES // 1048576} MB. A model that large will not draw smoothly in a "
-            f"browser either; decimate it first."
-        )
-
+    suffix = checked_suffix(path.name, path.suffix, path.stat().st_size)
     body = path.read_bytes()
     key = three_asset.keep(body, FORMATS[suffix])
     sidecars = _sidecars(path) if suffix not in (".glb", ".fbx", ".stl", ".3mf") else {}
     logger.info(
         "%s is held for the browser as %s, %.1f KB, with %d file(s) beside it",
-        path.name, key, size / 1024.0, len(sidecars),
+        path.name, key, len(body) / 1024.0, len(sidecars),
     )
-    return "%s?key=%s" % (three_asset.ROUTE, key), suffix.lstrip("."), sidecars
+    return Carried("%s?key=%s" % (three_asset.ROUTE, key), suffix.lstrip("."), sidecars, body)
+
+
+def carried_bytes(body: bytes, suffix: str, name: str) -> Carried:
+    """Hold a model that arrived as bytes, with no folder to find its other files in.
+
+    Args:
+        body: The model's bytes.
+        suffix: Its format, with or without the dot, such as ``glb``.
+        name: What to call it in a refusal and in the log.
+
+    Returns:
+        The model held, with no files beside it.
+
+    Raises:
+        ValueError: The format has no loader, or the bytes pass :data:`MAX_BYTES`.
+    """
+    suffix = checked_suffix(name, suffix, len(body))
+    key = three_asset.keep(body, FORMATS[suffix])
+    logger.info("%s is held for the browser as %s, %.1f KB", name, key, len(body) / 1024.0)
+    return Carried("%s?key=%s" % (three_asset.ROUTE, key), suffix.lstrip("."), {}, body)

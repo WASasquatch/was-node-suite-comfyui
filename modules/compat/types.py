@@ -20,6 +20,13 @@ __all__ = [
     "DICT",
     "DOC",
     "EMA_VFI_MODEL",
+    "FILE_3D",
+    "FILE_3D_FBX",
+    "FILE_3D_GLB",
+    "FILE_3D_GLTF",
+    "FILE_3D_OBJ",
+    "FILE_3D_PLY",
+    "FILE_3D_STL",
     "H3_ASSETS",
     "H3_DEROPE",
     "H3_PROMPTS",
@@ -143,6 +150,15 @@ EMA_VFI_MODEL = io.Custom("EMA_VFI_MODEL")
 #: `modules.dataset.dataset.Dataset`, an immutable value: a node that changes it answers a new
 #: one, so one dataset may feed any number of nodes.
 DATASET = io.Custom("WAS_DATASET")
+
+#: Core's 3D model file sockets, by the names core gives them: any format, then one per format.
+FILE_3D = io.Custom("FILE_3D")
+FILE_3D_GLB = io.Custom("FILE_3D_GLB")
+FILE_3D_GLTF = io.Custom("FILE_3D_GLTF")
+FILE_3D_FBX = io.Custom("FILE_3D_FBX")
+FILE_3D_OBJ = io.Custom("FILE_3D_OBJ")
+FILE_3D_STL = io.Custom("FILE_3D_STL")
+FILE_3D_PLY = io.Custom("FILE_3D_PLY")
 
 #: The dictionary passed between the dictionary nodes. Wire-compatible with core's
 #: `io.Dict`, which emits the same io_type; declared here so all custom sockets resolve
