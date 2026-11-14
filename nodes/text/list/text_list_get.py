@@ -5,13 +5,13 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ....modules.compat.types import LIST, NUMBER
+from ....modules.prompt import text_lists
 
 
 class TextListGet(io.ComfyNode):
-    """Read the entry of a ``LIST`` at ``index``.
+    """Read the entry of a ``LIST`` or a ``STRING`` list at ``index``.
 
-    A negative index counts back from the end. ``out_of_range`` decides what happens past
-    either end.
+    A negative index counts back from the end; ``out_of_range`` handles either end.
     """
 
     @classmethod
@@ -31,18 +31,19 @@ class TextListGet(io.ComfyNode):
             ],
             category="WAS Suite/Text/List",
             description=(
-                "Read one entry out of a list by position, with negative positions counting "
-                "from the end. An index past either end wraps, clamps, comes back empty or "
-                "stops, so a counter that only climbs can cycle a list forever. Hands on the "
-                "entry as text, the position read and the list's length."
+                "Read one entry out of a list by position, such as one line of Multiline "
+                "Text Lists per For Loop iteration. Negative positions count from the end, and "
+                "an index past either end wraps, clamps, comes back empty or stops. Hands on "
+                "the entry as text, the position read and the list's length."
             ),
+            is_input_list=True,
             inputs=[
-                LIST.Input(
+                io.MultiType.Input(
                     "text_list",
-                    extra_dict={"forceInput": True},
+                    [LIST, io.String],
                     tooltip=(
-                        "The list to read from, such as the LIST output of Text Split to "
-                        "List, Text List or Text Dictionary Keys."
+                        "The list to read from: a LIST, such as Text Split to List's, or a "
+                        "STRING list, such as Multiline Text Lists' strings, read whole."
                     ),
                 ),
                 io.MultiType.Input(
@@ -67,6 +68,7 @@ class TextListGet(io.ComfyNode):
             outputs=[
                 io.String.Output(
                     display_name="text",
+                    is_output_list=True,
                     tooltip=(
                         "The entry at that position, as text. An entry that is not text is "
                         "converted to it, so a list of numbers reads out as numerals."
@@ -74,6 +76,7 @@ class TextListGet(io.ComfyNode):
                 ),
                 io.Int.Output(
                     display_name="resolved_index",
+                    is_output_list=True,
                     tooltip=(
                         "The position actually read, after wrapping or clamping. Worth "
                         "watching when a counter drives the index, since it is the entry "
@@ -82,14 +85,41 @@ class TextListGet(io.ComfyNode):
                 ),
                 io.Int.Output(
                     display_name="length",
+                    is_output_list=True,
                     tooltip="How many entries the list holds.",
                 ),
             ],
         )
 
     @classmethod
-    def execute(cls, text_list, index=0, out_of_range="wrap") -> io.NodeOutput:
-        entries = list(text_list) if isinstance(text_list, (list, tuple)) else [text_list]
+    def execute(cls, text_list, index=None, out_of_range=None) -> io.NodeOutput:
+        mode = text_lists.single(out_of_range, "wrap")
+        lists = text_lists.runs(text_list)
+        indices = index if isinstance(index, list) and index else [0 if index is None else index]
+        texts, positions, lengths = [], [], []
+        for run in range(max(len(lists), len(indices))):
+            entries = lists[min(run, len(lists) - 1)]
+            text, position, length = cls.read(entries, indices[min(run, len(indices) - 1)], mode)
+            texts.append(text)
+            positions.append(position)
+            lengths.append(length)
+        return io.NodeOutput(texts, positions, lengths)
+
+    @classmethod
+    def read(cls, entries: list, index, out_of_range: str) -> tuple[str, int, int]:
+        """Read one entry.
+
+        Args:
+            entries: The list read from.
+            index: The requested position, a number.
+            out_of_range: ``wrap``, ``clamp``, ``empty`` or ``error``.
+
+        Returns:
+            The entry as text, the position read and the list's length.
+
+        Raises:
+            ValueError: The list is empty and ``out_of_range`` is ``error``.
+        """
         length = len(entries)
         if length == 0:
             if out_of_range == "error":
@@ -97,12 +127,11 @@ class TextListGet(io.ComfyNode):
                     "Text List Get was given an empty list. Set out_of_range to 'empty' to "
                     "let an empty list pass through as an empty string."
                 )
-            return io.NodeOutput("", 0, 0)
-
+            return "", 0, 0
         position = cls.resolve(int(index), length, out_of_range)
         if position is None:
-            return io.NodeOutput("", 0, length)
-        return io.NodeOutput(str(entries[position]), position, length)
+            return "", 0, length
+        return str(entries[position]), position, length
 
     @staticmethod
     def resolve(index: int, length: int, out_of_range: str) -> int | None:

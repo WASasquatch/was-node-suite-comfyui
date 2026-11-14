@@ -13154,7 +13154,7 @@ Keep the entries of a text list that match a search, or the ones that do not, su
 <details>
 <summary><b>Text List Get</b></summary>
 
-Read one entry out of a list by position, with negative positions counting from the end. An index past either end wraps, clamps, comes back empty or stops, so a counter that only climbs can cycle a list forever. Hands on the entry as text, the position read and the list's length.
+Read one entry out of a list by position, such as one line of Multiline Text Lists per For Loop iteration. Negative positions count from the end, and an index past either end wraps, clamps, comes back empty or stops. Hands on the entry as text, the position read and the list's length.
 
 | | |
 |---|---|
@@ -13164,7 +13164,7 @@ Read one entry out of a list by position, with negative positions counting from 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `text_list` | `ARRAY` | Yes |  |  | The list to read from, such as the LIST output of Text Split to List, Text List or Text Dictionary Keys. |
+| `text_list` | `ARRAY,STRING` | Yes |  |  | The list to read from: a LIST, such as Text Split to List's, or a STRING list, such as Multiline Text Lists' strings, read whole. |
 | `index` | `INT,NUMBER,FLOAT` | Yes | 0 |  | Which entry to take, counting from 0. -1 is the last entry, -2 the one before it. Wire a Number Counter in to step through the list one entry per run. A decimal value is cut down to a whole number. |
 | `out_of_range` | `COMBO` | Yes |  | `wrap`, `clamp`, `empty`, `error` | What an index past the end does: `wrap` counts round again, `clamp` sticks at the first or last entry, `empty` returns nothing, `error` stops the prompt. |
 

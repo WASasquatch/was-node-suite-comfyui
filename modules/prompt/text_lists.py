@@ -1,7 +1,7 @@
 """Filtering and ordering the entries of a text list, with names kept in step.
 
-:func:`entries` reads a list input handed over whole, a ``LIST`` wire or a ``STRING`` list,
-into its strings. Filters and orders answer positions into that list.
+:func:`entries` reads a list input handed over whole into its strings, :func:`runs` into one
+list per wire. Filters and orders answer positions into that list.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ __all__ = [
     "paired_names",
     "pattern_error",
     "quoted",
+    "runs",
     "single",
     "sort_entries",
 ]
@@ -62,6 +63,23 @@ def entries(value) -> list[str]:
         else:
             found.append("" if item is None else str(item))
     return found
+
+
+def runs(value) -> list[list]:
+    """A list input, handed over whole, as one list per run.
+
+    Args:
+        value: What an ``is_input_list`` node receives: a ``STRING`` list, one or more
+            ``LIST`` wires, or None for an input not wired.
+
+    Returns:
+        One list per ``LIST`` wire, or a single list holding a ``STRING`` list's strings.
+        Never empty: nothing wired gives one empty list.
+    """
+    items = list(value) if isinstance(value, (list, tuple)) else ([] if value is None else [value])
+    if items and all(isinstance(item, (list, tuple)) for item in items):
+        return [list(item) for item in items]
+    return [["" if item is None else item for item in items]]
 
 
 def single(value, default):

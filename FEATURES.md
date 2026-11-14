@@ -267,8 +267,10 @@ For driving a setting from something the graph worked out rather than a typed co
 
 47 nodes. **Text Multiline**, **Text Multiline (Code Compatible)** and **Rich Text Editor**
 author text. **Text List**, **Text Split to List**, **Text List Slice**, **Text List Get** and
-**Text List to Numbers** work on lists; **Text List Filter** keeps or drops entries that match,
-and **Text List Sort** orders, dedupes and shuffles them, each keeping a list of names in step.
+**Text List to Numbers** work on lists; **Text List Get** also reads a STRING list such as
+**Multiline Text Lists**' lines, one entry per For Loop pass. **Text List Filter** keeps or drops
+entries that match, and **Text List Sort** orders, dedupes and shuffles them, each keeping a list
+of names in step.
 **Text Dictionary New**, **Text Dictionary Get**, **Text Dictionary Keys**, **Text Dictionary
 Items** and **Text Dictionary Update** work on key and value pairs. **Prompt Parse**, **Prompt
 Tag Cleanup**, **Text Parse A1111 Embeddings**, **Text Add Tokens** and **Text Parse Tokens**
@@ -837,16 +839,20 @@ Both draw the picture before and after on the node.
 The incremental graph finds each area with ComfyUI's **WeVisOne-VL Detect** from a few words,
 edits it with MiniMax H3 Image, and runs one stage per edit on its own demo picture: the car
 repainted, the awning recoloured, the coffee cups turned to glasses of tea, the dog turned to a
-cat and the cap to a beret.
+cat, the cap to a beret and the yellow outfit to a maroon sweater. The loop graph makes the same
+edits with a single stage inside a **For Loop**: three **Multiline Text Lists** hold what to find,
+the change, and what to find once it is made, one line per edit, and **Text List Get** hands each
+pass its line. An edit is added by adding a line to each list.
 
-<img src="docs/images/wevisone-incremental-editing.jpg" alt="The demo picture before and after its five edits" width="800">
+<img src="docs/images/wevisone-incremental-editing.jpg" alt="The demo picture before and after its six edits" width="800">
 
 For changing several things in a large photograph, small or large, each at the edit model's own
 resolution, with the rest of the picture untouched.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Edit**. Graphs:
-[`wevisone-incremental-editing.json`](docs/workflows/wevisone-incremental-editing.json), which
-reads [`wevisone-busy-street.jpg`](docs/workflows/wevisone-busy-street.jpg) from ComfyUI's
+[`wevisone-incremental-editing.json`](docs/workflows/wevisone-incremental-editing.json) and
+[`wevisone-incremental-editing-loop.json`](docs/workflows/wevisone-incremental-editing-loop.json),
+which read [`wevisone-busy-street.jpg`](docs/workflows/wevisone-busy-street.jpg) from ComfyUI's
 `input` folder, and
 [`minimax-h3-image-precise-edit.json`](docs/workflows/minimax-h3-image-precise-edit.json). Each
 graph carries the download link of every model it loads.
