@@ -19,6 +19,8 @@ __all__ = [
     "DATASET",
     "DICT",
     "DOC",
+    "EDIT_CROP",
+    "EDIT_JOBS",
     "EMA_VFI_MODEL",
     "FILE_3D",
     "FILE_3D_FBX",
@@ -105,6 +107,14 @@ CONDITIONING_SEQ = io.Custom("CONDITIONING_SEQ")
 
 #: `(size, (left, top, right, bottom))`, from the four crop nodes to the three paste nodes.
 CROP_DATA = io.Custom("CROP_DATA")
+
+#: `Image Edit Crop` -> `Image Edit Restore`. One crop's window, size and regions, as an
+#: :class:`modules.image.edit_crop.EditCrop`, one per crop of a picture.
+EDIT_CROP = io.Custom("WAS_EDIT_CROP")
+
+#: `Image Edit Regions` -> `Image Edit Crop`. The changes picked for one picture, each with its
+#: mask and prompt, as a :class:`modules.image.edit_regions.EditJobs`.
+EDIT_JOBS = io.Custom("WAS_EDIT_JOBS")
 
 #: `MiniMax H3 Conditioning` -> `H3 Extend Window`. One encoded conditioning and one frame
 #: count per extension pass, in pass order.

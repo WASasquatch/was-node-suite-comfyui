@@ -179,6 +179,7 @@ class CameraMotionTrajectory(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "shake_seed", default=0, min=0, max=MAX_SHAKE_SEED, step=1,
+                    control_after_generate=io.ControlAfterGenerate.fixed,
                     tooltip=(
                         "Seed for the wobble. The same seed always produces the same wobble, "
                         "so a shot can be re-rendered identically; change it to try another "

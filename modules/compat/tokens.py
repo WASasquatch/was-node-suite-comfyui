@@ -37,6 +37,7 @@ LITERAL_INPUTS = {
     "WASComfyViewer": ("manual_content", "viewer_meta", "view_state"),
     "WASImageCurves": ("curve_points",),
     "WASLayersArrange": ("arrangement",),
+    "WASImageEditRegions": ("edits", "names"),
     "WASCurveToNumbers": ("curve_points",),
     "Mask Rect Area": ("drawn_mask",),
     "Mask Rect Area (Advanced)": ("drawn_mask",),

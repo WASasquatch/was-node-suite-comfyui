@@ -427,6 +427,19 @@ def _extreme_plane(
     return torch.where(roots == winner, 255, 0)
 
 
+def connected(marked: torch.Tensor, diagonal: bool = False) -> torch.Tensor:
+    """Label the connected regions of a boolean plane, as :func:`_label` does.
+
+    Args:
+        marked: ``(height, width)`` boolean plane, true over the regions.
+        diagonal: Join samples that touch only at a corner.
+
+    Returns:
+        An int64 plane holding each set sample's region label, and -1 for every clear sample.
+    """
+    return _label(marked, diagonal)
+
+
 def _label(marked: torch.Tensor, diagonal: bool = False) -> torch.Tensor:
     """Label the connected regions of a boolean plane.
 

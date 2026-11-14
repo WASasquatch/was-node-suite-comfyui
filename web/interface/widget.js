@@ -277,7 +277,9 @@ function watchDrags() {
     try {
       const target = event.target instanceof Element ? event.target : null;
       const shell = target?.closest?.("[data-node-id]");
-      if (shell && /-resize$/.test(getComputedStyle(target).cursor)) {
+      // A divider inside a panel resizes the panel's own panes, never the node.
+      const inPanel = Boolean(target?.closest?.("[data-was-interface]"));
+      if (shell && !inPanel && /-resize$/.test(getComputedStyle(target).cursor)) {
         draggedNodeId = String(shell.dataset.nodeId);
         holdPanels(app?.canvas?.graph?.getNodeById?.(draggedNodeId));
       }

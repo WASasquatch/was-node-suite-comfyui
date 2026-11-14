@@ -1,0 +1,6944 @@
+{
+  "id": "4d188f4a-fc77-47ec-a82a-afcf8d9dc715",
+  "revision": 0,
+  "last_node_id": 76,
+  "last_link_id": 158,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        43.49,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4,
+            21,
+            25,
+            127
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "wevisone-busy-street.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "wevisone-busy-street.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "CLIPLoader",
+      "pos": [
+        43.49,
+        650
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2,
+            19,
+            27,
+            44,
+            52,
+            69,
+            77,
+            94,
+            102,
+            119,
+            151,
+            153
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "clip_name": true,
+            "type": true,
+            "device": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "wevisone_vl_4b_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/WeVisOne-VL/resolve/main/text_encoders/wevisone_vl_4b_bf16.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wevisone_vl_4b_bf16.safetensors",
+        "stable_diffusion",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "wevisone_vl_4b_bf16.safetensors",
+        "type": "stable_diffusion",
+        "device": "default"
+      }
+    },
+    {
+      "id": 3,
+      "type": "UNETLoader",
+      "pos": [
+        43.49,
+        1222
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1,
+            11,
+            36,
+            61,
+            86,
+            111,
+            148
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unet_name": true,
+            "weight_dtype": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_image_pruned_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 4,
+      "type": "CLIPLoader",
+      "pos": [
+        43.49,
+        846
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            6,
+            31,
+            56,
+            81,
+            106,
+            157
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "clip_name": true,
+            "type": true,
+            "device": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    {
+      "id": 5,
+      "type": "VAELoader",
+      "pos": [
+        43.49,
+        1042
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            7,
+            18,
+            32,
+            43,
+            57,
+            68,
+            82,
+            93,
+            107,
+            118,
+            156,
+            158
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "vae_name": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "minimax_h3_image_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_image_vae_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_image_vae_fp16.safetensors"
+      }
+    },
+    {
+      "id": 6,
+      "type": "BasicScheduler",
+      "pos": [
+        497.99,
+        120
+      ],
+      "size": [
+        280,
+        120
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            15,
+            40,
+            65,
+            90,
+            115,
+            146
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "scheduler": true,
+            "steps": true,
+            "denoise": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "simple",
+        6,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "simple",
+        "steps": 6,
+        "denoise": 1
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASH3ImageSampler",
+      "pos": [
+        497.99,
+        330.0
+      ],
+      "size": [
+        280,
+        150
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "links": [
+            14,
+            39,
+            64,
+            89,
+            114,
+            147
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASH3ImageSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "mode": true,
+            "renoise_steps": true,
+            "noise_scale": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "standard",
+        1,
+        1
+      ],
+      "widgets_values_named": {
+        "mode": "standard",
+        "renoise_steps": 1,
+        "noise_scale": 1
+      }
+    },
+    {
+      "id": 8,
+      "type": "WeVisOneDetect",
+      "pos": [
+        583.49,
+        1614
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the red car",
+        true,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the red car",
+        "individual_masks": true,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASImageEditCrop",
+      "pos": [
+        963.49,
+        1614
+      ],
+      "size": [
+        300,
+        436
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 5
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "jobs",
+          "shape": 7,
+          "type": "WAS_EDIT_JOBS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "crops",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        },
+        {
+          "name": "crop_masks",
+          "shape": 6,
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "edits",
+          "shape": 6,
+          "type": "WAS_EDIT_CROP",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "prompts",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditCrop",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "context": true,
+            "grouping": true,
+            "min_side": true,
+            "max_side": true,
+            "multiple": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.3,
+        "auto",
+        2048,
+        1024,
+        32
+      ],
+      "widgets_values_named": {
+        "context": 0.3,
+        "grouping": "auto",
+        "max_resolution": 2048,
+        "min_resolution": 1024,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 10,
+      "type": "MiniMaxH3ImageConditioning",
+      "pos": [
+        1343.49,
+        1614
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 6
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 7
+        },
+        {
+          "name": "images.image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            9,
+            10
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageConditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt": true,
+            "width": true,
+            "height": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Repaint the car in <Picture 1> a pale mint green with cream accents, keeping its exact shape and chrome trim. Keep everything else in <Picture 1> exactly the same.",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Repaint the car in <Picture 1> a pale mint green with cream accents, keeping its exact shape and chrome trim. Keep everything else in <Picture 1> exactly the same.",
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASFreeMemory",
+      "pos": [
+        1723.49,
+        1614
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            12
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 12,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1723.49,
+        1938
+      ],
+      "size": [
+        205,
+        26
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "SamplerCustom",
+      "pos": [
+        2073.49,
+        1614
+      ],
+      "size": [
+        272,
+        230
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 11
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 12
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 13
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 14
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 15
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "add_noise": true,
+            "noise_seed": true,
+            "cfg": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        930515820757536,
+        "fixed",
+        1
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 930515820757536,
+        "control_after_generate": "fixed",
+        "cfg": 1
+      }
+    },
+    {
+      "id": 14,
+      "type": "VAEDecode",
+      "pos": [
+        2425.49,
+        1614
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 17
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            22,
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "WeVisOneDetect",
+      "pos": [
+        2995.49,
+        1614
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 19
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 20
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            24
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the mint green car",
+        false,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the mint green car",
+        "individual_masks": false,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 16,
+      "type": "WASImageEditRestore",
+      "pos": [
+        3375.49,
+        1614
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "name": "edited",
+          "type": "IMAGE",
+          "link": 22
+        },
+        {
+          "name": "edits",
+          "type": "WAS_EDIT_CROP",
+          "link": 23
+        },
+        {
+          "name": "edited_masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            29,
+            46,
+            50
+          ]
+        },
+        {
+          "name": "changed",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditRestore",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "grow": true,
+            "feather": true,
+            "correct_drift": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        4,
+        6,
+        true
+      ],
+      "widgets_values_named": {
+        "grow": 4,
+        "feather": 6,
+        "correct_drift": true
+      }
+    },
+    {
+      "id": 17,
+      "type": "WASFreeMemory",
+      "pos": [
+        43.49,
+        1614
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 18,
+      "type": "WASFreeMemory",
+      "pos": [
+        2645.49,
+        1614
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 19,
+      "type": "WeVisOneDetect",
+      "pos": [
+        583.49,
+        2360
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 27
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 28
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            30
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the striped awning",
+        true,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the striped awning",
+        "individual_masks": true,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 20,
+      "type": "WASImageEditCrop",
+      "pos": [
+        963.49,
+        2360
+      ],
+      "size": [
+        300,
+        436
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "name": "masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 30
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "jobs",
+          "shape": 7,
+          "type": "WAS_EDIT_JOBS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "crops",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            33
+          ]
+        },
+        {
+          "name": "crop_masks",
+          "shape": 6,
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "edits",
+          "shape": 6,
+          "type": "WAS_EDIT_CROP",
+          "links": [
+            48
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "prompts",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditCrop",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "context": true,
+            "grouping": true,
+            "min_side": true,
+            "max_side": true,
+            "multiple": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.3,
+        "auto",
+        2048,
+        1024,
+        32
+      ],
+      "widgets_values_named": {
+        "context": 0.3,
+        "grouping": "auto",
+        "max_resolution": 2048,
+        "min_resolution": 1024,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 21,
+      "type": "MiniMaxH3ImageConditioning",
+      "pos": [
+        1343.49,
+        2360
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 31
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 32
+        },
+        {
+          "name": "images.image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 33
+        },
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            34,
+            35
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageConditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt": true,
+            "width": true,
+            "height": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Change the striped awning in <Picture 1> to plain deep forest green canvas with the same scalloped edge and folds. Keep everything else in <Picture 1> exactly the same.",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Change the striped awning in <Picture 1> to plain deep forest green canvas with the same scalloped edge and folds. Keep everything else in <Picture 1> exactly the same.",
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "id": 22,
+      "type": "WASFreeMemory",
+      "pos": [
+        1723.49,
+        2360
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 34
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            37
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 23,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1723.49,
+        2684
+      ],
+      "size": [
+        205,
+        26
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "SamplerCustom",
+      "pos": [
+        2073.49,
+        2360
+      ],
+      "size": [
+        272,
+        230
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 36
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 37
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 38
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 39
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 40
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            42
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "add_noise": true,
+            "noise_seed": true,
+            "cfg": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        360759974926267,
+        "fixed",
+        1
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 360759974926267,
+        "control_after_generate": "fixed",
+        "cfg": 1
+      }
+    },
+    {
+      "id": 25,
+      "type": "VAEDecode",
+      "pos": [
+        2425.49,
+        2360
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 42
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            47,
+            51
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": "WeVisOneDetect",
+      "pos": [
+        2995.49,
+        2360
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 44
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 45
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            49
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the green awning",
+        false,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the green awning",
+        "individual_masks": false,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 27,
+      "type": "WASImageEditRestore",
+      "pos": [
+        3375.49,
+        2360
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 46
+        },
+        {
+          "name": "edited",
+          "type": "IMAGE",
+          "link": 47
+        },
+        {
+          "name": "edits",
+          "type": "WAS_EDIT_CROP",
+          "link": 48
+        },
+        {
+          "name": "edited_masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 49
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            54,
+            71,
+            75
+          ]
+        },
+        {
+          "name": "changed",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditRestore",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "grow": true,
+            "feather": true,
+            "correct_drift": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        4,
+        6,
+        true
+      ],
+      "widgets_values_named": {
+        "grow": 4,
+        "feather": 6,
+        "correct_drift": true
+      }
+    },
+    {
+      "id": 28,
+      "type": "WASFreeMemory",
+      "pos": [
+        43.49,
+        2360
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            28
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 29,
+      "type": "WASFreeMemory",
+      "pos": [
+        2645.49,
+        2360
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 51
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            45
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 30,
+      "type": "WeVisOneDetect",
+      "pos": [
+        583.49,
+        3106
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 52
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 53
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            55
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "every white coffee cup and saucer on the café tables",
+        true,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "every white coffee cup and saucer on the café tables",
+        "individual_masks": true,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 31,
+      "type": "WASImageEditCrop",
+      "pos": [
+        963.49,
+        3106
+      ],
+      "size": [
+        300,
+        436
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 54
+        },
+        {
+          "name": "masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 55
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "jobs",
+          "shape": 7,
+          "type": "WAS_EDIT_JOBS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "crops",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            58
+          ]
+        },
+        {
+          "name": "crop_masks",
+          "shape": 6,
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "edits",
+          "shape": 6,
+          "type": "WAS_EDIT_CROP",
+          "links": [
+            73
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "prompts",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditCrop",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "context": true,
+            "grouping": true,
+            "min_side": true,
+            "max_side": true,
+            "multiple": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.3,
+        "each region",
+        2048,
+        1024,
+        32
+      ],
+      "widgets_values_named": {
+        "context": 0.3,
+        "grouping": "each region",
+        "max_resolution": 2048,
+        "min_resolution": 1024,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 32,
+      "type": "MiniMaxH3ImageConditioning",
+      "pos": [
+        1343.49,
+        3106
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 56
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 57
+        },
+        {
+          "name": "images.image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 58
+        },
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            59,
+            60
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            66
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageConditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt": true,
+            "width": true,
+            "height": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Turn the white coffee cup in <Picture 1> into a small clear glass cup of amber tea on the saucer. Keep everything else in <Picture 1> exactly the same.",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Turn the white coffee cup in <Picture 1> into a small clear glass cup of amber tea on the saucer. Keep everything else in <Picture 1> exactly the same.",
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "id": 33,
+      "type": "WASFreeMemory",
+      "pos": [
+        1723.49,
+        3106
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 59
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            62
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 34,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1723.49,
+        3430
+      ],
+      "size": [
+        205,
+        26
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 60
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 35,
+      "type": "SamplerCustom",
+      "pos": [
+        2073.49,
+        3106
+      ],
+      "size": [
+        272,
+        230
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 61
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 62
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 63
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 64
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 65
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 66
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            67
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "add_noise": true,
+            "noise_seed": true,
+            "cfg": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        123076481424084,
+        "fixed",
+        1
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 123076481424084,
+        "control_after_generate": "fixed",
+        "cfg": 1
+      }
+    },
+    {
+      "id": 36,
+      "type": "VAEDecode",
+      "pos": [
+        2425.49,
+        3106
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 67
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 68
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            72,
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 37,
+      "type": "WeVisOneDetect",
+      "pos": [
+        2995.49,
+        3106
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 69
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 70
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            74
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "every glass cup and saucer on the café tables",
+        false,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "every glass cup and saucer on the café tables",
+        "individual_masks": false,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 38,
+      "type": "WASImageEditRestore",
+      "pos": [
+        3375.49,
+        3106
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 71
+        },
+        {
+          "name": "edited",
+          "type": "IMAGE",
+          "link": 72
+        },
+        {
+          "name": "edits",
+          "type": "WAS_EDIT_CROP",
+          "link": 73
+        },
+        {
+          "name": "edited_masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            79,
+            96,
+            100
+          ]
+        },
+        {
+          "name": "changed",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditRestore",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "grow": true,
+            "feather": true,
+            "correct_drift": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        4,
+        6,
+        true
+      ],
+      "widgets_values_named": {
+        "grow": 4,
+        "feather": 6,
+        "correct_drift": true
+      }
+    },
+    {
+      "id": 39,
+      "type": "WASFreeMemory",
+      "pos": [
+        43.49,
+        3106
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            53
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 40,
+      "type": "WASFreeMemory",
+      "pos": [
+        2645.49,
+        3106
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            70
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 41,
+      "type": "WeVisOneDetect",
+      "pos": [
+        583.49,
+        3852
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 77
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 78
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            80
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the dachshund",
+        true,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the dachshund",
+        "individual_masks": true,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 42,
+      "type": "WASImageEditCrop",
+      "pos": [
+        963.49,
+        3852
+      ],
+      "size": [
+        300,
+        436
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 79
+        },
+        {
+          "name": "masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 80
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "jobs",
+          "shape": 7,
+          "type": "WAS_EDIT_JOBS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "crops",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            83
+          ]
+        },
+        {
+          "name": "crop_masks",
+          "shape": 6,
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "edits",
+          "shape": 6,
+          "type": "WAS_EDIT_CROP",
+          "links": [
+            98
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "prompts",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditCrop",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "context": true,
+            "grouping": true,
+            "min_side": true,
+            "max_side": true,
+            "multiple": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.6,
+        "auto",
+        2048,
+        1024,
+        32
+      ],
+      "widgets_values_named": {
+        "context": 0.6,
+        "grouping": "auto",
+        "max_resolution": 2048,
+        "min_resolution": 1024,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 43,
+      "type": "MiniMaxH3ImageConditioning",
+      "pos": [
+        1343.49,
+        3852
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 81
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 82
+        },
+        {
+          "name": "images.image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 83
+        },
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            84,
+            85
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            91
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageConditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt": true,
+            "width": true,
+            "height": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Replace the dachshund in <Picture 1> with a ginger tabby cat lying on the cobblestones in the same spot. Keep everything else in <Picture 1> exactly the same.",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Replace the dachshund in <Picture 1> with a ginger tabby cat lying on the cobblestones in the same spot. Keep everything else in <Picture 1> exactly the same.",
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "id": 44,
+      "type": "WASFreeMemory",
+      "pos": [
+        1723.49,
+        3852
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 84
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            87
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 45,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1723.49,
+        4176
+      ],
+      "size": [
+        205,
+        26
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 85
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            88
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 46,
+      "type": "SamplerCustom",
+      "pos": [
+        2073.49,
+        3852
+      ],
+      "size": [
+        272,
+        230
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 86
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 87
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 88
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 89
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 90
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 91
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            92
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "add_noise": true,
+            "noise_seed": true,
+            "cfg": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        57348692578065,
+        "fixed",
+        1
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 57348692578065,
+        "control_after_generate": "fixed",
+        "cfg": 1
+      }
+    },
+    {
+      "id": 47,
+      "type": "VAEDecode",
+      "pos": [
+        2425.49,
+        3852
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 92
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 93
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            97,
+            101
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 48,
+      "type": "WeVisOneDetect",
+      "pos": [
+        2995.49,
+        3852
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 49,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 94
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 95
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            99
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the cat",
+        false,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the cat",
+        "individual_masks": false,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 49,
+      "type": "WASImageEditRestore",
+      "pos": [
+        3375.49,
+        3852
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 96
+        },
+        {
+          "name": "edited",
+          "type": "IMAGE",
+          "link": 97
+        },
+        {
+          "name": "edits",
+          "type": "WAS_EDIT_CROP",
+          "link": 98
+        },
+        {
+          "name": "edited_masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 99
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            104,
+            121,
+            125
+          ]
+        },
+        {
+          "name": "changed",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditRestore",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "grow": true,
+            "feather": true,
+            "correct_drift": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        4,
+        6,
+        true
+      ],
+      "widgets_values_named": {
+        "grow": 4,
+        "feather": 6,
+        "correct_drift": true
+      }
+    },
+    {
+      "id": 50,
+      "type": "WASFreeMemory",
+      "pos": [
+        43.49,
+        3852
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 100
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            78
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 51,
+      "type": "WASFreeMemory",
+      "pos": [
+        2645.49,
+        3852
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 101
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            95
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 52,
+      "type": "WeVisOneDetect",
+      "pos": [
+        583.49,
+        4598
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 102
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 103
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            105
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the man's flat cap",
+        true,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the man's flat cap",
+        "individual_masks": true,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 53,
+      "type": "WASImageEditCrop",
+      "pos": [
+        963.49,
+        4598
+      ],
+      "size": [
+        300,
+        436
+      ],
+      "flags": {},
+      "order": 53,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 104
+        },
+        {
+          "name": "masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 105
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "jobs",
+          "shape": 7,
+          "type": "WAS_EDIT_JOBS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "crops",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            108
+          ]
+        },
+        {
+          "name": "crop_masks",
+          "shape": 6,
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "edits",
+          "shape": 6,
+          "type": "WAS_EDIT_CROP",
+          "links": [
+            123
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "prompts",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditCrop",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "context": true,
+            "grouping": true,
+            "min_side": true,
+            "max_side": true,
+            "multiple": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.6,
+        "auto",
+        2048,
+        1024,
+        32
+      ],
+      "widgets_values_named": {
+        "context": 0.6,
+        "grouping": "auto",
+        "max_resolution": 2048,
+        "min_resolution": 1024,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 54,
+      "type": "MiniMaxH3ImageConditioning",
+      "pos": [
+        1343.49,
+        4598
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 106
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 107
+        },
+        {
+          "name": "images.image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 108
+        },
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            109,
+            110
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            116
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageConditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt": true,
+            "width": true,
+            "height": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Change the man's grey flat cap in <Picture 1> to a dark red wool beret worn at a slight angle. Keep everything else in <Picture 1> exactly the same.",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Change the man's grey flat cap in <Picture 1> to a dark red wool beret worn at a slight angle. Keep everything else in <Picture 1> exactly the same.",
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "id": 55,
+      "type": "WASFreeMemory",
+      "pos": [
+        1723.49,
+        4598
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 109
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            112
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 56,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1723.49,
+        4922
+      ],
+      "size": [
+        205,
+        26
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 110
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            113
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 57,
+      "type": "SamplerCustom",
+      "pos": [
+        2073.49,
+        4598
+      ],
+      "size": [
+        272,
+        230
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 111
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 112
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 113
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 114
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 115
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 116
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            117
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "add_noise": true,
+            "noise_seed": true,
+            "cfg": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        670608053216398,
+        "fixed",
+        1
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 670608053216398,
+        "control_after_generate": "fixed",
+        "cfg": 1
+      }
+    },
+    {
+      "id": 58,
+      "type": "VAEDecode",
+      "pos": [
+        2425.49,
+        4598
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 58,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 117
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 118
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            122,
+            126
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 59,
+      "type": "WeVisOneDetect",
+      "pos": [
+        2995.49,
+        4598
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 119
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 120
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            124
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the man's beret",
+        false,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the man's beret",
+        "individual_masks": false,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 60,
+      "type": "WASImageEditRestore",
+      "pos": [
+        3375.49,
+        4598
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 61,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 121
+        },
+        {
+          "name": "edited",
+          "type": "IMAGE",
+          "link": 122
+        },
+        {
+          "name": "edits",
+          "type": "WAS_EDIT_CROP",
+          "link": 123
+        },
+        {
+          "name": "edited_masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 124
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            144,
+            145,
+            155
+          ]
+        },
+        {
+          "name": "changed",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditRestore",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "grow": true,
+            "feather": true,
+            "correct_drift": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        4,
+        6,
+        true
+      ],
+      "widgets_values_named": {
+        "grow": 4,
+        "feather": 6,
+        "correct_drift": true
+      }
+    },
+    {
+      "id": 61,
+      "type": "WASFreeMemory",
+      "pos": [
+        43.49,
+        4598
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 125
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            103
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 62,
+      "type": "WASFreeMemory",
+      "pos": [
+        2645.49,
+        4598
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 59,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 126
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            120
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 63,
+      "type": "WASImageCompare",
+      "pos": [
+        937.99,
+        134.44
+      ],
+      "size": [
+        981.93561143384,
+        921.7248427180393
+      ],
+      "flags": {},
+      "order": 73,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 127
+        },
+        {
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 149
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "2a567bd9deb7767ce5bf4fd6afa5b5f8.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 17334119,
+              "total": 1,
+              "workflow": "40dcf510-fe81-47c1-9097-fcdb4ec2a57f"
+            }
+          ],
+          "b": [
+            {
+              "filename": "8ccb1f8a501c57a18d050f5b86f05a06.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 17094321,
+              "total": 1,
+              "workflow": "40dcf510-fe81-47c1-9097-fcdb4ec2a57f"
+            }
+          ]
+        },
+        "was_panel_heights": {
+          "was_image_compare_ui": 820
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 64,
+      "type": "SaveImage",
+      "pos": [
+        1999.92,
+        134.44
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 74,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 150
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "filename_prefix": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "was_edit/busy_street_edited"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "was_edit/busy_street_edited"
+      }
+    },
+    {
+      "id": 65,
+      "type": "WASFreeMemory",
+      "pos": [
+        43.49,
+        5344
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 62,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 144
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            130
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 67,
+      "type": "WeVisOneDetect",
+      "pos": [
+        583.49,
+        5344
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 63,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 151
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 130
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            131
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": []
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the woman's yellow outfit",
+        true,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the woman's yellow outfit",
+        "individual_masks": true,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 68,
+      "type": "WASImageEditCrop",
+      "pos": [
+        963.49,
+        5344
+      ],
+      "size": [
+        300,
+        436
+      ],
+      "flags": {},
+      "order": 64,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 145
+        },
+        {
+          "name": "masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 131
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "jobs",
+          "shape": 7,
+          "type": "WAS_EDIT_JOBS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "crops",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            132
+          ]
+        },
+        {
+          "name": "crop_masks",
+          "shape": 6,
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "edits",
+          "shape": 6,
+          "type": "WAS_EDIT_CROP",
+          "links": [
+            142
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "prompts",
+          "shape": 6,
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditCrop",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "context": true,
+            "grouping": true,
+            "min_side": true,
+            "max_side": true,
+            "multiple": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.6,
+        "auto",
+        2048,
+        1024,
+        32
+      ],
+      "widgets_values_named": {
+        "context": 0.6,
+        "grouping": "auto",
+        "max_resolution": 2048,
+        "min_resolution": 1024,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 69,
+      "type": "MiniMaxH3ImageConditioning",
+      "pos": [
+        1343.49,
+        5344
+      ],
+      "size": [
+        300,
+        238
+      ],
+      "flags": {},
+      "order": 65,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 157
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 158
+        },
+        {
+          "name": "images.image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 132
+        },
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            133,
+            134
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            137
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ImageConditioning",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt": true,
+            "width": true,
+            "height": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "om_textarea_heights": {
+          "prompt": 92
+        }
+      },
+      "widgets_values": [
+        "Change the woman's yellow outfit in <Picture 1> into a form fitting maroon turtleneck sweater and beige dress pants. Keep everything else in <Picture 1> exactly the same.",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt": "Change the woman's yellow outfit in <Picture 1> into a form fitting maroon turtleneck sweater and beige dress pants. Keep everything else in <Picture 1> exactly the same.",
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "id": 70,
+      "type": "WASFreeMemory",
+      "pos": [
+        1723.49,
+        5344
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 66,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 133
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "CONDITIONING",
+          "links": [
+            135
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 71,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1723.49,
+        5668
+      ],
+      "size": [
+        205,
+        26
+      ],
+      "flags": {},
+      "order": 67,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 134
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            136
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 72,
+      "type": "SamplerCustom",
+      "pos": [
+        2073.49,
+        5344
+      ],
+      "size": [
+        272,
+        230
+      ],
+      "flags": {},
+      "order": 68,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 148
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 135
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 136
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 147
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 146
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 137
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            138
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "add_noise": true,
+            "noise_seed": true,
+            "cfg": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        670608053216398,
+        "fixed",
+        1
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 670608053216398,
+        "control_after_generate": "fixed",
+        "cfg": 1
+      }
+    },
+    {
+      "id": 73,
+      "type": "VAEDecode",
+      "pos": [
+        2425.49,
+        5344
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 69,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 138
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 156
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            140,
+            141
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 74,
+      "type": "WeVisOneDetect",
+      "pos": [
+        2995.49,
+        5344
+      ],
+      "size": [
+        300,
+        242
+      ],
+      "flags": {},
+      "order": 71,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 153
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 139
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            143
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": []
+        },
+        {
+          "name": "points",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WeVisOneDetect",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "task": true,
+            "query": true,
+            "individual_masks": true,
+            "max_length": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "segmentation",
+        "the woman's maroon sweater and beige trousers",
+        false,
+        4096
+      ],
+      "widgets_values_named": {
+        "task": "segmentation",
+        "query": "the woman's maroon sweater and beige trousers",
+        "individual_masks": false,
+        "max_length": 4096
+      }
+    },
+    {
+      "id": 75,
+      "type": "WASFreeMemory",
+      "pos": [
+        2645.49,
+        5344
+      ],
+      "size": [
+        270,
+        234
+      ],
+      "flags": {},
+      "order": 70,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "passthrough",
+          "shape": 7,
+          "type": "*",
+          "link": 140
+        }
+      ],
+      "outputs": [
+        {
+          "name": "passthrough",
+          "type": "IMAGE",
+          "links": [
+            139
+          ]
+        },
+        {
+          "name": "vram_before",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "vram_after",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "freed",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASFreeMemory",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "unload_models": true,
+            "empty_cache": true,
+            "collect_garbage": true,
+            "release_fraction": true,
+            "always_run": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "unload_models": true,
+        "empty_cache": true,
+        "collect_garbage": true,
+        "release_fraction": 0,
+        "always_run": false
+      }
+    },
+    {
+      "id": 76,
+      "type": "WASImageEditRestore",
+      "pos": [
+        3375.49,
+        5344
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 72,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 155
+        },
+        {
+          "name": "edited",
+          "type": "IMAGE",
+          "link": 141
+        },
+        {
+          "name": "edits",
+          "type": "WAS_EDIT_CROP",
+          "link": 142
+        },
+        {
+          "name": "edited_masks",
+          "shape": 7,
+          "type": "MASK",
+          "link": 143
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            149,
+            150
+          ]
+        },
+        {
+          "name": "changed",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageEditRestore",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "grow": true,
+            "feather": true,
+            "correct_drift": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        4,
+        6,
+        true
+      ],
+      "widgets_values_named": {
+        "grow": 4,
+        "feather": 6,
+        "correct_drift": true
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      3,
+      0,
+      6,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      2,
+      0,
+      8,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      17,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      4,
+      1,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      8,
+      0,
+      9,
+      1,
+      "MASK"
+    ],
+    [
+      9,
+      10,
+      0,
+      11,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      10,
+      10,
+      0,
+      12,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      11,
+      3,
+      0,
+      13,
+      0,
+      "MODEL"
+    ],
+    [
+      12,
+      11,
+      0,
+      13,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      13,
+      12,
+      0,
+      13,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      7,
+      0,
+      13,
+      3,
+      "SAMPLER"
+    ],
+    [
+      15,
+      6,
+      0,
+      13,
+      4,
+      "SIGMAS"
+    ],
+    [
+      16,
+      10,
+      1,
+      13,
+      5,
+      "LATENT"
+    ],
+    [
+      17,
+      13,
+      0,
+      14,
+      0,
+      "LATENT"
+    ],
+    [
+      18,
+      5,
+      0,
+      14,
+      1,
+      "VAE"
+    ],
+    [
+      19,
+      2,
+      0,
+      15,
+      0,
+      "CLIP"
+    ],
+    [
+      20,
+      18,
+      0,
+      15,
+      1,
+      "IMAGE"
+    ],
+    [
+      21,
+      1,
+      0,
+      16,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      14,
+      0,
+      16,
+      1,
+      "IMAGE"
+    ],
+    [
+      23,
+      9,
+      2,
+      16,
+      2,
+      "WAS_EDIT_CROP"
+    ],
+    [
+      24,
+      15,
+      0,
+      16,
+      3,
+      "MASK"
+    ],
+    [
+      25,
+      1,
+      0,
+      17,
+      0,
+      "IMAGE"
+    ],
+    [
+      26,
+      14,
+      0,
+      18,
+      0,
+      "IMAGE"
+    ],
+    [
+      27,
+      2,
+      0,
+      19,
+      0,
+      "CLIP"
+    ],
+    [
+      28,
+      28,
+      0,
+      19,
+      1,
+      "IMAGE"
+    ],
+    [
+      29,
+      16,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      30,
+      19,
+      0,
+      20,
+      1,
+      "MASK"
+    ],
+    [
+      34,
+      21,
+      0,
+      22,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      35,
+      21,
+      0,
+      23,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      36,
+      3,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      37,
+      22,
+      0,
+      24,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      38,
+      23,
+      0,
+      24,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      39,
+      7,
+      0,
+      24,
+      3,
+      "SAMPLER"
+    ],
+    [
+      40,
+      6,
+      0,
+      24,
+      4,
+      "SIGMAS"
+    ],
+    [
+      41,
+      21,
+      1,
+      24,
+      5,
+      "LATENT"
+    ],
+    [
+      42,
+      24,
+      0,
+      25,
+      0,
+      "LATENT"
+    ],
+    [
+      43,
+      5,
+      0,
+      25,
+      1,
+      "VAE"
+    ],
+    [
+      44,
+      2,
+      0,
+      26,
+      0,
+      "CLIP"
+    ],
+    [
+      45,
+      29,
+      0,
+      26,
+      1,
+      "IMAGE"
+    ],
+    [
+      46,
+      16,
+      0,
+      27,
+      0,
+      "IMAGE"
+    ],
+    [
+      47,
+      25,
+      0,
+      27,
+      1,
+      "IMAGE"
+    ],
+    [
+      48,
+      20,
+      2,
+      27,
+      2,
+      "WAS_EDIT_CROP"
+    ],
+    [
+      49,
+      26,
+      0,
+      27,
+      3,
+      "MASK"
+    ],
+    [
+      50,
+      16,
+      0,
+      28,
+      0,
+      "IMAGE"
+    ],
+    [
+      51,
+      25,
+      0,
+      29,
+      0,
+      "IMAGE"
+    ],
+    [
+      52,
+      2,
+      0,
+      30,
+      0,
+      "CLIP"
+    ],
+    [
+      53,
+      39,
+      0,
+      30,
+      1,
+      "IMAGE"
+    ],
+    [
+      54,
+      27,
+      0,
+      31,
+      0,
+      "IMAGE"
+    ],
+    [
+      55,
+      30,
+      0,
+      31,
+      1,
+      "MASK"
+    ],
+    [
+      59,
+      32,
+      0,
+      33,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      60,
+      32,
+      0,
+      34,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      61,
+      3,
+      0,
+      35,
+      0,
+      "MODEL"
+    ],
+    [
+      62,
+      33,
+      0,
+      35,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      63,
+      34,
+      0,
+      35,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      64,
+      7,
+      0,
+      35,
+      3,
+      "SAMPLER"
+    ],
+    [
+      65,
+      6,
+      0,
+      35,
+      4,
+      "SIGMAS"
+    ],
+    [
+      66,
+      32,
+      1,
+      35,
+      5,
+      "LATENT"
+    ],
+    [
+      67,
+      35,
+      0,
+      36,
+      0,
+      "LATENT"
+    ],
+    [
+      68,
+      5,
+      0,
+      36,
+      1,
+      "VAE"
+    ],
+    [
+      69,
+      2,
+      0,
+      37,
+      0,
+      "CLIP"
+    ],
+    [
+      70,
+      40,
+      0,
+      37,
+      1,
+      "IMAGE"
+    ],
+    [
+      71,
+      27,
+      0,
+      38,
+      0,
+      "IMAGE"
+    ],
+    [
+      72,
+      36,
+      0,
+      38,
+      1,
+      "IMAGE"
+    ],
+    [
+      73,
+      31,
+      2,
+      38,
+      2,
+      "WAS_EDIT_CROP"
+    ],
+    [
+      74,
+      37,
+      0,
+      38,
+      3,
+      "MASK"
+    ],
+    [
+      75,
+      27,
+      0,
+      39,
+      0,
+      "IMAGE"
+    ],
+    [
+      76,
+      36,
+      0,
+      40,
+      0,
+      "IMAGE"
+    ],
+    [
+      77,
+      2,
+      0,
+      41,
+      0,
+      "CLIP"
+    ],
+    [
+      78,
+      50,
+      0,
+      41,
+      1,
+      "IMAGE"
+    ],
+    [
+      79,
+      38,
+      0,
+      42,
+      0,
+      "IMAGE"
+    ],
+    [
+      80,
+      41,
+      0,
+      42,
+      1,
+      "MASK"
+    ],
+    [
+      84,
+      43,
+      0,
+      44,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      85,
+      43,
+      0,
+      45,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      86,
+      3,
+      0,
+      46,
+      0,
+      "MODEL"
+    ],
+    [
+      87,
+      44,
+      0,
+      46,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      88,
+      45,
+      0,
+      46,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      89,
+      7,
+      0,
+      46,
+      3,
+      "SAMPLER"
+    ],
+    [
+      90,
+      6,
+      0,
+      46,
+      4,
+      "SIGMAS"
+    ],
+    [
+      91,
+      43,
+      1,
+      46,
+      5,
+      "LATENT"
+    ],
+    [
+      92,
+      46,
+      0,
+      47,
+      0,
+      "LATENT"
+    ],
+    [
+      93,
+      5,
+      0,
+      47,
+      1,
+      "VAE"
+    ],
+    [
+      94,
+      2,
+      0,
+      48,
+      0,
+      "CLIP"
+    ],
+    [
+      95,
+      51,
+      0,
+      48,
+      1,
+      "IMAGE"
+    ],
+    [
+      96,
+      38,
+      0,
+      49,
+      0,
+      "IMAGE"
+    ],
+    [
+      97,
+      47,
+      0,
+      49,
+      1,
+      "IMAGE"
+    ],
+    [
+      98,
+      42,
+      2,
+      49,
+      2,
+      "WAS_EDIT_CROP"
+    ],
+    [
+      99,
+      48,
+      0,
+      49,
+      3,
+      "MASK"
+    ],
+    [
+      100,
+      38,
+      0,
+      50,
+      0,
+      "IMAGE"
+    ],
+    [
+      101,
+      47,
+      0,
+      51,
+      0,
+      "IMAGE"
+    ],
+    [
+      102,
+      2,
+      0,
+      52,
+      0,
+      "CLIP"
+    ],
+    [
+      103,
+      61,
+      0,
+      52,
+      1,
+      "IMAGE"
+    ],
+    [
+      104,
+      49,
+      0,
+      53,
+      0,
+      "IMAGE"
+    ],
+    [
+      105,
+      52,
+      0,
+      53,
+      1,
+      "MASK"
+    ],
+    [
+      109,
+      54,
+      0,
+      55,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      110,
+      54,
+      0,
+      56,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      111,
+      3,
+      0,
+      57,
+      0,
+      "MODEL"
+    ],
+    [
+      112,
+      55,
+      0,
+      57,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      113,
+      56,
+      0,
+      57,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      114,
+      7,
+      0,
+      57,
+      3,
+      "SAMPLER"
+    ],
+    [
+      115,
+      6,
+      0,
+      57,
+      4,
+      "SIGMAS"
+    ],
+    [
+      116,
+      54,
+      1,
+      57,
+      5,
+      "LATENT"
+    ],
+    [
+      117,
+      57,
+      0,
+      58,
+      0,
+      "LATENT"
+    ],
+    [
+      118,
+      5,
+      0,
+      58,
+      1,
+      "VAE"
+    ],
+    [
+      119,
+      2,
+      0,
+      59,
+      0,
+      "CLIP"
+    ],
+    [
+      120,
+      62,
+      0,
+      59,
+      1,
+      "IMAGE"
+    ],
+    [
+      121,
+      49,
+      0,
+      60,
+      0,
+      "IMAGE"
+    ],
+    [
+      122,
+      58,
+      0,
+      60,
+      1,
+      "IMAGE"
+    ],
+    [
+      123,
+      53,
+      2,
+      60,
+      2,
+      "WAS_EDIT_CROP"
+    ],
+    [
+      124,
+      59,
+      0,
+      60,
+      3,
+      "MASK"
+    ],
+    [
+      125,
+      49,
+      0,
+      61,
+      0,
+      "IMAGE"
+    ],
+    [
+      126,
+      58,
+      0,
+      62,
+      0,
+      "IMAGE"
+    ],
+    [
+      127,
+      1,
+      0,
+      63,
+      0,
+      "IMAGE"
+    ],
+    [
+      130,
+      65,
+      0,
+      67,
+      1,
+      "IMAGE"
+    ],
+    [
+      131,
+      67,
+      0,
+      68,
+      1,
+      "MASK"
+    ],
+    [
+      133,
+      69,
+      0,
+      70,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      134,
+      69,
+      0,
+      71,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      135,
+      70,
+      0,
+      72,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      136,
+      71,
+      0,
+      72,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      137,
+      69,
+      1,
+      72,
+      5,
+      "LATENT"
+    ],
+    [
+      138,
+      72,
+      0,
+      73,
+      0,
+      "LATENT"
+    ],
+    [
+      139,
+      75,
+      0,
+      74,
+      1,
+      "IMAGE"
+    ],
+    [
+      140,
+      73,
+      0,
+      75,
+      0,
+      "IMAGE"
+    ],
+    [
+      141,
+      73,
+      0,
+      76,
+      1,
+      "IMAGE"
+    ],
+    [
+      142,
+      68,
+      2,
+      76,
+      2,
+      "WAS_EDIT_CROP"
+    ],
+    [
+      143,
+      74,
+      0,
+      76,
+      3,
+      "MASK"
+    ],
+    [
+      144,
+      60,
+      0,
+      65,
+      0,
+      "IMAGE"
+    ],
+    [
+      145,
+      60,
+      0,
+      68,
+      0,
+      "IMAGE"
+    ],
+    [
+      146,
+      6,
+      0,
+      72,
+      4,
+      "SIGMAS"
+    ],
+    [
+      147,
+      7,
+      0,
+      72,
+      3,
+      "SAMPLER"
+    ],
+    [
+      148,
+      3,
+      0,
+      72,
+      0,
+      "MODEL"
+    ],
+    [
+      149,
+      76,
+      0,
+      63,
+      1,
+      "IMAGE"
+    ],
+    [
+      150,
+      76,
+      0,
+      64,
+      0,
+      "IMAGE"
+    ],
+    [
+      151,
+      2,
+      0,
+      67,
+      0,
+      "CLIP"
+    ],
+    [
+      153,
+      2,
+      0,
+      74,
+      0,
+      "CLIP"
+    ],
+    [
+      155,
+      60,
+      0,
+      76,
+      0,
+      "IMAGE"
+    ],
+    [
+      156,
+      5,
+      0,
+      73,
+      1,
+      "VAE"
+    ],
+    [
+      6,
+      4,
+      0,
+      10,
+      0,
+      "CLIP"
+    ],
+    [
+      7,
+      5,
+      0,
+      10,
+      1,
+      "VAE"
+    ],
+    [
+      8,
+      9,
+      0,
+      10,
+      2,
+      "IMAGE"
+    ],
+    [
+      31,
+      4,
+      0,
+      21,
+      0,
+      "CLIP"
+    ],
+    [
+      32,
+      5,
+      0,
+      21,
+      1,
+      "VAE"
+    ],
+    [
+      33,
+      20,
+      0,
+      21,
+      2,
+      "IMAGE"
+    ],
+    [
+      56,
+      4,
+      0,
+      32,
+      0,
+      "CLIP"
+    ],
+    [
+      57,
+      5,
+      0,
+      32,
+      1,
+      "VAE"
+    ],
+    [
+      58,
+      31,
+      0,
+      32,
+      2,
+      "IMAGE"
+    ],
+    [
+      81,
+      4,
+      0,
+      43,
+      0,
+      "CLIP"
+    ],
+    [
+      82,
+      5,
+      0,
+      43,
+      1,
+      "VAE"
+    ],
+    [
+      83,
+      42,
+      0,
+      43,
+      2,
+      "IMAGE"
+    ],
+    [
+      106,
+      4,
+      0,
+      54,
+      0,
+      "CLIP"
+    ],
+    [
+      107,
+      5,
+      0,
+      54,
+      1,
+      "VAE"
+    ],
+    [
+      108,
+      53,
+      0,
+      54,
+      2,
+      "IMAGE"
+    ],
+    [
+      132,
+      68,
+      0,
+      69,
+      2,
+      "IMAGE"
+    ],
+    [
+      157,
+      4,
+      0,
+      69,
+      0,
+      "CLIP"
+    ],
+    [
+      158,
+      5,
+      0,
+      69,
+      1,
+      "VAE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture and models",
+      "bounding": [
+        3.49,
+        0,
+        814.5,
+        1374
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Edit 1: the car",
+      "bounding": [
+        3.49,
+        1494,
+        3712,
+        626
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Edit 2: the awning",
+      "bounding": [
+        3.49,
+        2240,
+        3712,
+        626
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Edit 3: the coffee cups",
+      "bounding": [
+        3.49,
+        2986,
+        3712,
+        626
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Edit 4: the dachshund",
+      "bounding": [
+        3.49,
+        3732,
+        3712,
+        626
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Edit 5: the flat cap",
+      "bounding": [
+        3.49,
+        4478,
+        3712,
+        626
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Result",
+      "bounding": [
+        897.99,
+        14.44,
+        1601.93,
+        1111.72
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Edit 6: the outfit",
+      "bounding": [
+        3.49,
+        5224,
+        3712,
+        626
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.35584102738367507,
+      "offset": [
+        2865.295691937026,
+        463.54182014742867
+      ]
+    },
+    "frontendVersion": "1.58.5",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4,
+  "seed_widgets": {
+    "13": 1,
+    "24": 1,
+    "35": 1,
+    "46": 1,
+    "57": 1,
+    "72": 1
+  },
+  "models": [
+    {
+      "name": "wevisone_vl_4b_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/WeVisOne-VL/resolve/main/text_encoders/wevisone_vl_4b_bf16.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "minimax_h3_image_vae_fp16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors",
+      "directory": "vae"
+    }
+  ]
+}

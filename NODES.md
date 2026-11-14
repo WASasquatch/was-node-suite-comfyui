@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **696** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **699** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-610 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+613 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 452 |
+| [Always loaded](#always-loaded) | always on | 455 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-452 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+455 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
@@ -55,6 +55,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (10)
 - [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (5)
 - [WAS Suite/Image/Bound](#was-suiteimagebound) (17)
+- [WAS Suite/Image/Edit](#was-suiteimageedit) (3)
 - [WAS Suite/Image/Filter](#was-suiteimagefilter) (23)
 - [WAS Suite/Image/Generate](#was-suiteimagegenerate) (6)
 - [WAS Suite/Image/HDR](#was-suiteimagehdr) (8)
@@ -3808,6 +3809,109 @@ Measure the tightest rectangle around everything a mask marks and answer it as b
 | Name | Type | What it is |
 |---|---|---|
 | `image_bounds` | `IMAGE_BOUNDS` | One row per mask, giving the first and last pixel row and column its marked area covers. A mask that marks nothing at this threshold covers the whole frame instead, and the console names which one did. |
+
+</details>
+
+### WAS Suite/Image/Edit
+
+<a id="node-wasimageeditcrop"></a>
+<details>
+<summary><b>Image Edit Crop</b></summary>
+
+Cut the areas to edit out of a picture, such as WeVisOne-VL Detect's masks or the edits picked on Image Edit Regions, into crops sized for an edit model like MiniMax H3 Image. Nearby areas share a crop and are edited together; Image Edit Restore puts each edit back through its own area alone.
+
+| | |
+|---|---|
+| Node id | `WASImageEditCrop` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The picture to edit. A batch is read from its first picture. |
+| `context` | `FLOAT` | Yes | 0.3 |  | Room the model sees around the regions, as a share of their longer side: 0 = tight, 0.3 = some surroundings, 1 = a wide view. |
+| `grouping` | `COMBO` | Yes | auto | `auto`, `one crop`, `each region` | `auto` = nearby regions share a crop while it stays at full resolution, far ones get their own; `one crop` = every region in one; `each region` = one crop each. |
+| `max_resolution` | `INT` | Yes | 2048 |  | Longest side a crop is handed to the model at: 1024 = older edit models such as FLUX.1 Kontext; 2048 = MiniMax H3 Image; 4096 = models that take larger pictures. A larger crop is shrunk to it. |
+| `min_resolution` | `INT` | Yes | 1024 |  | Shortest side a small crop is enlarged toward, never past max_resolution or 4 times its size: 1024 = MiniMax H3 Image; 512 = older models. |
+| `multiple` | `INT` | Yes | 32 |  | Step both sides of a crop are held to: 32 = MiniMax H3 Image, 16 = most other models. |
+| `masks` | `MASK` | No |  |  | The areas to edit, such as WeVisOne-VL Detect's masks. Every separate area on every mask is one region. Unwired or empty = the bboxes are used. |
+| `bboxes` | `BOUNDING_BOX` | No |  |  | Boxes to edit where no mask marks anything, such as a detector's boxes. Each box is one region, edited whole. |
+| `jobs` | `WAS_EDIT_JOBS` | No |  |  | Edits picked on Image Edit Regions, each with its own mask and prompt. Wired, they replace masks and bboxes, and each crop gets a prompt naming every edit inside it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `crops` | `IMAGE` | One crop per group of regions, for the edit model's picture input. |
+| `crop_masks` | `MASK` | The regions inside each crop, at the crop's size, for a model that takes a mask. |
+| `edits` | `WAS_EDIT_CROP` | Where each crop came from and what it holds, for Image Edit Restore. |
+| `preview` | `IMAGE` | The picture with each crop's window in blue and each region's box in amber. |
+| `count` | `INT` | How many crops the regions made. |
+| `prompts` | `STRING` | One prompt per crop naming every job inside it, for the edit model's prompt. Empty without jobs. |
+
+</details>
+
+<a id="node-wasimageeditregions"></a>
+<details>
+<summary><b>Image Edit Regions</b></summary>
+
+Find everything in a picture with SAM 3 and pick what to change on the node: click a thing, then edit, recolour, replace or remove it with a prompt. The picked edits go to Image Edit Crop as jobs, each with its own mask and prompt.
+
+| | |
+|---|---|
+| Node id | `WASImageEditRegions` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The picture to edit. A batch is read from its first picture. |
+| `model` | `MODEL` | Yes |  |  | SAM 3, from Load Checkpoint with sam3.1_multiplex_fp16.safetensors. |
+| `clip` | `CLIP` | Yes |  |  | SAM 3's text encoder, the CLIP from the same Load Checkpoint. |
+| `edit_model` | `COMBO` | Yes | MiniMax H3 Image | `MiniMax H3 Image`, `other` | How prompts name the picture: MiniMax H3 Image = <Picture 1>; other = "the picture". |
+| `edits` | `STRING` | Yes |  |  | The edits picked on the panel, as JSON such as `{"jobs": []}`. Empty = nothing to edit yet: the run finds the things in the picture and skips the stages after it. |
+| `threshold` | `FLOAT` | Yes | 0.5 |  | Least confidence a find needs: 0.3 = more things, some wrong; 0.6 = fewer, surer. |
+| `names` | `STRING` | Yes |  |  | More things to look for, separated by commas, added to the built-in list of about 170, such as `lantern, parasol`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `jobs` | `WAS_EDIT_JOBS` | Every picked edit with its mask and prompt, for Image Edit Crop's jobs input. |
+| `masks` | `MASK` | One mask per picked edit, at the picture's size. |
+| `count` | `INT` | How many edits were picked. |
+
+</details>
+
+<a id="node-wasimageeditrestore"></a>
+<details>
+<summary><b>Image Edit Restore</b></summary>
+
+Put the crops an edit model changed back into the picture Image Edit Crop cut them from, each through its own regions with a soft edge and the edit's colour drift removed. Every pixel outside the regions stays exactly as it was.
+
+| | |
+|---|---|
+| Node id | `WASImageEditRestore` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The picture Image Edit Crop cut the crops from. A batch is read from its first picture. |
+| `edited` | `IMAGE` | Yes |  |  | The edited crops, in the order Image Edit Crop handed them out, at any size. |
+| `edits` | `WAS_EDIT_CROP` | Yes |  |  | Image Edit Crop's edits output. |
+| `grow` | `INT` | Yes | 4 |  | Pixels each region is grown by before it is pasted: 0 = its matte exactly, 4 = a little past it. |
+| `feather` | `INT` | Yes | 6 |  | Pixels each region's edge fades over: 0 = a hard edge, 6 = a soft seam, 24 = a wide blend. |
+| `correct_drift` | `BOOLEAN` | Yes | True |  | `true` = remove the colour and light shift the edit made, measured on the crop outside the regions; `false` = paste the edit as it came. |
+| `edited_masks` | `MASK` | No |  |  | What each edited crop holds where its regions were, as WeVisOne-VL Detect finds it: an area lying over a region is pasted whole, one beside it is left out. Unwired = the original regions alone. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `image` | `IMAGE` | The picture with every edit pasted back; outside the regions it is the original exactly. |
+| `changed` | `MASK` | How much of the edit each pixel took: 0 = untouched, 1 = fully replaced. |
 
 </details>
 
@@ -20114,7 +20218,7 @@ Find the pictures in a library folder, such as a pose set, that best match a des
 | `top_k` | `INT` | Yes | 8 |  | How many matches the list outputs carry, best first: `8` = the eight closest. |
 | `one_per_group` | `BOOLEAN` | Yes | True |  | `true` = only the closest picture of each group, such as one angle of each pose, so the list holds different poses; `false` = every angle. |
 | `pause` | `BOOLEAN` | Yes | False |  | `true` = hold the run with the matches on the panel until one is clicked and Continue is pressed; `false` = send the pinned picture, or the closest, at once. |
-| `pinned` | `STRING` | Yes |  |  | The picture sent to `image`, as its path below `folder`, such as `img/full_single_P061_side.png`. Empty = the closest match. Clicking a match pins it. |
+| `pinned` | `STRING` | Yes |  |  | The picture sent to `image` while it is among the matches, as its path below `folder`, such as `img/full_single_P061_side.png`. Empty, or not among them = the closest match. Clicking a match pins it. |
 | `text_model` | `COMBO,STRING` | Yes | google/embeddinggemma-2 |  | Reads captions and prompts. embeddinggemma-2 = 1.5 GB, 100+ languages, the same model as the picture model; bge-small-en = 133 MB, English; keywords only = no model. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `picture_model` | `COMBO,STRING` | Yes | google/embeddinggemma-2 |  | Reads the pictures themselves, so `hair` finds photos captioned only by file name. embeddinggemma-2 = also the text model, loaded once; SigLIP 2 = quicker; none = captions alone. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `picture_weight` | `FLOAT` | Yes | 0.35 |  | Share of the ranking the picture model decides for captioned pictures: 0 = captions alone; 1 = pictures alone. A picture named only by its file is ranked 0.9 by itself. |
@@ -20123,6 +20227,7 @@ Find the pictures in a library folder, such as a pose set, that best match a des
 | `max_files` | `INT` | Yes | 20000 |  | Most pictures read: 20000 = the usual; the rest are left out and counted on the panel. |
 | `hold_timeout` | `INT` | Yes | 600 |  | Seconds `pause` holds the run: 600 = ten minutes; 0 = no limit. A hold that runs out sends the pinned picture, or the closest. |
 | `dimensions` | `INT` | Yes | 0 |  | Caption vector length compared: 0 = the model's own; 256 = shorter and quicker, for models trained for it, such as EmbeddingGemma at 768, 512, 256 or 128. |
+| `extract_pose` | `BOOLEAN` | Yes | True |  | `true` = search with only the prompt's pose and view phrases, such as `crouching low, side view`, leaving out setting, light, style and clothing; `false` = the whole prompt. A prompt with no pose phrase is searched whole. |
 
 **Outputs**
 
@@ -20830,10 +20935,10 @@ Light the scene from all around, which gives metal and glass something to reflec
 | `source` | `COMBO` | Yes | studio room | `studio room`, `image`, `file`, `none` | Where the light comes from. `studio room` needs nothing wired. `image` reads the image input, `file` reads the menu below, and `none` leaves the scene lit by its lamps alone. |
 | `intensity` | `FLOAT` | Yes | 1.0 |  | How strongly the surroundings light the scene. 1.0 is the image as it is, 0.3 a hint of fill, 3.0 a bright studio. |
 | `as_background` | `BOOLEAN` | Yes | False |  | `true` draws the environment behind the scene as well as reflecting it, `false` keeps Three Scene's own background. |
-| `background_blur` | `FLOAT` | Yes | 0.0 |  | How far the background is blurred when it is drawn. 0.0 is sharp, 0.3 throws it out of focus behind the subject. |
+| `background_blur` | `FLOAT` | Yes | 0.0 |  | How far the background is blurred, without changing the lighting or reflections: 0.0 = sharp; 0.05 = slightly out of focus; 0.15 and above = colour only, its shapes gone. |
 | `rotation` | `FLOAT` | Yes | 0.0 |  | Turns the surroundings around the scene, in degrees, which moves where the highlights fall. 0.0 leaves it as the image was shot. |
 | `image` | `IMAGE` | No |  |  | An equirectangular picture, twice as wide as it is tall, used when source is `image`. A batch is read on its first frame alone. |
-| `file` | `COMBO,STRING` | No | none |  | How far the background is blurred when it is drawn. 0.0 is sharp, 0.3 throws it out of focus behind the subject. |
+| `file` | `COMBO,STRING` | No | none |  | How far the background is blurred, without changing the lighting or reflections: 0.0 = sharp; 0.05 = slightly out of focus; 0.15 and above = colour only, its shapes gone. |
 | `path` | `STRING` | No |  |  | An environment somewhere else, as a full path such as `D:/hdri/studio_4k.hdr`. Filled in, it is used instead of the menu. |
 
 **Outputs**

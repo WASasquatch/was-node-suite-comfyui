@@ -2108,7 +2108,7 @@
         "file",
         1,
         true,
-        0.15,
+        0.05,
         0,
         "venice_sunset_2k.hdr [input]",
         ""
@@ -2117,7 +2117,7 @@
         "source": "file",
         "intensity": 1,
         "as_background": true,
-        "background_blur": 0.15,
+        "background_blur": 0.05,
         "rotation": 0,
         "file": "venice_sunset_2k.hdr [input]",
         "path": ""

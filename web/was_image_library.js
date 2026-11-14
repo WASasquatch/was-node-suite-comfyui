@@ -12,8 +12,8 @@ import { fetchWithin } from "./interface/request.js";
 import { fetchRunResult } from "./interface/run_result.js";
 import { themeVar } from "./interface/theme.js";
 import { setWidgetHidden } from "./interface/visibility.js";
-import { appendInterfaceWidget, chainWidgetCallback } from "./interface/widget.js";
-import { LOOK, SANS } from "./interface/window_kit.js";
+import { appendInterfaceWidget, chainWidgetCallback, keepOnNode } from "./interface/widget.js";
+import { LOOK, SANS, createSplitter } from "./interface/window_kit.js";
 
 const EXT_NAME = "WASNodeSuite.ImageLibrary";
 const NODE_ID = "WASImageLibrarySearch";
@@ -36,13 +36,23 @@ const SETTLE = 450;
 // Narrowest a match tile is drawn, in CSS pixels.
 const TILE_MIN = 96;
 
+// Node property holding the folder list's dragged height, in CSS pixels.
+const PANES_KEY = "was_image_library_panes";
+
+// Tallest the folder list grows to fit its folders before its divider is dragged.
+const TREE_HEIGHT = 132;
+
+// Least height in CSS pixels the folder list and the matches are each given.
+const TREE_LEAST = 30;
+const GRID_LEAST = 96;
+
 // The widgets the bar sets, folded off the canvas while the panel draws them.
-const BAR_WIDGETS = ["view", "filter", "top_k", "one_per_group", "pause"];
+const BAR_WIDGETS = ["view", "filter", "top_k", "one_per_group", "extract_pose", "pause"];
 
 // The widgets the search reads, in the names the server takes them under.
 const SETTINGS = [
   "folder", "folders", "captions", "recursive", "max_files", "text_model", "picture_model",
-  "prompt", "view", "filter", "top_k", "one_per_group", "picture_weight", "dimensions",
+  "prompt", "view", "filter", "top_k", "one_per_group", "picture_weight", "dimensions", "extract_pose",
 ];
 
 // Index states as the server names them, and the colour each chip is drawn in.
@@ -156,9 +166,9 @@ function createLibraryPanel(node) {
   treeHead.append(treeToggle, treeTitle, allButton, refreshButton);
   const tree = claim(el(
     "div",
-    "flex:0 1 auto;max-height:132px;min-height:0;overflow:auto;display:flex;flex-direction:column;"
+    `flex:0 1 auto;min-height:${TREE_LEAST}px;overflow:auto;display:flex;flex-direction:column;`
       + `gap:1px;border:1px solid ${themeVar("border")};border-radius:6px;padding:3px;`
-      + `background:${CARD_LOOK.inset};scrollbar-width:thin`,
+      + `background:${CARD_LOOK.inset};scrollbar-width:thin;box-sizing:border-box`,
   ));
 
   // The bar of search settings.
@@ -186,13 +196,14 @@ function createLibraryPanel(node) {
   const count = el("span", "flex:0 0 auto;min-width:22px;text-align:center;font-variant-numeric:tabular-nums");
   const more = barButton("+", "More matches");
   const groupButton = barButton("One per pose", "One angle per pose");
+  const poseButton = barButton("Pose only", "Search the prompt's pose words only");
   const pauseButton = barButton("Pause", "Hold the run to pick");
-  bar.append(viewSelect, filterInput, less, count, more, groupButton, pauseButton);
+  bar.append(viewSelect, filterInput, less, count, more, groupButton, poseButton, pauseButton);
 
   // The matches.
   const grid = claim(el(
     "div",
-    "flex:1 1 auto;min-height:0;overflow:auto;display:grid;gap:5px;align-content:start;"
+    `flex:1 1 auto;min-height:${GRID_LEAST}px;overflow:auto;display:grid;gap:5px;align-content:start;`
       + `grid-template-columns:repeat(auto-fill,minmax(${TILE_MIN}px,1fr));scrollbar-width:thin`,
   ));
   const footer = el("div", "flex:0 0 auto;display:flex;align-items:center;gap:6px;min-height:26px");
@@ -206,7 +217,67 @@ function createLibraryPanel(node) {
   continueButton.style.fontWeight = "650";
   footer.append(status, pinChip, continueButton);
 
-  root.append(treeHead, tree, bar, grid, footer);
+  // `null` fits the folder list to its folders, up to TREE_HEIGHT; a number is its dragged height.
+  let treeHeight = null;
+
+  /**
+   * Size the folder list from its dragged height, or to its folders before any drag.
+   *
+   * @returns {void}
+   */
+  const sizeTree = () => {
+    const scrolled = tree.scrollTop;
+    let wanted = treeHeight;
+    if (wanted === null) {
+      // The folders' own height, read with the box let go, up to TREE_HEIGHT.
+      tree.style.flex = "0 0 auto";
+      tree.style.maxHeight = "none";
+      tree.style.height = "auto";
+      wanted = Math.min(TREE_HEIGHT, tree.offsetHeight);
+    }
+    const style = getComputedStyle(root);
+    const shown = [...root.children].filter((child) => child.style.display !== "none");
+    const gaps = (parseFloat(style.rowGap) || 0) * Math.max(0, shown.length - 1);
+    const pads = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+    const others = shown
+      .filter((child) => child !== tree && child !== grid)
+      .reduce((sum, child) => sum + child.offsetHeight, 0);
+    const room = root.clientHeight - pads - gaps - others - GRID_LEAST;
+    tree.style.flex = "0 0 auto";
+    tree.style.maxHeight = "none";
+    tree.style.height = `${Math.round(Math.max(TREE_LEAST, Math.min(wanted, room)))}px`;
+    tree.scrollTop = scrolled;
+  };
+
+  /**
+   * Read the folder list's dragged height off the node.
+   *
+   * @returns {void}
+   */
+  const restoreTree = () => {
+    const kept = Number(node.properties?.[PANES_KEY]?.tree);
+    treeHeight = Number.isFinite(kept) && kept > 0 ? kept : null;
+    sizeTree();
+  };
+
+  const treeSplit = createSplitter(() => "y", (delta) => {
+    const shared = tree.offsetHeight + grid.offsetHeight;
+    const most = Math.max(TREE_LEAST, shared - GRID_LEAST);
+    treeHeight = Math.max(TREE_LEAST, Math.min(most, tree.offsetHeight + delta));
+    sizeTree();
+  }, () => {
+    if (node.graph && treeHeight !== null) keepOnNode(node, PANES_KEY, { tree: Math.round(treeHeight) });
+  });
+  treeSplit.element.title = "Drag to resize the folders";
+
+  root.append(treeHead, tree, treeSplit.element, bar, grid, footer);
+  restoreTree();
+
+  // A dragged folder list gives way to the matches when the node is made shorter.
+  const resizeWatch = new ResizeObserver(() => {
+    if (treeOpen) sizeTree();
+  });
+  resizeWatch.observe(root);
 
   let disposed = false;
   let serial = 0;
@@ -237,6 +308,7 @@ function createLibraryPanel(node) {
       button.style.borderColor = active ? LOOK.accent : themeVar("border");
     };
     on(groupButton, value("one_per_group") !== false);
+    on(poseButton, value("extract_pose") !== false);
     on(pauseButton, value("pause") === true);
   };
 
@@ -257,8 +329,10 @@ function createLibraryPanel(node) {
    * @returns {void}
    */
   const drawTree = () => {
+    const scrolled = tree.scrollTop;
     tree.textContent = "";
     tree.style.display = treeOpen ? "flex" : "none";
+    treeSplit.element.style.display = treeOpen ? "flex" : "none";
     treeToggle.textContent = treeOpen ? "▾" : "▸";
     const chosen = ticked();
     const searched = folders.filter((folder) => !chosen || chosen.has(folder.label));
@@ -299,6 +373,19 @@ function createLibraryPanel(node) {
       row.append(box, name, amount, chip);
       tree.appendChild(row);
     }
+    if (treeOpen) sizeTree();
+    tree.scrollTop = scrolled;
+  };
+
+  /**
+   * The match `image` sends: the pick while held, else the pin while it is a match, else the first.
+   *
+   * @returns {string} Its key, or "" with no matches.
+   */
+  const sentKey = () => {
+    if (isHeld) return picked;
+    const pinned = String(value("pinned") ?? "");
+    return matches.some((match) => match.key === pinned) ? pinned : matches[0]?.key ?? "";
   };
 
   /**
@@ -310,17 +397,20 @@ function createLibraryPanel(node) {
     const scrolled = grid.scrollTop;
     grid.textContent = "";
     const pinned = String(value("pinned") ?? "");
+    const sent = sentKey();
     for (const [index, match] of matches.entries()) {
       const chosenNow = isHeld ? match.key === picked : match.key === pinned;
+      const marked = match.key === sent;
       const tile = claim(el(
         "button",
         "display:flex;flex-direction:column;gap:2px;min-width:0;padding:3px;margin:0;cursor:pointer;"
           + `border-radius:6px;font:inherit;text-align:left;background:${CARD_LOOK.inset};color:${CARD_LOOK.text};`
-          + `border:1px solid ${chosenNow ? LOOK.accent : themeVar("border")};`
+          + `border:1px solid ${marked ? LOOK.accent : themeVar("border")};`
           + `box-shadow:${chosenNow ? `0 0 0 1px ${LOOK.accent}` : "none"}`,
       ));
       tile.type = "button";
-      tile.title = `${match.name}\n${match.caption}\n\n${isHeld ? "Click to pick" : (chosenNow ? "Click to unpin" : "Click to pin")}`;
+      const action = isHeld ? "Click to pick" : (chosenNow ? "Click to unpin" : "Click to pin");
+      tile.title = `${match.name}\n${match.caption}\n\n${marked && !isHeld ? "Sent to image. " : ""}${action}`;
       const frame = el("div", `width:100%;aspect-ratio:3/4;border-radius:4px;overflow:hidden;background:${themeVar("panelBg")}`);
       if (match.label) {
         const image = document.createElement("img");
@@ -359,6 +449,8 @@ function createLibraryPanel(node) {
 
   let note = "";
   let searched = 0;
+  // The pose phrases the last search used, empty while the whole prompt is searched.
+  let poseUsed = "";
 
   /**
    * Draw the status line, the pinned picture and Continue.
@@ -373,12 +465,17 @@ function createLibraryPanel(node) {
       status.style.color = LOOK.accent;
     } else {
       status.textContent = note || (matches.length
-        ? `${matches.length} matches of ${searched.toLocaleString()} searched`
+        ? `${matches.length} matches of ${searched.toLocaleString()} searched${poseUsed ? ` · ${poseUsed}` : ""}`
         : "No matches yet");
       status.style.color = themeVar("fgMuted");
     }
+    status.title = poseUsed && !isHeld ? `Searched for: ${poseUsed}` : "";
     pinChip.style.display = pinned && !isHeld ? "inline-block" : "none";
     pinChip.textContent = pinned ? `📌 ${pinned.split("/").pop().replace(/\.[^.]+$/, "")} ✕` : "";
+    const stale = Boolean(pinned) && matches.length > 0 && !matches.some((match) => match.key === pinned);
+    pinChip.style.opacity = stale ? "0.55" : "1";
+    pinChip.style.textDecoration = stale ? "line-through" : "none";
+    pinChip.title = stale ? "Not a match: closest sent" : "Unpin, send the closest";
     continueButton.style.display = isHeld ? "inline-block" : "none";
     continueButton.disabled = isHeld && !picked && !matches.length;
   };
@@ -396,6 +493,8 @@ function createLibraryPanel(node) {
       return { label, score: Number.parseFloat(score) || 0, name, caption, key };
     });
     searched = matches.length;
+    const facts = Array.isArray(answer?.result?.facts) ? answer.result.facts : [];
+    poseUsed = String(facts.find((fact) => fact?.name === "searched for")?.value ?? "");
     note = matches.length ? "Linked prompt: last run's matches" : "Linked prompt: run to search";
   };
 
@@ -426,6 +525,7 @@ function createLibraryPanel(node) {
       } else {
         matches = Array.isArray(reply.matches) ? reply.matches : [];
         searched = Number(reply.searched) || 0;
+        poseUsed = typeof reply.pose === "string" ? reply.pose : "";
         note = reply.note ? reply.note.charAt(0).toUpperCase() + reply.note.slice(1) : "";
       }
       if (isHeld && !matches.some((match) => match.key === picked)) picked = matches[0]?.key ?? "";
@@ -469,6 +569,7 @@ function createLibraryPanel(node) {
   less.addEventListener("click", () => write("top_k", Math.max(1, Number(value("top_k") ?? 8) - 1)));
   more.addEventListener("click", () => write("top_k", Math.min(64, Number(value("top_k") ?? 8) + 1)));
   groupButton.addEventListener("click", () => write("one_per_group", value("one_per_group") === false));
+  poseButton.addEventListener("click", () => write("extract_pose", value("extract_pose") === false));
   pauseButton.addEventListener("click", () => {
     writeWidget(node, "pause", value("pause") !== true);
     drawBar();
@@ -508,10 +609,12 @@ function createLibraryPanel(node) {
     height: PANEL_HEIGHT,
     minWidth: PANEL_WIDTH,
     refresh: () => schedule(0),
+    restore: restoreTree,
     held(on) {
       isHeld = on;
       if (on && !matches.some((match) => match.key === picked)) {
-        picked = String(value("pinned") ?? "") || matches[0]?.key || "";
+        const pinned = String(value("pinned") ?? "");
+        picked = matches.some((match) => match.key === pinned) ? pinned : matches[0]?.key || "";
       }
       if (!on) picked = "";
       schedule(0);
@@ -521,6 +624,7 @@ function createLibraryPanel(node) {
     dispose() {
       disposed = true;
       clearTimeout(timer);
+      resizeWatch.disconnect();
       serial += 1;
     },
   };
@@ -573,6 +677,13 @@ app.registerExtension({
         }
         const panel = createLibraryPanel(this);
         appendInterfaceWidget(this, panel, { name: UI_WIDGET_NAME, type: UI_WIDGET_TYPE });
+
+        const originalOnConfigure = this.onConfigure;
+        this.onConfigure = function (...args) {
+          const configured = originalOnConfigure?.apply(this, args);
+          panel.restore();
+          return configured;
+        };
 
         const originalOnAdded = this.onAdded;
         this.onAdded = function (...args) {

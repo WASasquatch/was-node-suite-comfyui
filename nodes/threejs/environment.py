@@ -119,8 +119,9 @@ class ThreeEnvironment(io.ComfyNode):
                     max=1.0,
                     step=0.01,
                     tooltip=(
-                        "How far the background is blurred when it is drawn. 0.0 is sharp, "
-                        "0.3 throws it out of focus behind the subject."
+                        "How far the background is blurred, without changing the lighting or "
+                        "reflections: 0.0 = sharp; 0.05 = slightly out of focus; 0.15 and above = "
+                        "colour only, its shapes gone."
                     ),
                 ),
                 io.Float.Input(

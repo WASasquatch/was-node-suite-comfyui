@@ -5,10 +5,10 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **696** across **68** categories |
+| Nodes | **698** across **69** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`. A workflow opened with one of their nodes turned off names the setting that loads it and any package it lacks, with the install command or a way into Open Manager: [`docs/CONFIG.md`](docs/CONFIG.md) |
-| Panels | 362 nodes draw their own readout, picture or editor on the canvas |
+| Panels | 364 nodes draw their own readout, picture or editor on the canvas |
 | Graphs | Runnable examples in [`docs/workflows/`](docs/workflows), linked per area below |
 
 ---
@@ -821,6 +821,35 @@ hat, without scaling the picture down to edit it.
 [`NODES.md`](NODES.md) under **WAS Suite/Loaders**, **WAS Suite/Conditioning** and **WAS
 Suite/Sampling**. Weights and settings: [`docs/MODELS.md`](docs/MODELS.md#bluepixel). Graph:
 [`bluepixel-edit.json`](docs/workflows/bluepixel-edit.json).
+
+---
+
+## Precise edits in a large picture
+
+**Image Edit Crop** cuts the areas to edit out of a picture: every region of a mask, or each box
+where no mask marks anything. Regions near each other share one crop and are edited together,
+and regions far apart get crops of their own. `max_resolution` is the longest side a crop is
+handed to the edit model at, such as 1024 for older edit models or 4096 for MiniMax H3 Image.
+**Image Edit Restore** pastes each edited crop back through its own region, feathered and with
+the edit model's colour drift removed, and leaves every other pixel of the picture as it was.
+Both draw the picture before and after on the node.
+
+The incremental graph finds each area with ComfyUI's **WeVisOne-VL Detect** from a few words,
+edits it with MiniMax H3 Image, and runs one stage per edit on its own demo picture: the car
+repainted, the awning recoloured, the coffee cups turned to glasses of tea, the dog turned to a
+cat and the cap to a beret.
+
+<img src="docs/images/wevisone-incremental-editing.jpg" alt="The demo picture before and after its five edits" width="800">
+
+For changing several things in a large photograph, small or large, each at the edit model's own
+resolution, with the rest of the picture untouched.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Edit**. Graphs:
+[`wevisone-incremental-editing.json`](docs/workflows/wevisone-incremental-editing.json), which
+reads [`wevisone-busy-street.jpg`](docs/workflows/wevisone-busy-street.jpg) from ComfyUI's
+`input` folder, and
+[`minimax-h3-image-precise-edit.json`](docs/workflows/minimax-h3-image-precise-edit.json). Each
+graph carries the download link of every model it loads.
 
 ---
 

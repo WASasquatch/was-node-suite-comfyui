@@ -103,10 +103,12 @@ def answer(body: dict) -> dict:
     Args:
         body: The request: ``folder``, ``folders``, ``captions``, ``recursive``, ``max_files``,
             ``text_model``, ``picture_model``, ``prompt``, ``view``, ``filter``, ``top_k``,
-            ``one_per_group``, ``picture_weight`` and ``dimensions``, as the node's widgets hold them.
+            ``one_per_group``, ``picture_weight``, ``dimensions`` and ``extract_pose``, as the node's
+            widgets hold them.
 
     Returns:
-        ``{"folders", "matches", "searched", "total", "note"}``.
+        ``{"folders", "matches", "searched", "total", "note"}``, and ``"pose"``, the text searched,
+        with ``extract_pose``.
     """
     from ..constants import ALLOWED_EXT
     from ..image import image_library
@@ -177,14 +179,19 @@ def answer(body: dict) -> dict:
         reply["note"] = "run the node to index"
         return reply
     view = _text(body.get("view"), 20)
+    searched = prompt
+    if bool(body.get("extract_pose", True)):
+        searched = image_library.pose_text(prompt, library.text_model, library.picture_model)
+        reply["pose"] = searched
     matches, kept = image_library.search(
-        library, prompt,
+        library, searched,
         _number(body.get("top_k"), 8, 1, 64),
         _number(body.get("picture_weight"), 0.35, 0.0, 1.0),
         _text(body.get("filter"), MAX_FILTER_CHARS),
         bool(body.get("one_per_group", True)),
         view if view in image_library.VIEW_CHOICES else "auto",
         _number(body.get("dimensions"), 0, 0, 4096),
+        view_text=prompt,
     )
     reply["searched"] = kept
     for match in matches:

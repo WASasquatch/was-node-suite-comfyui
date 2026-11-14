@@ -348,6 +348,11 @@ export function addSectionHeader(node, { name, title, before, colour, onClick })
   };
   const widget = {
     name,
+    // The bar's own text without its fold arrow, where a list of widgets names it.
+    get label() {
+      return text(node).replace(/^[▸▾]\s*/, "") || name;
+    },
+    set label(ignored) {},
     type: "custom",
     // Fixed, so a press never reads as a change of value.
     value: name,

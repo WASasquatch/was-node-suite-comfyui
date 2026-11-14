@@ -159,6 +159,46 @@ _CODE = re.compile(r"^[A-Za-z]{0,4}[-_]?\d{1,6}$")
 _SENTENCES = re.compile(r"[.!?;\n\r。！？；]+")
 _CLAUSES = re.compile(r"[,，、|]+")
 
+#: Words a new phrase starts at inside a clause, when a prompt is sorted into pose and the rest.
+_BREAK_WORDS = (
+    "on", "at", "in", "into", "inside", "outside", "beneath", "below", "under", "over", "near", "beside",
+    "against", "along", "across", "through", "during", "while", "with", "wearing", "and", "amid", "among",
+)
+_PHRASE_START = re.compile(r"\s+(?=(?:" + "|".join(_BREAK_WORDS) + r")\b)", re.IGNORECASE)
+
+#: Words ending in -ing that never start a phrase of their own.
+_NOT_PARTICIPLES = frozenset(
+    "thing something nothing anything everything morning evening ceiling building clothing lighting "
+    "painting wedding railing spring string swing during".split()
+)
+
+#: Most phrases of one prompt sorted; any past it are left out of the pose.
+MAX_PHRASES = 96
+
+#: Short descriptions of a body position or camera view, and of everything else a prompt
+#: describes. A phrase closer to the first set than to the second is part of the pose.
+POSE_PHRASES = (
+    "standing upright", "standing with the weight on one leg", "crouching low", "squatting on the heels",
+    "kneeling on one knee", "kneeling on both knees", "sitting on the ground", "sitting cross-legged",
+    "sitting on a chair, leaning back", "lying on the back", "lying on the side", "lying face down",
+    "leaning forward", "bending over at the waist", "arms raised above the head", "hands on the hips",
+    "arms crossed over the chest", "forearms resting on the knees", "hands resting on the thighs",
+    "reaching out with one arm", "pointing with one finger", "holding something in both hands",
+    "raising a weapon above the head", "gripping something with both hands",
+    "head tilted to one side", "looking back over the shoulder", "one knee raised", "legs stretched out",
+    "walking", "running", "jumping", "dancing", "a full body pose", "side view", "front view",
+    "seen from behind", "three-quarter view", "seen from above", "seen from below",
+)
+OTHER_PHRASES = (
+    "on a rooftop", "at night", "a neon city in the background", "rain falling", "a forest", "a beach at sunset",
+    "an empty room", "a city street", "a white background", "a wooden floor", "cinematic lighting",
+    "soft studio lighting", "dramatic shadows", "warm colours", "fog", "snow", "sunlight through the trees",
+    "film grain", "shallow depth of field", "a photo", "an oil painting", "anime style",
+    "highly detailed, best quality", "8k, masterpiece", "wearing a red dress", "a leather jacket",
+    "long blonde hair", "blue eyes", "a smiling face", "freckles", "tattoos", "a cup of coffee", "a car",
+    "a cat",
+)
+
 #: Words a keyword ranking drops.
 _STOPWORDS = frozenset(
     "a an and are as at be by for from has her his in into is it its of on or the their to with "
@@ -1282,6 +1322,88 @@ def pieces(prompt: str) -> list[str]:
     return unique[:MAX_PIECES]
 
 
+#: Reference vectors of :data:`POSE_PHRASES` and :data:`OTHER_PHRASES`, by encoder.
+_references: dict[str, tuple] = {}
+
+
+def _phrase_encoder(text: TextModel | None, picture: PictureModel | None):
+    """``(key, encode)`` for the model phrases are sorted with, or ``None`` with neither model."""
+    if text is not None and not text.keywords:
+        return f"text|{text.signature}", lambda texts: text.encode(texts, query=False)
+    if picture is not None:
+        return f"picture|{picture.label}|{picture.family}", picture.encode_texts
+    return None
+
+
+def phrases(clause: str) -> list[str]:
+    """A clause cut where a new phrase starts, such as ``on a rooftop`` or ``wearing a coat``.
+
+    Args:
+        clause: One clause of a prompt.
+
+    Returns:
+        Its phrases in order.
+    """
+    found = []
+    for phrase in _PHRASE_START.split(clause):
+        words = phrase.split()
+        if not words:
+            continue
+        cut = len(words)
+        # A phrase opened by a break word ends before its first -ing word: `in a red dress` | `sitting`.
+        if words[0].lower() in _BREAK_WORDS:
+            for at in range(1, len(words)):
+                word = words[at].lower().strip(".,;:!?\"'()")
+                if len(word) >= 5 and word.endswith("ing") and word not in _NOT_PARTICIPLES:
+                    cut = at
+                    break
+        found.append(" ".join(words[:cut]))
+        if cut < len(words):
+            found.append(" ".join(words[cut:]))
+    return found
+
+
+def pose_text(prompt: str, text: TextModel | None, picture: PictureModel | None) -> str:
+    """The phrases of a prompt that describe a body position or camera view.
+
+    Args:
+        prompt: A whole prompt.
+        text: The caption model, or ``None``.
+        picture: The picture model, or ``None``.
+
+    Returns:
+        The pose phrases in prompt order, or the prompt itself where none is found or no model
+        is loaded.
+    """
+    whole = " ".join(str(prompt or "")[:MAX_PROMPT_CHARS].split())
+    encoder = _phrase_encoder(text, picture)
+    if not whole or encoder is None:
+        return whole
+    key, encode = encoder
+    references = _references.get(key)
+    if references is None:
+        references = _references[key] = (encode(list(POSE_PHRASES)), encode(list(OTHER_PHRASES)))
+    clauses = []
+    for sentence in _SENTENCES.split(whole):
+        for clause in _CLAUSES.split(sentence):
+            cut = phrases(clause)
+            if cut:
+                clauses.append(cut)
+    flat = [phrase for cut in clauses for phrase in cut][:MAX_PHRASES]
+    if not flat:
+        return whole
+    vectors = encode(flat)
+    pose, other = references
+    lean = (vectors @ pose.T).max(dim=1).values - (vectors @ other.T).max(dim=1).values
+    flags = iter((lean > 0).tolist() + [False] * MAX_PHRASES)
+    kept = []
+    for cut in clauses:
+        chosen = [phrase for phrase in cut if next(flags)]
+        if chosen:
+            kept.append(" ".join(chosen))
+    return ", ".join(kept) or whole
+
+
 def _allowed(entries: list[Entry], wanted: str):
     """Which entries a filter keeps: every plain word present, no ``-word`` present."""
     import torch
@@ -1317,7 +1439,7 @@ def _shortened(matrix, dimensions: int):
 
 def search(
     library: Library, prompt: str, top_k: int, picture_weight: float, wanted: str = "", distinct: bool = True,
-    view: str = "auto", dimensions: int = 0,
+    view: str = "auto", dimensions: int = 0, view_text: str = "",
 ) -> tuple[list[Match], int]:
     """Rank a library against a prompt.
 
@@ -1331,6 +1453,7 @@ def search(
         distinct: Keep only one picture of each group, such as one angle of each pose.
         view: ``auto`` for the prompt's view words, ``any`` for none, or one of :data:`VIEWS`.
         dimensions: Caption vector length compared, 0 for the model's own.
+        view_text: The text ``auto`` reads view words from, empty for ``prompt``.
 
     Within a group the pictures whose camera view the prompt names come first, so the prompt's
     view words choose the angle and never the pose.
@@ -1381,7 +1504,7 @@ def search(
         ranking = full
     ranking = ranking.masked_fill(~keep, float("-inf"))
     count = min(max(1, int(top_k)), int(keep.sum()))
-    views = prompt_views(prompt) if view == "auto" else set() if view not in VIEWS else {view}
+    views = prompt_views(view_text or prompt) if view == "auto" else set() if view not in VIEWS else {view}
     groups: dict[str, list[int]] = {}
     for at in torch.argsort(ranking, descending=True)[:int(keep.sum())].tolist():
         groups.setdefault(entries[at].group or entries[at].key, []).append(at)

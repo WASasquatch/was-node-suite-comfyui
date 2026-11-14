@@ -240,6 +240,12 @@ def register_interface_routes() -> None:
     else:
         register_image_library()
     try:
+        from .modules.interface.edit_regions import register_routes as register_edit_regions
+    except Exception as error:
+        logger.debug("the edit regions channel is unavailable (%s)", error)
+    else:
+        register_edit_regions()
+    try:
         from .modules.interface.app_exposure import register_routes as register_app_exposure
     except Exception as error:
         logger.debug("the app workflow exposure channel is unavailable (%s)", error)

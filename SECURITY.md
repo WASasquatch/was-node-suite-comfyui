@@ -92,7 +92,7 @@ and embedding models reach their providers through those providers' own librarie
 No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
 `urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.
 Three related names do appear, and none of them reaches the network. `aiohttp.web` registers
-this pack's own inbound routes in twenty modules, and its client half is never used.
+this pack's own inbound routes in 21 modules, and its client half is never used.
 `urllib.parse` reads strings in ten files: it decodes a `data:` URI and a picture's name in
 the document exporter, unescapes the file names a 3D model refers to, splits the address Three
 Texture URL is given, and splits the addresses the LLM nodes fetch or call and the servers
@@ -290,6 +290,7 @@ folder that is refused if it would leave it. None takes a path to open.
 | `POST /was/interface/api/preview/subscribe` | node id | an in-memory store |
 | `POST /was/interface/api/preview/discard` | a list of mask editor upload names | deletes those files: names matching `clipspace-…-<digits>.png`, directly in `input/clipspace/`, written in the last ten minutes, at most eight a call |
 | `GET /was/interface/api/run_result`, `/run_result_page` | node id, workflow, client id | an in-memory store, served only to the client id that queued the run, or to any client for a run queued without one |
+| `GET /was/interface/api/edit_regions` | node id, workflow, client id, node class | an in-memory store of what Image Edit Regions found on its last run, 16 nodes at most, served only to the client id that queued the run, or to any client for a run queued without one |
 | `GET /was/interface/api/text_lines` | menu label | the file listing, then the allowlist |
 | `GET /was/interface/api/font` | font name | the font catalog |
 | `GET /was/interface/api/file_listing` | suffixes, a count | names, sizes and times of files in the permitted folders, 5000 at most. Symlinks and Windows junctions are not followed |

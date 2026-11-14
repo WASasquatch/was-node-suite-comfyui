@@ -102,6 +102,8 @@ const NODES = [
   "WASImageCompositeMasked",
   "WASImageDequantise",
   "WASImageDirectionalBlur",
+  "WASImageEditCrop",
+  "WASImageEditRestore",
   "WASImageFrequencyBlend",
   "WASImageGuidedFilter",
   "WASImageLensDistortion",

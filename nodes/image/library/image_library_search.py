@@ -114,8 +114,9 @@ class ImageLibrarySearch(io.ComfyNode):
                 io.String.Input(
                     "pinned", default="", advanced=True,
                     tooltip=(
-                        "The picture sent to `image`, as its path below `folder`, such as "
-                        "`img/full_single_P061_side.png`. Empty = the closest match. Clicking a match pins it."
+                        "The picture sent to `image` while it is among the matches, as its path below `folder`, "
+                        "such as `img/full_single_P061_side.png`. Empty, or not among them = the closest match. "
+                        "Clicking a match pins it."
                     ),
                 ),
                 picker.path_input(io.Combo.Input(
@@ -174,6 +175,14 @@ class ImageLibrarySearch(io.ComfyNode):
                         "for models trained for it, such as EmbeddingGemma at 768, 512, 256 or 128."
                     ),
                 ),
+                io.Boolean.Input(
+                    "extract_pose", default=True,
+                    tooltip=(
+                        "`true` = search with only the prompt's pose and view phrases, such as `crouching "
+                        "low, side view`, leaving out setting, light, style and clothing; `false` = the whole "
+                        "prompt. A prompt with no pose phrase is searched whole."
+                    ),
+                ),
             ],
             outputs=[
                 io.Image.Output(
@@ -207,7 +216,7 @@ class ImageLibrarySearch(io.ComfyNode):
     @classmethod
     def fingerprint_inputs(cls, prompt, folder, folders, view, filter, top_k, one_per_group, pause, pinned,
                            text_model, picture_model, picture_weight, captions, recursive, max_files,
-                           hold_timeout, dimensions):
+                           hold_timeout, dimensions, extract_pose=True):
         """Changes when a picture, caption or manifest in the folder changes, and on every paused run."""
         if pause:
             return float("nan")
@@ -223,7 +232,7 @@ class ImageLibrarySearch(io.ComfyNode):
     @classmethod
     def execute(cls, prompt, folder, folders, view, filter, top_k, one_per_group, pause, pinned,
                 text_model, picture_model, picture_weight, captions, recursive, max_files,
-                hold_timeout, dimensions) -> io.NodeOutput:
+                hold_timeout, dimensions, extract_pose=True) -> io.NodeOutput:
         """Read and embed the folder where it changed, rank it, and send the pinned or best match.
 
         Args:
@@ -235,7 +244,7 @@ class ImageLibrarySearch(io.ComfyNode):
             top_k: Most matches.
             one_per_group: Keep only the closest picture of each group.
             pause: Hold the run until a match is picked on the panel.
-            pinned: The key of the picture to send, empty for the closest.
+            pinned: The key of the picture to send while it is among the matches, empty for the closest.
             text_model: A text model menu entry, ``keywords only`` or a wired folder path.
             picture_model: A picture model menu entry, ``none`` or a wired folder path.
             picture_weight: Share of the ranking the picture model decides.
@@ -244,6 +253,7 @@ class ImageLibrarySearch(io.ComfyNode):
             max_files: Most pictures read.
             hold_timeout: Seconds ``pause`` holds the run, 0 for no limit.
             dimensions: Caption vector length compared, 0 for the model's own.
+            extract_pose: Search with only the prompt's pose and view phrases.
 
         Returns:
             The chosen picture and caption, then the matches as lists.
@@ -280,9 +290,12 @@ class ImageLibrarySearch(io.ComfyNode):
                               picture.label if picture else image_library.NO_PICTURE_MODEL),
             found, str(folders or ""), library,
         )
+        searched = (
+            image_library.pose_text(prompt, library.text_model, library.picture_model) if extract_pose else prompt
+        )
         matches, kept = image_library.search(
-            library, prompt, int(top_k), float(picture_weight), filter, bool(one_per_group), view,
-            int(dimensions),
+            library, searched, int(top_k), float(picture_weight), filter, bool(one_per_group), view,
+            int(dimensions), view_text=prompt,
         )
         if not matches:
             raise ValueError(
@@ -290,9 +303,11 @@ class ImageLibrarySearch(io.ComfyNode):
                 f"{len(library.entries):,} pictures. Remove a word from filter, or clear it."
             )
         chosen = matches[0].entry
-        pinned_entry = library.find(str(pinned or "").strip()) if str(pinned or "").strip() else None
-        if str(pinned or "").strip() and pinned_entry is None:
-            logger.warning("%s: the pinned picture is not in the folders searched, so the closest match is sent", NODE)
+        pin = str(pinned or "").strip()
+        pinned_entry = next((match.entry for match in matches if match.entry.key == pin), None) if pin else None
+        passed_over = bool(pin) and pinned_entry is None
+        if passed_over:
+            logger.info("%s: the pinned picture is not among the %d matches, so the closest is sent", NODE, len(matches))
         chosen = pinned_entry or chosen
         figures = library.figures
         seconds = time.monotonic() - started
@@ -325,6 +340,8 @@ class ImageLibrarySearch(io.ComfyNode):
                     "ranked by": text.label + (f" and {picture.label}" if picture and float(picture_weight) > 0 else ""),
                     "sent": entry.key,
                     "caption": entry.caption,
+                    **({"searched for": searched} if extract_pose else {}),
+                    **({"pin passed over": pin.rsplit("/", 1)[-1]} if passed_over else {}),
                 },
                 bodies=[run_result.body("matches", "\n".join(lines))],
             )
