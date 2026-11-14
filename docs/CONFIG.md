@@ -290,7 +290,7 @@ saved: [`docs/LLM.md`](LLM.md).
 | `features.vector_stores` | LanceDB, FAISS and the Postgres client<br>`pip install -r requirements/vector_stores.txt` | off | No nodes. Lets **LLM Vector Store** keep an index in LanceDB or FAISS on this machine, or on a Postgres server |
 | `features.chroma` | Chroma, with kubernetes, OpenTelemetry, onnxruntime and gRPC<br>`pip install -r requirements/chroma.txt` | off | No nodes. Lets **LLM Vector Store** keep an index in Chroma on this machine or on a Chroma server |
 | `features.audio` | none. Runs on torch and scipy, which ComfyUI already installs | **on** | Every node under **WAS Suite/Audio**: editing, mixing, metering and effects |
-| `features.threejs` | none. three.js ships with the pack, and the browser fetches it only when a scene runs | **on** | The 43 `Three` nodes |
+| `features.threejs` | none. three.js ships with the pack, and the browser fetches it only when a scene runs | **on** | The 44 `Three` nodes |
 | `features.extras` | none | **on** | The 27 WAS_Extras nodes |
 | `features.viewer` | none | **on** | `Content Viewer` and `CV Canvas Compose Batch`, the two nodes shared with the ComfyUI_Viewer pack |
 

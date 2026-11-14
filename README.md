@@ -89,14 +89,14 @@ on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, sci
 matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
 belongs to an optional group.
 
-## 421 new nodes
+## 425 new nodes
 
 | Area | New | Area | New |
 |---|--:|---|--:|
 | Llama-Index in ComfyUI | 79 | Bounds | 10 |
-| Three.js scenes | 43 | HDR and linear light | 9 |
+| Three.js scenes | 44 | HDR and linear light | 9 |
 | Audio | 39 | Affine sampling | 7 |
-| Files, archives and documents | 28 | Everything else | 158 |
+| Files, archives and documents | 28 | Everything else | 161 |
 | Logic and flow | 26 | | |
 | Layers | 22 | | |
 

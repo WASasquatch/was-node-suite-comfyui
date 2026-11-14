@@ -831,10 +831,13 @@ Suite/Sampling**. Weights and settings: [`docs/MODELS.md`](docs/MODELS.md#bluepi
 **Image Edit Crop** cuts the areas to edit out of a picture: every region of a mask, or each box
 where no mask marks anything. Regions near each other share one crop and are edited together,
 and regions far apart get crops of their own. `max_resolution` is the longest side a crop is
-handed to the edit model at, such as 1024 for older edit models or 4096 for MiniMax H3 Image.
-**Image Edit Restore** pastes each edited crop back through its own region, feathered and with
-the edit model's colour drift removed, and leaves every other pixel of the picture as it was.
-Both draw the picture before and after on the node.
+handed to the edit model at, such as 1024 for older edit models, 1536 for Qwen-Image-Edit 2511 or
+2048 for MiniMax H3 Image. **Image Edit Restore** pastes each edited crop back through its own
+region, feathered and with the edit model's colour drift removed, and leaves every other pixel of
+the picture as it was. Both draw the picture before and after on the node. **Image Edit Regions**
+finds the things in a picture with SAM 3.1 and picks what to change on the node: click a thing,
+then edit, recolour, replace or remove it, and each picked edit goes to Image Edit Crop with its
+own mask and prompt.
 
 The incremental graph finds each area with ComfyUI's **WeVisOne-VL Detect** from a few words,
 edits it with MiniMax H3 Image, and runs one stage per edit on its own demo picture: the car
@@ -853,9 +856,13 @@ resolution, with the rest of the picture untouched.
 [`wevisone-incremental-editing.json`](docs/workflows/wevisone-incremental-editing.json) and
 [`wevisone-incremental-editing-loop.json`](docs/workflows/wevisone-incremental-editing-loop.json),
 which read [`wevisone-busy-street.jpg`](docs/workflows/wevisone-busy-street.jpg) from ComfyUI's
-`input` folder, and
-[`minimax-h3-image-precise-edit.json`](docs/workflows/minimax-h3-image-precise-edit.json). Each
-graph carries the download link of every model it loads.
+`input` folder,
+[`minimax-h3-image-precise-edit.json`](docs/workflows/minimax-h3-image-precise-edit.json),
+[`qwen-image-edit-precise-edit.json`](docs/workflows/qwen-image-edit-precise-edit.json), an edit
+made with Qwen-Image-Edit 2511, and
+[`image-edit-regions.json`](docs/workflows/image-edit-regions.json). Each graph carries the
+download link of every model it loads. Guide, models and troubleshooting:
+[`docs/IMAGE_EDITING.md`](docs/IMAGE_EDITING.md).
 
 ---
 
@@ -1154,7 +1161,7 @@ The group starts on. Set `features.threejs` to false in `config.yaml` to leave t
 out.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Three**. Five graphs in
-[`docs/workflows/`](docs/workflows).
+[`docs/workflows/`](docs/workflows). Guide, graphs and troubleshooting: [`docs/3D.md`](docs/3D.md).
 
 ---
 
@@ -1187,7 +1194,8 @@ on flat feet.
 | [`tripo-drow-scene.json`](docs/workflows/tripo-drow-scene.json) | The drow rigged and walking through the cave camp, filmed by a wide and a chase camera |
 
 The Tripo graphs need [ComfyUI-Tripo](https://github.com/VAST-AI-Research/ComfyUI-Tripo) and a
-Tripo API key. [`NODES.md`](NODES.md) under **WAS Suite/Three**.
+Tripo API key, set up as [`docs/3D.md`](docs/3D.md#setup-for-the-tripo-graphs) lists.
+[`NODES.md`](NODES.md) under **WAS Suite/Three**.
 
 ---
 
